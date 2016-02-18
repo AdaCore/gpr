@@ -1,0 +1,5 @@
+
+with "second.gpr";
+
+library project first is
+end first;
