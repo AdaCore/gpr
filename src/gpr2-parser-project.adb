@@ -380,10 +380,29 @@ package body GPR2.Parser.Project is
       function Parser (Node : GPR_Node) return Visit_Status;
       --  Actual parser callabck for the project
 
+      function Get_Variable_Value
+        (Node : Variable_Reference) return Value_Type;
+      --  Parse and return the value for the given variable reference
+
       function Get_Term_List
         (Node : Term_List) return Containers.Value_List
         with Pre => Node /= null;
       --  Parse a list of value or a single value as found in an attribute
+
+      --  The parsing status for case statement (possibly nested)
+
+      Case_Values : Containers.Value_List;
+      --  The case-values to match against the case-item. Each time a case
+      --  statement is enterred the value for the case is prepended into this
+      --  vector. The first value is then removed when exiting from the case
+      --  statement.
+
+      Is_Open     : Boolean := True;
+      --  Is_Open is a parsing barrier, it is True when parsing can be
+      --  conducted and False otherwise. Is_Open is set to False when enterring
+      --  a case construct. It is then set to True/False depending on the case
+      --  When Is_Open is False no parsing should be done, that is all node
+      --  should be ignored except the Case_Item ones.
 
       -------------------
       -- Get_Term_List --
@@ -474,16 +493,8 @@ package body GPR2.Parser.Project is
             ---------------------
 
             procedure Handle_Variable (Node : Variable_Reference) is
-               Name_1 : constant Identifier := F_Variable_Name1 (Node);
-               Name   : constant Name_Type :=
-                          Image (F_Tok (Single_Tok_Node (Name_1)));
             begin
-               if Vars.Contains (Name) then
-                  Result.Append (String (Vars (Name).Values.First_Element));
-               else
-                  --  ?? This is an undefined variable reference
-                  Result.Append ("@" & Name);
-               end if;
+               Result.Append (String (Get_Variable_Value (Node)));
             end Handle_Variable;
 
          begin
@@ -509,6 +520,25 @@ package body GPR2.Parser.Project is
          return Result;
       end Get_Term_List;
 
+      ------------------------
+      -- Get_Variable_Value --
+      ------------------------
+
+      function Get_Variable_Value
+        (Node : Variable_Reference) return Value_Type
+      is
+         use Langkit_Support.Tokens;
+         Name_1 : constant Identifier := F_Variable_Name1 (Node);
+         Name   : constant Name_Type :=
+                    Image (F_Tok (Single_Tok_Node (Name_1)));
+      begin
+         if Vars.Contains (Name) then
+            return Vars (Name).Values.First_Element;
+         else
+            raise Constraint_Error with "variable " & Name & " does not exist";
+         end if;
+      end Get_Variable_Value;
+
       ------------
       -- Parser --
       ------------
@@ -517,11 +547,28 @@ package body GPR2.Parser.Project is
 
          use GPR_Parser;
 
-         Status : constant Visit_Status := Into;
+         Status : Visit_Status := Into;
 
-         procedure Parse_Attribute_Decl_Kind (Node : Attribute_Decl);
+         procedure Parse_Attribute_Decl_Kind (Node : Attribute_Decl)
+           with Pre => Is_Open;
+         --  Parse attribute declaration and append it into Attrs set
 
-         procedure Parse_Variable_Decl_Kind (Node : Variable_Decl);
+         procedure Parse_Variable_Decl_Kind (Node : Variable_Decl)
+           with Pre => Is_Open;
+         --  Parse variable declaration and append it into the Vars set
+
+         procedure Parse_Case_Construction (Node : Case_Construction)
+           with Pre  => Is_Open,
+                Post => Case_Values.Length'Old = Case_Values.Length;
+         --  Parse a case construction, during a case construction parsing the
+         --  Is_Open flag may be set to False and True. Set Is_Open comments.
+
+         procedure Parse_Case_Item (Node : Case_Item)
+           with Pre => Case_Values.Length > 0;
+         --  Set Is_Open to True or False depending on the item
+
+         procedure Visit_Child (Child : GPR_Node);
+         --  Recursive call to the Parser if the Child is not null
 
          -------------------------------
          -- Parse_Attribute_Decl_Kind --
@@ -555,6 +602,95 @@ package body GPR2.Parser.Project is
             end if;
          end Parse_Attribute_Decl_Kind;
 
+         -----------------------------
+         -- Parse_Case_Construction --
+         -----------------------------
+
+         procedure Parse_Case_Construction (Node : Case_Construction) is
+            Var   : constant Variable_Reference := F_Var_Ref (Node);
+            Value : constant Value_Type := Get_Variable_Value (Var);
+         begin
+            Case_Values.Prepend (Value);
+            --  Set status to close for now, this will be open when a
+            --  when_clause will match the value pushed just above on
+            --  the vector.
+
+            Is_Open := False;
+
+            declare
+               Childs : constant List_Case_Item := F_Items (Node);
+            begin
+               for C in 0 .. Child_Count (Childs) loop
+                  Visit_Child (Child (GPR_Node (Childs), C));
+               end loop;
+            end;
+
+            --  Then remove the case value
+
+            Case_Values.Delete_First;
+
+            --  Skip all nodes for this construct
+
+            Status := Over;
+
+            Is_Open := True;
+         end Parse_Case_Construction;
+
+         ---------------------
+         -- Parse_Case_Item --
+         ---------------------
+
+         procedure Parse_Case_Item (Node : Case_Item) is
+            use GPR_Parser.AST.Types;
+
+            function Parser (Node : GPR_Node) return Visit_Status;
+
+            Is_Case_Item_Matches : Boolean := False;
+
+            ------------
+            -- Parser --
+            ------------
+
+            function Parser (Node : GPR_Node) return Visit_Status is
+               Status : constant Visit_Status := Into;
+
+               procedure Handle_String   (Node : String_Literal);
+
+               -------------------
+               -- Handle_String --
+               -------------------
+
+               procedure Handle_String (Node : String_Literal) is
+                  use Langkit_Support.Tokens;
+                  Value : constant Name_Type :=
+                            Unquote
+                              (Name_Type
+                                 (Image (F_Tok (Single_Tok_Node (Node)))));
+               begin
+                  Is_Case_Item_Matches :=
+                    Is_Case_Item_Matches
+                    or else (Value = Case_Values.First_Element);
+               end Handle_String;
+
+            begin
+               case Kind (Node) is
+                  when String_Literal_Kind =>
+                     Handle_String (String_Literal (Node));
+
+                  when others =>
+                     null;
+               end case;
+
+               return Status;
+            end Parser;
+
+            Choices : constant List_GPR_Node := F_Choice (Node);
+
+         begin
+            Traverse (GPR_Node (Choices), Parser'Access);
+            Is_Open := Is_Case_Item_Matches;
+         end Parse_Case_Item;
+
          ------------------------------
          -- Parse_Variable_Decl_Kind --
          ------------------------------
@@ -586,17 +722,52 @@ package body GPR2.Parser.Project is
             Vars.Include (V.Name, V);
          end Parse_Variable_Decl_Kind;
 
+         -----------------
+         -- Visit_Child --
+         -----------------
+
+         procedure Visit_Child (Child : GPR_Node) is
+         begin
+            if Present (Child) then
+               Status :=
+                 Traverse
+                   (Node  => Child,
+                    Visit => Parser'Access);
+            end if;
+         end Visit_Child;
+
       begin
-         case AST.Kind (Node) is
-            when Attribute_Decl_Kind =>
-               Parse_Attribute_Decl_Kind (Attribute_Decl (Node));
+         if Is_Open then
+            --  Handle all kind of nodes when the parsing is open
 
-            when Variable_Decl_Kind =>
-               Parse_Variable_Decl_Kind (Variable_Decl (Node));
+            case AST.Kind (Node) is
+               when Attribute_Decl_Kind =>
+                  Parse_Attribute_Decl_Kind (Attribute_Decl (Node));
 
-            when others =>
-               null;
-         end case;
+               when Variable_Decl_Kind =>
+                  Parse_Variable_Decl_Kind (Variable_Decl (Node));
+
+               when Case_Construction_Kind =>
+                  Parse_Case_Construction (Case_Construction (Node));
+
+               when Case_Item_Kind =>
+                  Parse_Case_Item (Case_Item (Node));
+
+               when others =>
+                  null;
+            end case;
+
+         else
+            --  We are on a closed parsing mode, only handle case alternatives
+
+            case AST.Kind (Node) is
+               when Case_Item_Kind =>
+                  Parse_Case_Item (Case_Item (Node));
+
+               when others =>
+                  null;
+            end case;
+         end if;
 
          return Status;
       end Parser;
