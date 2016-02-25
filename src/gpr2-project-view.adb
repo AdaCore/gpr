@@ -30,9 +30,9 @@ package body GPR2.Project.View is
    -- Attributes --
    ----------------
 
-   function Attributes (Project : Object) return Attribute.Set.Object is
+   function Attributes (Self : Object) return Attribute.Set.Object is
    begin
-      return Definition.Get (Project).Attrs;
+      return Definition.Get (Self).Attrs;
    end Attributes;
 
    -------------
@@ -48,82 +48,82 @@ package body GPR2.Project.View is
    -- Has_Attributes --
    --------------------
 
-   function Has_Attributes (Project : Object) return Boolean is
+   function Has_Attributes (Self : Object) return Boolean is
    begin
-      return Definition.Get (Project).Attrs.Length > 0;
+      return Definition.Get (Self).Attrs.Length > 0;
    end Has_Attributes;
 
    -----------------
    -- Has_Imports --
    -----------------
 
-   function Has_Imports (Project : Object) return Boolean is
+   function Has_Imports (Self : Object) return Boolean is
       use type Ada.Containers.Count_Type;
    begin
-      return Definition.Get (Project).Trees.Imports.Length > 0;
+      return Definition.Get (Self).Trees.Imports.Length > 0;
    end Has_Imports;
 
    ------------------
    -- Has_Packages --
    ------------------
 
-   function Has_Packages (Project : Object) return Boolean is
+   function Has_Packages (Self : Object) return Boolean is
    begin
-      return Definition.Get (Project).Packs.Length > 0;
+      return Definition.Get (Self).Packs.Length > 0;
    end Has_Packages;
 
    -------------------
    -- Has_Variables --
    -------------------
 
-   function Has_Variables (Project : Object) return Boolean is
+   function Has_Variables (Self : Object) return Boolean is
    begin
-      return Definition.Get (Project).Vars.Length > 0;
+      return Definition.Get (Self).Vars.Length > 0;
    end Has_Variables;
 
    ----------
    -- Name --
    ----------
 
-   function Name (Project : Object) return Name_Type is
+   function Name (Self : Object) return Name_Type is
    begin
-      return Definition.Get (Project).Trees.Project.Name;
+      return Definition.Get (Self).Trees.Project.Name;
    end Name;
 
    --------------
    -- Packages --
    --------------
 
-   function Packages (Project : Object) return Pack.Set.Object is
+   function Packages (Self : Object) return Pack.Set.Object is
    begin
-      return Definition.Get (Project).Packs;
+      return Definition.Get (Self).Packs;
    end Packages;
 
    ---------------
    -- Path_Name --
    ---------------
 
-   function Path_Name (Project : Object) return Path_Name_Type is
+   function Path_Name (Self : Object) return Path_Name_Type is
    begin
-      return Definition.Get (Project).Trees.Project.Path_Name;
+      return Definition.Get (Self).Trees.Project.Path_Name;
    end Path_Name;
 
    ---------------
    -- Qualifier --
    ---------------
 
-   function Qualifier (Project : Object) return Project_Qualifier is
+   function Qualifier (Self : Object) return Project_Qualifier is
    begin
-      return Definition.Get (Project).Trees.Project.Qualifier;
+      return Definition.Get (Self).Trees.Project.Qualifier;
    end Qualifier;
 
    ---------------
    -- Variables --
    ---------------
 
-   function Variables (Project : Object) return Variable.Set.Object is
+   function Variables (Self : Object) return Variable.Set.Object is
    begin
-      return Definition.Get (Project).Vars;
+      return Definition.Get (Self).Vars;
    end Variables;
 
 end GPR2.Project.View;

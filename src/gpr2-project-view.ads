@@ -41,46 +41,43 @@ package GPR2.Project.View is
 
    Undefined : constant Object;
 
-   function Path_Name (Project : Object) return Path_Name_Type
-     with Pre => Project /= Undefined;
+   function Path_Name (Self : Object) return Path_Name_Type
+     with Pre => Self /= Undefined;
 
-   function Name (Project : Object) return Name_Type
-     with Pre => Project /= Undefined;
+   function Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined;
 
-   function Qualifier (Project : Object) return Project_Qualifier
-     with Pre => Project /= Undefined;
+   function Qualifier (Self : Object) return Project_Qualifier
+     with Pre => Self /= Undefined;
 
    --  Imports
 
-   function Has_Imports (Project : Object) return Boolean
-     with Pre => Project /= Undefined;
+   function Has_Imports (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
 
    --  Attributes
 
-   function Has_Attributes (Project : Object) return Boolean
-     with Pre => Project /= Undefined;
+   function Has_Attributes (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
 
-   function Attributes (Project : Object) return Attribute.Set.Object
-     with Post =>
-       (if Project.Has_Attributes then Attributes'Result.Length > 0);
+   function Attributes (Self : Object) return Attribute.Set.Object
+     with Post => (if Self.Has_Attributes then Attributes'Result.Length > 0);
 
    --  Variables
 
-   function Has_Variables (Project : Object) return Boolean
-     with Pre => Project /= Undefined;
+   function Has_Variables (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
 
-   function Variables (Project : Object) return Variable.Set.Object
-     with Post =>
-       (if Project.Has_Variables then Variables'Result.Length > 0);
+   function Variables (Self : Object) return Variable.Set.Object
+     with Post => (if Self.Has_Variables then Variables'Result.Length > 0);
 
    --  Packages
 
-   function Has_Packages (Project : Object) return Boolean
-     with Pre => Project /= Undefined;
+   function Has_Packages (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
 
-   function Packages (Project : Object) return Pack.Set.Object
-     with Post =>
-       (if Project.Has_Packages then Packages'Result.Length > 0);
+   function Packages (Self : Object) return Pack.Set.Object
+     with Post => (if Self.Has_Packages then Packages'Result.Length > 0);
 
    --  Following routines are for internal use only and convert from a View
    --  unique Id.

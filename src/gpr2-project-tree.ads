@@ -45,26 +45,25 @@ package GPR2.Project.Tree is
    function Load (Filename : Path_Name_Type) return Object;
    --  Load a root-project
 
-   function Root_Project (Tree : Object) return View.Object
+   function Root_Project (Self : Object) return View.Object
      with Post => Root_Project'Result /= View.Undefined;
    --  Returns the root project for the given tree
 
    --  Context
 
-   function Has_Context (Tree : Object) return Boolean
-     with Pre  => Tree /= Undefined;
+   function Has_Context (Self : Object) return Boolean
+     with Pre  => Self /= Undefined;
 
-   function Context (Tree : Object) return Context.Object
-     with Pre  => Tree /= Undefined,
-          Post =>
-            Has_Context (Tree) = (Context'Result /= GPR2.Context.Empty);
+   function Context (Self : Object) return Context.Object
+     with Pre  => Self /= Undefined,
+          Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
 
    procedure Set_Context
-     (Tree    : in out Object;
+     (Self    : in out Object;
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
-     with Pre  => Tree /= Undefined,
-          Post => Tree.Context = Context;
+     with Pre  => Self /= Undefined,
+          Post => Self.Context = Context;
 
    --  Iterator
 
@@ -91,11 +90,11 @@ package GPR2.Project.Tree is
      with Implicit_Dereference => View;
 
    function Constant_Reference
-     (Tree      : aliased in out Object;
+     (Self      : aliased in out Object;
       Position  : Cursor) return Constant_Reference_Type;
 
    function Iterate
-     (Tree   : Object;
+     (Self   : Object;
       Kind   : Iterator_Kind := I_Default;
       Filter : Project_Filter := F_Default)
       return Project_Iterator.Forward_Iterator'Class

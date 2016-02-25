@@ -42,39 +42,39 @@ package GPR2.Parser.Project is
    --  during the parsing the return object is Undefined.
 
    procedure Parse
-     (Project : in out Object;
+     (Self    : in out Object;
       Ctx     : Context.Object;
       Attrs   : in out GPR2.Project.Attribute.Set.Object;
       Vars    : in out GPR2.Project.Variable.Set.Object;
       Packs   : in out GPR2.Project.Pack.Set.Object;
       Changed : not null access procedure (Project : Object))
-     with Pre => Project /= Undefined;
+     with Pre => Self /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback
    --  is called whenever a specific project has been impacted by the context
    --  change.
 
-   function Qualifier (Project : Object) return Project_Qualifier
-     with Pre => Project /= Undefined;
+   function Qualifier (Self : Object) return Project_Qualifier
+     with Pre => Self /= Undefined;
 
-   function Name (Project : Object) return Name_Type
-     with Pre => Project /= Undefined;
+   function Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined;
 
-   function Path_Name (Project : Object) return Path_Name_Type
-     with Pre => Project /= Undefined;
+   function Path_Name (Self : Object) return Path_Name_Type
+     with Pre => Self /= Undefined;
 
-   function Has_Imports (Project : Object) return Boolean
-     with Pre => Project /= Undefined;
+   function Has_Imports (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
    --  Returns True if Project has some imported projects
 
-   function Imports (Project : Object) return Containers.Path_Name_List
-     with Pre => Project /= Undefined;
+   function Imports (Self : Object) return Containers.Path_Name_List
+     with Pre => Self /= Undefined;
 
-   function Has_Externals (Project : Object) return Boolean
-     with Pre => Project /= Undefined;
+   function Has_Externals (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
 
-   function Externals (Project : Object) return Containers.Name_List
-     with Pre => Project /= Undefined;
+   function Externals (Self : Object) return Containers.Name_List
+     with Pre => Self /= Undefined;
 
 private
 

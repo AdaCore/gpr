@@ -92,9 +92,9 @@ package body GPR2.Parser.Project is
    -- Externals --
    ---------------
 
-   function Externals (Project : Object) return Containers.Name_List is
+   function Externals (Self : Object) return Containers.Name_List is
    begin
-      return Project.Externals;
+      return Self.Externals;
    end Externals;
 
    -------------------
@@ -119,27 +119,27 @@ package body GPR2.Parser.Project is
    -- Has_Externals --
    -------------------
 
-   function Has_Externals (Project : Object) return Boolean is
+   function Has_Externals (Self : Object) return Boolean is
    begin
-      return Project.Externals.Length > 0;
+      return Self.Externals.Length > 0;
    end Has_Externals;
 
    -----------------
    -- Has_Imports --
    -----------------
 
-   function Has_Imports (Project : Object) return Boolean is
+   function Has_Imports (Self : Object) return Boolean is
    begin
-      return Project.Imports.Length > 0;
+      return Self.Imports.Length > 0;
    end Has_Imports;
 
    -------------
    -- Imports --
    -------------
 
-   function Imports (Project : Object) return Containers.Path_Name_List is
+   function Imports (Self : Object) return Containers.Path_Name_List is
    begin
-      return Project.Imports;
+      return Self.Imports;
    end Imports;
 
    ----------
@@ -360,9 +360,9 @@ package body GPR2.Parser.Project is
    -- Name --
    ----------
 
-   function Name (Project : Object) return Name_Type is
+   function Name (Self : Object) return Name_Type is
    begin
-      return Name_Type (To_String (Project.Name));
+      return Name_Type (To_String (Self.Name));
    end Name;
 
    -----------
@@ -370,7 +370,7 @@ package body GPR2.Parser.Project is
    -----------
 
    procedure Parse
-     (Project : in out Object;
+     (Self    : in out Object;
       Ctx     : Context.Object;
       Attrs   : in out GPR2.Project.Attribute.Set.Object;
       Vars    : in out GPR2.Project.Variable.Set.Object;
@@ -820,10 +820,10 @@ package body GPR2.Parser.Project is
       end Parser;
 
       New_Signature : constant MD5.Binary_Message_Digest :=
-                        Context_Signature (Ctx, Project.Externals);
+                        Context_Signature (Ctx, Self.Externals);
 
    begin
-      if Project.Signature /= New_Signature then
+      if Self.Signature /= New_Signature then
          --  Clear all current values for this project
 
          Attrs.Clear;
@@ -832,18 +832,18 @@ package body GPR2.Parser.Project is
 
          --  Re-Analyze the project given the new context
 
-         Traverse (Root (Project.Unit), Parser'Access);
+         Traverse (Root (Self.Unit), Parser'Access);
 
          --  Record new signature
 
-         Project.Signature := New_Signature;
+         Self.Signature := New_Signature;
 
          --  Signal project change only if we have a non default signature.
          --  That is if there is at least some external used otherwise the
          --  project is stable and won't change.
 
-         if Project.Signature /= Default_Signature then
-            Changed (Project);
+         if Self.Signature /= Default_Signature then
+            Changed (Self);
          end if;
       end if;
    end Parse;
@@ -852,18 +852,18 @@ package body GPR2.Parser.Project is
    -- Path_Name --
    ---------------
 
-   function Path_Name (Project : Object) return Path_Name_Type is
+   function Path_Name (Self : Object) return Path_Name_Type is
    begin
-      return Project.File;
+      return Self.File;
    end Path_Name;
 
    ---------------
    -- Qualifier --
    ---------------
 
-   function Qualifier (Project : Object) return Project_Qualifier is
+   function Qualifier (Self : Object) return Project_Qualifier is
    begin
-      return Project.Qualifier;
+      return Self.Qualifier;
    end Qualifier;
 
 end GPR2.Parser.Project;

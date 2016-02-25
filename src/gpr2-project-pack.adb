@@ -28,9 +28,9 @@ package body GPR2.Project.Pack is
    -- Attributes --
    ----------------
 
-   function Attributes (Pack : Object) return Attribute.Set.Object is
+   function Attributes (Self : Object) return Attribute.Set.Object is
    begin
-      return Pack.Attrs;
+      return Self.Attrs;
    end Attributes;
 
    ------------
@@ -48,9 +48,9 @@ package body GPR2.Project.Pack is
    -- Name --
    ----------
 
-   function Name (Pack : Object) return Name_Type is
+   function Name (Self : Object) return Name_Type is
    begin
-      return To_String (Pack.Name);
+      return To_String (Self.Name);
    end Name;
 
 end GPR2.Project.Pack;

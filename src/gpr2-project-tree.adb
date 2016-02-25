@@ -47,10 +47,10 @@ package body GPR2.Project.Tree is
    ------------------------
 
    function Constant_Reference
-     (Tree     : aliased in out Object;
+     (Self     : aliased in out Object;
       Position : Cursor) return Constant_Reference_Type
    is
-      pragma Unreferenced (Tree);
+      pragma Unreferenced (Self);
    begin
       --  Constant reference is given by the constant reference of the
       --  element contained in the Views set at the current location.
@@ -64,9 +64,9 @@ package body GPR2.Project.Tree is
    -- Context --
    -------------
 
-   function Context (Tree : Object) return GPR2.Context.Object is
+   function Context (Self : Object) return GPR2.Context.Object is
    begin
-      return Tree.Context;
+      return Self.Context;
    end Context;
 
    -------------
@@ -172,9 +172,9 @@ package body GPR2.Project.Tree is
    -- Has_Context --
    -----------------
 
-   function Has_Context (Tree : Object) return Boolean is
+   function Has_Context (Self : Object) return Boolean is
    begin
-      return Tree.Context.Length > 0;
+      return Self.Context.Length > 0;
    end Has_Context;
 
    -----------------
@@ -200,12 +200,12 @@ package body GPR2.Project.Tree is
    -------------
 
    function Iterate
-     (Tree   : Object;
+     (Self   : Object;
       Kind   : Iterator_Kind := I_Default;
       Filter : Project_Filter := F_Default)
       return Project_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Kind, Filter, Tree);
+      return Iterator'(Kind, Filter, Self);
    end Iterate;
 
    ----------
@@ -302,9 +302,9 @@ package body GPR2.Project.Tree is
    -- Root_Project --
    ------------------
 
-   function Root_Project (Tree : Object) return View.Object is
+   function Root_Project (Self : Object) return View.Object is
    begin
-      return Tree.Root;
+      return Self.Root;
    end Root_Project;
 
    -----------------
@@ -312,18 +312,18 @@ package body GPR2.Project.Tree is
    -----------------
 
    procedure Set_Context
-     (Tree    : in out Object;
+     (Self    : in out Object;
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null) is
    begin
       --  Register the context for this project tree
 
-      Tree.Context := Context;
+      Self.Context := Context;
 
       --  Propagate the change in the project Tree. That is for each project in
       --  the tree we need to update the corresponding view.
 
-      for View of Tree loop
+      for View of Self loop
          declare
             procedure Changed (Project : GPR2.Parser.Project.Object);
             --  Callback signaled when a project is changed, that is when one

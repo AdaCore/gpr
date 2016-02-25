@@ -41,12 +41,12 @@ package GPR2.Project.Pack is
    --  Note that the list of attribute can be empty as a package can contain no
    --  declaration.
 
-   function Name (Pack : Object) return Name_Type
-     with Pre => Pack /= Undefined;
+   function Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined;
    --  Returns the name of the project
 
-   function Attributes (Pack : Object) return Attribute.Set.Object
-     with Pre => Pack /= Undefined;
+   function Attributes (Self : Object) return Attribute.Set.Object
+     with Pre => Self /= Undefined;
    --  Returns all attributes defined for the package
 
 private
