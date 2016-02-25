@@ -583,6 +583,7 @@ package body GPR2.Parser.Project is
          -------------------------------
 
          procedure Parse_Attribute_Decl_Kind (Node : Attribute_Decl) is
+            use Langkit_Support.Tokens;
             Name   : constant GPR_Node := F_Attr_Name (Node);
             Index  : constant GPR_Node := F_Attr_Index (Node);
             Expr   : constant Term_List := F_Expr (Node);
@@ -592,25 +593,37 @@ package body GPR2.Parser.Project is
          begin
             --  Name is either a string or an external
 
-            if Values.Length = 1 then
-               A := GPR2.Project.Attribute.Create
-                 (Name  => Get_Name_Type (Single_Tok_Node (Name)),
-                  Value => Values.First_Element);
+            if Present (Index) then
+               if Values.Length = 1 then
+                  A := GPR2.Project.Attribute.Create
+                    (Name     => Get_Name_Type (Single_Tok_Node (Name)),
+                     Language =>
+                       Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
+                     Value    => Values.First_Element);
+               else
+                  A := GPR2.Project.Attribute.Create
+                    (Name     => Get_Name_Type (Single_Tok_Node (Name)),
+                     Language =>
+                       Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
+                     Values   => Values);
+               end if;
+
             else
-               A := GPR2.Project.Attribute.Create
-                 (Name   => Get_Name_Type (Single_Tok_Node (Name)),
-                  Values => Values);
+               if Values.Length = 1 then
+                  A := GPR2.Project.Attribute.Create
+                    (Name  => Get_Name_Type (Single_Tok_Node (Name)),
+                     Value => Values.First_Element);
+               else
+                  A := GPR2.Project.Attribute.Create
+                    (Name   => Get_Name_Type (Single_Tok_Node (Name)),
+                     Values => Values);
+               end if;
             end if;
 
             if In_Pack then
                Pack_Attrs.Insert (A.Name, A);
             else
                Attrs.Insert (A.Name, A);
-            end if;
-
-            if Present (Index) then
-               --  ?? this is an attribute with an index
-               null;
             end if;
          end Parse_Attribute_Decl_Kind;
 

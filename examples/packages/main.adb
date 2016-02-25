@@ -46,6 +46,11 @@ procedure Main is
    procedure Display (Att : Project.Attribute.Object) is
    begin
       Text_IO.Put ("   " & Att.Name);
+
+      if Att.Has_Language then
+         Text_IO.Put (" (" & Att.Language & ")");
+      end if;
+
       Text_IO.Put (" -> ");
 
       for V of Att.Values loop

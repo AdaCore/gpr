@@ -29,7 +29,7 @@ project Demo is
    for Main use ("main.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-g");
+      for Default_Switches ("C") use ("-g");
    end Compiler;
 
    package Binder is

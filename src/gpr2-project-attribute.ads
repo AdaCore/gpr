@@ -22,18 +22,70 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Containers;
 with GPR2.Project.Name_Values;
 
-package GPR2.Project.Attribute with Elaborate_Body is
+private with Ada.Strings.Unbounded;
+
+package GPR2.Project.Attribute is
+
+   use type GPR2.Project.Name_Values.Kind_Type;
+   use type GPR2.Containers.Count_Type;
 
    type Object is new Name_Values.Object with private;
 
    Undefined : constant Object;
 
+   function Create
+     (Name     : Name_Type;
+      Language : Name_Type;
+      Value    : Value_Type) return Object
+     with Post => Create'Result.Kind = Name_Values.K_Single
+                  and then Create'Result.Name = Name
+                  and then Create'Result.Count_Values = 1;
+   --  Create a single-valued object
+
+   function Create
+     (Name     : Name_Type;
+      Language : Name_Type;
+      Values   : Containers.Value_List) return Object
+     with Post => Create'Result.Kind = Name_Values.K_List
+                  and then Create'Result.Name = Name
+                  and then Create'Result.Count_Values = Values.Length;
+   --  Create a multi-valued object
+
+   overriding function Create
+     (Name  : Name_Type;
+      Value : Value_Type) return Object
+     with Post => Create'Result.Kind = Name_Values.K_Single
+                  and then Create'Result.Name = Name
+                  and then Create'Result.Count_Values = 1;
+   --  Create a single-valued object
+
+   overriding function Create
+     (Name   : Name_Type;
+      Values : Containers.Value_List) return Object
+     with Post => Create'Result.Kind = Name_Values.K_List
+                  and then Create'Result.Name = Name
+                  and then Create'Result.Count_Values = Values.Length;
+   --  Create a multi-valued object
+
+   function Has_Language (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+
+   function Language (Self : Object) return Name_Type
+     with Pre => Self /= Undefined;
+   --  Returns the language name
+
 private
 
-   type Object is new Name_Values.Object with null record;
+   use Ada.Strings.Unbounded;
 
-   Undefined : constant Object := (Name_Values.Undefined with null record);
+   type Object is new Name_Values.Object with record
+      Language : Unbounded_String;
+   end record;
+
+   Undefined : constant Object :=
+                 (Name_Values.Undefined with Null_Unbounded_String);
 
 end GPR2.Project.Attribute;

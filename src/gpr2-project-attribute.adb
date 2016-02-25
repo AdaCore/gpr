@@ -24,7 +24,64 @@
 
 package body GPR2.Project.Attribute is
 
-   --  Empty for now, will contains attribute specific routines.
-   --  TBD
+   ------------
+   -- Create --
+   ------------
+
+   function Create
+     (Name     : Name_Type;
+      Language : Name_Type;
+      Value    : Value_Type) return Object is
+   begin
+      return A : Object := Create (Name, Value) do
+         A.Language := To_Unbounded_String (Language);
+      end return;
+   end Create;
+
+   function Create
+     (Name     : Name_Type;
+      Language : Name_Type;
+      Values   : Containers.Value_List) return Object is
+   begin
+      return A : Object := Create (Name, Values) do
+         A.Language := To_Unbounded_String (Language);
+      end return;
+   end Create;
+
+   overriding function Create
+     (Name  : Name_Type;
+      Value : Value_Type) return Object is
+   begin
+      return Object'
+        (Name_Values.Create (Name, Value)
+         with Language => Null_Unbounded_String);
+   end Create;
+
+   overriding function Create
+     (Name   : Name_Type;
+      Values : Containers.Value_List) return Object is
+   begin
+      return Object'
+        (Name_Values.Create (Name, Values)
+         with Language => Null_Unbounded_String);
+   end Create;
+
+   ------------------
+   -- Has_Language --
+   ------------------
+
+   function Has_Language (Self : Object) return Boolean is
+   begin
+      return Self.Language /= Null_Unbounded_String;
+   end Has_Language;
+
+   --------------
+   -- Language --
+   --------------
+
+   function Language (Self : Object) return Name_Type is
+   begin
+      return To_String (Self.Language);
+   end Language;
 
 end GPR2.Project.Attribute;
