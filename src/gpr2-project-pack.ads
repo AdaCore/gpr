@@ -22,46 +22,42 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
+--  Handle project's packages which are a set of attributes
 
-with GPR2.Parser.Project.Set;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Pack.Set;
-with GPR2.Project.Variable.Set;
 
-with GPR2.Project.View;
+private with Ada.Strings.Unbounded;
 
-private package GPR2.Project.Definition is
+package GPR2.Project.Pack is
 
-   use type View.Id;
-   use type View.Object;
-   use type Parser.Project.Object;
+   type Object is tagged private;
 
-   type Tree is tagged record
-      Project : Parser.Project.Object;
-      Imports : Parser.Project.Set.Object;
+   Undefined : constant Object;
+
+   function Create
+     (Name       : Name_Type;
+      Attributes : Attribute.Set.Object) return Object;
+   --  Create a package object with the given Name and the list of attributes.
+   --  Note that the list of attribute can be empty as a package can contain no
+   --  declaration.
+
+   function Name (Pack : Object) return Name_Type
+     with Pre => Pack /= Undefined;
+   --  Returns the name of the project
+
+   function Attributes (Pack : Object) return Attribute.Set.Object
+     with Pre => Pack /= Undefined;
+   --  Returns all attributes defined for the package
+
+private
+
+   use Ada.Strings.Unbounded;
+
+   type Object is tagged record
+      Name  : Unbounded_String;
+      Attrs : Attribute.Set.Object;
    end record;
 
-   package Project_View_Store is
-     new Ada.Containers.Vectors (Positive, View.Object);
+   Undefined : constant Object := Object'(Null_Unbounded_String, Attrs => <>);
 
-   type Data is tagged record
-      Trees   : Tree;
-      Imports : Project_View_Store.Vector;
-      Attrs   : Project.Attribute.Set.Object;
-      Vars    : Project.Variable.Set.Object;
-      Packs   : Project.Pack.Set.Object;
-   end record;
-
-   function Register (Def : Data) return View.Object
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (Register'Result) = Def;
-
-   function Get (View : Project.View.Object) return Data
-     with Post => Get'Result.Trees.Project /= Parser.Project.Undefined;
-
-   procedure Set (View : Project.View.Object; Def : Data)
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (View) = Def;
-
-end GPR2.Project.Definition;
+end GPR2.Project.Pack;

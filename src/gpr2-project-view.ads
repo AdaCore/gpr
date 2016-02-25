@@ -28,6 +28,7 @@
 with Ada.Containers;
 
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
 package GPR2.Project.View is
@@ -71,6 +72,15 @@ package GPR2.Project.View is
    function Variables (Project : Object) return Variable.Set.Object
      with Post =>
        (if Project.Has_Variables then Variables'Result.Length > 0);
+
+   --  Packages
+
+   function Has_Packages (Project : Object) return Boolean
+     with Pre => Project /= Undefined;
+
+   function Packages (Project : Object) return Pack.Set.Object
+     with Post =>
+       (if Project.Has_Packages then Packages'Result.Length > 0);
 
    --  Following routines are for internal use only and convert from a View
    --  unique Id.

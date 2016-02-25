@@ -22,16 +22,35 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  A map for a Name_Value object given a Name. This is used to store variables
---  and attributes for a project.
+package body GPR2.Project.Pack is
 
-with Ada.Containers.Indefinite_Ordered_Maps;
+   ----------------
+   -- Attributes --
+   ----------------
 
-package GPR2.Project.Name_Values.Set is
+   function Attributes (Pack : Object) return Attribute.Set.Object is
+   begin
+      return Pack.Attrs;
+   end Attributes;
 
-   package Set is
-     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object'Class);
+   ------------
+   -- Create --
+   ------------
 
-   subtype Object is Set.Map;
+   function Create
+     (Name       : Name_Type;
+      Attributes : Attribute.Set.Object) return Object is
+   begin
+      return Object'(To_Unbounded_String (Name), Attributes);
+   end Create;
 
-end GPR2.Project.Name_Values.Set;
+   ----------
+   -- Name --
+   ----------
+
+   function Name (Pack : Object) return Name_Type is
+   begin
+      return To_String (Pack.Name);
+   end Name;
+
+end GPR2.Project.Pack;

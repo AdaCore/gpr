@@ -22,46 +22,67 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
-
-with GPR2.Parser.Project.Set;
-with GPR2.Project.Attribute.Set;
-with GPR2.Project.Pack.Set;
-with GPR2.Project.Variable.Set;
+with Ada.Text_IO;
 
 with GPR2.Project.View;
+with GPR2.Project.Tree;
+with GPR2.Project.Attribute.Set;
+with GPR2.Context;
 
-private package GPR2.Project.Definition is
+procedure Main is
 
-   use type View.Id;
-   use type View.Object;
-   use type Parser.Project.Object;
+   use Ada;
+   use GPR2;
+   use GPR2.Project;
 
-   type Tree is tagged record
-      Project : Parser.Project.Object;
-      Imports : Parser.Project.Set.Object;
-   end record;
+   procedure Display (Prj : Project.View.Object);
 
-   package Project_View_Store is
-     new Ada.Containers.Vectors (Positive, View.Object);
+   procedure Display (Att : Project.Attribute.Object);
 
-   type Data is tagged record
-      Trees   : Tree;
-      Imports : Project_View_Store.Vector;
-      Attrs   : Project.Attribute.Set.Object;
-      Vars    : Project.Variable.Set.Object;
-      Packs   : Project.Pack.Set.Object;
-   end record;
+   -------------
+   -- Display --
+   -------------
 
-   function Register (Def : Data) return View.Object
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (Register'Result) = Def;
+   procedure Display (Att : Project.Attribute.Object) is
+   begin
+      Text_IO.Put ("   " & Att.Name);
+      Text_IO.Put (" -> ");
 
-   function Get (View : Project.View.Object) return Data
-     with Post => Get'Result.Trees.Project /= Parser.Project.Undefined;
+      for V of Att.Values loop
+         Text_IO.Put (V & " ");
+      end loop;
+      Text_IO.New_Line;
+   end Display;
 
-   procedure Set (View : Project.View.Object; Def : Data)
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (View) = Def;
+   procedure Display (Prj : Project.View.Object) is
+      use GPR2.Project.Attribute.Set.Set;
+   begin
+      Text_IO.Put (Prj.Name & " ");
+      Text_IO.Set_Col (10);
+      Text_IO.Put_Line (Prj.Qualifier'Img);
 
-end GPR2.Project.Definition;
+      if Prj.Has_Attributes then
+         for A of Prj.Attributes loop
+            Display (A);
+         end loop;
+      end if;
+
+      if Prj.Has_Packages then
+         for Pck of Prj.Packages loop
+            Text_IO.Put_Line (" " & String (Pck.Name));
+
+            for A of Pck.Attributes loop
+               Display (A);
+            end loop;
+         end loop;
+
+      end if;
+      Text_IO.New_Line;
+   end Display;
+
+   Prj : Project.Tree.Object;
+
+begin
+   Prj := Project.Tree.Load (Create ("demo.gpr"));
+   Display (Prj.Root_Project);
+end Main;

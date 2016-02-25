@@ -22,11 +22,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Project.Name_Values.Set;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Project.Variable.Set is
 
-   package Set renames Name_Values.Set.Set;
+   package Set is
+     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object);
 
    subtype Object is Set.Map;
 

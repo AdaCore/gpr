@@ -25,6 +25,7 @@
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
 private with GPR_Parser.Analysis;
@@ -45,6 +46,7 @@ package GPR2.Parser.Project is
       Ctx     : Context.Object;
       Attrs   : in out GPR2.Project.Attribute.Set.Object;
       Vars    : in out GPR2.Project.Variable.Set.Object;
+      Packs   : in out GPR2.Project.Pack.Set.Object;
       Changed : not null access procedure (Project : Object))
      with Pre => Project /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This

@@ -63,6 +63,15 @@ package body GPR2.Project.View is
       return Definition.Get (Project).Trees.Imports.Length > 0;
    end Has_Imports;
 
+   ------------------
+   -- Has_Packages --
+   ------------------
+
+   function Has_Packages (Project : Object) return Boolean is
+   begin
+      return Definition.Get (Project).Packs.Length > 0;
+   end Has_Packages;
+
    -------------------
    -- Has_Variables --
    -------------------
@@ -80,6 +89,15 @@ package body GPR2.Project.View is
    begin
       return Definition.Get (Project).Trees.Project.Name;
    end Name;
+
+   --------------
+   -- Packages --
+   --------------
+
+   function Packages (Project : Object) return Pack.Set.Object is
+   begin
+      return Definition.Get (Project).Packs;
+   end Packages;
 
    ---------------
    -- Path_Name --

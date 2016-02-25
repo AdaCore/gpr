@@ -349,6 +349,7 @@ package body GPR2.Project.Tree is
                Context,
                P_Data.Attrs,
                P_Data.Vars,
+               P_Data.Packs,
                Changed'Access);
 
             Definition.Set (View, P_Data);

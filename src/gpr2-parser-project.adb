@@ -374,6 +374,7 @@ package body GPR2.Parser.Project is
       Ctx     : Context.Object;
       Attrs   : in out GPR2.Project.Attribute.Set.Object;
       Vars    : in out GPR2.Project.Variable.Set.Object;
+      Packs   : in out GPR2.Project.Pack.Set.Object;
       Changed : not null access procedure (Project : Object))
    is
 
@@ -403,6 +404,9 @@ package body GPR2.Parser.Project is
       --  a case construct. It is then set to True/False depending on the case
       --  When Is_Open is False no parsing should be done, that is all node
       --  should be ignored except the Case_Item ones.
+
+      In_Pack     : Boolean := False;
+      Pack_Attrs  : GPR2.Project.Attribute.Set.Object;
 
       -------------------
       -- Get_Term_List --
@@ -557,6 +561,10 @@ package body GPR2.Parser.Project is
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
+         procedure Parse_Package_Decl_Kind (Node : Package_Decl)
+           with Pre => Is_Open;
+         --  Parse variable declaration and append it into the Vars set
+
          procedure Parse_Case_Construction (Node : Case_Construction)
            with Pre  => Is_Open,
                 Post => Case_Values.Length'Old = Case_Values.Length;
@@ -594,7 +602,11 @@ package body GPR2.Parser.Project is
                   Values => Values);
             end if;
 
-            Attrs.Insert (A.Name, A);
+            if In_Pack then
+               Pack_Attrs.Insert (A.Name, A);
+            else
+               Attrs.Insert (A.Name, A);
+            end if;
 
             if Present (Index) then
                --  ?? this is an attribute with an index
@@ -691,6 +703,38 @@ package body GPR2.Parser.Project is
             Is_Open := Is_Case_Item_Matches;
          end Parse_Case_Item;
 
+         -----------------------------
+         -- Parse_Package_Decl_Kind --
+         -----------------------------
+
+         procedure Parse_Package_Decl_Kind (Node : Package_Decl) is
+            Name : constant Identifier := F_Pkg_Name (Node);
+         begin
+            --  First clear the package attributes container
+
+            Pack_Attrs.Clear;
+
+            In_Pack := True;
+
+            Visit_Child (F_Pkg_Spec (Node));
+
+            In_Pack := False;
+
+            --  Insert the package definition into the final result
+
+            declare
+               P_Name : constant Name_Type :=
+                          Get_Name_Type (Single_Tok_Node (Name));
+            begin
+               Packs.Insert
+                 (P_Name, GPR2.Project.Pack.Create (P_Name, Pack_Attrs));
+            end;
+
+            --  Skip all nodes for this construct
+
+            Status := Over;
+         end Parse_Package_Decl_Kind;
+
          ------------------------------
          -- Parse_Variable_Decl_Kind --
          ------------------------------
@@ -747,6 +791,9 @@ package body GPR2.Parser.Project is
                when Variable_Decl_Kind =>
                   Parse_Variable_Decl_Kind (Variable_Decl (Node));
 
+               when Package_Decl_Kind =>
+                  Parse_Package_Decl_Kind (Package_Decl (Node));
+
                when Case_Construction_Kind =>
                   Parse_Case_Construction (Case_Construction (Node));
 
@@ -781,6 +828,7 @@ package body GPR2.Parser.Project is
 
          Attrs.Clear;
          Vars.Clear;
+         Packs.Clear;
 
          --  Re-Analyze the project given the new context
 

@@ -22,46 +22,15 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
+--  A list of packages
 
-with GPR2.Parser.Project.Set;
-with GPR2.Project.Attribute.Set;
-with GPR2.Project.Pack.Set;
-with GPR2.Project.Variable.Set;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
-with GPR2.Project.View;
+package GPR2.Project.Pack.Set is
 
-private package GPR2.Project.Definition is
+   package Set is
+     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object);
 
-   use type View.Id;
-   use type View.Object;
-   use type Parser.Project.Object;
+   subtype Object is Set.Map;
 
-   type Tree is tagged record
-      Project : Parser.Project.Object;
-      Imports : Parser.Project.Set.Object;
-   end record;
-
-   package Project_View_Store is
-     new Ada.Containers.Vectors (Positive, View.Object);
-
-   type Data is tagged record
-      Trees   : Tree;
-      Imports : Project_View_Store.Vector;
-      Attrs   : Project.Attribute.Set.Object;
-      Vars    : Project.Variable.Set.Object;
-      Packs   : Project.Pack.Set.Object;
-   end record;
-
-   function Register (Def : Data) return View.Object
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (Register'Result) = Def;
-
-   function Get (View : Project.View.Object) return Data
-     with Post => Get'Result.Trees.Project /= Parser.Project.Undefined;
-
-   procedure Set (View : Project.View.Object; Def : Data)
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (View) = Def;
-
-end GPR2.Project.Definition;
+end GPR2.Project.Pack.Set;
