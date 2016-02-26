@@ -5,6 +5,7 @@ langkit/lib
 langkit/src/gpr.qx
 lib
 obj
+*~
 
 # Python artifacts
 *.pyc
