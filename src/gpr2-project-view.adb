@@ -82,6 +82,16 @@ package body GPR2.Project.View is
    end Has_Variables;
 
    ----------
+   -- Kind --
+   ----------
+
+   function Kind (Self : Object) return Project_Kind is
+   begin
+      --  ?? for now just return the qualifier
+      return Definition.Get (Self).Trees.Project.Qualifier;
+   end Kind;
+
+   ----------
    -- Name --
    ----------
 
@@ -112,7 +122,7 @@ package body GPR2.Project.View is
    -- Qualifier --
    ---------------
 
-   function Qualifier (Self : Object) return Project_Qualifier is
+   function Qualifier (Self : Object) return Project_Kind is
    begin
       return Definition.Get (Self).Trees.Project.Qualifier;
    end Qualifier;

@@ -209,7 +209,7 @@ package body GPR2.Parser.Project is
                if Present (Qual) then
                   case AST.Kind (F_Qualifier (Qual)) is
                      when Abstract_Present_Kind =>
-                        Project.Qualifier := Q_Abstract;
+                        Project.Qualifier := K_Abstract;
 
                      when Qualifier_Names_Kind =>
                         declare
@@ -231,20 +231,20 @@ package body GPR2.Parser.Project is
                                          (Single_Tok_Node (Name_2)));
                         begin
                            if Str_1 = "library" and then Str_2 = "" then
-                              Project.Qualifier := Q_Library;
+                              Project.Qualifier := K_Library;
 
                            elsif Str_1 = "aggregate" and then Str_2 = "" then
-                              Project.Qualifier := Q_Aggregate;
+                              Project.Qualifier := K_Aggregate;
 
                            elsif Str_1 = "aggregate"
                              and then Str_2 = "library"
                            then
-                              Project.Qualifier := Q_Aggregate_Library;
+                              Project.Qualifier := K_Aggregate_Library;
 
                            elsif Str_1 = "configuration"
                              and then Str_2 = ""
                            then
-                              Project.Qualifier := Q_Configuration;
+                              Project.Qualifier := K_Configuration;
 
                            else
                               --  ?? an error
@@ -874,7 +874,7 @@ package body GPR2.Parser.Project is
    -- Qualifier --
    ---------------
 
-   function Qualifier (Self : Object) return Project_Qualifier is
+   function Qualifier (Self : Object) return Project_Kind is
    begin
       return Self.Qualifier;
    end Qualifier;

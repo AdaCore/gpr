@@ -111,19 +111,19 @@ package body GPR2.Project.Tree is
       ------------
 
       procedure Append (View : Project.View.Object) is
-         Qualifier : constant Project_Qualifier := View.Qualifier;
+         Qualifier : constant Project_Kind := View.Kind;
       begin
          if not Seen.Contains (View) then
             --  Check if it corresponds to the current filter
-            if (Qualifier = Q_Library
+            if (Qualifier = K_Library
                 and then Is_Set (Iter.Filter, F_Library))
-              or else (Qualifier = Q_Standard
+              or else (Qualifier = K_Standard
                        and then Is_Set (Iter.Filter, F_Standard))
-              or else (Qualifier = Q_Abstract
+              or else (Qualifier = K_Abstract
                        and then Is_Set (Iter.Filter, F_Abstract))
-              or else (Qualifier = Q_Aggregate
+              or else (Qualifier = K_Aggregate
                        and then Is_Set (Iter.Filter, F_Aggregate))
-              or else (Qualifier = Q_Aggregate_Library
+              or else (Qualifier = K_Aggregate_Library
                        and then Is_Set (Iter.Filter, F_Aggregate_Library))
             then
                Projects.Append (View);

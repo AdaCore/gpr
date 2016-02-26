@@ -54,8 +54,12 @@ package GPR2.Parser.Project is
    --  is called whenever a specific project has been impacted by the context
    --  change.
 
-   function Qualifier (Self : Object) return Project_Qualifier
+   function Qualifier (Self : Object) return Project_Kind
      with Pre => Self /= Undefined;
+   --  Returns the project qualifier if present when parsing. Returns
+   --  Q_Standard if no qualifier is present. Note that the actual project
+   --  kind may be different as computed based on the attributes present on
+   --  the project.
 
    function Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
@@ -89,7 +93,7 @@ private
    type Object is tagged record
       Name      : Unbounded_String;
       File      : Path_Name_Type;
-      Qualifier : Project_Qualifier := Q_Standard;
+      Qualifier : Project_Kind := K_Standard;
       Externals : Containers.Name_List;
       Imports   : Containers.Path_Name_List;
       Unit      : Analysis_Unit;

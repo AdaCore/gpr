@@ -47,13 +47,19 @@ package GPR2.Project.View is
    function Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
 
-   function Qualifier (Self : Object) return Project_Qualifier
+   function Qualifier (Self : Object) return Project_Kind
      with Pre => Self /= Undefined;
 
-   --  Imports
+   function Kind (Self : Object) return Project_Kind
+     with Pre  => Self /= Undefined,
+          Post => Kind'Result = Self.Qualifier
+                  or else Self.Qualifier = K_Standard;
+   --  The actual kind of the project file. This may be different of the
+   --  Qualifier is not specified.
 
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns True if the project has some imports
 
    --  Attributes
 

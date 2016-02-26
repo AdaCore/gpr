@@ -64,7 +64,7 @@ procedure Main is
    begin
       Text_IO.Put (Prj.Name & " ");
       Text_IO.Set_Col (10);
-      Text_IO.Put_Line (Prj.Qualifier'Img);
+      Text_IO.Put_Line (Prj.Kind'Img);
 
       if Prj.Has_Attributes then
          for A of Prj.Attributes loop

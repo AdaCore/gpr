@@ -37,9 +37,9 @@ private with Ada.Strings.Unbounded;
 
 package GPR2 is
 
-   type Project_Qualifier is
-     (Q_Configuration, Q_Abstract,
-      Q_Standard, Q_Library, Q_Aggregate, Q_Aggregate_Library);
+   type Project_Kind is
+     (K_Configuration, K_Abstract,
+      K_Standard, K_Library, K_Aggregate, K_Aggregate_Library);
 
    --
    --  Name / Value
