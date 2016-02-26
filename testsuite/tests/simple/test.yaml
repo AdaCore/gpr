@@ -1,0 +1,5 @@
+description:
+    Example testcase for the build_and_run driver.
+driver: build_and_run
+project_file: simple
+main: main
