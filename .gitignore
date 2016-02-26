@@ -1,0 +1,14 @@
+# Build artifacts
+langkit/build
+langkit/install
+langkit/lib
+langkit/src/gpr.qx
+lib
+obj
+
+# Python artifacts
+*.pyc
+
+# Testsuite output
+out
+testsuite/out
