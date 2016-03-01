@@ -36,6 +36,12 @@ private package GPR2.Project.Definition is
    use type View.Id;
    use type View.Object;
    use type Parser.Project.Object;
+   use type Ada.Containers.Count_Type;
+
+   --  Tree contains the Project parser object. This is shared by all projects
+   --  view in all loaded tree. That is there is always a single instance of
+   --  the project parser object.
+   --  Imports contains the list of all imported projects for Project.
 
    type Tree is tagged record
       Project : Parser.Project.Object;
@@ -44,6 +50,11 @@ private package GPR2.Project.Definition is
 
    package Project_View_Store is
      new Ada.Containers.Vectors (Positive, View.Object);
+
+   --  Data contains a project view data. We have all the attributes, variables
+   --  and pakcages with the final values as parsed with the project's context
+   --  in the given tree. Imports here are the project views corresponding to
+   --  the imports in Trees.
 
    type Data is tagged record
       Trees   : Tree;
@@ -56,12 +67,15 @@ private package GPR2.Project.Definition is
    function Register (Def : Data) return View.Object
      with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
           Post => Get (Register'Result) = Def;
+   --  Register a new project definition, returns the corresponding view
 
    function Get (View : Project.View.Object) return Data
      with Post => Get'Result.Trees.Project /= Parser.Project.Undefined;
+   --  Returns the project data definition for the given view
 
    procedure Set (View : Project.View.Object; Def : Data)
      with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
           Post => Get (View) = Def;
+   --  Set the project data defintion for the given view
 
 end GPR2.Project.Definition;

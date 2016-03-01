@@ -53,10 +53,15 @@ package GPR2.Project.Tree is
 
    function Has_Context (Self : Object) return Boolean
      with Pre  => Self /= Undefined;
+   --  Returns True if the project tree has some context. If any of the project
+   --  in the tree has some external variables then a context is present. A
+   --  project without context is fully static has it does not reference any
+   --  external (and so modifiable) variables.
 
    function Context (Self : Object) return Context.Object
      with Pre  => Self /= Undefined,
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
+   --  Returns the Context for the given project tree
 
    procedure Set_Context
      (Self    : in out Object;
@@ -64,6 +69,10 @@ package GPR2.Project.Tree is
       Changed : access procedure (Project : View.Object) := null)
      with Pre  => Self /= Undefined,
           Post => Self.Context = Context;
+   --  Set the context for the project tree. The callback Changed is called for
+   --  any project view which is impacted by this change of context. That is,
+   --  if the project view does reference directly or indirectly an external
+   --  variable.
 
    --  Iterator
 
@@ -99,6 +108,10 @@ package GPR2.Project.Tree is
       Filter : Project_Filter := F_Default)
       return Project_Iterator.Forward_Iterator'Class
      with Pre => Kind /= I_Invalid;
+   --  Iterate over all project views in the tree given the iterator kind (only
+   --  the project with or without imports) and the filter which can be used to
+   --  iterate over only some specific projects (only the library projects for
+   --  example).
 
 private
 

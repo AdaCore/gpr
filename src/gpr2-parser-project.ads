@@ -63,9 +63,11 @@ package GPR2.Parser.Project is
 
    function Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
+   --  The name of the project file
 
    function Path_Name (Self : Object) return Path_Name_Type
      with Pre => Self /= Undefined;
+   --  The full path name of the project file
 
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self /= Undefined;
@@ -73,12 +75,15 @@ package GPR2.Parser.Project is
 
    function Imports (Self : Object) return Containers.Path_Name_List
      with Pre => Self /= Undefined;
+   --  Returns the list of path name for all imported projects
 
    function Has_Externals (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns True if the project has some external variable reference
 
    function Externals (Self : Object) return Containers.Name_List
      with Pre => Self /= Undefined;
+   --  Returns the list of all external variables
 
 private
 

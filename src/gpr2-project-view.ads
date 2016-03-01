@@ -23,7 +23,10 @@
 ------------------------------------------------------------------------------
 
 --  A specific view of a project as seen in a tree. A project view is retreived
---  from a tree, see Project.Tree package.
+--  from a tree, see Project.Tree package. A project view differ from a
+--  standard project object from the parser as it does access to the actual
+--  attributes, variables and packages values depending on the current context
+--  for the corresponding tree.
 
 with Ada.Containers;
 
@@ -37,18 +40,22 @@ package GPR2.Project.View is
 
    type Object is tagged private;
 
-   function "<" (Left, Right : View.Object) return Boolean;
-
    Undefined : constant Object;
+
+   function "<" (Left, Right : View.Object) return Boolean;
+   --  Ordering a project object to be able to build an ordered map for example
 
    function Path_Name (Self : Object) return Path_Name_Type
      with Pre => Self /= Undefined;
+   --  Full pathname of the corresponding project file
 
    function Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
+   --  The name of the project
 
    function Qualifier (Self : Object) return Project_Kind
      with Pre => Self /= Undefined;
+   --  The qualifier as specified in the project file
 
    function Kind (Self : Object) return Project_Kind
      with Pre  => Self /= Undefined,
@@ -65,25 +72,34 @@ package GPR2.Project.View is
 
    function Has_Attributes (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns true if the project view has some attributes defined
 
    function Attributes (Self : Object) return Attribute.Set.Object
      with Post => (if Self.Has_Attributes then Attributes'Result.Length > 0);
+   --  Get the list of attributes, possibly an empty list if it does not
+   --  contain attributes.
 
    --  Variables
 
    function Has_Variables (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns true if the project view has some variables defined
 
    function Variables (Self : Object) return Variable.Set.Object
      with Post => (if Self.Has_Variables then Variables'Result.Length > 0);
+   --  Get the list of variables, possibly an empty list if it does not
+   --  contain variables.
 
    --  Packages
 
    function Has_Packages (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns true if the project view has some packages defined
 
    function Packages (Self : Object) return Pack.Set.Object
      with Post => (if Self.Has_Packages then Packages'Result.Length > 0);
+   --  Get the list of packages, possibly an empty list if it does not
+   --  contain packages.
 
    --  Following routines are for internal use only and convert from a View
    --  unique Id.

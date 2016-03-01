@@ -27,14 +27,18 @@ limited with GPR2.Parser.Project;
 private package GPR2.Parser.Registry is
 
    function Exists (Filename : Path_Name_Type) return Boolean;
+   --  Returns True if the project file given by its full path-name is known in
+   --  the registry.
 
    procedure Register
      (Filename : Path_Name_Type; Project : Parser.Project.Object)
      with
        Pre  => not Exists (Filename),
        Post => Exists (Filename);
+   --  Register a new project syntactic tree for Pathname
 
    function Get (Filename : Path_Name_Type) return Project.Object
      with Pre => Exists (Filename);
+   --  Returns the syntactic tree for project Pathname
 
 end GPR2.Parser.Registry;

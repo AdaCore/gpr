@@ -57,21 +57,26 @@ package GPR2.Project.Name_Values is
 
    function Kind (Self : Object'Class) return Kind_Type
      with Pre => Object (Self) /= Undefined;
+   --  Returns the Kind for the Name/Values pair object
 
    function Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
+   --  Returns the name of the Name/Value pair object
 
    function Count_Values (Self : Object) return Containers.Count_Type
      with Pre  => Self /= Undefined,
           Post =>
             (if Self.Kind = K_Single then Count_Values'Result = 1);
+   --  Returns the number of values for the Name/Values pair object
 
    function Values (Self : Object) return Containers.Value_List
      with Pre  => Self /= Undefined,
           Post => Values'Result.Length = Self.Count_Values;
+   --  Returns the values for the Name/Values pair object
 
    function Value (Self : Object) return Value_Type
      with Pre  => Self /= Undefined and then Self.Kind = K_Single;
+   --  Returns the value for the Name/Values pair object
 
 private
 
