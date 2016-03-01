@@ -1,7 +1,7 @@
 
 with "first.gpr";
 
-abstract project Demo is
+project Demo is
    type Me is ("one", "two");
    Dir1 := "toto";
    Dir2 := external ("OS");

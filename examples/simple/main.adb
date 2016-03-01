@@ -26,6 +26,7 @@ with Ada.Text_IO;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Variable.Set;
 with GPR2.Context;
 
 procedure Main is
@@ -53,6 +54,7 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
       use GPR2.Project.Attribute.Set.Set;
+      use GPR2.Project.Variable.Set.Set;
    begin
       Text_IO.Put (Prj.Name & " ");
       Text_IO.Set_Col (10);
@@ -73,7 +75,7 @@ procedure Main is
 
          if Prj.Has_Variables then
             for V in Prj.Variables.Iterate loop
-               Text_IO.Put ("V:   " & String (Key (v)));
+               Text_IO.Put ("V:   " & String (Key (V)));
                Text_IO.Put (" -> ");
                Text_IO.Put (String (Element (V).Value));
                Text_IO.New_Line;
