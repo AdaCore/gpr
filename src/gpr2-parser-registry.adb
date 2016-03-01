@@ -43,18 +43,18 @@ package body GPR2.Parser.Registry is
    -- Exists --
    ------------
 
-   function Exists (Filename : Path_Name_Type) return Boolean is
+   function Exists (Pathname : Path_Name_Type) return Boolean is
    begin
-      return Store.Contains (Filename);
+      return Store.Contains (Pathname);
    end Exists;
 
    ---------
    -- Get --
    ---------
 
-   function Get (Filename : Path_Name_Type) return Project.Object is
+   function Get (Pathname : Path_Name_Type) return Project.Object is
    begin
-      return Store (Filename);
+      return Store (Pathname);
    end Get;
 
    --------------
@@ -62,9 +62,9 @@ package body GPR2.Parser.Registry is
    --------------
 
    procedure Register
-     (Filename : Path_Name_Type; Project : Parser.Project.Object) is
+     (Pathname : Path_Name_Type; Project : Parser.Project.Object) is
    begin
-      Store.Insert (Filename, Project);
+      Store.Insert (Pathname, Project);
    end Register;
 
 end GPR2.Parser.Registry;

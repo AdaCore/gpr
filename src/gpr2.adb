@@ -22,6 +22,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Environment_Variables;
+
+with GNAT.OS_Lib;
+
 package body GPR2 is
 
    ------------
@@ -29,10 +33,48 @@ package body GPR2 is
    ------------
 
    function Create (Name : Name_Type) return Path_Name_Type is
+      use Ada;
+      use GNAT;
+
+      use type OS_Lib.String_Access;
    begin
-      return Path_Name_Type'
-        (As_Is => To_Unbounded_String (Name),
-         Value => To_Unbounded_String (Name));
+      --  If the file exists or an absolute path has been specificed or there
+      --  is no ADA_PROJECT_PATH, just create the Path_Name_Type using the
+      --  given Name.
+
+      if OS_Lib.Is_Absolute_Path (Name)
+        or else OS_Lib.Is_Regular_File (Name)
+        or else not Environment_Variables.Exists ("ADA_PROJECT_PATH")
+      then
+         return Path_Name_Type'
+           (As_Is => To_Unbounded_String (Name),
+            Value => To_Unbounded_String (OS_Lib.Normalize_Pathname (Name)));
+
+      else
+         --  Otherwise, let's try to check Name in ADA_PROJECT_PATH
+
+         declare
+            File : OS_Lib.String_Access :=
+                     OS_Lib.Locate_Regular_File
+                       (Name,
+                        Environment_Variables.Value ("ADA_PROJECT_PATH"));
+            N    : Unbounded_String;
+         begin
+            if File = null then
+               return Path_Name_Type'
+                 (As_Is => To_Unbounded_String (Name),
+                  Value => To_Unbounded_String (Name));
+
+            else
+               N := To_Unbounded_String (File.all);
+               OS_Lib.Free (File);
+               return Path_Name_Type'
+                 (As_Is => N,
+                  Value => To_Unbounded_String
+                    (OS_Lib.Normalize_Pathname (To_String (N))));
+            end if;
+         end;
+      end if;
    end Create;
 
    -------------
@@ -56,7 +98,7 @@ package body GPR2 is
    -- Value --
    -----------
 
-   function Value (File : Path_Name_Type) return Name_Type is
+   function Value (File : Path_Name_Type) return Full_Path_Name is
    begin
       return To_String (File.Value);
    end Value;

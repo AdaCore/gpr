@@ -23,6 +23,8 @@
 ------------------------------------------------------------------------------
 
 with Ada.Text_IO;
+with Ada.Directories;
+
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -45,7 +47,9 @@ procedure Main is
 
    procedure Changed_Callback (Prj : Project.View.Object) is
    begin
-      Text_IO.Put_Line (">>> Changed_Callback for " & Value (Prj.Path_Name));
+      Text_IO.Put_Line
+        (">>> Changed_Callback for "
+         & Directories.Simple_Name (Value (Prj.Path_Name)));
    end Changed_Callback;
 
    -------------

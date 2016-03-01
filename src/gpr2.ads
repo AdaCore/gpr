@@ -64,9 +64,17 @@ package GPR2 is
    --  A project path-name, will always be normalized according to the running
    --  target.
 
-   function Create (Name : Name_Type) return Path_Name_Type;
+   subtype Full_Path_Name is String
+     with Dynamic_Predicate =>
+       (for some C of Full_Path_Name => C in '/' | '\');
 
-   function Value (File : Path_Name_Type) return Name_Type;
+   function Create (Name : Name_Type) return Path_Name_Type;
+   --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
+   --  the Name is not found in the current working directly, the project file
+   --  is looked for in the ADA_PROJECT_PATH.
+
+   function Value (File : Path_Name_Type) return Full_Path_Name;
+   --  Returns the full pathname for the given Path_Name_Type
 
 private
 
