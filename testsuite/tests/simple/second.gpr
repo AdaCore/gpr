@@ -1,0 +1,4 @@
+
+aggregate library project second is
+   for Project_Files use ("first.gpr");
+end second;

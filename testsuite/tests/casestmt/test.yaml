@@ -1,0 +1,5 @@
+description:
+    check for case statement
+driver: build_and_run
+project_file: casestmt.gpr
+main: main

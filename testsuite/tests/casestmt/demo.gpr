@@ -1,0 +1,29 @@
+
+project Demo is
+   type OS_Kind is ("Windows", "Linux");
+   OS : OS_Kind := external ("OS", "Windows");
+
+   type Build_Kind is ("Debug", "Production");
+   Build : Build_Kind := external ("BUILD", "Production");
+
+   case OS is
+      when "Windows" =>
+         for Source_Dirs ("Ada") use (".", "src-win");
+         case Build is
+            when "Debug" =>
+               for Object_Dir use "obj-wdeb";
+            when "Production" =>
+               for Object_Dir use "obj-wprod";
+         end case;
+      when "Linux" =>
+         for Source_Dirs ("Ada") use (".", "src-lnx");
+         case Build is
+            when "Debug" =>
+               for Object_Dir use "obj-ldeb";
+            when "Production" =>
+               for Object_Dir use "obj-lprod";
+         end case;
+   end case;
+
+   for Main use ("main.adb");
+end Demo;

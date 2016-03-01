@@ -1,0 +1,5 @@
+description:
+    check for packages
+driver: build_and_run
+project_file: packages.gpr
+main: main

@@ -1,0 +1,8 @@
+Demo     K_STANDARD
+   Main -> main.adb
+   Object_Dir -> obj
+   Source_Dirs (Ada) -> src
+ Binder
+   Default_Switches (Ada) -> -Es
+ Compiler
+   Default_Switches (C) -> -g

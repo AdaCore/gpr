@@ -1,0 +1,41 @@
+>>> Changed_Callback for demo.gpr
+>>> Changed_Callback for demo.gpr
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> . toto Linux
+V:   Dir1 -> toto
+V:   Dir2 -> Linux
+V:   Dir3 -> one
+
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> . toto Windows
+V:   Dir1 -> toto
+V:   Dir2 -> Windows
+V:   Dir3 -> one
+
+>>> Changed_Callback for demo.gpr
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> . toto Linux-2
+V:   Dir1 -> toto
+V:   Dir2 -> Linux-2
+V:   Dir3 -> one
+
+**************** Iterator Prj1
+first    K_LIBRARY
+Demo     K_STANDARD
+   is root
+**************** Iterator Prj2
+second   K_AGGREGATE_LIBRARY
+first    K_LIBRARY
+Demo     K_STANDARD
+**************** Iterator Prj3
+first    K_LIBRARY
+**************** Iterator Prj4
+second   K_AGGREGATE_LIBRARY
+first    K_LIBRARY
+Demo     K_STANDARD

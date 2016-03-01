@@ -1,0 +1,8 @@
+Demo     K_STANDARD
+   Main -> main.adb
+   Object_Dir -> obj-lprod
+   Source_Dirs -> . src-lnx
+Demo     K_STANDARD
+   Main -> main.adb
+   Object_Dir -> obj-wprod
+   Source_Dirs -> . src-win
