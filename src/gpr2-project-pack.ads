@@ -45,6 +45,10 @@ package GPR2.Project.Pack is
      with Pre => Self /= Undefined;
    --  Returns the name of the project
 
+   function Has_Attributes (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns true if the package has some attributes defined
+
    function Attributes (Self : Object) return Attribute.Set.Object
      with Pre => Self /= Undefined;
    --  Returns all attributes defined for the package

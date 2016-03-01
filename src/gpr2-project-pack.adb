@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Containers;
+
 package body GPR2.Project.Pack is
 
    ----------------
@@ -43,6 +45,16 @@ package body GPR2.Project.Pack is
    begin
       return Object'(To_Unbounded_String (Name), Attributes);
    end Create;
+
+   --------------------
+   -- Has_Attributes --
+   --------------------
+
+   function Has_Attributes (Self : Object) return Boolean is
+      use type Containers.Count_Type;
+   begin
+      return Self.Attrs.Length > 0;
+   end Has_Attributes;
 
    ----------
    -- Name --
