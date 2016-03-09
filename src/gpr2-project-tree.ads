@@ -49,6 +49,19 @@ package GPR2.Project.Tree is
      with Post => Root_Project'Result /= View.Undefined;
    --  Returns the root project for the given tree
 
+   function View_For
+     (Self : Object;
+      Name : Name_Type;
+      Ctx  : Context.Object) return View.Object;
+   --  Returns the project's view in the tree which correspond to project
+   --  name and that is matching the context. The context is needed as in
+   --  the tree the same project can have different view with different context
+   --  (e.g. under an aggregate project which is redefining some external
+   --  variables). Given the context we are not sure of the uniqueness of the
+   --  view, but this does not matters as all views of the same project with
+   --  the same context will have the exact same definition.
+   --  Returns Undefined if the view was not found.
+
    --  Context
 
    function Has_Context (Self : Object) return Boolean

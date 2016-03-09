@@ -24,6 +24,7 @@
 
 with Ada.Containers.Ordered_Sets; use Ada;
 with Ada.Environment_Variables;
+with Ada.Strings.Equal_Case_Insensitive;
 
 with GPR2.Project.Definition;
 with GPR2.Parser.Project;
@@ -354,5 +355,34 @@ package body GPR2.Project.Tree is
          end;
       end loop;
    end Set_Context;
+
+   --------------
+   -- View_For --
+   --------------
+
+   function View_For
+     (Self : Object;
+      Name : Name_Type;
+      Ctx  : GPR2.Context.Object) return View.Object
+   is
+      use type GPR2.Context.Binary_Signature;
+      Tree : Object := Self;
+   begin
+      for View of Tree loop
+         if Strings.Equal_Case_Insensitive (View.Name, Name) then
+            declare
+               P_Data : constant Definition.Data := Definition.Get (View);
+               P_Sig  : constant GPR2.Context.Binary_Signature :=
+                          Ctx.Signature (P_Data.Trees.Project.Externals);
+            begin
+               if View.Signature = P_Sig then
+                  return View;
+               end if;
+            end;
+         end if;
+      end loop;
+
+      return View.Undefined;
+   end View_For;
 
 end GPR2.Project.Tree;
