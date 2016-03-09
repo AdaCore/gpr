@@ -1,0 +1,5 @@
+description:
+    simple test to check attribute and variable references
+driver: build_and_run
+project_file: refs
+main: main

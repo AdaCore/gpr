@@ -341,9 +341,17 @@ package body GPR2.Parser.Project is
       function Parser (Node : GPR_Node) return Visit_Status;
       --  Actual parser callabck for the project
 
-      function Get_Variable_Value
-        (Node : Variable_Reference) return Value_Type;
+      function Get_Variable_Values
+        (Node : Variable_Reference) return Containers.Value_List;
       --  Parse and return the value for the given variable reference
+
+      function Get_Attribute_Ref
+        (Project : Name_Type; Node : Attribute_Reference)
+         return Containers.Value_List;
+
+      function Get_Variable_Ref
+        (Project : Name_Type; Node : Identifier)
+         return Containers.Value_List;
 
       function Get_Term_List
         (Node : Term_List) return Containers.Value_List
@@ -367,6 +375,27 @@ package body GPR2.Parser.Project is
 
       In_Pack     : Boolean := False;
       Pack_Attrs  : GPR2.Project.Attribute.Set.Object;
+
+      -----------------------
+      -- Get_Attribute_Ref --
+      -----------------------
+
+      function Get_Attribute_Ref
+        (Project : Name_Type; Node : Attribute_Reference)
+         return Containers.Value_List
+      is
+         Name : constant Name_Type :=
+                  Get_Name_Type (Single_Tok_Node (F_Attribute_Name (Node)));
+         View : constant GPR2.Project.View.Object :=
+                  GPR2.Project.Tree.View_For (Tree, Project, Ctx);
+      begin
+         if View.Has_Attributes (Name) then
+            return View.Attributes (Name).First_Element.Values;
+
+         else
+            return Containers.Value_Type_List.Empty_Vector;
+         end if;
+      end Get_Attribute_Ref;
 
       -------------------
       -- Get_Term_List --
@@ -398,12 +427,12 @@ package body GPR2.Parser.Project is
 
             procedure Handle_Variable (Node : Variable_Reference)
               with Pre  => Present (Node),
-                   Post => Result.Length'Old + 1 = Result.Length;
+                   Post => Result.Length'Old < Result.Length;
             --  A variable
 
             procedure Handle_External_Variable (Node : External_Reference)
               with Pre  => Present (Node),
-                   Post => Result.Length'Old + 1 = Result.Length;
+                   Post => Result.Length'Old < Result.Length;
             --  An external variable
 
             ------------------------------
@@ -457,8 +486,15 @@ package body GPR2.Parser.Project is
             ---------------------
 
             procedure Handle_Variable (Node : Variable_Reference) is
+               Values : constant Containers.Value_List :=
+                          Get_Variable_Values (Node);
             begin
-               Result.Append (String (Get_Variable_Value (Node)));
+               if Values.Length = 0 then
+                  Result.Append ("");
+
+               else
+                  Result.Append (Values);
+               end if;
             end Handle_Variable;
 
          begin
@@ -484,24 +520,52 @@ package body GPR2.Parser.Project is
          return Result;
       end Get_Term_List;
 
-      ------------------------
-      -- Get_Variable_Value --
-      ------------------------
+      ----------------------
+      -- Get_Variable_Ref --
+      ----------------------
 
-      function Get_Variable_Value
-        (Node : Variable_Reference) return Value_Type
+      function Get_Variable_Ref
+        (Project : Name_Type; Node : Identifier)
+         return Containers.Value_List
+      is
+         Name : constant Name_Type := Get_Name_Type (Node);
+         View : constant GPR2.Project.View.Object :=
+                  GPR2.Project.Tree.View_For (Tree, Project, Ctx);
+      begin
+         if View.Has_Variables (Name) then
+            return View.Variables (Name).First_Element.Values;
+         else
+            return Containers.Value_Type_List.Empty_Vector;
+         end if;
+      end Get_Variable_Ref;
+
+      -------------------------
+      -- Get_Variable_Values --
+      -------------------------
+
+      function Get_Variable_Values
+        (Node : Variable_Reference) return Containers.Value_List
       is
          use Langkit_Support.Tokens;
-         Name_1 : constant Identifier := F_Variable_Name1 (Node);
-         Name   : constant Name_Type :=
-                    Image (F_Tok (Single_Tok_Node (Name_1)));
+         Name_1  : constant Identifier := F_Variable_Name1 (Node);
+         Name_2  : constant Identifier := F_Variable_Name2 (Node);
+         Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
+         Name    : constant Name_Type :=
+                     Image (F_Tok (Single_Tok_Node (Name_1)));
       begin
-         if Vars.Contains (Name) then
-            return Vars (Name).Values.First_Element;
+         if Present (Att_Ref) then
+            return Get_Attribute_Ref (Name, Att_Ref);
+
+         elsif Present (Name_2) then
+            return Get_Variable_Ref (Name, Name_2);
+
+         elsif Vars.Contains (Name) then
+            return Vars (Name).Values;
+
          else
             raise Constraint_Error with "variable " & Name & " does not exist";
          end if;
-      end Get_Variable_Value;
+      end Get_Variable_Values;
 
       ------------
       -- Parser --
@@ -593,7 +657,8 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Case_Construction (Node : Case_Construction) is
             Var   : constant Variable_Reference := F_Var_Ref (Node);
-            Value : constant Value_Type := Get_Variable_Value (Var);
+            Value : constant Value_Type :=
+                      Get_Variable_Values (Var).First_Element;
          begin
             Case_Values.Prepend (Value);
             --  Set status to close for now, this will be open when a

@@ -1,0 +1,6 @@
+
+abstract project shared is
+   Other_SRC := "toto";
+   for Object_Dir use "shared_obj";
+   All_Mains := ("one.adb", "two.adb");
+end shared;

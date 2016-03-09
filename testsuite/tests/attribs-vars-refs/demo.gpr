@@ -1,0 +1,15 @@
+
+with "shared.gpr";
+
+project Demo is
+   type Me is ("one", "two");
+   Dir1 := "toto";
+   Dir2 := external ("OS");
+   Dir3 : Me := "one";
+   Var1 := shared.other_src;
+   Drs  := ("here", "there");
+
+   for Source_Dirs use (".", Dir1, Dir2) & Drs;
+   for Object_Dir use shared'Object_Dir;
+   for Main use SHARED.all_mains;
+end Demo;
