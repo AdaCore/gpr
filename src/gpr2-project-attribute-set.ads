@@ -24,11 +24,55 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
+private with Ada.Strings.Unbounded;
+
 package GPR2.Project.Attribute.Set is
 
    package Set is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object);
 
-   subtype Object is Set.Map;
+   type Object is new Set.Map with private;
+
+   subtype Cursor is Set.Cursor;
+
+   function Iterate_Filter
+     (Self     : Object;
+      Name     : String := "";
+      Language : String := "")
+      return Set.Map_Iterator_Interfaces.Reversible_Iterator'Class;
+   --  An iterator on an attribute set which can filter out based on the name
+   --  or the language (or both) of the attribute.
+
+   function Filter
+     (Self     : Object;
+      Name     : String := "";
+      Language : String := "") return Object
+     with Post => (if Name = "" and then Language = ""
+                   then Filter'Result = Self);
+   --  Returns an attribute set containing only the attribute corresponding to
+   --  the given filter.
+
+private
+
+   use Ada.Strings.Unbounded;
+
+   type Object is new Set.Map with null record;
+
+   type Iterator is
+     new Set.Map_Iterator_Interfaces.Reversible_Iterator with
+   record
+      Object   : Set.Map;
+      Position : Cursor;
+      Name     : Unbounded_String;
+      Language : Unbounded_String;
+   end record;
+
+   overriding function First (Object : Iterator) return Cursor;
+   overriding function Last  (Object : Iterator) return Cursor;
+
+   overriding function Next
+     (Object : Iterator; Position : Cursor) return Cursor;
+   overriding function Previous
+     (Object : Iterator; Position : Cursor) return Cursor;
 
 end GPR2.Project.Attribute.Set;
