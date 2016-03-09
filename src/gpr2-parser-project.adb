@@ -391,7 +391,7 @@ package body GPR2.Parser.Project is
          function Parser (Node : GPR_Node) return Visit_Status is
             Status : Visit_Status := Into;
 
-            procedure Handle_String   (Node : String_Literal)
+            procedure Handle_String (Node : String_Literal)
               with Pre  => Present (Node),
                    Post => Result.Length'Old + 1 = Result.Length;
             --  A simple static string
