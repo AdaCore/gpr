@@ -90,9 +90,15 @@ package body GPR2.Project.View is
    -- Has_Variables --
    -------------------
 
-   function Has_Variables (Self : Object) return Boolean is
+   function Has_Variables
+     (Self : Object;
+      Name : String := "") return Boolean is
    begin
-      return Definition.Get (Self).Vars.Length > 0;
+      if Name = "" then
+         return Definition.Get (Self).Vars.Length > 0;
+      else
+         return Definition.Get (Self).Vars.Contains (Name);
+      end if;
    end Has_Variables;
 
    ----------
@@ -154,9 +160,18 @@ package body GPR2.Project.View is
    -- Variables --
    ---------------
 
-   function Variables (Self : Object) return Variable.Set.Object is
+   function Variables
+     (Self : Object;
+      Name : String := "") return Variable.Set.Object is
    begin
-      return Definition.Get (Self).Vars;
+      if Name = "" then
+         return Definition.Get (Self).Vars;
+
+      else
+         return Result : Variable.Set.Object do
+            Result.Insert (Name, Definition.Get (Self).Vars (Name));
+         end return;
+      end if;
    end Variables;
 
 end GPR2.Project.View;

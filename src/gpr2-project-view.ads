@@ -93,11 +93,15 @@ package GPR2.Project.View is
 
    --  Variables
 
-   function Has_Variables (Self : Object) return Boolean
+   function Has_Variables
+     (Self : Object;
+      Name : String := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some variables defined
 
-   function Variables (Self : Object) return Variable.Set.Object
+   function Variables
+     (Self : Object;
+      Name : String := "") return Variable.Set.Object
      with Post => (if Self.Has_Variables then Variables'Result.Length > 0);
    --  Get the list of variables, possibly an empty list if it does not
    --  contain variables.
