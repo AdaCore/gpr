@@ -23,13 +23,16 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Strings.Less_Case_Insensitive;
 
 private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Attribute.Set is
 
-   package Set is
-     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object);
+   --  The attribute name must not be case-sensitive
+
+   package Set is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Object, Ada.Strings.Less_Case_Insensitive);
 
    type Object is new Set.Map with private;
 
