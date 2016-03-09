@@ -30,9 +30,12 @@ package body GPR2.Project.View is
    -- Attributes --
    ----------------
 
-   function Attributes (Self : Object) return Attribute.Set.Object is
+   function Attributes
+     (Self     : Object;
+      Name     : String := "";
+      Language : String := "") return Attribute.Set.Object is
    begin
-      return Definition.Get (Self).Attrs;
+      return Definition.Get (Self).Attrs.Filter (Name, Language);
    end Attributes;
 
    -------------
@@ -48,9 +51,20 @@ package body GPR2.Project.View is
    -- Has_Attributes --
    --------------------
 
-   function Has_Attributes (Self : Object) return Boolean is
+   function Has_Attributes
+     (Self     : Object;
+      Name     : String := "";
+      Language : String := "") return Boolean is
    begin
-      return Definition.Get (Self).Attrs.Length > 0;
+      if Name = "" and then Language = "" then
+         return Definition.Get (Self).Attrs.Length > 0;
+
+      elsif Language = "" then
+         return Definition.Get (Self).Attrs.Contains (Name);
+
+      else
+         return Attributes (Self, Name, Language).Length > 0;
+      end if;
    end Has_Attributes;
 
    -----------------

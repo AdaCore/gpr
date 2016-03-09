@@ -30,9 +30,12 @@ package body GPR2.Project.Pack is
    -- Attributes --
    ----------------
 
-   function Attributes (Self : Object) return Attribute.Set.Object is
+   function Attributes
+     (Self     : Object;
+      Name     : String := "";
+      Language : String := "") return Attribute.Set.Object is
    begin
-      return Self.Attrs;
+      return Self.Attrs.Filter (Name, Language);
    end Attributes;
 
    ------------
@@ -50,10 +53,21 @@ package body GPR2.Project.Pack is
    -- Has_Attributes --
    --------------------
 
-   function Has_Attributes (Self : Object) return Boolean is
+   function Has_Attributes
+     (Self     : Object;
+      Name     : String := "";
+      Language : String := "") return Boolean is
       use type Containers.Count_Type;
    begin
-      return Self.Attrs.Length > 0;
+      if Name = "" and then Language = "" then
+         return Self.Attrs.Length > 0;
+
+      elsif Language = "" then
+         return Self.Attrs.Contains (Name);
+
+      else
+         return Attributes (Self, Name, Language).Length > 0;
+      end if;
    end Has_Attributes;
 
    ----------
