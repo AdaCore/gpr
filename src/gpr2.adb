@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Environment_Variables;
 
 with GNAT.OS_Lib;
@@ -36,19 +37,27 @@ package body GPR2 is
       use Ada;
       use GNAT;
 
+      GPR_Name : constant Name_Type :=
+                   (if Directories.Extension (Name) = "gpr"
+                    then Name
+                    else Directories.Compose
+                      (Name => Name, Extension => "gpr"));
+
       use type OS_Lib.String_Access;
+
    begin
       --  If the file exists or an absolute path has been specificed or there
       --  is no ADA_PROJECT_PATH, just create the Path_Name_Type using the
       --  given Name.
 
-      if OS_Lib.Is_Absolute_Path (Name)
-        or else OS_Lib.Is_Regular_File (Name)
+      if OS_Lib.Is_Absolute_Path (GPR_Name)
+        or else OS_Lib.Is_Regular_File (GPR_Name)
         or else not Environment_Variables.Exists ("ADA_PROJECT_PATH")
       then
          return Path_Name_Type'
-           (As_Is => To_Unbounded_String (Name),
-            Value => To_Unbounded_String (OS_Lib.Normalize_Pathname (Name)));
+           (As_Is => To_Unbounded_String (GPR_Name),
+            Value => To_Unbounded_String
+                       (OS_Lib.Normalize_Pathname (GPR_Name)));
 
       else
          --  Otherwise, let's try to check Name in ADA_PROJECT_PATH
@@ -56,18 +65,19 @@ package body GPR2 is
          declare
             File : OS_Lib.String_Access :=
                      OS_Lib.Locate_Regular_File
-                       (Name,
+                       (GPR_Name,
                         Environment_Variables.Value ("ADA_PROJECT_PATH"));
             N    : Unbounded_String;
          begin
             if File = null then
                return Path_Name_Type'
-                 (As_Is => To_Unbounded_String (Name),
-                  Value => To_Unbounded_String (Name));
+                 (As_Is => To_Unbounded_String (GPR_Name),
+                  Value => To_Unbounded_String (GPR_Name));
 
             else
                N := To_Unbounded_String (File.all);
                OS_Lib.Free (File);
+
                return Path_Name_Type'
                  (As_Is => N,
                   Value => To_Unbounded_String
