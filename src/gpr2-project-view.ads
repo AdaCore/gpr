@@ -41,6 +41,8 @@ package GPR2.Project.View is
 
    type Object is tagged private;
 
+   subtype Project_View is Object;
+
    Undefined : constant Object;
 
    function "<" (Left, Right : View.Object) return Boolean;

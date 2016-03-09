@@ -36,6 +36,8 @@ package GPR2.Parser.Project is
 
    type Object is tagged private;
 
+   subtype Project_Type is Object;
+
    Undefined : constant Object;
 
    function Load (Filename : Path_Name_Type) return Object;

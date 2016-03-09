@@ -41,6 +41,8 @@ package GPR2.Context is
    --  tree. This context corresponds to all values of external variables found
    --  in a project tree.
 
+   subtype Context_Type is Object;
+
    Empty : constant Object;
 
    subtype Binary_Signature is MD5.Binary_Message_Digest;

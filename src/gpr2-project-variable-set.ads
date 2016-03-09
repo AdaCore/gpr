@@ -34,4 +34,6 @@ package GPR2.Project.Variable.Set is
 
    subtype Object is Set.Map;
 
+   subtype Variable_Set is Object;
+
 end GPR2.Project.Variable.Set;

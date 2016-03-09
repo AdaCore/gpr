@@ -36,6 +36,8 @@ package GPR2.Project.Attribute.Set is
 
    type Object is new Set.Map with private;
 
+   subtype Attribute_Set is Object;
+
    subtype Cursor is Set.Cursor;
 
    function Iterate_Filter

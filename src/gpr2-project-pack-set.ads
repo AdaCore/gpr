@@ -33,4 +33,6 @@ package GPR2.Project.Pack.Set is
 
    subtype Object is Set.Map;
 
+   subtype Package_Set is Object;
+
 end GPR2.Project.Pack.Set;

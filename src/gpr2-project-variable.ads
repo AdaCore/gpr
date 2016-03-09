@@ -28,6 +28,8 @@ package GPR2.Project.Variable is
 
    type Object is new Name_Values.Object with private;
 
+   subtype Project_Variable is Object;
+
    Undefined : constant Object;
 
 private

@@ -34,6 +34,8 @@ package GPR2.Project.Pack is
 
    Undefined : constant Object;
 
+   subtype Project_Pack is Object;
+
    function Create
      (Name       : Name_Type;
       Attributes : Attribute.Set.Object) return Object;
