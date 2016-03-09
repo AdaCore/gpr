@@ -22,53 +22,49 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
+package body GPR2.Context is
 
-with GPR2.Containers;
-
-with GNAT.MD5; use GNAT;
-
-package GPR2.Context is
-
-   use type GPR2.Containers.Count_Type;
-   use type MD5.Binary_Message_Digest;
-
-   package Key_Value is
-     new Ada.Containers.Indefinite_Ordered_Maps (String, String);
-
-   type Object is new Key_Value.Map with private;
-   --  A parsing context containing the external values for a given project
-   --  tree. This context corresponds to all values of external variables found
-   --  in a project tree.
-
-   Empty : constant Object;
-
-   subtype Binary_Signature is MD5.Binary_Message_Digest;
-
-   Default_Signature : constant Binary_Signature;
-   --  The default signature, this is the one used for project having no
-   --  external variable.
+   ---------------
+   -- Signature --
+   ---------------
 
    function Signature
      (Self      : Object;
       Externals : Containers.Name_List) return Context.Binary_Signature
-     with Post =>
-       (if Externals.Length = 0
-           or else (for all E of Externals => not Self.Contains (E))
-        then Signature'Result = Default_Signature
-        else Signature'Result /= Default_Signature);
-   --  Compute and returns a MD5 signature for the Externals given the context.
-   --  This is used to check if a project's environment has been changed and
-   --  if so the project is to be analysed again. Note that if there is no
-   --  Externals the project has no need to be analysed again, in this case
-   --  the Default_Signature is returned.
+   is
+      Position : Context.Key_Value.Cursor;
+      P_Ctx    : Context.Object;
+   begin
+      --  Compute the project's own context. That is, the context based only on
+      --  the project's external variables.
 
-private
+      for E of Externals loop
+         Position := Self.Find (E);
 
-   type Object is new Key_Value.Map with null record;
+         if Context.Key_Value.Has_Element (Position) then
+            P_Ctx.Insert
+              (Context.Key_Value.Key (Position),
+               Context.Key_Value.Element (Position));
+         end if;
+      end loop;
 
-   Empty : constant Object := (Key_Value.Empty_Map with null record);
+      if P_Ctx.Is_Empty then
+         return Context.Default_Signature;
 
-   Default_Signature : constant Binary_Signature := (others => 0);
+      else
+         declare
+            C : MD5.Context;
+         begin
+            for E in P_Ctx.Iterate loop
+               MD5.Update (C, Key_Value.Key (E));
+               MD5.Update (C, "=");
+               MD5.Update (C, Key_Value.Element (E));
+               MD5.Update (C, ";");
+            end loop;
+
+            return MD5.Digest (C);
+         end;
+      end if;
+   end Signature;
 
 end GPR2.Context;
