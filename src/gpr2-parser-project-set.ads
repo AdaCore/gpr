@@ -26,9 +26,6 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Parser.Project.Set is
 
-   function "<" (Left, Right : Path_Name_Type) return Boolean
-     is (Value (Left) < Value (Right));
-
    package Set is new Ada.Containers.Indefinite_Ordered_Maps
      (Path_Name_Type, Object);
 
