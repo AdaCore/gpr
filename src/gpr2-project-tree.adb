@@ -325,32 +325,30 @@ package body GPR2.Project.Tree is
 
       for View of Self loop
          declare
-            procedure Changed (Project : GPR2.Parser.Project.Object);
-            --  Callback signaled when a project is changed, that is when one
-            --  of its scenario variable has changed value.
+            use type GPR2.Context.Binary_Signature;
 
-            -------------
-            -- Changed --
-            -------------
-
-            procedure Changed (Project : GPR2.Parser.Project.Object) is
-               pragma Unreferenced (Project);
-            begin
-               if Set_Context.Changed /= null then
-                  Set_Context.Changed (View);
-               end if;
-            end Changed;
-
-            P_Data : Definition.Data := Definition.Get (View);
-
+            P_Data        : Definition.Data := Definition.Get (View);
+            Old_Signature : constant GPR2.Context.Binary_Signature :=
+                              P_Data.Sig;
          begin
             Parser.Project.Parse
               (P_Data.Trees.Project,
-               Context,
+               Self,
                P_Data.Attrs,
                P_Data.Vars,
                P_Data.Packs,
-               Changed'Access);
+               P_Data.Sig);
+
+            --  Signal project change only if we have different and non default
+            --  signature. That is if there is at least some external used
+            --  otherwise the project is stable and won't change.
+
+            if P_Data.Sig /= Old_Signature
+              and then P_Data.Sig /= GPR2.Context.Default_Signature
+              and then Changed /= null
+            then
+               Changed (View);
+            end if;
 
             Definition.Set (View, P_Data);
          end;

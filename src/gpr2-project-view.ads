@@ -30,6 +30,7 @@
 
 with Ada.Containers;
 
+with GPR2.Context;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
@@ -63,6 +64,9 @@ package GPR2.Project.View is
                   or else Self.Qualifier = K_Standard;
    --  The actual kind of the project file. This may be different of the
    --  Qualifier is not specified.
+
+   function Signature (Self : Object) return Context.Binary_Signature;
+   --  Returns the signature for the view
 
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self /= Undefined;

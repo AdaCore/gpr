@@ -32,12 +32,14 @@ with GPR_Parser.AST.Types; use GPR_Parser.AST.Types;
 
 with GPR2.Parser.Registry;
 with GPR2.Project.Attribute;
+with GPR2.Project.Tree;
 with GPR2.Project.Variable;
+with GPR2.Project.View;
 
 package body GPR2.Parser.Project is
 
    use type Ada.Containers.Count_Type;
-   use type MD5.Binary_Message_Digest;
+   use type Context.Binary_Signature;
 
    --  Some helpers routines for the parser
 
@@ -48,45 +50,6 @@ package body GPR2.Parser.Project is
    function Present (Node : access GPR_Node_Type'Class) return Boolean is
      (Node /= null);
    --  Returns True if the Node is present (not null)
-
-   function Context_Signature
-     (Ctx       : Context.Object;
-      Externals : Containers.Name_List) return MD5.Binary_Message_Digest
-     with Post =>
-       (if Externals.Length = 0
-        then Context_Signature'Result = Default_Signature
-        else Context_Signature'Result /= Default_Signature);
-   --  Compute and returns a MD5 signature for the Externals given the context.
-   --  This is used to check if a project's environment has been changed and
-   --  if so the project is to be analysed again. Note that if there is no
-   --  Externals the project has no need to be analysed again, in this case
-   --  the Default_Signature is returned.
-
-   -----------------------
-   -- Context_Signature --
-   -----------------------
-
-   function Context_Signature
-     (Ctx       : Context.Object;
-      Externals : Containers.Name_List) return MD5.Binary_Message_Digest
-   is
-      Result : MD5.Binary_Message_Digest := Default_Signature;
-      C      : MD5.Context;
-      Found  : Boolean := False;
-   begin
-      for E of Externals loop
-         if Ctx.Contains (E) then
-            MD5.Update (C, Ctx (E));
-         end if;
-         Found := True;
-      end loop;
-
-      if Found then
-         Result := MD5.Digest (C);
-      end if;
-
-      return Result;
-   end Context_Signature;
 
    ---------------
    -- Externals --
@@ -338,15 +301,9 @@ package body GPR2.Parser.Project is
          --  used for later parsing when creating view of projects with a
          --  full context.
 
-         Project.File      := Filename;
-         Project.Unit      := Unit;
-         Project.Context   := Context;
-         Project.Signature := (1 => 1, others => 0);
-         pragma Assert
-           (Project.Signature /= Default_Signature,
-            "project signature must be different that default_signature");
-         --  Initialized with a signature which is not Default_Signature. This
-         --  is needed to ensure that the analyze will be done in stage-1.
+         Project.File    := Filename;
+         Project.Unit    := Unit;
+         Project.Context := Context;
 
          --  Finaly register this project into the registry
 
@@ -370,13 +327,16 @@ package body GPR2.Parser.Project is
    -----------
 
    procedure Parse
-     (Self    : in out Object;
-      Ctx     : Context.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object;
-      Changed : not null access procedure (Project : Object))
+     (Self      : in out Object;
+      Tree      : GPR2.Project.Tree.Object;
+      Attrs     : in out GPR2.Project.Attribute.Set.Object;
+      Vars      : in out GPR2.Project.Variable.Set.Object;
+      Packs     : in out GPR2.Project.Pack.Set.Object;
+      Signature : in out Context.Binary_Signature)
    is
+
+      Ctx : constant Context.Object := Tree.Context;
+      --  The full project's tree context
 
       function Parser (Node : GPR_Node) return Visit_Status;
       --  Actual parser callabck for the project
@@ -832,11 +792,16 @@ package body GPR2.Parser.Project is
          return Status;
       end Parser;
 
-      New_Signature : constant MD5.Binary_Message_Digest :=
-                        Context_Signature (Ctx, Self.Externals);
+      New_Signature : constant Context.Binary_Signature :=
+                        Context.Signature (Ctx, Self.Externals);
 
    begin
-      if Self.Signature /= New_Signature then
+      --  ?? we probably want to always parse and then check that Attrs, Vars
+      --  or Packs has changed. Indeed, a project which depends on another
+      --  project and referencing a variable or attribute whose value depends
+      --  on an external is not taken into account right now.
+
+      if Signature /= New_Signature then
          --  Clear all current values for this project
 
          Attrs.Clear;
@@ -849,15 +814,7 @@ package body GPR2.Parser.Project is
 
          --  Record new signature
 
-         Self.Signature := New_Signature;
-
-         --  Signal project change only if we have a non default signature.
-         --  That is if there is at least some external used otherwise the
-         --  project is stable and won't change.
-
-         if Self.Signature /= Default_Signature then
-            Changed (Self);
-         end if;
+         Signature := New_Signature;
       end if;
    end Parse;
 

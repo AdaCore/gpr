@@ -24,11 +24,11 @@
 
 with Ada.Containers.Vectors;
 
+with GPR2.Context;
 with GPR2.Parser.Project.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
-
 with GPR2.Project.View;
 
 private package GPR2.Project.Definition is
@@ -58,6 +58,7 @@ private package GPR2.Project.Definition is
 
    type Data is tagged record
       Trees   : Tree;
+      Sig     : Context.Binary_Signature;
       Imports : Project_View_Store.Vector;
       Attrs   : Project.Attribute.Set.Object;
       Vars    : Project.Variable.Set.Object;

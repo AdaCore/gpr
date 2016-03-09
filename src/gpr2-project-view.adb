@@ -142,6 +142,15 @@ package body GPR2.Project.View is
    end Qualifier;
 
    ---------------
+   -- Signature --
+   ---------------
+
+   function Signature (Self : Object) return Context.Binary_Signature is
+   begin
+      return Definition.Get (Self).Sig;
+   end Signature;
+
+   ---------------
    -- Variables --
    ---------------
 

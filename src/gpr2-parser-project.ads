@@ -28,8 +28,9 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
+limited with GPR2.Project.Tree;
+
 private with GPR_Parser.Analysis;
-private with GNAT.MD5;
 
 package GPR2.Parser.Project is
 
@@ -42,12 +43,12 @@ package GPR2.Parser.Project is
    --  during the parsing the return object is Undefined.
 
    procedure Parse
-     (Self    : in out Object;
-      Ctx     : Context.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object;
-      Changed : not null access procedure (Project : Object))
+     (Self      : in out Object;
+      Tree      : GPR2.Project.Tree.Object;
+      Attrs     : in out GPR2.Project.Attribute.Set.Object;
+      Vars      : in out GPR2.Project.Variable.Set.Object;
+      Packs     : in out GPR2.Project.Pack.Set.Object;
+      Signature : in out Context.Binary_Signature)
      with Pre => Self /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback
@@ -88,12 +89,7 @@ package GPR2.Parser.Project is
 private
 
    use Ada.Strings.Unbounded;
-   use GNAT;
    use GPR_Parser.Analysis;
-
-   Default_Signature : constant MD5.Binary_Message_Digest := (others => 0);
-   --  The default signature, this is the one used for project having no
-   --  external variable.
 
    type Object is tagged record
       Name      : Unbounded_String;
@@ -103,7 +99,6 @@ private
       Imports   : Containers.Path_Name_List;
       Unit      : Analysis_Unit;
       Context   : Analysis_Context;
-      Signature : MD5.Binary_Message_Digest;
       --  ??? Must be freed : Destroy (Context)
    end record;
 
