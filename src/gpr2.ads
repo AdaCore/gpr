@@ -50,6 +50,8 @@ package GPR2 is
 
    subtype Value_Type is String;
 
+   No_Value : constant Value_Type;
+
    function Unquote (Str : Value_Type) return Value_Type with
      Post => Unquote'Result (Unquote'Result'First) not in ''' | '"'
              and then Unquote'Result (Unquote'Result'Last) not in ''' | '"'
@@ -84,5 +86,7 @@ private
       As_Is : Unbounded_String;
       Value : Unbounded_String;
    end record;
+
+   No_Value : constant Value_Type := "";
 
 end GPR2;
