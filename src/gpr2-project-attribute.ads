@@ -72,6 +72,7 @@ package GPR2.Project.Attribute is
 
    function Has_Language (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns True if the attribute is language specific
 
    function Language (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
