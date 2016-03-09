@@ -66,6 +66,10 @@ package GPR2 is
    --  A project path-name, will always be normalized according to the running
    --  target.
 
+   overriding function "=" (Left, Right : Path_Name_Type) return Boolean;
+   --  Returns True if Left and Right are referencing the same project. That
+   --  is, based on the normalized names.
+
    subtype Full_Path_Name is String
      with Dynamic_Predicate =>
        (for some C of Full_Path_Name => C in '/' | '\');
@@ -86,6 +90,9 @@ private
       As_Is : Unbounded_String;
       Value : Unbounded_String;
    end record;
+
+   overriding function "=" (Left, Right : Path_Name_Type) return Boolean is
+     (Left.Value = Right.Value);
 
    No_Value : constant Value_Type := "";
 
