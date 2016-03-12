@@ -620,16 +620,16 @@ package body GPR2.Parser.Project is
             if Present (Index) then
                if Values.Length = 1 then
                   A := GPR2.Project.Attribute.Create
-                    (Name     => Get_Name_Type (Single_Tok_Node (Name)),
-                     Language =>
+                    (Name  => Get_Name_Type (Single_Tok_Node (Name)),
+                     Index =>
                        Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
-                     Value    => Values.First_Element);
+                     Value => Values.First_Element);
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name     => Get_Name_Type (Single_Tok_Node (Name)),
-                     Language =>
+                    (Name   => Get_Name_Type (Single_Tok_Node (Name)),
+                     Index =>
                        Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
-                     Values   => Values);
+                     Values => Values);
                end if;
 
             else

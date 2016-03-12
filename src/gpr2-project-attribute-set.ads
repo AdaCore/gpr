@@ -41,18 +41,18 @@ package GPR2.Project.Attribute.Set is
    subtype Cursor is Set.Cursor;
 
    function Iterate_Filter
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "")
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "")
       return Set.Map_Iterator_Interfaces.Reversible_Iterator'Class;
    --  An iterator on an attribute set which can filter out based on the name
    --  or the language (or both) of the attribute.
 
    function Filter
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "") return Object
-     with Post => (if Name = "" and then Language = ""
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "") return Object
+     with Post => (if Name = "" and then Index = ""
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
    --  the given filter.
@@ -69,7 +69,7 @@ private
       Object   : Set.Map;
       Position : Cursor;
       Name     : Unbounded_String;
-      Language : Unbounded_String;
+      Index    : Unbounded_String;
    end record;
 
    overriding function First (Object : Iterator) return Cursor;

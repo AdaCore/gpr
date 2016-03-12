@@ -39,18 +39,18 @@ package GPR2.Project.Attribute is
    Undefined : constant Object;
 
    function Create
-     (Name     : Name_Type;
-      Language : Name_Type;
-      Value    : Value_Type) return Object
+     (Name  : Name_Type;
+      Index : Name_Type;
+      Value : Value_Type) return Object
      with Post => Create'Result.Kind = Name_Values.K_Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
    --  Create a single-valued object
 
    function Create
-     (Name     : Name_Type;
-      Language : Name_Type;
-      Values   : Containers.Value_List) return Object
+     (Name   : Name_Type;
+      Index  : Name_Type;
+      Values : Containers.Value_List) return Object
      with Post => Create'Result.Kind = Name_Values.K_List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
@@ -72,20 +72,20 @@ package GPR2.Project.Attribute is
                   and then Create'Result.Count_Values = Values.Length;
    --  Create a multi-valued object
 
-   function Has_Language (Self : Object) return Boolean
+   function Has_Index (Self : Object) return Boolean
      with Pre => Self /= Undefined;
-   --  Returns True if the attribute is language specific
+   --  Returns True if the attribute has an index
 
-   function Language (Self : Object) return Name_Type
+   function Index (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
-   --  Returns the language name
+   --  Returns the attribute's index value
 
 private
 
    use Ada.Strings.Unbounded;
 
    type Object is new Name_Values.Object with record
-      Language : Unbounded_String;
+      Index : Unbounded_String;
    end record;
 
    Undefined : constant Object :=

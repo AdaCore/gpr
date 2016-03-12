@@ -77,21 +77,21 @@ package GPR2.Project.View is
    --  Attributes
 
    function Has_Attributes
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "") return Boolean
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some attributes defined. If Name
-   --  and/or Language are set it returns True if an attribute with the given
-   --  Name and/or Language is defined.
+   --  and/or Index are set it returns True if an attribute with the given
+   --  Name and/or Index is defined.
 
    function Attributes
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "") return Attribute.Set.Object
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "") return Attribute.Set.Object
      with Post => (if Self.Has_Attributes then Attributes'Result.Length > 0);
    --  Get the list of attributes, possibly an empty list if it does not
-   --  contain attributes or if Name and Language does not match any attribute.
+   --  contain attributes or if Name and Index does not match any attribute.
 
    --  Variables
 

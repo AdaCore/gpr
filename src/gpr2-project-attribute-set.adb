@@ -32,18 +32,18 @@ package body GPR2.Project.Attribute.Set is
    ------------
 
    function Filter
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "") return Object is
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "") return Object is
    begin
-      if Name = "" and then Language = "" then
+      if Name = "" and then Index = "" then
          return Self;
 
       else
          declare
             Result : Object;
          begin
-            for C in Self.Iterate_Filter (Name, Language) loop
+            for C in Self.Iterate_Filter (Name, Index) loop
                Result.Insert (Set.Key (C), Set.Element (C));
             end loop;
 
@@ -73,12 +73,12 @@ package body GPR2.Project.Attribute.Set is
    function Is_Matching
      (Object : Iterator; Position : Cursor) return Boolean
    is
-      A        : constant Attribute.Object := Set.Element (Position);
-      Name     : constant String := To_String (Object.Name);
-      Language : constant String := To_String (Object.Language);
+      A     : constant Attribute.Object := Set.Element (Position);
+      Name  : constant String := To_String (Object.Name);
+      Index : constant String := To_String (Object.Index);
    begin
       return (Name = "" or else A.Name = Name)
-        and then (Language = "" or else A.Language = Language);
+        and then (Index = "" or else A.Index = Index);
    end Is_Matching;
 
    -------------
@@ -86,16 +86,16 @@ package body GPR2.Project.Attribute.Set is
    -------------
 
    function Iterate_Filter
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "")
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "")
       return Set.Map_Iterator_Interfaces.Reversible_Iterator'Class is
    begin
       return It : Iterator do
          It.Object   := Set.Map (Self);
          It.Position := Self.First;
          It.Name     := To_Unbounded_String (Name);
-         It.Language := To_Unbounded_String (Language);
+         It.Index    := To_Unbounded_String (Index);
       end return;
    end Iterate_Filter;
 

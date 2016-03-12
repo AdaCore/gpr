@@ -48,21 +48,21 @@ package GPR2.Project.Pack is
    --  Returns the name of the project
 
    function Has_Attributes
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "") return Boolean
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the package has some attributes defined. If Name
-   --  and/or Language are set it returns True if an attribute with the given
-   --  Name and/or Language is defined.
+   --  and/or Index are set it returns True if an attribute with the given
+   --  Name and/or Index is defined.
 
    function Attributes
-     (Self     : Object;
-      Name     : String := "";
-      Language : String := "") return Attribute.Set.Object
+     (Self  : Object;
+      Name  : String := "";
+      Index : String := "") return Attribute.Set.Object
      with Pre => Self /= Undefined;
    --  Returns all attributes defined for the package. Possibly an empty list
-   --  if it does not contain attributes or if Name and Language does not match
+   --  if it does not contain attributes or if Name and Index does not match
    --  any attribute.
 
 private

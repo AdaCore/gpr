@@ -29,22 +29,22 @@ package body GPR2.Project.Attribute is
    ------------
 
    function Create
-     (Name     : Name_Type;
-      Language : Name_Type;
-      Value    : Value_Type) return Object is
+     (Name  : Name_Type;
+      Index : Name_Type;
+      Value : Value_Type) return Object is
    begin
       return A : Object := Create (Name, Value) do
-         A.Language := To_Unbounded_String (Language);
+         A.Index := To_Unbounded_String (Index);
       end return;
    end Create;
 
    function Create
-     (Name     : Name_Type;
-      Language : Name_Type;
-      Values   : Containers.Value_List) return Object is
+     (Name   : Name_Type;
+      Index  : Name_Type;
+      Values : Containers.Value_List) return Object is
    begin
       return A : Object := Create (Name, Values) do
-         A.Language := To_Unbounded_String (Language);
+         A.Index := To_Unbounded_String (Index);
       end return;
    end Create;
 
@@ -54,7 +54,7 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Name_Values.Create (Name, Value)
-         with Language => Null_Unbounded_String);
+         with Index => Null_Unbounded_String);
    end Create;
 
    overriding function Create
@@ -63,25 +63,25 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Name_Values.Create (Name, Values)
-         with Language => Null_Unbounded_String);
+         with Index => Null_Unbounded_String);
    end Create;
 
-   ------------------
-   -- Has_Language --
-   ------------------
+   ---------------
+   -- Has_Index --
+   ---------------
 
-   function Has_Language (Self : Object) return Boolean is
+   function Has_Index (Self : Object) return Boolean is
    begin
-      return Self.Language /= Null_Unbounded_String;
-   end Has_Language;
+      return Self.Index /= Null_Unbounded_String;
+   end Has_Index;
 
-   --------------
-   -- Language --
-   --------------
+   -----------
+   -- Index --
+   -----------
 
-   function Language (Self : Object) return Name_Type is
+   function Index (Self : Object) return Name_Type is
    begin
-      return To_String (Self.Language);
-   end Language;
+      return To_String (Self.Index);
+   end Index;
 
 end GPR2.Project.Attribute;

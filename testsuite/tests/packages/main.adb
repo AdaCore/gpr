@@ -47,8 +47,8 @@ procedure Main is
    begin
       Text_IO.Put ("   " & Att.Name);
 
-      if Att.Has_Language then
-         Text_IO.Put (" (" & Att.Language & ")");
+      if Att.Has_Index then
+         Text_IO.Put (" (" & Att.Index & ")");
       end if;
 
       Text_IO.Put (" ->");
