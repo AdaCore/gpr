@@ -46,7 +46,7 @@ package GPR2.Project.Attribute.Set is
       Index : String := "")
       return Set.Map_Iterator_Interfaces.Reversible_Iterator'Class;
    --  An iterator on an attribute set which can filter out based on the name
-   --  or the language (or both) of the attribute.
+   --  or the index (or both) of the attribute.
 
    function Filter
      (Self  : Object;
