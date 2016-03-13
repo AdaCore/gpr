@@ -1,0 +1,6 @@
+
+with "first.gpr";
+
+project Demo is
+   for Object_Dir use First'Object_Dir;
+end Demo;

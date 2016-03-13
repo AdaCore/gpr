@@ -1,0 +1,5 @@
+description:
+    Test deep external dependency
+driver: build_and_run
+project_file: externals
+main: main

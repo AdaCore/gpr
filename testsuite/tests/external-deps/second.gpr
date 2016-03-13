@@ -1,0 +1,12 @@
+
+project second is
+   type OS_Kind is ("Windows", "Linux");
+   OS : OS_Kind := external ("OS", "Windows");
+
+   case OS is
+      when "Windows" =>
+         for Object_Dir use "windows-obj";
+      when "Linux" =>
+         for Object_Dir use "linux-obj";
+   end case;
+end second;

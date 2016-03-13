@@ -246,6 +246,8 @@ package body GPR2.Project.Tree is
 
          View.Trees.Project := Parser.Project.Load (Filename);
 
+         View.Externals := View.Trees.Project.Externals;
+
          --  Now load all imported projects if any
 
          for Project_Name of View.Trees.Project.Imports loop
@@ -261,12 +263,12 @@ package body GPR2.Project.Tree is
       end Load;
 
       Root_View : constant Definition.Data := Load (Filename);
-      Context   : GPR2.Context.Object;
+      Context   : GPR2.Context.Object := GPR2.Context.Empty;
 
    begin
       --  Let's setup the full external environment for project
 
-      for E of Root_View.Trees.Project.Externals loop
+      for E of Root_View.Externals loop
          --  Fill all known external in the environment variables
          if Environment_Variables.Exists (E) then
             Context.Include (E, Environment_Variables.Value (E));
@@ -277,6 +279,24 @@ package body GPR2.Project.Tree is
         Object'(Root    => Definition.Register (Root_View),
                 Context => Context)
       do
+         for View of Tree loop
+            declare
+               V_Data : Definition.Data := Definition.Get (View);
+            begin
+               --  Compute the external dependencies for the view. This is
+               --  the set of external used in the project and in all imported
+               --  project.
+
+               for E of V_Data.Externals loop
+                  if not V_Data.Externals.Contains (E) then
+                     V_Data.Externals.Append (E);
+                  end if;
+               end loop;
+
+               Definition.Set (View, V_Data);
+            end;
+         end loop;
+
          Set_Context (Tree, Context);
       end return;
    end Load;
@@ -331,27 +351,29 @@ package body GPR2.Project.Tree is
             P_Data        : Definition.Data := Definition.Get (View);
             Old_Signature : constant GPR2.Context.Binary_Signature :=
                               P_Data.Sig;
+            New_Signature : constant GPR2.Context.Binary_Signature :=
+                              Context.Signature (P_Data.Externals);
          begin
             Parser.Project.Parse
               (P_Data.Trees.Project,
                Self,
                P_Data.Attrs,
                P_Data.Vars,
-               P_Data.Packs,
-               P_Data.Sig);
+               P_Data.Packs);
+
+            P_Data.Sig := New_Signature;
+            Definition.Set (View, P_Data);
 
             --  Signal project change only if we have different and non default
             --  signature. That is if there is at least some external used
             --  otherwise the project is stable and won't change.
 
-            if P_Data.Sig /= Old_Signature
+            if Old_Signature /= New_Signature
               and then P_Data.Sig /= GPR2.Context.Default_Signature
               and then Changed /= null
             then
                Changed (View);
             end if;
-
-            Definition.Set (View, P_Data);
          end;
       end loop;
    end Set_Context;
@@ -373,7 +395,7 @@ package body GPR2.Project.Tree is
             declare
                P_Data : constant Definition.Data := Definition.Get (View);
                P_Sig  : constant GPR2.Context.Binary_Signature :=
-                          Ctx.Signature (P_Data.Trees.Project.Externals);
+                          Ctx.Signature (P_Data.Externals);
             begin
                if View.Signature = P_Sig then
                   return View;

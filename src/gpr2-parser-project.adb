@@ -39,7 +39,6 @@ with GPR2.Project.View;
 package body GPR2.Parser.Project is
 
    use type Ada.Containers.Count_Type;
-   use type Context.Binary_Signature;
 
    --  Some helpers routines for the parser
 
@@ -331,8 +330,7 @@ package body GPR2.Parser.Project is
       Tree      : GPR2.Project.Tree.Object;
       Attrs     : in out GPR2.Project.Attribute.Set.Object;
       Vars      : in out GPR2.Project.Variable.Set.Object;
-      Packs     : in out GPR2.Project.Pack.Set.Object;
-      Signature : in out Context.Binary_Signature)
+      Packs     : in out GPR2.Project.Pack.Set.Object)
    is
 
       Ctx : constant Context.Object := Tree.Context;
@@ -857,30 +855,14 @@ package body GPR2.Parser.Project is
          return Status;
       end Parser;
 
-      New_Signature : constant Context.Binary_Signature :=
-                        Context.Signature (Ctx, Self.Externals);
-
    begin
-      --  ?? we probably want to always parse and then check that Attrs, Vars
-      --  or Packs has changed. Indeed, a project which depends on another
-      --  project and referencing a variable or attribute whose value depends
-      --  on an external is not taken into account right now.
+      Attrs.Clear;
+      Vars.Clear;
+      Packs.Clear;
 
-      if Signature /= New_Signature then
-         --  Clear all current values for this project
+      --  Re-Analyze the project given the new context
 
-         Attrs.Clear;
-         Vars.Clear;
-         Packs.Clear;
-
-         --  Re-Analyze the project given the new context
-
-         Traverse (Root (Self.Unit), Parser'Access);
-
-         --  Record new signature
-
-         Signature := New_Signature;
-      end if;
+      Traverse (Root (Self.Unit), Parser'Access);
    end Parse;
 
    ---------------

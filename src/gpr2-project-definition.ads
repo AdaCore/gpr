@@ -24,6 +24,7 @@
 
 with Ada.Containers.Vectors;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Parser.Project.Set;
 with GPR2.Project.Attribute.Set;
@@ -57,12 +58,14 @@ private package GPR2.Project.Definition is
    --  the imports in Trees.
 
    type Data is tagged record
-      Trees   : Tree;
-      Sig     : Context.Binary_Signature;
-      Imports : Project_View_Store.Vector;
-      Attrs   : Project.Attribute.Set.Object;
-      Vars    : Project.Variable.Set.Object;
-      Packs   : Project.Pack.Set.Object;
+      Trees     : Tree;
+      Externals : Containers.Name_List;
+      --  List of externals directly or indirectly visible
+      Sig       : Context.Binary_Signature;
+      Imports   : Project_View_Store.Vector;
+      Attrs     : Project.Attribute.Set.Object;
+      Vars      : Project.Variable.Set.Object;
+      Packs     : Project.Pack.Set.Object;
    end record;
 
    function Register (Def : Data) return View.Object

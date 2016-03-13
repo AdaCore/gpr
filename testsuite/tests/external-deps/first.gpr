@@ -1,0 +1,6 @@
+
+with "second.gpr";
+
+project first is
+   for Object_Dir use second'object_dir;
+end first;

@@ -49,8 +49,7 @@ package GPR2.Parser.Project is
       Tree      : GPR2.Project.Tree.Object;
       Attrs     : in out GPR2.Project.Attribute.Set.Object;
       Vars      : in out GPR2.Project.Variable.Set.Object;
-      Packs     : in out GPR2.Project.Pack.Set.Object;
-      Signature : in out Context.Binary_Signature)
+      Packs     : in out GPR2.Project.Pack.Set.Object)
      with Pre => Self /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback
