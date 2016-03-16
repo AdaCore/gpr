@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Equal_Case_Insensitive; use Ada;
+
 package body GPR2.Project.Attribute.Set is
 
    function Is_Matching (Object : Iterator; Position : Cursor) return Boolean;
@@ -77,8 +79,9 @@ package body GPR2.Project.Attribute.Set is
       Name  : constant String := To_String (Object.Name);
       Index : constant String := To_String (Object.Index);
    begin
-      return (Name = "" or else A.Name = Name)
-        and then (Index = "" or else A.Index = Index);
+      return
+        (Name = "" or else Strings.Equal_Case_Insensitive (A.Name, Name))
+        and then (Index = "" or else A.Index_Equal (Index));
    end Is_Matching;
 
    -------------
