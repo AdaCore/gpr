@@ -22,47 +22,78 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
-
+with Ada.Text_IO;
 with GPR2.Project.View;
+with GPR2.Project.Tree;
+with GPR2.Project.Attribute.Set;
+with GPR2.Project.Variable.Set;
+with GPR2.Context;
 
-package body GPR2.Project.Definition is
+procedure Main is
 
-   package Project_Views is
-     new Ada.Containers.Indefinite_Ordered_Maps (View.Object, Data);
+   use Ada;
+   use GPR2;
+   use GPR2.Project;
 
-   Views : Project_Views.Map;
+   procedure Display (Prj : Project.View.Object);
 
-   N : View.Id := 0;
+   procedure Changed_Callback (Prj : Project.View.Object);
 
-   ---------
-   -- Get --
-   ---------
+   ----------------------
+   -- Changed_Callback --
+   ----------------------
 
-   function Get (View : Project.View.Object) return Data is
+   procedure Changed_Callback (Prj : Project.View.Object) is
    begin
-      return Views (View);
-   end Get;
+      Text_IO.Put_Line (">>> Changed_Callback for " & Prj.Name);
+   end Changed_Callback;
 
-   --------------
-   -- Register --
-   --------------
+   -------------
+   -- Display --
+   -------------
 
-   function Register (Def : Data) return View.Object is
-      View : constant Project.View.Object := Project.View.From_Id (N + 1);
+   procedure Display (Prj : Project.View.Object) is
+      use GPR2.Project.Attribute.Set.Set;
+      use GPR2.Project.Variable.Set.Set;
    begin
-      N := N + 1;
-      Views.Insert (View, Def);
-      return View;
-   end Register;
+      Text_IO.Put (Prj.Name & " ");
+      Text_IO.Set_Col (10);
+      Text_IO.Put_Line (Prj.Qualifier'Img);
 
-   ---------
-   -- Set --
-   ---------
+      if Prj.Has_Attributes then
+         for A in Prj.Attributes.Iterate loop
+            Text_IO.Put ("A:   " & String (Key (A)));
+            Text_IO.Put (" ->");
 
-   procedure Set (View : Project.View.Object; Def : Data) is
-   begin
-      Views (View) := Def;
-   end Set;
+            for V of Element (A).Values loop
+               Text_IO.Put (" " & V);
+            end loop;
+            Text_IO.New_Line;
+         end loop;
+      end if;
+   end Display;
 
-end GPR2.Project.Definition;
+   Prj : Project.Tree.Object;
+   Ctx : Context.Object;
+
+begin
+   Prj := Project.Tree.Load (Create ("demo.gpr"));
+
+   Text_IO.Put_Line ("//// OS set to Linux");
+   Ctx := Prj.Context;
+   Ctx.Include ("OS", "Linux");
+   Prj.Set_Context (Ctx, Changed_Callback'Access);
+
+   for P of Prj loop
+      Display (P);
+   end loop;
+
+   Text_IO.Put_Line ("//// OS set to Windows");
+   Ctx := Prj.Context;
+   Ctx.Include ("OS", "Windows");
+   Prj.Set_Context (Ctx, Changed_Callback'Access);
+
+   for P of Prj loop
+      Display (P);
+   end loop;
+end Main;

@@ -328,13 +328,11 @@ package body GPR2.Parser.Project is
    procedure Parse
      (Self      : in out Object;
       Tree      : GPR2.Project.Tree.Object;
+      Context   : GPR2.Context.Object;
       Attrs     : in out GPR2.Project.Attribute.Set.Object;
       Vars      : in out GPR2.Project.Variable.Set.Object;
       Packs     : in out GPR2.Project.Pack.Set.Object)
    is
-
-      Ctx : constant Context.Object := Tree.Context;
-      --  The full project's tree context
 
       function Parser (Node : GPR_Node) return Visit_Status;
       --  Actual parser callabck for the project
@@ -385,7 +383,7 @@ package body GPR2.Parser.Project is
          Name : constant Name_Type :=
                   Get_Name_Type (Single_Tok_Node (F_Attribute_Name (Node)));
          View : constant GPR2.Project.View.Object :=
-                  GPR2.Project.Tree.View_For (Tree, Project, Ctx);
+                  GPR2.Project.Tree.View_For (Tree, Project, Context);
       begin
          if View.Has_Attributes (Name) then
             return View.Attributes (Name).First_Element.Values;
@@ -444,9 +442,9 @@ package body GPR2.Parser.Project is
                           (Name_Type (Image (F_Tok (Single_Tok_Node (Str)))));
                Expr  : constant Term_List := F_Expr (Node);
             begin
-               if Ctx.Contains (Name) then
+               if Context.Contains (Name) then
                   --  External in the context, use this value
-                  Result.Append (Ctx (Name));
+                  Result.Append (Context (Name));
 
                elsif Present (Expr) then
                   --  External not in the context but has a default value
@@ -528,7 +526,7 @@ package body GPR2.Parser.Project is
       is
          Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
-                  GPR2.Project.Tree.View_For (Tree, Project, Ctx);
+                  GPR2.Project.Tree.View_For (Tree, Project, Context);
       begin
          if View.Has_Variables (Name) then
             return View.Variables (Name).First_Element.Values;

@@ -35,6 +35,8 @@ with GPR2.Project.Variable.Set;
 
 package GPR2.Project.View is
 
+   use type Context.Object;
+
    type Object is tagged private;
 
    subtype Project_View is Object;
@@ -69,6 +71,20 @@ package GPR2.Project.View is
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self /= Undefined;
    --  Returns True if the project has some imports
+
+   --  Context
+
+   function Has_Context (Self : Object) return Boolean
+     with Pre  => Self /= Undefined;
+   --  Returns True if the project tree has some context. If any of the project
+   --  in the tree has some external variables then a context is present. A
+   --  project without context is fully static has it does not reference any
+   --  external (and so modifiable) variables.
+
+   function Context (Self : Object) return Context.Object
+     with Pre  => Self /= Undefined,
+          Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
+   --  Returns the Context for the given project tree
 
    --  Attributes
 

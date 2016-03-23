@@ -52,21 +52,47 @@ private package GPR2.Project.Definition is
    package Project_View_Store is
      new Ada.Containers.Vectors (Positive, View.Object);
 
+   type Relation_Status is (Root, Imported, Aggregated);
+
    --  Data contains a project view data. We have all the attributes, variables
    --  and pakcages with the final values as parsed with the project's context
    --  in the given tree. Imports here are the project views corresponding to
    --  the imports in Trees.
+   --
+   --  Either a Data has a context or is referencing another with containing
+   --  the context. This is used for aggregate project which can be used to
+   --  refine the global context by setting some external values with the
+   --  corresponding attribute. So both the root project and all aggregate
+   --  projects have a context. All other projects are referencing a project
+   --  which own a context.
 
-   type Data is tagged record
-      Trees     : Tree;
-      Externals : Containers.Name_List;
+   type Data (Has_Context : Boolean) is tagged record
+      Trees        : Tree;
+      Externals    : Containers.Name_List;
       --  List of externals directly or indirectly visible
-      Sig       : Context.Binary_Signature;
-      Imports   : Project_View_Store.Vector;
-      Attrs     : Project.Attribute.Set.Object;
-      Vars      : Project.Variable.Set.Object;
-      Packs     : Project.Pack.Set.Object;
-   end record;
+      Sig          : Context.Binary_Signature;
+      Imports      : Project_View_Store.Vector;
+      Aggregated   : Project_View_Store.Vector;
+      Attrs        : Project.Attribute.Set.Object;
+      Vars         : Project.Variable.Set.Object;
+      Packs        : Project.Pack.Set.Object;
+      Context_View : View.Object;
+      Status       : Relation_Status;
+
+      case Has_Context is
+         when True =>
+            Context   : GPR2.Context.Object;
+            A_Context : GPR2.Context.Object; -- Aggregate context
+         when False =>
+            null;
+      end case;
+   end record
+     with Dynamic_Predicate =>
+            --  Only a root-aggregate project can have a context defined via
+            --  the External attribute.
+            not Data.Has_Context
+            or else Data.Context_View = View.Undefined
+            or else Data.A_Context.Is_Empty;
 
    function Register (Def : Data) return View.Object
      with Pre  => Def.Trees.Project /= Parser.Project.Undefined,

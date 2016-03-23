@@ -39,6 +39,77 @@ package body GPR2.Project.View is
    end Attributes;
 
    -------------
+   -- Context --
+   -------------
+
+   function Context (Self : Object) return GPR2.Context.Object is
+
+      function Recursive_Context
+        (Self   : Object;
+         Status : Definition.Relation_Status) return GPR2.Context.Object;
+      --  Recursively get the context for the view. This properly handle
+      --  the context given by an aggregate project through the External
+      --  attribute.
+
+      -----------------------
+      -- Recursive_Context --
+      -----------------------
+
+      function Recursive_Context
+        (Self   : Object;
+         Status : Definition.Relation_Status) return GPR2.Context.Object
+      is
+         Data : constant Definition.Data := Definition.Get (Self);
+
+         function Get_Context return GPR2.Context.Object;
+
+         -----------------
+         -- Get_Context --
+         -----------------
+
+         function Get_Context return GPR2.Context.Object is
+            use type Definition.Relation_Status;
+
+            Context : GPR2.Context.Object := Data.Context;
+         begin
+            if Status = Definition.Aggregated then
+               for C in Data.A_Context.Iterate loop
+                  Context.Include
+                    (GPR2.Context.Key_Value.Key (C),
+                     GPR2.Context.Key_Value.Element (C));
+               end loop;
+            end if;
+
+            return Context;
+         end Get_Context;
+
+      begin
+         if Data.Context_View = Undefined then
+            return (if Data.Has_Context
+                    then Get_Context
+                    else GPR2.Context.Empty);
+
+         else
+            return Ctx : GPR2.Context.Object :=
+              Recursive_Context (Data.Context_View, Status)
+            do
+               --  And override by our definition if any
+               if Data.Has_Context then
+                  for C in Get_Context.Iterate loop
+                     Ctx.Include
+                       (GPR2.Context.Key_Value.Key (C),
+                        GPR2.Context.Key_Value.Element (C));
+                  end loop;
+               end if;
+            end return;
+         end if;
+      end Recursive_Context;
+
+   begin
+      return Recursive_Context (Self, Definition.Get (Self).Status);
+   end Context;
+
+   -------------
    -- From_Id --
    -------------
 
@@ -66,6 +137,57 @@ package body GPR2.Project.View is
          return not Attributes (Self, Name, Index).Is_Empty;
       end if;
    end Has_Attributes;
+
+   -----------------
+   -- Has_Context --
+   -----------------
+
+   function Has_Context (Self : Object) return Boolean is
+
+      function Recursive_Has_Context
+        (Self   : Object;
+         Status : Definition.Relation_Status) return Boolean;
+      --  Recursively check that the view has a context or not. This handles
+      --  aggregated project context.
+
+      -----------------------
+      -- Recursive_Context --
+      -----------------------
+
+      function Recursive_Has_Context
+        (Self   : Object;
+         Status : Definition.Relation_Status) return Boolean
+      is
+         Data : constant Definition.Data := Definition.Get (Self);
+
+         function Has_Context return Boolean;
+
+         -----------------
+         -- Get_Context --
+         -----------------
+
+         function Has_Context return Boolean is
+            use type Definition.Relation_Status;
+         begin
+            return Data.Has_Context
+              and then (not Data.Context.Is_Empty
+                        or else (Status = Definition.Aggregated
+                                 and then not Data.A_Context.Is_Empty));
+         end Has_Context;
+
+      begin
+         if Data.Context_View = Undefined then
+            return Data.Has_Context and then Has_Context;
+
+         else
+            return Has_Context
+              or else Recursive_Has_Context (Data.Context_View, Status);
+         end if;
+      end Recursive_Has_Context;
+
+   begin
+      return Recursive_Has_Context (Self, Definition.Get (Self).Status);
+   end Has_Context;
 
    -----------------
    -- Has_Imports --
@@ -151,7 +273,7 @@ package body GPR2.Project.View is
    -- Signature --
    ---------------
 
-   function Signature (Self : Object) return Context.Binary_Signature is
+   function Signature (Self : Object) return GPR2.Context.Binary_Signature is
    begin
       return Definition.Get (Self).Sig;
    end Signature;

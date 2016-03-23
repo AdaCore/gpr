@@ -1,0 +1,7 @@
+
+with "a.gpr";
+
+aggregate project Demo is
+   for External ("OS") use ("Linux");
+   for Project_Files use ("a.gpr");
+end Demo;

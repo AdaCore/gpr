@@ -64,7 +64,9 @@ package GPR2.Project.Tree is
    --  the same context will have the exact same definition.
    --  Returns Undefined if the view was not found.
 
-   --  Context
+   --  Context.
+   --  Note that the context of the project tree corresponds to the context of
+   --  the root project view.
 
    function Has_Context (Self : Object) return Boolean
      with Pre  => Self /= Undefined;
@@ -131,8 +133,7 @@ package GPR2.Project.Tree is
 private
 
    type Object is tagged record
-      Root    : View.Object;
-      Context : GPR2.Context.Object;
+      Root : View.Object;
    end record;
 
    type Cursor is record
@@ -144,8 +145,8 @@ private
    type Constant_Reference_Type
      (View : not null access constant Project.View.Object) is null record;
 
-   Undefined  : constant Object :=
-                  (Root => View.Undefined, Context => GPR2.Context.Empty);
+   Undefined  : constant Object := (Root => View.Undefined);
+
    No_Element : constant Cursor :=
                   (Definition.Project_View_Store.Empty_Vector,
                    1, View.Undefined);
