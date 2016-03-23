@@ -101,10 +101,10 @@ package body GPR2.Project.Tree is
         with Post => Seen.Contains (View);
       --  Append into P if not already seen
 
-      procedure For_Project (Id : View.Object);
+      procedure For_Project (View : Project.View.Object);
       --  Handle project node
 
-      procedure For_Imports (Id : View.Object);
+      procedure For_Imports (View : Project.View.Object);
       --  Handle import nodes
 
       ------------
@@ -138,9 +138,9 @@ package body GPR2.Project.Tree is
       -- For_Imports --
       -----------------
 
-      procedure For_Imports (Id : View.Object) is
+      procedure For_Imports (View : Project.View.Object) is
       begin
-         for I of Definition.Get (Id).Imports loop
+         for I of Definition.Get (View).Imports loop
             if Is_Set (Iter.Kind, I_Recursive) then
                For_Project (I);
             else
@@ -153,15 +153,15 @@ package body GPR2.Project.Tree is
       -- For_Project --
       -----------------
 
-      procedure For_Project (Id : View.Object) is
+      procedure For_Project (View : Project.View.Object) is
       begin
          if Is_Set (Iter.Kind, I_Imported)
            or else Is_Set (Iter.Kind, I_Recursive)
          then
-            For_Imports (Id);
+            For_Imports (View);
          end if;
 
-         Append (Id);
+         Append (View);
       end For_Project;
 
    begin
