@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
+with Ada.Characters.Handling;
 
 with Langkit_Support.Tokens;
 
@@ -38,6 +39,7 @@ with GPR2.Project.View;
 
 package body GPR2.Parser.Project is
 
+   use Ada;
    use type Ada.Containers.Count_Type;
 
    --  Some helpers routines for the parser
@@ -189,15 +191,17 @@ package body GPR2.Parser.Project is
                            Str_1  : constant String :=
                                       (if Name_1 = null
                                        then ""
-                                       else Get_Name_Type
-                                         (Single_Tok_Node (Name_1)));
+                                       else Characters.Handling.To_Lower
+                                         (Get_Name_Type
+                                            (Single_Tok_Node (Name_1))));
                            Name_2 : constant Identifier :=
                                       F_Qualifier_Id2 (Names);
                            Str_2  : constant String :=
                                       (if Name_2 = null
                                        then ""
-                                       else Get_Name_Type
-                                         (Single_Tok_Node (Name_2)));
+                                       else Characters.Handling.To_Lower
+                                         (Get_Name_Type
+                                            (Single_Tok_Node (Name_2))));
                         begin
                            if Str_1 = "library" and then Str_2 = "" then
                               Project.Qualifier := K_Library;
