@@ -617,11 +617,18 @@ package body GPR2.Parser.Project is
 
             if Present (Index) then
                if Values.Length = 1 then
+                  --  A special case is the External attribute which has a
+                  --  single value and an Index.
+
                   A := GPR2.Project.Attribute.Create
-                    (Name  => Get_Name_Type (Single_Tok_Node (Name)),
+                    (Name  =>
+                       (if Kind (Name) = External_Name_Kind
+                        then "external"
+                        else Get_Name_Type (Single_Tok_Node (Name))),
                      Index =>
                        Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
                      Value => Values.First_Element);
+
                else
                   A := GPR2.Project.Attribute.Create
                     (Name   => Get_Name_Type (Single_Tok_Node (Name)),
