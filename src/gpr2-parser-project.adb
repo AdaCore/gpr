@@ -137,21 +137,25 @@ package body GPR2.Parser.Project is
          function Parser (Node : GPR_Node) return Visit_Status is
             Status : constant Visit_Status := Into;
 
-            procedure Parse_Project_Declaration (N : Project_Declaration);
+            procedure Parse_Project_Declaration
+              (N : not null Project_Declaration);
             --  Parse a project declaration and set the qualifier if present
 
-            procedure Parse_External_Reference (N : External_Reference);
+            procedure Parse_External_Reference
+              (N : not null External_Reference);
             --  A the name of the external into the Externals list
 
-            procedure Parse_With_Decl (N : With_Decl);
+            procedure Parse_With_Decl (N : not null With_Decl);
             --  Add the name of the withed project into the Imports list
 
             ------------------------------
             -- Parse_External_Reference --
             ------------------------------
 
-            procedure Parse_External_Reference (N : External_Reference) is
-               Var : constant String_Literal := F_String_Lit (N);
+            procedure Parse_External_Reference
+              (N : not null External_Reference)
+            is
+               Var : constant not null String_Literal := F_String_Lit (N);
             begin
                Project.Externals.Append (Get_Name_Type (Var));
             end Parse_External_Reference;
@@ -160,9 +164,12 @@ package body GPR2.Parser.Project is
             -- Parse_Project_Declaration --
             -------------------------------
 
-            procedure Parse_Project_Declaration (N : Project_Declaration) is
-               Name : constant Expr := F_Project_Name (N);
-               Qual : constant Types.Project_Qualifier := F_Qualifier (N);
+            procedure Parse_Project_Declaration
+              (N : not null Project_Declaration)
+            is
+               Name : constant not null Expr := F_Project_Name (N);
+               Qual : constant Types.Project_Qualifier :=
+                        F_Qualifier (N);
             begin
                --  If we have an explicit qualifier parse it now. If not the
                --  kind of project will be determined later during a second
@@ -175,7 +182,7 @@ package body GPR2.Parser.Project is
 
                      when Qualifier_Names_Kind =>
                         declare
-                           Names : constant Qualifier_Names :=
+                           Names : constant not null Qualifier_Names :=
                                      Qualifier_Names (F_Qualifier (Qual));
                            Name_1 : constant Identifier :=
                                       F_Qualifier_Id1 (Names);
@@ -228,8 +235,9 @@ package body GPR2.Parser.Project is
             -- Parse_With_Decl --
             ---------------------
 
-            procedure Parse_With_Decl (N : With_Decl) is
-               Path_Names : constant List_String_Literal := F_Path_Names (N);
+            procedure Parse_With_Decl (N : not null With_Decl) is
+               Path_Names : constant not null List_String_Literal :=
+                              F_Path_Names (N);
                Num_Childs : constant Natural := Child_Count (N);
                Cur_Child  : GPR_Node;
             begin
@@ -338,20 +346,19 @@ package body GPR2.Parser.Project is
       --  Actual parser callabck for the project
 
       function Get_Variable_Values
-        (Node : Variable_Reference) return Containers.Value_List;
+        (Node : not null Variable_Reference) return Containers.Value_List;
       --  Parse and return the value for the given variable reference
 
       function Get_Attribute_Ref
-        (Project : Name_Type; Node : Attribute_Reference)
+        (Project : Name_Type; Node : not null Attribute_Reference)
          return Containers.Value_List;
 
       function Get_Variable_Ref
-        (Project : Name_Type; Node : Identifier)
+        (Project : Name_Type; Node : not null Identifier)
          return Containers.Value_List;
 
       function Get_Term_List
-        (Node : Term_List) return Containers.Value_List
-        with Pre => Node /= null;
+        (Node : not null Term_List) return Containers.Value_List;
       --  Parse a list of value or a single value as found in an attribute
 
       --  The parsing status for case statement (possibly nested)
@@ -377,7 +384,7 @@ package body GPR2.Parser.Project is
       -----------------------
 
       function Get_Attribute_Ref
-        (Project : Name_Type; Node : Attribute_Reference)
+        (Project : Name_Type; Node : not null Attribute_Reference)
          return Containers.Value_List
       is
          Name : constant Name_Type :=
@@ -398,7 +405,7 @@ package body GPR2.Parser.Project is
       -------------------
 
       function Get_Term_List
-        (Node : Term_List) return Containers.Value_List
+        (Node : not null Term_List) return Containers.Value_List
       is
          use Langkit_Support;
          use Langkit_Support.Tokens;
@@ -416,17 +423,18 @@ package body GPR2.Parser.Project is
          function Parser (Node : GPR_Node) return Visit_Status is
             Status : Visit_Status := Into;
 
-            procedure Handle_String (Node : String_Literal)
+            procedure Handle_String (Node : not null String_Literal)
               with Pre  => Present (Node),
                    Post => Result.Length'Old + 1 = Result.Length;
             --  A simple static string
 
-            procedure Handle_Variable (Node : Variable_Reference)
+            procedure Handle_Variable (Node : not null Variable_Reference)
               with Pre  => Present (Node),
                    Post => Result.Length'Old < Result.Length;
             --  A variable
 
-            procedure Handle_External_Variable (Node : External_Reference)
+            procedure Handle_External_Variable
+              (Node : not null External_Reference)
               with Pre  => Present (Node),
                    Post => Result.Length'Old < Result.Length;
             --  An external variable
@@ -435,8 +443,10 @@ package body GPR2.Parser.Project is
             -- Handle_External_Variable --
             ------------------------------
 
-            procedure Handle_External_Variable (Node : External_Reference) is
-               Str  : constant String_Literal := F_String_Lit (Node);
+            procedure Handle_External_Variable
+              (Node : not null External_Reference)
+            is
+               Str  : constant not null String_Literal := F_String_Lit (Node);
                Name : constant Name_Type :=
                         Unquote
                           (Name_Type (Image (F_Tok (Single_Tok_Node (Str)))));
@@ -470,7 +480,7 @@ package body GPR2.Parser.Project is
             -- Handle_String --
             -------------------
 
-            procedure Handle_String (Node : String_Literal) is
+            procedure Handle_String (Node : not null String_Literal) is
             begin
                Result.Append
                  (Unquote
@@ -481,7 +491,7 @@ package body GPR2.Parser.Project is
             -- Handle_Variable --
             ---------------------
 
-            procedure Handle_Variable (Node : Variable_Reference) is
+            procedure Handle_Variable (Node : not null Variable_Reference) is
                Values : constant Containers.Value_List :=
                           Get_Variable_Values (Node);
             begin
@@ -521,7 +531,7 @@ package body GPR2.Parser.Project is
       ----------------------
 
       function Get_Variable_Ref
-        (Project : Name_Type; Node : Identifier)
+        (Project : Name_Type; Node : not null Identifier)
          return Containers.Value_List
       is
          Name : constant Name_Type := Get_Name_Type (Node);
@@ -540,10 +550,10 @@ package body GPR2.Parser.Project is
       -------------------------
 
       function Get_Variable_Values
-        (Node : Variable_Reference) return Containers.Value_List
+        (Node : not null Variable_Reference) return Containers.Value_List
       is
          use Langkit_Support.Tokens;
-         Name_1  : constant Identifier := F_Variable_Name1 (Node);
+         Name_1  : constant not null Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
          Name    : constant Name_Type :=
@@ -573,25 +583,25 @@ package body GPR2.Parser.Project is
 
          Status : Visit_Status := Into;
 
-         procedure Parse_Attribute_Decl_Kind (Node : Attribute_Decl)
+         procedure Parse_Attribute_Decl_Kind (Node : not null Attribute_Decl)
            with Pre => Is_Open;
          --  Parse attribute declaration and append it into Attrs set
 
-         procedure Parse_Variable_Decl_Kind (Node : Variable_Decl)
+         procedure Parse_Variable_Decl_Kind (Node : not null Variable_Decl)
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
-         procedure Parse_Package_Decl_Kind (Node : Package_Decl)
+         procedure Parse_Package_Decl_Kind (Node : not null Package_Decl)
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
-         procedure Parse_Case_Construction (Node : Case_Construction)
+         procedure Parse_Case_Construction (Node : not null Case_Construction)
            with Pre  => Is_Open,
                 Post => Case_Values.Length'Old = Case_Values.Length;
          --  Parse a case construction, during a case construction parsing the
          --  Is_Open flag may be set to False and True. Set Is_Open comments.
 
-         procedure Parse_Case_Item (Node : Case_Item)
+         procedure Parse_Case_Item (Node : not null Case_Item)
            with Pre => not Case_Values.Is_Empty;
          --  Set Is_Open to True or False depending on the item
 
@@ -602,11 +612,13 @@ package body GPR2.Parser.Project is
          -- Parse_Attribute_Decl_Kind --
          -------------------------------
 
-         procedure Parse_Attribute_Decl_Kind (Node : Attribute_Decl) is
+         procedure Parse_Attribute_Decl_Kind
+           (Node : not null Attribute_Decl)
+         is
             use Langkit_Support.Tokens;
-            Name   : constant GPR_Node := F_Attr_Name (Node);
+            Name   : constant not null GPR_Node := F_Attr_Name (Node);
             Index  : constant GPR_Node := F_Attr_Index (Node);
-            Expr   : constant Term_List := F_Expr (Node);
+            Expr   : constant not null Term_List := F_Expr (Node);
             Values : constant Containers.Value_List :=
                        Get_Term_List (Expr);
             A      : GPR2.Project.Attribute.Object;
@@ -658,8 +670,10 @@ package body GPR2.Parser.Project is
          -- Parse_Case_Construction --
          -----------------------------
 
-         procedure Parse_Case_Construction (Node : Case_Construction) is
-            Var   : constant Variable_Reference := F_Var_Ref (Node);
+         procedure Parse_Case_Construction
+           (Node : not null Case_Construction)
+         is
+            Var   : constant not null Variable_Reference := F_Var_Ref (Node);
             Value : constant Value_Type :=
                       Get_Variable_Values (Var).First_Element;
          begin
@@ -693,7 +707,7 @@ package body GPR2.Parser.Project is
          -- Parse_Case_Item --
          ---------------------
 
-         procedure Parse_Case_Item (Node : Case_Item) is
+         procedure Parse_Case_Item (Node : not null Case_Item) is
             use GPR_Parser.AST.Types;
 
             function Parser (Node : GPR_Node) return Visit_Status;
@@ -707,13 +721,13 @@ package body GPR2.Parser.Project is
             function Parser (Node : GPR_Node) return Visit_Status is
                Status : constant Visit_Status := Into;
 
-               procedure Handle_String   (Node : String_Literal);
+               procedure Handle_String   (Node : not null String_Literal);
 
                -------------------
                -- Handle_String --
                -------------------
 
-               procedure Handle_String (Node : String_Literal) is
+               procedure Handle_String (Node : not null String_Literal) is
                   use Langkit_Support.Tokens;
                   Value : constant Name_Type :=
                             Unquote
@@ -748,8 +762,8 @@ package body GPR2.Parser.Project is
          -- Parse_Package_Decl_Kind --
          -----------------------------
 
-         procedure Parse_Package_Decl_Kind (Node : Package_Decl) is
-            Name : constant Identifier := F_Pkg_Name (Node);
+         procedure Parse_Package_Decl_Kind (Node : not null Package_Decl) is
+            Name : constant not null Identifier := F_Pkg_Name (Node);
          begin
             --  First clear the package attributes container
 
@@ -780,9 +794,9 @@ package body GPR2.Parser.Project is
          -- Parse_Variable_Decl_Kind --
          ------------------------------
 
-         procedure Parse_Variable_Decl_Kind (Node : Variable_Decl) is
-            Name   : constant Identifier := F_Var_Name (Node);
-            Expr   : constant Term_List := F_Expr (Node);
+         procedure Parse_Variable_Decl_Kind (Node : not null Variable_Decl) is
+            Name   : constant not null Identifier := F_Var_Name (Node);
+            Expr   : constant not null Term_List := F_Expr (Node);
             Values : constant Containers.Value_List :=
                        Get_Term_List (Expr);
             V_Type : constant Types.Expr := F_Var_Type (Node);
