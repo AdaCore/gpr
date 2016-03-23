@@ -83,7 +83,7 @@ package body GPR2.Parser.Project is
 
    function Has_Externals (Self : Object) return Boolean is
    begin
-      return Self.Externals.Length > 0;
+      return not Self.Externals.Is_Empty;
    end Has_Externals;
 
    -----------------
@@ -92,7 +92,7 @@ package body GPR2.Parser.Project is
 
    function Has_Imports (Self : Object) return Boolean is
    begin
-      return Self.Imports.Length > 0;
+      return not Self.Imports.Is_Empty;
    end Has_Imports;
 
    -------------
@@ -487,7 +487,7 @@ package body GPR2.Parser.Project is
                Values : constant Containers.Value_List :=
                           Get_Variable_Values (Node);
             begin
-               if Values.Length = 0 then
+               if Values.Is_Empty then
                   Result.Append ("");
 
                else
@@ -594,7 +594,7 @@ package body GPR2.Parser.Project is
          --  Is_Open flag may be set to False and True. Set Is_Open comments.
 
          procedure Parse_Case_Item (Node : Case_Item)
-           with Pre => Case_Values.Length > 0;
+           with Pre => not Case_Values.Is_Empty;
          --  Set Is_Open to True or False depending on the item
 
          procedure Visit_Child (Child : GPR_Node);

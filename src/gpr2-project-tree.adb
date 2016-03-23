@@ -175,7 +175,7 @@ package body GPR2.Project.Tree is
 
    function Has_Context (Self : Object) return Boolean is
    begin
-      return Self.Context.Length > 0;
+      return not Self.Context.Is_Empty;
    end Has_Context;
 
    -----------------

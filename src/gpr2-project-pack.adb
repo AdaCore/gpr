@@ -60,13 +60,13 @@ package body GPR2.Project.Pack is
       use type Containers.Count_Type;
    begin
       if Name = "" and then Index = "" then
-         return Self.Attrs.Length > 0;
+         return not Self.Attrs.Is_Empty;
 
       elsif Index = "" then
          return Self.Attrs.Contains (Name);
 
       else
-         return Attributes (Self, Name, Index).Length > 0;
+         return not Attributes (Self, Name, Index).Is_Empty;
       end if;
    end Has_Attributes;
 

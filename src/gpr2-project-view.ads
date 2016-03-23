@@ -28,16 +28,12 @@
 --  attributes, variables and packages values depending on the current context
 --  for the corresponding tree.
 
-with Ada.Containers;
-
 with GPR2.Context;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
 package GPR2.Project.View is
-
-   use type Ada.Containers.Count_Type;
 
    type Object is tagged private;
 
@@ -89,7 +85,7 @@ package GPR2.Project.View is
      (Self  : Object;
       Name  : String := "";
       Index : String := "") return Attribute.Set.Object
-     with Post => (if Self.Has_Attributes then Attributes'Result.Length > 0);
+     with Post => (if Self.Has_Attributes then not Attributes'Result.Is_Empty);
    --  Get the list of attributes, possibly an empty list if it does not
    --  contain attributes or if Name and Index does not match any attribute.
 
@@ -104,7 +100,7 @@ package GPR2.Project.View is
    function Variables
      (Self : Object;
       Name : String := "") return Variable.Set.Object
-     with Post => (if Self.Has_Variables then Variables'Result.Length > 0);
+     with Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
    --  Get the list of variables, possibly an empty list if it does not
    --  contain variables.
 
@@ -115,7 +111,7 @@ package GPR2.Project.View is
    --  Returns true if the project view has some packages defined
 
    function Packages (Self : Object) return Pack.Set.Object
-     with Post => (if Self.Has_Packages then Packages'Result.Length > 0);
+     with Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
    --  Get the list of packages, possibly an empty list if it does not
    --  contain packages.
 

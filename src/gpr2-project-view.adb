@@ -57,13 +57,13 @@ package body GPR2.Project.View is
       Index : String := "") return Boolean is
    begin
       if Name = "" and then Index = "" then
-         return Definition.Get (Self).Attrs.Length > 0;
+         return not Definition.Get (Self).Attrs.Is_Empty;
 
       elsif Index = "" then
          return Definition.Get (Self).Attrs.Contains (Name);
 
       else
-         return Attributes (Self, Name, Index).Length > 0;
+         return not Attributes (Self, Name, Index).Is_Empty;
       end if;
    end Has_Attributes;
 
@@ -74,7 +74,7 @@ package body GPR2.Project.View is
    function Has_Imports (Self : Object) return Boolean is
       use type Ada.Containers.Count_Type;
    begin
-      return Definition.Get (Self).Trees.Imports.Length > 0;
+      return not Definition.Get (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
    ------------------
@@ -83,7 +83,7 @@ package body GPR2.Project.View is
 
    function Has_Packages (Self : Object) return Boolean is
    begin
-      return Definition.Get (Self).Packs.Length > 0;
+      return not Definition.Get (Self).Packs.Is_Empty;
    end Has_Packages;
 
    -------------------
@@ -95,7 +95,7 @@ package body GPR2.Project.View is
       Name : String := "") return Boolean is
    begin
       if Name = "" then
-         return Definition.Get (Self).Vars.Length > 0;
+         return not Definition.Get (Self).Vars.Is_Empty;
       else
          return Definition.Get (Self).Vars.Contains (Name);
       end if;
