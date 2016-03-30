@@ -80,15 +80,36 @@ package GPR2.Project.Attribute is
      with Pre => Self /= Undefined;
    --  Returns the attribute's index value
 
+   function Index_Equal (Self : Object; Value : Name_Type) return Boolean;
+   --  Returns True if the attribute's index is equal to Value taking into
+   --  account the case-sensitivity of the index.
+
+   function Value_Equal (Self : Object; Value : Name_Type) return Boolean
+     with Pre => Self.Kind = Name_Values.K_Single;
+   --  Returns True if the attribute's value is equal to Value taking into
+   --  account the case-sensitivity of the value.
+
+   --  Casing modificator
+
+   procedure Set_Case
+     (Self                    : in out Object;
+      Index_Is_Case_Sensitive : Boolean;
+      Value_Is_Case_Sensitive : Boolean);
+   --  Set attribute casing for the index and the value. By default the casing
+   --  for both are sensitive.
+
 private
 
    use Ada.Strings.Unbounded;
 
    type Object is new Name_Values.Object with record
-      Index : Unbounded_String;
+      Index                : Unbounded_String;
+      Index_Case_Sensitive : Boolean := True;
+      Value_Case_Sensitive : Boolean := True;
    end record;
 
    Undefined : constant Object :=
-                 (Name_Values.Undefined with Null_Unbounded_String);
+                 (Name_Values.Undefined
+                  with Null_Unbounded_String, True, True);
 
 end GPR2.Project.Attribute;

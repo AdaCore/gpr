@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Equal_Case_Insensitive; use Ada.Strings;
+
 package body GPR2.Project.Attribute is
 
    ------------
@@ -54,7 +56,9 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Name_Values.Create (Name, Value)
-         with Index => Null_Unbounded_String);
+         with Index                => Null_Unbounded_String,
+              Index_Case_Sensitive => True,
+              Value_Case_Sensitive => True);
    end Create;
 
    overriding function Create
@@ -63,7 +67,9 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Name_Values.Create (Name, Values)
-         with Index => Null_Unbounded_String);
+         with Index                => Null_Unbounded_String,
+              Index_Case_Sensitive => True,
+              Value_Case_Sensitive => True);
    end Create;
 
    ---------------
@@ -83,5 +89,44 @@ package body GPR2.Project.Attribute is
    begin
       return To_String (Self.Index);
    end Index;
+
+   -----------------
+   -- Index_Equal --
+   -----------------
+
+   function Index_Equal (Self : Object; Value : Name_Type) return Boolean is
+   begin
+      if Self.Index_Case_Sensitive then
+         return To_String (Self.Index) = Value;
+      else
+         return Equal_Case_Insensitive (To_String (Self.Index), Value);
+      end if;
+   end Index_Equal;
+
+   --------------
+   -- Set_Case --
+   --------------
+
+   procedure Set_Case
+     (Self                    : in out Object;
+      Index_Is_Case_Sensitive : Boolean;
+      Value_Is_Case_Sensitive : Boolean) is
+   begin
+      Self.Index_Case_Sensitive := Index_Is_Case_Sensitive;
+      Self.Value_Case_Sensitive := Value_Is_Case_Sensitive;
+   end Set_Case;
+
+   -----------------
+   -- Value_Equal --
+   -----------------
+
+   function Value_Equal (Self : Object; Value : Name_Type) return Boolean is
+   begin
+      if Self.Value_Case_Sensitive then
+         return Self.Value = Value;
+      else
+         return Equal_Case_Insensitive (Self.Value, Value);
+      end if;
+   end Value_Equal;
 
 end GPR2.Project.Attribute;
