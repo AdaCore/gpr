@@ -36,7 +36,7 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   use type GPR2.Project.Name_Values.Kind_Type;
+   use all type GPR2.Project.Name_Values.Value_Kind;
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
@@ -85,7 +85,7 @@ procedure Main is
                Text_IO.Put ("V:   " & String (Key (V)));
                Text_IO.Put (" ->");
 
-               if Element (V).Kind = Name_Values.K_Single then
+               if Element (V).Kind = Single then
                   Text_IO.Put (" " & String (Element (V).Value));
 
                else

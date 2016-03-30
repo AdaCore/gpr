@@ -27,22 +27,23 @@
 --  of values (possibly none).
 
 with GPR2.Containers;
+with GPR2.Project.Registry.Attribute;
 
 package GPR2.Project.Name_Values is
 
    use type Containers.Count_Type;
+   use all type Registry.Attribute.Value_Kind;
 
    type Object is tagged private;
 
-   type Kind_Type is (K_Single, K_List);
-   --  Either a single value or a list of values
-
    Undefined : constant Object;
+
+   subtype Value_Kind is Registry.Attribute.Value_Kind;
 
    function Create
      (Name  : Name_Type;
       Value : Value_Type) return Object
-     with Post => Create'Result.Kind = K_Single
+     with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
    --  Create a single-valued object
@@ -50,12 +51,12 @@ package GPR2.Project.Name_Values is
    function Create
      (Name   : Name_Type;
       Values : Containers.Value_List) return Object
-     with Post => Create'Result.Kind = K_List
+     with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
    --  Create a multi-valued object
 
-   function Kind (Self : Object'Class) return Kind_Type
+   function Kind (Self : Object'Class) return Registry.Attribute.Value_Kind
      with Pre => Object (Self) /= Undefined;
    --  Returns the Kind for the Name/Values pair object
 
@@ -66,7 +67,7 @@ package GPR2.Project.Name_Values is
    function Count_Values (Self : Object) return Containers.Count_Type
      with Pre  => Self /= Undefined,
           Post =>
-            (if Self.Kind = K_Single then Count_Values'Result = 1);
+            (if Self.Kind = Single then Count_Values'Result = 1);
    --  Returns the number of values for the Name/Values pair object
 
    function Values (Self : Object) return Containers.Value_List
@@ -75,13 +76,13 @@ package GPR2.Project.Name_Values is
    --  Returns the values for the Name/Values pair object
 
    function Value (Self : Object) return Value_Type
-     with Pre  => Self /= Undefined and then Self.Kind = K_Single;
+     with Pre  => Self /= Undefined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
 
 private
 
    type Object is tagged record
-      Kind   : Kind_Type;
+      Kind   : Registry.Attribute.Value_Kind;
       Name   : Unbounded_String;
       Values : Containers.Value_List;
    end record;

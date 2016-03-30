@@ -42,7 +42,7 @@ package body GPR2.Project.Name_Values is
       Value : Value_Type) return Object is
    begin
       return Object'
-        (K_Single,
+        (Single,
          To_Unbounded_String (String (Name)),
          Containers.Value_Type_List.To_Vector (String (Value), 1));
    end Create;
@@ -51,14 +51,14 @@ package body GPR2.Project.Name_Values is
      (Name   : Name_Type;
       Values : Containers.Value_List) return Object is
    begin
-      return Object'(K_List, To_Unbounded_String (String (Name)), Values);
+      return Object'(List, To_Unbounded_String (String (Name)), Values);
    end Create;
 
    ----------
    -- Kind --
    ----------
 
-   function Kind (Self : Object'Class) return Kind_Type is
+   function Kind (Self : Object'Class) return Registry.Attribute.Value_Kind is
    begin
       return Self.Kind;
    end Kind;

@@ -24,13 +24,14 @@
 
 with GPR2.Containers;
 with GPR2.Project.Name_Values;
+with GPR2.Project.Registry.Attribute;
 
 private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Attribute is
 
-   use type GPR2.Project.Name_Values.Kind_Type;
-   use type GPR2.Containers.Count_Type;
+   use type Containers.Count_Type;
+   use all type Registry.Attribute.Value_Kind;
 
    type Object is new Name_Values.Object with private;
 
@@ -42,7 +43,7 @@ package GPR2.Project.Attribute is
      (Name  : Name_Type;
       Index : Name_Type;
       Value : Value_Type) return Object
-     with Post => Create'Result.Kind = Name_Values.K_Single
+     with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
    --  Create a single-valued object
@@ -51,7 +52,7 @@ package GPR2.Project.Attribute is
      (Name   : Name_Type;
       Index  : Name_Type;
       Values : Containers.Value_List) return Object
-     with Post => Create'Result.Kind = Name_Values.K_List
+     with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
    --  Create a multi-valued object
@@ -59,7 +60,7 @@ package GPR2.Project.Attribute is
    overriding function Create
      (Name  : Name_Type;
       Value : Value_Type) return Object
-     with Post => Create'Result.Kind = Name_Values.K_Single
+     with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
    --  Create a single-valued object
@@ -67,7 +68,7 @@ package GPR2.Project.Attribute is
    overriding function Create
      (Name   : Name_Type;
       Values : Containers.Value_List) return Object
-     with Post => Create'Result.Kind = Name_Values.K_List
+     with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
    --  Create a multi-valued object
@@ -85,7 +86,7 @@ package GPR2.Project.Attribute is
    --  account the case-sensitivity of the index.
 
    function Value_Equal (Self : Object; Value : Name_Type) return Boolean
-     with Pre => Self.Kind = Name_Values.K_Single;
+     with Pre => Self.Kind = Single;
    --  Returns True if the attribute's value is equal to Value taking into
    --  account the case-sensitivity of the value.
 
