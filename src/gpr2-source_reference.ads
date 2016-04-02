@@ -22,62 +22,46 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Containers;
+--  This package represents an entity source reference. It is used for
+--  variables, attributes and packages declared in projects.
 
-package body GPR2.Project.Pack is
+private with Ada.Strings.Unbounded;
 
-   ----------------
-   -- Attributes --
-   ----------------
+package GPR2.Source_Reference is
 
-   function Attributes
-     (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Attribute.Set.Object is
-   begin
-      return Self.Attrs.Filter (Name, Index);
-   end Attributes;
+   type Object is tagged private;
 
-   ------------
-   -- Create --
-   ------------
+   subtype Source_Reference is Object;
+
+   Undefined : constant Object;
 
    function Create
-     (Name       : Name_Type;
-      Attributes : Attribute.Set.Object;
-      Sloc       : Source_Reference.Object) return Object is
-   begin
-      return Object'(Sloc with To_Unbounded_String (Name), Attributes);
-   end Create;
+     (Filename     : Full_Path_Name;
+      Line, Column : Positive) return Object'Class;
 
-   --------------------
-   -- Has_Attributes --
-   --------------------
+   function Filename (Self : Object) return Full_Path_Name;
+   --  Returns the full pathname where the entity is defined
 
-   function Has_Attributes
-     (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Boolean is
-      use type Containers.Count_Type;
-   begin
-      if Name = "" and then Index = "" then
-         return not Self.Attrs.Is_Empty;
+   function Line   (Self : Object) return Positive;
+   --  Returns the starting line of the entity declaration
 
-      elsif Index = "" then
-         return Self.Attrs.Contains (Name);
+   function Column (Self : Object) return Positive;
+   --  Returns the starting column of the entity declaration
 
-      else
-         return not Attributes (Self, Name, Index).Is_Empty;
-      end if;
-   end Has_Attributes;
+private
 
-   ----------
-   -- Name --
-   ----------
+   use Ada.Strings.Unbounded;
 
-   function Name (Self : Object) return Name_Type is
-   begin
-      return To_String (Self.Name);
-   end Name;
+   type Object is tagged record
+      Line     : Natural;
+      Column   : Natural;
+      Filename : Unbounded_String;
+   end record
+     with Dynamic_Predicate =>
+       (if Object.Filename /= Null_Unbounded_String
+        then Object.Line /= 0 and then Object.Column /= 0);
 
-end GPR2.Project.Pack;
+   Undefined : constant Object :=
+                 (0, 0, Null_Unbounded_String);
+
+end GPR2.Source_Reference;

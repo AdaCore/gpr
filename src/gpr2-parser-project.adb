@@ -37,6 +37,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 with GPR2.Project.View;
+with GPR2.Source_Reference;
 
 package body GPR2.Parser.Project is
 
@@ -623,6 +624,14 @@ package body GPR2.Parser.Project is
          procedure Visit_Child (Child : GPR_Node);
          --  Recursive call to the Parser if the Child is not null
 
+         function Get_Source_Reference
+           (Slr : Langkit_Support.Tokens.Source_Location_Range)
+            return Source_Reference.Object is
+           (Source_Reference.Create
+              (Value (Self.File),
+               Positive (Slr.Start_Line),
+               Positive (Slr.Start_Column)));
+
          -------------------------------
          -- Parse_Attribute_Decl_Kind --
          -------------------------------
@@ -631,12 +640,19 @@ package body GPR2.Parser.Project is
            (Node : not null Attribute_Decl)
          is
             use Langkit_Support.Tokens;
+            Sloc   : constant Source_Reference.Object :=
+                       Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
             Name   : constant not null GPR_Node := F_Attr_Name (Node);
             Index  : constant GPR_Node := F_Attr_Index (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
+            N_Str  : constant String :=
+                       (if Kind (Name) = External_Name_Kind
+                        then "external"
+                        else Get_Name_Type (Single_Tok_Node (Name)));
             Values : constant Containers.Value_List :=
                        Get_Term_List (Expr);
             A      : GPR2.Project.Attribute.Object;
+
          begin
             --  Name is either a string or an external
 
@@ -646,31 +662,32 @@ package body GPR2.Parser.Project is
                   --  single value and an Index.
 
                   A := GPR2.Project.Attribute.Create
-                    (Name  =>
-                       (if Kind (Name) = External_Name_Kind
-                        then "external"
-                        else Get_Name_Type (Single_Tok_Node (Name))),
+                    (Name  => N_Str,
                      Index =>
                        Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
-                     Value => Values.First_Element);
+                     Value => Values.First_Element,
+                     Sloc  => Sloc);
 
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name   => Get_Name_Type (Single_Tok_Node (Name)),
+                    (Name  => N_Str,
                      Index =>
                        Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
-                     Values => Values);
+                     Values => Values,
+                     Sloc   => Sloc);
                end if;
 
             else
                if Values.Length = 1 then
                   A := GPR2.Project.Attribute.Create
-                    (Name  => Get_Name_Type (Single_Tok_Node (Name)),
-                     Value => Values.First_Element);
+                    (Name  => N_Str,
+                     Value => Values.First_Element,
+                     Sloc  => Sloc);
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name   => Get_Name_Type (Single_Tok_Node (Name)),
-                     Values => Values);
+                    (Name   => N_Str,
+                     Values => Values,
+                     Sloc   => Sloc);
                end if;
             end if;
 
@@ -797,6 +814,8 @@ package body GPR2.Parser.Project is
          -----------------------------
 
          procedure Parse_Package_Decl_Kind (Node : not null Package_Decl) is
+            Sloc   : constant Source_Reference.Object :=
+                       Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
             Name   : constant not null Identifier := F_Pkg_Name (Node);
             P_Name : constant Name_Type :=
                        Get_Name_Type (Single_Tok_Node (Name));
@@ -818,13 +837,8 @@ package body GPR2.Parser.Project is
 
             --  Insert the package definition into the final result
 
-            declare
-               P_Name : constant Name_Type :=
-                          Get_Name_Type (Single_Tok_Node (Name));
-            begin
-               Packs.Insert
-                 (P_Name, GPR2.Project.Pack.Create (P_Name, Pack_Attrs));
-            end;
+            Packs.Insert
+              (P_Name, GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Sloc));
 
             --  Skip all nodes for this construct
 
@@ -836,6 +850,8 @@ package body GPR2.Parser.Project is
          ------------------------------
 
          procedure Parse_Variable_Decl_Kind (Node : not null Variable_Decl) is
+            Sloc   : constant Source_Reference.Object :=
+                       Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
             Name   : constant not null Identifier := F_Var_Name (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
             Values : constant Containers.Value_List :=
@@ -852,11 +868,13 @@ package body GPR2.Parser.Project is
             if Values.Length = 1 then
                V := GPR2.Project.Variable.Create
                  (Name  => Get_Name_Type (Single_Tok_Node (Name)),
-                  Value => Values.First_Element);
+                  Value => Values.First_Element,
+                  Sloc  => Sloc);
             else
                V := GPR2.Project.Variable.Create
                  (Name   => Get_Name_Type (Single_Tok_Node (Name)),
-                  Values => Values);
+                  Values => Values,
+                  Sloc   => Sloc);
             end if;
 
             Vars.Include (V.Name, V);

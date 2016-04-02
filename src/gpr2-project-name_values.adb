@@ -39,19 +39,23 @@ package body GPR2.Project.Name_Values is
 
    function Create
      (Name  : Name_Type;
-      Value : Value_Type) return Object is
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object is
    begin
       return Object'
-        (Single,
-         To_Unbounded_String (String (Name)),
-         Containers.Value_Type_List.To_Vector (String (Value), 1));
+        (Sloc
+         with Single,
+              To_Unbounded_String (String (Name)),
+              Containers.Value_Type_List.To_Vector (String (Value), 1));
    end Create;
 
    function Create
      (Name   : Name_Type;
-      Values : Containers.Value_List) return Object is
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object is
    begin
-      return Object'(List, To_Unbounded_String (String (Name)), Values);
+      return Object'
+        (Sloc with List, To_Unbounded_String (String (Name)), Values);
    end Create;
 
    ----------

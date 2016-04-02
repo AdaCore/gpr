@@ -25,12 +25,13 @@
 --  Handle project's packages which are a set of attributes
 
 with GPR2.Project.Attribute.Set;
+with GPR2.Source_Reference;
 
 private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Pack is
 
-   type Object is tagged private;
+   type Object is new Source_Reference.Object with private;
 
    Undefined : constant Object;
 
@@ -38,7 +39,8 @@ package GPR2.Project.Pack is
 
    function Create
      (Name       : Name_Type;
-      Attributes : Attribute.Set.Object) return Object;
+      Attributes : Attribute.Set.Object;
+      Sloc       : Source_Reference.Object) return Object;
    --  Create a package object with the given Name and the list of attributes.
    --  Note that the list of attribute can be empty as a package can contain no
    --  declaration.
@@ -69,11 +71,13 @@ private
 
    use Ada.Strings.Unbounded;
 
-   type Object is tagged record
+   type Object is new Source_Reference.Object with record
       Name  : Unbounded_String;
       Attrs : Attribute.Set.Object;
    end record;
 
-   Undefined : constant Object := Object'(Null_Unbounded_String, Attrs => <>);
+   Undefined : constant Object :=
+                 Object'(Source_Reference.Object
+                         with Null_Unbounded_String, Attrs => <>);
 
 end GPR2.Project.Pack;

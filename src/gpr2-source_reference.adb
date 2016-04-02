@@ -22,62 +22,44 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Containers;
+package body GPR2.Source_Reference is
 
-package body GPR2.Project.Pack is
+   ------------
+   -- Column --
+   ------------
 
-   ----------------
-   -- Attributes --
-   ----------------
-
-   function Attributes
-     (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Attribute.Set.Object is
+   function Column (Self : Object) return Positive is
    begin
-      return Self.Attrs.Filter (Name, Index);
-   end Attributes;
+      return Self.Column;
+   end Column;
 
    ------------
    -- Create --
    ------------
 
    function Create
-     (Name       : Name_Type;
-      Attributes : Attribute.Set.Object;
-      Sloc       : Source_Reference.Object) return Object is
+     (Filename     : Full_Path_Name;
+      Line, Column : Positive) return Object'Class is
    begin
-      return Object'(Sloc with To_Unbounded_String (Name), Attributes);
+      return Object'(Line, Column, To_Unbounded_String (Filename));
    end Create;
 
-   --------------------
-   -- Has_Attributes --
-   --------------------
+   --------------
+   -- Filename --
+   --------------
 
-   function Has_Attributes
-     (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Boolean is
-      use type Containers.Count_Type;
+   function Filename (Self : Object) return Full_Path_Name is
    begin
-      if Name = "" and then Index = "" then
-         return not Self.Attrs.Is_Empty;
-
-      elsif Index = "" then
-         return Self.Attrs.Contains (Name);
-
-      else
-         return not Attributes (Self, Name, Index).Is_Empty;
-      end if;
-   end Has_Attributes;
+      return To_String (Self.Filename);
+   end Filename;
 
    ----------
-   -- Name --
+   -- Line --
    ----------
 
-   function Name (Self : Object) return Name_Type is
+   function Line   (Self : Object) return Positive is
    begin
-      return To_String (Self.Name);
-   end Name;
+      return Self.Line;
+   end Line;
 
-end GPR2.Project.Pack;
+end GPR2.Source_Reference;

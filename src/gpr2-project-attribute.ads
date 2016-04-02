@@ -25,6 +25,7 @@
 with GPR2.Containers;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Source_Reference;
 
 private with Ada.Strings.Unbounded;
 
@@ -42,7 +43,8 @@ package GPR2.Project.Attribute is
    function Create
      (Name  : Name_Type;
       Index : Name_Type;
-      Value : Value_Type) return Object
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
@@ -51,7 +53,8 @@ package GPR2.Project.Attribute is
    function Create
      (Name   : Name_Type;
       Index  : Name_Type;
-      Values : Containers.Value_List) return Object
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
@@ -59,7 +62,8 @@ package GPR2.Project.Attribute is
 
    overriding function Create
      (Name  : Name_Type;
-      Value : Value_Type) return Object
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
@@ -67,7 +71,8 @@ package GPR2.Project.Attribute is
 
    overriding function Create
      (Name   : Name_Type;
-      Values : Containers.Value_List) return Object
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;

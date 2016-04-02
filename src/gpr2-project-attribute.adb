@@ -33,9 +33,10 @@ package body GPR2.Project.Attribute is
    function Create
      (Name  : Name_Type;
       Index : Name_Type;
-      Value : Value_Type) return Object is
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object is
    begin
-      return A : Object := Create (Name, Value) do
+      return A : Object := Create (Name, Value, Sloc) do
          A.Index := To_Unbounded_String (Index);
       end return;
    end Create;
@@ -43,19 +44,21 @@ package body GPR2.Project.Attribute is
    function Create
      (Name   : Name_Type;
       Index  : Name_Type;
-      Values : Containers.Value_List) return Object is
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object is
    begin
-      return A : Object := Create (Name, Values) do
+      return A : Object := Create (Name, Values, Sloc) do
          A.Index := To_Unbounded_String (Index);
       end return;
    end Create;
 
    overriding function Create
      (Name  : Name_Type;
-      Value : Value_Type) return Object is
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Value)
+        (Name_Values.Create (Name, Value, Sloc)
          with Index                => Null_Unbounded_String,
               Index_Case_Sensitive => True,
               Value_Case_Sensitive => True);
@@ -63,10 +66,11 @@ package body GPR2.Project.Attribute is
 
    overriding function Create
      (Name   : Name_Type;
-      Values : Containers.Value_List) return Object is
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Values)
+        (Name_Values.Create (Name, Values, Sloc)
          with Index                => Null_Unbounded_String,
               Index_Case_Sensitive => True,
               Value_Case_Sensitive => True);

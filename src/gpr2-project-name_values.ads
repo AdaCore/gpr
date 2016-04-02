@@ -28,13 +28,14 @@
 
 with GPR2.Containers;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Source_Reference;
 
 package GPR2.Project.Name_Values is
 
    use type Containers.Count_Type;
    use all type Registry.Attribute.Value_Kind;
 
-   type Object is tagged private;
+   type Object is new Source_Reference.Object with private;
 
    Undefined : constant Object;
 
@@ -42,7 +43,8 @@ package GPR2.Project.Name_Values is
 
    function Create
      (Name  : Name_Type;
-      Value : Value_Type) return Object
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
@@ -50,7 +52,8 @@ package GPR2.Project.Name_Values is
 
    function Create
      (Name   : Name_Type;
-      Values : Containers.Value_List) return Object
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
@@ -81,12 +84,13 @@ package GPR2.Project.Name_Values is
 
 private
 
-   type Object is tagged record
+   type Object is new Source_Reference.Object with record
       Kind   : Registry.Attribute.Value_Kind;
       Name   : Unbounded_String;
       Values : Containers.Value_List;
    end record;
 
-   Undefined : constant Object := Object'(others => <>);
+   Undefined : constant Object :=
+                 Object'(Source_Reference.Object with others => <>);
 
 end GPR2.Project.Name_Values;
