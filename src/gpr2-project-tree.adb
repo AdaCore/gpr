@@ -326,6 +326,7 @@ package body GPR2.Project.Tree is
       begin
          Data.Trees.Project := Project;
          Data.Externals := Data.Trees.Project.Externals;
+         Data.Kind := Project.Qualifier;
 
          --  Now load all imported projects if any
 
@@ -470,6 +471,21 @@ package body GPR2.Project.Tree is
          end if;
 
          P_Data.Sig := New_Signature;
+
+         --  Let's compute the project kind if needed. A project without
+         --  an explicit qualifier may actually be a library project if
+         --  Library_Name, Library_Kind is declared.
+
+         P_Data.Kind := P_Data.Trees.Project.Qualifier;
+
+         if P_Data.Kind = K_Standard then
+            if P_Data.Attrs.Contains ("library_kind")
+              or else P_Data.Attrs.Contains ("library_name")
+            then
+               P_Data.Kind := K_Library;
+            end if;
+         end if;
+
          Definition.Set (View, P_Data);
 
          --  Signal project change only if we have different and non default

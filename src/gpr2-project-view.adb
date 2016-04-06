@@ -229,8 +229,7 @@ package body GPR2.Project.View is
 
    function Kind (Self : Object) return Project_Kind is
    begin
-      --  ?? for now just return the qualifier
-      return Definition.Get (Self).Trees.Project.Qualifier;
+      return Definition.Get (Self).Kind;
    end Kind;
 
    ----------

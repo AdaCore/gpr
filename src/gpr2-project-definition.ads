@@ -78,6 +78,7 @@ private package GPR2.Project.Definition is
       Packs        : Project.Pack.Set.Object;
       Context_View : View.Object;
       Status       : Relation_Status;
+      Kind         : Project_Kind;
 
       case Has_Context is
          when True =>
