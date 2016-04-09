@@ -33,6 +33,7 @@ with GPR_Parser.AST.Types; use GPR_Parser.AST.Types;
 
 with GPR2.Parser.Registry;
 with GPR2.Project.Attribute;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 with GPR2.Project.View;
@@ -365,6 +366,11 @@ package body GPR2.Parser.Project is
         (Node : not null Term_List) return Containers.Value_List;
       --  Parse a list of value or a single value as found in an attribute
 
+      --  Global variables used to keep state during the parsing. While
+      --  visiting child nodes we may need to record status (when in a package
+      --  or a case construct for example). This parsing state is then used
+      --  to apply different check or recording.
+
       --  The parsing status for case statement (possibly nested)
 
       Case_Values : Containers.Value_List;
@@ -380,7 +386,12 @@ package body GPR2.Parser.Project is
       --  When Is_Open is False no parsing should be done, that is all node
       --  should be ignored except the Case_Item ones.
 
+      --  Package orientated state, when parsing is in a package In_Pack is
+      --  set and Pack_Name contains the name of the package and all parsed
+      --  attributes are recorded into Pack_Attrs set.
+
       In_Pack     : Boolean := False;
+      Pack_Name   : Unbounded_String;
       Pack_Attrs  : GPR2.Project.Attribute.Set.Object;
 
       -----------------------
@@ -663,11 +674,30 @@ package body GPR2.Parser.Project is
                end if;
             end if;
 
-            if In_Pack then
-               Pack_Attrs.Insert (A.Name, A);
-            else
-               Attrs.Insert (A.Name, A);
-            end if;
+            --  Record attribute with proper casing definition if found
+
+            declare
+               package A_Reg renames GPR2.Project.Registry.Attribute;
+
+               Q_Name : constant A_Reg.Qualified_Name :=
+                          A_Reg.Create (A.Name, To_String (Pack_Name));
+            begin
+               if A_Reg.Exists (Q_Name) then
+                  declare
+                     Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
+                  begin
+                     A.Set_Case
+                       (Def.Index_Case_Sensitive,
+                        Def.Value_Case_Sensitive);
+                  end;
+               end if;
+
+               if In_Pack then
+                  Pack_Attrs.Insert (A.Name, A);
+               else
+                  Attrs.Insert (A.Name, A);
+               end if;
+            end;
          end Parse_Attribute_Decl_Kind;
 
          -----------------------------
@@ -767,17 +797,24 @@ package body GPR2.Parser.Project is
          -----------------------------
 
          procedure Parse_Package_Decl_Kind (Node : not null Package_Decl) is
-            Name : constant not null Identifier := F_Pkg_Name (Node);
+            Name   : constant not null Identifier := F_Pkg_Name (Node);
+            P_Name : constant Name_Type :=
+                       Get_Name_Type (Single_Tok_Node (Name));
          begin
             --  First clear the package attributes container
 
             Pack_Attrs.Clear;
 
+            --  Entering a package, set the state and parse the corresponding
+            --  children.
+
             In_Pack := True;
+            Pack_Name := To_Unbounded_String (P_Name);
 
             Visit_Child (F_Pkg_Spec (Node));
 
             In_Pack := False;
+            Pack_Name := Null_Unbounded_String;
 
             --  Insert the package definition into the final result
 
