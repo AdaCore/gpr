@@ -42,7 +42,7 @@ package body GPR2.Project.Tree is
      (Iter : Iterator) return Cursor;
 
    overriding function Next
-     (Iter : Iterator; Position : Cursor)  return Cursor;
+     (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Recursive_Load
      (Filename     : Path_Name_Type;

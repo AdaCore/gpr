@@ -340,12 +340,12 @@ package body GPR2.Parser.Project is
    -----------
 
    procedure Parse
-     (Self      : in out Object;
-      Tree      : GPR2.Project.Tree.Object;
-      Context   : GPR2.Context.Object;
-      Attrs     : in out GPR2.Project.Attribute.Set.Object;
-      Vars      : in out GPR2.Project.Variable.Set.Object;
-      Packs     : in out GPR2.Project.Pack.Set.Object)
+     (Self    : in out Object;
+      Tree    : GPR2.Project.Tree.Object;
+      Context : GPR2.Context.Object;
+      Attrs   : in out GPR2.Project.Attribute.Set.Object;
+      Vars    : in out GPR2.Project.Variable.Set.Object;
+      Packs   : in out GPR2.Project.Pack.Set.Object)
    is
 
       function Parser (Node : GPR_Node) return Visit_Status;
@@ -466,7 +466,7 @@ package body GPR2.Parser.Project is
                Name : constant Name_Type :=
                         Unquote
                           (Name_Type (Image (F_Tok (Single_Tok_Node (Str)))));
-               Expr  : constant Term_List := F_Expr (Node);
+               Expr : constant Term_List := F_Expr (Node);
             begin
                if Context.Contains (Name) then
                   --  External in the context, use this value

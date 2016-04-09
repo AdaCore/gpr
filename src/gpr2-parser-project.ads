@@ -45,12 +45,12 @@ package GPR2.Parser.Project is
    --  during the parsing the return object is Undefined.
 
    procedure Parse
-     (Self      : in out Object;
-      Tree      : GPR2.Project.Tree.Object;
-      Context   : GPR2.Context.Object;
-      Attrs     : in out GPR2.Project.Attribute.Set.Object;
-      Vars      : in out GPR2.Project.Variable.Set.Object;
-      Packs     : in out GPR2.Project.Pack.Set.Object)
+     (Self    : in out Object;
+      Tree    : GPR2.Project.Tree.Object;
+      Context : GPR2.Context.Object;
+      Attrs   : in out GPR2.Project.Attribute.Set.Object;
+      Vars    : in out GPR2.Project.Variable.Set.Object;
+      Packs   : in out GPR2.Project.Pack.Set.Object)
      with Pre => Self /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback
