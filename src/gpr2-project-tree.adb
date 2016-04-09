@@ -256,7 +256,7 @@ package body GPR2.Project.Tree is
                                     Root_Context);
 
    begin
-      return Tree : Object := Object'(Root => Root_View) do
+      return Tree : Object := Object'(Root => Root_View, Messages => <>) do
          for View of Tree loop
             declare
                V_Data : Definition.Data := Definition.Get (View);
@@ -278,6 +278,15 @@ package body GPR2.Project.Tree is
          Set_Context (Tree, Root_Context);
       end return;
    end Load;
+
+   ------------------
+   -- Log_Messages --
+   ------------------
+
+   function Log_Messages (Self : Object) return Log.Object is
+   begin
+      return Self.Messages;
+   end Log_Messages;
 
    ----------
    -- Next --

@@ -25,6 +25,7 @@
 with Ada.Iterator_Interfaces;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Project.View;
 
 private with GPR2.Project.Definition;
@@ -64,7 +65,12 @@ package GPR2.Project.Tree is
    --  the same context will have the exact same definition.
    --  Returns Undefined if the view was not found.
 
-   --  Context.
+   function Log_Messages (Self : Object) return Log.Object;
+   --  Returns the Logs, this contains information, warning and error messages
+   --  found while handling the project.
+
+   --  Context
+
    --  Note that the context of the project tree corresponds to the context of
    --  the root project view.
 
@@ -133,7 +139,8 @@ package GPR2.Project.Tree is
 private
 
    type Object is tagged record
-      Root : View.Object;
+      Root     : View.Object;
+      Messages : Log.Object;
    end record;
 
    type Cursor is record
@@ -145,7 +152,7 @@ private
    type Constant_Reference_Type
      (View : not null access constant Project.View.Object) is null record;
 
-   Undefined  : constant Object := (Root => View.Undefined);
+   Undefined  : constant Object := (Root => View.Undefined, Messages => <>);
 
    No_Element : constant Cursor :=
                   (Definition.Project_View_Store.Empty_Vector,
