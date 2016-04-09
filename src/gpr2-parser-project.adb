@@ -364,8 +364,13 @@ package body GPR2.Parser.Project is
          return Containers.Value_List;
 
       function Get_Term_List
-        (Node : not null Term_List) return Containers.Value_List;
-      --  Parse a list of value or a single value as found in an attribute
+        (Node   : not null Term_List;
+         Single : out Boolean) return Containers.Value_List;
+      --  Parse a list of value or a single value as found in an attribute.
+      --  Single is set to True if we have a single value. It is false if we
+      --  have parsed an expression list. In this later case it does not mean
+      --  that we are retuning multiple values, just that the expression is a
+      --  list surrounded by parentheses.
 
       --  Global variables used to keep state during the parsing. While
       --  visiting child nodes we may need to record status (when in a package
@@ -421,7 +426,8 @@ package body GPR2.Parser.Project is
       -------------------
 
       function Get_Term_List
-        (Node : not null Term_List) return Containers.Value_List
+        (Node   : not null Term_List;
+         Single : out Boolean) return Containers.Value_List
       is
          use Langkit_Support;
          use Langkit_Support.Tokens;
@@ -475,8 +481,9 @@ package body GPR2.Parser.Project is
                elsif Present (Expr) then
                   --  External not in the context but has a default value
                   declare
+                     Single  : Boolean;
                      Default : constant Containers.Value_List :=
-                                 Get_Term_List (Expr);
+                                 Get_Term_List (Expr, Single);
                   begin
                      Result.Append (Unquote (Default.First_Element));
                   end;
@@ -515,12 +522,23 @@ package body GPR2.Parser.Project is
                   Result.Append ("");
 
                else
+                  --  We are adding a variable value to the current non empty
+                  --  list, or the variable contains multiple values, so this
+                  --  is not a single valued attribute.
+
+                  if Result.Length > 0 or else Values.Length > 1 then
+                     Single := False;
+                  end if;
+
                   Result.Append (Values);
                end if;
             end Handle_Variable;
 
          begin
             case Kind (Node) is
+               when Expr_List_Kind =>
+                  Single := False;
+
                when String_Literal_Kind =>
                   Handle_String (String_Literal (Node));
 
@@ -538,6 +556,7 @@ package body GPR2.Parser.Project is
          end Parser;
 
       begin
+         Single := True;
          Traverse (GPR_Node (Node), Parser'Access);
          return Result;
       end Get_Term_List;
@@ -649,18 +668,15 @@ package body GPR2.Parser.Project is
                        (if Kind (Name) = External_Name_Kind
                         then "external"
                         else Get_Name_Type (Single_Tok_Node (Name)));
+            Single : Boolean;
             Values : constant Containers.Value_List :=
-                       Get_Term_List (Expr);
+                       Get_Term_List (Expr, Single);
             A      : GPR2.Project.Attribute.Object;
-
          begin
             --  Name is either a string or an external
 
             if Present (Index) then
-               if Values.Length = 1 then
-                  --  A special case is the External attribute which has a
-                  --  single value and an Index.
-
+               if Single then
                   A := GPR2.Project.Attribute.Create
                     (Name  => N_Str,
                      Index =>
@@ -678,7 +694,7 @@ package body GPR2.Parser.Project is
                end if;
 
             else
-               if Values.Length = 1 then
+               if Single then
                   A := GPR2.Project.Attribute.Create
                     (Name  => N_Str,
                      Value => Values.First_Element,
@@ -854,8 +870,9 @@ package body GPR2.Parser.Project is
                        Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
             Name   : constant not null Identifier := F_Var_Name (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
+            Single : Boolean;
             Values : constant Containers.Value_List :=
-                       Get_Term_List (Expr);
+                       Get_Term_List (Expr, Single);
             V_Type : constant Types.Expr := F_Var_Type (Node);
             V      : GPR2.Project.Variable.Object;
          begin
@@ -865,7 +882,7 @@ package body GPR2.Parser.Project is
                null;
             end if;
 
-            if Values.Length = 1 then
+            if Single then
                V := GPR2.Project.Variable.Create
                  (Name  => Get_Name_Type (Single_Tok_Node (Name)),
                   Value => Values.First_Element,
