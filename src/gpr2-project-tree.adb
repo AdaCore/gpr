@@ -26,9 +26,14 @@ with Ada.Containers.Ordered_Sets; use Ada;
 with Ada.Environment_Variables;
 with Ada.Strings.Equal_Case_Insensitive;
 
-with GPR2.Project.Definition;
+with GPR2.Message;
 with GPR2.Parser.Project;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Definition;
+with GPR2.Project.Name_Values;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
+with GPR2.Source_Reference;
 
 package body GPR2.Project.Tree is
 
@@ -422,6 +427,9 @@ package body GPR2.Project.Tree is
       procedure Set_View (View : Project.View.Object);
       --  Set the context for the given view
 
+      procedure Validity_Check (View : Project.View.Object);
+      --  Do validity check on the given view
+
       --------------
       -- Set_View --
       --------------
@@ -471,10 +479,17 @@ package body GPR2.Project.Tree is
 
             for C in P_Data.Attrs.Iterate_Filter ("external") loop
                declare
+                  use all type Project.Registry.Attribute.Value_Kind;
+
                   External : constant Attribute.Object :=
                                Attribute.Set.Set.Element (C);
                begin
-                  P_Data.A_Context.Include (External.Index, External.Value);
+                  --  Check for the validity of the external attribute here
+                  --  as the validity check will come after it is fully
+                  --  loaded/resolved.
+                  if External.Kind = Single then
+                     P_Data.A_Context.Include (External.Index, External.Value);
+                  end if;
                end;
             end loop;
          end if;
@@ -509,6 +524,125 @@ package body GPR2.Project.Tree is
          end if;
       end Set_View;
 
+      --------------------
+      -- Validity_Check --
+      --------------------
+
+      procedure Validity_Check (View : Project.View.Object) is
+         use type Registry.Attribute.Index_Kind;
+         use type Registry.Attribute.Value_Kind;
+
+         procedure Check_Def
+           (Def : Registry.Attribute.Def;
+            A   : Attribute.Object);
+         --  Check if attribute definition is valid, record errors into the
+         --  message log facility.
+
+         ---------------
+         -- Check_Def --
+         ---------------
+
+         procedure Check_Def
+           (Def : Registry.Attribute.Def;
+            A   : Attribute.Object) is
+         begin
+            if Def.Index = Registry.Attribute.No
+              and then A.Has_Index
+            then
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute " & A.Name & " cannot have index",
+                     Source_Reference.Object (A)));
+            end if;
+
+            if Def.Value = Registry.Attribute.Single
+              and then A.Kind = Registry.Attribute.List
+            then
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute " & A.Name & " cannot be a list",
+                     Source_Reference.Object (A)));
+            end if;
+
+            if Def.Value = Registry.Attribute.List
+              and then A.Kind = Registry.Attribute.Single
+            then
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute " & A.Name & " must be a list",
+                     Source_Reference.Object (A)));
+            end if;
+         end Check_Def;
+
+         P_Kind : constant Project_Kind := View.Kind;
+         P_Data : constant Definition.Data := Definition.Get (View);
+
+      begin
+         --  Check packages
+
+         for P of P_Data.Packs loop
+            if Registry.Pack.Exists (P.Name) then
+               --  Check the package itself
+
+               if not Registry.Pack.Is_Allowed_In (P.Name, P_Kind) then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "package " & P.Name & " cannot be used in "
+                        & P_Kind'Img,
+                        Source_Reference.Object (P)));
+               end if;
+
+               --  Check package's attributes
+
+               for A of P.Attributes loop
+                  declare
+                     Q_Name : constant Registry.Attribute.Qualified_Name :=
+                                Registry.Attribute.Create (A.Name, P.Name);
+                     Def    : constant Registry.Attribute.Def :=
+                                Registry.Attribute.Get (Q_Name);
+                  begin
+                     if not Def.Is_Allowed_In (P_Kind) then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "attribute " & A.Name
+                              & " cannot be used in package " & P.Name,
+                              Source_Reference.Object (A)));
+                     end if;
+
+                     Check_Def (Def, A);
+                  end;
+               end loop;
+            end if;
+         end loop;
+
+         --  Check top level attributes
+
+         for A of P_Data.Attrs loop
+            declare
+               Q_Name : constant Registry.Attribute.Qualified_Name :=
+                          Registry.Attribute.Create (A.Name);
+            begin
+               if not Registry.Attribute.Get
+                 (Q_Name).Is_Allowed_In (P_Kind)
+               then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "attribute " & A.Name
+                        & " cannot be used in " & P_Kind'Img,
+                        Source_Reference.Object (A)));
+               end if;
+
+               Check_Def (Registry.Attribute.Get (Q_Name), A);
+            end;
+         end loop;
+      end Validity_Check;
+
    begin
       --  Register the root context for this project tree
 
@@ -530,6 +664,12 @@ package body GPR2.Project.Tree is
         (Kind => I_Project or I_Imported or I_Recursive)
       loop
          Set_View (Element (View));
+      end loop;
+
+      --  We now have an up-to-date tree, do some validity checks
+
+      for View of Self loop
+         Validity_Check (View);
       end loop;
    end Set_Context;
 

@@ -30,12 +30,15 @@ first    K_LIBRARY
 Demo     K_STANDARD
    is root
 **************** Iterator Prj2
-second   K_AGGREGATE_LIBRARY
+second   K_AGGREGATE
+first    K_LIBRARY
 first    K_LIBRARY
 Demo     K_STANDARD
 **************** Iterator Prj3
 first    K_LIBRARY
+first    K_LIBRARY
 **************** Iterator Prj4
-second   K_AGGREGATE_LIBRARY
+second   K_AGGREGATE
+first    K_LIBRARY
 first    K_LIBRARY
 Demo     K_STANDARD
