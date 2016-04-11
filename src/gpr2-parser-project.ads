@@ -24,6 +24,7 @@
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
@@ -40,7 +41,9 @@ package GPR2.Parser.Project is
 
    Undefined : constant Object;
 
-   function Load (Filename : Path_Name_Type) return Object;
+   function Load
+     (Filename : Path_Name_Type;
+      Messages : out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
 

@@ -65,7 +65,11 @@ package GPR2.Project.Tree is
    --  the same context will have the exact same definition.
    --  Returns Undefined if the view was not found.
 
-   function Log_Messages (Self : Object) return Log.Object;
+   function Has_Messages (Self : Object) return Boolean;
+   --  Returns whether some messages are present for this project tree
+
+   function Log_Messages (Self : Object) return Log.Object
+     with Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
    --  Returns the Logs, this contains information, warning and error messages
    --  found while handling the project.
 

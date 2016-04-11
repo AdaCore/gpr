@@ -53,7 +53,8 @@ package body GPR2.Project.Tree is
      (Filename     : Path_Name_Type;
       Context_View : View.Object;
       Status       : Definition.Relation_Status;
-      Root_Context : out GPR2.Context.Object) return View.Object;
+      Root_Context : out GPR2.Context.Object;
+      Messages     : out Log.Object) return View.Object;
    --  Load a project filename recurivelly and returns the corresponding root
    --  view.
 
@@ -224,6 +225,15 @@ package body GPR2.Project.Tree is
       return Position /= No_Element;
    end Has_Element;
 
+   ------------------
+   -- Has_Messages --
+   ------------------
+
+   function Has_Messages (Self : Object) return Boolean is
+   begin
+      return not Self.Messages.Is_Empty;
+   end Has_Messages;
+
    -------------
    -- Is_Root --
    -------------
@@ -253,34 +263,42 @@ package body GPR2.Project.Tree is
    function Load (Filename : Path_Name_Type) return Object is
 
       Root_Context : GPR2.Context.Object;
+      Messages     : Log.Object;
 
       Root_View : constant View.Object :=
                     Recursive_Load (Filename,
                                     View.Undefined,
                                     Definition.Root,
-                                    Root_Context);
+                                    Root_Context,
+                                    Messages);
 
    begin
-      return Tree : Object := Object'(Root => Root_View, Messages => <>) do
-         for View of Tree loop
-            declare
-               V_Data : Definition.Data := Definition.Get (View);
-            begin
-               --  Compute the external dependencies for the views. This is
-               --  the set of external used in the project and in all imported
-               --  project.
+      return Tree : Object :=
+        Object'(Root => Root_View, Messages => Messages)
+      do
+         --  Do nothing more if there is errors during the parsing
 
-               for E of V_Data.Externals loop
-                  if not V_Data.Externals.Contains (E) then
-                     V_Data.Externals.Append (E);
-                  end if;
-               end loop;
+         if Messages.Is_Empty then
+            for View of Tree loop
+               declare
+                  V_Data : Definition.Data := Definition.Get (View);
+               begin
+                  --  Compute the external dependencies for the views. This
+                  --  is the set of external used in the project and in all
+                  --  imported project.
 
-               Definition.Set (View, V_Data);
-            end;
-         end loop;
+                  for E of V_Data.Externals loop
+                     if not V_Data.Externals.Contains (E) then
+                        V_Data.Externals.Append (E);
+                     end if;
+                  end loop;
 
-         Set_Context (Tree, Root_Context);
+                  Definition.Set (View, V_Data);
+               end;
+            end loop;
+
+            Set_Context (Tree, Root_Context);
+         end if;
       end return;
    end Load;
 
@@ -319,7 +337,8 @@ package body GPR2.Project.Tree is
      (Filename     : Path_Name_Type;
       Context_View : View.Object;
       Status       : Definition.Relation_Status;
-      Root_Context : out GPR2.Context.Object) return View.Object
+      Root_Context : out GPR2.Context.Object;
+      Messages     : out Log.Object) return View.Object
 
    is
       function Load (Filename : Path_Name_Type) return Definition.Data;
@@ -331,7 +350,7 @@ package body GPR2.Project.Tree is
 
       function Load (Filename : Path_Name_Type) return Definition.Data is
          Project : constant Parser.Project.Object :=
-                     Parser.Project.Load (Filename);
+                     Parser.Project.Load (Filename, Messages);
 
          Data    : Definition.Data
                      (Has_Context =>
@@ -339,15 +358,20 @@ package body GPR2.Project.Tree is
                       or else Project.Qualifier = K_Aggregate);
       begin
          Data.Trees.Project := Project;
-         Data.Externals := Data.Trees.Project.Externals;
-         Data.Kind := Project.Qualifier;
 
-         --  Now load all imported projects if any
+         --  Do the following only if there is no error messages
 
-         for Project_Name of Data.Trees.Project.Imports loop
-            Data.Trees.Imports.Insert
-              (Project_Name, Parser.Project.Load (Project_Name));
-         end loop;
+         if Messages.Is_Empty then
+            Data.Kind := Project.Qualifier;
+            Data.Externals := Data.Trees.Project.Externals;
+
+            --  Now load all imported projects if any
+
+            for Project_Name of Data.Trees.Project.Imports loop
+               Data.Trees.Imports.Insert
+                 (Project_Name, Parser.Project.Load (Project_Name, Messages));
+            end loop;
+         end if;
 
          return Data;
       end Load;
@@ -356,6 +380,12 @@ package body GPR2.Project.Tree is
       View : Project.View.Object;
 
    begin
+      --  If there is parsing errors, do not go further
+
+      if not Messages.Is_Empty then
+         return View;
+      end if;
+
       --  Let's setup the full external environment for project
 
       for E of Data.Externals loop
@@ -395,7 +425,8 @@ package body GPR2.Project.Tree is
                   then View
                   else Context_View),
                Status       => Definition.Imported,
-               Root_Context => Root_Context));
+               Root_Context => Root_Context,
+               Messages     => Messages));
       end loop;
 
       --  And record back new data for this view
@@ -465,7 +496,9 @@ package body GPR2.Project.Tree is
                   Ctx      : GPR2.Context.Object;
                   A_View   : constant GPR2.Project.View.Object :=
                                Recursive_Load
-                                 (Pathname, View, Definition.Aggregated, Ctx);
+                                 (Pathname, View,
+                                  Definition.Aggregated, Ctx,
+                                  Self.Messages);
                begin
                   --  Record aggregated view into the aggregate's view
                   P_Data.Aggregated.Append (A_View);

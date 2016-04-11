@@ -24,6 +24,7 @@
 
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
+with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Tokens;
 
@@ -31,6 +32,7 @@ with GPR_Parser;
 with GPR_Parser.AST;       use GPR_Parser.AST;
 with GPR_Parser.AST.Types; use GPR_Parser.AST.Types;
 
+with GPR2.Message;
 with GPR2.Parser.Registry;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
@@ -112,8 +114,12 @@ package body GPR2.Parser.Project is
    -- Load --
    ----------
 
-   function Load (Filename : Path_Name_Type) return Object is
-
+   function Load
+     (Filename : Path_Name_Type;
+      Messages : out Log.Object) return Object
+   is
+      use Ada.Characters.Conversions;
+      use Ada.Strings.Wide_Wide_Unbounded;
       use GPR_Parser;
       use Langkit_Support;
       use Langkit_Support.Tokens;
@@ -298,9 +304,29 @@ package body GPR2.Parser.Project is
       else
          Unit := Get_From_File (Context, Value (Filename));
 
-         if Root (Unit) = null then
-            --  A syntax error in the project trigger this, where is the
-            --  context to display information about the malformed project?
+         if Root (Unit) = null or else Has_Diagnostics (Unit) then
+
+            if Has_Diagnostics (Unit) then
+               for D of Diagnostics (Unit) loop
+                  declare
+                     Sloc : constant Source_Reference.Object'Class :=
+                              Source_Reference.Create
+                                (Filename => Value (Filename),
+                                 Line     =>
+                                   Positive (D.Sloc_Range.Start_Line),
+                                 Column   =>
+                                   Positive (D.Sloc_Range.Start_Column));
+                  begin
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    => Source_Reference.Object (Sloc),
+                           Message =>
+                             To_String (To_Wide_Wide_String (D.Message))));
+                  end;
+               end loop;
+            end if;
+
             return Undefined;
          end if;
 
