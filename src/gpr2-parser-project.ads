@@ -80,7 +80,10 @@ package GPR2.Parser.Project is
    --  Returns True if Project has some imported projects
 
    function Imports (Self : Object) return Containers.Path_Name_List
-     with Pre => Self /= Undefined;
+     with Pre  => Self /= Undefined,
+          Post => (if Self.Has_Imports
+                   then not Imports'Result.Is_Empty
+                   else Imports'Result.Is_Empty);
    --  Returns the list of path name for all imported projects
 
    function Has_Externals (Self : Object) return Boolean
@@ -88,7 +91,10 @@ package GPR2.Parser.Project is
    --  Returns True if the project has some external variable reference
 
    function Externals (Self : Object) return Containers.Name_List
-     with Pre => Self /= Undefined;
+     with Pre  => Self /= Undefined,
+          Post => (if Self.Has_Externals
+                   then not Externals'Result.Is_Empty
+                   else Externals'Result.Is_Empty);
    --  Returns the list of all external variables
 
 private
