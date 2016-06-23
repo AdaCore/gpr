@@ -87,6 +87,18 @@ package body GPR2 is
       end if;
    end Create;
 
+   -----------------
+   -- Create_File --
+   -----------------
+
+   function Create_File (Name : Name_Type) return Path_Name_Type is
+      use GNAT;
+   begin
+      return Path_Name_Type'
+        (As_Is => To_Unbounded_String (Name),
+         Value => To_Unbounded_String (OS_Lib.Normalize_Pathname (Name)));
+   end Create_File;
+
    -------------
    -- Unquote --
    -------------

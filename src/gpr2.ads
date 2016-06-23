@@ -80,7 +80,7 @@ package GPR2 is
    function Create (Name : Name_Type) return Path_Name_Type;
    --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
    --  the Name is not found in the current working directly, the project file
-   --  is looked for in the ADA_PROJECT_PATH.
+   --  is looked for in the ADA_PROJECT_PATH if Is_Project is True.
 
    function Value (File : Path_Name_Type) return Full_Path_Name;
    --  Returns the full pathname for the given Path_Name_Type
@@ -101,5 +101,8 @@ private
      is (Left.Value < Right.Value);
 
    No_Value : constant Value_Type := "";
+
+   function Create_File (Name : Name_Type) return Path_Name_Type;
+   --  Create a Path_Name_Type for a file
 
 end GPR2;
