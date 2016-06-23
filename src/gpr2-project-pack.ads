@@ -24,12 +24,15 @@
 
 --  Handle project's packages which are a set of attributes
 
+with GPR2.Containers;
 with GPR2.Project.Attribute.Set;
 with GPR2.Source_Reference;
 
 private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Pack is
+
+   use type Containers.Count_Type;
 
    type Object is new Source_Reference.Object with private;
 
@@ -67,13 +70,23 @@ package GPR2.Project.Pack is
    --  if it does not contain attributes or if Name and Index does not match
    --  any attribute.
 
+   function Attribute
+     (Self  : Object;
+      Name  : String;
+      Index : String := "") return Project.Attribute.Object
+     with Pre =>
+       Self /= Undefined
+       and then Self.Has_Attributes (Name, Index)
+       and then Self.Attributes (Name, Index).Length = 1;
+   --  Returns the Attribute with the given Name and possibly Index
+
 private
 
    use Ada.Strings.Unbounded;
 
    type Object is new Source_Reference.Object with record
       Name  : Unbounded_String;
-      Attrs : Attribute.Set.Object;
+      Attrs : Project.Attribute.Set.Object;
    end record;
 
    Undefined : constant Object :=

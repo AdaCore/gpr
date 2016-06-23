@@ -28,6 +28,7 @@
 --  attributes, variables and packages values depending on the current context
 --  for the corresponding tree.
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
@@ -35,7 +36,9 @@ with GPR2.Project.Variable.Set;
 
 package GPR2.Project.View is
 
+   use type Containers.Count_Type;
    use type Context.Object;
+   use type Attribute.Object;
 
    type Object is tagged private;
 
@@ -101,11 +104,21 @@ package GPR2.Project.View is
      (Self  : Object;
       Name  : String := "";
       Index : String := "") return Attribute.Set.Object
-     with Post => (if Self.Has_Attributes then not Attributes'Result.Is_Empty);
+     with Post =>
+       (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty);
    --  Get the list of attributes, possibly an empty list if it does not
    --  contain attributes or if Name and Index does not match any attribute.
 
-   --  Variables
+   function Attribute
+     (Self  : Object;
+      Name  : String;
+      Index : String := "") return Attribute.Object
+     with
+       Pre  =>
+         Self /= Undefined
+         and then Self.Has_Attributes (Name, Index)
+         and then Self.Attributes (Name, Index).Length = 1;
+   --  Returns the Attribute with the given Name and possibly Index
 
    function Has_Variables
      (Self : Object;

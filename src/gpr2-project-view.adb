@@ -26,6 +26,18 @@ with GPR2.Project.Definition;
 
 package body GPR2.Project.View is
 
+   ---------------
+   -- Attribute --
+   ---------------
+
+   function Attribute
+     (Self  : Object;
+      Name  : String;
+      Index : String := "") return Project.Attribute.Object is
+   begin
+      return Self.Attributes (Name, Index).First_Element;
+   end Attribute;
+
    ----------------
    -- Attributes --
    ----------------
@@ -33,7 +45,7 @@ package body GPR2.Project.View is
    function Attributes
      (Self  : Object;
       Name  : String := "";
-      Index : String := "") return Attribute.Set.Object is
+      Index : String := "") return Project.Attribute.Set.Object is
    begin
       return Definition.Get (Self).Attrs.Filter (Name, Index);
    end Attributes;

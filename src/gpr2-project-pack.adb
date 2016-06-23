@@ -26,6 +26,18 @@ with GPR2.Containers;
 
 package body GPR2.Project.Pack is
 
+   ---------------
+   -- Attribute --
+   ---------------
+
+   function Attribute
+     (Self  : Object;
+      Name  : String;
+      Index : String := "") return Project.Attribute.Object is
+   begin
+      return Self.Attributes (Name, Index).First_Element;
+   end Attribute;
+
    ----------------
    -- Attributes --
    ----------------
@@ -33,7 +45,7 @@ package body GPR2.Project.Pack is
    function Attributes
      (Self  : Object;
       Name  : String := "";
-      Index : String := "") return Attribute.Set.Object is
+      Index : String := "") return Project.Attribute.Set.Object is
    begin
       return Self.Attrs.Filter (Name, Index);
    end Attributes;
@@ -44,7 +56,7 @@ package body GPR2.Project.Pack is
 
    function Create
      (Name       : Name_Type;
-      Attributes : Attribute.Set.Object;
+      Attributes : Project.Attribute.Set.Object;
       Sloc       : Source_Reference.Object) return Object is
    begin
       return Object'(Sloc with To_Unbounded_String (Name), Attributes);
