@@ -32,17 +32,12 @@ package body GPR2.Project.Registry.Attribute is
                                      Environment_Variables.Exists ("OS");
    --  True on Windows
 
---     function Less_Case_Insensitive
---       (Left, Right : Qualified_Name) return Boolean is
---       (Ada.Strings.Less_Case_Insensitive (String (Left), String (Right)));
---  ?? pending P402-003 fix
-
    function Less_Case_Insensitive
-     (Left, Right : Name_Type) return Boolean is
+     (Left, Right : Qualified_Name) return Boolean is
      (Ada.Strings.Less_Case_Insensitive (String (Left), String (Right)));
 
    package Attribute_Definitions is new Containers.Indefinite_Ordered_Maps
-     (Name_Type, Def, Less_Case_Insensitive);
+     (Qualified_Name, Def, Less_Case_Insensitive);
 
    Store : Attribute_Definitions.Map;
 
@@ -77,7 +72,7 @@ package body GPR2.Project.Registry.Attribute is
 
    function Exists (Q_Name : Qualified_Name) return Boolean is
    begin
-      return Store.Contains (Name_Type (Q_Name));
+      return Store.Contains (Q_Name);
    end Exists;
 
    ---------
@@ -86,7 +81,7 @@ package body GPR2.Project.Registry.Attribute is
 
    function Get (Q_Name : Qualified_Name) return Def is
    begin
-      return Store (Name_Type (Q_Name));
+      return Store (Q_Name);
    end Get;
 
 begin

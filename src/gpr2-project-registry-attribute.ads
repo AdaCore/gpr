@@ -30,9 +30,7 @@ package GPR2.Project.Registry.Attribute is
 
    type Value_Kind is (Single, List);
 
---     type Qualified_Name (<>) is private;
-   type Qualified_Name is new Name_Type;
-   --  ??? pending P402-003 fix
+   type Qualified_Name (<>) is private;
 
    function Create
      (Name : Name_Type; Pack : String := "") return Qualified_Name;
@@ -69,6 +67,6 @@ package GPR2.Project.Registry.Attribute is
 
 private
 
---     type Qualified_Name is new Name_Type;
+   type Qualified_Name is new Name_Type;
 
 end GPR2.Project.Registry.Attribute;
