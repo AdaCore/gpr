@@ -22,52 +22,71 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This package defines a source Object. This source object is shared with all
---  loaded project tree.
+with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
-package GPR2.Source is
+with GPR2.Project.View;
+with GPR2.Project.Tree;
+with GPR2.Source;
 
-   type Object is tagged private;
+procedure Main is
 
-   Undefined : constant Object;
+   use Ada;
+   use GPR2;
+   use GPR2.Project;
 
-   type Kind_Type is (S_Spec, S_Body, S_Separate);
+   procedure Check (Project_Name : String);
+   --  Do check the given project's sources
 
-   function "<" (Left, Right : Object) return Boolean;
+   procedure Output_Filename (Filename : Name_Type);
+   --  Remove the leading tmp directory
 
-   function Filename (Self : Object) return Full_Path_Name;
-   --  Retruns the filename for the given source
+   -----------
+   -- Check --
+   -----------
 
-   function Kind (Self : Object) return Kind_Type;
-   --  Returns the kind of source
+   procedure Check (Project_Name : String) is
+      Prj  : Project.Tree.Object;
+      View : Project.View.Object;
+   begin
+      Prj := Project.Tree.Load (Create (Project_Name));
 
-   function Other_Part (Self : Object) return Object;
-   --  Returns the other-part of the source. This is either the spec for a body
-   --  or the body for a spec.
+      View := Prj.Root_Project;
+      Text_IO.Put_Line ("Project: " & View.Name);
 
-   function Unit_Name (Self : Object) return Value_Type;
-   --  Returns the unit name for the given source or the empty string if the
-   --  language does not have support for unit.
+      for Source of View.Sources loop
+         declare
+            S : constant GPR2.Source.Object := Source.Source;
+            U : constant Value_Type := S.Unit_Name;
+         begin
+            Output_Filename (S.Filename);
 
-   function Language (Self : Object) return Name_Type;
-   --  Returns the language for the given source
+            Text_IO.Set_Col (16);
+            Text_IO.Put ("   language: " & S.Language);
 
-   function Create
-     (Filename  : Path_Name_Type;
-      Kind      : Kind_Type;
-      Language  : Name_Type;
-      Unit_Name : Value_Type) return Object;
+            Text_IO.Set_Col (33);
+            Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
 
-   procedure Set_Other_Part
-     (Self       : in out Object;
-      Other_Part : in out Object);
+            if U /= "" then
+               Text_IO.Put ("   unit: " & U);
+            end if;
 
-private
+            Text_IO.New_Line;
+         end;
+      end loop;
+   end Check;
 
-   type Object is tagged record
-      Id : Natural;
-   end record;
+   ---------------------
+   -- Output_Filename --
+   ---------------------
 
-   Undefined : constant Object := Object'(Id => 0);
+   procedure Output_Filename (Filename : Name_Type) is
+      I : constant Positive := Strings.Fixed.Index (Filename, "source1/");
+   begin
+      Text_IO.Put (" > " & Filename (I + 8 .. Filename'Last));
+   end Output_Filename;
 
-end GPR2.Source;
+begin
+   Check ("demo1.gpr");
+   Check ("demo2.gpr");
+end Main;

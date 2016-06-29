@@ -22,52 +22,20 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This package defines a source Object. This source object is shared with all
---  loaded project tree.
+with Ada.Containers.Vectors;
 
-package GPR2.Source is
+private package GPR2.Source.Registry is
 
-   type Object is tagged private;
-
-   Undefined : constant Object;
-
-   type Kind_Type is (S_Spec, S_Body, S_Separate);
-
-   function "<" (Left, Right : Object) return Boolean;
-
-   function Filename (Self : Object) return Full_Path_Name;
-   --  Retruns the filename for the given source
-
-   function Kind (Self : Object) return Kind_Type;
-   --  Returns the kind of source
-
-   function Other_Part (Self : Object) return Object;
-   --  Returns the other-part of the source. This is either the spec for a body
-   --  or the body for a spec.
-
-   function Unit_Name (Self : Object) return Value_Type;
-   --  Returns the unit name for the given source or the empty string if the
-   --  language does not have support for unit.
-
-   function Language (Self : Object) return Name_Type;
-   --  Returns the language for the given source
-
-   function Create
-     (Filename  : Path_Name_Type;
-      Kind      : Kind_Type;
-      Language  : Name_Type;
-      Unit_Name : Value_Type) return Object;
-
-   procedure Set_Other_Part
-     (Self       : in out Object;
-      Other_Part : in out Object);
-
-private
-
-   type Object is tagged record
-      Id : Natural;
+   type Data is record
+      Path_Name  : Path_Name_Type;
+      Language   : Unbounded_String;
+      Unit_Name  : Unbounded_String;
+      Kind       : Kind_Type;
+      Other_Part : Natural;
    end record;
 
-   Undefined : constant Object := Object'(Id => 0);
+   package Source_Store is new Ada.Containers.Vectors (Positive, Data);
 
-end GPR2.Source;
+   Store : Source_Store.Vector;
+
+end GPR2.Source.Registry;

@@ -470,7 +470,7 @@ package body GPR2.Project.Tree is
 
          P_Data        : Definition.Data := Definition.Get (View);
          Old_Signature : constant GPR2.Context.Binary_Signature :=
-                           P_Data.Sig;
+                           P_Data.Signature;
          New_Signature : constant GPR2.Context.Binary_Signature :=
                            Context.Signature (P_Data.Externals);
          Context       : constant GPR2.Context.Object :=
@@ -526,7 +526,7 @@ package body GPR2.Project.Tree is
             end loop;
          end if;
 
-         P_Data.Sig := New_Signature;
+         P_Data.Signature := New_Signature;
 
          --  Let's compute the project kind if needed. A project without
          --  an explicit qualifier may actually be a library project if
@@ -549,7 +549,7 @@ package body GPR2.Project.Tree is
          --  otherwise the project is stable and won't change.
 
          if Old_Signature /= New_Signature
-           and then P_Data.Sig /= GPR2.Context.Default_Signature
+           and then P_Data.Signature /= GPR2.Context.Default_Signature
            and then Changed /= null
          then
             Changed (View);

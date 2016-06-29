@@ -1,0 +1,11 @@
+Project: Demo
+ > main.adb       language: ada    Kind: S_BODY   unit: main
+Project: Demo
+ > demo1.gpr      language: ada    Kind: S_SPEC   unit: demo1
+ > demo2.gpr      language: ada    Kind: S_SPEC   unit: demo2
+ > file3.c        language: c      Kind: S_BODY
+ > first.gpr      language: ada    Kind: S_SPEC   unit: first
+ > source1.gpr    language: ada    Kind: S_SPEC   unit: source1
+ > src/file.ab    language: ada    Kind: S_BODY   unit: file
+ > src/file.gpr   language: ada    Kind: S_SPEC   unit: file
+ > src/file3.h    language: c      Kind: S_SPEC

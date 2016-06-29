@@ -22,9 +22,35 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps.Constants;
+
+with GNAT.MD5;
+with GNAT.OS_Lib;
+
+with GPR2.Containers;
 with GPR2.Project.Definition;
+with GPR2.Project.Source.Set;
+with GPR2.Source;
+with GPR2.Source_Reference;
 
 package body GPR2.Project.View is
+
+   function Naming_Package (Self : Object) return Pack.Object;
+   --  Returns the Naming package for the current view. This is either
+   --  the view Naming package, the project's tree Naming package from the
+   --  loaded configuration project if any and finally the default Naming
+   --  package.
+
+   Builtin_Naming_Package : Pack.Object;
+   --  The default naming package to use if no Naming package specified in the
+   --  project and no configuration file loaded. We at least want to handle in
+   --  this case the standard Ada and C namings.
+
+   Builtin_Languages      : Project.Attribute.Object;
+   --  The default languages to use if no languages attribute specified in the
+   --  project. The default value is just "ada".
 
    ---------------
    -- Attribute --
@@ -226,6 +252,16 @@ package body GPR2.Project.View is
       end if;
    end Has_Packages;
 
+   -----------------
+   -- Has_Sources --
+   -----------------
+
+   function Has_Sources (Self : Object) return Boolean is
+      use type GPR2.Containers.Count_Type;
+   begin
+      return not Definition.Get (Self).Sources.Is_Empty;
+   end Has_Sources;
+
    -------------------
    -- Has_Variables --
    -------------------
@@ -258,6 +294,20 @@ package body GPR2.Project.View is
    begin
       return Definition.Get (Self).Trees.Project.Name;
    end Name;
+
+   --------------------
+   -- Naming_Package --
+   --------------------
+
+   function Naming_Package (Self : Object) return Pack.Object is
+   --  ?? for now we do not support the loaded config project
+   begin
+      if Self.Has_Packages ("naming") then
+         return Self.Packages.Element ("naming");
+      else
+         return Builtin_Naming_Package;
+      end if;
+   end Naming_Package;
 
    --------------
    -- Packages --
@@ -292,8 +342,427 @@ package body GPR2.Project.View is
 
    function Signature (Self : Object) return GPR2.Context.Binary_Signature is
    begin
-      return Definition.Get (Self).Sig;
+      return Definition.Get (Self).Signature;
    end Signature;
+
+   -------------
+   -- Sources --
+   -------------
+
+   function Sources (Self : Object) return Source.Set.Object is
+
+      use Ada;
+      use GNAT;
+      use type MD5.Binary_Message_Digest;
+
+      procedure Handle_Directory (Dir : Full_Path_Name);
+      --  Handle the specified directory, that is read all files in Dir and
+      --  eventually call recursivelly Handle_Directory if a recursive read
+      --  is specified.
+
+      procedure Handle_File (Filename : Full_Path_Name);
+      --  Handle Filename which can eventually be part of the current view
+      --  depending on the language handled by the current view.
+
+      function Language_For
+        (Filename : Full_Path_Name;
+         Kind     : out GPR2.Source.Kind_Type)
+         return Value_Type;
+      --  The language for Filename based on the Naming package. It also
+      --  returns in Kind if Filename is a spec, a body or a separate.
+
+      function Unit_For
+        (Filename : Full_Path_Name;
+         Language : Name_Type;
+         Kind     : GPR2.Source.Kind_Type) return Name_Type;
+      --  Given Filename, returns the unit name. This is meaningful for unit
+      --  based language like Ada. For other languages the unit name is the
+      --  same as the Filename.
+
+      function Signature return MD5.Binary_Message_Digest;
+      --  Compute the signature corresponding to the source context. If the
+      --  signature is not the same recorded for the view, the source set
+      --  need to be recomputed.
+
+      Naming : constant Pack.Object := Naming_Package (Self);
+      --  Package Naming for the view
+
+      Data : Definition.Data := Definition.Get (Self);
+      --  View definition data, will be updated and recorded back into the
+      --  definition set.
+
+      ----------------------
+      -- Handle_Directory --
+      ----------------------
+
+      procedure Handle_Directory (Dir : Full_Path_Name) is
+         use all type Directories.File_Kind;
+
+         Is_Recursive : constant Boolean :=
+                          Dir'Length > 2
+                          and then Dir (Dir'Last) = '*'
+                          and then Dir (Dir'Last - 1) = '*';
+         --  Recursivityy is controlled by a double * at the end of the
+         --  directory.
+
+         Dir_Search   : Directories.Search_Type;
+         Dir_Entry    : Directories.Directory_Entry_Type;
+         Dir_Name     : constant Full_Path_Name :=
+                          (if Is_Recursive
+                           then Dir (Dir'First .. Dir'Last - 1)
+                           else Dir);
+      begin
+         Directories.Start_Search (Dir_Search, Dir_Name, "*");
+
+         while Directories.More_Entries (Dir_Search) loop
+            Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
+
+            if Directories.Kind (Dir_Entry) = Ordinary_File then
+               Handle_File (Directories.Full_Name (Dir_Entry));
+
+            elsif Directories.Kind (Dir_Entry) = Directory
+              and then Is_Recursive
+            then
+               Handle_Sub_Directory : declare
+                  New_Dir : constant String :=
+                              Directories.Simple_Name (Dir_Entry);
+               begin
+                  if New_Dir not in "." | ".." then
+                     Handle_Directory (Directories.Full_Name (Dir_Entry));
+                  end if;
+               end Handle_Sub_Directory;
+            end if;
+         end loop;
+
+         Directories.End_Search (Dir_Search);
+      end Handle_Directory;
+
+      -----------------
+      -- Handle_File --
+      -----------------
+
+      procedure Handle_File (Filename : Full_Path_Name) is
+         Kind     : GPR2.Source.Kind_Type;
+         Language : constant Value_Type :=
+                      Language_For (Filename, Kind);
+      begin
+         --  Check the language, if no language found this is not a source for
+         --  this project.
+
+         if Language /= No_Value then
+            declare
+               Src : constant GPR2.Source.Object :=
+                       GPR2.Source.Create
+                         (Create_File (Filename),
+                          Kind, Language,
+                          (if Language = "ada"
+                           then Unit_For (Filename, Language, Kind)
+                           else ""));
+            begin
+               Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
+            end;
+         end if;
+      end Handle_File;
+
+      ------------------
+      -- Language_For --
+      ------------------
+
+      function Language_For
+        (Filename : Full_Path_Name;
+         Kind     : out GPR2.Source.Kind_Type)
+         return Value_Type
+      is
+
+         function Ends_With (Str, Ending : String) return Boolean with Inline;
+         --  Returns True if Str ends with the string Ending
+
+         ---------------
+         -- Ends_With --
+         ---------------
+
+         function Ends_With (Str, Ending : String) return Boolean is
+         begin
+            if Str'Length >= Ending'Length then
+               return Strings.Fixed.Tail (Str, Ending'Length) = Ending;
+            else
+               return False;
+            end if;
+         end Ends_With;
+
+         Languages : constant Project.Attribute.Object :=
+                       (if Self.Has_Attributes ("languages")
+                        then Self.Attribute ("languages")
+                        else Builtin_Languages);
+
+      begin
+         --  For every languages defined for the view
+
+         for Lang of Languages.Values loop
+            --  Check for a spec
+
+            if Naming.Has_Attributes ("spec_suffix", Lang) then
+               if Ends_With
+                 (Filename, Naming.Attribute ("spec_suffix", Lang).Value)
+               then
+                  Kind := GPR2.Source.S_Spec;
+                  return Lang;
+               end if;
+            end if;
+
+            if Naming.Has_Attributes ("specification_suffix", Lang) then
+               if Ends_With
+                 (Filename, Naming.Attribute
+                    ("specification_suffix", Lang).Value)
+               then
+                  Kind := GPR2.Source.S_Spec;
+                  return Lang;
+               end if;
+            end if;
+
+            --  Check for a body
+
+            if Naming.Has_Attributes ("body_suffix", Lang) then
+               if Ends_With
+                 (Filename, Naming.Attribute ("body_suffix", Lang).Value)
+               then
+                  Kind := GPR2.Source.S_Body;
+                  return Lang;
+               end if;
+            end if;
+
+            if Naming.Has_Attributes ("implementation_suffix", Lang) then
+               if Ends_With
+                 (Filename, Naming.Attribute
+                    ("implementation_suffix", Lang).Value)
+               then
+                  Kind := GPR2.Source.S_Body;
+                  return Lang;
+               end if;
+            end if;
+         end loop;
+
+         return No_Value;
+      end Language_For;
+
+      ---------------
+      -- Signature --
+      ---------------
+
+      function Signature return MD5.Binary_Message_Digest is
+         C : MD5.Context;
+
+         procedure Add (A : Project.Attribute.Object);
+         --  Add attribute name and values into the MD5 context
+
+         ---------
+         -- Add --
+         ---------
+
+         procedure Add (A : Project.Attribute.Object) is
+         begin
+            MD5.Update (C, A.Name & "/");
+            for Value of A.Values loop
+               MD5.Update (C, Value);
+            end loop;
+         end Add;
+
+      begin
+         --  The signature to detect the source change is based on the
+         --  attributes which are used to compute the actual source set.
+
+         if Data.Attrs.Has_Source_Dirs then
+            Add (Data.Attrs.Source_Dirs);
+         end if;
+
+         if Data.Attrs.Has_Source_File then
+            Add (Data.Attrs.Source_File);
+         end if;
+
+         return MD5.Digest (C);
+      end Signature;
+
+      --------------
+      -- Unit_For --
+      --------------
+
+      function Unit_For
+        (Filename : Full_Path_Name;
+         Language : Name_Type;
+         Kind     : GPR2.Source.Kind_Type) return Name_Type
+      is
+         use Ada.Strings;
+
+         function Is_Standard_GNAT_Naming return Boolean;
+         --  True if the current naming scheme is GNAT's default naming scheme.
+         --  This is to take into account shortened names like "Ada." (a-),
+         --  "System." (s-) and so on.
+
+         -----------------------------
+         -- Is_Standard_GNAT_Naming --
+         -----------------------------
+
+         function Is_Standard_GNAT_Naming return Boolean is
+         begin
+            return
+              (not Naming.Has_Attributes ("spec_suffix", "ada")
+               or else Naming.Attribute ("spec_suffix", "ada").Value = ".ads")
+                 or else
+              (not Naming.Has_Attributes ("body_suffix", "ada")
+               or else Naming.Attribute ("body_suffix", "ada").Value = ".adb")
+                 or else
+              (not Naming.Has_Attributes ("dot_replacement", "ada")
+               or else Naming.Attribute
+                 ("dot_replacement_suffix", "ada").Value = "-");
+         end Is_Standard_GNAT_Naming;
+
+         Result : Unbounded_String :=
+                    To_Unbounded_String (Directories.Simple_Name (Filename));
+
+      begin
+         --  First remove the suffix for the given language
+
+         declare
+            Suffix : constant Value_Type :=
+                       Naming.Attribute
+                         ((case Kind is
+                             when GPR2.Source.S_Spec     => "spec_suffix",
+                             when GPR2.Source.S_Body     => "body_suffix",
+                             when GPR2.Source.S_Separate => "sep_suffix"),
+                          Language).Value;
+         begin
+            if Length (Result) > Suffix'Length then
+               Delete
+                 (Result,
+                  From    => Length (Result) - Suffix'Length + 1,
+                  Through => Length (Result));
+            end if;
+         end;
+
+         --  If Dot_Replacement is not a single dot, then there should not
+         --  be any dot in the name.
+
+         declare
+            Dot_Repl : constant String :=
+                         (if Naming.Has_Attributes
+                            ("dot_replacement", Language)
+                          then Naming.Attribute
+                            ("dot_replacement", Language).Value
+                          else ".");
+
+         begin
+            if Dot_Repl /= "." then
+               if Index (Result, ".") /= 0 then
+                  --  Message.Create
+                  --   (Message.Error, "invalid name, contains dot");
+                  return To_String (Result);
+
+               else
+                  declare
+                     I : Natural;
+                  begin
+                     loop
+                        I := Index (Result, Dot_Repl);
+                        exit when I = 0;
+
+                        Replace_Slice
+                          (Result, I, I + Dot_Repl'Length - 1, ".");
+                     end loop;
+                  end;
+               end if;
+            end if;
+
+            Translate (Result, Maps.Constants.Lower_Case_Map);
+         end;
+
+         --  In the standard GNAT naming scheme, check for special cases:
+         --  children or separates of A, G, I or S, and run time sources.
+
+         if Is_Standard_GNAT_Naming and then Length (Result) >= 3 then
+            declare
+               S1 : constant Character := Element (Result, 1);
+               S2 : constant Character := Element (Result, 2);
+               S3 : constant Character := Element (Result, 3);
+
+            begin
+               if S1 in 'a' | 'g' | 'i' | 's' then
+                  --  Children or separates of packages A, G, I or S. These
+                  --  names are x__ ... or x~... (where x is a, g, i, or s).
+                  --  Both versions (x__... and x~...) are allowed in all
+                  --  platforms, because it is not possible to know the
+                  --  platform before processing of the project files.
+
+                  if S2 = '_' and then S3 = '_' then
+                     --  Replace first _ by a dot
+                     Replace_Element (Result, 2, '.');
+
+                     --  and remove the second _
+                     Delete (Result, 3, 3);
+
+                  elsif S2 = '~' then
+                     Replace_Element (Result, 2, '.');
+
+                  elsif S2 = '.' then
+
+                     --  If it is potentially a run time source
+
+                     null;
+                  end if;
+               end if;
+            end;
+         end if;
+
+         --  Result contains the name of the unit in lower-cases. Check
+         --  that this is a valid unit name.
+
+         --  ?? TODO: start with letter, cannot have 2 consecutive underscores,
+         --  cannot have aa dot after an underscore, only contains alphanumeric
+         --  characters...
+
+         --  If there is a naming exception for the same unit, the file is not
+         --  a source for the unit.
+
+         --  ?? TODO: this is not currently supported
+
+         return To_String (Result);
+      end Unit_For;
+
+      Current_Signature : constant MD5.Binary_Message_Digest :=
+                            Signature;
+   begin
+      --  Check if up-to-date using signature for source_dirs, source_files...
+
+      if Data.Sources_Signature /= Current_Signature then
+         --  Read sources and set-up the corresponding definition
+
+         Populate_Sources : declare
+            Root : constant Full_Path_Name :=
+                     Directories.Containing_Directory
+                       (Value (Data.Trees.Project.Path_Name));
+         begin
+            --  Handle Source_Dirs
+
+            if Data.Attrs.Has_Source_Dirs then
+               for Dir of Data.Attrs.Source_Dirs.Values loop
+                  if OS_Lib.Is_Absolute_Path (Dir) then
+                     Handle_Directory (Dir);
+                  else
+                     Handle_Directory (Directories.Compose (Root, Dir));
+                  end if;
+               end loop;
+            end if;
+         end Populate_Sources;
+
+         --  Record back new definition for the view with updated sources
+
+         Data.Sources_Signature := Current_Signature;
+         Definition.Set (Self, Data);
+      end if;
+
+      --  Then returns the sources
+
+      return Data.Sources;
+   end Sources;
 
    ---------------
    -- Variables --
@@ -313,4 +782,38 @@ package body GPR2.Project.View is
       end if;
    end Variables;
 
+begin
+   --  Setup the default/build-in naming package
+
+   declare
+      Undef_Sloc : Source_Reference.Object renames Source_Reference.Undefined;
+      Ada_Spec   : constant Project.Attribute.Object :=
+                     Project.Attribute.Create
+                       ("spec_suffix", "ada", ".ads", Undef_Sloc);
+      Ada_Body   : constant Project.Attribute.Object :=
+                     Project.Attribute.Create
+                       ("body_suffix", "ada", ".adb", Undef_Sloc);
+      C_Spec     : constant Project.Attribute.Object :=
+                     Project.Attribute.Create
+                       ("spec_suffix", "c", ".h", Undef_Sloc);
+      C_Body     : constant Project.Attribute.Object :=
+                     Project.Attribute.Create
+                       ("body_suffix", "c", ".c", Undef_Sloc);
+      Attrs      : Project.Attribute.Set.Object;
+      Langs      : Containers.Value_List;
+   begin
+      --  Default naming package
+
+      Attrs.Insert (Ada_Spec);
+      Attrs.Insert (Ada_Body);
+      Attrs.Insert (C_Spec);
+      Attrs.Insert (C_Body);
+      Builtin_Naming_Package := Pack.Create ("naming", Attrs, Undef_Sloc);
+
+      --  Default languages attribute
+
+      Langs.Append ("ada");
+      Builtin_Languages :=
+        Project.Attribute.Create ("languages", Langs, Undef_Sloc);
+   end;
 end GPR2.Project.View;

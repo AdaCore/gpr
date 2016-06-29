@@ -34,6 +34,8 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
+limited with GPR2.Project.Source.Set;
+
 package GPR2.Project.View is
 
    use type Containers.Count_Type;
@@ -145,6 +147,16 @@ package GPR2.Project.View is
      with Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
    --  Get the list of packages, possibly an empty list if it does not
    --  contain packages.
+
+   --  Sources
+
+   function Has_Sources (Self : Object) return Boolean
+     with Pre  => Self /= Undefined,
+          Post => (if Self.Kind = K_Abstract then not Has_Sources'Result);
+   --  Returns true if the project view has some sources
+
+   function Sources (Self : Object) return Project.Source.Set.Object
+     with Pre => Self /= Undefined;
 
    --  Following routines are for internal use only and convert from a View
    --  unique Id.

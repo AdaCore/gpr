@@ -23,12 +23,14 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Vectors;
+with GNAT.MD5;
 
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Parser.Project.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
+with GPR2.Project.Source.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 
@@ -67,18 +69,20 @@ private package GPR2.Project.Definition is
    --  which own a context.
 
    type Data (Has_Context : Boolean) is tagged record
-      Trees        : Tree;
-      Externals    : Containers.Name_List;
+      Trees             : Tree;
+      Externals         : Containers.Name_List;
       --  List of externals directly or indirectly visible
-      Sig          : Context.Binary_Signature;
-      Imports      : Project_View_Store.Vector;
-      Aggregated   : Project_View_Store.Vector;
-      Attrs        : Project.Attribute.Set.Object;
-      Vars         : Project.Variable.Set.Object;
-      Packs        : Project.Pack.Set.Object;
-      Context_View : View.Object;
-      Status       : Relation_Status;
-      Kind         : Project_Kind;
+      Signature         : Context.Binary_Signature;
+      Imports           : Project_View_Store.Vector;
+      Aggregated        : Project_View_Store.Vector;
+      Attrs             : Project.Attribute.Set.Object;
+      Vars              : Project.Variable.Set.Object;
+      Packs             : Project.Pack.Set.Object;
+      Sources           : Project.Source.Set.Object;
+      Sources_Signature : GNAT.MD5.Binary_Message_Digest;
+      Context_View      : View.Object;
+      Status            : Relation_Status;
+      Kind              : Project_Kind;
 
       case Has_Context is
          when True =>

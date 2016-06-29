@@ -22,52 +22,18 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This package defines a source Object. This source object is shared with all
---  loaded project tree.
+with Ada.Containers.Ordered_Sets;
 
-package GPR2.Source is
+package GPR2.Project.Source.Set is
 
-   type Object is tagged private;
+   package Set is new Ada.Containers.Ordered_Sets (Object);
 
-   Undefined : constant Object;
+   type Object is new Set.Set with private;
 
-   type Kind_Type is (S_Spec, S_Body, S_Separate);
-
-   function "<" (Left, Right : Object) return Boolean;
-
-   function Filename (Self : Object) return Full_Path_Name;
-   --  Retruns the filename for the given source
-
-   function Kind (Self : Object) return Kind_Type;
-   --  Returns the kind of source
-
-   function Other_Part (Self : Object) return Object;
-   --  Returns the other-part of the source. This is either the spec for a body
-   --  or the body for a spec.
-
-   function Unit_Name (Self : Object) return Value_Type;
-   --  Returns the unit name for the given source or the empty string if the
-   --  language does not have support for unit.
-
-   function Language (Self : Object) return Name_Type;
-   --  Returns the language for the given source
-
-   function Create
-     (Filename  : Path_Name_Type;
-      Kind      : Kind_Type;
-      Language  : Name_Type;
-      Unit_Name : Value_Type) return Object;
-
-   procedure Set_Other_Part
-     (Self       : in out Object;
-      Other_Part : in out Object);
+   subtype Source_Set is Object;
 
 private
 
-   type Object is tagged record
-      Id : Natural;
-   end record;
+   type Object is new Set.Set with null record;
 
-   Undefined : constant Object := Object'(Id => 0);
-
-end GPR2.Source;
+end GPR2.Project.Source.Set;
