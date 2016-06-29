@@ -490,7 +490,7 @@ package body GPR2.Project.Tree is
          if View.Qualifier = K_Aggregate then
             P_Data.Aggregated.Clear;
 
-            for Project of P_Data.Attrs ("project_files").Values loop
+            for Project of P_Data.Attrs.Element ("project_files").Values loop
                declare
                   Pathname : constant Path_Name_Type := Create (Project);
                   Ctx      : GPR2.Context.Object;
@@ -510,12 +510,11 @@ package body GPR2.Project.Tree is
             --  And finaly also record the External definition if any into
             --  the aggregate project context.
 
-            for C in P_Data.Attrs.Iterate_Filter ("external") loop
+            for C in P_Data.Attrs.Iterate ("external") loop
                declare
                   use all type Project.Registry.Attribute.Value_Kind;
 
-                  External : constant Attribute.Object :=
-                               Attribute.Set.Set.Element (C);
+                  External : constant Attribute.Object := P_Data.Attrs (C);
                begin
                   --  Check for the validity of the external attribute here
                   --  as the validity check will come after it is fully

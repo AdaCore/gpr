@@ -35,7 +35,7 @@ package body GPR2.Project.View is
       Name  : String;
       Index : String := "") return Project.Attribute.Object is
    begin
-      return Self.Attributes (Name, Index).First_Element;
+      return Definition.Get (Self).Attrs.Element (Name, Index);
    end Attribute;
 
    ----------------

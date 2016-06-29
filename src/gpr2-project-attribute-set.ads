@@ -22,31 +22,92 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Strings.Less_Case_Insensitive;
+with Ada.Iterator_Interfaces;
 
-private with Ada.Strings.Unbounded;
+private with Ada.Containers.Indefinite_Ordered_Maps;
+private with Ada.Strings.Less_Case_Insensitive;
 
 package GPR2.Project.Attribute.Set is
 
-   --  The attribute name must not be case-sensitive
-
-   package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Object, Ada.Strings.Less_Case_Insensitive);
-
-   type Object is new Set.Map with private;
+   type Object is tagged private
+     with Constant_Indexing => Constant_Reference,
+          Variable_Indexing => Reference,
+          Default_Iterator  => Iterate,
+          Iterator_Element  => Attribute.Object;
 
    subtype Attribute_Set is Object;
 
-   subtype Cursor is Set.Cursor;
+   function Length (Self : Object) return Containers.Count_Type;
 
-   function Iterate_Filter
+   function Is_Empty (Self : Object) return Boolean;
+
+   function Contains
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Value_Type := "") return Boolean;
+   --  Check whether the set constains the attribute with the given Name and
+   --  possibly the given Index.
+
+   procedure Clear (Self : in out Object);
+   --  Removes all elements from Self
+
+   function Element
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Value_Type := "") return Attribute.Object
+     with Post =>
+       (if Self.Contains (Name, Index)
+        then Element'Result /= Attribute.Undefined
+        else Element'Result = Attribute.Undefined);
+
+   procedure Insert
+     (Self : in out Object; Attribute : Project.Attribute.Object)
+     with Pre => not Self.Contains (Attribute.Name, Attribute.Index);
+   --  Insert Attribute into the set
+
+   --  Iterator
+
+   type Cursor is private;
+
+   No_Element : constant Cursor;
+
+   function Element (Position : Cursor) return Attribute.Object
+     with Post =>
+       (if Has_Element (Position)
+        then Element'Result /= Attribute.Undefined
+        else Element'Result = Attribute.Undefined);
+
+   function Find
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Value_Type := "") return Cursor;
+
+   function Has_Element (Position : Cursor) return Boolean;
+
+   package Attribute_Iterator is
+     new Ada.Iterator_Interfaces (Cursor, Has_Element);
+
+   type Constant_Reference_Type
+     (Attribute : not null access constant Project.Attribute.Object) is private
+     with Implicit_Dereference => Attribute;
+
+   type Reference_Type
+     (Attribute : not null access Project.Attribute.Object) is private
+   with Implicit_Dereference => Attribute;
+
+   function Constant_Reference
+     (Self     : aliased Object;
+      Position : Cursor) return Constant_Reference_Type;
+
+   function Reference
+     (Self     : aliased in out Object;
+      Position : Cursor) return Reference_Type;
+
+   function Iterate
      (Self  : Object;
       Name  : String := "";
       Index : String := "")
-      return Set.Map_Iterator_Interfaces.Reversible_Iterator'Class;
-   --  An iterator on an attribute set which can filter out based on the name
-   --  or the index (or both) of the attribute.
+      return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
      (Self  : Object;
@@ -59,25 +120,44 @@ package GPR2.Project.Attribute.Set is
 
 private
 
-   use Ada.Strings.Unbounded;
+   --  An attribute set object is:
+   --
+   --     1. A map at the first level with the attribute name as key
+   --
+   --     2. The above map point to another map containing the actual
+   --        attributes. The map key is the index for the attributes.
 
-   type Object is new Set.Map with null record;
+   package Set_Attribute is new Ada.Containers.Indefinite_Ordered_Maps
+     (Value_Type, Attribute.Object);
+   --  The key in this set is the attribute index
 
-   type Iterator is
-     new Set.Map_Iterator_Interfaces.Reversible_Iterator with
-   record
-      Object   : Set.Map;
-      Position : Cursor;
-      Name     : Unbounded_String;
-      Index    : Unbounded_String;
+   package Set is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Set_Attribute.Map,
+      Ada.Strings.Less_Case_Insensitive, Set_Attribute."=");
+   --  The key in this Set is the attribute name (not case sensitive)
+
+   type Cursor is record
+      CM    : Set.Cursor;               -- main map cursor
+      CA    : Set_Attribute.Cursor;     -- inner map cursor (Set below)
+      Set   : access Set_Attribute.Map; -- Set ref to current inner map
    end record;
 
-   overriding function First (Object : Iterator) return Cursor;
-   overriding function Last  (Object : Iterator) return Cursor;
+   No_Element : constant Cursor :=
+                  (Set.No_Element,
+                   Set_Attribute.No_Element,
+                   null);
 
-   overriding function Next
-     (Object : Iterator; Position : Cursor) return Cursor;
-   overriding function Previous
-     (Object : Iterator; Position : Cursor) return Cursor;
+   type Constant_Reference_Type
+     (Attribute : not null access constant Project.Attribute.Object)
+   is null record;
+
+   type Reference_Type
+     (Attribute : not null access Project.Attribute.Object)
+   is null record;
+
+   type Object is tagged record
+      Attributes : Set.Map;
+      Length     : Containers.Count_Type := 0;
+   end record;
 
 end GPR2.Project.Attribute.Set;

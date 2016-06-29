@@ -42,7 +42,7 @@ procedure Main is
    -------------
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
-      use GPR2.Project.Attribute.Set.Set;
+      use GPR2.Project.Attribute.Set;
    begin
       Text_IO.Put (Prj.Name & " ");
       Text_IO.Set_Col (10);
@@ -51,10 +51,10 @@ procedure Main is
       if Full then
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate loop
-               Text_IO.Put ("   " & String (Key (A)));
+               Text_IO.Put ("   " & String (Attribute.Set.Element (A).Name));
                Text_IO.Put (" ->");
 
-               for V of Element (A).Values loop
+               for V of Attribute.Set.Element (A).Values loop
                   Text_IO.Put (" " & V);
                end loop;
                Text_IO.New_Line;

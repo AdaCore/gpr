@@ -60,7 +60,7 @@ procedure Main is
    end Display;
 
    procedure Display (Prj : Project.View.Object) is
-      use GPR2.Project.Attribute.Set.Set;
+      use GPR2.Project.Attribute.Set;
    begin
       Text_IO.Put (Prj.Name & " ");
       Text_IO.Set_Col (10);

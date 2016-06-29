@@ -48,11 +48,11 @@ begin
    Prj.Set_Context (Ctx);
 
    Text_IO.Put_Line
-     (Prj.Root_Project.Attributes ("object_dir").First_Element.Value);
+     (Prj.Root_Project.Attribute ("object_dir").Value);
 
    Ctx.Include ("OS", "Windows");
    Prj.Set_Context (Ctx);
 
    Text_IO.Put_Line
-     (Prj.Root_Project.Attributes ("object_dir").First_Element.Value);
+     (Prj.Root_Project.Attribute ("object_dir").Value);
 end Main;

@@ -35,7 +35,7 @@ package body GPR2.Project.Pack is
       Name  : String;
       Index : String := "") return Project.Attribute.Object is
    begin
-      return Self.Attributes (Name, Index).First_Element;
+      return Self.Attributes.Element (Name, Index);
    end Attribute;
 
    ----------------
@@ -74,12 +74,8 @@ package body GPR2.Project.Pack is
    begin
       if Name = "" and then Index = "" then
          return not Self.Attrs.Is_Empty;
-
-      elsif Index = "" then
-         return Self.Attrs.Contains (Name);
-
       else
-         return not Attributes (Self, Name, Index).Is_Empty;
+         return Self.Attrs.Contains (Name, Index);
       end if;
    end Has_Attributes;
 

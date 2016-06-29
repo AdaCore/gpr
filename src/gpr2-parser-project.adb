@@ -442,7 +442,7 @@ package body GPR2.Parser.Project is
                   GPR2.Project.Tree.View_For (Tree, Project, Context);
       begin
          if View.Has_Attributes (Name) then
-            return View.Attributes (Name).First_Element.Values;
+            return View.Attributes.Element (Name).Values;
 
          else
             return Containers.Value_Type_List.Empty_Vector;
@@ -755,9 +755,9 @@ package body GPR2.Parser.Project is
                end if;
 
                if In_Pack then
-                  Pack_Attrs.Insert (A.Name, A);
+                  Pack_Attrs.Insert (A);
                else
-                  Attrs.Insert (A.Name, A);
+                  Attrs.Insert (A);
                end if;
             end;
          end Parse_Attribute_Decl_Kind;
