@@ -65,6 +65,11 @@ package GPR2.Project.Registry.Attribute is
      with Pre => Exists (Q_Name);
    --  Returns the definition data for the given attribute fully qualified name
 
+   --  Some common attribute names
+
+   Source_Dirs : constant Name_Type := "source_dirs";
+   Source_File : constant Name_Type := "source_file";
+
 private
 
    type Qualified_Name is new Name_Type;

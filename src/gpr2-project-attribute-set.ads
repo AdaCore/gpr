@@ -118,6 +118,20 @@ package GPR2.Project.Attribute.Set is
    --  Returns an attribute set containing only the attribute corresponding to
    --  the given filter.
 
+   --  Some helper routines on attributes in the set
+
+   function Has_Source_Dirs (Self : Object) return Boolean is
+      (Self.Contains (Registry.Attribute.Source_Dirs));
+
+   function Source_Dirs (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Source_Dirs));
+
+   function Has_Source_File (Self : Object) return Boolean is
+      (Self.Contains (Registry.Attribute.Source_File));
+
+   function Source_File (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Source_File));
+
 private
 
    --  An attribute set object is:
