@@ -215,9 +215,15 @@ package body GPR2.Project.View is
    -- Has_Packages --
    ------------------
 
-   function Has_Packages (Self : Object) return Boolean is
+   function Has_Packages
+     (Self : Object;
+      Name : String := "") return Boolean is
    begin
-      return not Definition.Get (Self).Packs.Is_Empty;
+      if Name = "" then
+         return not Definition.Get (Self).Packs.Is_Empty;
+      else
+         return Definition.Get (Self).Packs.Contains (Name);
+      end if;
    end Has_Packages;
 
    -------------------

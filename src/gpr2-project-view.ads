@@ -135,7 +135,9 @@ package GPR2.Project.View is
 
    --  Packages
 
-   function Has_Packages (Self : Object) return Boolean
+   function Has_Packages
+     (Self : Object;
+      Name : String := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some packages defined
 
