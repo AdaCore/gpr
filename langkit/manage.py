@@ -29,7 +29,7 @@ class Manage(ManageScript):
         from language.parser import gpr_grammar
         from language.parser.lexer import gpr_lexer
 
-        return CompileCtx(lang_name='GPR', main_rule_name='compilation_unit',
+        return CompileCtx(lang_name='GPR',
                           lexer=gpr_lexer,
                           grammar=gpr_grammar,
                           lib_name='GPR_Parser',

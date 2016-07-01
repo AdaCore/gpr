@@ -1,9 +1,8 @@
 from langkit.compiled_types import abstract, ASTNode, root_grammar_class
 from langkit.parsers import Grammar
 
-gpr_grammar = Grammar()
+gpr_grammar = Grammar(main_rule_name='compilation_unit')
 A = gpr_grammar
-gpr_grammar.main_rule_name = "project"
 
 
 @abstract
