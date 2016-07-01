@@ -29,11 +29,11 @@ class Token(LexerToken):
     Project = WithSymbol()
     Extends = WithSymbol()
     External = WithSymbol()
-    External_As_List = WithSymbol()
+    ExternalAsList = WithSymbol()
 
     # Punctuation
-    Par_open = WithSymbol()
-    Par_close = WithSymbol()
+    ParOpen = WithSymbol()
+    ParClose = WithSymbol()
     Semicolon = WithSymbol()
     Colon = WithSymbol()
     Comma = WithSymbol()
@@ -88,9 +88,9 @@ gpr_lexer.add_rules(
     (NoCase("project"),                         Token.Project),
     (NoCase("extends"),                         Token.Extends),
     (NoCase("external"),                        Token.External),
-    (NoCase("external_as_list"),                Token.External_As_List),
-    (Literal("("),                              Token.Par_open),
-    (Literal(")"),                              Token.Par_close),
+    (NoCase("external_as_list"),                Token.ExternalAsList),
+    (Literal("("),                              Token.ParOpen),
+    (Literal(")"),                              Token.ParClose),
     (Literal(";"),                              Token.Semicolon),
     (Literal(":"),                              Token.Colon),
     (Literal(","),                              Token.Comma),
