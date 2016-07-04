@@ -29,28 +29,232 @@
 
 
 
-with Ada.Containers;        use Ada.Containers;
+
+
+with Ada.Containers; use Ada.Containers;
 with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Ordered_Maps;
-with Ada.Text_IO;           use Ada.Text_IO;
+with Ada.Text_IO;    use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
-with System.Storage_Elements; use System.Storage_Elements;
+with System.Storage_Elements;    use System.Storage_Elements;
 
 with Langkit_Support.Extensions; use Langkit_Support.Extensions;
 with Langkit_Support.PP_Utils;   use Langkit_Support.PP_Utils;
+with Langkit_Support.Relative_Get;
 with Langkit_Support.Symbols;    use Langkit_Support.Symbols;
-with Langkit_Support.Text;       use Langkit_Support.Text;
-with Langkit_Support.Tokens;     use Langkit_Support.Tokens;
 
 package body GPR_Parser.AST is
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (T       : Lexical_Env_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return Lexical_Env
+   is
+      function Absolute_Get
+        (T : Lexical_Env_Array_Access; Index : Integer)
+         return Lexical_Env
+      is
+        (T.Items (Index + 1)); --  T.Items is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => Lexical_Env,
+         Sequence_Type => Lexical_Env_Array_Access,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : Lexical_Env;
+   begin
+      if Relative_Get (T, Index, Result) then
+            Inc_Ref (Result);
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds array access";
+      end if;
+   end Get;
+
+   -------------
+   -- Inc_Ref --
+   -------------
+
+   procedure Inc_Ref (T : Lexical_Env_Array_Access) is
+   begin
+      T.Ref_Count := T.Ref_Count + 1;
+   end Inc_Ref;
+
+   -------------
+   -- Dec_Ref --
+   -------------
+
+   procedure Dec_Ref (T : in out Lexical_Env_Array_Access) is
+   begin
+      if T = null then
+         return;
+      end if;
+
+      if T.Ref_Count = 1 then
+            for Item of T.Items loop
+               Dec_Ref (Item);
+            end loop;
+         Free (T);
+      else
+         T.Ref_Count := T.Ref_Count - 1;
+         T := null;
+      end if;
+   end Dec_Ref;
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (T       : Env_Element_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return Env_Element
+   is
+      function Absolute_Get
+        (T : Env_Element_Array_Access; Index : Integer)
+         return Env_Element
+      is
+        (T.Items (Index + 1)); --  T.Items is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => Env_Element,
+         Sequence_Type => Env_Element_Array_Access,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : Env_Element;
+   begin
+      if Relative_Get (T, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return No_Env_Element;
+      else
+         raise Property_Error with "out-of-bounds array access";
+      end if;
+   end Get;
+
+   -------------
+   -- Inc_Ref --
+   -------------
+
+   procedure Inc_Ref (T : Env_Element_Array_Access) is
+   begin
+      T.Ref_Count := T.Ref_Count + 1;
+   end Inc_Ref;
+
+   -------------
+   -- Dec_Ref --
+   -------------
+
+   procedure Dec_Ref (T : in out Env_Element_Array_Access) is
+   begin
+      if T = null then
+         return;
+      end if;
+
+      if T.Ref_Count = 1 then
+         Free (T);
+      else
+         T.Ref_Count := T.Ref_Count - 1;
+         T := null;
+      end if;
+   end Dec_Ref;
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (T       : GPR_Node_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node
+   is
+      function Absolute_Get
+        (T : GPR_Node_Array_Access; Index : Integer)
+         return GPR_Node
+      is
+        (T.Items (Index + 1)); --  T.Items is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => GPR_Node,
+         Sequence_Type => GPR_Node_Array_Access,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : GPR_Node;
+   begin
+      if Relative_Get (T, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds array access";
+      end if;
+   end Get;
+
+   -------------
+   -- Inc_Ref --
+   -------------
+
+   procedure Inc_Ref (T : GPR_Node_Array_Access) is
+   begin
+      T.Ref_Count := T.Ref_Count + 1;
+   end Inc_Ref;
+
+   -------------
+   -- Dec_Ref --
+   -------------
+
+   procedure Dec_Ref (T : in out GPR_Node_Array_Access) is
+   begin
+      if T = null then
+         return;
+      end if;
+
+      if T.Ref_Count = 1 then
+         Free (T);
+      else
+         T.Ref_Count := T.Ref_Count - 1;
+         T := null;
+      end if;
+   end Dec_Ref;
+
+
+
+   function Child_Number
+     (Node : access GPR_Node_Type'Class)
+      return Positive
+      with Pre => Node.Parent /= null;
+   --  Return the 1-based index for Node in its parents' children
 
    -----------
    -- Child --
    -----------
 
    function Child (Node  : access GPR_Node_Type'Class;
-                   Index : Natural) return GPR_Node
+                   Index : Positive) return GPR_Node
    is
       Result : GPR_Node;
       Exists : Boolean;
@@ -64,8 +268,8 @@ package body GPR_Parser.AST is
    --------------
 
    function Traverse
-     (Node  : GPR_Node;
-      Visit : access function (Node : GPR_Node)
+     (Node  : access GPR_Node_Type'Class;
+      Visit : access function (Node : access GPR_Node_Type'Class)
               return Visit_Status)
      return Visit_Status
    is
@@ -84,7 +288,7 @@ package body GPR_Parser.AST is
             for I in 1 .. Child_Count (Node) loop
                declare
                   Cur_Child : constant GPR_Node :=
-                     Child (Node, I - 1);
+                     Child (Node, I);
 
                begin
                   if Cur_Child /= null then
@@ -112,9 +316,9 @@ package body GPR_Parser.AST is
    --------------
 
    procedure Traverse
-     (Node  : GPR_Node;
-      Visit : access function (Node : GPR_Node)
-              return Visit_Status)
+     (Node  : access GPR_Node_Type'Class;
+      Visit : access function (Node : access GPR_Node_Type'Class)
+                               return Visit_Status)
    is
       Result_Status : Visit_Status;
       pragma Unreferenced (Result_Status);
@@ -122,32 +326,195 @@ package body GPR_Parser.AST is
       Result_Status := Traverse (Node, Visit);
    end Traverse;
 
+   ------------------------
+   -- Traverse_With_Data --
+   ------------------------
+
+   function Traverse_With_Data
+     (Node  : access GPR_Node_Type'Class;
+      Visit : access function (Node : access GPR_Node_Type'Class;
+                               Data : in out Data_type)
+                               return Visit_Status;
+      Data  : in out Data_Type)
+      return Visit_Status
+   is
+      function Helper (Node : access GPR_Node_Type'Class)
+                       return Visit_Status;
+
+      ------------
+      -- Helper --
+      ------------
+
+      function Helper (Node : access GPR_Node_Type'Class)
+                       return Visit_Status
+      is
+      begin
+         return Visit (Node, Data);
+      end Helper;
+
+      Saved_Data : Data_Type;
+      Result     : Visit_Status;
+
+   begin
+      if Reset_After_Traversal then
+         Saved_Data := Data;
+      end if;
+      Result := Traverse (Node, Helper'Access);
+      if Reset_After_Traversal then
+         Data := Saved_Data;
+      end if;
+      return Result;
+   end Traverse_With_Data;
+
+   --------------
+   -- Traverse --
+   --------------
+
+   function Traverse
+     (Root : access GPR_Node_Type'Class)
+      return Traverse_Iterator
+   is
+   begin
+      return Create (Root);
+   end Traverse;
+
+   ----------
+   -- Next --
+   ----------
+
+   function Next (It       : in out Find_Iterator;
+                  Element  : out GPR_Node) return Boolean
+   is
+   begin
+      while Next (It.Traverse_It, Element) loop
+         if It.Predicate.Evaluate (Element) then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Next;
+
+   --------------
+   -- Finalize --
+   --------------
+
+   overriding
+   procedure Finalize (It : in out Find_Iterator) is
+   begin
+      Destroy (It.Predicate);
+   end Finalize;
+
+   ----------
+   -- Next --
+   ----------
+
+   overriding function Next
+     (It       : in out Local_Find_Iterator;
+      Element  : out GPR_Node) return Boolean is
+   begin
+      while Next (It.Traverse_It, Element) loop
+         if It.Predicate (Element) then
+            return True;
+         end if;
+      end loop;
+      return False;
+   end Next;
+
+   ----------
+   -- Find --
+   ----------
+
+   function Find
+     (Root      : access GPR_Node_Type'Class;
+      Predicate : access function (N : GPR_Node) return Boolean)
+     return Local_Find_Iterator
+   is
+   begin
+      return Ret : Local_Find_Iterator do
+         Ret.Traverse_It := Traverse (Root);
+         --  We still want to provide this functionality, even though it is
+         --  unsafe. TODO: We might be able to make a safe version of this
+         --  using generics. Still would be more verbose though.
+         Ret.Predicate   := Predicate'Unrestricted_Access.all;
+      end return;
+   end Find;
+
+   ----------
+   -- Find --
+   ----------
+
+   function Find
+     (Root      : access GPR_Node_Type'Class;
+      Predicate : GPR_Node_Predicate)
+      return Find_Iterator
+   is
+   begin
+      return (Ada.Finalization.Limited_Controlled with
+              Traverse_It => Traverse (Root),
+              Predicate   => Predicate);
+   end Find;
+
+   ----------------
+   -- Find_First --
+   ----------------
+
+   function Find_First
+     (Root      : access GPR_Node_Type'Class;
+      Predicate : GPR_Node_Predicate)
+      return GPR_Node
+   is
+      I      : Find_Iterator := Find (Root, Predicate);
+      Result : GPR_Node;
+   begin
+      if not I.Next (Result) then
+         Result := null;
+      end if;
+      return Result;
+   end Find_First;
+
+   --------------
+   -- Evaluate --
+   --------------
+
+   function Evaluate
+     (P : access GPR_Node_Kind_Filter;
+      N : GPR_Node)
+      return Boolean
+   is
+   begin
+      return N.Kind = P.Kind;
+   end Evaluate;
+
    ----------------
    -- Sloc_Range --
    ----------------
 
    function Sloc_Range
-     (Node : GPR_Node;
+     (Node : access GPR_Node_Type'Class;
       Snap : Boolean := False) return Source_Location_Range
    is
-      Tokens : Token_Vectors.Vector renames Node.Token_Data.Tokens;
+      TDH                  : Token_Data_Handler renames
+         Node.Unit.Token_Data.all;
       Sloc_Start, Sloc_End : Source_Location;
-      use Token_Vectors;
+
+      function Get (Index : Token_Index) return Token_Data_Type is
+        (Get_Token (TDH, Index));
+
    begin
       if Snap then
          declare
-            Tok_Start : constant Natural :=
-              Natural'Max (Node.Token_Start - 1, 0);
-            Tok_End : constant Natural :=
-              Natural'Min (Node.Token_End + 1, Last_Index (Tokens));
+            Tok_Start : constant Token_Index :=
+              Token_Index'Max (Node.Token_Start - 1, 0);
+            Tok_End : constant Token_Index :=
+              Token_Index'Min (Node.Token_End + 1, Last_Token (TDH));
          begin
-            Sloc_Start := End_Sloc (Get (Tokens, Tok_Start).Sloc_Range);
+            Sloc_Start := End_Sloc (Get (Tok_Start).Sloc_Range);
             Sloc_End :=
-              Start_Sloc (Get (Tokens, Tok_End).Sloc_Range);
+              Start_Sloc (Get (Tok_End).Sloc_Range);
          end;
       else
-         Sloc_Start := Start_Sloc (Get (Tokens, Node.Token_Start).Sloc_Range);
-         Sloc_End := End_Sloc (Get (Tokens, Node.Token_End).Sloc_Range);
+         Sloc_Start := Start_Sloc (Get (Node.Token_Start).Sloc_Range);
+         Sloc_End := End_Sloc (Get (Node.Token_End).Sloc_Range);
       end if;
       return Make_Range (Sloc_Start, Sloc_End);
    end Sloc_Range;
@@ -156,7 +523,7 @@ package body GPR_Parser.AST is
    -- Lookup --
    ------------
 
-   function Lookup (Node : GPR_Node;
+   function Lookup (Node : access GPR_Node_Type'Class;
                     Sloc : Source_Location;
                     Snap : Boolean := False) return GPR_Node
    is
@@ -171,7 +538,7 @@ package body GPR_Parser.AST is
    -- Compare --
    -------------
 
-   function Compare (Node : GPR_Node;
+   function Compare (Node : access GPR_Node_Type'Class;
                      Sloc : Source_Location;
                      Snap : Boolean := False) return Relative_Position is
    begin
@@ -183,7 +550,7 @@ package body GPR_Parser.AST is
    -------------------
 
    function Get_Extension
-     (Node : GPR_Node;
+     (Node : access GPR_Node_Type'Class;
       ID   : Extension_ID;
       Dtor : Extension_Destructor) return Extension_Access
    is
@@ -211,16 +578,17 @@ package body GPR_Parser.AST is
    -- Free_Extensions --
    ---------------------
 
-   procedure Free_Extensions (Node : access GPR_Node_Type) is
+   procedure Free_Extensions (Node : access GPR_Node_Type'Class) is
       procedure Free is new Ada.Unchecked_Deallocation
         (Extension_Type, Extension_Access);
       use Extension_Vectors;
       Slot : Extension_Slot;
    begin
       --  Explicit iteration for perf
-      for J in 0 .. Last_Index (Node.Extensions) loop
+      for J in First_Index (Node.Extensions) .. Last_Index (Node.Extensions)
+      loop
          Slot := Get (Node.Extensions, J);
-         Slot.Dtor (GPR_Node (Node), Slot.Extension.all);
+         Slot.Dtor (Node, Slot.Extension.all);
          Free (Slot.Extension);
       end loop;
    end Free_Extensions;
@@ -229,11 +597,12 @@ package body GPR_Parser.AST is
    -- Lookup_Relative --
    ---------------------
 
-   procedure Lookup_Relative (Node       : GPR_Node;
-                              Sloc       : Source_Location;
-                              Position   : out Relative_Position;
-                              Node_Found : out GPR_Node;
-                              Snap       : Boolean := False) is
+   procedure Lookup_Relative
+     (Node       : access GPR_Node_Type'Class;
+      Sloc       : Source_Location;
+      Position   : out Relative_Position;
+      Node_Found : out GPR_Node;
+      Snap       : Boolean := False) is
       Result : constant Relative_Position :=
         Compare (Node, Sloc, Snap);
    begin
@@ -251,50 +620,286 @@ package body GPR_Parser.AST is
      (Node : access GPR_Node_Type'Class)
      return GPR_Node_Arrays.Array_Type
    is
+      
+
+      First : constant Integer := GPR_Node_Arrays.Index_Type'First;
+      Last  : constant Integer := First + Child_Count (Node) - 1;
    begin
-      return A : GPR_Node_Arrays.Array_Type
-                    (0 .. Child_Count (Node))
+      return A : GPR_Node_Arrays.Array_Type (First .. Last)
       do
-         for I in 0 .. Child_Count (Node) loop
+         for I in First .. Last loop
             A (I) := Child (Node, I);
          end loop;
       end return;
    end Children;
+
+   -----------------
+   -- First_Token --
+   -----------------
+
+   function First_Token (TDH : Token_Data_Handler_Access) return Token_Type is
+      use Token_Vectors, Trivia_Vectors, Integer_Vectors;
+   begin
+      if Length (TDH.Tokens_To_Trivias) = 0
+         or else (First_Element (TDH.Tokens_To_Trivias)
+                  = Integer (No_Token_Index))
+      then
+         --  There is no leading trivia: return the first token
+
+         return (if Length (TDH.Tokens) = 0
+                 then No_Token
+                 else (TDH,
+                       Token_Index (First_Index (TDH.Tokens)),
+                       No_Token_Index));
+
+      else
+         return (TDH, No_Token_Index, Token_Index (First_Index (TDH.Trivias)));
+      end if;
+   end First_Token;
+
+   ----------------
+   -- Last_Token --
+   ----------------
+
+   function Last_Token (TDH : Token_Data_Handler_Access) return Token_Type is
+      use Token_Vectors, Trivia_Vectors, Integer_Vectors;
+   begin
+      if Length (TDH.Tokens_To_Trivias) = 0
+           or else
+         Last_Element (TDH.Tokens_To_Trivias) = Integer (No_Token_Index)
+      then
+         --  There is no trailing trivia: return the last token
+
+         return (if Length (TDH.Tokens) = 0
+                 then No_Token
+                 else (TDH,
+                       Token_Index (Last_Index (TDH.Tokens)),
+                       No_Token_Index));
+
+      else
+         return (TDH, No_Token_Index, Token_Index (First_Index (TDH.Trivias)));
+      end if;
+   end Last_Token;
+
+   ---------
+   -- "<" --
+   ---------
+
+   function "<" (Left, Right : Token_Type) return Boolean is
+      pragma Assert (Left.TDH = Right.TDH);
+   begin
+      if Left.Token < Right.Token then
+         return True;
+
+      elsif Left.Token = Right.Token then
+         return Left.Trivia < Right.Trivia;
+
+      else
+         return False;
+      end if;
+   end "<";
+
+   ----------
+   -- Next --
+   ----------
+
+   function Next (Token : Token_Type) return Token_Type is
+   begin
+      if Token.TDH = null then
+         return No_Token;
+      end if;
+
+      declare
+         use Token_Vectors, Trivia_Vectors, Integer_Vectors;
+         TDH : Token_Data_Handler renames Token.TDH.all;
+
+         function Next_Token return Token_Type is
+           (if Token.Token < Token_Index (Last_Index (TDH.Tokens))
+            then (Token.TDH, Token.Token + 1, No_Token_Index)
+            else No_Token);
+         --  Return a reference to the next token (not trivia) or No_Token if
+         --  Token was the last one.
+
+      begin
+         if Token.Trivia /= No_Token_Index then
+            --  Token is a reference to a trivia: take the next trivia if it
+            --  exists, or escalate to the next token otherwise.
+
+            declare
+               Tr : constant Trivia_Node :=
+                  Get (TDH.Trivias, Natural (Token.Trivia));
+            begin
+               return (if Tr.Has_Next
+                       then (Token.TDH, Token.Token, Token.Trivia + 1)
+                       else Next_Token);
+            end;
+
+         else
+            --  Thanks to the guard above, we cannot get to the declare block
+            --  for the No_Token case, so if Token does not refers to a trivia,
+            --  it must be a token.
+
+            pragma Assert (Token.Token /= No_Token_Index);
+
+            --  If there is no trivia, just go to the next token
+
+            if Length (TDH.Tokens_To_Trivias) = 0 then
+               return Next_Token;
+            end if;
+
+            --  If this token has trivia, return a reference to the first one,
+            --  otherwise get the next token.
+
+            declare
+               Tr_Index : constant Token_Index := Token_Index
+                 (Get (TDH.Tokens_To_Trivias, Natural (Token.Token) + 1));
+            begin
+               return (if Tr_Index = No_Token_Index
+                       then Next_Token
+                       else (Token.TDH, Token.Token, Tr_Index));
+            end;
+         end if;
+      end;
+   end Next;
+
+   --------------
+   -- Previous --
+   --------------
+
+   function Previous (Token : Token_Type) return Token_Type is
+   begin
+      if Token.TDH = null then
+         return No_Token;
+      end if;
+
+      declare
+         use Token_Vectors, Trivia_Vectors, Integer_Vectors;
+         TDH : Token_Data_Handler renames Token.TDH.all;
+      begin
+         if Token.Trivia = No_Token_Index then
+            --  Token is a regular token, so the previous token is either the
+            --  last trivia of the previous regular token, either the previous
+            --  regular token itself.
+            declare
+               Prev_Trivia : Token_Index;
+            begin
+               --  Get the index of the trivia that is right bofre Token (if
+               --  any).
+               if Length (TDH.Tokens_To_Trivias) = 0 then
+                  Prev_Trivia := No_Token_Index;
+
+               else
+                  Prev_Trivia := Token_Index
+                    (Get (TDH.Tokens_To_Trivias, Natural (Token.Token)));
+                  while Prev_Trivia /= No_Token_Index
+                           and then
+                        Get (TDH.Trivias, Natural (Prev_Trivia)).Has_Next
+                  loop
+                     Prev_Trivia := Prev_Trivia + 1;
+                  end loop;
+               end if;
+
+               --  If there is no such trivia and Token was the first one, then
+               --  this was the start of the token stream: no previous token.
+               if Prev_Trivia = No_Token_Index
+                  and then Token.Token <= First_Token_Index
+               then
+                  return No_Token;
+               else
+                  return (Token.TDH, Token.Token - 1, Prev_Trivia);
+               end if;
+            end;
+
+         --  Past this point: Token is known to be a trivia
+
+         elsif Token.Trivia = First_Token_Index then
+            --  This is the first trivia for some token, so the previous token
+            --  cannot be a trivia.
+            return (if Token.Token = No_Token_Index
+                    then No_Token
+                    else (Token.TDH, Token.Token, No_Token_Index));
+
+         elsif Token.Token = No_Token_Index then
+            --  This is a leading trivia and not the first one, so the previous
+            --  token has to be a trivia.
+            return (Token.TDH, No_Token_Index, Token.Trivia - 1);
+
+         --  Past this point: Token is known to be a trivia *and* it is not a
+         --  leading trivia.
+
+         else
+            return (Token.TDH,
+                    Token.Token,
+                    (if Get (TDH.Trivias, Natural (Token.Trivia - 1)).Has_Next
+                     then Token.Trivia - 1
+                     else No_Token_Index));
+         end if;
+      end;
+   end Previous;
+
+   ----------
+   -- Data --
+   ----------
+
+   function Data (T : Token_Type) return Token_Data_Type is
+   begin
+      return (if T.Trivia = No_Token_Index
+              then Token_Vectors.Get (T.TDH.Tokens, Natural (T.Token))
+              else Trivia_Vectors.Get (T.TDH.Trivias, Natural (T.Trivia)).T);
+   end Data;
+
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Token : Token_Type) return String is
+      D : constant Token_Data_Type := Data (Token);
+   begin
+      return (if D.Text = null
+              then Token_Kind_Name (D.Kind)
+              else Image (D.Text.all));
+   end Image;
 
    --------------------------
    -- Children_With_Trivia --
    --------------------------
 
    function Children_With_Trivia
-     (Node : GPR_Node) return Children_Arrays.Array_Type
+     (Node : access GPR_Node_Type'Class)
+      return Children_Arrays.Array_Type
    is
-      Ret_Vec : Children_Vectors.Vector;
       use Children_Vectors;
 
-      procedure Append_Trivias (First, Last : Natural);
+      Ret_Vec : Children_Vectors.Vector;
+      TDH     : Token_Data_Handler renames Node.Unit.Token_Data.all;
+
+      procedure Append_Trivias (First, Last : Token_Index);
       --  Append all the trivias of tokens between indices First and Last to
       --  the returned vector.
 
-      procedure Append_Trivias (First, Last : Natural) is
+      procedure Append_Trivias (First, Last : Token_Index) is
       begin
          for I in First .. Last loop
-            for T of Get_Trivias (Node.Token_Data.all, I) loop
-               Append (Ret_Vec, Child_Record'(Kind => Trivia, Trivia => T));
+            for D of Get_Trivias (TDH, I) loop
+               Append (Ret_Vec, (Kind => Trivia, Trivia => D));
             end loop;
          end loop;
       end Append_Trivias;
 
-      function Not_Null
-        (N : GPR_Node) return Boolean is (N /= null);
+      function Not_Null (N : GPR_Node) return Boolean is
+        (N /= null);
 
-      N_Children : constant GPR_Node_Arrays.Array_Type
+      First_Child : constant GPR_Node_Arrays.Index_Type :=
+         GPR_Node_Arrays.Index_Type'First;
+      N_Children  : constant GPR_Node_Arrays.Array_Type
         := GPR_Node_Arrays.Filter
           (Children (Node), Not_Null'Access);
    begin
       if N_Children'Length > 0
-        and then Node.Token_Start /= N_Children (0).Token_Start
+        and then Node.Token_Start /= N_Children (First_Child).Token_Start
       then
-         Append_Trivias (Node.Token_Start, N_Children (0).Token_Start - 1);
+         Append_Trivias (Node.Token_Start,
+                         N_Children (First_Child).Token_Start - 1);
       end if;
 
       for I in N_Children'Range loop
@@ -312,17 +917,40 @@ package body GPR_Parser.AST is
       end return;
    end Children_With_Trivia;
 
+   --------------
+   -- Node_Env --
+   --------------
+
+   function Node_Env
+     (Node : access GPR_Node_Type)
+      return AST_Envs.Lexical_Env
+   is (Node.Self_Env);
+
+   ------------------
+   -- Children_Env --
+   ------------------
+
+   function Children_Env
+     (Node : access GPR_Node_Type)
+      return AST_Envs.Lexical_Env
+   is (Node.Self_Env);
+
    ---------------
    -- PP_Trivia --
    ---------------
 
-   procedure PP_Trivia (Node : GPR_Node; Level : Integer := 0) is
+   procedure PP_Trivia
+     (Node : access GPR_Node_Type'Class;
+      Level : Integer := 0)
+   is
    begin
       Put_Line (Level, Kind_Name (Node));
       for C of Children_With_Trivia (Node) loop
          case C.Kind is
             when Trivia =>
-               Put_Line (Level + 1, Image (C.Trivia.Text.all));
+               Put_Line (Level + 1, (if C.Trivia.Text = null
+                                     then ""
+                                     else Image (C.Trivia.Text.all)));
             when Child =>
                PP_Trivia (C.Node, Level + 1);
          end case;
@@ -336,12 +964,13 @@ package body GPR_Parser.AST is
    --------------------------
 
    procedure Populate_Lexical_Env
-     (Node : GPR_Node; Root_Env : AST_Envs.Lexical_Env)
+     (Node     : access GPR_Node_Type'Class;
+      Root_Env : AST_Envs.Lexical_Env)
    is
 
       --  The internal algorithm, as well as the Do_Env_Action implementations,
-      --  use an implicit stack of environment, where the topmost parent
-      --  environment (Parent_Env parameter) is mutable.
+      --  use an implicit stack of environment, where the topmost
+      --  environment (Current_Env parameter) is mutable.
       --
       --  - We want to be able to replace the topmost env that will be seen by
       --    subsequent nodes. This is to support constructs such as use clauses
@@ -370,45 +999,46 @@ package body GPR_Parser.AST is
       --    like in the GNAT compiler.
 
       procedure Populate_Internal
-        (Node : GPR_Node;
-         Parent_Env : aliased in out Lexical_Env);
+        (Node        : access GPR_Node_Type'Class;
+         Current_Env : in out Lexical_Env);
 
       -----------------------
       -- Populate_Internal --
       -----------------------
 
       procedure Populate_Internal
-        (Node : GPR_Node;
-         Parent_Env : aliased in out Lexical_Env)
+        (Node        : access GPR_Node_Type'Class;
+         Current_Env : in out Lexical_Env)
       is
-         New_Parent_Env : aliased Lexical_Env;
+         Children_Env : Lexical_Env;
       begin
          if Node = null then
             return;
          end if;
 
-         --  Set the lexical env of node to the Parent environment
-         Node.Parent_Env := Parent_Env;
+         --  By default (i.e. unless Do_Env_Actions does something special),
+         --  the environment we store in Node is the current one.
+         Node.Self_Env := Current_Env;
 
          --  Call Do_Env_Actions on the Node. This might:
-         --  1. Mutate the Parent_Env functionally, eg. replace the pointer by
-         --     a pointer to a new env derived from Parent_Env.
-         --  2. Return a new Env, that will be used as the Parent_Env for the
-         --     node's children.
-         New_Parent_Env := Node.Do_Env_Actions (Parent_Env);
+         --  1. Mutate Current_Env, eg. replace it with a new env derived from
+         --     Current_Env.
+         --  2. Return a new env, that will be used as the Current_Env for
+         --     Node's children.
+         Children_Env := Node.Do_Env_Actions (Current_Env);
 
-         --  Call recursively on children. Use the New_Parent_Env if available,
-         --  else pass the existing Parent_Env.
+         --  Call recursively on children. Use the Children_Env if available,
+         --  else pass the existing Current_Env.
          for Child of Children (Node) loop
-            if New_Parent_Env = null then
-               Populate_Internal (Child, Parent_Env);
+            if Children_Env = null then
+               Populate_Internal (Child, Current_Env);
             else
-               Populate_Internal (Child, New_Parent_Env);
+               Populate_Internal (Child, Children_Env);
             end if;
          end loop;
       end Populate_Internal;
 
-      Env : aliased AST_Envs.Lexical_Env := Root_Env;
+      Env : AST_Envs.Lexical_Env := Root_Env;
    begin
       Populate_Internal (Node, Env);
    end Populate_Lexical_Env;
@@ -417,9 +1047,14 @@ package body GPR_Parser.AST is
    -- Short_Image --
    -----------------
 
-   function Short_Image (Node : GPR_Node) return String is
+   function Short_Image
+     (Node : access GPR_Node_Type)
+      return Text_Type
+   is
+      Self : access GPR_Node_Type'Class := Node;
    begin
-      return "<" & Kind_Name (Node) & " " & Image (Sloc_Range (Node)) & ">";
+      return "<" & To_Text (Kind_Name (Self))
+             & " " & To_Text (Image (Sloc_Range (Node))) & ">";
    end Short_Image;
 
    ------------------------
@@ -472,31 +1107,36 @@ package body GPR_Parser.AST is
    ----------
 
    procedure Dump_One_Lexical_Env
-     (Self : AST_Envs.Lexical_Env; Env_Id : String := "";
+     (Self          : AST_Envs.Lexical_Env; Env_Id : String := "";
       Parent_Env_Id : String := "")
    is
       use Sorted_Envs;
 
       function Image (El : Env_Element) return String is
-        (Short_Image (El.El));
+        (Image (Short_Image (El.El)));
+      -- TODO??? This is slightly hackish, because we're converting a wide
+      -- string back to string. But since we're using this solely for
+      -- test/debug purposes, it should not matter. Still, would be good to
+      -- have Text_Type everywhere at some point.
 
-      function Image is new Env_Element_Vectors.Image (Image);
+      function Image is new AST_Envs.Env_Element_Vectors.Image (Image);
 
-      First_Iter : Boolean := True;
    begin
-      Put ("<LexEnv Id" & Env_Id & " Parent"
-           & (if Self.Parent /= null then Parent_Env_Id
-              else " null") & " (");
+      Put ("<LexEnv (Id" & Env_Id & ", Parent"
+           & (if Self.Parent /= null then Parent_Env_Id else " null")
+           & "), ");
 
-      for El in To_Sorted_Env (Self.Env).Iterate loop
-         if not First_Iter then
-            Put (" ");
-         end if;
-         First_Iter := False;
-         Put (Langkit_Support.Text.Image (Key (El).all) & ": "
-              & Image (Element (El)));
-      end loop;
-      Put (")>");
+      if Self.Env.Is_Empty then
+         Put_Line ("empty>");
+      else
+         Put_Line ("{");
+         for El in To_Sorted_Env (Self.Env.all).Iterate loop
+            Put ("    ");
+            Put_Line (Langkit_Support.Text.Image (Key (El).all) & ": "
+                 & Image (Element (El)));
+         end loop;
+         Put_Line ("}>");
+      end if;
    end Dump_One_Lexical_Env;
    --  This procedure dumps *one* lexical environment
 
@@ -506,7 +1146,8 @@ package body GPR_Parser.AST is
    ----------------------
 
    procedure Dump_Lexical_Env
-     (Node : GPR_Node; Root_Env : AST_Envs.Lexical_Env)
+     (Node     : access GPR_Node_Type'Class;
+      Root_Env : AST_Envs.Lexical_Env)
    is
       use Address_To_Id_Maps;
 
@@ -523,6 +1164,8 @@ package body GPR_Parser.AST is
       begin
          if E = Root_Env then
             return " <root>";
+         elsif E = null then
+            return " <null>";
          end if;
 
          Env_Ids.Insert (E, Current_Env_Id, C, Inserted);
@@ -550,13 +1193,12 @@ package body GPR_Parser.AST is
          --  we'll only dump environments at the site of their creation, and
          --  not in any subsequent link. We use the Env_Ids map to check which
          --  envs we have already seen or not.
-         if not Env_Ids.Contains (Current.Parent_Env) then
-            Env := Current.Parent_Env;
+         if not Env_Ids.Contains (Current.Self_Env) then
+            Env := Current.Self_Env;
             Put ("<" & Kind_Name (Current) & " "
                  & Image (Sloc_Range (Current)) & "> - ");
             Dump_One_Lexical_Env
               (Env, Get_Env_Id (Env), Get_Env_Id (Env.Parent));
-            Put_Line ("");
          end if;
 
          for Child of Children (Current) loop
@@ -566,7 +1208,7 @@ package body GPR_Parser.AST is
       --  This procedure implements the main recursive logic of dumping the
       --  environments.
    begin
-      Internal (Node);
+      Internal (GPR_Node (Node));
    end Dump_Lexical_Env;
 
    -------------
@@ -574,22 +1216,24 @@ package body GPR_Parser.AST is
    -------------
 
    function Parents
-     (Node : access GPR_Node_Type)
+     (Node         : access GPR_Node_Type'Class;
+      Include_Self : Boolean := True)
       return GPR_Node_Array_Access
    is
-      Count : Natural := 1;
-      Cur   : GPR_Node := GPR_Node (Node);
+      Count : Natural := 0;
+      Start : GPR_Node :=
+        GPR_Node (if Include_Self then Node else Node.Parent);
+      Cur   : GPR_Node := Start;
    begin
-      while Cur.Parent /= null loop
+      while Cur /= null loop
          Count := Count + 1;
          Cur := Cur.Parent;
       end loop;
 
       declare
-         Result : constant GPR_Node_Array_Access :=
-           new GPR_Node_Array_Record (Count);
+         Result : constant GPR_Node_Array_Access := Create (Count);
       begin
-         Cur := GPR_Node (Node);
+         Cur := Start;
          for I in Result.Items'Range loop
             Result.Items (I) := Cur;
             Cur := Cur.Parent;
@@ -597,6 +1241,180 @@ package body GPR_Parser.AST is
          return Result;
       end;
    end Parents;
+
+   ------------
+   -- Parent --
+   ------------
+
+   function Parent
+     (Node : access GPR_Node_Type'Class) return GPR_Node
+   is
+   begin
+      return Node.Parent;
+   end Parent;
+
+   -------------
+   -- Iterate --
+   -------------
+
+   function Iterate
+     (Node : GPR_Node_Type)
+      return
+      GPR_Node_Ada2012_Iterators.Reversible_Iterator'Class
+   is
+   begin
+      return It : constant Iterator := (Node => Node'Unrestricted_Access)
+      do
+         null;
+      end return;
+   end Iterate;
+
+   -----------
+   -- First --
+   -----------
+
+   overriding
+   function First (Object : Iterator) return Children_Cursor is
+      Node : GPR_Node renames Object.Node;
+   begin
+      return (if Node.Child_Count > 0
+              then (Node, 1)
+              else No_Children);
+   end First;
+
+   ----------
+   -- Last --
+   ----------
+
+   overriding
+   function Last (Object : Iterator) return Children_Cursor is
+      Node : GPR_Node renames Object.Node;
+   begin
+      return (if Node.Child_Count > 0
+              then (Node, Node.Child_Count)
+              else No_Children);
+   end Last;
+
+   ----------
+   -- Next --
+   ----------
+
+   overriding
+   function Next
+     (Object : Iterator;
+      C      : Children_Cursor)
+      return Children_Cursor
+   is
+      Node : GPR_Node renames Object.Node;
+   begin
+      if C = No_Children or else C.Child_Index >= Node.Child_Count then
+         return No_Children;
+      else
+         return (Node, C.Child_Index + 1);
+      end if;
+   end Next;
+
+   --------------
+   -- Previous --
+   --------------
+
+   overriding
+   function Previous
+     (Object : Iterator;
+      C      : Children_Cursor)
+      return Children_Cursor
+   is
+      pragma Unreferenced (Object);
+   begin
+      if C = No_Children or else C.Child_Index <= 1 then
+         return No_Children;
+      else
+         return (C.Node, C.Child_Index - 1);
+      end if;
+   end Previous;
+
+   ------------------
+   -- Child_Number --
+   ------------------
+
+   function Child_Number
+     (Node : access GPR_Node_Type'Class)
+      return Positive
+   is
+      N : GPR_Node := null;
+   begin
+      for I in 1 .. Child_Count (Node.Parent) loop
+         N := Child (Node.Parent, I);
+         if N = Node then
+            return I;
+         end if;
+      end loop;
+
+      --  If we reach this point, then Node isn't a Child of Node.Parent. This
+      --  is not supposed to happen.
+      raise Program_Error;
+   end Child_Number;
+
+   ----------------------
+   -- Previous_Sibling --
+   ----------------------
+
+   function Previous_Sibling
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node
+   is
+      N : constant Positive := Child_Number (Node);
+   begin
+      return (if N = 1
+              then null
+              else Node.Parent.Child (N - 1));
+   end Previous_Sibling;
+
+   ------------------
+   -- Next_Sibling --
+   ------------------
+
+   function Next_Sibling
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node
+   is
+   begin
+      --  If Node is the last sibling, then Child will return null
+      return Node.Parent.Child (Child_Number (Node) + 1);
+   end Next_Sibling;
+
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (A     : AST_Envs.Env_Element_Array;
+      Index : Integer)
+      return Env_Element
+   is
+      function Length (A : AST_Envs.Env_Element_Array) return Natural
+      is (A'Length);
+
+      function Get
+        (A     : AST_Envs.Env_Element_Array;
+         Index : Integer)
+         return Env_Element
+      is (A (Index + 1)); --  A is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => Env_Element,
+         Sequence_Type => AST_Envs.Env_Element_Array,
+         Length        => Length,
+         Get           => Get);
+      Result : Env_Element;
+   begin
+      if Relative_Get (A, Index, Result) then
+         return Result;
+      else
+         raise Property_Error with "out-of-bounds array access";
+      end if;
+   end Get;
 
 
 end GPR_Parser.AST;

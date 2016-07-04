@@ -36,8 +36,11 @@
 
 
 pragma Warnings (Off, "referenced");
+with Ada.Strings.Wide_Wide_Unbounded; use Ada.Strings.Wide_Wide_Unbounded;
+
 with Langkit_Support.Bump_Ptr; use Langkit_Support.Bump_Ptr;
-with Langkit_Support.Tokens;   use Langkit_Support.Tokens;
+with Langkit_Support.Slocs;    use Langkit_Support.Slocs;
+with Langkit_Support.Symbols;  use Langkit_Support.Symbols;
 with Langkit_Support.Vectors;
 pragma Warnings (On, "referenced");
 
@@ -50,76 +53,6 @@ private with GPR_Parser.AST.List;
 
 package GPR_Parser.AST.Types is
 
-   --  Set of supported values for GPR_Node_Type_Kind (see AST_Root):
-
-   List_Kind : constant GPR_Node_Type_Kind := 1;
-         Abstract_Present_Kind : constant GPR_Node_Type_Kind :=
-            2;
-         Attribute_Decl_Kind : constant GPR_Node_Type_Kind :=
-            3;
-         Attribute_Reference_Kind : constant GPR_Node_Type_Kind :=
-            4;
-         Case_Construction_Kind : constant GPR_Node_Type_Kind :=
-            5;
-         Case_Item_Kind : constant GPR_Node_Type_Kind :=
-            6;
-         Compilation_Unit_Kind : constant GPR_Node_Type_Kind :=
-            7;
-         Empty_Decl_Kind : constant GPR_Node_Type_Kind :=
-            8;
-         Prefix_Kind : constant GPR_Node_Type_Kind :=
-            9;
-         Identifier_Kind : constant GPR_Node_Type_Kind :=
-            10;
-         Num_Literal_Kind : constant GPR_Node_Type_Kind :=
-            11;
-         String_Literal_Kind : constant GPR_Node_Type_Kind :=
-            12;
-         Expr_List_Kind : constant GPR_Node_Type_Kind :=
-            13;
-         External_Kind : constant GPR_Node_Type_Kind :=
-            14;
-         External_As_List_Kind : constant GPR_Node_Type_Kind :=
-            15;
-         External_Name_Kind : constant GPR_Node_Type_Kind :=
-            16;
-         External_Reference_Kind : constant GPR_Node_Type_Kind :=
-            17;
-         Others_Designator_Kind : constant GPR_Node_Type_Kind :=
-            18;
-         Package_Decl_Kind : constant GPR_Node_Type_Kind :=
-            19;
-         Package_Extension_Kind : constant GPR_Node_Type_Kind :=
-            20;
-         Package_Renaming_Kind : constant GPR_Node_Type_Kind :=
-            21;
-         Package_Spec_Kind : constant GPR_Node_Type_Kind :=
-            22;
-         Project_Kind : constant GPR_Node_Type_Kind :=
-            23;
-         Project_Declaration_Kind : constant GPR_Node_Type_Kind :=
-            24;
-         Project_Extension_Kind : constant GPR_Node_Type_Kind :=
-            25;
-         Project_Qualifier_Kind : constant GPR_Node_Type_Kind :=
-            26;
-         Project_Reference_Kind : constant GPR_Node_Type_Kind :=
-            27;
-         Qualifier_Names_Kind : constant GPR_Node_Type_Kind :=
-            28;
-         String_Literal_At_Kind : constant GPR_Node_Type_Kind :=
-            29;
-         Term_List_Kind : constant GPR_Node_Type_Kind :=
-            30;
-         Typed_String_Decl_Kind : constant GPR_Node_Type_Kind :=
-            31;
-         Variable_Decl_Kind : constant GPR_Node_Type_Kind :=
-            32;
-         Variable_Reference_Kind : constant GPR_Node_Type_Kind :=
-            33;
-         With_Decl_Kind : constant GPR_Node_Type_Kind :=
-            34;
-
    -----------------------
    -- Enumeration types --
    -----------------------
@@ -128,9 +61,9 @@ package GPR_Parser.AST.Types is
      (if Value then "True" else "False");
 
 
-   ----------------------------------------------
-   -- Structure types (incomplete declarations --
-   ----------------------------------------------
+   -----------------------------------------------
+   -- Structure types (incomplete declarations) --
+   -----------------------------------------------
 
 
    -----------------------------------------------------
@@ -387,7 +320,7 @@ package GPR_Parser.AST.Types is
 
    
 
-   type List_Case_Item_Type is new GPR_Node_Type with private;
+   type List_Case_Item_Type;
    type List_Case_Item is access all List_Case_Item_Type'Class;
 
 
@@ -395,7 +328,7 @@ package GPR_Parser.AST.Types is
 
    
 
-   type List_GPR_Node_Type is new GPR_Node_Type with private;
+   type List_GPR_Node_Type;
    type List_GPR_Node is access all List_GPR_Node_Type'Class;
 
 
@@ -403,7 +336,7 @@ package GPR_Parser.AST.Types is
 
    
 
-   type List_String_Literal_Type is new GPR_Node_Type with private;
+   type List_String_Literal_Type;
    type List_String_Literal is access all List_String_Literal_Type'Class;
 
 
@@ -411,7 +344,7 @@ package GPR_Parser.AST.Types is
 
    
 
-   type List_Term_List_Type is new GPR_Node_Type with private;
+   type List_Term_List_Type;
    type List_Term_List is access all List_Term_List_Type'Class;
 
 
@@ -419,7 +352,7 @@ package GPR_Parser.AST.Types is
 
    
 
-   type List_With_Decl_Type is new GPR_Node_Type with private;
+   type List_With_Decl_Type;
    type List_With_Decl is access all List_With_Decl_Type'Class;
 
 
@@ -439,12 +372,56 @@ package GPR_Parser.AST.Types is
    --  TODO??? This is likely to change in the near future: we would like to
    --  have here pure Ada arrays instead.
 
+   
 
-   ---------------------------------------------------
-   -- ASTNode derived types (complete declarations) --
-   ---------------------------------------------------
+   
 
-   --  See AST_Root for primitive operations documentations
+   type Env_Element_Array is array (Positive range <>) of Env_Element;
+   type Env_Element_Array_Record (N : Natural) is record
+      Ref_Count : Positive;
+      Items     : Env_Element_Array (1 .. N);
+   end record;
+
+   type Env_Element_Array_Access is access all Env_Element_Array_Record;
+
+   function Copy is new AST_Envs.Env_Element_Arrays.Copy
+     (Positive, Env_Element_Array);
+
+   function Create (Items : AST_Envs.Env_Element_Array) return Env_Element_Array_Access
+   is (new Env_Element_Array_Record'(N         => Items'Length,
+                             Items     => Copy (Items),
+                             Ref_Count => 1));
+
+   package Env_Element_Vectors is new Langkit_Support.Vectors
+     (Env_Element);
+   package Env_Element_Arrays renames Env_Element_Vectors.Elements_Arrays;
+
+   function Create (Items_Count : Natural) return Env_Element_Array_Access is
+     (new Env_Element_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
+   --  Create a new array for N uninitialized elements and give its only
+   --  ownership share to the caller.
+
+   function Get
+     (T       : Env_Element_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return Env_Element;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based. If
+   --  the result is ref-counted, a new owning reference is returned.
+
+   function Length (T : Env_Element_Array_Access) return Natural is (T.N);
+
+   procedure Inc_Ref (T : Env_Element_Array_Access);
+   procedure Dec_Ref (T : in out Env_Element_Array_Access);
+
+
+
+   -----------------------------------------------
+   -- ASTNode derived types (full declarations) --
+   -----------------------------------------------
+
+   --  See GPR_Parser.AST for overriden primitive
+   --  operations documentations.
 
    
 
@@ -459,7 +436,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Abstract_Present_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Abstract_Present_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Abstract_Present_Type) return String;
       overriding
@@ -470,7 +447,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Abstract_Present_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Abstract_Present_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -487,6 +464,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -498,7 +478,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Attribute_Decl_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Attribute_Decl_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Attribute_Decl_Type) return String;
       overriding
@@ -509,7 +489,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Attribute_Decl_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Attribute_Decl_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -521,16 +501,28 @@ package GPR_Parser.AST.Types is
         (Node : access Attribute_Decl_Type);
 
 
-       function F_Attr_Name
-         (Node : Attribute_Decl) return GPR_Node;
-       
-       function F_Attr_Index
-         (Node : Attribute_Decl) return GPR_Node;
-       
-       function F_Expr
-         (Node : Attribute_Decl) return Term_List;
-       
 
+      
+   
+   function F_Attr_Name
+     (Node : access Attribute_Decl_Type) return GPR_Node;
+   
+
+      
+   
+   function F_Attr_Index
+     (Node : access Attribute_Decl_Type) return GPR_Node;
+   
+
+      
+   
+   function F_Expr
+     (Node : access Attribute_Decl_Type) return Term_List;
+   
+
+
+
+   
 
 
    
@@ -546,7 +538,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Attribute_Reference_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Attribute_Reference_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Attribute_Reference_Type) return String;
       overriding
@@ -557,7 +549,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Attribute_Reference_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Attribute_Reference_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -569,13 +561,22 @@ package GPR_Parser.AST.Types is
         (Node : access Attribute_Reference_Type);
 
 
-       function F_Attribute_Name
-         (Node : Attribute_Reference) return Identifier;
-       
-       function F_Attribute_Index
-         (Node : Attribute_Reference) return GPR_Node;
-       
 
+      
+   
+   function F_Attribute_Name
+     (Node : access Attribute_Reference_Type) return Identifier;
+   
+
+      
+   
+   function F_Attribute_Index
+     (Node : access Attribute_Reference_Type) return GPR_Node;
+   
+
+
+
+   
 
 
    
@@ -591,7 +592,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Case_Construction_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Case_Construction_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Case_Construction_Type) return String;
       overriding
@@ -602,7 +603,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Case_Construction_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Case_Construction_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -614,13 +615,22 @@ package GPR_Parser.AST.Types is
         (Node : access Case_Construction_Type);
 
 
-       function F_Var_Ref
-         (Node : Case_Construction) return Variable_Reference;
-       
-       function F_Items
-         (Node : Case_Construction) return List_Case_Item;
-       
 
+      
+   
+   function F_Var_Ref
+     (Node : access Case_Construction_Type) return Variable_Reference;
+   
+
+      
+   
+   function F_Items
+     (Node : access Case_Construction_Type) return List_Case_Item;
+   
+
+
+
+   
 
 
    
@@ -636,7 +646,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Case_Item_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Case_Item_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Case_Item_Type) return String;
       overriding
@@ -647,7 +657,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Case_Item_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Case_Item_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -659,13 +669,22 @@ package GPR_Parser.AST.Types is
         (Node : access Case_Item_Type);
 
 
-       function F_Choice
-         (Node : Case_Item) return List_GPR_Node;
-       
-       function F_Decls
-         (Node : Case_Item) return List_GPR_Node;
-       
 
+      
+   
+   function F_Choice
+     (Node : access Case_Item_Type) return List_GPR_Node;
+   
+
+      
+   
+   function F_Decls
+     (Node : access Case_Item_Type) return List_GPR_Node;
+   
+
+
+
+   
 
 
    
@@ -681,7 +700,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Compilation_Unit_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Compilation_Unit_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Compilation_Unit_Type) return String;
       overriding
@@ -692,7 +711,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Compilation_Unit_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Compilation_Unit_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -704,10 +723,16 @@ package GPR_Parser.AST.Types is
         (Node : access Compilation_Unit_Type);
 
 
-       function F_Project
-         (Node : Compilation_Unit) return Project;
-       
 
+      
+   
+   function F_Project
+     (Node : access Compilation_Unit_Type) return Project;
+   
+
+
+
+   
 
 
    
@@ -723,7 +748,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Empty_Decl_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Empty_Decl_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Empty_Decl_Type) return String;
       overriding
@@ -734,7 +759,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Empty_Decl_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Empty_Decl_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -747,6 +772,9 @@ package GPR_Parser.AST.Types is
 
 
 
+
+
+   
 
 
    
@@ -767,6 +795,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -778,7 +809,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Prefix_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Prefix_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Prefix_Type) return String;
       overriding
@@ -789,7 +820,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Prefix_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Prefix_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -801,13 +832,22 @@ package GPR_Parser.AST.Types is
         (Node : access Prefix_Type);
 
 
-       function F_Prefix
-         (Node : Prefix) return Expr;
-       
-       function F_Suffix
-         (Node : Prefix) return Expr;
-       
 
+      
+   
+   function F_Prefix
+     (Node : access Prefix_Type) return Expr;
+   
+
+      
+   
+   function F_Suffix
+     (Node : access Prefix_Type) return Expr;
+   
+
+
+
+   
 
 
    
@@ -823,10 +863,16 @@ package GPR_Parser.AST.Types is
 
 
 
-       function F_Tok
-         (Node : Single_Tok_Node) return Token;
-       
 
+      
+   
+   function F_Tok
+     (Node : access Single_Tok_Node_Type) return Token_Type;
+   
+
+
+
+   
 
 
    
@@ -842,7 +888,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Identifier_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Identifier_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Identifier_Type) return String;
       overriding
@@ -853,7 +899,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Identifier_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Identifier_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -870,6 +916,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -881,7 +930,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Num_Literal_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Num_Literal_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Num_Literal_Type) return String;
       overriding
@@ -892,7 +941,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Num_Literal_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Num_Literal_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -909,6 +958,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -920,7 +972,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access String_Literal_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access String_Literal_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access String_Literal_Type) return String;
       overriding
@@ -931,7 +983,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access String_Literal_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access String_Literal_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -948,6 +1000,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -959,7 +1014,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Expr_List_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Expr_List_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Expr_List_Type) return String;
       overriding
@@ -970,7 +1025,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Expr_List_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Expr_List_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -982,10 +1037,16 @@ package GPR_Parser.AST.Types is
         (Node : access Expr_List_Type);
 
 
-       function F_Exprs
-         (Node : Expr_List) return List_Term_List;
-       
 
+      
+   
+   function F_Exprs
+     (Node : access Expr_List_Type) return List_Term_List;
+   
+
+
+
+   
 
 
    
@@ -1001,7 +1062,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access External_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access External_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access External_Type) return String;
       overriding
@@ -1012,7 +1073,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access External_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access External_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1029,6 +1090,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -1040,7 +1104,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access External_As_List_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access External_As_List_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access External_As_List_Type) return String;
       overriding
@@ -1051,7 +1115,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access External_As_List_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access External_As_List_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1068,6 +1132,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -1079,7 +1146,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access External_Name_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access External_Name_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access External_Name_Type) return String;
       overriding
@@ -1090,7 +1157,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access External_Name_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access External_Name_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1107,6 +1174,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -1118,7 +1188,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access External_Reference_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access External_Reference_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access External_Reference_Type) return String;
       overriding
@@ -1129,7 +1199,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access External_Reference_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access External_Reference_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1141,16 +1211,28 @@ package GPR_Parser.AST.Types is
         (Node : access External_Reference_Type);
 
 
-       function F_Kind
-         (Node : External_Reference) return GPR_Node;
-       
-       function F_String_Lit
-         (Node : External_Reference) return String_Literal;
-       
-       function F_Expr
-         (Node : External_Reference) return Term_List;
-       
 
+      
+   
+   function F_Kind
+     (Node : access External_Reference_Type) return GPR_Node;
+   
+
+      
+   
+   function F_String_Lit
+     (Node : access External_Reference_Type) return String_Literal;
+   
+
+      
+   
+   function F_Expr
+     (Node : access External_Reference_Type) return Term_List;
+   
+
+
+
+   
 
 
    
@@ -1166,7 +1248,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Others_Designator_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Others_Designator_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Others_Designator_Type) return String;
       overriding
@@ -1177,7 +1259,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Others_Designator_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Others_Designator_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1194,6 +1276,9 @@ package GPR_Parser.AST.Types is
 
    
 
+
+   
+
    
 
    --
@@ -1205,7 +1290,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Package_Decl_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Package_Decl_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Package_Decl_Type) return String;
       overriding
@@ -1216,7 +1301,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Package_Decl_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Package_Decl_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1228,13 +1313,22 @@ package GPR_Parser.AST.Types is
         (Node : access Package_Decl_Type);
 
 
-       function F_Pkg_Name
-         (Node : Package_Decl) return Identifier;
-       
-       function F_Pkg_Spec
-         (Node : Package_Decl) return GPR_Node;
-       
 
+      
+   
+   function F_Pkg_Name
+     (Node : access Package_Decl_Type) return Identifier;
+   
+
+      
+   
+   function F_Pkg_Spec
+     (Node : access Package_Decl_Type) return GPR_Node;
+   
+
+
+
+   
 
 
    
@@ -1250,7 +1344,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Package_Extension_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Package_Extension_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Package_Extension_Type) return String;
       overriding
@@ -1261,7 +1355,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Package_Extension_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Package_Extension_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1273,13 +1367,22 @@ package GPR_Parser.AST.Types is
         (Node : access Package_Extension_Type);
 
 
-       function F_Prj_Name
-         (Node : Package_Extension) return Identifier;
-       
-       function F_Pkg_Name
-         (Node : Package_Extension) return Identifier;
-       
 
+      
+   
+   function F_Prj_Name
+     (Node : access Package_Extension_Type) return Identifier;
+   
+
+      
+   
+   function F_Pkg_Name
+     (Node : access Package_Extension_Type) return Identifier;
+   
+
+
+
+   
 
 
    
@@ -1295,7 +1398,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Package_Renaming_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Package_Renaming_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Package_Renaming_Type) return String;
       overriding
@@ -1306,7 +1409,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Package_Renaming_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Package_Renaming_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1318,13 +1421,22 @@ package GPR_Parser.AST.Types is
         (Node : access Package_Renaming_Type);
 
 
-       function F_Prj_Name
-         (Node : Package_Renaming) return Identifier;
-       
-       function F_Pkg_Name
-         (Node : Package_Renaming) return Identifier;
-       
 
+      
+   
+   function F_Prj_Name
+     (Node : access Package_Renaming_Type) return Identifier;
+   
+
+      
+   
+   function F_Pkg_Name
+     (Node : access Package_Renaming_Type) return Identifier;
+   
+
+
+
+   
 
 
    
@@ -1340,7 +1452,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Package_Spec_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Package_Spec_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Package_Spec_Type) return String;
       overriding
@@ -1351,7 +1463,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Package_Spec_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Package_Spec_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1363,16 +1475,28 @@ package GPR_Parser.AST.Types is
         (Node : access Package_Spec_Type);
 
 
-       function F_Extension
-         (Node : Package_Spec) return Package_Extension;
-       
-       function F_Decls
-         (Node : Package_Spec) return List_GPR_Node;
-       
-       function F_End_Name
-         (Node : Package_Spec) return Identifier;
-       
 
+      
+   
+   function F_Extension
+     (Node : access Package_Spec_Type) return Package_Extension;
+   
+
+      
+   
+   function F_Decls
+     (Node : access Package_Spec_Type) return List_GPR_Node;
+   
+
+      
+   
+   function F_End_Name
+     (Node : access Package_Spec_Type) return Identifier;
+   
+
+
+
+   
 
 
    
@@ -1388,7 +1512,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Project_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Project_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Project_Type) return String;
       overriding
@@ -1399,7 +1523,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Project_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Project_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1411,13 +1535,22 @@ package GPR_Parser.AST.Types is
         (Node : access Project_Type);
 
 
-       function F_Context_Clauses
-         (Node : Project) return List_With_Decl;
-       
-       function F_Project_Decl
-         (Node : Project) return Project_Declaration;
-       
 
+      
+   
+   function F_Context_Clauses
+     (Node : access Project_Type) return List_With_Decl;
+   
+
+      
+   
+   function F_Project_Decl
+     (Node : access Project_Type) return Project_Declaration;
+   
+
+
+
+   
 
 
    
@@ -1433,7 +1566,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Project_Declaration_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Project_Declaration_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Project_Declaration_Type) return String;
       overriding
@@ -1444,7 +1577,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Project_Declaration_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Project_Declaration_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1456,22 +1589,40 @@ package GPR_Parser.AST.Types is
         (Node : access Project_Declaration_Type);
 
 
-       function F_Qualifier
-         (Node : Project_Declaration) return Project_Qualifier;
-       
-       function F_Project_Name
-         (Node : Project_Declaration) return Expr;
-       
-       function F_Extension
-         (Node : Project_Declaration) return Project_Extension;
-       
-       function F_Decls
-         (Node : Project_Declaration) return List_GPR_Node;
-       
-       function F_End_Name
-         (Node : Project_Declaration) return Expr;
-       
 
+      
+   
+   function F_Qualifier
+     (Node : access Project_Declaration_Type) return Project_Qualifier;
+   
+
+      
+   
+   function F_Project_Name
+     (Node : access Project_Declaration_Type) return Expr;
+   
+
+      
+   
+   function F_Extension
+     (Node : access Project_Declaration_Type) return Project_Extension;
+   
+
+      
+   
+   function F_Decls
+     (Node : access Project_Declaration_Type) return List_GPR_Node;
+   
+
+      
+   
+   function F_End_Name
+     (Node : access Project_Declaration_Type) return Expr;
+   
+
+
+
+   
 
 
    
@@ -1487,7 +1638,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Project_Extension_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Project_Extension_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Project_Extension_Type) return String;
       overriding
@@ -1498,7 +1649,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Project_Extension_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Project_Extension_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1510,13 +1661,22 @@ package GPR_Parser.AST.Types is
         (Node : access Project_Extension_Type);
 
 
-       function F_Is_All
-         (Node : Project_Extension) return Boolean;
-       
-       function F_Path_Name
-         (Node : Project_Extension) return String_Literal;
-       
 
+      
+   
+   function F_Is_All
+     (Node : access Project_Extension_Type) return Boolean;
+   
+
+      
+   
+   function F_Path_Name
+     (Node : access Project_Extension_Type) return String_Literal;
+   
+
+
+
+   
 
 
    
@@ -1532,7 +1692,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Project_Qualifier_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Project_Qualifier_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Project_Qualifier_Type) return String;
       overriding
@@ -1543,7 +1703,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Project_Qualifier_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Project_Qualifier_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1555,10 +1715,16 @@ package GPR_Parser.AST.Types is
         (Node : access Project_Qualifier_Type);
 
 
-       function F_Qualifier
-         (Node : Project_Qualifier) return GPR_Node;
-       
 
+      
+   
+   function F_Qualifier
+     (Node : access Project_Qualifier_Type) return GPR_Node;
+   
+
+
+
+   
 
 
    
@@ -1574,7 +1740,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Project_Reference_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Project_Reference_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Project_Reference_Type) return String;
       overriding
@@ -1585,7 +1751,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Project_Reference_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Project_Reference_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1597,10 +1763,16 @@ package GPR_Parser.AST.Types is
         (Node : access Project_Reference_Type);
 
 
-       function F_Attr_Ref
-         (Node : Project_Reference) return Attribute_Reference;
-       
 
+      
+   
+   function F_Attr_Ref
+     (Node : access Project_Reference_Type) return Attribute_Reference;
+   
+
+
+
+   
 
 
    
@@ -1616,7 +1788,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Qualifier_Names_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Qualifier_Names_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Qualifier_Names_Type) return String;
       overriding
@@ -1627,7 +1799,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Qualifier_Names_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Qualifier_Names_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1639,13 +1811,22 @@ package GPR_Parser.AST.Types is
         (Node : access Qualifier_Names_Type);
 
 
-       function F_Qualifier_Id1
-         (Node : Qualifier_Names) return Identifier;
-       
-       function F_Qualifier_Id2
-         (Node : Qualifier_Names) return Identifier;
-       
 
+      
+   
+   function F_Qualifier_Id1
+     (Node : access Qualifier_Names_Type) return Identifier;
+   
+
+      
+   
+   function F_Qualifier_Id2
+     (Node : access Qualifier_Names_Type) return Identifier;
+   
+
+
+
+   
 
 
    
@@ -1661,7 +1842,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access String_Literal_At_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access String_Literal_At_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access String_Literal_At_Type) return String;
       overriding
@@ -1672,7 +1853,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access String_Literal_At_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access String_Literal_At_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1684,13 +1865,22 @@ package GPR_Parser.AST.Types is
         (Node : access String_Literal_At_Type);
 
 
-       function F_Str_Lit
-         (Node : String_Literal_At) return String_Literal;
-       
-       function F_At_Lit
-         (Node : String_Literal_At) return Num_Literal;
-       
 
+      
+   
+   function F_Str_Lit
+     (Node : access String_Literal_At_Type) return String_Literal;
+   
+
+      
+   
+   function F_At_Lit
+     (Node : access String_Literal_At_Type) return Num_Literal;
+   
+
+
+
+   
 
 
    
@@ -1706,7 +1896,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Term_List_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Term_List_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Term_List_Type) return String;
       overriding
@@ -1717,7 +1907,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Term_List_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Term_List_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1729,10 +1919,16 @@ package GPR_Parser.AST.Types is
         (Node : access Term_List_Type);
 
 
-       function F_Terms
-         (Node : Term_List) return List_GPR_Node;
-       
 
+      
+   
+   function F_Terms
+     (Node : access Term_List_Type) return List_GPR_Node;
+   
+
+
+
+   
 
 
    
@@ -1748,7 +1944,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Typed_String_Decl_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Typed_String_Decl_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Typed_String_Decl_Type) return String;
       overriding
@@ -1759,7 +1955,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Typed_String_Decl_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Typed_String_Decl_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1771,13 +1967,22 @@ package GPR_Parser.AST.Types is
         (Node : access Typed_String_Decl_Type);
 
 
-       function F_Type_Id
-         (Node : Typed_String_Decl) return Identifier;
-       
-       function F_String_Literals
-         (Node : Typed_String_Decl) return List_String_Literal;
-       
 
+      
+   
+   function F_Type_Id
+     (Node : access Typed_String_Decl_Type) return Identifier;
+   
+
+      
+   
+   function F_String_Literals
+     (Node : access Typed_String_Decl_Type) return List_String_Literal;
+   
+
+
+
+   
 
 
    
@@ -1793,7 +1998,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Variable_Decl_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Variable_Decl_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Variable_Decl_Type) return String;
       overriding
@@ -1804,7 +2009,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Variable_Decl_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Variable_Decl_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1816,16 +2021,28 @@ package GPR_Parser.AST.Types is
         (Node : access Variable_Decl_Type);
 
 
-       function F_Var_Name
-         (Node : Variable_Decl) return Identifier;
-       
-       function F_Var_Type
-         (Node : Variable_Decl) return Expr;
-       
-       function F_Expr
-         (Node : Variable_Decl) return Term_List;
-       
 
+      
+   
+   function F_Var_Name
+     (Node : access Variable_Decl_Type) return Identifier;
+   
+
+      
+   
+   function F_Var_Type
+     (Node : access Variable_Decl_Type) return Expr;
+   
+
+      
+   
+   function F_Expr
+     (Node : access Variable_Decl_Type) return Term_List;
+   
+
+
+
+   
 
 
    
@@ -1841,7 +2058,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access Variable_Reference_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access Variable_Reference_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access Variable_Reference_Type) return String;
       overriding
@@ -1852,7 +2069,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access Variable_Reference_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access Variable_Reference_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1864,16 +2081,28 @@ package GPR_Parser.AST.Types is
         (Node : access Variable_Reference_Type);
 
 
-       function F_Variable_Name1
-         (Node : Variable_Reference) return Identifier;
-       
-       function F_Variable_Name2
-         (Node : Variable_Reference) return Identifier;
-       
-       function F_Attribute_Ref
-         (Node : Variable_Reference) return Attribute_Reference;
-       
 
+      
+   
+   function F_Variable_Name1
+     (Node : access Variable_Reference_Type) return Identifier;
+   
+
+      
+   
+   function F_Variable_Name2
+     (Node : access Variable_Reference_Type) return Identifier;
+   
+
+      
+   
+   function F_Attribute_Ref
+     (Node : access Variable_Reference_Type) return Attribute_Reference;
+   
+
+
+
+   
 
 
    
@@ -1889,7 +2118,7 @@ package GPR_Parser.AST.Types is
 
 
       overriding
-      function Kind (Node : access With_Decl_Type) return GPR_Node_Type_Kind;
+      function Kind (Node : access With_Decl_Type) return GPR_Node_Kind_Type;
       overriding
       function Kind_Name (Node : access With_Decl_Type) return String;
       overriding
@@ -1900,7 +2129,7 @@ package GPR_Parser.AST.Types is
       function Child_Count (Node : access With_Decl_Type) return Natural;
       overriding
       procedure Get_Child (Node  : access With_Decl_Type;
-                           Index : Natural;
+                           Index : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node);
 
@@ -1912,26 +2141,119 @@ package GPR_Parser.AST.Types is
         (Node : access With_Decl_Type);
 
 
-       function F_Is_Limited
-         (Node : With_Decl) return Boolean;
-       
-       function F_Path_Names
-         (Node : With_Decl) return List_String_Literal;
-       
 
+      
+   
+   function F_Is_Limited
+     (Node : access With_Decl_Type) return Boolean;
+   
+
+      
+   
+   function F_Path_Names
+     (Node : access With_Decl_Type) return List_String_Literal;
+   
+
+
+
+   
+
+
+
+   
+
+   
+
+   type List_Case_Item_Type is new GPR_Node_Type with private;
+
+   function Item
+     (Node  : access List_Case_Item_Type;
+      Index : Positive)
+      return Case_Item
+   is (Case_Item (Node.Child (Index)));
+   --  Shortcut for: List_Case_Item (Child (Node, Index))
+
+
+   
+
+   
+
+   type List_GPR_Node_Type is new GPR_Node_Type with private;
+
+   function Item
+     (Node  : access List_GPR_Node_Type;
+      Index : Positive)
+      return GPR_Node
+   is (GPR_Node (Node.Child (Index)));
+   --  Shortcut for: List_GPR_Node (Child (Node, Index))
+
+
+   
+
+   
+
+   type List_String_Literal_Type is new GPR_Node_Type with private;
+
+   function Item
+     (Node  : access List_String_Literal_Type;
+      Index : Positive)
+      return String_Literal
+   is (String_Literal (Node.Child (Index)));
+   --  Shortcut for: List_String_Literal (Child (Node, Index))
+
+
+   
+
+   
+
+   type List_Term_List_Type is new GPR_Node_Type with private;
+
+   function Item
+     (Node  : access List_Term_List_Type;
+      Index : Positive)
+      return Term_List
+   is (Term_List (Node.Child (Index)));
+   --  Shortcut for: List_Term_List (Child (Node, Index))
+
+
+   
+
+   
+
+   type List_With_Decl_Type is new GPR_Node_Type with private;
+
+   function Item
+     (Node  : access List_With_Decl_Type;
+      Index : Positive)
+      return With_Decl
+   is (With_Decl (Node.Child (Index)));
+   --  Shortcut for: List_With_Decl (Child (Node, Index))
 
 
 
 private
 
    
+  procedure Free is new Ada.Unchecked_Deallocation
+    (Env_Element_Array_Record, Env_Element_Array_Access);
+
+
+   
 
    
 
    type Abstract_Present_Type is 
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -1949,9 +2271,9 @@ private
    
 
    type Attribute_Decl_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Attr_Name : aliased GPR_Node
                := null;
             
@@ -1961,9 +2283,15 @@ private
             F_Expr : aliased Term_List
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -1981,18 +2309,24 @@ private
    
 
    type Attribute_Reference_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Attribute_Name : aliased Identifier
                := null;
             
             F_Attribute_Index : aliased GPR_Node
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2010,18 +2344,24 @@ private
    
 
    type Case_Construction_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Var_Ref : aliased Variable_Reference
                := null;
             
             F_Items : aliased List_Case_Item
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2039,18 +2379,24 @@ private
    
 
    type Case_Item_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Choice : aliased List_GPR_Node
                := null;
             
             F_Decls : aliased List_GPR_Node
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2068,15 +2414,21 @@ private
    
 
    type Compilation_Unit_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Project : aliased Project
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2094,9 +2446,17 @@ private
    
 
    type Empty_Decl_Type is 
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2114,9 +2474,18 @@ private
    
 
    type Expr_Type is abstract
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
+
 
 
 
@@ -2125,18 +2494,24 @@ private
    
 
    type Prefix_Type is 
-      new Expr_Type with
-
-      record
+      new Expr_Type with record
+      
+   
             F_Prefix : aliased Expr
                := null;
             
             F_Suffix : aliased Expr
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2154,15 +2529,22 @@ private
    
 
    type Single_Tok_Node_Type is abstract
-      new Expr_Type with
-
-      record
-            F_Tok : aliased Token
-               := No_Token;
+      new Expr_Type with record
+      
+   
+            F_Tok : aliased Token_Index
+               := No_Token_Index;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
+
 
 
 
@@ -2171,9 +2553,17 @@ private
    
 
    type Identifier_Type is 
-      new Single_Tok_Node_Type with
+      new Single_Tok_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2191,9 +2581,17 @@ private
    
 
    type Num_Literal_Type is 
-      new Single_Tok_Node_Type with
+      new Single_Tok_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2211,9 +2609,17 @@ private
    
 
    type String_Literal_Type is 
-      new Single_Tok_Node_Type with
+      new Single_Tok_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2231,15 +2637,21 @@ private
    
 
    type Expr_List_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Exprs : aliased List_Term_List
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2257,9 +2669,17 @@ private
    
 
    type External_Type is 
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2277,9 +2697,17 @@ private
    
 
    type External_As_List_Type is 
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2297,9 +2725,17 @@ private
    
 
    type External_Name_Type is 
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2317,9 +2753,9 @@ private
    
 
    type External_Reference_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Kind : aliased GPR_Node
                := null;
             
@@ -2329,9 +2765,15 @@ private
             F_Expr : aliased Term_List
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2349,9 +2791,17 @@ private
    
 
    type Others_Designator_Type is 
-      new GPR_Node_Type with
+      new GPR_Node_Type with record
+      
+   
+      null;
 
-      null record;
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2369,18 +2819,24 @@ private
    
 
    type Package_Decl_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Pkg_Name : aliased Identifier
                := null;
             
             F_Pkg_Spec : aliased GPR_Node
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2398,18 +2854,24 @@ private
    
 
    type Package_Extension_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Prj_Name : aliased Identifier
                := null;
             
             F_Pkg_Name : aliased Identifier
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2427,18 +2889,24 @@ private
    
 
    type Package_Renaming_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Prj_Name : aliased Identifier
                := null;
             
             F_Pkg_Name : aliased Identifier
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2456,9 +2924,9 @@ private
    
 
    type Package_Spec_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Extension : aliased Package_Extension
                := null;
             
@@ -2468,9 +2936,15 @@ private
             F_End_Name : aliased Identifier
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2488,18 +2962,24 @@ private
    
 
    type Project_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Context_Clauses : aliased List_With_Decl
                := null;
             
             F_Project_Decl : aliased Project_Declaration
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2517,9 +2997,9 @@ private
    
 
    type Project_Declaration_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Qualifier : aliased Project_Qualifier
                := null;
             
@@ -2535,9 +3015,15 @@ private
             F_End_Name : aliased Expr
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2555,18 +3041,24 @@ private
    
 
    type Project_Extension_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Is_All : aliased Boolean
                := false;
             
             F_Path_Name : aliased String_Literal
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2584,15 +3076,21 @@ private
    
 
    type Project_Qualifier_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Qualifier : aliased GPR_Node
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2610,15 +3108,21 @@ private
    
 
    type Project_Reference_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Attr_Ref : aliased Attribute_Reference
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2636,18 +3140,24 @@ private
    
 
    type Qualifier_Names_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Qualifier_Id1 : aliased Identifier
                := null;
             
             F_Qualifier_Id2 : aliased Identifier
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2665,18 +3175,24 @@ private
    
 
    type String_Literal_At_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Str_Lit : aliased String_Literal
                := null;
             
             F_At_Lit : aliased Num_Literal
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2694,15 +3210,21 @@ private
    
 
    type Term_List_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Terms : aliased List_GPR_Node
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2720,18 +3242,24 @@ private
    
 
    type Typed_String_Decl_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Type_Id : aliased Identifier
                := null;
             
             F_String_Literals : aliased List_String_Literal
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2749,9 +3277,9 @@ private
    
 
    type Variable_Decl_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Var_Name : aliased Identifier
                := null;
             
@@ -2761,9 +3289,15 @@ private
             F_Expr : aliased Term_List
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2781,9 +3315,9 @@ private
    
 
    type Variable_Reference_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Variable_Name1 : aliased Identifier
                := null;
             
@@ -2793,9 +3327,15 @@ private
             F_Attribute_Ref : aliased Attribute_Reference
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2813,18 +3353,24 @@ private
    
 
    type With_Decl_Type is 
-      new GPR_Node_Type with
-
-      record
+      new GPR_Node_Type with record
+      
+   
             F_Is_Limited : aliased Boolean
                := false;
             
             F_Path_Names : aliased List_String_Literal
                := null;
             
-         
+       
 
-      end record;
+
+   end record;
+
+
+   
+
+
 
 
       overriding
@@ -2856,12 +3402,13 @@ private
 
    function Get
      (Node    : List_Case_Item;
-      Index   : Natural;
-      Or_Null : Boolean := False) return GPR_Node
-   is
-     (if Index < Node.Child_Count
-      then GPR_Node (Lists_Case_Item.Node_Vectors.Get_At_Index (Node.Vec, Index))
-      else (if Or_Null then null else raise Property_Error));
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based.
+
+   function Length (Node : List_Case_Item) return Natural is
+     (Node.Child_Count);
 
 
    
@@ -2882,12 +3429,13 @@ private
 
    function Get
      (Node    : List_GPR_Node;
-      Index   : Natural;
-      Or_Null : Boolean := False) return GPR_Node
-   is
-     (if Index < Node.Child_Count
-      then GPR_Node (Lists_GPR_Node.Node_Vectors.Get_At_Index (Node.Vec, Index))
-      else (if Or_Null then null else raise Property_Error));
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based.
+
+   function Length (Node : List_GPR_Node) return Natural is
+     (Node.Child_Count);
 
 
    
@@ -2908,12 +3456,13 @@ private
 
    function Get
      (Node    : List_String_Literal;
-      Index   : Natural;
-      Or_Null : Boolean := False) return GPR_Node
-   is
-     (if Index < Node.Child_Count
-      then GPR_Node (Lists_String_Literal.Node_Vectors.Get_At_Index (Node.Vec, Index))
-      else (if Or_Null then null else raise Property_Error));
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based.
+
+   function Length (Node : List_String_Literal) return Natural is
+     (Node.Child_Count);
 
 
    
@@ -2934,12 +3483,13 @@ private
 
    function Get
      (Node    : List_Term_List;
-      Index   : Natural;
-      Or_Null : Boolean := False) return GPR_Node
-   is
-     (if Index < Node.Child_Count
-      then GPR_Node (Lists_Term_List.Node_Vectors.Get_At_Index (Node.Vec, Index))
-      else (if Or_Null then null else raise Property_Error));
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based.
+
+   function Length (Node : List_Term_List) return Natural is
+     (Node.Child_Count);
 
 
    
@@ -2960,12 +3510,13 @@ private
 
    function Get
      (Node    : List_With_Decl;
-      Index   : Natural;
-      Or_Null : Boolean := False) return GPR_Node
-   is
-     (if Index < Node.Child_Count
-      then GPR_Node (Lists_With_Decl.Node_Vectors.Get_At_Index (Node.Vec, Index))
-      else (if Or_Null then null else raise Property_Error));
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based.
+
+   function Length (Node : List_With_Decl) return Natural is
+     (Node.Child_Count);
 
 
 

@@ -33,7 +33,7 @@
  * NOTE: This file has been created automatically by Quex.
  *       Visit quex.org for further info.
  *
- * DATE: Wed Feb 24 18:44:12 2016
+ * DATE: Mon Jul  4 19:37:14 2016
  *
  * (C) 2005-2010 Frank-Rene Schaefer
  * ABSOLUTELY NO WARRANTY                                           */
@@ -72,8 +72,8 @@
 #define QUEX_TKN_INDENT           ((QUEX_TYPE_TOKEN_ID)4097)
 #define QUEX_TKN_IS               ((QUEX_TYPE_TOKEN_ID)9)
 #define QUEX_TKN_LABEL            ((QUEX_TYPE_TOKEN_ID)36)
-#define QUEX_TKN_LEXFAIL          ((QUEX_TYPE_TOKEN_ID)38)
-#define QUEX_TKN_LEXINGFAILURE    ((QUEX_TYPE_TOKEN_ID)1)
+#define QUEX_TKN_LEXING_FAILURE   ((QUEX_TYPE_TOKEN_ID)1)
+#define QUEX_TKN_LEX_FAIL         ((QUEX_TYPE_TOKEN_ID)38)
 #define QUEX_TKN_LIMITED          ((QUEX_TYPE_TOKEN_ID)10)
 #define QUEX_TKN_NODENT           ((QUEX_TYPE_TOKEN_ID)4098)
 #define QUEX_TKN_NULL             ((QUEX_TYPE_TOKEN_ID)11)

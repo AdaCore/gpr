@@ -4208,7 +4208,7 @@ _333:
     __quex_debug("* TERMINAL FAILURE\n");
 __QUEX_COUNT_VOID(&self, LexemeBegin, LexemeEnd);
 {
-self_send(QUEX_TKN_LEXFAIL);
+self_send(QUEX_TKN_LEX_FAIL);
 
 
 #   line 4188 "quex_lexer.c"
@@ -5945,8 +5945,8 @@ QUEX_NAME_TOKEN(map_id_to_name)(const QUEX_TYPE_TOKEN_ID TokenID)
    static const char  token_id_str_IDENTIFIER[]       = "IDENTIFIER";
    static const char  token_id_str_IS[]               = "IS";
    static const char  token_id_str_LABEL[]            = "LABEL";
-   static const char  token_id_str_LEXFAIL[]          = "LEXFAIL";
-   static const char  token_id_str_LEXINGFAILURE[]    = "LEXINGFAILURE";
+   static const char  token_id_str_LEXING_FAILURE[]   = "LEXING_FAILURE";
+   static const char  token_id_str_LEX_FAIL[]         = "LEX_FAIL";
    static const char  token_id_str_LIMITED[]          = "LIMITED";
    static const char  token_id_str_NULL[]             = "NULL";
    static const char  token_id_str_NUMBER[]           = "NUMBER";
@@ -6000,8 +6000,8 @@ QUEX_NAME_TOKEN(map_id_to_name)(const QUEX_TYPE_TOKEN_ID TokenID)
    case QUEX_TKN_IDENTIFIER:       return token_id_str_IDENTIFIER;
    case QUEX_TKN_IS:               return token_id_str_IS;
    case QUEX_TKN_LABEL:            return token_id_str_LABEL;
-   case QUEX_TKN_LEXFAIL:          return token_id_str_LEXFAIL;
-   case QUEX_TKN_LEXINGFAILURE:    return token_id_str_LEXINGFAILURE;
+   case QUEX_TKN_LEXING_FAILURE:   return token_id_str_LEXING_FAILURE;
+   case QUEX_TKN_LEX_FAIL:         return token_id_str_LEX_FAIL;
    case QUEX_TKN_LIMITED:          return token_id_str_LIMITED;
    case QUEX_TKN_NULL:             return token_id_str_NULL;
    case QUEX_TKN_NUMBER:           return token_id_str_NUMBER;

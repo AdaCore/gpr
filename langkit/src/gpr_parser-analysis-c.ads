@@ -38,7 +38,8 @@ with Interfaces;           use Interfaces;
 with Interfaces.C;         use Interfaces.C;
 with Interfaces.C.Strings; use Interfaces.C.Strings;
 
-with Langkit_Support.Tokens; use Langkit_Support.Tokens;
+with Langkit_Support.Slocs; use Langkit_Support.Slocs;
+with Langkit_Support.Text;  use Langkit_Support.Text;
 
 --  This package defines data types and subprograms to provide the
 --  implementation of the exported C API for analysis primitives.
@@ -64,8 +65,8 @@ package GPR_Parser.Analysis.C is
    type gpr_node_kind_enum is new int;
    --  Kind of AST nodes in parse trees.
 
-   type gpr_token is new System.Address;
-   --  Kind of AST nodes in parse trees.
+   type gpr_lexical_env is new System.Address;
+   --  Data type for lexical environments.
 
    --  Helper data structures for source location handling
 
@@ -86,9 +87,22 @@ package GPR_Parser.Analysis.C is
 
       Length : size_t;
       --  Size of the string (in characters).
+
+      Is_Allocated : int;
    end record
      with Convention => C_Pass_By_Copy;
    --  String encoded in UTF-32 (native endianness).
+
+   type gpr_token is record
+      Token_Data                : System.Address;
+      Token_Index, Trivia_Index : int;
+
+      Kind                      : int;
+      Text                      : gpr_text;
+      Sloc_Range                : gpr_source_location_range;
+   end record
+     with Convention => C_Pass_By_Copy;
+   --  Reference to a token in an analysis unit.
 
    type gpr_diagnostic is record
       Sloc_Range : gpr_source_location_range;
@@ -100,6 +114,11 @@ package GPR_Parser.Analysis.C is
    --  Analysis unit diagnostics.
 
    type gpr_exception is record
+      Is_Fatal    : int;
+      --  Whether this exception is fatal for this process. If it is fatal,
+      --  then process sanity is no longer guaranteed by Libadalang. If it is
+      --  not, performing further processing is safe.
+
       Information : chars_ptr;
       --  Message and context information associated with this exception.
    end record;
@@ -111,8 +130,13 @@ package GPR_Parser.Analysis.C is
    --  information, but depending on possible future Ada runtime improvements,
    --  this might change.
 
+   type gpr_bool is new Unsigned_8;
+
+      type gpr_bool_Ptr is access gpr_bool;
       type gpr_base_node_Ptr is access gpr_base_node;
+      type gpr_lexical_env_Ptr is access gpr_lexical_env;
       type gpr_token_Ptr is access gpr_token;
+      type gpr_text_Ptr is access gpr_text;
       type gpr_source_location_Ptr is access gpr_source_location;
       type gpr_source_location_range_Ptr is access gpr_source_location_range;
       type gpr_diagnostic_Ptr is access gpr_diagnostic;
@@ -129,6 +153,16 @@ package GPR_Parser.Analysis.C is
    --  This is a helper to free objects from dynamic languages.
    --  Helper to free objects in dynamic languages
 
+   procedure gpr_destroy_text (T : gpr_text_Ptr)
+     with Export        => True,
+          Convention    => C,
+          External_Name => "gpr_destroy_text";
+   --  If this text object owns the buffer it references, free this buffer.
+   --
+   --  Note that even though this accepts a pointer to a text object, it does
+   --  not deallocates the text object itself but rather the buffer it
+   --  references.
+
    -------------------------
    -- Analysis primitives --
    -------------------------
@@ -139,15 +173,39 @@ package GPR_Parser.Analysis.C is
       with Export        => True,
            Convention    => C,
            External_name => "gpr_create_analysis_context";
-   --  Create a new Analysis_Context. When done with it, invoke Destroy on it.
+   --  Create a new Analysis_Context. The returned value has a ref-count set to
+   --  1. When done with it, invoke Destroy on it, in which case the ref-count
+   --  is ignored. If this value is shared with garbage collected languages,
+   --  use ref-counting primitives instead so that the context is destroyed
+   --  when nobody references it anymore.
    --
    --  Charset will be used as a default charset to decode input sources in
    --  analysis units. Please see GNATCOLL.Iconv for a couple of supported
    --  charsets. Be careful: passing an unsupported charset here is not
    --  guaranteed to raise an error here.
    --
+   --  If no charset is provided, take utf-8 as the default.
+   --
    --  TODO: Passing an unsupported charset here is not guaranteed to raise an
    --  error right here, but this would be really helpful for users.
+
+   function gpr_context_incref
+     (Context : gpr_analysis_context)
+      return gpr_analysis_context
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_context_incref";
+   --  Increase the reference count to an analysis context. Useful for bindings
+   --  to garbage collected languages. Return the reference for convenience.
+
+   procedure gpr_context_decref
+     (Context : gpr_analysis_context)
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_context_decref";
+   --  Decrease the reference count to an analysis context. Useful for bindings
+   --  to garbage collected languages. Destruction happens when the ref-count
+   --  reaches 0.
 
    procedure gpr_destroy_analysis_context
      (Context : gpr_analysis_context)
@@ -161,7 +219,8 @@ package GPR_Parser.Analysis.C is
    function gpr_get_analysis_unit_from_file
      (Context           : gpr_analysis_context;
       Filename, Charset : chars_ptr;
-      Reparse           : int)
+      Reparse           : int;
+      With_Trivia       : int)
       return gpr_analysis_unit
       with Export        => True,
            Convention    => C,
@@ -189,7 +248,8 @@ package GPR_Parser.Analysis.C is
      (Context           : gpr_analysis_context;
       Filename, Charset : chars_ptr;
       Buffer            : chars_ptr;
-      Buffer_Size       : size_t)
+      Buffer_Size       : size_t;
+      With_Trivia       : int)
       return gpr_analysis_unit
       with Export        => True,
            Convention    => C,
@@ -232,6 +292,33 @@ package GPR_Parser.Analysis.C is
            External_name => "gpr_unit_root";
    --  Return the root AST node for this unit, or NULL if there is none.
 
+   procedure gpr_unit_first_token
+     (Unit  : gpr_analysis_unit;
+      Token : gpr_token_Ptr)
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_unit_first_token";
+   --  Return a reference to the first token scanned in this unit.
+
+   procedure gpr_unit_last_token
+     (Unit  : gpr_analysis_unit;
+      Token : gpr_token_Ptr)
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_unit_last_token";
+   --  Return a reference to the last token scanned in this unit.
+
+   function gpr_unit_filename
+     (Unit : gpr_analysis_unit)
+      return chars_ptr
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_unit_filename";
+   --  Return the filename an unit is associated to.
+   --
+   --  The returned string is dynamically allocated and the caller must free it
+   --  when done with it.
+
    function gpr_unit_diagnostic_count
      (Unit : gpr_analysis_unit) return unsigned
       with Export        => True,
@@ -249,6 +336,14 @@ package GPR_Parser.Analysis.C is
    --  Get the Nth diagnostic in this unit and store it into *DIAGNOSTIC_P.
    --  Return zero on failure (when N is too big).
 
+   function gpr_node_unit
+     (Node : gpr_base_node)
+      return gpr_analysis_unit
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_node_unit";
+   --  Return the unit that owns an AST node.
+
    function gpr_unit_incref
      (Unit : gpr_analysis_unit) return gpr_analysis_unit
       with Export        => True,
@@ -262,6 +357,14 @@ package GPR_Parser.Analysis.C is
            Convention    => C,
            External_name => "gpr_unit_decref";
    --  Decrease the reference count to an analysis unit.
+
+   function gpr_unit_context
+     (Unit : gpr_analysis_unit)
+      return gpr_analysis_context
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_unit_context";
+   --  Return the context that owns this unit.
 
    procedure gpr_unit_reparse_from_file
      (Unit : gpr_analysis_unit; Charset : chars_ptr)
@@ -317,6 +420,13 @@ package GPR_Parser.Analysis.C is
    --  Helper for textual dump: return the name of a node kind. The returned
    --  string is a copy and thus must be free'd by the caller.
 
+   function gpr_node_short_image (Node : gpr_base_node)
+                                                  return gpr_text
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_node_short_image";
+   --  Return a representation of NODE as a string.
+
    procedure gpr_node_sloc_range
      (Node         : gpr_base_node;
       Sloc_Range_P : gpr_source_location_range_Ptr)
@@ -350,13 +460,6 @@ package GPR_Parser.Analysis.C is
            External_name => "gpr_node_child";
    --  Get the Nth child AST node in NODE's fields and store it into *CHILD_P.
    --  Return zero on failure (when N is too big).
-
-   function gpr_token_text (Token : gpr_token)
-                                            return gpr_text
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_token_text";
-   --  Get the text of the given token.
 
    function gpr_text_to_locale_string
      (Text : gpr_text) return System.Address
@@ -431,9 +534,40 @@ package GPR_Parser.Analysis.C is
    procedure Clear_Last_Exception;
    --  Free the information contained in Last_Exception
 
-   procedure Set_Last_Exception (Exc  : Exception_Occurrence);
+   procedure Set_Last_Exception
+     (Exc      : Exception_Occurrence;
+      Is_Fatal : Boolean := True);
    --  Free the information contained in Last_Exception and replace it with
    --  newly allocated information from Exc.
+
+   function gpr_token_kind_name (Kind : int) return chars_ptr
+      with Export => True,
+           Convention => C,
+           External_Name => "gpr_token_kind_name";
+   --  Return a human-readable name for a token kind.
+   --
+   --  The returned string is dynamically allocated and the caller must free it
+   --  when done with it.
+   --
+   --  If the given kind is invalid, return NULL and set the last exception
+   --  accordingly.
+
+   procedure gpr_token_next
+     (Token      : gpr_token_Ptr;
+      Next_Token : gpr_token_Ptr)
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_token_next";
+   --  Return a reference to the next token in the corresponding analysis unit.
+
+   procedure gpr_token_previous
+     (Token          : gpr_token_Ptr;
+      Previous_Token : gpr_token_Ptr)
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_token_previous";
+   --  Return a reference to the previous token in the corresponding analysis
+   --  unit.
 
    ------------------------
    -- Conversion helpers --
@@ -455,6 +589,21 @@ package GPR_Parser.Analysis.C is
 
    function Wrap (S : Unbounded_Wide_Wide_String) return gpr_text;
 
+   function Wrap_Alloc (S : Text_Type) return gpr_text;
+
+   function Wrap (T : Text_Access) return gpr_text is
+     (if T = null
+      then (Chars => System.Null_Address, Length => 0, Is_Allocated => 0)
+      else (Chars => T.all'Address, Length => T.all'Length, Is_Allocated => 0));
+
+   function Wrap (T : Symbol_Type) return gpr_text is
+     (Wrap (Text_Access (T)));
+
+   function Unwrap
+     (Unit : Analysis_Unit_Interface;
+      Text : gpr_text)
+      return Symbol_Type;
+
    --  The following conversions are used only at the interface between Ada and
    --  C (i.e. as parameters and return types for C entry points) for access
    --  types.  All read/writes for the pointed values are made through the
@@ -467,9 +616,9 @@ package GPR_Parser.Analysis.C is
    pragma Warnings (Off, "possible aliasing problem for type");
 
    function Wrap is new Ada.Unchecked_Conversion
-     (Token_Access, gpr_token);
+     (AST_Envs.Lexical_Env, gpr_lexical_env);
    function Unwrap is new Ada.Unchecked_Conversion
-     (gpr_token, Token_Access);
+     (gpr_lexical_env, AST_Envs.Lexical_Env);
 
    function Wrap is new Ada.Unchecked_Conversion
      (Analysis_Context, gpr_analysis_context);
@@ -480,6 +629,10 @@ package GPR_Parser.Analysis.C is
      (Analysis_Unit, gpr_analysis_unit);
    function Unwrap is new Ada.Unchecked_Conversion
      (gpr_analysis_unit, Analysis_Unit);
+   function Wrap is new Ada.Unchecked_Conversion
+     (Analysis_Unit_Interface, gpr_analysis_unit);
+   function Unwrap is new Ada.Unchecked_Conversion
+     (gpr_analysis_unit, Analysis_Unit_Interface);
 
    function Wrap is new Ada.Unchecked_Conversion
      (GPR_Node, gpr_base_node);

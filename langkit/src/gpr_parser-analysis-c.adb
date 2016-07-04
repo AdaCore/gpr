@@ -45,6 +45,10 @@ with GPR_Parser.Analysis;
 use GPR_Parser.Analysis;
 with GPR_Parser.AST;
 use GPR_Parser.AST;
+with GPR_Parser.AST.C;
+use GPR_Parser.AST.C;
+with GPR_Parser.Lexer;
+use GPR_Parser.Lexer;
 
 package body GPR_Parser.Analysis.C is
 
@@ -54,8 +58,7 @@ package body GPR_Parser.Analysis.C is
        then ""
        else Value (S));
 
-   Last_Exception : gpr_exception_Ptr := null
-     with Thread_Local_Storage => True;
+   Last_Exception : gpr_exception_Ptr := null;
 
    ----------
    -- Free --
@@ -81,12 +84,38 @@ package body GPR_Parser.Analysis.C is
    begin
       Clear_Last_Exception;
 
-      return Wrap (Create (Value (Charset)));
+      declare
+         C : constant String := (if Charset = Null_Ptr
+                                 then ""
+                                 else Value (Charset));
+      begin
+         return Wrap (if C'Length = 0
+                      then Create
+                      else Create (C));
+      end;
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_analysis_context (System.Null_Address);
-   end gpr_create_analysis_context;
+   end;
+
+   function gpr_context_incref
+     (Context : gpr_analysis_context)
+      return gpr_analysis_context
+   is
+      C : constant Analysis_Context := Unwrap (Context);
+   begin
+      Inc_Ref (C);
+      return Context;
+   end;
+
+   procedure gpr_context_decref
+     (Context : gpr_analysis_context)
+   is
+      C : Analysis_Context := Unwrap (Context);
+   begin
+      Dec_Ref (C);
+   end;
 
    procedure gpr_destroy_analysis_context
      (Context : gpr_analysis_context)
@@ -102,12 +131,14 @@ package body GPR_Parser.Analysis.C is
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-   end gpr_destroy_analysis_context;
+   end;
 
    function gpr_get_analysis_unit_from_file
      (Context           : gpr_analysis_context;
       Filename, Charset : chars_ptr;
-      Reparse           : int) return gpr_analysis_unit
+      Reparse           : int;
+      With_Trivia       : int)
+      return gpr_analysis_unit
    is
    begin
       Clear_Last_Exception;
@@ -118,7 +149,8 @@ package body GPR_Parser.Analysis.C is
            (Ctx,
             Value (Filename),
             Value_Or_Empty (Charset),
-            Reparse /= 0);
+            Reparse /= 0,
+            With_Trivia /= 0);
       begin
          return Wrap (Unit);
       end;
@@ -126,13 +158,15 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_analysis_unit (System.Null_Address);
-   end gpr_get_analysis_unit_from_file;
+   end;
 
    function gpr_get_analysis_unit_from_buffer
      (Context           : gpr_analysis_context;
       Filename, Charset : chars_ptr;
       Buffer            : chars_ptr;
-      Buffer_Size       : size_t) return gpr_analysis_unit
+      Buffer_Size       : size_t;
+      With_Trivia       : int)
+      return gpr_analysis_unit
    is
    begin
       Clear_Last_Exception;
@@ -148,14 +182,15 @@ package body GPR_Parser.Analysis.C is
            (Ctx,
             Value (Filename),
             Value_Or_Empty (Charset),
-            Buffer_Str);
+            Buffer_Str,
+            With_Trivia /= 0);
          return Wrap (Unit);
       end;
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_analysis_unit (System.Null_Address);
-   end gpr_get_analysis_unit_from_buffer;
+   end;
 
    function gpr_remove_analysis_unit
      (Context  : gpr_analysis_context;
@@ -179,7 +214,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return 0;
-   end gpr_remove_analysis_unit;
+   end;
 
    function gpr_unit_root (Unit : gpr_analysis_unit)
                                            return gpr_base_node
@@ -196,7 +231,36 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_base_node (System.Null_Address);
-   end gpr_unit_root;
+   end;
+
+   procedure gpr_unit_first_token
+     (Unit  : gpr_analysis_unit;
+      Token : gpr_token_Ptr)
+   is
+      U : constant Analysis_Unit := Unwrap (Unit);
+      T : constant Token_Type := First_Token (U);
+   begin
+      Token.all := Wrap (T);
+   end;
+
+   procedure gpr_unit_last_token
+     (Unit  : gpr_analysis_unit;
+      Token : gpr_token_Ptr)
+   is
+      U : constant Analysis_Unit := Unwrap (Unit);
+      T : constant Token_Type := Last_Token (U);
+   begin
+      Token.all := Wrap (T);
+   end;
+
+   function gpr_unit_filename
+     (Unit : gpr_analysis_unit)
+      return chars_ptr
+   is
+      U : constant Analysis_Unit := Unwrap (Unit);
+   begin
+      return New_String (Get_Filename (U));
+   end;
 
    function gpr_unit_diagnostic_count
      (Unit : gpr_analysis_unit) return unsigned
@@ -213,7 +277,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return 0;
-   end gpr_unit_diagnostic_count;
+   end;
 
    function gpr_unit_diagnostic
      (Unit         : gpr_analysis_unit;
@@ -228,7 +292,7 @@ package body GPR_Parser.Analysis.C is
       begin
          if N < unsigned (U.Diagnostics.Length) then
             declare
-               D_In  : Diagnostic renames U.Diagnostics (Natural (N));
+               D_In  : Diagnostic renames U.Diagnostics (Natural (N) + 1);
                D_Out : gpr_diagnostic renames Diagnostic_P.all;
             begin
                D_Out.Sloc_Range := Wrap (D_In.Sloc_Range);
@@ -243,7 +307,26 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return 0;
-   end gpr_unit_diagnostic;
+   end;
+
+   function gpr_node_unit
+     (Node : gpr_base_node)
+      return gpr_analysis_unit
+   is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         N : constant GPR_Node := Unwrap (Node);
+         U : constant Analysis_Unit := Get_Unit (N);
+      begin
+         return Wrap (U);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return gpr_analysis_unit (System.Null_Address);
+   end;
 
    function gpr_unit_incref
      (Unit : gpr_analysis_unit) return gpr_analysis_unit
@@ -261,7 +344,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_analysis_unit (System.Null_Address);
-   end gpr_unit_incref;
+   end;
 
    procedure gpr_unit_decref (Unit : gpr_analysis_unit)
    is
@@ -276,7 +359,16 @@ package body GPR_Parser.Analysis.C is
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-   end gpr_unit_decref;
+   end;
+
+   function gpr_unit_context
+     (Unit : gpr_analysis_unit)
+      return gpr_analysis_context
+   is
+      U : constant Analysis_Unit := Unwrap (Unit);
+   begin
+      return Wrap (U.Context);
+   end;
 
    procedure gpr_unit_reparse_from_file
      (Unit : gpr_analysis_unit; Charset : chars_ptr)
@@ -292,7 +384,7 @@ package body GPR_Parser.Analysis.C is
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-   end gpr_unit_reparse_from_file;
+   end;
 
    procedure gpr_unit_reparse_from_buffer
      (Unit        : gpr_analysis_unit;
@@ -313,7 +405,7 @@ package body GPR_Parser.Analysis.C is
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-   end gpr_unit_reparse_from_buffer;
+   end;
 
    procedure gpr_unit_populate_lexical_env
      (Unit : gpr_analysis_unit)
@@ -329,47 +421,80 @@ package body GPR_Parser.Analysis.C is
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-   end gpr_unit_populate_lexical_env;
+   end;
 
    ---------------------------------
    -- General AST node primitives --
    ---------------------------------
 
-   Node_Kind_Names : constant array (Positive range <>) of Text_Access :=
-     (new Text_Type'(To_Text ("list"))
-            , new Text_Type'(To_Text ("AbstractPresent"))
-            , new Text_Type'(To_Text ("AttributeDecl"))
-            , new Text_Type'(To_Text ("AttributeReference"))
-            , new Text_Type'(To_Text ("CaseConstruction"))
-            , new Text_Type'(To_Text ("CaseItem"))
-            , new Text_Type'(To_Text ("CompilationUnit"))
-            , new Text_Type'(To_Text ("EmptyDecl"))
-            , new Text_Type'(To_Text ("Prefix"))
-            , new Text_Type'(To_Text ("Identifier"))
-            , new Text_Type'(To_Text ("NumLiteral"))
-            , new Text_Type'(To_Text ("StringLiteral"))
-            , new Text_Type'(To_Text ("ExprList"))
-            , new Text_Type'(To_Text ("External"))
-            , new Text_Type'(To_Text ("ExternalAsList"))
-            , new Text_Type'(To_Text ("ExternalName"))
-            , new Text_Type'(To_Text ("ExternalReference"))
-            , new Text_Type'(To_Text ("OthersDesignator"))
-            , new Text_Type'(To_Text ("PackageDecl"))
-            , new Text_Type'(To_Text ("PackageExtension"))
-            , new Text_Type'(To_Text ("PackageRenaming"))
-            , new Text_Type'(To_Text ("PackageSpec"))
-            , new Text_Type'(To_Text ("Project"))
-            , new Text_Type'(To_Text ("ProjectDeclaration"))
-            , new Text_Type'(To_Text ("ProjectExtension"))
-            , new Text_Type'(To_Text ("ProjectQualifier"))
-            , new Text_Type'(To_Text ("ProjectReference"))
-            , new Text_Type'(To_Text ("QualifierNames"))
-            , new Text_Type'(To_Text ("StringLiteralAt"))
-            , new Text_Type'(To_Text ("TermList"))
-            , new Text_Type'(To_Text ("TypedStringDecl"))
-            , new Text_Type'(To_Text ("VariableDecl"))
-            , new Text_Type'(To_Text ("VariableReference"))
-            , new Text_Type'(To_Text ("WithDecl"))
+   Node_Kind_Names : constant array (GPR_Node_Kind_Type) of Text_Access :=
+     (GPR_List => new Text_Type'(To_Text ("list"))
+            , GPR_Abstract_Present =>
+               new Text_Type'(To_Text ("AbstractPresent"))
+            , GPR_Attribute_Decl =>
+               new Text_Type'(To_Text ("AttributeDecl"))
+            , GPR_Attribute_Reference =>
+               new Text_Type'(To_Text ("AttributeReference"))
+            , GPR_Case_Construction =>
+               new Text_Type'(To_Text ("CaseConstruction"))
+            , GPR_Case_Item =>
+               new Text_Type'(To_Text ("CaseItem"))
+            , GPR_Compilation_Unit =>
+               new Text_Type'(To_Text ("CompilationUnit"))
+            , GPR_Empty_Decl =>
+               new Text_Type'(To_Text ("EmptyDecl"))
+            , GPR_Prefix =>
+               new Text_Type'(To_Text ("Prefix"))
+            , GPR_Identifier =>
+               new Text_Type'(To_Text ("Identifier"))
+            , GPR_Num_Literal =>
+               new Text_Type'(To_Text ("NumLiteral"))
+            , GPR_String_Literal =>
+               new Text_Type'(To_Text ("StringLiteral"))
+            , GPR_Expr_List =>
+               new Text_Type'(To_Text ("ExprList"))
+            , GPR_External =>
+               new Text_Type'(To_Text ("External"))
+            , GPR_External_As_List =>
+               new Text_Type'(To_Text ("ExternalAsList"))
+            , GPR_External_Name =>
+               new Text_Type'(To_Text ("ExternalName"))
+            , GPR_External_Reference =>
+               new Text_Type'(To_Text ("ExternalReference"))
+            , GPR_Others_Designator =>
+               new Text_Type'(To_Text ("OthersDesignator"))
+            , GPR_Package_Decl =>
+               new Text_Type'(To_Text ("PackageDecl"))
+            , GPR_Package_Extension =>
+               new Text_Type'(To_Text ("PackageExtension"))
+            , GPR_Package_Renaming =>
+               new Text_Type'(To_Text ("PackageRenaming"))
+            , GPR_Package_Spec =>
+               new Text_Type'(To_Text ("PackageSpec"))
+            , GPR_Project =>
+               new Text_Type'(To_Text ("Project"))
+            , GPR_Project_Declaration =>
+               new Text_Type'(To_Text ("ProjectDeclaration"))
+            , GPR_Project_Extension =>
+               new Text_Type'(To_Text ("ProjectExtension"))
+            , GPR_Project_Qualifier =>
+               new Text_Type'(To_Text ("ProjectQualifier"))
+            , GPR_Project_Reference =>
+               new Text_Type'(To_Text ("ProjectReference"))
+            , GPR_Qualifier_Names =>
+               new Text_Type'(To_Text ("QualifierNames"))
+            , GPR_String_Literal_At =>
+               new Text_Type'(To_Text ("StringLiteralAt"))
+            , GPR_Term_List =>
+               new Text_Type'(To_Text ("TermList"))
+            , GPR_Typed_String_Decl =>
+               new Text_Type'(To_Text ("TypedStringDecl"))
+            , GPR_Variable_Decl =>
+               new Text_Type'(To_Text ("VariableDecl"))
+            , GPR_Variable_Reference =>
+               new Text_Type'(To_Text ("VariableReference"))
+            , GPR_With_Decl =>
+               new Text_Type'(To_Text ("WithDecl"))
       );
 
    function gpr_node_kind (Node : gpr_base_node)
@@ -380,14 +505,15 @@ package body GPR_Parser.Analysis.C is
 
       declare
          N : constant GPR_Node := Unwrap (Node);
+         K : GPR_Node_Kind_Type := Kind (N);
       begin
-         return gpr_node_kind_enum (Kind (N));
+         return gpr_node_kind_enum (K'Enum_Rep);
       end;
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_node_kind_enum'First;
-   end gpr_node_kind;
+   end;
 
    function gpr_kind_name (Kind : gpr_node_kind_enum)
                                            return gpr_text
@@ -396,15 +522,35 @@ package body GPR_Parser.Analysis.C is
       Clear_Last_Exception;
 
       declare
-         Name : Text_Access renames Node_Kind_Names (Natural (Kind));
+         K    : constant GPR_Node_Kind_Type :=
+            GPR_Node_Kind_Type'Enum_Val (Kind);
+         Name : Text_Access renames Node_Kind_Names (K);
       begin
-         return (Chars => Name.all'Address, Length => Name'Length);
+         return (Chars => Name.all'Address, Length => Name'Length,
+                 Is_Allocated => 0);
       end;
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-         return (System.Null_Address, 0);
-   end gpr_kind_name;
+         return (System.Null_Address, 0, Is_Allocated => 0);
+   end;
+
+   function gpr_node_short_image (Node : gpr_base_node)
+                                                  return gpr_text
+   is
+   begin
+      Clear_Last_Exception;
+      declare
+         N   : constant GPR_Node := Unwrap (Node);
+         Img : constant Text_Type := N.Short_Image;
+      begin
+         return Wrap_Alloc (Img);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return (System.Null_Address, 0, 0);
+   end;
 
    procedure gpr_node_sloc_range
      (Node         : gpr_base_node;
@@ -421,7 +567,7 @@ package body GPR_Parser.Analysis.C is
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
-   end gpr_node_sloc_range;
+   end;
 
    function gpr_lookup_in_node
      (Node : gpr_base_node;
@@ -440,7 +586,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return gpr_base_node (System.Null_Address);
-   end gpr_lookup_in_node;
+   end;
 
    function gpr_node_child_count (Node : gpr_base_node)
                                                   return unsigned
@@ -457,7 +603,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return 0;
-   end gpr_node_child_count;
+   end;
 
    function gpr_node_child
      (Node    : gpr_base_node;
@@ -475,7 +621,7 @@ package body GPR_Parser.Analysis.C is
          if N > unsigned (Natural'Last) then
             return 0;
          end if;
-         Get_Child (Nod, Natural (N), Exists, Result);
+         Get_Child (Nod, Natural (N) + 1, Exists, Result);
          if Exists then
             Child_P.all := Wrap (Result);
             return 1;
@@ -487,26 +633,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return 0;
-   end gpr_node_child;
-
-   function gpr_token_text (Token : gpr_token)
-                                            return gpr_text
-   is
-   begin
-      Clear_Last_Exception;
-
-      declare
-         T : Langkit_Support.Tokens.Token renames Unwrap (Token).all;
-      begin
-         return (if T.Text = null
-                 then (Chars => System.Null_Address, Length => 0)
-                 else (Chars => T.Text.all'Address, Length => T.Text'Length));
-      end;
-   exception
-      when Exc : others =>
-         Set_Last_Exception (Exc);
-         return (System.Null_Address, 0);
-   end gpr_token_text;
+   end;
 
    function gpr_text_to_locale_string
      (Text : gpr_text) return System.Address
@@ -574,7 +701,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return System.Null_Address;
-   end gpr_text_to_locale_string;
+   end;
 
    -------------------------
    -- Extensions handling --
@@ -591,7 +718,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return 0;
-   end gpr_register_extension;
+   end;
 
    function gpr_node_extension
      (Node   : gpr_base_node;
@@ -613,7 +740,7 @@ package body GPR_Parser.Analysis.C is
       when Exc : others =>
          Set_Last_Exception (Exc);
          return System.Null_Address;
-   end gpr_node_extension;
+   end;
 
    ----------
    -- Wrap --
@@ -624,14 +751,17 @@ package body GPR_Parser.Analysis.C is
       Length : Natural;
    begin
       Get_Wide_Wide_String (S, Chars, Length);
-      return (Chars.all'Address, size_t (Length));
+      return (Chars.all'Address, size_t (Length), 0);
    end Wrap;
 
    ------------------------
    -- Set_Last_Exception --
    ------------------------
 
-   procedure Set_Last_Exception (Exc  : Exception_Occurrence) is
+   procedure Set_Last_Exception
+     (Exc      : Exception_Occurrence;
+      Is_Fatal : Boolean := True)
+   is
    begin
       --  If it's the first time, allocate room for the exception information
 
@@ -645,6 +775,7 @@ package body GPR_Parser.Analysis.C is
          Free (Last_Exception.Information);
       end if;
 
+      Last_Exception.Is_Fatal := (if Is_Fatal then 1 else 0);
       Last_Exception.Information := New_String (Exception_Information (Exc));
    end Set_Last_Exception;
 
@@ -669,6 +800,82 @@ package body GPR_Parser.Analysis.C is
       else
          return Last_Exception;
       end if;
-   end gpr_get_last_exception;
+   end;
+
+   function gpr_token_kind_name (Kind : int) return chars_ptr
+   is
+      K : Token_Kind;
+   begin
+      begin
+         K := Token_Kind'Enum_Val (Kind);
+      exception
+         when Exc : Constraint_Error =>
+            Set_Last_Exception (Exc);
+            return Null_Ptr;
+      end;
+
+      return New_String (Token_Kind_Name (K));
+   end;
+
+   procedure gpr_token_next
+     (Token      : gpr_token_Ptr;
+      Next_Token : gpr_token_Ptr)
+   is
+      T  : constant Token_Type := Unwrap (Token.all);
+      NT : constant Token_Type := Next (T);
+   begin
+      Next_Token.all := Wrap (NT);
+   end;
+
+   procedure gpr_token_previous
+     (Token          : gpr_token_Ptr;
+      Previous_Token : gpr_token_Ptr)
+   is
+      T  : constant Token_Type := Unwrap (Token.all);
+      PT : constant Token_Type := Previous (T);
+   begin
+      Previous_Token.all := Wrap (PT);
+   end;
+
+   ------------
+   -- Unwrap --
+   ------------
+
+   function Unwrap
+     (Unit : Analysis_Unit_Interface;
+      Text : gpr_text)
+      return Symbol_Type
+   is
+      T : Text_Type (1 .. Natural (Text.Length));
+      for T'Address use Text.Chars;
+   begin
+     return Find (Unit.Token_Data.Symbols, T, False);
+   end Unwrap;
+
+   ----------------
+   -- Wrap_Alloc --
+   ----------------
+
+   function Wrap_Alloc (S : Text_Type) return gpr_text
+   is
+      T : Text_Access := new Text_Type'(S);
+   begin
+      return gpr_text'(T.all'Address, T.all'Length, Is_Allocated => 1);
+   end Wrap_Alloc;
+
+   procedure gpr_destroy_text (T : gpr_text_Ptr) is
+      use System;
+   begin
+      if T.Is_Allocated /= 0 and then T.Chars /= System.Null_Address then
+         declare
+            TT : Text_Type (1 .. Natural (T.Length));
+            for TT'Address use T.Chars;
+            TA : Text_Access := TT'Unrestricted_Access;
+         begin
+            Free (TA);
+         end;
+         T.Chars := System.Null_Address;
+      end if;
+   end;
 
 end GPR_Parser.Analysis.C;

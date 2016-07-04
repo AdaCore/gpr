@@ -30,14 +30,18 @@
 
 
 
+with Ada.Unchecked_Conversion;
+
 with Interfaces;   use Interfaces;
 with Interfaces.C; use Interfaces.C;
 
 with GPR_Parser.Analysis.C;
 use GPR_Parser.Analysis.C;
+with GPR_Parser.AST.C;
+use GPR_Parser.AST.C;
 
 --  This package defines data types and subprograms to provide the
---  implementation of the exported C API for AST nodes.
+--  implementation of the exported C API for AST nodes subclasses.
 --
 --  Unless one wants to deal with C code, it is very likely that one needs to
 --  use this package. Please refer to the C header if you want to use the C
@@ -46,14 +50,22 @@ use GPR_Parser.Analysis.C;
 package GPR_Parser.AST.Types.C is
 
 
+         
+
+
+
+type gpr_env_element_array_Ptr is access Env_Element_Array_Access;
+
+procedure gpr_env_element_array_dec_ref (A : Env_Element_Array_Access)
+   with Export        => True,
+        Convention    => C,
+        External_name => "gpr_env_element_array_dec_ref";
+
+
+
       
-
-type gpr_gpr_node_array_Ptr is
-   access GPR_Node_Array_Access;
-
-
-
       type gpr_env_element_Ptr is access Env_Element;
+
 
    ---------------------------------------
    -- Kind-specific AST node primitives --
@@ -70,6 +82,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_gpr_node_parent
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -84,6 +98,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_gpr_node_parents
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_gpr_node_array_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -96,8 +112,70 @@ type gpr_gpr_node_array_Ptr is
 
    
 
+   function gpr_gpr_node_token_start
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_token_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_gpr_node_token_start";
+   --  Return the first token used to parse this node.
+
+
+           
+
+   
+
+   function gpr_gpr_node_token_end
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_token_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_gpr_node_token_end";
+   --  Return the last token used to parse this node.
+
+
+           
+
+   
+
+   function gpr_gpr_node_previous_sibling
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_base_node_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_gpr_node_previous_sibling";
+   --  Return the node's previous sibling, if there is one
+
+
+           
+
+   
+
+   function gpr_gpr_node_next_sibling
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_base_node_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_gpr_node_next_sibling";
+   --  Return the node's next sibling, if there is one
+
+
+           
+
+   
+
    function gpr_attribute_decl_f_attr_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -111,6 +189,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_attribute_decl_f_attr_index
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -124,6 +204,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_attribute_decl_f_expr
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -137,6 +219,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_attribute_reference_f_attribute_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -150,6 +234,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_attribute_reference_f_attribute_index
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -163,6 +249,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_case_construction_f_var_ref
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -176,6 +264,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_case_construction_f_items
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -189,6 +279,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_case_item_f_choice
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -202,6 +294,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_case_item_f_decls
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -215,6 +309,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_compilation_unit_f_project
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -228,6 +324,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_prefix_f_prefix
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -241,6 +339,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_prefix_f_suffix
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -254,6 +354,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_single_tok_node_f_tok
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_token_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -267,6 +369,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_expr_list_f_exprs
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -280,6 +384,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_external_reference_f_kind
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -293,6 +399,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_external_reference_f_string_lit
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -306,6 +414,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_external_reference_f_expr
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -319,6 +429,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_decl_f_pkg_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -332,6 +444,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_decl_f_pkg_spec
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -345,6 +459,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_extension_f_prj_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -358,6 +474,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_extension_f_pkg_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -371,6 +489,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_renaming_f_prj_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -384,6 +504,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_renaming_f_pkg_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -397,6 +519,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_spec_f_extension
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -410,6 +534,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_spec_f_decls
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -423,6 +549,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_package_spec_f_end_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -436,6 +564,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_f_context_clauses
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -449,6 +579,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_f_project_decl
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -462,6 +594,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_declaration_f_qualifier
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -475,6 +609,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_declaration_f_project_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -488,6 +624,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_declaration_f_extension
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -501,6 +639,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_declaration_f_decls
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -514,6 +654,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_declaration_f_end_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -527,7 +669,9 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_extension_f_is_all
      (Node    : gpr_base_node;
-      Value_P : int_Ptr) return int
+
+
+      Value_P : gpr_bool_Ptr) return int
       with Export        => True,
            Convention    => C,
            External_name => "gpr_project_extension_f_is_all";
@@ -540,6 +684,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_extension_f_path_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -553,6 +699,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_qualifier_f_qualifier
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -566,6 +714,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_project_reference_f_attr_ref
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -579,6 +729,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_qualifier_names_f_qualifier_id1
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -592,6 +744,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_qualifier_names_f_qualifier_id2
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -605,6 +759,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_string_literal_at_f_str_lit
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -618,6 +774,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_string_literal_at_f_at_lit
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -631,6 +789,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_term_list_f_terms
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -644,6 +804,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_typed_string_decl_f_type_id
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -657,6 +819,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_typed_string_decl_f_string_literals
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -670,6 +834,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_variable_decl_f_var_name
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -683,6 +849,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_variable_decl_f_var_type
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -696,6 +864,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_variable_decl_f_expr
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -709,6 +879,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_variable_reference_f_variable_name1
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -722,6 +894,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_variable_reference_f_variable_name2
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -735,6 +909,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_variable_reference_f_attribute_ref
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,
@@ -748,7 +924,9 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_with_decl_f_is_limited
      (Node    : gpr_base_node;
-      Value_P : int_Ptr) return int
+
+
+      Value_P : gpr_bool_Ptr) return int
       with Export        => True,
            Convention    => C,
            External_name => "gpr_with_decl_f_is_limited";
@@ -761,6 +939,8 @@ type gpr_gpr_node_array_Ptr is
 
    function gpr_with_decl_f_path_names
      (Node    : gpr_base_node;
+
+
       Value_P : gpr_base_node_Ptr) return int
       with Export        => True,
            Convention    => C,

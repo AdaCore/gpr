@@ -42,373 +42,373 @@ package body GPR_Parser.AST.Types.Parsers is
 
 
       package GPR_Node_Memos is new Langkit_Support.Packrat
-        (GPR_Node);
+        (GPR_Node, Token_Index);
       use GPR_Node_Memos;
 
          package List_GPR_Node_Memos is new Langkit_Support.Packrat
-           (List_GPR_Node);
+           (List_GPR_Node, Token_Index);
          use List_GPR_Node_Memos;
       package Abstract_Present_Memos is new Langkit_Support.Packrat
-        (Abstract_Present);
+        (Abstract_Present, Token_Index);
       use Abstract_Present_Memos;
 
       package Attribute_Decl_Memos is new Langkit_Support.Packrat
-        (Attribute_Decl);
+        (Attribute_Decl, Token_Index);
       use Attribute_Decl_Memos;
 
       package Attribute_Reference_Memos is new Langkit_Support.Packrat
-        (Attribute_Reference);
+        (Attribute_Reference, Token_Index);
       use Attribute_Reference_Memos;
 
       package Case_Construction_Memos is new Langkit_Support.Packrat
-        (Case_Construction);
+        (Case_Construction, Token_Index);
       use Case_Construction_Memos;
 
       package Case_Item_Memos is new Langkit_Support.Packrat
-        (Case_Item);
+        (Case_Item, Token_Index);
       use Case_Item_Memos;
 
          package List_Case_Item_Memos is new Langkit_Support.Packrat
-           (List_Case_Item);
+           (List_Case_Item, Token_Index);
          use List_Case_Item_Memos;
       package Compilation_Unit_Memos is new Langkit_Support.Packrat
-        (Compilation_Unit);
+        (Compilation_Unit, Token_Index);
       use Compilation_Unit_Memos;
 
       package Empty_Decl_Memos is new Langkit_Support.Packrat
-        (Empty_Decl);
+        (Empty_Decl, Token_Index);
       use Empty_Decl_Memos;
 
       package Expr_Memos is new Langkit_Support.Packrat
-        (Expr);
+        (Expr, Token_Index);
       use Expr_Memos;
 
       package Prefix_Memos is new Langkit_Support.Packrat
-        (Prefix);
+        (Prefix, Token_Index);
       use Prefix_Memos;
 
       package Single_Tok_Node_Memos is new Langkit_Support.Packrat
-        (Single_Tok_Node);
+        (Single_Tok_Node, Token_Index);
       use Single_Tok_Node_Memos;
 
       package Identifier_Memos is new Langkit_Support.Packrat
-        (Identifier);
+        (Identifier, Token_Index);
       use Identifier_Memos;
 
       package Num_Literal_Memos is new Langkit_Support.Packrat
-        (Num_Literal);
+        (Num_Literal, Token_Index);
       use Num_Literal_Memos;
 
       package String_Literal_Memos is new Langkit_Support.Packrat
-        (String_Literal);
+        (String_Literal, Token_Index);
       use String_Literal_Memos;
 
          package List_String_Literal_Memos is new Langkit_Support.Packrat
-           (List_String_Literal);
+           (List_String_Literal, Token_Index);
          use List_String_Literal_Memos;
       package Expr_List_Memos is new Langkit_Support.Packrat
-        (Expr_List);
+        (Expr_List, Token_Index);
       use Expr_List_Memos;
 
       package External_Memos is new Langkit_Support.Packrat
-        (External);
+        (External, Token_Index);
       use External_Memos;
 
       package External_As_List_Memos is new Langkit_Support.Packrat
-        (External_As_List);
+        (External_As_List, Token_Index);
       use External_As_List_Memos;
 
       package External_Name_Memos is new Langkit_Support.Packrat
-        (External_Name);
+        (External_Name, Token_Index);
       use External_Name_Memos;
 
       package External_Reference_Memos is new Langkit_Support.Packrat
-        (External_Reference);
+        (External_Reference, Token_Index);
       use External_Reference_Memos;
 
       package Others_Designator_Memos is new Langkit_Support.Packrat
-        (Others_Designator);
+        (Others_Designator, Token_Index);
       use Others_Designator_Memos;
 
       package Package_Decl_Memos is new Langkit_Support.Packrat
-        (Package_Decl);
+        (Package_Decl, Token_Index);
       use Package_Decl_Memos;
 
       package Package_Extension_Memos is new Langkit_Support.Packrat
-        (Package_Extension);
+        (Package_Extension, Token_Index);
       use Package_Extension_Memos;
 
       package Package_Renaming_Memos is new Langkit_Support.Packrat
-        (Package_Renaming);
+        (Package_Renaming, Token_Index);
       use Package_Renaming_Memos;
 
       package Package_Spec_Memos is new Langkit_Support.Packrat
-        (Package_Spec);
+        (Package_Spec, Token_Index);
       use Package_Spec_Memos;
 
       package Project_Memos is new Langkit_Support.Packrat
-        (Project);
+        (Project, Token_Index);
       use Project_Memos;
 
       package Project_Declaration_Memos is new Langkit_Support.Packrat
-        (Project_Declaration);
+        (Project_Declaration, Token_Index);
       use Project_Declaration_Memos;
 
       package Project_Extension_Memos is new Langkit_Support.Packrat
-        (Project_Extension);
+        (Project_Extension, Token_Index);
       use Project_Extension_Memos;
 
       package Project_Qualifier_Memos is new Langkit_Support.Packrat
-        (Project_Qualifier);
+        (Project_Qualifier, Token_Index);
       use Project_Qualifier_Memos;
 
       package Project_Reference_Memos is new Langkit_Support.Packrat
-        (Project_Reference);
+        (Project_Reference, Token_Index);
       use Project_Reference_Memos;
 
       package Qualifier_Names_Memos is new Langkit_Support.Packrat
-        (Qualifier_Names);
+        (Qualifier_Names, Token_Index);
       use Qualifier_Names_Memos;
 
       package String_Literal_At_Memos is new Langkit_Support.Packrat
-        (String_Literal_At);
+        (String_Literal_At, Token_Index);
       use String_Literal_At_Memos;
 
       package Term_List_Memos is new Langkit_Support.Packrat
-        (Term_List);
+        (Term_List, Token_Index);
       use Term_List_Memos;
 
          package List_Term_List_Memos is new Langkit_Support.Packrat
-           (List_Term_List);
+           (List_Term_List, Token_Index);
          use List_Term_List_Memos;
       package Typed_String_Decl_Memos is new Langkit_Support.Packrat
-        (Typed_String_Decl);
+        (Typed_String_Decl, Token_Index);
       use Typed_String_Decl_Memos;
 
       package Variable_Decl_Memos is new Langkit_Support.Packrat
-        (Variable_Decl);
+        (Variable_Decl, Token_Index);
       use Variable_Decl_Memos;
 
       package Variable_Reference_Memos is new Langkit_Support.Packrat
-        (Variable_Reference);
+        (Variable_Reference, Token_Index);
       use Variable_Reference_Memos;
 
       package With_Decl_Memos is new Langkit_Support.Packrat
-        (With_Decl);
+        (With_Decl, Token_Index);
       use With_Decl_Memos;
 
          package List_With_Decl_Memos is new Langkit_Support.Packrat
-           (List_With_Decl);
+           (List_With_Decl, Token_Index);
          use List_With_Decl_Memos;
 
    
 function External_As_List_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External_As_List;
 
    
 function External_Name_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External_Name;
 
    
 function Identifier_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Identifier;
 
    
 function Others_Designator_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Others_Designator;
 
    
 function String_Literal_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return String_Literal;
 
    
 function Attribute_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Attribute_Reference;
 
    
 function Project_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Reference;
 
    
 function Static_Name_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Expr;
 
    
 function Package_Renaming_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Renaming;
 
    
 function Package_Extension_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Extension;
 
    
 function Expression_List_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Expr_List;
 
    
 function Num_Literal_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Num_Literal;
 
    
 function String_Literal_At_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return String_Literal_At;
 
    
 function Variable_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Variable_Reference;
 
    
 function External_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External;
 
    
 function External_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External_Reference;
 
    
 function Term_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node;
 
    
 function Expression_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Term_List;
 
    
 function Variable_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Variable_Decl;
 
    
 function Associative_Array_Index_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node;
 
    
 function Attribute_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Attribute_Decl;
 
    
 function Choice_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node;
 
    
 function Discrete_Choice_List_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_GPR_Node;
 
    
 function Case_Item_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Case_Item;
 
    
 function Case_Construction_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Case_Construction;
 
    
 function Empty_Declaration_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Empty_Decl;
 
    
 function Simple_Declarative_Item_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node;
 
    
 function Simple_Declarative_Items_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_GPR_Node;
 
    
 function Package_Spec_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Spec;
 
    
 function Package_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Decl;
 
    
 function Typed_String_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Typed_String_Decl;
 
    
 function Declarative_Item_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node;
 
    
 function With_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return With_Decl;
 
    
 function Context_Clauses_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_With_Decl;
 
    
 function Abstract_Present_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Abstract_Present;
 
    
 function Qualifier_Names_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Qualifier_Names;
 
    
 function Project_Qualifier_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Qualifier;
 
    
 function Project_Extension_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Extension;
 
    
 function Declarative_Items_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_GPR_Node;
 
    
 function Project_Declaration_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Declaration;
 
    
 function Project_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project;
 
    
 function Compilation_Unit_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Compilation_Unit;
 
 
@@ -417,35 +417,39 @@ function Compilation_Unit_Transform_Parse_0 (Parser : in out Parser_Type;
       Check_Complete : Boolean := True);
    --  Helper for the user parsing function, to be called after a low-level
    --  parsing function. Check_Complete has the same semantics as in Parse. If
-   --  the parsing failed (Parser.Current_Pos = -1), append corresponding
-   --  diagnostics to Parser.Diagnostics, do nothing instead.
+   --  the parsing failed (Parser.Current_Pos = No_Token_Index), append
+   --  corresponding diagnostics to Parser.Diagnostics, do nothing instead.
 
    ----------------------
    -- Create_From_File --
    ----------------------
 
-   function Create_From_File (Filename, Charset : String;
-                              TDH               : Token_Data_Handler_Access;
-                              With_Trivia       : Boolean := False)
-                              return Parser_type
+   function Create_From_File
+     (Filename, Charset : String;
+      Unit              : Analysis_Unit_Interface;
+      With_Trivia       : Boolean := False)
+      return Parser_type
    is
+      TDH : Token_Data_Handler renames Unit.Token_Data.all;
    begin
-      Lex_From_Filename (Filename, Charset, TDH.all, With_Trivia);
-      return (TDH => TDH, others => <>);
+      Lex_From_Filename (Filename, Charset, TDH, With_Trivia);
+      return (Unit => Unit, TDH => Unit.Token_Data, others => <>);
    end Create_From_File;
 
    ------------------------
    -- Create_From_Buffer --
    ------------------------
 
-   function Create_From_Buffer (Buffer, Charset : String;
-                                TDH             : Token_Data_Handler_Access;
-                                With_Trivia     : Boolean := False)
-                                return Parser_type
+   function Create_From_Buffer
+     (Buffer, Charset : String;
+      Unit            : Analysis_Unit_Interface;
+      With_Trivia     : Boolean := False)
+      return Parser_type
    is
+      TDH : Token_Data_Handler renames Unit.Token_Data.all;
    begin
-      Lex_From_Buffer (Buffer, Charset, TDH.all, With_Trivia);
-      return (TDH => TDH, others => <>);
+      Lex_From_Buffer (Buffer, Charset, TDH, With_Trivia);
+      return (Unit => Unit, TDH => Unit.Token_Data, others => <>);
    end Create_From_Buffer;
 
    ---------------------------
@@ -458,15 +462,15 @@ function Compilation_Unit_Transform_Parse_0 (Parser : in out Parser_Type;
    is
 
       procedure Add_Last_Fail_Diagnostic is
-         Last_Token : Token renames
+         Last_Token : Token_Data_Type renames
             Get_Token (Parser.TDH.all, Parser.Last_Fail.Pos);
          D : constant Diagnostic :=
            (Sloc_Range => Last_Token.Sloc_Range,
             Message    => To_Unbounded_Wide_Wide_String (To_Text
               ("Expected """
-               & Token_Text (Parser.Last_Fail.Expected_Token_Id)
+               & Token_Kind_Name (Parser.Last_Fail.Expected_Token_Id)
                & """, got """
-               & Token_Text (Parser.Last_Fail.Found_Token_Id)
+               & Token_Kind_Name (Parser.Last_Fail.Found_Token_Id)
                & """")));
       begin
          Parser.Diagnostics.Append (D);
@@ -474,24 +478,23 @@ function Compilation_Unit_Transform_Parse_0 (Parser : in out Parser_Type;
 
    begin
 
-      if Parser.Current_Pos = -1 then
+      if Parser.Current_Pos = No_Token_Index then
          Add_Last_Fail_Diagnostic;
       elsif Check_Complete
-        and then (Parser.Current_Pos
-                  /= Token_Vectors.Last_Index (Parser.TDH.Tokens))
+        and then Parser.Current_Pos /= Last_Token (Parser.TDH.all)
       then
          --  If the fail pos is the current position of the parser, it means
          --  that the longest parse is the correct result, and that we have
          --  some garbage afterwards.
          if Parser.Current_Pos = Parser.Last_Fail.Pos then
             declare
-               First_Garbage_Token : Token renames
-                 Get_Token (Parser.TDH.all, Parser.Current_Pos);
-               D : constant Diagnostic :=
+               First_Garbage_Token : Token_Data_Type renames
+                  Get_Token (Parser.TDH.all, Parser.Current_Pos);
+               D                   : constant Diagnostic :=
                  (Sloc_Range => First_Garbage_Token.Sloc_Range,
                   Message    => To_Unbounded_Wide_Wide_String (To_Text
                     ("End of input expected, got """
-                     & Token_Text (First_Garbage_Token.Id)
+                     & Token_Kind_Name (First_Garbage_Token.Kind)
                      & """")));
             begin
                Parser.Diagnostics.Append (D);
@@ -511,538 +514,207 @@ function Compilation_Unit_Transform_Parse_0 (Parser : in out Parser_Type;
 
    function Parse
      (Parser         : in out Parser_Type;
-      Check_Complete : Boolean := True) return GPR_Node
-   is
-   begin
+      Check_Complete : Boolean := True;
+      Rule           : Grammar_Rule)
       return GPR_Node
-        (Parse_Compilation_Unit
-           (Parser, Check_Complete));
+   is
+      Result : GPR_Node;
+   begin
+      case Rule is
+         when Abstract_Present_Rule =>
+            Result := GPR_Node
+              (Abstract_Present_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Associative_Array_Index_Rule =>
+            Result := GPR_Node
+              (Associative_Array_Index_Or_Parse_0
+                 (Parser, First_Token_Index));
+         when Attribute_Decl_Rule =>
+            Result := GPR_Node
+              (Attribute_Decl_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Attribute_Reference_Rule =>
+            Result := GPR_Node
+              (Attribute_Reference_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Case_Construction_Rule =>
+            Result := GPR_Node
+              (Case_Construction_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Case_Item_Rule =>
+            Result := GPR_Node
+              (Case_Item_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Choice_Rule =>
+            Result := GPR_Node
+              (Choice_Or_Parse_0
+                 (Parser, First_Token_Index));
+         when Compilation_Unit_Rule =>
+            Result := GPR_Node
+              (Compilation_Unit_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Context_Clauses_Rule =>
+            Result := GPR_Node
+              (Context_Clauses_List_Parse_0
+                 (Parser, First_Token_Index));
+         when Declarative_Item_Rule =>
+            Result := GPR_Node
+              (Declarative_Item_Or_Parse_0
+                 (Parser, First_Token_Index));
+         when Declarative_Items_Rule =>
+            Result := GPR_Node
+              (Declarative_Items_List_Parse_0
+                 (Parser, First_Token_Index));
+         when Discrete_Choice_List_Rule =>
+            Result := GPR_Node
+              (Discrete_Choice_List_List_Parse_0
+                 (Parser, First_Token_Index));
+         when Empty_Declaration_Rule =>
+            Result := GPR_Node
+              (Empty_Declaration_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Expression_Rule =>
+            Result := GPR_Node
+              (Expression_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Expression_List_Rule =>
+            Result := GPR_Node
+              (Expression_List_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when External_Rule =>
+            Result := GPR_Node
+              (External_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when External_As_List_Rule =>
+            Result := GPR_Node
+              (External_As_List_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when External_Name_Rule =>
+            Result := GPR_Node
+              (External_Name_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when External_Reference_Rule =>
+            Result := GPR_Node
+              (External_Reference_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Identifier_Rule =>
+            Result := GPR_Node
+              (Identifier_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Num_Literal_Rule =>
+            Result := GPR_Node
+              (Num_Literal_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Others_Designator_Rule =>
+            Result := GPR_Node
+              (Others_Designator_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Package_Decl_Rule =>
+            Result := GPR_Node
+              (Package_Decl_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Package_Extension_Rule =>
+            Result := GPR_Node
+              (Package_Extension_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Package_Renaming_Rule =>
+            Result := GPR_Node
+              (Package_Renaming_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Package_Spec_Rule =>
+            Result := GPR_Node
+              (Package_Spec_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Project_Rule =>
+            Result := GPR_Node
+              (Project_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Project_Declaration_Rule =>
+            Result := GPR_Node
+              (Project_Declaration_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Project_Extension_Rule =>
+            Result := GPR_Node
+              (Project_Extension_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Project_Qualifier_Rule =>
+            Result := GPR_Node
+              (Project_Qualifier_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Project_Reference_Rule =>
+            Result := GPR_Node
+              (Project_Reference_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Qualifier_Names_Rule =>
+            Result := GPR_Node
+              (Qualifier_Names_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Simple_Declarative_Item_Rule =>
+            Result := GPR_Node
+              (Simple_Declarative_Item_Or_Parse_0
+                 (Parser, First_Token_Index));
+         when Simple_Declarative_Items_Rule =>
+            Result := GPR_Node
+              (Simple_Declarative_Items_List_Parse_0
+                 (Parser, First_Token_Index));
+         when Static_Name_Rule =>
+            Result := GPR_Node
+              (Static_Name_List_Parse_0
+                 (Parser, First_Token_Index));
+         when String_Literal_Rule =>
+            Result := GPR_Node
+              (String_Literal_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when String_Literal_At_Rule =>
+            Result := GPR_Node
+              (String_Literal_At_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Term_Rule =>
+            Result := GPR_Node
+              (Term_Or_Parse_0
+                 (Parser, First_Token_Index));
+         when Typed_String_Decl_Rule =>
+            Result := GPR_Node
+              (Typed_String_Decl_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Variable_Decl_Rule =>
+            Result := GPR_Node
+              (Variable_Decl_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when Variable_Reference_Rule =>
+            Result := GPR_Node
+              (Variable_Reference_Transform_Parse_0
+                 (Parser, First_Token_Index));
+         when With_Decl_Rule =>
+            Result := GPR_Node
+              (With_Decl_Transform_Parse_0
+                 (Parser, First_Token_Index));
+      end case;
+      Process_Parsing_Error (Parser, Check_Complete);
+      Clean_All_Memos;
+      return Result;
    end Parse;
 
-      function Parse_Abstract_Present
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Abstract_Present
-      is
-         Result : Abstract_Present :=
-            Abstract_Present_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Abstract_Present;
-      function Parse_Associative_Array_Index
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return GPR_Node
-      is
-         Result : GPR_Node :=
-            Associative_Array_Index_Or_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Associative_Array_Index;
-      function Parse_Attribute_Decl
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Attribute_Decl
-      is
-         Result : Attribute_Decl :=
-            Attribute_Decl_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Attribute_Decl;
-      function Parse_Attribute_Reference
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Attribute_Reference
-      is
-         Result : Attribute_Reference :=
-            Attribute_Reference_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Attribute_Reference;
-      function Parse_Case_Construction
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Case_Construction
-      is
-         Result : Case_Construction :=
-            Case_Construction_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Case_Construction;
-      function Parse_Case_Item
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Case_Item
-      is
-         Result : Case_Item :=
-            Case_Item_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Case_Item;
-      function Parse_Choice
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return GPR_Node
-      is
-         Result : GPR_Node :=
-            Choice_Or_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Choice;
-      function Parse_Compilation_Unit
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Compilation_Unit
-      is
-         Result : Compilation_Unit :=
-            Compilation_Unit_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Compilation_Unit;
-      function Parse_Context_Clauses
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return List_With_Decl
-      is
-         Result : List_With_Decl :=
-            Context_Clauses_List_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Context_Clauses;
-      function Parse_Declarative_Item
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return GPR_Node
-      is
-         Result : GPR_Node :=
-            Declarative_Item_Or_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Declarative_Item;
-      function Parse_Declarative_Items
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return List_GPR_Node
-      is
-         Result : List_GPR_Node :=
-            Declarative_Items_List_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Declarative_Items;
-      function Parse_Discrete_Choice_List
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return List_GPR_Node
-      is
-         Result : List_GPR_Node :=
-            Discrete_Choice_List_List_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Discrete_Choice_List;
-      function Parse_Empty_Declaration
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Empty_Decl
-      is
-         Result : Empty_Decl :=
-            Empty_Declaration_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Empty_Declaration;
-      function Parse_Expression
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Term_List
-      is
-         Result : Term_List :=
-            Expression_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Expression;
-      function Parse_Expression_List
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Expr_List
-      is
-         Result : Expr_List :=
-            Expression_List_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Expression_List;
-      function Parse_External
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return External
-      is
-         Result : External :=
-            External_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_External;
-      function Parse_External_As_List
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return External_As_List
-      is
-         Result : External_As_List :=
-            External_As_List_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_External_As_List;
-      function Parse_External_Name
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return External_Name
-      is
-         Result : External_Name :=
-            External_Name_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_External_Name;
-      function Parse_External_Reference
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return External_Reference
-      is
-         Result : External_Reference :=
-            External_Reference_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_External_Reference;
-      function Parse_Identifier
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Identifier
-      is
-         Result : Identifier :=
-            Identifier_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Identifier;
-      function Parse_Num_Literal
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Num_Literal
-      is
-         Result : Num_Literal :=
-            Num_Literal_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Num_Literal;
-      function Parse_Others_Designator
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Others_Designator
-      is
-         Result : Others_Designator :=
-            Others_Designator_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Others_Designator;
-      function Parse_Package_Decl
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Package_Decl
-      is
-         Result : Package_Decl :=
-            Package_Decl_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Package_Decl;
-      function Parse_Package_Extension
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Package_Extension
-      is
-         Result : Package_Extension :=
-            Package_Extension_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Package_Extension;
-      function Parse_Package_Renaming
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Package_Renaming
-      is
-         Result : Package_Renaming :=
-            Package_Renaming_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Package_Renaming;
-      function Parse_Package_Spec
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Package_Spec
-      is
-         Result : Package_Spec :=
-            Package_Spec_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Package_Spec;
-      function Parse_Project
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Project
-      is
-         Result : Project :=
-            Project_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Project;
-      function Parse_Project_Declaration
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Project_Declaration
-      is
-         Result : Project_Declaration :=
-            Project_Declaration_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Project_Declaration;
-      function Parse_Project_Extension
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Project_Extension
-      is
-         Result : Project_Extension :=
-            Project_Extension_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Project_Extension;
-      function Parse_Project_Qualifier
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Project_Qualifier
-      is
-         Result : Project_Qualifier :=
-            Project_Qualifier_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Project_Qualifier;
-      function Parse_Project_Reference
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Project_Reference
-      is
-         Result : Project_Reference :=
-            Project_Reference_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Project_Reference;
-      function Parse_Qualifier_Names
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Qualifier_Names
-      is
-         Result : Qualifier_Names :=
-            Qualifier_Names_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Qualifier_Names;
-      function Parse_Simple_Declarative_Item
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return GPR_Node
-      is
-         Result : GPR_Node :=
-            Simple_Declarative_Item_Or_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Simple_Declarative_Item;
-      function Parse_Simple_Declarative_Items
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return List_GPR_Node
-      is
-         Result : List_GPR_Node :=
-            Simple_Declarative_Items_List_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Simple_Declarative_Items;
-      function Parse_Static_Name
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Expr
-      is
-         Result : Expr :=
-            Static_Name_List_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Static_Name;
-      function Parse_String_Literal
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return String_Literal
-      is
-         Result : String_Literal :=
-            String_Literal_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_String_Literal;
-      function Parse_String_Literal_At
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return String_Literal_At
-      is
-         Result : String_Literal_At :=
-            String_Literal_At_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_String_Literal_At;
-      function Parse_Term
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return GPR_Node
-      is
-         Result : GPR_Node :=
-            Term_Or_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Term;
-      function Parse_Typed_String_Decl
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Typed_String_Decl
-      is
-         Result : Typed_String_Decl :=
-            Typed_String_Decl_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Typed_String_Decl;
-      function Parse_Variable_Decl
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Variable_Decl
-      is
-         Result : Variable_Decl :=
-            Variable_Decl_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Variable_Decl;
-      function Parse_Variable_Reference
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return Variable_Reference
-      is
-         Result : Variable_Reference :=
-            Variable_Reference_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_Variable_Reference;
-      function Parse_With_Decl
-        (Parser         : in out Parser_Type;
-         Check_Complete : Boolean := True)
-         return With_Decl
-      is
-         Result : With_Decl :=
-            With_Decl_Transform_Parse_0 (Parser, 0);
-      begin
-         Process_Parsing_Error (Parser, Check_Complete);
-         Clean_All_Memos;
-         return Result;
-      end Parse_With_Decl;
-
    
+
+
 External_As_List_Transform_Parse_0_Memo : External_As_List_Memos.Memo_Type;
 
 function External_As_List_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External_As_List
 is
-      Row_Pos_0 : Integer
-         :=0;
-      Tk_Pos_0 : Integer
-         :=0;
-      Tk_Res_0 : Token
-         :=No_Token;
+      Row_Pos_0 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_0 : Token_Index
+         := No_Token_Index;
+      Tk_Res_0 : Token_Index
+         := No_Token_Index;
       Transform_Res_0 : External_As_List
-         :=null;
+         := null;
 
 
-   M       : External_As_List_Memos.Memo_Entry :=
-      Get (External_As_List_Transform_Parse_0_Memo, Pos);
+   M : External_As_List_Memos.Memo_Entry := Get (External_As_List_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1051,7 +723,7 @@ begin
       Transform_Res_0 := M.Instance;
       return Transform_Res_0;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_0;
    end if;
 
@@ -1074,30 +746,35 @@ Row_Pos_0 := pos;
 
 --  Start tok_code
 
-Tk_Res_0 := Get_Token (Parser.TDH.all, Row_Pos_0);
+Tk_Res_0 := Row_Pos_0;
 
-if Tk_Res_0.Id /= QUEX_TKN_EXTERNAL_AS_LIST then
-    Tk_Pos_0 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_0));
+begin
+   if T.Kind /= GPR_External_As_List then
+       Tk_Pos_0 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_0 then
-        Parser.Last_Fail.Pos := Row_Pos_0;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_EXTERNAL_AS_LIST;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_0.Id;
-    end if;
-else
-    Tk_Pos_0 := Row_Pos_0 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_0 then
+           Parser.Last_Fail.Pos := Row_Pos_0;
+           Parser.Last_Fail.Expected_Token_Id := GPR_External_As_List;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_0 := Row_Pos_0 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_0 /= -1 then
+if Tk_Pos_0 /= No_Token_Index then
 
    Row_Pos_0 := Tk_Pos_0;
 
 
 else
-   Row_Pos_0 := -1;
+   Row_Pos_0 := No_Token_Index;
    goto Row_Exit_Label_0_0;
 
 end if;
@@ -1110,12 +787,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_0 /= -1 then
+if Row_Pos_0 /= No_Token_Index then
 
    Transform_Res_0 := External_As_List
      (External_As_List_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_0.Token_Data := Parser.TDH;
+   Transform_Res_0.Unit := Parser.Unit;
    Transform_Res_0.Token_Start := pos;
    Transform_Res_0.Token_End := (if Row_Pos_0 = pos
                         then pos
@@ -1133,7 +810,7 @@ end if;
 
 
    Set (External_As_List_Transform_Parse_0_Memo,
-        Row_Pos_0 /= -1,
+        Row_Pos_0 /= No_Token_Index,
         Transform_Res_0,
         Pos,
         Row_Pos_0);
@@ -1145,24 +822,25 @@ end if;
 end External_As_List_Transform_Parse_0;
 
    
+
+
 External_Name_Transform_Parse_0_Memo : External_Name_Memos.Memo_Type;
 
 function External_Name_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External_Name
 is
-      Row_Pos_1 : Integer
-         :=0;
-      Tk_Pos_1 : Integer
-         :=0;
-      Tk_Res_1 : Token
-         :=No_Token;
+      Row_Pos_1 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_1 : Token_Index
+         := No_Token_Index;
+      Tk_Res_1 : Token_Index
+         := No_Token_Index;
       Transform_Res_1 : External_Name
-         :=null;
+         := null;
 
 
-   M       : External_Name_Memos.Memo_Entry :=
-      Get (External_Name_Transform_Parse_0_Memo, Pos);
+   M : External_Name_Memos.Memo_Entry := Get (External_Name_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1171,7 +849,7 @@ begin
       Transform_Res_1 := M.Instance;
       return Transform_Res_1;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_1;
    end if;
 
@@ -1194,30 +872,35 @@ Row_Pos_1 := pos;
 
 --  Start tok_code
 
-Tk_Res_1 := Get_Token (Parser.TDH.all, Row_Pos_1);
+Tk_Res_1 := Row_Pos_1;
 
-if Tk_Res_1.Id /= QUEX_TKN_EXTERNAL then
-    Tk_Pos_1 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_1));
+begin
+   if T.Kind /= GPR_External then
+       Tk_Pos_1 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_1 then
-        Parser.Last_Fail.Pos := Row_Pos_1;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_EXTERNAL;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_1.Id;
-    end if;
-else
-    Tk_Pos_1 := Row_Pos_1 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_1 then
+           Parser.Last_Fail.Pos := Row_Pos_1;
+           Parser.Last_Fail.Expected_Token_Id := GPR_External;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_1 := Row_Pos_1 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_1 /= -1 then
+if Tk_Pos_1 /= No_Token_Index then
 
    Row_Pos_1 := Tk_Pos_1;
 
 
 else
-   Row_Pos_1 := -1;
+   Row_Pos_1 := No_Token_Index;
    goto Row_Exit_Label_1_0;
 
 end if;
@@ -1230,12 +913,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_1 /= -1 then
+if Row_Pos_1 /= No_Token_Index then
 
    Transform_Res_1 := External_Name
      (External_Name_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_1.Token_Data := Parser.TDH;
+   Transform_Res_1.Unit := Parser.Unit;
    Transform_Res_1.Token_Start := pos;
    Transform_Res_1.Token_End := (if Row_Pos_1 = pos
                         then pos
@@ -1253,7 +936,7 @@ end if;
 
 
    Set (External_Name_Transform_Parse_0_Memo,
-        Row_Pos_1 /= -1,
+        Row_Pos_1 /= No_Token_Index,
         Transform_Res_1,
         Pos,
         Row_Pos_1);
@@ -1265,22 +948,23 @@ end if;
 end External_Name_Transform_Parse_0;
 
    
+
+
 Identifier_Transform_Parse_0_Memo : Identifier_Memos.Memo_Type;
 
 function Identifier_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Identifier
 is
-      Tk_Pos_4 : Integer
-         :=0;
-      Tk_Res_4 : Token
-         :=No_Token;
+      Tk_Pos_4 : Token_Index
+         := No_Token_Index;
+      Tk_Res_4 : Token_Index
+         := No_Token_Index;
       Transform_Res_2 : Identifier
-         :=null;
+         := null;
 
 
-   M       : Identifier_Memos.Memo_Entry :=
-      Get (Identifier_Transform_Parse_0_Memo, Pos);
+   M : Identifier_Memos.Memo_Entry := Get (Identifier_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1289,7 +973,7 @@ begin
       Transform_Res_2 := M.Instance;
       return Transform_Res_2;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_2;
    end if;
 
@@ -1304,29 +988,34 @@ begin
 
 --  Start tok_code
 
-Tk_Res_4 := Get_Token (Parser.TDH.all, pos);
+Tk_Res_4 := pos;
 
-if Tk_Res_4.Id /= QUEX_TKN_IDENTIFIER then
-    Tk_Pos_4 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_4));
+begin
+   if T.Kind /= GPR_Identifier then
+       Tk_Pos_4 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= pos then
-        Parser.Last_Fail.Pos := pos;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_IDENTIFIER;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_4.Id;
-    end if;
-else
-    Tk_Pos_4 := pos + 1;
-end if;
+       if Parser.Last_Fail.Pos <= pos then
+           Parser.Last_Fail.Pos := pos;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Identifier;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_4 := pos + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_4 /= -1 then
+if Tk_Pos_4 /= No_Token_Index then
 
    Transform_Res_2 := Identifier
      (Identifier_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_2.Token_Data := Parser.TDH;
+   Transform_Res_2.Unit := Parser.Unit;
    Transform_Res_2.Token_Start := pos;
    Transform_Res_2.Token_End := (if Tk_Pos_4 = pos
                         then pos
@@ -1347,7 +1036,7 @@ end if;
 
 
    Set (Identifier_Transform_Parse_0_Memo,
-        Tk_Pos_4 /= -1,
+        Tk_Pos_4 /= No_Token_Index,
         Transform_Res_2,
         Pos,
         Tk_Pos_4);
@@ -1359,22 +1048,23 @@ end if;
 end Identifier_Transform_Parse_0;
 
    
+
+
 Others_Designator_Transform_Parse_0_Memo : Others_Designator_Memos.Memo_Type;
 
 function Others_Designator_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Others_Designator
 is
-      Tk_Pos_6 : Integer
-         :=0;
-      Tk_Res_6 : Token
-         :=No_Token;
+      Tk_Pos_6 : Token_Index
+         := No_Token_Index;
+      Tk_Res_6 : Token_Index
+         := No_Token_Index;
       Transform_Res_3 : Others_Designator
-         :=null;
+         := null;
 
 
-   M       : Others_Designator_Memos.Memo_Entry :=
-      Get (Others_Designator_Transform_Parse_0_Memo, Pos);
+   M : Others_Designator_Memos.Memo_Entry := Get (Others_Designator_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1383,7 +1073,7 @@ begin
       Transform_Res_3 := M.Instance;
       return Transform_Res_3;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_3;
    end if;
 
@@ -1398,29 +1088,34 @@ begin
 
 --  Start tok_code
 
-Tk_Res_6 := Get_Token (Parser.TDH.all, pos);
+Tk_Res_6 := pos;
 
-if Tk_Res_6.Id /= QUEX_TKN_OTHERS then
-    Tk_Pos_6 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_6));
+begin
+   if T.Kind /= GPR_Others then
+       Tk_Pos_6 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= pos then
-        Parser.Last_Fail.Pos := pos;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_OTHERS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_6.Id;
-    end if;
-else
-    Tk_Pos_6 := pos + 1;
-end if;
+       if Parser.Last_Fail.Pos <= pos then
+           Parser.Last_Fail.Pos := pos;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Others;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_6 := pos + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_6 /= -1 then
+if Tk_Pos_6 /= No_Token_Index then
 
    Transform_Res_3 := Others_Designator
      (Others_Designator_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_3.Token_Data := Parser.TDH;
+   Transform_Res_3.Unit := Parser.Unit;
    Transform_Res_3.Token_Start := pos;
    Transform_Res_3.Token_End := (if Tk_Pos_6 = pos
                         then pos
@@ -1438,7 +1133,7 @@ end if;
 
 
    Set (Others_Designator_Transform_Parse_0_Memo,
-        Tk_Pos_6 /= -1,
+        Tk_Pos_6 /= No_Token_Index,
         Transform_Res_3,
         Pos,
         Tk_Pos_6);
@@ -1450,22 +1145,23 @@ end if;
 end Others_Designator_Transform_Parse_0;
 
    
+
+
 String_Literal_Transform_Parse_0_Memo : String_Literal_Memos.Memo_Type;
 
 function String_Literal_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return String_Literal
 is
-      Tk_Pos_7 : Integer
-         :=0;
-      Tk_Res_7 : Token
-         :=No_Token;
+      Tk_Pos_7 : Token_Index
+         := No_Token_Index;
+      Tk_Res_7 : Token_Index
+         := No_Token_Index;
       Transform_Res_4 : String_Literal
-         :=null;
+         := null;
 
 
-   M       : String_Literal_Memos.Memo_Entry :=
-      Get (String_Literal_Transform_Parse_0_Memo, Pos);
+   M : String_Literal_Memos.Memo_Entry := Get (String_Literal_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1474,7 +1170,7 @@ begin
       Transform_Res_4 := M.Instance;
       return Transform_Res_4;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_4;
    end if;
 
@@ -1489,29 +1185,34 @@ begin
 
 --  Start tok_code
 
-Tk_Res_7 := Get_Token (Parser.TDH.all, pos);
+Tk_Res_7 := pos;
 
-if Tk_Res_7.Id /= QUEX_TKN_STRING then
-    Tk_Pos_7 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_7));
+begin
+   if T.Kind /= GPR_String then
+       Tk_Pos_7 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= pos then
-        Parser.Last_Fail.Pos := pos;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_STRING;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_7.Id;
-    end if;
-else
-    Tk_Pos_7 := pos + 1;
-end if;
+       if Parser.Last_Fail.Pos <= pos then
+           Parser.Last_Fail.Pos := pos;
+           Parser.Last_Fail.Expected_Token_Id := GPR_String;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_7 := pos + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_7 /= -1 then
+if Tk_Pos_7 /= No_Token_Index then
 
    Transform_Res_4 := String_Literal
      (String_Literal_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_4.Token_Data := Parser.TDH;
+   Transform_Res_4.Unit := Parser.Unit;
    Transform_Res_4.Token_Start := pos;
    Transform_Res_4.Token_End := (if Tk_Pos_7 = pos
                         then pos
@@ -1532,7 +1233,7 @@ end if;
 
 
    Set (String_Literal_Transform_Parse_0_Memo,
-        Tk_Pos_7 /= -1,
+        Tk_Pos_7 /= No_Token_Index,
         Transform_Res_4,
         Pos,
         Tk_Pos_7);
@@ -1544,52 +1245,53 @@ end if;
 end String_Literal_Transform_Parse_0;
 
    
+
+
 Attribute_Reference_Transform_Parse_0_Memo : Attribute_Reference_Memos.Memo_Type;
 
 function Attribute_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Attribute_Reference
 is
-      Row_Pos_3 : Integer
-         :=0;
-      Fncall_Pos_0 : Integer
-         :=0;
+      Row_Pos_3 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_0 : Token_Index
+         := No_Token_Index;
       Fncall_Res_0 : Identifier
-         :=null;
+         := null;
       Row_Subres_0_3 : Identifier
-         :=null;
-      Row_Pos_4 : Integer
-         :=0;
-      Tk_Pos_5 : Integer
-         :=0;
-      Tk_Res_5 : Token
-         :=No_Token;
-      Or_Pos_0 : Integer
-         :=0;
+         := null;
+      Row_Pos_4 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_5 : Token_Index
+         := No_Token_Index;
+      Tk_Res_5 : Token_Index
+         := No_Token_Index;
+      Or_Pos_0 : Token_Index
+         := No_Token_Index;
       Or_Res_0 : GPR_Node
-         :=null;
-      Fncall_Pos_1 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_1 : Token_Index
+         := No_Token_Index;
       Fncall_Res_1 : Others_Designator
-         :=null;
-      Fncall_Pos_2 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_2 : Token_Index
+         := No_Token_Index;
       Fncall_Res_2 : String_Literal
-         :=null;
+         := null;
       Row_Subres_1_2 : GPR_Node
-         :=null;
-      Tk_Pos_8 : Integer
-         :=0;
-      Tk_Res_8 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_8 : Token_Index
+         := No_Token_Index;
+      Tk_Res_8 : Token_Index
+         := No_Token_Index;
       Row_Subres_1_1 : GPR_Node
-         :=null;
+         := null;
       Transform_Res_5 : Attribute_Reference
-         :=null;
+         := null;
 
 
-   M       : Attribute_Reference_Memos.Memo_Entry :=
-      Get (Attribute_Reference_Transform_Parse_0_Memo, Pos);
+   M : Attribute_Reference_Memos.Memo_Entry := Get (Attribute_Reference_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1598,7 +1300,7 @@ begin
       Transform_Res_5 := M.Instance;
       return Transform_Res_5;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_5;
    end if;
 
@@ -1623,14 +1325,14 @@ Fncall_Res_0 := Identifier_Transform_Parse_0(Parser, Row_Pos_3);
 Fncall_Pos_0 := Parser.Current_Pos;
 
 
-if Fncall_Pos_0 /= -1 then
+if Fncall_Pos_0 /= No_Token_Index then
 
    Row_Pos_3 := Fncall_Pos_0;
 
       Row_Subres_0_3 := Fncall_Res_0;
 
 else
-   Row_Pos_3 := -1;
+   Row_Pos_3 := No_Token_Index;
    goto Row_Exit_Label_3_0;
 
 end if;
@@ -1654,30 +1356,35 @@ Row_Pos_4 := Row_Pos_3;
 
 --  Start tok_code
 
-Tk_Res_5 := Get_Token (Parser.TDH.all, Row_Pos_4);
+Tk_Res_5 := Row_Pos_4;
 
-if Tk_Res_5.Id /= QUEX_TKN_PAR_OPEN then
-    Tk_Pos_5 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_5));
+begin
+   if T.Kind /= GPR_Par_Open then
+       Tk_Pos_5 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_4 then
-        Parser.Last_Fail.Pos := Row_Pos_4;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_OPEN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_5.Id;
-    end if;
-else
-    Tk_Pos_5 := Row_Pos_4 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_4 then
+           Parser.Last_Fail.Pos := Row_Pos_4;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Open;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_5 := Row_Pos_4 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_5 /= -1 then
+if Tk_Pos_5 /= No_Token_Index then
 
    Row_Pos_4 := Tk_Pos_5;
 
 
 else
-   Row_Pos_4 := -1;
+   Row_Pos_4 := No_Token_Index;
    goto Row_Exit_Label_4_0;
 
 end if;
@@ -1690,24 +1397,26 @@ end if;
 
 --  Start or_code
 
-Or_Pos_0 := -1;
+Or_Pos_0 := No_Token_Index;
 Or_Res_0 := null;
     
 Fncall_Res_1 := Others_Designator_Transform_Parse_0(Parser, Row_Pos_4);
 Fncall_Pos_1 := Parser.Current_Pos;
 
-    if Fncall_Pos_1 /= -1 then
+    if Fncall_Pos_1 /= No_Token_Index then
         Or_Pos_0 := Fncall_Pos_1;
-        Or_Res_0 := GPR_Node (Fncall_Res_1);
+        Or_Res_0 := GPR_Node
+          (Fncall_Res_1);
         goto Exit_Or_0;
     end if;
     
 Fncall_Res_2 := String_Literal_Transform_Parse_0(Parser, Row_Pos_4);
 Fncall_Pos_2 := Parser.Current_Pos;
 
-    if Fncall_Pos_2 /= -1 then
+    if Fncall_Pos_2 /= No_Token_Index then
         Or_Pos_0 := Fncall_Pos_2;
-        Or_Res_0 := GPR_Node (Fncall_Res_2);
+        Or_Res_0 := GPR_Node
+          (Fncall_Res_2);
         goto Exit_Or_0;
     end if;
 <<Exit_Or_0>>
@@ -1715,14 +1424,14 @@ Fncall_Pos_2 := Parser.Current_Pos;
 --  End or_code
 
 
-if Or_Pos_0 /= -1 then
+if Or_Pos_0 /= No_Token_Index then
 
    Row_Pos_4 := Or_Pos_0;
 
       Row_Subres_1_2 := Or_Res_0;
 
 else
-   Row_Pos_4 := -1;
+   Row_Pos_4 := No_Token_Index;
    goto Row_Exit_Label_4_0;
 
 end if;
@@ -1735,30 +1444,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_8 := Get_Token (Parser.TDH.all, Row_Pos_4);
+Tk_Res_8 := Row_Pos_4;
 
-if Tk_Res_8.Id /= QUEX_TKN_PAR_CLOSE then
-    Tk_Pos_8 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_8));
+begin
+   if T.Kind /= GPR_Par_Close then
+       Tk_Pos_8 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_4 then
-        Parser.Last_Fail.Pos := Row_Pos_4;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_CLOSE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_8.Id;
-    end if;
-else
-    Tk_Pos_8 := Row_Pos_4 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_4 then
+           Parser.Last_Fail.Pos := Row_Pos_4;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Close;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_8 := Row_Pos_4 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_8 /= -1 then
+if Tk_Pos_8 /= No_Token_Index then
 
    Row_Pos_4 := Tk_Pos_8;
 
 
 else
-   Row_Pos_4 := -1;
+   Row_Pos_4 := No_Token_Index;
    goto Row_Exit_Label_4_0;
 
 end if;
@@ -1772,8 +1486,9 @@ end if;
 
 
 
-if Row_Pos_4 = -1 then
-        Row_Subres_1_2 := null;
+if Row_Pos_4 = No_Token_Index then
+        Row_Subres_1_2 :=
+           null;
 
 
     Row_Pos_4 := Row_Pos_3;
@@ -1782,14 +1497,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_4 /= -1 then
+if Row_Pos_4 /= No_Token_Index then
 
    Row_Pos_3 := Row_Pos_4;
 
       Row_Subres_1_1 := Row_Subres_1_2;
 
 else
-   Row_Pos_3 := -1;
+   Row_Pos_3 := No_Token_Index;
    goto Row_Exit_Label_3_0;
 
 end if;
@@ -1802,12 +1517,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_3 /= -1 then
+if Row_Pos_3 /= No_Token_Index then
 
    Transform_Res_5 := Attribute_Reference
      (Attribute_Reference_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_5.Token_Data := Parser.TDH;
+   Transform_Res_5.Unit := Parser.Unit;
    Transform_Res_5.Token_Start := pos;
    Transform_Res_5.Token_End := (if Row_Pos_3 = pos
                         then pos
@@ -1837,7 +1552,7 @@ end if;
 
 
    Set (Attribute_Reference_Transform_Parse_0_Memo,
-        Row_Pos_3 /= -1,
+        Row_Pos_3 /= No_Token_Index,
         Transform_Res_5,
         Pos,
         Row_Pos_3);
@@ -1849,34 +1564,35 @@ end if;
 end Attribute_Reference_Transform_Parse_0;
 
    
+
+
 Project_Reference_Transform_Parse_0_Memo : Project_Reference_Memos.Memo_Type;
 
 function Project_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Reference
 is
-      Row_Pos_2 : Integer
-         :=0;
-      Tk_Pos_2 : Integer
-         :=0;
-      Tk_Res_2 : Token
-         :=No_Token;
-      Tk_Pos_3 : Integer
-         :=0;
-      Tk_Res_3 : Token
-         :=No_Token;
-      Fncall_Pos_3 : Integer
-         :=0;
+      Row_Pos_2 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_2 : Token_Index
+         := No_Token_Index;
+      Tk_Res_2 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_3 : Token_Index
+         := No_Token_Index;
+      Tk_Res_3 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_3 : Token_Index
+         := No_Token_Index;
       Fncall_Res_3 : Attribute_Reference
-         :=null;
+         := null;
       Row_Subres_2_0 : Attribute_Reference
-         :=null;
+         := null;
       Transform_Res_6 : Project_Reference
-         :=null;
+         := null;
 
 
-   M       : Project_Reference_Memos.Memo_Entry :=
-      Get (Project_Reference_Transform_Parse_0_Memo, Pos);
+   M : Project_Reference_Memos.Memo_Entry := Get (Project_Reference_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -1885,7 +1601,7 @@ begin
       Transform_Res_6 := M.Instance;
       return Transform_Res_6;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_6;
    end if;
 
@@ -1908,30 +1624,35 @@ Row_Pos_2 := pos;
 
 --  Start tok_code
 
-Tk_Res_2 := Get_Token (Parser.TDH.all, Row_Pos_2);
+Tk_Res_2 := Row_Pos_2;
 
-if Tk_Res_2.Id /= QUEX_TKN_PROJECT then
-    Tk_Pos_2 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_2));
+begin
+   if T.Kind /= GPR_Project then
+       Tk_Pos_2 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_2 then
-        Parser.Last_Fail.Pos := Row_Pos_2;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PROJECT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_2.Id;
-    end if;
-else
-    Tk_Pos_2 := Row_Pos_2 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_2 then
+           Parser.Last_Fail.Pos := Row_Pos_2;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Project;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_2 := Row_Pos_2 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_2 /= -1 then
+if Tk_Pos_2 /= No_Token_Index then
 
    Row_Pos_2 := Tk_Pos_2;
 
 
 else
-   Row_Pos_2 := -1;
+   Row_Pos_2 := No_Token_Index;
    goto Row_Exit_Label_2_0;
 
 end if;
@@ -1944,30 +1665,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_3 := Get_Token (Parser.TDH.all, Row_Pos_2);
+Tk_Res_3 := Row_Pos_2;
 
-if Tk_Res_3.Id /= QUEX_TKN_TICK then
-    Tk_Pos_3 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_3));
+begin
+   if T.Kind /= GPR_Tick then
+       Tk_Pos_3 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_2 then
-        Parser.Last_Fail.Pos := Row_Pos_2;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_TICK;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_3.Id;
-    end if;
-else
-    Tk_Pos_3 := Row_Pos_2 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_2 then
+           Parser.Last_Fail.Pos := Row_Pos_2;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Tick;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_3 := Row_Pos_2 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_3 /= -1 then
+if Tk_Pos_3 /= No_Token_Index then
 
    Row_Pos_2 := Tk_Pos_3;
 
 
 else
-   Row_Pos_2 := -1;
+   Row_Pos_2 := No_Token_Index;
    goto Row_Exit_Label_2_0;
 
 end if;
@@ -1982,14 +1708,14 @@ Fncall_Res_3 := Attribute_Reference_Transform_Parse_0(Parser, Row_Pos_2);
 Fncall_Pos_3 := Parser.Current_Pos;
 
 
-if Fncall_Pos_3 /= -1 then
+if Fncall_Pos_3 /= No_Token_Index then
 
    Row_Pos_2 := Fncall_Pos_3;
 
       Row_Subres_2_0 := Fncall_Res_3;
 
 else
-   Row_Pos_2 := -1;
+   Row_Pos_2 := No_Token_Index;
    goto Row_Exit_Label_2_0;
 
 end if;
@@ -2002,12 +1728,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_2 /= -1 then
+if Row_Pos_2 /= No_Token_Index then
 
    Transform_Res_6 := Project_Reference
      (Project_Reference_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_6.Token_Data := Parser.TDH;
+   Transform_Res_6.Unit := Parser.Unit;
    Transform_Res_6.Token_Start := pos;
    Transform_Res_6.Token_End := (if Row_Pos_2 = pos
                         then pos
@@ -2031,7 +1757,7 @@ end if;
 
 
    Set (Project_Reference_Transform_Parse_0_Memo,
-        Row_Pos_2 /= -1,
+        Row_Pos_2 /= No_Token_Index,
         Transform_Res_6,
         Pos,
         Row_Pos_2);
@@ -2043,30 +1769,31 @@ end if;
 end Project_Reference_Transform_Parse_0;
 
    
+
+
 Static_Name_List_Parse_0_Memo : Expr_Memos.Memo_Type;
 
 function Static_Name_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Expr
 is
-      Lst_Pos_0 : Integer
-         :=0;
+      Lst_Pos_0 : Token_Index
+         := No_Token_Index;
       Lst_Res_0 : Expr
-         :=null;
-      Lst_Cpos_0 : Integer
-         :=0;
-      Fncall_Pos_4 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_0 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_4 : Token_Index
+         := No_Token_Index;
       Fncall_Res_4 : Identifier
-         :=null;
-      Tk_Pos_9 : Integer
-         :=0;
-      Tk_Res_9 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_9 : Token_Index
+         := No_Token_Index;
+      Tk_Res_9 : Token_Index
+         := No_Token_Index;
 
 
-   M       : Expr_Memos.Memo_Entry :=
-      Get (Static_Name_List_Parse_0_Memo, Pos);
+   M : Expr_Memos.Memo_Entry := Get (Static_Name_List_Parse_0_Memo, Pos);
 
 begin
 
@@ -2075,7 +1802,7 @@ begin
       Lst_Res_0 := M.Instance;
       return Lst_Res_0;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Lst_Res_0;
    end if;
 
@@ -2087,7 +1814,7 @@ begin
    
 --  Start list_code
 
-    Lst_Pos_0 := -1;
+    Lst_Pos_0 := No_Token_Index;
 
 Lst_Res_0 := null;
 Lst_Cpos_0 := pos;
@@ -2098,7 +1825,7 @@ Fncall_Res_4 := Identifier_Transform_Parse_0(Parser, Lst_Cpos_0);
 Fncall_Pos_4 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_4 = -1;
+   exit when Fncall_Pos_4 = No_Token_Index;
 
    Lst_Pos_0 := Fncall_Pos_4;
    Lst_Cpos_0 := Fncall_Pos_4;
@@ -2116,10 +1843,10 @@ Fncall_Pos_4 := Parser.Current_Pos;
               (Prefix_Alloc.Alloc (Parser.Mem_Pool));
          begin
             
-            New_Res.F_Prefix := Lst_Res_0;
+            New_Res.F_Prefix := Expr (Lst_Res_0);
 
             New_Res.F_Suffix :=
-               Expr (Fncall_Res_4);
+              Expr (Fncall_Res_4);
 
             Lst_Res_0.Parent := GPR_Node (New_Res);
             Fncall_Res_4.Parent :=
@@ -2128,7 +1855,7 @@ Fncall_Pos_4 := Parser.Current_Pos;
             Lst_Res_0 := Expr (New_Res);
          end;
 
-         Lst_Res_0.Token_Data := Parser.TDH;
+         Lst_Res_0.Unit := Parser.Unit;
          Lst_Res_0.Token_Start := pos;
          Lst_Res_0.Token_End := (if Lst_Cpos_0 = pos
                               then pos
@@ -2139,23 +1866,28 @@ Fncall_Pos_4 := Parser.Current_Pos;
       
 --  Start tok_code
 
-Tk_Res_9 := Get_Token (Parser.TDH.all, Lst_Cpos_0);
+Tk_Res_9 := Lst_Cpos_0;
 
-if Tk_Res_9.Id /= QUEX_TKN_DOT then
-    Tk_Pos_9 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_9));
+begin
+   if T.Kind /= GPR_Dot then
+       Tk_Pos_9 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Lst_Cpos_0 then
-        Parser.Last_Fail.Pos := Lst_Cpos_0;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_DOT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_9.Id;
-    end if;
-else
-    Tk_Pos_9 := Lst_Cpos_0 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Lst_Cpos_0 then
+           Parser.Last_Fail.Pos := Lst_Cpos_0;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Dot;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_9 := Lst_Cpos_0 + 1;
+   end if;
+end;
 
 --  End tok_code
 
-      if Tk_Pos_9 /= -1 then
+      if Tk_Pos_9 /= No_Token_Index then
           Lst_Cpos_0 := Tk_Pos_9;
       else
          exit;
@@ -2164,7 +1896,7 @@ end if;
 end loop;
 
 if Lst_Res_0 /= null then
-   Lst_Res_0.Token_Data := Parser.TDH;
+   Lst_Res_0.Unit := Parser.Unit;
    Lst_Res_0.Token_Start := pos;
    Lst_Res_0.Token_End := (if Lst_Cpos_0 = pos
                         then pos
@@ -2181,7 +1913,7 @@ end if;
 
 
    Set (Static_Name_List_Parse_0_Memo,
-        Lst_Pos_0 /= -1,
+        Lst_Pos_0 /= No_Token_Index,
         Lst_Res_0,
         Pos,
         Lst_Pos_0);
@@ -2193,40 +1925,41 @@ end if;
 end Static_Name_List_Parse_0;
 
    
+
+
 Package_Renaming_Transform_Parse_0_Memo : Package_Renaming_Memos.Memo_Type;
 
 function Package_Renaming_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Renaming
 is
-      Row_Pos_5 : Integer
-         :=0;
-      Tk_Pos_10 : Integer
-         :=0;
-      Tk_Res_10 : Token
-         :=No_Token;
-      Fncall_Pos_5 : Integer
-         :=0;
+      Row_Pos_5 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_10 : Token_Index
+         := No_Token_Index;
+      Tk_Res_10 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_5 : Token_Index
+         := No_Token_Index;
       Fncall_Res_5 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_3 : Identifier
-         :=null;
-      Tk_Pos_11 : Integer
-         :=0;
-      Tk_Res_11 : Token
-         :=No_Token;
-      Fncall_Pos_6 : Integer
-         :=0;
+         := null;
+      Tk_Pos_11 : Token_Index
+         := No_Token_Index;
+      Tk_Res_11 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_6 : Token_Index
+         := No_Token_Index;
       Fncall_Res_6 : Identifier
-         :=null;
+         := null;
       Row_Subres_3_0 : Identifier
-         :=null;
+         := null;
       Transform_Res_7 : Package_Renaming
-         :=null;
+         := null;
 
 
-   M       : Package_Renaming_Memos.Memo_Entry :=
-      Get (Package_Renaming_Transform_Parse_0_Memo, Pos);
+   M : Package_Renaming_Memos.Memo_Entry := Get (Package_Renaming_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -2235,7 +1968,7 @@ begin
       Transform_Res_7 := M.Instance;
       return Transform_Res_7;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_7;
    end if;
 
@@ -2258,30 +1991,35 @@ Row_Pos_5 := pos;
 
 --  Start tok_code
 
-Tk_Res_10 := Get_Token (Parser.TDH.all, Row_Pos_5);
+Tk_Res_10 := Row_Pos_5;
 
-if Tk_Res_10.Id /= QUEX_TKN_RENAMES then
-    Tk_Pos_10 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_10));
+begin
+   if T.Kind /= GPR_Renames then
+       Tk_Pos_10 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_5 then
-        Parser.Last_Fail.Pos := Row_Pos_5;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_RENAMES;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_10.Id;
-    end if;
-else
-    Tk_Pos_10 := Row_Pos_5 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_5 then
+           Parser.Last_Fail.Pos := Row_Pos_5;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Renames;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_10 := Row_Pos_5 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_10 /= -1 then
+if Tk_Pos_10 /= No_Token_Index then
 
    Row_Pos_5 := Tk_Pos_10;
 
 
 else
-   Row_Pos_5 := -1;
+   Row_Pos_5 := No_Token_Index;
    goto Row_Exit_Label_5_0;
 
 end if;
@@ -2296,14 +2034,14 @@ Fncall_Res_5 := Identifier_Transform_Parse_0(Parser, Row_Pos_5);
 Fncall_Pos_5 := Parser.Current_Pos;
 
 
-if Fncall_Pos_5 /= -1 then
+if Fncall_Pos_5 /= No_Token_Index then
 
    Row_Pos_5 := Fncall_Pos_5;
 
       Row_Subres_1_3 := Fncall_Res_5;
 
 else
-   Row_Pos_5 := -1;
+   Row_Pos_5 := No_Token_Index;
    goto Row_Exit_Label_5_0;
 
 end if;
@@ -2316,30 +2054,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_11 := Get_Token (Parser.TDH.all, Row_Pos_5);
+Tk_Res_11 := Row_Pos_5;
 
-if Tk_Res_11.Id /= QUEX_TKN_DOT then
-    Tk_Pos_11 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_11));
+begin
+   if T.Kind /= GPR_Dot then
+       Tk_Pos_11 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_5 then
-        Parser.Last_Fail.Pos := Row_Pos_5;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_DOT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_11.Id;
-    end if;
-else
-    Tk_Pos_11 := Row_Pos_5 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_5 then
+           Parser.Last_Fail.Pos := Row_Pos_5;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Dot;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_11 := Row_Pos_5 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_11 /= -1 then
+if Tk_Pos_11 /= No_Token_Index then
 
    Row_Pos_5 := Tk_Pos_11;
 
 
 else
-   Row_Pos_5 := -1;
+   Row_Pos_5 := No_Token_Index;
    goto Row_Exit_Label_5_0;
 
 end if;
@@ -2354,14 +2097,14 @@ Fncall_Res_6 := Identifier_Transform_Parse_0(Parser, Row_Pos_5);
 Fncall_Pos_6 := Parser.Current_Pos;
 
 
-if Fncall_Pos_6 /= -1 then
+if Fncall_Pos_6 /= No_Token_Index then
 
    Row_Pos_5 := Fncall_Pos_6;
 
       Row_Subres_3_0 := Fncall_Res_6;
 
 else
-   Row_Pos_5 := -1;
+   Row_Pos_5 := No_Token_Index;
    goto Row_Exit_Label_5_0;
 
 end if;
@@ -2374,12 +2117,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_5 /= -1 then
+if Row_Pos_5 /= No_Token_Index then
 
    Transform_Res_7 := Package_Renaming
      (Package_Renaming_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_7.Token_Data := Parser.TDH;
+   Transform_Res_7.Unit := Parser.Unit;
    Transform_Res_7.Token_Start := pos;
    Transform_Res_7.Token_End := (if Row_Pos_5 = pos
                         then pos
@@ -2409,7 +2152,7 @@ end if;
 
 
    Set (Package_Renaming_Transform_Parse_0_Memo,
-        Row_Pos_5 /= -1,
+        Row_Pos_5 /= No_Token_Index,
         Transform_Res_7,
         Pos,
         Row_Pos_5);
@@ -2421,40 +2164,41 @@ end if;
 end Package_Renaming_Transform_Parse_0;
 
    
+
+
 Package_Extension_Transform_Parse_0_Memo : Package_Extension_Memos.Memo_Type;
 
 function Package_Extension_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Extension
 is
-      Row_Pos_8 : Integer
-         :=0;
-      Tk_Pos_13 : Integer
-         :=0;
-      Tk_Res_13 : Token
-         :=No_Token;
-      Fncall_Pos_9 : Integer
-         :=0;
+      Row_Pos_8 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_13 : Token_Index
+         := No_Token_Index;
+      Tk_Res_13 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_9 : Token_Index
+         := No_Token_Index;
       Fncall_Res_9 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_6 : Identifier
-         :=null;
-      Tk_Pos_14 : Integer
-         :=0;
-      Tk_Res_14 : Token
-         :=No_Token;
-      Fncall_Pos_10 : Integer
-         :=0;
+         := null;
+      Tk_Pos_14 : Token_Index
+         := No_Token_Index;
+      Tk_Res_14 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_10 : Token_Index
+         := No_Token_Index;
       Fncall_Res_10 : Identifier
-         :=null;
+         := null;
       Row_Subres_3_2 : Identifier
-         :=null;
+         := null;
       Transform_Res_8 : Package_Extension
-         :=null;
+         := null;
 
 
-   M       : Package_Extension_Memos.Memo_Entry :=
-      Get (Package_Extension_Transform_Parse_0_Memo, Pos);
+   M : Package_Extension_Memos.Memo_Entry := Get (Package_Extension_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -2463,7 +2207,7 @@ begin
       Transform_Res_8 := M.Instance;
       return Transform_Res_8;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_8;
    end if;
 
@@ -2486,30 +2230,35 @@ Row_Pos_8 := pos;
 
 --  Start tok_code
 
-Tk_Res_13 := Get_Token (Parser.TDH.all, Row_Pos_8);
+Tk_Res_13 := Row_Pos_8;
 
-if Tk_Res_13.Id /= QUEX_TKN_EXTENDS then
-    Tk_Pos_13 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_13));
+begin
+   if T.Kind /= GPR_Extends then
+       Tk_Pos_13 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_8 then
-        Parser.Last_Fail.Pos := Row_Pos_8;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_EXTENDS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_13.Id;
-    end if;
-else
-    Tk_Pos_13 := Row_Pos_8 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_8 then
+           Parser.Last_Fail.Pos := Row_Pos_8;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Extends;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_13 := Row_Pos_8 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_13 /= -1 then
+if Tk_Pos_13 /= No_Token_Index then
 
    Row_Pos_8 := Tk_Pos_13;
 
 
 else
-   Row_Pos_8 := -1;
+   Row_Pos_8 := No_Token_Index;
    goto Row_Exit_Label_8_0;
 
 end if;
@@ -2524,14 +2273,14 @@ Fncall_Res_9 := Identifier_Transform_Parse_0(Parser, Row_Pos_8);
 Fncall_Pos_9 := Parser.Current_Pos;
 
 
-if Fncall_Pos_9 /= -1 then
+if Fncall_Pos_9 /= No_Token_Index then
 
    Row_Pos_8 := Fncall_Pos_9;
 
       Row_Subres_1_6 := Fncall_Res_9;
 
 else
-   Row_Pos_8 := -1;
+   Row_Pos_8 := No_Token_Index;
    goto Row_Exit_Label_8_0;
 
 end if;
@@ -2544,30 +2293,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_14 := Get_Token (Parser.TDH.all, Row_Pos_8);
+Tk_Res_14 := Row_Pos_8;
 
-if Tk_Res_14.Id /= QUEX_TKN_DOT then
-    Tk_Pos_14 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_14));
+begin
+   if T.Kind /= GPR_Dot then
+       Tk_Pos_14 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_8 then
-        Parser.Last_Fail.Pos := Row_Pos_8;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_DOT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_14.Id;
-    end if;
-else
-    Tk_Pos_14 := Row_Pos_8 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_8 then
+           Parser.Last_Fail.Pos := Row_Pos_8;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Dot;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_14 := Row_Pos_8 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_14 /= -1 then
+if Tk_Pos_14 /= No_Token_Index then
 
    Row_Pos_8 := Tk_Pos_14;
 
 
 else
-   Row_Pos_8 := -1;
+   Row_Pos_8 := No_Token_Index;
    goto Row_Exit_Label_8_0;
 
 end if;
@@ -2582,14 +2336,14 @@ Fncall_Res_10 := Identifier_Transform_Parse_0(Parser, Row_Pos_8);
 Fncall_Pos_10 := Parser.Current_Pos;
 
 
-if Fncall_Pos_10 /= -1 then
+if Fncall_Pos_10 /= No_Token_Index then
 
    Row_Pos_8 := Fncall_Pos_10;
 
       Row_Subres_3_2 := Fncall_Res_10;
 
 else
-   Row_Pos_8 := -1;
+   Row_Pos_8 := No_Token_Index;
    goto Row_Exit_Label_8_0;
 
 end if;
@@ -2602,12 +2356,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_8 /= -1 then
+if Row_Pos_8 /= No_Token_Index then
 
    Transform_Res_8 := Package_Extension
      (Package_Extension_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_8.Token_Data := Parser.TDH;
+   Transform_Res_8.Unit := Parser.Unit;
    Transform_Res_8.Token_Start := pos;
    Transform_Res_8.Token_End := (if Row_Pos_8 = pos
                         then pos
@@ -2637,7 +2391,7 @@ end if;
 
 
    Set (Package_Extension_Transform_Parse_0_Memo,
-        Row_Pos_8 /= -1,
+        Row_Pos_8 /= No_Token_Index,
         Transform_Res_8,
         Pos,
         Row_Pos_8);
@@ -2649,44 +2403,45 @@ end if;
 end Package_Extension_Transform_Parse_0;
 
    
+
+
 Expression_List_Transform_Parse_0_Memo : Expr_List_Memos.Memo_Type;
 
 function Expression_List_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Expr_List
 is
-      Row_Pos_12 : Integer
-         :=0;
-      Tk_Pos_18 : Integer
-         :=0;
-      Tk_Res_18 : Token
-         :=No_Token;
-      Lst_Pos_1 : Integer
-         :=0;
+      Row_Pos_12 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_18 : Token_Index
+         := No_Token_Index;
+      Tk_Res_18 : Token_Index
+         := No_Token_Index;
+      Lst_Pos_1 : Token_Index
+         := No_Token_Index;
       Lst_Res_1 : List_Term_List
-         :=null;
-      Lst_Cpos_3 : Integer
-         :=0;
-      Fncall_Pos_14 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_3 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_14 : Token_Index
+         := No_Token_Index;
       Fncall_Res_14 : Term_List
-         :=null;
-      Tk_Pos_19 : Integer
-         :=0;
-      Tk_Res_19 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_19 : Token_Index
+         := No_Token_Index;
+      Tk_Res_19 : Token_Index
+         := No_Token_Index;
       Row_Subres_1_10 : List_Term_List
-         :=null;
-      Tk_Pos_20 : Integer
-         :=0;
-      Tk_Res_20 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_20 : Token_Index
+         := No_Token_Index;
+      Tk_Res_20 : Token_Index
+         := No_Token_Index;
       Transform_Res_9 : Expr_List
-         :=null;
+         := null;
 
 
-   M       : Expr_List_Memos.Memo_Entry :=
-      Get (Expression_List_Transform_Parse_0_Memo, Pos);
+   M : Expr_List_Memos.Memo_Entry := Get (Expression_List_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -2695,7 +2450,7 @@ begin
       Transform_Res_9 := M.Instance;
       return Transform_Res_9;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_9;
    end if;
 
@@ -2718,30 +2473,35 @@ Row_Pos_12 := pos;
 
 --  Start tok_code
 
-Tk_Res_18 := Get_Token (Parser.TDH.all, Row_Pos_12);
+Tk_Res_18 := Row_Pos_12;
 
-if Tk_Res_18.Id /= QUEX_TKN_PAR_OPEN then
-    Tk_Pos_18 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_18));
+begin
+   if T.Kind /= GPR_Par_Open then
+       Tk_Pos_18 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_12 then
-        Parser.Last_Fail.Pos := Row_Pos_12;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_OPEN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_18.Id;
-    end if;
-else
-    Tk_Pos_18 := Row_Pos_12 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_12 then
+           Parser.Last_Fail.Pos := Row_Pos_12;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Open;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_18 := Row_Pos_12 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_18 /= -1 then
+if Tk_Pos_18 /= No_Token_Index then
 
    Row_Pos_12 := Tk_Pos_18;
 
 
 else
-   Row_Pos_12 := -1;
+   Row_Pos_12 := No_Token_Index;
    goto Row_Exit_Label_12_0;
 
 end if;
@@ -2765,7 +2525,7 @@ Fncall_Res_14 := Expression_Transform_Parse_0(Parser, Lst_Cpos_3);
 Fncall_Pos_14 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_14 = -1;
+   exit when Fncall_Pos_14 = No_Token_Index;
 
    Lst_Pos_1 := Fncall_Pos_14;
    Lst_Cpos_3 := Fncall_Pos_14;
@@ -2793,23 +2553,28 @@ Fncall_Pos_14 := Parser.Current_Pos;
       
 --  Start tok_code
 
-Tk_Res_19 := Get_Token (Parser.TDH.all, Lst_Cpos_3);
+Tk_Res_19 := Lst_Cpos_3;
 
-if Tk_Res_19.Id /= QUEX_TKN_COMMA then
-    Tk_Pos_19 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_19));
+begin
+   if T.Kind /= GPR_Comma then
+       Tk_Pos_19 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Lst_Cpos_3 then
-        Parser.Last_Fail.Pos := Lst_Cpos_3;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_COMMA;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_19.Id;
-    end if;
-else
-    Tk_Pos_19 := Lst_Cpos_3 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Lst_Cpos_3 then
+           Parser.Last_Fail.Pos := Lst_Cpos_3;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Comma;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_19 := Lst_Cpos_3 + 1;
+   end if;
+end;
 
 --  End tok_code
 
-      if Tk_Pos_19 /= -1 then
+      if Tk_Pos_19 /= No_Token_Index then
           Lst_Cpos_3 := Tk_Pos_19;
       else
          exit;
@@ -2818,7 +2583,7 @@ end if;
 end loop;
 
 if Lst_Res_1 /= null then
-   Lst_Res_1.Token_Data := Parser.TDH;
+   Lst_Res_1.Unit := Parser.Unit;
    Lst_Res_1.Token_Start := Row_Pos_12;
    Lst_Res_1.Token_End := (if Lst_Cpos_3 = Row_Pos_12
                         then Row_Pos_12
@@ -2829,14 +2594,14 @@ end if;
 --  End list_code
 
 
-if Lst_Pos_1 /= -1 then
+if Lst_Pos_1 /= No_Token_Index then
 
    Row_Pos_12 := Lst_Pos_1;
 
       Row_Subres_1_10 := Lst_Res_1;
 
 else
-   Row_Pos_12 := -1;
+   Row_Pos_12 := No_Token_Index;
    goto Row_Exit_Label_12_0;
 
 end if;
@@ -2849,30 +2614,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_20 := Get_Token (Parser.TDH.all, Row_Pos_12);
+Tk_Res_20 := Row_Pos_12;
 
-if Tk_Res_20.Id /= QUEX_TKN_PAR_CLOSE then
-    Tk_Pos_20 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_20));
+begin
+   if T.Kind /= GPR_Par_Close then
+       Tk_Pos_20 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_12 then
-        Parser.Last_Fail.Pos := Row_Pos_12;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_CLOSE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_20.Id;
-    end if;
-else
-    Tk_Pos_20 := Row_Pos_12 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_12 then
+           Parser.Last_Fail.Pos := Row_Pos_12;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Close;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_20 := Row_Pos_12 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_20 /= -1 then
+if Tk_Pos_20 /= No_Token_Index then
 
    Row_Pos_12 := Tk_Pos_20;
 
 
 else
-   Row_Pos_12 := -1;
+   Row_Pos_12 := No_Token_Index;
    goto Row_Exit_Label_12_0;
 
 end if;
@@ -2885,12 +2655,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_12 /= -1 then
+if Row_Pos_12 /= No_Token_Index then
 
    Transform_Res_9 := Expr_List
      (Expr_List_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_9.Token_Data := Parser.TDH;
+   Transform_Res_9.Unit := Parser.Unit;
    Transform_Res_9.Token_Start := pos;
    Transform_Res_9.Token_End := (if Row_Pos_12 = pos
                         then pos
@@ -2914,7 +2684,7 @@ end if;
 
 
    Set (Expression_List_Transform_Parse_0_Memo,
-        Row_Pos_12 /= -1,
+        Row_Pos_12 /= No_Token_Index,
         Transform_Res_9,
         Pos,
         Row_Pos_12);
@@ -2926,22 +2696,23 @@ end if;
 end Expression_List_Transform_Parse_0;
 
    
+
+
 Num_Literal_Transform_Parse_0_Memo : Num_Literal_Memos.Memo_Type;
 
 function Num_Literal_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Num_Literal
 is
-      Tk_Pos_22 : Integer
-         :=0;
-      Tk_Res_22 : Token
-         :=No_Token;
+      Tk_Pos_22 : Token_Index
+         := No_Token_Index;
+      Tk_Res_22 : Token_Index
+         := No_Token_Index;
       Transform_Res_10 : Num_Literal
-         :=null;
+         := null;
 
 
-   M       : Num_Literal_Memos.Memo_Entry :=
-      Get (Num_Literal_Transform_Parse_0_Memo, Pos);
+   M : Num_Literal_Memos.Memo_Entry := Get (Num_Literal_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -2950,7 +2721,7 @@ begin
       Transform_Res_10 := M.Instance;
       return Transform_Res_10;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_10;
    end if;
 
@@ -2965,29 +2736,34 @@ begin
 
 --  Start tok_code
 
-Tk_Res_22 := Get_Token (Parser.TDH.all, pos);
+Tk_Res_22 := pos;
 
-if Tk_Res_22.Id /= QUEX_TKN_NUMBER then
-    Tk_Pos_22 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_22));
+begin
+   if T.Kind /= GPR_Number then
+       Tk_Pos_22 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= pos then
-        Parser.Last_Fail.Pos := pos;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_NUMBER;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_22.Id;
-    end if;
-else
-    Tk_Pos_22 := pos + 1;
-end if;
+       if Parser.Last_Fail.Pos <= pos then
+           Parser.Last_Fail.Pos := pos;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Number;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_22 := pos + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_22 /= -1 then
+if Tk_Pos_22 /= No_Token_Index then
 
    Transform_Res_10 := Num_Literal
      (Num_Literal_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_10.Token_Data := Parser.TDH;
+   Transform_Res_10.Unit := Parser.Unit;
    Transform_Res_10.Token_Start := pos;
    Transform_Res_10.Token_End := (if Tk_Pos_22 = pos
                         then pos
@@ -3008,7 +2784,7 @@ end if;
 
 
    Set (Num_Literal_Transform_Parse_0_Memo,
-        Tk_Pos_22 /= -1,
+        Tk_Pos_22 /= No_Token_Index,
         Transform_Res_10,
         Pos,
         Tk_Pos_22);
@@ -3020,40 +2796,41 @@ end if;
 end Num_Literal_Transform_Parse_0;
 
    
+
+
 String_Literal_At_Transform_Parse_0_Memo : String_Literal_At_Memos.Memo_Type;
 
 function String_Literal_At_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return String_Literal_At
 is
-      Row_Pos_13 : Integer
-         :=0;
-      Fncall_Pos_16 : Integer
-         :=0;
+      Row_Pos_13 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_16 : Token_Index
+         := No_Token_Index;
       Fncall_Res_16 : String_Literal
-         :=null;
+         := null;
       Row_Subres_0_13 : String_Literal
-         :=null;
-      Row_Pos_14 : Integer
-         :=0;
-      Tk_Pos_21 : Integer
-         :=0;
-      Tk_Res_21 : Token
-         :=No_Token;
-      Fncall_Pos_17 : Integer
-         :=0;
+         := null;
+      Row_Pos_14 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_21 : Token_Index
+         := No_Token_Index;
+      Tk_Res_21 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_17 : Token_Index
+         := No_Token_Index;
       Fncall_Res_17 : Num_Literal
-         :=null;
+         := null;
       Row_Subres_1_12 : Num_Literal
-         :=null;
+         := null;
       Row_Subres_1_11 : Num_Literal
-         :=null;
+         := null;
       Transform_Res_11 : String_Literal_At
-         :=null;
+         := null;
 
 
-   M       : String_Literal_At_Memos.Memo_Entry :=
-      Get (String_Literal_At_Transform_Parse_0_Memo, Pos);
+   M : String_Literal_At_Memos.Memo_Entry := Get (String_Literal_At_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -3062,7 +2839,7 @@ begin
       Transform_Res_11 := M.Instance;
       return Transform_Res_11;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_11;
    end if;
 
@@ -3087,14 +2864,14 @@ Fncall_Res_16 := String_Literal_Transform_Parse_0(Parser, Row_Pos_13);
 Fncall_Pos_16 := Parser.Current_Pos;
 
 
-if Fncall_Pos_16 /= -1 then
+if Fncall_Pos_16 /= No_Token_Index then
 
    Row_Pos_13 := Fncall_Pos_16;
 
       Row_Subres_0_13 := Fncall_Res_16;
 
 else
-   Row_Pos_13 := -1;
+   Row_Pos_13 := No_Token_Index;
    goto Row_Exit_Label_13_0;
 
 end if;
@@ -3118,30 +2895,35 @@ Row_Pos_14 := Row_Pos_13;
 
 --  Start tok_code
 
-Tk_Res_21 := Get_Token (Parser.TDH.all, Row_Pos_14);
+Tk_Res_21 := Row_Pos_14;
 
-if Tk_Res_21.Id /= QUEX_TKN_AT then
-    Tk_Pos_21 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_21));
+begin
+   if T.Kind /= GPR_At then
+       Tk_Pos_21 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_14 then
-        Parser.Last_Fail.Pos := Row_Pos_14;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_AT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_21.Id;
-    end if;
-else
-    Tk_Pos_21 := Row_Pos_14 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_14 then
+           Parser.Last_Fail.Pos := Row_Pos_14;
+           Parser.Last_Fail.Expected_Token_Id := GPR_At;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_21 := Row_Pos_14 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_21 /= -1 then
+if Tk_Pos_21 /= No_Token_Index then
 
    Row_Pos_14 := Tk_Pos_21;
 
 
 else
-   Row_Pos_14 := -1;
+   Row_Pos_14 := No_Token_Index;
    goto Row_Exit_Label_14_0;
 
 end if;
@@ -3156,14 +2938,14 @@ Fncall_Res_17 := Num_Literal_Transform_Parse_0(Parser, Row_Pos_14);
 Fncall_Pos_17 := Parser.Current_Pos;
 
 
-if Fncall_Pos_17 /= -1 then
+if Fncall_Pos_17 /= No_Token_Index then
 
    Row_Pos_14 := Fncall_Pos_17;
 
       Row_Subres_1_12 := Fncall_Res_17;
 
 else
-   Row_Pos_14 := -1;
+   Row_Pos_14 := No_Token_Index;
    goto Row_Exit_Label_14_0;
 
 end if;
@@ -3177,8 +2959,9 @@ end if;
 
 
 
-if Row_Pos_14 = -1 then
-        Row_Subres_1_12 := null;
+if Row_Pos_14 = No_Token_Index then
+        Row_Subres_1_12 :=
+           null;
 
 
     Row_Pos_14 := Row_Pos_13;
@@ -3187,14 +2970,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_14 /= -1 then
+if Row_Pos_14 /= No_Token_Index then
 
    Row_Pos_13 := Row_Pos_14;
 
       Row_Subres_1_11 := Row_Subres_1_12;
 
 else
-   Row_Pos_13 := -1;
+   Row_Pos_13 := No_Token_Index;
    goto Row_Exit_Label_13_0;
 
 end if;
@@ -3207,12 +2990,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_13 /= -1 then
+if Row_Pos_13 /= No_Token_Index then
 
    Transform_Res_11 := String_Literal_At
      (String_Literal_At_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_11.Token_Data := Parser.TDH;
+   Transform_Res_11.Unit := Parser.Unit;
    Transform_Res_11.Token_Start := pos;
    Transform_Res_11.Token_End := (if Row_Pos_13 = pos
                         then pos
@@ -3242,7 +3025,7 @@ end if;
 
 
    Set (String_Literal_At_Transform_Parse_0_Memo,
-        Row_Pos_13 /= -1,
+        Row_Pos_13 /= No_Token_Index,
         Transform_Res_11,
         Pos,
         Row_Pos_13);
@@ -3254,54 +3037,55 @@ end if;
 end String_Literal_At_Transform_Parse_0;
 
    
+
+
 Variable_Reference_Transform_Parse_0_Memo : Variable_Reference_Memos.Memo_Type;
 
 function Variable_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Variable_Reference
 is
-      Row_Pos_15 : Integer
-         :=0;
-      Fncall_Pos_19 : Integer
-         :=0;
+      Row_Pos_15 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_19 : Token_Index
+         := No_Token_Index;
       Fncall_Res_19 : Identifier
-         :=null;
+         := null;
       Row_Subres_0_15 : Identifier
-         :=null;
-      Row_Pos_16 : Integer
-         :=0;
-      Tk_Pos_23 : Integer
-         :=0;
-      Tk_Res_23 : Token
-         :=No_Token;
-      Fncall_Pos_20 : Integer
-         :=0;
+         := null;
+      Row_Pos_16 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_23 : Token_Index
+         := No_Token_Index;
+      Tk_Res_23 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_20 : Token_Index
+         := No_Token_Index;
       Fncall_Res_20 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_14 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_13 : Identifier
-         :=null;
-      Row_Pos_17 : Integer
-         :=0;
-      Tk_Pos_24 : Integer
-         :=0;
-      Tk_Res_24 : Token
-         :=No_Token;
-      Fncall_Pos_21 : Integer
-         :=0;
+         := null;
+      Row_Pos_17 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_24 : Token_Index
+         := No_Token_Index;
+      Tk_Res_24 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_21 : Token_Index
+         := No_Token_Index;
       Fncall_Res_21 : Attribute_Reference
-         :=null;
+         := null;
       Row_Subres_1_15 : Attribute_Reference
-         :=null;
+         := null;
       Row_Subres_2_8 : Attribute_Reference
-         :=null;
+         := null;
       Transform_Res_12 : Variable_Reference
-         :=null;
+         := null;
 
 
-   M       : Variable_Reference_Memos.Memo_Entry :=
-      Get (Variable_Reference_Transform_Parse_0_Memo, Pos);
+   M : Variable_Reference_Memos.Memo_Entry := Get (Variable_Reference_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -3310,7 +3094,7 @@ begin
       Transform_Res_12 := M.Instance;
       return Transform_Res_12;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_12;
    end if;
 
@@ -3335,14 +3119,14 @@ Fncall_Res_19 := Identifier_Transform_Parse_0(Parser, Row_Pos_15);
 Fncall_Pos_19 := Parser.Current_Pos;
 
 
-if Fncall_Pos_19 /= -1 then
+if Fncall_Pos_19 /= No_Token_Index then
 
    Row_Pos_15 := Fncall_Pos_19;
 
       Row_Subres_0_15 := Fncall_Res_19;
 
 else
-   Row_Pos_15 := -1;
+   Row_Pos_15 := No_Token_Index;
    goto Row_Exit_Label_15_0;
 
 end if;
@@ -3366,30 +3150,35 @@ Row_Pos_16 := Row_Pos_15;
 
 --  Start tok_code
 
-Tk_Res_23 := Get_Token (Parser.TDH.all, Row_Pos_16);
+Tk_Res_23 := Row_Pos_16;
 
-if Tk_Res_23.Id /= QUEX_TKN_DOT then
-    Tk_Pos_23 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_23));
+begin
+   if T.Kind /= GPR_Dot then
+       Tk_Pos_23 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_16 then
-        Parser.Last_Fail.Pos := Row_Pos_16;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_DOT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_23.Id;
-    end if;
-else
-    Tk_Pos_23 := Row_Pos_16 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_16 then
+           Parser.Last_Fail.Pos := Row_Pos_16;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Dot;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_23 := Row_Pos_16 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_23 /= -1 then
+if Tk_Pos_23 /= No_Token_Index then
 
    Row_Pos_16 := Tk_Pos_23;
 
 
 else
-   Row_Pos_16 := -1;
+   Row_Pos_16 := No_Token_Index;
    goto Row_Exit_Label_16_0;
 
 end if;
@@ -3404,14 +3193,14 @@ Fncall_Res_20 := Identifier_Transform_Parse_0(Parser, Row_Pos_16);
 Fncall_Pos_20 := Parser.Current_Pos;
 
 
-if Fncall_Pos_20 /= -1 then
+if Fncall_Pos_20 /= No_Token_Index then
 
    Row_Pos_16 := Fncall_Pos_20;
 
       Row_Subres_1_14 := Fncall_Res_20;
 
 else
-   Row_Pos_16 := -1;
+   Row_Pos_16 := No_Token_Index;
    goto Row_Exit_Label_16_0;
 
 end if;
@@ -3425,8 +3214,9 @@ end if;
 
 
 
-if Row_Pos_16 = -1 then
-        Row_Subres_1_14 := null;
+if Row_Pos_16 = No_Token_Index then
+        Row_Subres_1_14 :=
+           null;
 
 
     Row_Pos_16 := Row_Pos_15;
@@ -3435,14 +3225,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_16 /= -1 then
+if Row_Pos_16 /= No_Token_Index then
 
    Row_Pos_15 := Row_Pos_16;
 
       Row_Subres_1_13 := Row_Subres_1_14;
 
 else
-   Row_Pos_15 := -1;
+   Row_Pos_15 := No_Token_Index;
    goto Row_Exit_Label_15_0;
 
 end if;
@@ -3466,30 +3256,35 @@ Row_Pos_17 := Row_Pos_15;
 
 --  Start tok_code
 
-Tk_Res_24 := Get_Token (Parser.TDH.all, Row_Pos_17);
+Tk_Res_24 := Row_Pos_17;
 
-if Tk_Res_24.Id /= QUEX_TKN_TICK then
-    Tk_Pos_24 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_24));
+begin
+   if T.Kind /= GPR_Tick then
+       Tk_Pos_24 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_17 then
-        Parser.Last_Fail.Pos := Row_Pos_17;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_TICK;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_24.Id;
-    end if;
-else
-    Tk_Pos_24 := Row_Pos_17 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_17 then
+           Parser.Last_Fail.Pos := Row_Pos_17;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Tick;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_24 := Row_Pos_17 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_24 /= -1 then
+if Tk_Pos_24 /= No_Token_Index then
 
    Row_Pos_17 := Tk_Pos_24;
 
 
 else
-   Row_Pos_17 := -1;
+   Row_Pos_17 := No_Token_Index;
    goto Row_Exit_Label_17_0;
 
 end if;
@@ -3504,14 +3299,14 @@ Fncall_Res_21 := Attribute_Reference_Transform_Parse_0(Parser, Row_Pos_17);
 Fncall_Pos_21 := Parser.Current_Pos;
 
 
-if Fncall_Pos_21 /= -1 then
+if Fncall_Pos_21 /= No_Token_Index then
 
    Row_Pos_17 := Fncall_Pos_21;
 
       Row_Subres_1_15 := Fncall_Res_21;
 
 else
-   Row_Pos_17 := -1;
+   Row_Pos_17 := No_Token_Index;
    goto Row_Exit_Label_17_0;
 
 end if;
@@ -3525,8 +3320,9 @@ end if;
 
 
 
-if Row_Pos_17 = -1 then
-        Row_Subres_1_15 := null;
+if Row_Pos_17 = No_Token_Index then
+        Row_Subres_1_15 :=
+           null;
 
 
     Row_Pos_17 := Row_Pos_15;
@@ -3535,14 +3331,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_17 /= -1 then
+if Row_Pos_17 /= No_Token_Index then
 
    Row_Pos_15 := Row_Pos_17;
 
       Row_Subres_2_8 := Row_Subres_1_15;
 
 else
-   Row_Pos_15 := -1;
+   Row_Pos_15 := No_Token_Index;
    goto Row_Exit_Label_15_0;
 
 end if;
@@ -3555,12 +3351,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_15 /= -1 then
+if Row_Pos_15 /= No_Token_Index then
 
    Transform_Res_12 := Variable_Reference
      (Variable_Reference_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_12.Token_Data := Parser.TDH;
+   Transform_Res_12.Unit := Parser.Unit;
    Transform_Res_12.Token_Start := pos;
    Transform_Res_12.Token_End := (if Row_Pos_15 = pos
                         then pos
@@ -3596,7 +3392,7 @@ end if;
 
 
    Set (Variable_Reference_Transform_Parse_0_Memo,
-        Row_Pos_15 /= -1,
+        Row_Pos_15 /= No_Token_Index,
         Transform_Res_12,
         Pos,
         Row_Pos_15);
@@ -3608,24 +3404,25 @@ end if;
 end Variable_Reference_Transform_Parse_0;
 
    
+
+
 External_Transform_Parse_0_Memo : External_Memos.Memo_Type;
 
 function External_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External
 is
-      Row_Pos_19 : Integer
-         :=0;
-      Tk_Pos_25 : Integer
-         :=0;
-      Tk_Res_25 : Token
-         :=No_Token;
+      Row_Pos_19 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_25 : Token_Index
+         := No_Token_Index;
+      Tk_Res_25 : Token_Index
+         := No_Token_Index;
       Transform_Res_13 : External
-         :=null;
+         := null;
 
 
-   M       : External_Memos.Memo_Entry :=
-      Get (External_Transform_Parse_0_Memo, Pos);
+   M : External_Memos.Memo_Entry := Get (External_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -3634,7 +3431,7 @@ begin
       Transform_Res_13 := M.Instance;
       return Transform_Res_13;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_13;
    end if;
 
@@ -3657,30 +3454,35 @@ Row_Pos_19 := pos;
 
 --  Start tok_code
 
-Tk_Res_25 := Get_Token (Parser.TDH.all, Row_Pos_19);
+Tk_Res_25 := Row_Pos_19;
 
-if Tk_Res_25.Id /= QUEX_TKN_EXTERNAL then
-    Tk_Pos_25 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_25));
+begin
+   if T.Kind /= GPR_External then
+       Tk_Pos_25 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_19 then
-        Parser.Last_Fail.Pos := Row_Pos_19;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_EXTERNAL;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_25.Id;
-    end if;
-else
-    Tk_Pos_25 := Row_Pos_19 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_19 then
+           Parser.Last_Fail.Pos := Row_Pos_19;
+           Parser.Last_Fail.Expected_Token_Id := GPR_External;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_25 := Row_Pos_19 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_25 /= -1 then
+if Tk_Pos_25 /= No_Token_Index then
 
    Row_Pos_19 := Tk_Pos_25;
 
 
 else
-   Row_Pos_19 := -1;
+   Row_Pos_19 := No_Token_Index;
    goto Row_Exit_Label_19_0;
 
 end if;
@@ -3693,12 +3495,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_19 /= -1 then
+if Row_Pos_19 /= No_Token_Index then
 
    Transform_Res_13 := External
      (External_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_13.Token_Data := Parser.TDH;
+   Transform_Res_13.Unit := Parser.Unit;
    Transform_Res_13.Token_Start := pos;
    Transform_Res_13.Token_End := (if Row_Pos_19 = pos
                         then pos
@@ -3716,7 +3518,7 @@ end if;
 
 
    Set (External_Transform_Parse_0_Memo,
-        Row_Pos_19 /= -1,
+        Row_Pos_19 /= No_Token_Index,
         Transform_Res_13,
         Pos,
         Row_Pos_19);
@@ -3728,62 +3530,63 @@ end if;
 end External_Transform_Parse_0;
 
    
+
+
 External_Reference_Transform_Parse_0_Memo : External_Reference_Memos.Memo_Type;
 
 function External_Reference_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return External_Reference
 is
-      Row_Pos_18 : Integer
-         :=0;
-      Or_Pos_4 : Integer
-         :=0;
+      Row_Pos_18 : Token_Index
+         := No_Token_Index;
+      Or_Pos_4 : Token_Index
+         := No_Token_Index;
       Or_Res_4 : GPR_Node
-         :=null;
-      Fncall_Pos_24 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_24 : Token_Index
+         := No_Token_Index;
       Fncall_Res_24 : External
-         :=null;
-      Fncall_Pos_25 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_25 : Token_Index
+         := No_Token_Index;
       Fncall_Res_25 : External_As_List
-         :=null;
+         := null;
       Row_Subres_0_18 : GPR_Node
-         :=null;
-      Tk_Pos_26 : Integer
-         :=0;
-      Tk_Res_26 : Token
-         :=No_Token;
-      Fncall_Pos_26 : Integer
-         :=0;
+         := null;
+      Tk_Pos_26 : Token_Index
+         := No_Token_Index;
+      Tk_Res_26 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_26 : Token_Index
+         := No_Token_Index;
       Fncall_Res_26 : String_Literal
-         :=null;
+         := null;
       Row_Subres_2_9 : String_Literal
-         :=null;
-      Row_Pos_20 : Integer
-         :=0;
-      Tk_Pos_27 : Integer
-         :=0;
-      Tk_Res_27 : Token
-         :=No_Token;
-      Fncall_Pos_27 : Integer
-         :=0;
+         := null;
+      Row_Pos_20 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_27 : Token_Index
+         := No_Token_Index;
+      Tk_Res_27 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_27 : Token_Index
+         := No_Token_Index;
       Fncall_Res_27 : Term_List
-         :=null;
+         := null;
       Row_Subres_1_17 : Term_List
-         :=null;
+         := null;
       Row_Subres_3_4 : Term_List
-         :=null;
-      Tk_Pos_28 : Integer
-         :=0;
-      Tk_Res_28 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_28 : Token_Index
+         := No_Token_Index;
+      Tk_Res_28 : Token_Index
+         := No_Token_Index;
       Transform_Res_14 : External_Reference
-         :=null;
+         := null;
 
 
-   M       : External_Reference_Memos.Memo_Entry :=
-      Get (External_Reference_Transform_Parse_0_Memo, Pos);
+   M : External_Reference_Memos.Memo_Entry := Get (External_Reference_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -3792,7 +3595,7 @@ begin
       Transform_Res_14 := M.Instance;
       return Transform_Res_14;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_14;
    end if;
 
@@ -3815,24 +3618,26 @@ Row_Pos_18 := pos;
 
 --  Start or_code
 
-Or_Pos_4 := -1;
+Or_Pos_4 := No_Token_Index;
 Or_Res_4 := null;
     
 Fncall_Res_24 := External_Transform_Parse_0(Parser, Row_Pos_18);
 Fncall_Pos_24 := Parser.Current_Pos;
 
-    if Fncall_Pos_24 /= -1 then
+    if Fncall_Pos_24 /= No_Token_Index then
         Or_Pos_4 := Fncall_Pos_24;
-        Or_Res_4 := GPR_Node (Fncall_Res_24);
+        Or_Res_4 := GPR_Node
+          (Fncall_Res_24);
         goto Exit_Or_1;
     end if;
     
 Fncall_Res_25 := External_As_List_Transform_Parse_0(Parser, Row_Pos_18);
 Fncall_Pos_25 := Parser.Current_Pos;
 
-    if Fncall_Pos_25 /= -1 then
+    if Fncall_Pos_25 /= No_Token_Index then
         Or_Pos_4 := Fncall_Pos_25;
-        Or_Res_4 := GPR_Node (Fncall_Res_25);
+        Or_Res_4 := GPR_Node
+          (Fncall_Res_25);
         goto Exit_Or_1;
     end if;
 <<Exit_Or_1>>
@@ -3840,14 +3645,14 @@ Fncall_Pos_25 := Parser.Current_Pos;
 --  End or_code
 
 
-if Or_Pos_4 /= -1 then
+if Or_Pos_4 /= No_Token_Index then
 
    Row_Pos_18 := Or_Pos_4;
 
       Row_Subres_0_18 := Or_Res_4;
 
 else
-   Row_Pos_18 := -1;
+   Row_Pos_18 := No_Token_Index;
    goto Row_Exit_Label_18_0;
 
 end if;
@@ -3860,30 +3665,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_26 := Get_Token (Parser.TDH.all, Row_Pos_18);
+Tk_Res_26 := Row_Pos_18;
 
-if Tk_Res_26.Id /= QUEX_TKN_PAR_OPEN then
-    Tk_Pos_26 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_26));
+begin
+   if T.Kind /= GPR_Par_Open then
+       Tk_Pos_26 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_18 then
-        Parser.Last_Fail.Pos := Row_Pos_18;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_OPEN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_26.Id;
-    end if;
-else
-    Tk_Pos_26 := Row_Pos_18 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_18 then
+           Parser.Last_Fail.Pos := Row_Pos_18;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Open;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_26 := Row_Pos_18 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_26 /= -1 then
+if Tk_Pos_26 /= No_Token_Index then
 
    Row_Pos_18 := Tk_Pos_26;
 
 
 else
-   Row_Pos_18 := -1;
+   Row_Pos_18 := No_Token_Index;
    goto Row_Exit_Label_18_0;
 
 end if;
@@ -3898,14 +3708,14 @@ Fncall_Res_26 := String_Literal_Transform_Parse_0(Parser, Row_Pos_18);
 Fncall_Pos_26 := Parser.Current_Pos;
 
 
-if Fncall_Pos_26 /= -1 then
+if Fncall_Pos_26 /= No_Token_Index then
 
    Row_Pos_18 := Fncall_Pos_26;
 
       Row_Subres_2_9 := Fncall_Res_26;
 
 else
-   Row_Pos_18 := -1;
+   Row_Pos_18 := No_Token_Index;
    goto Row_Exit_Label_18_0;
 
 end if;
@@ -3929,30 +3739,35 @@ Row_Pos_20 := Row_Pos_18;
 
 --  Start tok_code
 
-Tk_Res_27 := Get_Token (Parser.TDH.all, Row_Pos_20);
+Tk_Res_27 := Row_Pos_20;
 
-if Tk_Res_27.Id /= QUEX_TKN_COMMA then
-    Tk_Pos_27 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_27));
+begin
+   if T.Kind /= GPR_Comma then
+       Tk_Pos_27 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_20 then
-        Parser.Last_Fail.Pos := Row_Pos_20;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_COMMA;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_27.Id;
-    end if;
-else
-    Tk_Pos_27 := Row_Pos_20 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_20 then
+           Parser.Last_Fail.Pos := Row_Pos_20;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Comma;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_27 := Row_Pos_20 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_27 /= -1 then
+if Tk_Pos_27 /= No_Token_Index then
 
    Row_Pos_20 := Tk_Pos_27;
 
 
 else
-   Row_Pos_20 := -1;
+   Row_Pos_20 := No_Token_Index;
    goto Row_Exit_Label_20_0;
 
 end if;
@@ -3967,14 +3782,14 @@ Fncall_Res_27 := Expression_Transform_Parse_0(Parser, Row_Pos_20);
 Fncall_Pos_27 := Parser.Current_Pos;
 
 
-if Fncall_Pos_27 /= -1 then
+if Fncall_Pos_27 /= No_Token_Index then
 
    Row_Pos_20 := Fncall_Pos_27;
 
       Row_Subres_1_17 := Fncall_Res_27;
 
 else
-   Row_Pos_20 := -1;
+   Row_Pos_20 := No_Token_Index;
    goto Row_Exit_Label_20_0;
 
 end if;
@@ -3988,8 +3803,9 @@ end if;
 
 
 
-if Row_Pos_20 = -1 then
-        Row_Subres_1_17 := null;
+if Row_Pos_20 = No_Token_Index then
+        Row_Subres_1_17 :=
+           null;
 
 
     Row_Pos_20 := Row_Pos_18;
@@ -3998,14 +3814,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_20 /= -1 then
+if Row_Pos_20 /= No_Token_Index then
 
    Row_Pos_18 := Row_Pos_20;
 
       Row_Subres_3_4 := Row_Subres_1_17;
 
 else
-   Row_Pos_18 := -1;
+   Row_Pos_18 := No_Token_Index;
    goto Row_Exit_Label_18_0;
 
 end if;
@@ -4018,30 +3834,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_28 := Get_Token (Parser.TDH.all, Row_Pos_18);
+Tk_Res_28 := Row_Pos_18;
 
-if Tk_Res_28.Id /= QUEX_TKN_PAR_CLOSE then
-    Tk_Pos_28 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_28));
+begin
+   if T.Kind /= GPR_Par_Close then
+       Tk_Pos_28 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_18 then
-        Parser.Last_Fail.Pos := Row_Pos_18;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_CLOSE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_28.Id;
-    end if;
-else
-    Tk_Pos_28 := Row_Pos_18 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_18 then
+           Parser.Last_Fail.Pos := Row_Pos_18;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Close;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_28 := Row_Pos_18 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_28 /= -1 then
+if Tk_Pos_28 /= No_Token_Index then
 
    Row_Pos_18 := Tk_Pos_28;
 
 
 else
-   Row_Pos_18 := -1;
+   Row_Pos_18 := No_Token_Index;
    goto Row_Exit_Label_18_0;
 
 end if;
@@ -4054,12 +3875,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_18 /= -1 then
+if Row_Pos_18 /= No_Token_Index then
 
    Transform_Res_14 := External_Reference
      (External_Reference_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_14.Token_Data := Parser.TDH;
+   Transform_Res_14.Unit := Parser.Unit;
    Transform_Res_14.Token_Start := pos;
    Transform_Res_14.Token_End := (if Row_Pos_18 = pos
                         then pos
@@ -4095,7 +3916,7 @@ end if;
 
 
    Set (External_Reference_Transform_Parse_0_Memo,
-        Row_Pos_18 /= -1,
+        Row_Pos_18 /= No_Token_Index,
         Transform_Res_14,
         Pos,
         Row_Pos_18);
@@ -4107,40 +3928,41 @@ end if;
 end External_Reference_Transform_Parse_0;
 
    
+
+
 Term_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
 
 function Term_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node
 is
-      Or_Pos_3 : Integer
-         :=0;
+      Or_Pos_3 : Token_Index
+         := No_Token_Index;
       Or_Res_3 : GPR_Node
-         :=null;
-      Fncall_Pos_15 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_15 : Token_Index
+         := No_Token_Index;
       Fncall_Res_15 : Expr_List
-         :=null;
-      Fncall_Pos_18 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_18 : Token_Index
+         := No_Token_Index;
       Fncall_Res_18 : String_Literal_At
-         :=null;
-      Fncall_Pos_22 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_22 : Token_Index
+         := No_Token_Index;
       Fncall_Res_22 : Variable_Reference
-         :=null;
-      Fncall_Pos_23 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_23 : Token_Index
+         := No_Token_Index;
       Fncall_Res_23 : Project_Reference
-         :=null;
-      Fncall_Pos_28 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_28 : Token_Index
+         := No_Token_Index;
       Fncall_Res_28 : External_Reference
-         :=null;
+         := null;
 
 
-   M       : GPR_Node_Memos.Memo_Entry :=
-      Get (Term_Or_Parse_0_Memo, Pos);
+   M : GPR_Node_Memos.Memo_Entry := Get (Term_Or_Parse_0_Memo, Pos);
 
 begin
 
@@ -4149,7 +3971,7 @@ begin
       Or_Res_3 := M.Instance;
       return Or_Res_3;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Or_Res_3;
    end if;
 
@@ -4161,51 +3983,56 @@ begin
    
 --  Start or_code
 
-Or_Pos_3 := -1;
+Or_Pos_3 := No_Token_Index;
 Or_Res_3 := null;
     
 Fncall_Res_15 := Expression_List_Transform_Parse_0(Parser, pos);
 Fncall_Pos_15 := Parser.Current_Pos;
 
-    if Fncall_Pos_15 /= -1 then
+    if Fncall_Pos_15 /= No_Token_Index then
         Or_Pos_3 := Fncall_Pos_15;
-        Or_Res_3 := GPR_Node (Fncall_Res_15);
+        Or_Res_3 := GPR_Node
+          (Fncall_Res_15);
         goto Exit_Or_2;
     end if;
     
 Fncall_Res_18 := String_Literal_At_Transform_Parse_0(Parser, pos);
 Fncall_Pos_18 := Parser.Current_Pos;
 
-    if Fncall_Pos_18 /= -1 then
+    if Fncall_Pos_18 /= No_Token_Index then
         Or_Pos_3 := Fncall_Pos_18;
-        Or_Res_3 := GPR_Node (Fncall_Res_18);
+        Or_Res_3 := GPR_Node
+          (Fncall_Res_18);
         goto Exit_Or_2;
     end if;
     
 Fncall_Res_22 := Variable_Reference_Transform_Parse_0(Parser, pos);
 Fncall_Pos_22 := Parser.Current_Pos;
 
-    if Fncall_Pos_22 /= -1 then
+    if Fncall_Pos_22 /= No_Token_Index then
         Or_Pos_3 := Fncall_Pos_22;
-        Or_Res_3 := GPR_Node (Fncall_Res_22);
+        Or_Res_3 := GPR_Node
+          (Fncall_Res_22);
         goto Exit_Or_2;
     end if;
     
 Fncall_Res_23 := Project_Reference_Transform_Parse_0(Parser, pos);
 Fncall_Pos_23 := Parser.Current_Pos;
 
-    if Fncall_Pos_23 /= -1 then
+    if Fncall_Pos_23 /= No_Token_Index then
         Or_Pos_3 := Fncall_Pos_23;
-        Or_Res_3 := GPR_Node (Fncall_Res_23);
+        Or_Res_3 := GPR_Node
+          (Fncall_Res_23);
         goto Exit_Or_2;
     end if;
     
 Fncall_Res_28 := External_Reference_Transform_Parse_0(Parser, pos);
 Fncall_Pos_28 := Parser.Current_Pos;
 
-    if Fncall_Pos_28 /= -1 then
+    if Fncall_Pos_28 /= No_Token_Index then
         Or_Pos_3 := Fncall_Pos_28;
-        Or_Res_3 := GPR_Node (Fncall_Res_28);
+        Or_Res_3 := GPR_Node
+          (Fncall_Res_28);
         goto Exit_Or_2;
     end if;
 <<Exit_Or_2>>
@@ -4219,7 +4046,7 @@ Fncall_Pos_28 := Parser.Current_Pos;
 
 
    Set (Term_Or_Parse_0_Memo,
-        Or_Pos_3 /= -1,
+        Or_Pos_3 /= No_Token_Index,
         Or_Res_3,
         Pos,
         Or_Pos_3);
@@ -4231,32 +4058,33 @@ Fncall_Pos_28 := Parser.Current_Pos;
 end Term_Or_Parse_0;
 
    
+
+
 Expression_Transform_Parse_0_Memo : Term_List_Memos.Memo_Type;
 
 function Expression_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Term_List
 is
-      Lst_Pos_2 : Integer
-         :=0;
+      Lst_Pos_2 : Token_Index
+         := No_Token_Index;
       Lst_Res_2 : List_GPR_Node
-         :=null;
-      Lst_Cpos_2 : Integer
-         :=0;
-      Fncall_Pos_29 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_2 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_29 : Token_Index
+         := No_Token_Index;
       Fncall_Res_29 : GPR_Node
-         :=null;
-      Tk_Pos_29 : Integer
-         :=0;
-      Tk_Res_29 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_29 : Token_Index
+         := No_Token_Index;
+      Tk_Res_29 : Token_Index
+         := No_Token_Index;
       Transform_Res_15 : Term_List
-         :=null;
+         := null;
 
 
-   M       : Term_List_Memos.Memo_Entry :=
-      Get (Expression_Transform_Parse_0_Memo, Pos);
+   M : Term_List_Memos.Memo_Entry := Get (Expression_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -4265,7 +4093,7 @@ begin
       Transform_Res_15 := M.Instance;
       return Transform_Res_15;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_15;
    end if;
 
@@ -4280,7 +4108,7 @@ begin
 
 --  Start list_code
 
-    Lst_Pos_2 := -1;
+    Lst_Pos_2 := No_Token_Index;
 
 Lst_Res_2 := null;
 Lst_Cpos_2 := pos;
@@ -4291,7 +4119,7 @@ Fncall_Res_29 := Term_Or_Parse_0(Parser, Lst_Cpos_2);
 Fncall_Pos_29 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_29 = -1;
+   exit when Fncall_Pos_29 = No_Token_Index;
 
    Lst_Pos_2 := Fncall_Pos_29;
    Lst_Cpos_2 := Fncall_Pos_29;
@@ -4319,23 +4147,28 @@ Fncall_Pos_29 := Parser.Current_Pos;
       
 --  Start tok_code
 
-Tk_Res_29 := Get_Token (Parser.TDH.all, Lst_Cpos_2);
+Tk_Res_29 := Lst_Cpos_2;
 
-if Tk_Res_29.Id /= QUEX_TKN_AMP then
-    Tk_Pos_29 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_29));
+begin
+   if T.Kind /= GPR_Amp then
+       Tk_Pos_29 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Lst_Cpos_2 then
-        Parser.Last_Fail.Pos := Lst_Cpos_2;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_AMP;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_29.Id;
-    end if;
-else
-    Tk_Pos_29 := Lst_Cpos_2 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Lst_Cpos_2 then
+           Parser.Last_Fail.Pos := Lst_Cpos_2;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Amp;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_29 := Lst_Cpos_2 + 1;
+   end if;
+end;
 
 --  End tok_code
 
-      if Tk_Pos_29 /= -1 then
+      if Tk_Pos_29 /= No_Token_Index then
           Lst_Cpos_2 := Tk_Pos_29;
       else
          exit;
@@ -4344,7 +4177,7 @@ end if;
 end loop;
 
 if Lst_Res_2 /= null then
-   Lst_Res_2.Token_Data := Parser.TDH;
+   Lst_Res_2.Unit := Parser.Unit;
    Lst_Res_2.Token_Start := pos;
    Lst_Res_2.Token_End := (if Lst_Cpos_2 = pos
                         then pos
@@ -4355,12 +4188,12 @@ end if;
 --  End list_code
 
 
-if Lst_Pos_2 /= -1 then
+if Lst_Pos_2 /= No_Token_Index then
 
    Transform_Res_15 := Term_List
      (Term_List_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_15.Token_Data := Parser.TDH;
+   Transform_Res_15.Unit := Parser.Unit;
    Transform_Res_15.Token_Start := pos;
    Transform_Res_15.Token_End := (if Lst_Pos_2 = pos
                         then pos
@@ -4384,7 +4217,7 @@ end if;
 
 
    Set (Expression_Transform_Parse_0_Memo,
-        Lst_Pos_2 /= -1,
+        Lst_Pos_2 /= No_Token_Index,
         Transform_Res_15,
         Pos,
         Lst_Pos_2);
@@ -4396,50 +4229,51 @@ end if;
 end Expression_Transform_Parse_0;
 
    
+
+
 Variable_Decl_Transform_Parse_0_Memo : Variable_Decl_Memos.Memo_Type;
 
 function Variable_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Variable_Decl
 is
-      Row_Pos_10 : Integer
-         :=0;
-      Fncall_Pos_12 : Integer
-         :=0;
+      Row_Pos_10 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_12 : Token_Index
+         := No_Token_Index;
       Fncall_Res_12 : Identifier
-         :=null;
+         := null;
       Row_Subres_0_10 : Identifier
-         :=null;
-      Row_Pos_11 : Integer
-         :=0;
-      Tk_Pos_16 : Integer
-         :=0;
-      Tk_Res_16 : Token
-         :=No_Token;
-      Fncall_Pos_13 : Integer
-         :=0;
+         := null;
+      Row_Pos_11 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_16 : Token_Index
+         := No_Token_Index;
+      Tk_Res_16 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_13 : Token_Index
+         := No_Token_Index;
       Fncall_Res_13 : Expr
-         :=null;
+         := null;
       Row_Subres_1_9 : Expr
-         :=null;
+         := null;
       Row_Subres_1_8 : Expr
-         :=null;
-      Tk_Pos_17 : Integer
-         :=0;
-      Tk_Res_17 : Token
-         :=No_Token;
-      Fncall_Pos_30 : Integer
-         :=0;
+         := null;
+      Tk_Pos_17 : Token_Index
+         := No_Token_Index;
+      Tk_Res_17 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_30 : Token_Index
+         := No_Token_Index;
       Fncall_Res_30 : Term_List
-         :=null;
+         := null;
       Row_Subres_3_3 : Term_List
-         :=null;
+         := null;
       Transform_Res_16 : Variable_Decl
-         :=null;
+         := null;
 
 
-   M       : Variable_Decl_Memos.Memo_Entry :=
-      Get (Variable_Decl_Transform_Parse_0_Memo, Pos);
+   M : Variable_Decl_Memos.Memo_Entry := Get (Variable_Decl_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -4448,7 +4282,7 @@ begin
       Transform_Res_16 := M.Instance;
       return Transform_Res_16;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_16;
    end if;
 
@@ -4473,14 +4307,14 @@ Fncall_Res_12 := Identifier_Transform_Parse_0(Parser, Row_Pos_10);
 Fncall_Pos_12 := Parser.Current_Pos;
 
 
-if Fncall_Pos_12 /= -1 then
+if Fncall_Pos_12 /= No_Token_Index then
 
    Row_Pos_10 := Fncall_Pos_12;
 
       Row_Subres_0_10 := Fncall_Res_12;
 
 else
-   Row_Pos_10 := -1;
+   Row_Pos_10 := No_Token_Index;
    goto Row_Exit_Label_10_0;
 
 end if;
@@ -4504,30 +4338,35 @@ Row_Pos_11 := Row_Pos_10;
 
 --  Start tok_code
 
-Tk_Res_16 := Get_Token (Parser.TDH.all, Row_Pos_11);
+Tk_Res_16 := Row_Pos_11;
 
-if Tk_Res_16.Id /= QUEX_TKN_COLON then
-    Tk_Pos_16 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_16));
+begin
+   if T.Kind /= GPR_Colon then
+       Tk_Pos_16 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_11 then
-        Parser.Last_Fail.Pos := Row_Pos_11;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_COLON;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_16.Id;
-    end if;
-else
-    Tk_Pos_16 := Row_Pos_11 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_11 then
+           Parser.Last_Fail.Pos := Row_Pos_11;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Colon;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_16 := Row_Pos_11 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_16 /= -1 then
+if Tk_Pos_16 /= No_Token_Index then
 
    Row_Pos_11 := Tk_Pos_16;
 
 
 else
-   Row_Pos_11 := -1;
+   Row_Pos_11 := No_Token_Index;
    goto Row_Exit_Label_11_0;
 
 end if;
@@ -4542,14 +4381,14 @@ Fncall_Res_13 := Static_Name_List_Parse_0(Parser, Row_Pos_11);
 Fncall_Pos_13 := Parser.Current_Pos;
 
 
-if Fncall_Pos_13 /= -1 then
+if Fncall_Pos_13 /= No_Token_Index then
 
    Row_Pos_11 := Fncall_Pos_13;
 
       Row_Subres_1_9 := Fncall_Res_13;
 
 else
-   Row_Pos_11 := -1;
+   Row_Pos_11 := No_Token_Index;
    goto Row_Exit_Label_11_0;
 
 end if;
@@ -4563,8 +4402,9 @@ end if;
 
 
 
-if Row_Pos_11 = -1 then
-        Row_Subres_1_9 := null;
+if Row_Pos_11 = No_Token_Index then
+        Row_Subres_1_9 :=
+           null;
 
 
     Row_Pos_11 := Row_Pos_10;
@@ -4573,14 +4413,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_11 /= -1 then
+if Row_Pos_11 /= No_Token_Index then
 
    Row_Pos_10 := Row_Pos_11;
 
       Row_Subres_1_8 := Row_Subres_1_9;
 
 else
-   Row_Pos_10 := -1;
+   Row_Pos_10 := No_Token_Index;
    goto Row_Exit_Label_10_0;
 
 end if;
@@ -4593,30 +4433,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_17 := Get_Token (Parser.TDH.all, Row_Pos_10);
+Tk_Res_17 := Row_Pos_10;
 
-if Tk_Res_17.Id /= QUEX_TKN_ASSIGN then
-    Tk_Pos_17 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_17));
+begin
+   if T.Kind /= GPR_Assign then
+       Tk_Pos_17 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_10 then
-        Parser.Last_Fail.Pos := Row_Pos_10;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_ASSIGN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_17.Id;
-    end if;
-else
-    Tk_Pos_17 := Row_Pos_10 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_10 then
+           Parser.Last_Fail.Pos := Row_Pos_10;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Assign;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_17 := Row_Pos_10 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_17 /= -1 then
+if Tk_Pos_17 /= No_Token_Index then
 
    Row_Pos_10 := Tk_Pos_17;
 
 
 else
-   Row_Pos_10 := -1;
+   Row_Pos_10 := No_Token_Index;
    goto Row_Exit_Label_10_0;
 
 end if;
@@ -4631,14 +4476,14 @@ Fncall_Res_30 := Expression_Transform_Parse_0(Parser, Row_Pos_10);
 Fncall_Pos_30 := Parser.Current_Pos;
 
 
-if Fncall_Pos_30 /= -1 then
+if Fncall_Pos_30 /= No_Token_Index then
 
    Row_Pos_10 := Fncall_Pos_30;
 
       Row_Subres_3_3 := Fncall_Res_30;
 
 else
-   Row_Pos_10 := -1;
+   Row_Pos_10 := No_Token_Index;
    goto Row_Exit_Label_10_0;
 
 end if;
@@ -4651,12 +4496,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_10 /= -1 then
+if Row_Pos_10 /= No_Token_Index then
 
    Transform_Res_16 := Variable_Decl
      (Variable_Decl_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_16.Token_Data := Parser.TDH;
+   Transform_Res_16.Unit := Parser.Unit;
    Transform_Res_16.Token_Start := pos;
    Transform_Res_16.Token_End := (if Row_Pos_10 = pos
                         then pos
@@ -4692,7 +4537,7 @@ end if;
 
 
    Set (Variable_Decl_Transform_Parse_0_Memo,
-        Row_Pos_10 /= -1,
+        Row_Pos_10 /= No_Token_Index,
         Transform_Res_16,
         Pos,
         Row_Pos_10);
@@ -4704,28 +4549,29 @@ end if;
 end Variable_Decl_Transform_Parse_0;
 
    
+
+
 Associative_Array_Index_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
 
 function Associative_Array_Index_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node
 is
-      Or_Pos_6 : Integer
-         :=0;
+      Or_Pos_6 : Token_Index
+         := No_Token_Index;
       Or_Res_6 : GPR_Node
-         :=null;
-      Fncall_Pos_34 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_34 : Token_Index
+         := No_Token_Index;
       Fncall_Res_34 : Others_Designator
-         :=null;
-      Fncall_Pos_35 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_35 : Token_Index
+         := No_Token_Index;
       Fncall_Res_35 : String_Literal_At
-         :=null;
+         := null;
 
 
-   M       : GPR_Node_Memos.Memo_Entry :=
-      Get (Associative_Array_Index_Or_Parse_0_Memo, Pos);
+   M : GPR_Node_Memos.Memo_Entry := Get (Associative_Array_Index_Or_Parse_0_Memo, Pos);
 
 begin
 
@@ -4734,7 +4580,7 @@ begin
       Or_Res_6 := M.Instance;
       return Or_Res_6;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Or_Res_6;
    end if;
 
@@ -4746,24 +4592,26 @@ begin
    
 --  Start or_code
 
-Or_Pos_6 := -1;
+Or_Pos_6 := No_Token_Index;
 Or_Res_6 := null;
     
 Fncall_Res_34 := Others_Designator_Transform_Parse_0(Parser, pos);
 Fncall_Pos_34 := Parser.Current_Pos;
 
-    if Fncall_Pos_34 /= -1 then
+    if Fncall_Pos_34 /= No_Token_Index then
         Or_Pos_6 := Fncall_Pos_34;
-        Or_Res_6 := GPR_Node (Fncall_Res_34);
+        Or_Res_6 := GPR_Node
+          (Fncall_Res_34);
         goto Exit_Or_4;
     end if;
     
 Fncall_Res_35 := String_Literal_At_Transform_Parse_0(Parser, pos);
 Fncall_Pos_35 := Parser.Current_Pos;
 
-    if Fncall_Pos_35 /= -1 then
+    if Fncall_Pos_35 /= No_Token_Index then
         Or_Pos_6 := Fncall_Pos_35;
-        Or_Res_6 := GPR_Node (Fncall_Res_35);
+        Or_Res_6 := GPR_Node
+          (Fncall_Res_35);
         goto Exit_Or_4;
     end if;
 <<Exit_Or_4>>
@@ -4777,7 +4625,7 @@ Fncall_Pos_35 := Parser.Current_Pos;
 
 
    Set (Associative_Array_Index_Or_Parse_0_Memo,
-        Or_Pos_6 /= -1,
+        Or_Pos_6 /= No_Token_Index,
         Or_Res_6,
         Pos,
         Or_Pos_6);
@@ -4789,66 +4637,67 @@ Fncall_Pos_35 := Parser.Current_Pos;
 end Associative_Array_Index_Or_Parse_0;
 
    
+
+
 Attribute_Decl_Transform_Parse_0_Memo : Attribute_Decl_Memos.Memo_Type;
 
 function Attribute_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Attribute_Decl
 is
-      Row_Pos_21 : Integer
-         :=0;
-      Tk_Pos_30 : Integer
-         :=0;
-      Tk_Res_30 : Token
-         :=No_Token;
-      Or_Pos_5 : Integer
-         :=0;
+      Row_Pos_21 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_30 : Token_Index
+         := No_Token_Index;
+      Tk_Res_30 : Token_Index
+         := No_Token_Index;
+      Or_Pos_5 : Token_Index
+         := No_Token_Index;
       Or_Res_5 : GPR_Node
-         :=null;
-      Fncall_Pos_32 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_32 : Token_Index
+         := No_Token_Index;
       Fncall_Res_32 : Identifier
-         :=null;
-      Fncall_Pos_33 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_33 : Token_Index
+         := No_Token_Index;
       Fncall_Res_33 : External_Name
-         :=null;
+         := null;
       Row_Subres_1_18 : GPR_Node
-         :=null;
-      Row_Pos_22 : Integer
-         :=0;
-      Tk_Pos_31 : Integer
-         :=0;
-      Tk_Res_31 : Token
-         :=No_Token;
-      Fncall_Pos_36 : Integer
-         :=0;
+         := null;
+      Row_Pos_22 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_31 : Token_Index
+         := No_Token_Index;
+      Tk_Res_31 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_36 : Token_Index
+         := No_Token_Index;
       Fncall_Res_36 : GPR_Node
-         :=null;
+         := null;
       Row_Subres_1_19 : GPR_Node
-         :=null;
-      Tk_Pos_32 : Integer
-         :=0;
-      Tk_Res_32 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_32 : Token_Index
+         := No_Token_Index;
+      Tk_Res_32 : Token_Index
+         := No_Token_Index;
       Row_Subres_2_10 : GPR_Node
-         :=null;
-      Tk_Pos_33 : Integer
-         :=0;
-      Tk_Res_33 : Token
-         :=No_Token;
-      Fncall_Pos_37 : Integer
-         :=0;
+         := null;
+      Tk_Pos_33 : Token_Index
+         := No_Token_Index;
+      Tk_Res_33 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_37 : Token_Index
+         := No_Token_Index;
       Fncall_Res_37 : Term_List
-         :=null;
+         := null;
       Row_Subres_4_2 : Term_List
-         :=null;
+         := null;
       Transform_Res_17 : Attribute_Decl
-         :=null;
+         := null;
 
 
-   M       : Attribute_Decl_Memos.Memo_Entry :=
-      Get (Attribute_Decl_Transform_Parse_0_Memo, Pos);
+   M : Attribute_Decl_Memos.Memo_Entry := Get (Attribute_Decl_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -4857,7 +4706,7 @@ begin
       Transform_Res_17 := M.Instance;
       return Transform_Res_17;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_17;
    end if;
 
@@ -4880,30 +4729,35 @@ Row_Pos_21 := pos;
 
 --  Start tok_code
 
-Tk_Res_30 := Get_Token (Parser.TDH.all, Row_Pos_21);
+Tk_Res_30 := Row_Pos_21;
 
-if Tk_Res_30.Id /= QUEX_TKN_FOR then
-    Tk_Pos_30 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_30));
+begin
+   if T.Kind /= GPR_For then
+       Tk_Pos_30 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_21 then
-        Parser.Last_Fail.Pos := Row_Pos_21;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_FOR;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_30.Id;
-    end if;
-else
-    Tk_Pos_30 := Row_Pos_21 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_21 then
+           Parser.Last_Fail.Pos := Row_Pos_21;
+           Parser.Last_Fail.Expected_Token_Id := GPR_For;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_30 := Row_Pos_21 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_30 /= -1 then
+if Tk_Pos_30 /= No_Token_Index then
 
    Row_Pos_21 := Tk_Pos_30;
 
 
 else
-   Row_Pos_21 := -1;
+   Row_Pos_21 := No_Token_Index;
    goto Row_Exit_Label_21_0;
 
 end if;
@@ -4916,24 +4770,26 @@ end if;
 
 --  Start or_code
 
-Or_Pos_5 := -1;
+Or_Pos_5 := No_Token_Index;
 Or_Res_5 := null;
     
 Fncall_Res_32 := Identifier_Transform_Parse_0(Parser, Row_Pos_21);
 Fncall_Pos_32 := Parser.Current_Pos;
 
-    if Fncall_Pos_32 /= -1 then
+    if Fncall_Pos_32 /= No_Token_Index then
         Or_Pos_5 := Fncall_Pos_32;
-        Or_Res_5 := GPR_Node (Fncall_Res_32);
+        Or_Res_5 := GPR_Node
+          (Fncall_Res_32);
         goto Exit_Or_3;
     end if;
     
 Fncall_Res_33 := External_Name_Transform_Parse_0(Parser, Row_Pos_21);
 Fncall_Pos_33 := Parser.Current_Pos;
 
-    if Fncall_Pos_33 /= -1 then
+    if Fncall_Pos_33 /= No_Token_Index then
         Or_Pos_5 := Fncall_Pos_33;
-        Or_Res_5 := GPR_Node (Fncall_Res_33);
+        Or_Res_5 := GPR_Node
+          (Fncall_Res_33);
         goto Exit_Or_3;
     end if;
 <<Exit_Or_3>>
@@ -4941,14 +4797,14 @@ Fncall_Pos_33 := Parser.Current_Pos;
 --  End or_code
 
 
-if Or_Pos_5 /= -1 then
+if Or_Pos_5 /= No_Token_Index then
 
    Row_Pos_21 := Or_Pos_5;
 
       Row_Subres_1_18 := Or_Res_5;
 
 else
-   Row_Pos_21 := -1;
+   Row_Pos_21 := No_Token_Index;
    goto Row_Exit_Label_21_0;
 
 end if;
@@ -4972,30 +4828,35 @@ Row_Pos_22 := Row_Pos_21;
 
 --  Start tok_code
 
-Tk_Res_31 := Get_Token (Parser.TDH.all, Row_Pos_22);
+Tk_Res_31 := Row_Pos_22;
 
-if Tk_Res_31.Id /= QUEX_TKN_PAR_OPEN then
-    Tk_Pos_31 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_31));
+begin
+   if T.Kind /= GPR_Par_Open then
+       Tk_Pos_31 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_22 then
-        Parser.Last_Fail.Pos := Row_Pos_22;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_OPEN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_31.Id;
-    end if;
-else
-    Tk_Pos_31 := Row_Pos_22 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_22 then
+           Parser.Last_Fail.Pos := Row_Pos_22;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Open;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_31 := Row_Pos_22 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_31 /= -1 then
+if Tk_Pos_31 /= No_Token_Index then
 
    Row_Pos_22 := Tk_Pos_31;
 
 
 else
-   Row_Pos_22 := -1;
+   Row_Pos_22 := No_Token_Index;
    goto Row_Exit_Label_22_0;
 
 end if;
@@ -5010,14 +4871,14 @@ Fncall_Res_36 := Associative_Array_Index_Or_Parse_0(Parser, Row_Pos_22);
 Fncall_Pos_36 := Parser.Current_Pos;
 
 
-if Fncall_Pos_36 /= -1 then
+if Fncall_Pos_36 /= No_Token_Index then
 
    Row_Pos_22 := Fncall_Pos_36;
 
       Row_Subres_1_19 := Fncall_Res_36;
 
 else
-   Row_Pos_22 := -1;
+   Row_Pos_22 := No_Token_Index;
    goto Row_Exit_Label_22_0;
 
 end if;
@@ -5030,30 +4891,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_32 := Get_Token (Parser.TDH.all, Row_Pos_22);
+Tk_Res_32 := Row_Pos_22;
 
-if Tk_Res_32.Id /= QUEX_TKN_PAR_CLOSE then
-    Tk_Pos_32 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_32));
+begin
+   if T.Kind /= GPR_Par_Close then
+       Tk_Pos_32 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_22 then
-        Parser.Last_Fail.Pos := Row_Pos_22;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_CLOSE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_32.Id;
-    end if;
-else
-    Tk_Pos_32 := Row_Pos_22 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_22 then
+           Parser.Last_Fail.Pos := Row_Pos_22;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Close;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_32 := Row_Pos_22 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_32 /= -1 then
+if Tk_Pos_32 /= No_Token_Index then
 
    Row_Pos_22 := Tk_Pos_32;
 
 
 else
-   Row_Pos_22 := -1;
+   Row_Pos_22 := No_Token_Index;
    goto Row_Exit_Label_22_0;
 
 end if;
@@ -5067,8 +4933,9 @@ end if;
 
 
 
-if Row_Pos_22 = -1 then
-        Row_Subres_1_19 := null;
+if Row_Pos_22 = No_Token_Index then
+        Row_Subres_1_19 :=
+           null;
 
 
     Row_Pos_22 := Row_Pos_21;
@@ -5077,14 +4944,14 @@ end if;
 --  End opt_code
 
 
-if Row_Pos_22 /= -1 then
+if Row_Pos_22 /= No_Token_Index then
 
    Row_Pos_21 := Row_Pos_22;
 
       Row_Subres_2_10 := Row_Subres_1_19;
 
 else
-   Row_Pos_21 := -1;
+   Row_Pos_21 := No_Token_Index;
    goto Row_Exit_Label_21_0;
 
 end if;
@@ -5097,30 +4964,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_33 := Get_Token (Parser.TDH.all, Row_Pos_21);
+Tk_Res_33 := Row_Pos_21;
 
-if Tk_Res_33.Id /= QUEX_TKN_USE then
-    Tk_Pos_33 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_33));
+begin
+   if T.Kind /= GPR_Use then
+       Tk_Pos_33 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_21 then
-        Parser.Last_Fail.Pos := Row_Pos_21;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_USE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_33.Id;
-    end if;
-else
-    Tk_Pos_33 := Row_Pos_21 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_21 then
+           Parser.Last_Fail.Pos := Row_Pos_21;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Use;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_33 := Row_Pos_21 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_33 /= -1 then
+if Tk_Pos_33 /= No_Token_Index then
 
    Row_Pos_21 := Tk_Pos_33;
 
 
 else
-   Row_Pos_21 := -1;
+   Row_Pos_21 := No_Token_Index;
    goto Row_Exit_Label_21_0;
 
 end if;
@@ -5135,14 +5007,14 @@ Fncall_Res_37 := Expression_Transform_Parse_0(Parser, Row_Pos_21);
 Fncall_Pos_37 := Parser.Current_Pos;
 
 
-if Fncall_Pos_37 /= -1 then
+if Fncall_Pos_37 /= No_Token_Index then
 
    Row_Pos_21 := Fncall_Pos_37;
 
       Row_Subres_4_2 := Fncall_Res_37;
 
 else
-   Row_Pos_21 := -1;
+   Row_Pos_21 := No_Token_Index;
    goto Row_Exit_Label_21_0;
 
 end if;
@@ -5155,12 +5027,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_21 /= -1 then
+if Row_Pos_21 /= No_Token_Index then
 
    Transform_Res_17 := Attribute_Decl
      (Attribute_Decl_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_17.Token_Data := Parser.TDH;
+   Transform_Res_17.Unit := Parser.Unit;
    Transform_Res_17.Token_Start := pos;
    Transform_Res_17.Token_End := (if Row_Pos_21 = pos
                         then pos
@@ -5196,7 +5068,7 @@ end if;
 
 
    Set (Attribute_Decl_Transform_Parse_0_Memo,
-        Row_Pos_21 /= -1,
+        Row_Pos_21 /= No_Token_Index,
         Transform_Res_17,
         Pos,
         Row_Pos_21);
@@ -5208,28 +5080,29 @@ end if;
 end Attribute_Decl_Transform_Parse_0;
 
    
+
+
 Choice_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
 
 function Choice_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node
 is
-      Or_Pos_7 : Integer
-         :=0;
+      Or_Pos_7 : Token_Index
+         := No_Token_Index;
       Or_Res_7 : GPR_Node
-         :=null;
-      Fncall_Pos_40 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_40 : Token_Index
+         := No_Token_Index;
       Fncall_Res_40 : String_Literal
-         :=null;
-      Fncall_Pos_41 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_41 : Token_Index
+         := No_Token_Index;
       Fncall_Res_41 : Others_Designator
-         :=null;
+         := null;
 
 
-   M       : GPR_Node_Memos.Memo_Entry :=
-      Get (Choice_Or_Parse_0_Memo, Pos);
+   M : GPR_Node_Memos.Memo_Entry := Get (Choice_Or_Parse_0_Memo, Pos);
 
 begin
 
@@ -5238,7 +5111,7 @@ begin
       Or_Res_7 := M.Instance;
       return Or_Res_7;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Or_Res_7;
    end if;
 
@@ -5250,24 +5123,26 @@ begin
    
 --  Start or_code
 
-Or_Pos_7 := -1;
+Or_Pos_7 := No_Token_Index;
 Or_Res_7 := null;
     
 Fncall_Res_40 := String_Literal_Transform_Parse_0(Parser, pos);
 Fncall_Pos_40 := Parser.Current_Pos;
 
-    if Fncall_Pos_40 /= -1 then
+    if Fncall_Pos_40 /= No_Token_Index then
         Or_Pos_7 := Fncall_Pos_40;
-        Or_Res_7 := GPR_Node (Fncall_Res_40);
+        Or_Res_7 := GPR_Node
+          (Fncall_Res_40);
         goto Exit_Or_5;
     end if;
     
 Fncall_Res_41 := Others_Designator_Transform_Parse_0(Parser, pos);
 Fncall_Pos_41 := Parser.Current_Pos;
 
-    if Fncall_Pos_41 /= -1 then
+    if Fncall_Pos_41 /= No_Token_Index then
         Or_Pos_7 := Fncall_Pos_41;
-        Or_Res_7 := GPR_Node (Fncall_Res_41);
+        Or_Res_7 := GPR_Node
+          (Fncall_Res_41);
         goto Exit_Or_5;
     end if;
 <<Exit_Or_5>>
@@ -5281,7 +5156,7 @@ Fncall_Pos_41 := Parser.Current_Pos;
 
 
    Set (Choice_Or_Parse_0_Memo,
-        Or_Pos_7 /= -1,
+        Or_Pos_7 /= No_Token_Index,
         Or_Res_7,
         Pos,
         Or_Pos_7);
@@ -5293,30 +5168,31 @@ Fncall_Pos_41 := Parser.Current_Pos;
 end Choice_Or_Parse_0;
 
    
+
+
 Discrete_Choice_List_List_Parse_0_Memo : List_GPR_Node_Memos.Memo_Type;
 
 function Discrete_Choice_List_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_GPR_Node
 is
-      Lst_Pos_3 : Integer
-         :=0;
+      Lst_Pos_3 : Token_Index
+         := No_Token_Index;
       Lst_Res_3 : List_GPR_Node
-         :=null;
-      Lst_Cpos_5 : Integer
-         :=0;
-      Fncall_Pos_42 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_5 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_42 : Token_Index
+         := No_Token_Index;
       Fncall_Res_42 : GPR_Node
-         :=null;
-      Tk_Pos_37 : Integer
-         :=0;
-      Tk_Res_37 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_37 : Token_Index
+         := No_Token_Index;
+      Tk_Res_37 : Token_Index
+         := No_Token_Index;
 
 
-   M       : List_GPR_Node_Memos.Memo_Entry :=
-      Get (Discrete_Choice_List_List_Parse_0_Memo, Pos);
+   M : List_GPR_Node_Memos.Memo_Entry := Get (Discrete_Choice_List_List_Parse_0_Memo, Pos);
 
 begin
 
@@ -5325,7 +5201,7 @@ begin
       Lst_Res_3 := M.Instance;
       return Lst_Res_3;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Lst_Res_3;
    end if;
 
@@ -5337,7 +5213,7 @@ begin
    
 --  Start list_code
 
-    Lst_Pos_3 := -1;
+    Lst_Pos_3 := No_Token_Index;
 
 Lst_Res_3 := null;
 Lst_Cpos_5 := pos;
@@ -5348,7 +5224,7 @@ Fncall_Res_42 := Choice_Or_Parse_0(Parser, Lst_Cpos_5);
 Fncall_Pos_42 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_42 = -1;
+   exit when Fncall_Pos_42 = No_Token_Index;
 
    Lst_Pos_3 := Fncall_Pos_42;
    Lst_Cpos_5 := Fncall_Pos_42;
@@ -5376,23 +5252,28 @@ Fncall_Pos_42 := Parser.Current_Pos;
       
 --  Start tok_code
 
-Tk_Res_37 := Get_Token (Parser.TDH.all, Lst_Cpos_5);
+Tk_Res_37 := Lst_Cpos_5;
 
-if Tk_Res_37.Id /= QUEX_TKN_PIPE then
-    Tk_Pos_37 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_37));
+begin
+   if T.Kind /= GPR_Pipe then
+       Tk_Pos_37 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Lst_Cpos_5 then
-        Parser.Last_Fail.Pos := Lst_Cpos_5;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PIPE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_37.Id;
-    end if;
-else
-    Tk_Pos_37 := Lst_Cpos_5 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Lst_Cpos_5 then
+           Parser.Last_Fail.Pos := Lst_Cpos_5;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Pipe;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_37 := Lst_Cpos_5 + 1;
+   end if;
+end;
 
 --  End tok_code
 
-      if Tk_Pos_37 /= -1 then
+      if Tk_Pos_37 /= No_Token_Index then
           Lst_Cpos_5 := Tk_Pos_37;
       else
          exit;
@@ -5401,7 +5282,7 @@ end if;
 end loop;
 
 if Lst_Res_3 /= null then
-   Lst_Res_3.Token_Data := Parser.TDH;
+   Lst_Res_3.Unit := Parser.Unit;
    Lst_Res_3.Token_Start := pos;
    Lst_Res_3.Token_End := (if Lst_Cpos_5 = pos
                         then pos
@@ -5418,7 +5299,7 @@ end if;
 
 
    Set (Discrete_Choice_List_List_Parse_0_Memo,
-        Lst_Pos_3 /= -1,
+        Lst_Pos_3 /= No_Token_Index,
         Lst_Res_3,
         Pos,
         Lst_Pos_3);
@@ -5430,40 +5311,41 @@ end if;
 end Discrete_Choice_List_List_Parse_0;
 
    
+
+
 Case_Item_Transform_Parse_0_Memo : Case_Item_Memos.Memo_Type;
 
 function Case_Item_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Case_Item
 is
-      Row_Pos_24 : Integer
-         :=0;
-      Tk_Pos_36 : Integer
-         :=0;
-      Tk_Res_36 : Token
-         :=No_Token;
-      Fncall_Pos_43 : Integer
-         :=0;
+      Row_Pos_24 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_36 : Token_Index
+         := No_Token_Index;
+      Tk_Res_36 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_43 : Token_Index
+         := No_Token_Index;
       Fncall_Res_43 : List_GPR_Node
-         :=null;
+         := null;
       Row_Subres_1_21 : List_GPR_Node
-         :=null;
-      Tk_Pos_38 : Integer
-         :=0;
-      Tk_Res_38 : Token
-         :=No_Token;
-      Fncall_Pos_44 : Integer
-         :=0;
+         := null;
+      Tk_Pos_38 : Token_Index
+         := No_Token_Index;
+      Tk_Res_38 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_44 : Token_Index
+         := No_Token_Index;
       Fncall_Res_44 : List_GPR_Node
-         :=null;
+         := null;
       Row_Subres_3_7 : List_GPR_Node
-         :=null;
+         := null;
       Transform_Res_18 : Case_Item
-         :=null;
+         := null;
 
 
-   M       : Case_Item_Memos.Memo_Entry :=
-      Get (Case_Item_Transform_Parse_0_Memo, Pos);
+   M : Case_Item_Memos.Memo_Entry := Get (Case_Item_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -5472,7 +5354,7 @@ begin
       Transform_Res_18 := M.Instance;
       return Transform_Res_18;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_18;
    end if;
 
@@ -5495,30 +5377,35 @@ Row_Pos_24 := pos;
 
 --  Start tok_code
 
-Tk_Res_36 := Get_Token (Parser.TDH.all, Row_Pos_24);
+Tk_Res_36 := Row_Pos_24;
 
-if Tk_Res_36.Id /= QUEX_TKN_WHEN then
-    Tk_Pos_36 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_36));
+begin
+   if T.Kind /= GPR_When then
+       Tk_Pos_36 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_24 then
-        Parser.Last_Fail.Pos := Row_Pos_24;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_WHEN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_36.Id;
-    end if;
-else
-    Tk_Pos_36 := Row_Pos_24 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_24 then
+           Parser.Last_Fail.Pos := Row_Pos_24;
+           Parser.Last_Fail.Expected_Token_Id := GPR_When;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_36 := Row_Pos_24 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_36 /= -1 then
+if Tk_Pos_36 /= No_Token_Index then
 
    Row_Pos_24 := Tk_Pos_36;
 
 
 else
-   Row_Pos_24 := -1;
+   Row_Pos_24 := No_Token_Index;
    goto Row_Exit_Label_24_0;
 
 end if;
@@ -5533,14 +5420,14 @@ Fncall_Res_43 := Discrete_Choice_List_List_Parse_0(Parser, Row_Pos_24);
 Fncall_Pos_43 := Parser.Current_Pos;
 
 
-if Fncall_Pos_43 /= -1 then
+if Fncall_Pos_43 /= No_Token_Index then
 
    Row_Pos_24 := Fncall_Pos_43;
 
       Row_Subres_1_21 := Fncall_Res_43;
 
 else
-   Row_Pos_24 := -1;
+   Row_Pos_24 := No_Token_Index;
    goto Row_Exit_Label_24_0;
 
 end if;
@@ -5553,30 +5440,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_38 := Get_Token (Parser.TDH.all, Row_Pos_24);
+Tk_Res_38 := Row_Pos_24;
 
-if Tk_Res_38.Id /= QUEX_TKN_ARROW then
-    Tk_Pos_38 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_38));
+begin
+   if T.Kind /= GPR_Arrow then
+       Tk_Pos_38 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_24 then
-        Parser.Last_Fail.Pos := Row_Pos_24;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_ARROW;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_38.Id;
-    end if;
-else
-    Tk_Pos_38 := Row_Pos_24 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_24 then
+           Parser.Last_Fail.Pos := Row_Pos_24;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Arrow;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_38 := Row_Pos_24 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_38 /= -1 then
+if Tk_Pos_38 /= No_Token_Index then
 
    Row_Pos_24 := Tk_Pos_38;
 
 
 else
-   Row_Pos_24 := -1;
+   Row_Pos_24 := No_Token_Index;
    goto Row_Exit_Label_24_0;
 
 end if;
@@ -5591,14 +5483,14 @@ Fncall_Res_44 := Simple_Declarative_Items_List_Parse_0(Parser, Row_Pos_24);
 Fncall_Pos_44 := Parser.Current_Pos;
 
 
-if Fncall_Pos_44 /= -1 then
+if Fncall_Pos_44 /= No_Token_Index then
 
    Row_Pos_24 := Fncall_Pos_44;
 
       Row_Subres_3_7 := Fncall_Res_44;
 
 else
-   Row_Pos_24 := -1;
+   Row_Pos_24 := No_Token_Index;
    goto Row_Exit_Label_24_0;
 
 end if;
@@ -5611,12 +5503,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_24 /= -1 then
+if Row_Pos_24 /= No_Token_Index then
 
    Transform_Res_18 := Case_Item
      (Case_Item_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_18.Token_Data := Parser.TDH;
+   Transform_Res_18.Unit := Parser.Unit;
    Transform_Res_18.Token_Start := pos;
    Transform_Res_18.Token_End := (if Row_Pos_24 = pos
                         then pos
@@ -5646,7 +5538,7 @@ end if;
 
 
    Set (Case_Item_Transform_Parse_0_Memo,
-        Row_Pos_24 /= -1,
+        Row_Pos_24 /= No_Token_Index,
         Transform_Res_18,
         Pos,
         Row_Pos_24);
@@ -5658,54 +5550,55 @@ end if;
 end Case_Item_Transform_Parse_0;
 
    
+
+
 Case_Construction_Transform_Parse_0_Memo : Case_Construction_Memos.Memo_Type;
 
 function Case_Construction_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Case_Construction
 is
-      Row_Pos_23 : Integer
-         :=0;
-      Tk_Pos_34 : Integer
-         :=0;
-      Tk_Res_34 : Token
-         :=No_Token;
-      Fncall_Pos_39 : Integer
-         :=0;
+      Row_Pos_23 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_34 : Token_Index
+         := No_Token_Index;
+      Tk_Res_34 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_39 : Token_Index
+         := No_Token_Index;
       Fncall_Res_39 : Variable_Reference
-         :=null;
+         := null;
       Row_Subres_1_20 : Variable_Reference
-         :=null;
-      Tk_Pos_35 : Integer
-         :=0;
-      Tk_Res_35 : Token
-         :=No_Token;
-      Lst_Pos_4 : Integer
-         :=0;
+         := null;
+      Tk_Pos_35 : Token_Index
+         := No_Token_Index;
+      Tk_Res_35 : Token_Index
+         := No_Token_Index;
+      Lst_Pos_4 : Token_Index
+         := No_Token_Index;
       Lst_Res_4 : List_Case_Item
-         :=null;
-      Lst_Cpos_4 : Integer
-         :=0;
-      Fncall_Pos_45 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_4 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_45 : Token_Index
+         := No_Token_Index;
       Fncall_Res_45 : Case_Item
-         :=null;
+         := null;
       Row_Subres_3_6 : List_Case_Item
-         :=null;
-      Tk_Pos_39 : Integer
-         :=0;
-      Tk_Res_39 : Token
-         :=No_Token;
-      Tk_Pos_40 : Integer
-         :=0;
-      Tk_Res_40 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_39 : Token_Index
+         := No_Token_Index;
+      Tk_Res_39 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_40 : Token_Index
+         := No_Token_Index;
+      Tk_Res_40 : Token_Index
+         := No_Token_Index;
       Transform_Res_19 : Case_Construction
-         :=null;
+         := null;
 
 
-   M       : Case_Construction_Memos.Memo_Entry :=
-      Get (Case_Construction_Transform_Parse_0_Memo, Pos);
+   M : Case_Construction_Memos.Memo_Entry := Get (Case_Construction_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -5714,7 +5607,7 @@ begin
       Transform_Res_19 := M.Instance;
       return Transform_Res_19;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_19;
    end if;
 
@@ -5737,30 +5630,35 @@ Row_Pos_23 := pos;
 
 --  Start tok_code
 
-Tk_Res_34 := Get_Token (Parser.TDH.all, Row_Pos_23);
+Tk_Res_34 := Row_Pos_23;
 
-if Tk_Res_34.Id /= QUEX_TKN_CASE then
-    Tk_Pos_34 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_34));
+begin
+   if T.Kind /= GPR_Case then
+       Tk_Pos_34 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_23 then
-        Parser.Last_Fail.Pos := Row_Pos_23;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_CASE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_34.Id;
-    end if;
-else
-    Tk_Pos_34 := Row_Pos_23 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_23 then
+           Parser.Last_Fail.Pos := Row_Pos_23;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Case;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_34 := Row_Pos_23 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_34 /= -1 then
+if Tk_Pos_34 /= No_Token_Index then
 
    Row_Pos_23 := Tk_Pos_34;
 
 
 else
-   Row_Pos_23 := -1;
+   Row_Pos_23 := No_Token_Index;
    goto Row_Exit_Label_23_0;
 
 end if;
@@ -5775,14 +5673,14 @@ Fncall_Res_39 := Variable_Reference_Transform_Parse_0(Parser, Row_Pos_23);
 Fncall_Pos_39 := Parser.Current_Pos;
 
 
-if Fncall_Pos_39 /= -1 then
+if Fncall_Pos_39 /= No_Token_Index then
 
    Row_Pos_23 := Fncall_Pos_39;
 
       Row_Subres_1_20 := Fncall_Res_39;
 
 else
-   Row_Pos_23 := -1;
+   Row_Pos_23 := No_Token_Index;
    goto Row_Exit_Label_23_0;
 
 end if;
@@ -5795,30 +5693,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_35 := Get_Token (Parser.TDH.all, Row_Pos_23);
+Tk_Res_35 := Row_Pos_23;
 
-if Tk_Res_35.Id /= QUEX_TKN_IS then
-    Tk_Pos_35 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_35));
+begin
+   if T.Kind /= GPR_Is then
+       Tk_Pos_35 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_23 then
-        Parser.Last_Fail.Pos := Row_Pos_23;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_IS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_35.Id;
-    end if;
-else
-    Tk_Pos_35 := Row_Pos_23 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_23 then
+           Parser.Last_Fail.Pos := Row_Pos_23;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Is;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_35 := Row_Pos_23 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_35 /= -1 then
+if Tk_Pos_35 /= No_Token_Index then
 
    Row_Pos_23 := Tk_Pos_35;
 
 
 else
-   Row_Pos_23 := -1;
+   Row_Pos_23 := No_Token_Index;
    goto Row_Exit_Label_23_0;
 
 end if;
@@ -5842,7 +5745,7 @@ Fncall_Res_45 := Case_Item_Transform_Parse_0(Parser, Lst_Cpos_4);
 Fncall_Pos_45 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_45 = -1;
+   exit when Fncall_Pos_45 = No_Token_Index;
 
    Lst_Pos_4 := Fncall_Pos_45;
    Lst_Cpos_4 := Fncall_Pos_45;
@@ -5871,7 +5774,7 @@ Fncall_Pos_45 := Parser.Current_Pos;
 end loop;
 
 if Lst_Res_4 /= null then
-   Lst_Res_4.Token_Data := Parser.TDH;
+   Lst_Res_4.Unit := Parser.Unit;
    Lst_Res_4.Token_Start := Row_Pos_23;
    Lst_Res_4.Token_End := (if Lst_Cpos_4 = Row_Pos_23
                         then Row_Pos_23
@@ -5882,14 +5785,14 @@ end if;
 --  End list_code
 
 
-if Lst_Pos_4 /= -1 then
+if Lst_Pos_4 /= No_Token_Index then
 
    Row_Pos_23 := Lst_Pos_4;
 
       Row_Subres_3_6 := Lst_Res_4;
 
 else
-   Row_Pos_23 := -1;
+   Row_Pos_23 := No_Token_Index;
    goto Row_Exit_Label_23_0;
 
 end if;
@@ -5902,30 +5805,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_39 := Get_Token (Parser.TDH.all, Row_Pos_23);
+Tk_Res_39 := Row_Pos_23;
 
-if Tk_Res_39.Id /= QUEX_TKN_END then
-    Tk_Pos_39 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_39));
+begin
+   if T.Kind /= GPR_End then
+       Tk_Pos_39 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_23 then
-        Parser.Last_Fail.Pos := Row_Pos_23;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_END;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_39.Id;
-    end if;
-else
-    Tk_Pos_39 := Row_Pos_23 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_23 then
+           Parser.Last_Fail.Pos := Row_Pos_23;
+           Parser.Last_Fail.Expected_Token_Id := GPR_End;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_39 := Row_Pos_23 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_39 /= -1 then
+if Tk_Pos_39 /= No_Token_Index then
 
    Row_Pos_23 := Tk_Pos_39;
 
 
 else
-   Row_Pos_23 := -1;
+   Row_Pos_23 := No_Token_Index;
    goto Row_Exit_Label_23_0;
 
 end if;
@@ -5938,30 +5846,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_40 := Get_Token (Parser.TDH.all, Row_Pos_23);
+Tk_Res_40 := Row_Pos_23;
 
-if Tk_Res_40.Id /= QUEX_TKN_CASE then
-    Tk_Pos_40 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_40));
+begin
+   if T.Kind /= GPR_Case then
+       Tk_Pos_40 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_23 then
-        Parser.Last_Fail.Pos := Row_Pos_23;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_CASE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_40.Id;
-    end if;
-else
-    Tk_Pos_40 := Row_Pos_23 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_23 then
+           Parser.Last_Fail.Pos := Row_Pos_23;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Case;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_40 := Row_Pos_23 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_40 /= -1 then
+if Tk_Pos_40 /= No_Token_Index then
 
    Row_Pos_23 := Tk_Pos_40;
 
 
 else
-   Row_Pos_23 := -1;
+   Row_Pos_23 := No_Token_Index;
    goto Row_Exit_Label_23_0;
 
 end if;
@@ -5974,12 +5887,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_23 /= -1 then
+if Row_Pos_23 /= No_Token_Index then
 
    Transform_Res_19 := Case_Construction
      (Case_Construction_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_19.Token_Data := Parser.TDH;
+   Transform_Res_19.Unit := Parser.Unit;
    Transform_Res_19.Token_Start := pos;
    Transform_Res_19.Token_End := (if Row_Pos_23 = pos
                         then pos
@@ -6009,7 +5922,7 @@ end if;
 
 
    Set (Case_Construction_Transform_Parse_0_Memo,
-        Row_Pos_23 /= -1,
+        Row_Pos_23 /= No_Token_Index,
         Transform_Res_19,
         Pos,
         Row_Pos_23);
@@ -6021,24 +5934,25 @@ end if;
 end Case_Construction_Transform_Parse_0;
 
    
+
+
 Empty_Declaration_Transform_Parse_0_Memo : Empty_Decl_Memos.Memo_Type;
 
 function Empty_Declaration_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Empty_Decl
 is
-      Row_Pos_25 : Integer
-         :=0;
-      Tk_Pos_41 : Integer
-         :=0;
-      Tk_Res_41 : Token
-         :=No_Token;
+      Row_Pos_25 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_41 : Token_Index
+         := No_Token_Index;
+      Tk_Res_41 : Token_Index
+         := No_Token_Index;
       Transform_Res_20 : Empty_Decl
-         :=null;
+         := null;
 
 
-   M       : Empty_Decl_Memos.Memo_Entry :=
-      Get (Empty_Declaration_Transform_Parse_0_Memo, Pos);
+   M : Empty_Decl_Memos.Memo_Entry := Get (Empty_Declaration_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -6047,7 +5961,7 @@ begin
       Transform_Res_20 := M.Instance;
       return Transform_Res_20;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_20;
    end if;
 
@@ -6070,30 +5984,35 @@ Row_Pos_25 := pos;
 
 --  Start tok_code
 
-Tk_Res_41 := Get_Token (Parser.TDH.all, Row_Pos_25);
+Tk_Res_41 := Row_Pos_25;
 
-if Tk_Res_41.Id /= QUEX_TKN_NULL then
-    Tk_Pos_41 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_41));
+begin
+   if T.Kind /= GPR_Null then
+       Tk_Pos_41 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_25 then
-        Parser.Last_Fail.Pos := Row_Pos_25;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_NULL;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_41.Id;
-    end if;
-else
-    Tk_Pos_41 := Row_Pos_25 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_25 then
+           Parser.Last_Fail.Pos := Row_Pos_25;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Null;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_41 := Row_Pos_25 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_41 /= -1 then
+if Tk_Pos_41 /= No_Token_Index then
 
    Row_Pos_25 := Tk_Pos_41;
 
 
 else
-   Row_Pos_25 := -1;
+   Row_Pos_25 := No_Token_Index;
    goto Row_Exit_Label_25_0;
 
 end if;
@@ -6106,12 +6025,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_25 /= -1 then
+if Row_Pos_25 /= No_Token_Index then
 
    Transform_Res_20 := Empty_Decl
      (Empty_Decl_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_20.Token_Data := Parser.TDH;
+   Transform_Res_20.Unit := Parser.Unit;
    Transform_Res_20.Token_Start := pos;
    Transform_Res_20.Token_End := (if Row_Pos_25 = pos
                         then pos
@@ -6129,7 +6048,7 @@ end if;
 
 
    Set (Empty_Declaration_Transform_Parse_0_Memo,
-        Row_Pos_25 /= -1,
+        Row_Pos_25 /= No_Token_Index,
         Transform_Res_20,
         Pos,
         Row_Pos_25);
@@ -6141,36 +6060,37 @@ end if;
 end Empty_Declaration_Transform_Parse_0;
 
    
+
+
 Simple_Declarative_Item_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
 
 function Simple_Declarative_Item_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node
 is
-      Or_Pos_2 : Integer
-         :=0;
+      Or_Pos_2 : Token_Index
+         := No_Token_Index;
       Or_Res_2 : GPR_Node
-         :=null;
-      Fncall_Pos_31 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_31 : Token_Index
+         := No_Token_Index;
       Fncall_Res_31 : Variable_Decl
-         :=null;
-      Fncall_Pos_38 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_38 : Token_Index
+         := No_Token_Index;
       Fncall_Res_38 : Attribute_Decl
-         :=null;
-      Fncall_Pos_46 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_46 : Token_Index
+         := No_Token_Index;
       Fncall_Res_46 : Case_Construction
-         :=null;
-      Fncall_Pos_47 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_47 : Token_Index
+         := No_Token_Index;
       Fncall_Res_47 : Empty_Decl
-         :=null;
+         := null;
 
 
-   M       : GPR_Node_Memos.Memo_Entry :=
-      Get (Simple_Declarative_Item_Or_Parse_0_Memo, Pos);
+   M : GPR_Node_Memos.Memo_Entry := Get (Simple_Declarative_Item_Or_Parse_0_Memo, Pos);
 
 begin
 
@@ -6179,7 +6099,7 @@ begin
       Or_Res_2 := M.Instance;
       return Or_Res_2;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Or_Res_2;
    end if;
 
@@ -6191,42 +6111,46 @@ begin
    
 --  Start or_code
 
-Or_Pos_2 := -1;
+Or_Pos_2 := No_Token_Index;
 Or_Res_2 := null;
     
 Fncall_Res_31 := Variable_Decl_Transform_Parse_0(Parser, pos);
 Fncall_Pos_31 := Parser.Current_Pos;
 
-    if Fncall_Pos_31 /= -1 then
+    if Fncall_Pos_31 /= No_Token_Index then
         Or_Pos_2 := Fncall_Pos_31;
-        Or_Res_2 := GPR_Node (Fncall_Res_31);
+        Or_Res_2 := GPR_Node
+          (Fncall_Res_31);
         goto Exit_Or_6;
     end if;
     
 Fncall_Res_38 := Attribute_Decl_Transform_Parse_0(Parser, pos);
 Fncall_Pos_38 := Parser.Current_Pos;
 
-    if Fncall_Pos_38 /= -1 then
+    if Fncall_Pos_38 /= No_Token_Index then
         Or_Pos_2 := Fncall_Pos_38;
-        Or_Res_2 := GPR_Node (Fncall_Res_38);
+        Or_Res_2 := GPR_Node
+          (Fncall_Res_38);
         goto Exit_Or_6;
     end if;
     
 Fncall_Res_46 := Case_Construction_Transform_Parse_0(Parser, pos);
 Fncall_Pos_46 := Parser.Current_Pos;
 
-    if Fncall_Pos_46 /= -1 then
+    if Fncall_Pos_46 /= No_Token_Index then
         Or_Pos_2 := Fncall_Pos_46;
-        Or_Res_2 := GPR_Node (Fncall_Res_46);
+        Or_Res_2 := GPR_Node
+          (Fncall_Res_46);
         goto Exit_Or_6;
     end if;
     
 Fncall_Res_47 := Empty_Declaration_Transform_Parse_0(Parser, pos);
 Fncall_Pos_47 := Parser.Current_Pos;
 
-    if Fncall_Pos_47 /= -1 then
+    if Fncall_Pos_47 /= No_Token_Index then
         Or_Pos_2 := Fncall_Pos_47;
-        Or_Res_2 := GPR_Node (Fncall_Res_47);
+        Or_Res_2 := GPR_Node
+          (Fncall_Res_47);
         goto Exit_Or_6;
     end if;
 <<Exit_Or_6>>
@@ -6240,7 +6164,7 @@ Fncall_Pos_47 := Parser.Current_Pos;
 
 
    Set (Simple_Declarative_Item_Or_Parse_0_Memo,
-        Or_Pos_2 /= -1,
+        Or_Pos_2 /= No_Token_Index,
         Or_Res_2,
         Pos,
         Or_Pos_2);
@@ -6252,34 +6176,35 @@ Fncall_Pos_47 := Parser.Current_Pos;
 end Simple_Declarative_Item_Or_Parse_0;
 
    
+
+
 Simple_Declarative_Items_List_Parse_0_Memo : List_GPR_Node_Memos.Memo_Type;
 
 function Simple_Declarative_Items_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_GPR_Node
 is
-      Lst_Pos_5 : Integer
-         :=0;
+      Lst_Pos_5 : Token_Index
+         := No_Token_Index;
       Lst_Res_5 : List_GPR_Node
-         :=null;
-      Lst_Cpos_1 : Integer
-         :=0;
-      Row_Pos_9 : Integer
-         :=0;
-      Fncall_Pos_48 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_1 : Token_Index
+         := No_Token_Index;
+      Row_Pos_9 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_48 : Token_Index
+         := No_Token_Index;
       Fncall_Res_48 : GPR_Node
-         :=null;
+         := null;
       Row_Subres_0_9 : GPR_Node
-         :=null;
-      Tk_Pos_42 : Integer
-         :=0;
-      Tk_Res_42 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_42 : Token_Index
+         := No_Token_Index;
+      Tk_Res_42 : Token_Index
+         := No_Token_Index;
 
 
-   M       : List_GPR_Node_Memos.Memo_Entry :=
-      Get (Simple_Declarative_Items_List_Parse_0_Memo, Pos);
+   M : List_GPR_Node_Memos.Memo_Entry := Get (Simple_Declarative_Items_List_Parse_0_Memo, Pos);
 
 begin
 
@@ -6288,7 +6213,7 @@ begin
       Lst_Res_5 := M.Instance;
       return Lst_Res_5;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Lst_Res_5;
    end if;
 
@@ -6319,14 +6244,14 @@ Fncall_Res_48 := Simple_Declarative_Item_Or_Parse_0(Parser, Row_Pos_9);
 Fncall_Pos_48 := Parser.Current_Pos;
 
 
-if Fncall_Pos_48 /= -1 then
+if Fncall_Pos_48 /= No_Token_Index then
 
    Row_Pos_9 := Fncall_Pos_48;
 
       Row_Subres_0_9 := Fncall_Res_48;
 
 else
-   Row_Pos_9 := -1;
+   Row_Pos_9 := No_Token_Index;
    goto Row_Exit_Label_9_0;
 
 end if;
@@ -6339,30 +6264,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_42 := Get_Token (Parser.TDH.all, Row_Pos_9);
+Tk_Res_42 := Row_Pos_9;
 
-if Tk_Res_42.Id /= QUEX_TKN_SEMICOLON then
-    Tk_Pos_42 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_42));
+begin
+   if T.Kind /= GPR_Semicolon then
+       Tk_Pos_42 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_9 then
-        Parser.Last_Fail.Pos := Row_Pos_9;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_SEMICOLON;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_42.Id;
-    end if;
-else
-    Tk_Pos_42 := Row_Pos_9 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_9 then
+           Parser.Last_Fail.Pos := Row_Pos_9;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Semicolon;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_42 := Row_Pos_9 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_42 /= -1 then
+if Tk_Pos_42 /= No_Token_Index then
 
    Row_Pos_9 := Tk_Pos_42;
 
 
 else
-   Row_Pos_9 := -1;
+   Row_Pos_9 := No_Token_Index;
    goto Row_Exit_Label_9_0;
 
 end if;
@@ -6375,7 +6305,7 @@ end if;
 --  End row_code
 
 
-   exit when Row_Pos_9 = -1;
+   exit when Row_Pos_9 = No_Token_Index;
 
    Lst_Pos_5 := Row_Pos_9;
    Lst_Cpos_1 := Row_Pos_9;
@@ -6404,7 +6334,7 @@ end if;
 end loop;
 
 if Lst_Res_5 /= null then
-   Lst_Res_5.Token_Data := Parser.TDH;
+   Lst_Res_5.Unit := Parser.Unit;
    Lst_Res_5.Token_Start := pos;
    Lst_Res_5.Token_End := (if Lst_Cpos_1 = pos
                         then pos
@@ -6421,7 +6351,7 @@ end if;
 
 
    Set (Simple_Declarative_Items_List_Parse_0_Memo,
-        Lst_Pos_5 /= -1,
+        Lst_Pos_5 /= No_Token_Index,
         Lst_Res_5,
         Pos,
         Lst_Pos_5);
@@ -6433,46 +6363,47 @@ end if;
 end Simple_Declarative_Items_List_Parse_0;
 
    
+
+
 Package_Spec_Transform_Parse_0_Memo : Package_Spec_Memos.Memo_Type;
 
 function Package_Spec_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Spec
 is
-      Row_Pos_7 : Integer
-         :=0;
-      Fncall_Pos_11 : Integer
-         :=0;
+      Row_Pos_7 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_11 : Token_Index
+         := No_Token_Index;
       Fncall_Res_11 : Package_Extension
-         :=null;
+         := null;
       Row_Subres_0_7 : Package_Extension
-         :=null;
-      Tk_Pos_15 : Integer
-         :=0;
-      Tk_Res_15 : Token
-         :=No_Token;
-      Fncall_Pos_49 : Integer
-         :=0;
+         := null;
+      Tk_Pos_15 : Token_Index
+         := No_Token_Index;
+      Tk_Res_15 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_49 : Token_Index
+         := No_Token_Index;
       Fncall_Res_49 : List_GPR_Node
-         :=null;
+         := null;
       Row_Subres_2_4 : List_GPR_Node
-         :=null;
-      Tk_Pos_43 : Integer
-         :=0;
-      Tk_Res_43 : Token
-         :=No_Token;
-      Fncall_Pos_50 : Integer
-         :=0;
+         := null;
+      Tk_Pos_43 : Token_Index
+         := No_Token_Index;
+      Tk_Res_43 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_50 : Token_Index
+         := No_Token_Index;
       Fncall_Res_50 : Identifier
-         :=null;
+         := null;
       Row_Subres_4_0 : Identifier
-         :=null;
+         := null;
       Transform_Res_21 : Package_Spec
-         :=null;
+         := null;
 
 
-   M       : Package_Spec_Memos.Memo_Entry :=
-      Get (Package_Spec_Transform_Parse_0_Memo, Pos);
+   M : Package_Spec_Memos.Memo_Entry := Get (Package_Spec_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -6481,7 +6412,7 @@ begin
       Transform_Res_21 := M.Instance;
       return Transform_Res_21;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_21;
    end if;
 
@@ -6510,8 +6441,9 @@ Fncall_Pos_11 := Parser.Current_Pos;
 
 
 
-if Fncall_Pos_11 = -1 then
-        Fncall_Res_11 := null;
+if Fncall_Pos_11 = No_Token_Index then
+        Fncall_Res_11 :=
+           null;
 
 
     Fncall_Pos_11 := Row_Pos_7;
@@ -6520,14 +6452,14 @@ end if;
 --  End opt_code
 
 
-if Fncall_Pos_11 /= -1 then
+if Fncall_Pos_11 /= No_Token_Index then
 
    Row_Pos_7 := Fncall_Pos_11;
 
       Row_Subres_0_7 := Fncall_Res_11;
 
 else
-   Row_Pos_7 := -1;
+   Row_Pos_7 := No_Token_Index;
    goto Row_Exit_Label_7_0;
 
 end if;
@@ -6540,30 +6472,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_15 := Get_Token (Parser.TDH.all, Row_Pos_7);
+Tk_Res_15 := Row_Pos_7;
 
-if Tk_Res_15.Id /= QUEX_TKN_IS then
-    Tk_Pos_15 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_15));
+begin
+   if T.Kind /= GPR_Is then
+       Tk_Pos_15 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_7 then
-        Parser.Last_Fail.Pos := Row_Pos_7;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_IS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_15.Id;
-    end if;
-else
-    Tk_Pos_15 := Row_Pos_7 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_7 then
+           Parser.Last_Fail.Pos := Row_Pos_7;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Is;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_15 := Row_Pos_7 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_15 /= -1 then
+if Tk_Pos_15 /= No_Token_Index then
 
    Row_Pos_7 := Tk_Pos_15;
 
 
 else
-   Row_Pos_7 := -1;
+   Row_Pos_7 := No_Token_Index;
    goto Row_Exit_Label_7_0;
 
 end if;
@@ -6578,14 +6515,14 @@ Fncall_Res_49 := Simple_Declarative_Items_List_Parse_0(Parser, Row_Pos_7);
 Fncall_Pos_49 := Parser.Current_Pos;
 
 
-if Fncall_Pos_49 /= -1 then
+if Fncall_Pos_49 /= No_Token_Index then
 
    Row_Pos_7 := Fncall_Pos_49;
 
       Row_Subres_2_4 := Fncall_Res_49;
 
 else
-   Row_Pos_7 := -1;
+   Row_Pos_7 := No_Token_Index;
    goto Row_Exit_Label_7_0;
 
 end if;
@@ -6598,30 +6535,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_43 := Get_Token (Parser.TDH.all, Row_Pos_7);
+Tk_Res_43 := Row_Pos_7;
 
-if Tk_Res_43.Id /= QUEX_TKN_END then
-    Tk_Pos_43 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_43));
+begin
+   if T.Kind /= GPR_End then
+       Tk_Pos_43 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_7 then
-        Parser.Last_Fail.Pos := Row_Pos_7;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_END;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_43.Id;
-    end if;
-else
-    Tk_Pos_43 := Row_Pos_7 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_7 then
+           Parser.Last_Fail.Pos := Row_Pos_7;
+           Parser.Last_Fail.Expected_Token_Id := GPR_End;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_43 := Row_Pos_7 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_43 /= -1 then
+if Tk_Pos_43 /= No_Token_Index then
 
    Row_Pos_7 := Tk_Pos_43;
 
 
 else
-   Row_Pos_7 := -1;
+   Row_Pos_7 := No_Token_Index;
    goto Row_Exit_Label_7_0;
 
 end if;
@@ -6636,14 +6578,14 @@ Fncall_Res_50 := Identifier_Transform_Parse_0(Parser, Row_Pos_7);
 Fncall_Pos_50 := Parser.Current_Pos;
 
 
-if Fncall_Pos_50 /= -1 then
+if Fncall_Pos_50 /= No_Token_Index then
 
    Row_Pos_7 := Fncall_Pos_50;
 
       Row_Subres_4_0 := Fncall_Res_50;
 
 else
-   Row_Pos_7 := -1;
+   Row_Pos_7 := No_Token_Index;
    goto Row_Exit_Label_7_0;
 
 end if;
@@ -6656,12 +6598,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_7 /= -1 then
+if Row_Pos_7 /= No_Token_Index then
 
    Transform_Res_21 := Package_Spec
      (Package_Spec_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_21.Token_Data := Parser.TDH;
+   Transform_Res_21.Unit := Parser.Unit;
    Transform_Res_21.Token_Start := pos;
    Transform_Res_21.Token_End := (if Row_Pos_7 = pos
                         then pos
@@ -6697,7 +6639,7 @@ end if;
 
 
    Set (Package_Spec_Transform_Parse_0_Memo,
-        Row_Pos_7 /= -1,
+        Row_Pos_7 /= No_Token_Index,
         Transform_Res_21,
         Pos,
         Row_Pos_7);
@@ -6709,44 +6651,45 @@ end if;
 end Package_Spec_Transform_Parse_0;
 
    
+
+
 Package_Decl_Transform_Parse_0_Memo : Package_Decl_Memos.Memo_Type;
 
 function Package_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Package_Decl
 is
-      Row_Pos_6 : Integer
-         :=0;
-      Tk_Pos_12 : Integer
-         :=0;
-      Tk_Res_12 : Token
-         :=No_Token;
-      Fncall_Pos_7 : Integer
-         :=0;
+      Row_Pos_6 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_12 : Token_Index
+         := No_Token_Index;
+      Tk_Res_12 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_7 : Token_Index
+         := No_Token_Index;
       Fncall_Res_7 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_4 : Identifier
-         :=null;
-      Or_Pos_1 : Integer
-         :=0;
+         := null;
+      Or_Pos_1 : Token_Index
+         := No_Token_Index;
       Or_Res_1 : GPR_Node
-         :=null;
-      Fncall_Pos_8 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_8 : Token_Index
+         := No_Token_Index;
       Fncall_Res_8 : Package_Renaming
-         :=null;
-      Fncall_Pos_51 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_51 : Token_Index
+         := No_Token_Index;
       Fncall_Res_51 : Package_Spec
-         :=null;
+         := null;
       Row_Subres_2_3 : GPR_Node
-         :=null;
+         := null;
       Transform_Res_22 : Package_Decl
-         :=null;
+         := null;
 
 
-   M       : Package_Decl_Memos.Memo_Entry :=
-      Get (Package_Decl_Transform_Parse_0_Memo, Pos);
+   M : Package_Decl_Memos.Memo_Entry := Get (Package_Decl_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -6755,7 +6698,7 @@ begin
       Transform_Res_22 := M.Instance;
       return Transform_Res_22;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_22;
    end if;
 
@@ -6778,30 +6721,35 @@ Row_Pos_6 := pos;
 
 --  Start tok_code
 
-Tk_Res_12 := Get_Token (Parser.TDH.all, Row_Pos_6);
+Tk_Res_12 := Row_Pos_6;
 
-if Tk_Res_12.Id /= QUEX_TKN_PACKAGE then
-    Tk_Pos_12 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_12));
+begin
+   if T.Kind /= GPR_Package then
+       Tk_Pos_12 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_6 then
-        Parser.Last_Fail.Pos := Row_Pos_6;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PACKAGE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_12.Id;
-    end if;
-else
-    Tk_Pos_12 := Row_Pos_6 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_6 then
+           Parser.Last_Fail.Pos := Row_Pos_6;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Package;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_12 := Row_Pos_6 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_12 /= -1 then
+if Tk_Pos_12 /= No_Token_Index then
 
    Row_Pos_6 := Tk_Pos_12;
 
 
 else
-   Row_Pos_6 := -1;
+   Row_Pos_6 := No_Token_Index;
    goto Row_Exit_Label_6_0;
 
 end if;
@@ -6816,14 +6764,14 @@ Fncall_Res_7 := Identifier_Transform_Parse_0(Parser, Row_Pos_6);
 Fncall_Pos_7 := Parser.Current_Pos;
 
 
-if Fncall_Pos_7 /= -1 then
+if Fncall_Pos_7 /= No_Token_Index then
 
    Row_Pos_6 := Fncall_Pos_7;
 
       Row_Subres_1_4 := Fncall_Res_7;
 
 else
-   Row_Pos_6 := -1;
+   Row_Pos_6 := No_Token_Index;
    goto Row_Exit_Label_6_0;
 
 end if;
@@ -6836,24 +6784,26 @@ end if;
 
 --  Start or_code
 
-Or_Pos_1 := -1;
+Or_Pos_1 := No_Token_Index;
 Or_Res_1 := null;
     
 Fncall_Res_8 := Package_Renaming_Transform_Parse_0(Parser, Row_Pos_6);
 Fncall_Pos_8 := Parser.Current_Pos;
 
-    if Fncall_Pos_8 /= -1 then
+    if Fncall_Pos_8 /= No_Token_Index then
         Or_Pos_1 := Fncall_Pos_8;
-        Or_Res_1 := GPR_Node (Fncall_Res_8);
+        Or_Res_1 := GPR_Node
+          (Fncall_Res_8);
         goto Exit_Or_7;
     end if;
     
 Fncall_Res_51 := Package_Spec_Transform_Parse_0(Parser, Row_Pos_6);
 Fncall_Pos_51 := Parser.Current_Pos;
 
-    if Fncall_Pos_51 /= -1 then
+    if Fncall_Pos_51 /= No_Token_Index then
         Or_Pos_1 := Fncall_Pos_51;
-        Or_Res_1 := GPR_Node (Fncall_Res_51);
+        Or_Res_1 := GPR_Node
+          (Fncall_Res_51);
         goto Exit_Or_7;
     end if;
 <<Exit_Or_7>>
@@ -6861,14 +6811,14 @@ Fncall_Pos_51 := Parser.Current_Pos;
 --  End or_code
 
 
-if Or_Pos_1 /= -1 then
+if Or_Pos_1 /= No_Token_Index then
 
    Row_Pos_6 := Or_Pos_1;
 
       Row_Subres_2_3 := Or_Res_1;
 
 else
-   Row_Pos_6 := -1;
+   Row_Pos_6 := No_Token_Index;
    goto Row_Exit_Label_6_0;
 
 end if;
@@ -6881,12 +6831,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_6 /= -1 then
+if Row_Pos_6 /= No_Token_Index then
 
    Transform_Res_22 := Package_Decl
      (Package_Decl_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_22.Token_Data := Parser.TDH;
+   Transform_Res_22.Unit := Parser.Unit;
    Transform_Res_22.Token_Start := pos;
    Transform_Res_22.Token_End := (if Row_Pos_6 = pos
                         then pos
@@ -6916,7 +6866,7 @@ end if;
 
 
    Set (Package_Decl_Transform_Parse_0_Memo,
-        Row_Pos_6 /= -1,
+        Row_Pos_6 /= No_Token_Index,
         Transform_Res_22,
         Pos,
         Row_Pos_6);
@@ -6928,58 +6878,59 @@ end if;
 end Package_Decl_Transform_Parse_0;
 
    
+
+
 Typed_String_Decl_Transform_Parse_0_Memo : Typed_String_Decl_Memos.Memo_Type;
 
 function Typed_String_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Typed_String_Decl
 is
-      Row_Pos_26 : Integer
-         :=0;
-      Tk_Pos_44 : Integer
-         :=0;
-      Tk_Res_44 : Token
-         :=No_Token;
-      Fncall_Pos_53 : Integer
-         :=0;
+      Row_Pos_26 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_44 : Token_Index
+         := No_Token_Index;
+      Tk_Res_44 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_53 : Token_Index
+         := No_Token_Index;
       Fncall_Res_53 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_22 : Identifier
-         :=null;
-      Tk_Pos_45 : Integer
-         :=0;
-      Tk_Res_45 : Token
-         :=No_Token;
-      Tk_Pos_46 : Integer
-         :=0;
-      Tk_Res_46 : Token
-         :=No_Token;
-      Lst_Pos_6 : Integer
-         :=0;
+         := null;
+      Tk_Pos_45 : Token_Index
+         := No_Token_Index;
+      Tk_Res_45 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_46 : Token_Index
+         := No_Token_Index;
+      Tk_Res_46 : Token_Index
+         := No_Token_Index;
+      Lst_Pos_6 : Token_Index
+         := No_Token_Index;
       Lst_Res_6 : List_String_Literal
-         :=null;
-      Lst_Cpos_6 : Integer
-         :=0;
-      Fncall_Pos_54 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_6 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_54 : Token_Index
+         := No_Token_Index;
       Fncall_Res_54 : String_Literal
-         :=null;
-      Tk_Pos_47 : Integer
-         :=0;
-      Tk_Res_47 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_47 : Token_Index
+         := No_Token_Index;
+      Tk_Res_47 : Token_Index
+         := No_Token_Index;
       Row_Subres_4_4 : List_String_Literal
-         :=null;
-      Tk_Pos_48 : Integer
-         :=0;
-      Tk_Res_48 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_48 : Token_Index
+         := No_Token_Index;
+      Tk_Res_48 : Token_Index
+         := No_Token_Index;
       Transform_Res_23 : Typed_String_Decl
-         :=null;
+         := null;
 
 
-   M       : Typed_String_Decl_Memos.Memo_Entry :=
-      Get (Typed_String_Decl_Transform_Parse_0_Memo, Pos);
+   M : Typed_String_Decl_Memos.Memo_Entry := Get (Typed_String_Decl_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -6988,7 +6939,7 @@ begin
       Transform_Res_23 := M.Instance;
       return Transform_Res_23;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_23;
    end if;
 
@@ -7011,30 +6962,35 @@ Row_Pos_26 := pos;
 
 --  Start tok_code
 
-Tk_Res_44 := Get_Token (Parser.TDH.all, Row_Pos_26);
+Tk_Res_44 := Row_Pos_26;
 
-if Tk_Res_44.Id /= QUEX_TKN_TYPE then
-    Tk_Pos_44 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_44));
+begin
+   if T.Kind /= GPR_Type then
+       Tk_Pos_44 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_26 then
-        Parser.Last_Fail.Pos := Row_Pos_26;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_TYPE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_44.Id;
-    end if;
-else
-    Tk_Pos_44 := Row_Pos_26 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_26 then
+           Parser.Last_Fail.Pos := Row_Pos_26;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Type;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_44 := Row_Pos_26 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_44 /= -1 then
+if Tk_Pos_44 /= No_Token_Index then
 
    Row_Pos_26 := Tk_Pos_44;
 
 
 else
-   Row_Pos_26 := -1;
+   Row_Pos_26 := No_Token_Index;
    goto Row_Exit_Label_26_0;
 
 end if;
@@ -7049,14 +7005,14 @@ Fncall_Res_53 := Identifier_Transform_Parse_0(Parser, Row_Pos_26);
 Fncall_Pos_53 := Parser.Current_Pos;
 
 
-if Fncall_Pos_53 /= -1 then
+if Fncall_Pos_53 /= No_Token_Index then
 
    Row_Pos_26 := Fncall_Pos_53;
 
       Row_Subres_1_22 := Fncall_Res_53;
 
 else
-   Row_Pos_26 := -1;
+   Row_Pos_26 := No_Token_Index;
    goto Row_Exit_Label_26_0;
 
 end if;
@@ -7069,30 +7025,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_45 := Get_Token (Parser.TDH.all, Row_Pos_26);
+Tk_Res_45 := Row_Pos_26;
 
-if Tk_Res_45.Id /= QUEX_TKN_IS then
-    Tk_Pos_45 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_45));
+begin
+   if T.Kind /= GPR_Is then
+       Tk_Pos_45 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_26 then
-        Parser.Last_Fail.Pos := Row_Pos_26;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_IS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_45.Id;
-    end if;
-else
-    Tk_Pos_45 := Row_Pos_26 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_26 then
+           Parser.Last_Fail.Pos := Row_Pos_26;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Is;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_45 := Row_Pos_26 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_45 /= -1 then
+if Tk_Pos_45 /= No_Token_Index then
 
    Row_Pos_26 := Tk_Pos_45;
 
 
 else
-   Row_Pos_26 := -1;
+   Row_Pos_26 := No_Token_Index;
    goto Row_Exit_Label_26_0;
 
 end if;
@@ -7105,30 +7066,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_46 := Get_Token (Parser.TDH.all, Row_Pos_26);
+Tk_Res_46 := Row_Pos_26;
 
-if Tk_Res_46.Id /= QUEX_TKN_PAR_OPEN then
-    Tk_Pos_46 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_46));
+begin
+   if T.Kind /= GPR_Par_Open then
+       Tk_Pos_46 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_26 then
-        Parser.Last_Fail.Pos := Row_Pos_26;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_OPEN;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_46.Id;
-    end if;
-else
-    Tk_Pos_46 := Row_Pos_26 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_26 then
+           Parser.Last_Fail.Pos := Row_Pos_26;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Open;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_46 := Row_Pos_26 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_46 /= -1 then
+if Tk_Pos_46 /= No_Token_Index then
 
    Row_Pos_26 := Tk_Pos_46;
 
 
 else
-   Row_Pos_26 := -1;
+   Row_Pos_26 := No_Token_Index;
    goto Row_Exit_Label_26_0;
 
 end if;
@@ -7141,7 +7107,7 @@ end if;
 
 --  Start list_code
 
-    Lst_Pos_6 := -1;
+    Lst_Pos_6 := No_Token_Index;
 
 Lst_Res_6 := null;
 Lst_Cpos_6 := Row_Pos_26;
@@ -7152,7 +7118,7 @@ Fncall_Res_54 := String_Literal_Transform_Parse_0(Parser, Lst_Cpos_6);
 Fncall_Pos_54 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_54 = -1;
+   exit when Fncall_Pos_54 = No_Token_Index;
 
    Lst_Pos_6 := Fncall_Pos_54;
    Lst_Cpos_6 := Fncall_Pos_54;
@@ -7180,23 +7146,28 @@ Fncall_Pos_54 := Parser.Current_Pos;
       
 --  Start tok_code
 
-Tk_Res_47 := Get_Token (Parser.TDH.all, Lst_Cpos_6);
+Tk_Res_47 := Lst_Cpos_6;
 
-if Tk_Res_47.Id /= QUEX_TKN_COMMA then
-    Tk_Pos_47 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_47));
+begin
+   if T.Kind /= GPR_Comma then
+       Tk_Pos_47 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Lst_Cpos_6 then
-        Parser.Last_Fail.Pos := Lst_Cpos_6;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_COMMA;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_47.Id;
-    end if;
-else
-    Tk_Pos_47 := Lst_Cpos_6 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Lst_Cpos_6 then
+           Parser.Last_Fail.Pos := Lst_Cpos_6;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Comma;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_47 := Lst_Cpos_6 + 1;
+   end if;
+end;
 
 --  End tok_code
 
-      if Tk_Pos_47 /= -1 then
+      if Tk_Pos_47 /= No_Token_Index then
           Lst_Cpos_6 := Tk_Pos_47;
       else
          exit;
@@ -7205,7 +7176,7 @@ end if;
 end loop;
 
 if Lst_Res_6 /= null then
-   Lst_Res_6.Token_Data := Parser.TDH;
+   Lst_Res_6.Unit := Parser.Unit;
    Lst_Res_6.Token_Start := Row_Pos_26;
    Lst_Res_6.Token_End := (if Lst_Cpos_6 = Row_Pos_26
                         then Row_Pos_26
@@ -7216,14 +7187,14 @@ end if;
 --  End list_code
 
 
-if Lst_Pos_6 /= -1 then
+if Lst_Pos_6 /= No_Token_Index then
 
    Row_Pos_26 := Lst_Pos_6;
 
       Row_Subres_4_4 := Lst_Res_6;
 
 else
-   Row_Pos_26 := -1;
+   Row_Pos_26 := No_Token_Index;
    goto Row_Exit_Label_26_0;
 
 end if;
@@ -7236,30 +7207,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_48 := Get_Token (Parser.TDH.all, Row_Pos_26);
+Tk_Res_48 := Row_Pos_26;
 
-if Tk_Res_48.Id /= QUEX_TKN_PAR_CLOSE then
-    Tk_Pos_48 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_48));
+begin
+   if T.Kind /= GPR_Par_Close then
+       Tk_Pos_48 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_26 then
-        Parser.Last_Fail.Pos := Row_Pos_26;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PAR_CLOSE;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_48.Id;
-    end if;
-else
-    Tk_Pos_48 := Row_Pos_26 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_26 then
+           Parser.Last_Fail.Pos := Row_Pos_26;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Par_Close;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_48 := Row_Pos_26 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_48 /= -1 then
+if Tk_Pos_48 /= No_Token_Index then
 
    Row_Pos_26 := Tk_Pos_48;
 
 
 else
-   Row_Pos_26 := -1;
+   Row_Pos_26 := No_Token_Index;
    goto Row_Exit_Label_26_0;
 
 end if;
@@ -7272,12 +7248,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_26 /= -1 then
+if Row_Pos_26 /= No_Token_Index then
 
    Transform_Res_23 := Typed_String_Decl
      (Typed_String_Decl_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_23.Token_Data := Parser.TDH;
+   Transform_Res_23.Unit := Parser.Unit;
    Transform_Res_23.Token_Start := pos;
    Transform_Res_23.Token_End := (if Row_Pos_26 = pos
                         then pos
@@ -7307,7 +7283,7 @@ end if;
 
 
    Set (Typed_String_Decl_Transform_Parse_0_Memo,
-        Row_Pos_26 /= -1,
+        Row_Pos_26 /= No_Token_Index,
         Transform_Res_23,
         Pos,
         Row_Pos_26);
@@ -7319,32 +7295,33 @@ end if;
 end Typed_String_Decl_Transform_Parse_0;
 
    
+
+
 Declarative_Item_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
 
 function Declarative_Item_Or_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return GPR_Node
 is
-      Or_Pos_8 : Integer
-         :=0;
+      Or_Pos_8 : Token_Index
+         := No_Token_Index;
       Or_Res_8 : GPR_Node
-         :=null;
-      Fncall_Pos_52 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_52 : Token_Index
+         := No_Token_Index;
       Fncall_Res_52 : GPR_Node
-         :=null;
-      Fncall_Pos_55 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_55 : Token_Index
+         := No_Token_Index;
       Fncall_Res_55 : Typed_String_Decl
-         :=null;
-      Fncall_Pos_56 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_56 : Token_Index
+         := No_Token_Index;
       Fncall_Res_56 : Package_Decl
-         :=null;
+         := null;
 
 
-   M       : GPR_Node_Memos.Memo_Entry :=
-      Get (Declarative_Item_Or_Parse_0_Memo, Pos);
+   M : GPR_Node_Memos.Memo_Entry := Get (Declarative_Item_Or_Parse_0_Memo, Pos);
 
 begin
 
@@ -7353,7 +7330,7 @@ begin
       Or_Res_8 := M.Instance;
       return Or_Res_8;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Or_Res_8;
    end if;
 
@@ -7365,33 +7342,36 @@ begin
    
 --  Start or_code
 
-Or_Pos_8 := -1;
+Or_Pos_8 := No_Token_Index;
 Or_Res_8 := null;
     
 Fncall_Res_52 := Simple_Declarative_Item_Or_Parse_0(Parser, pos);
 Fncall_Pos_52 := Parser.Current_Pos;
 
-    if Fncall_Pos_52 /= -1 then
+    if Fncall_Pos_52 /= No_Token_Index then
         Or_Pos_8 := Fncall_Pos_52;
-        Or_Res_8 := GPR_Node (Fncall_Res_52);
+        Or_Res_8 := GPR_Node
+          (Fncall_Res_52);
         goto Exit_Or_8;
     end if;
     
 Fncall_Res_55 := Typed_String_Decl_Transform_Parse_0(Parser, pos);
 Fncall_Pos_55 := Parser.Current_Pos;
 
-    if Fncall_Pos_55 /= -1 then
+    if Fncall_Pos_55 /= No_Token_Index then
         Or_Pos_8 := Fncall_Pos_55;
-        Or_Res_8 := GPR_Node (Fncall_Res_55);
+        Or_Res_8 := GPR_Node
+          (Fncall_Res_55);
         goto Exit_Or_8;
     end if;
     
 Fncall_Res_56 := Package_Decl_Transform_Parse_0(Parser, pos);
 Fncall_Pos_56 := Parser.Current_Pos;
 
-    if Fncall_Pos_56 /= -1 then
+    if Fncall_Pos_56 /= No_Token_Index then
         Or_Pos_8 := Fncall_Pos_56;
-        Or_Res_8 := GPR_Node (Fncall_Res_56);
+        Or_Res_8 := GPR_Node
+          (Fncall_Res_56);
         goto Exit_Or_8;
     end if;
 <<Exit_Or_8>>
@@ -7405,7 +7385,7 @@ Fncall_Pos_56 := Parser.Current_Pos;
 
 
    Set (Declarative_Item_Or_Parse_0_Memo,
-        Or_Pos_8 /= -1,
+        Or_Pos_8 /= No_Token_Index,
         Or_Res_8,
         Pos,
         Or_Pos_8);
@@ -7417,48 +7397,49 @@ Fncall_Pos_56 := Parser.Current_Pos;
 end Declarative_Item_Or_Parse_0;
 
    
+
+
 With_Decl_Transform_Parse_0_Memo : With_Decl_Memos.Memo_Type;
 
 function With_Decl_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return With_Decl
 is
-      Row_Pos_28 : Integer
-         :=0;
-      Tk_Pos_49 : Integer
-         :=0;
-      Tk_Res_49 : Token
-         :=No_Token;
+      Row_Pos_28 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_49 : Token_Index
+         := No_Token_Index;
+      Tk_Res_49 : Token_Index
+         := No_Token_Index;
       Opt_Bool_Res_8 : Boolean
-         :=false;
+         := false;
       Row_Subres_0_28 : Boolean
-         :=false;
-      Tk_Pos_50 : Integer
-         :=0;
-      Tk_Res_50 : Token
-         :=No_Token;
-      Lst_Pos_7 : Integer
-         :=0;
+         := false;
+      Tk_Pos_50 : Token_Index
+         := No_Token_Index;
+      Tk_Res_50 : Token_Index
+         := No_Token_Index;
+      Lst_Pos_7 : Token_Index
+         := No_Token_Index;
       Lst_Res_7 : List_String_Literal
-         :=null;
-      Lst_Cpos_8 : Integer
-         :=0;
-      Fncall_Pos_57 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_8 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_57 : Token_Index
+         := No_Token_Index;
       Fncall_Res_57 : String_Literal
-         :=null;
-      Tk_Pos_51 : Integer
-         :=0;
-      Tk_Res_51 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_51 : Token_Index
+         := No_Token_Index;
+      Tk_Res_51 : Token_Index
+         := No_Token_Index;
       Row_Subres_2_15 : List_String_Literal
-         :=null;
+         := null;
       Transform_Res_24 : With_Decl
-         :=null;
+         := null;
 
 
-   M       : With_Decl_Memos.Memo_Entry :=
-      Get (With_Decl_Transform_Parse_0_Memo, Pos);
+   M : With_Decl_Memos.Memo_Entry := Get (With_Decl_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -7467,7 +7448,7 @@ begin
       Transform_Res_24 := M.Instance;
       return Transform_Res_24;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_24;
    end if;
 
@@ -7493,26 +7474,31 @@ Row_Pos_28 := pos;
 
 --  Start tok_code
 
-Tk_Res_49 := Get_Token (Parser.TDH.all, Row_Pos_28);
+Tk_Res_49 := Row_Pos_28;
 
-if Tk_Res_49.Id /= QUEX_TKN_LIMITED then
-    Tk_Pos_49 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_49));
+begin
+   if T.Kind /= GPR_Limited then
+       Tk_Pos_49 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_28 then
-        Parser.Last_Fail.Pos := Row_Pos_28;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_LIMITED;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_49.Id;
-    end if;
-else
-    Tk_Pos_49 := Row_Pos_28 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_28 then
+           Parser.Last_Fail.Pos := Row_Pos_28;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Limited;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_49 := Row_Pos_28 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
     Opt_Bool_Res_8 := True;
 
-if Tk_Pos_49 = -1 then
+if Tk_Pos_49 = No_Token_Index then
         Opt_Bool_Res_8 := False;
 
 
@@ -7522,14 +7508,14 @@ end if;
 --  End opt_code
 
 
-if Tk_Pos_49 /= -1 then
+if Tk_Pos_49 /= No_Token_Index then
 
    Row_Pos_28 := Tk_Pos_49;
 
       Row_Subres_0_28 := Opt_Bool_Res_8;
 
 else
-   Row_Pos_28 := -1;
+   Row_Pos_28 := No_Token_Index;
    goto Row_Exit_Label_28_0;
 
 end if;
@@ -7542,30 +7528,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_50 := Get_Token (Parser.TDH.all, Row_Pos_28);
+Tk_Res_50 := Row_Pos_28;
 
-if Tk_Res_50.Id /= QUEX_TKN_WITH then
-    Tk_Pos_50 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_50));
+begin
+   if T.Kind /= GPR_With then
+       Tk_Pos_50 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_28 then
-        Parser.Last_Fail.Pos := Row_Pos_28;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_WITH;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_50.Id;
-    end if;
-else
-    Tk_Pos_50 := Row_Pos_28 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_28 then
+           Parser.Last_Fail.Pos := Row_Pos_28;
+           Parser.Last_Fail.Expected_Token_Id := GPR_With;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_50 := Row_Pos_28 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_50 /= -1 then
+if Tk_Pos_50 /= No_Token_Index then
 
    Row_Pos_28 := Tk_Pos_50;
 
 
 else
-   Row_Pos_28 := -1;
+   Row_Pos_28 := No_Token_Index;
    goto Row_Exit_Label_28_0;
 
 end if;
@@ -7578,7 +7569,7 @@ end if;
 
 --  Start list_code
 
-    Lst_Pos_7 := -1;
+    Lst_Pos_7 := No_Token_Index;
 
 Lst_Res_7 := null;
 Lst_Cpos_8 := Row_Pos_28;
@@ -7589,7 +7580,7 @@ Fncall_Res_57 := String_Literal_Transform_Parse_0(Parser, Lst_Cpos_8);
 Fncall_Pos_57 := Parser.Current_Pos;
 
 
-   exit when Fncall_Pos_57 = -1;
+   exit when Fncall_Pos_57 = No_Token_Index;
 
    Lst_Pos_7 := Fncall_Pos_57;
    Lst_Cpos_8 := Fncall_Pos_57;
@@ -7617,23 +7608,28 @@ Fncall_Pos_57 := Parser.Current_Pos;
       
 --  Start tok_code
 
-Tk_Res_51 := Get_Token (Parser.TDH.all, Lst_Cpos_8);
+Tk_Res_51 := Lst_Cpos_8;
 
-if Tk_Res_51.Id /= QUEX_TKN_COMMA then
-    Tk_Pos_51 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_51));
+begin
+   if T.Kind /= GPR_Comma then
+       Tk_Pos_51 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Lst_Cpos_8 then
-        Parser.Last_Fail.Pos := Lst_Cpos_8;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_COMMA;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_51.Id;
-    end if;
-else
-    Tk_Pos_51 := Lst_Cpos_8 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Lst_Cpos_8 then
+           Parser.Last_Fail.Pos := Lst_Cpos_8;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Comma;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_51 := Lst_Cpos_8 + 1;
+   end if;
+end;
 
 --  End tok_code
 
-      if Tk_Pos_51 /= -1 then
+      if Tk_Pos_51 /= No_Token_Index then
           Lst_Cpos_8 := Tk_Pos_51;
       else
          exit;
@@ -7642,7 +7638,7 @@ end if;
 end loop;
 
 if Lst_Res_7 /= null then
-   Lst_Res_7.Token_Data := Parser.TDH;
+   Lst_Res_7.Unit := Parser.Unit;
    Lst_Res_7.Token_Start := Row_Pos_28;
    Lst_Res_7.Token_End := (if Lst_Cpos_8 = Row_Pos_28
                         then Row_Pos_28
@@ -7653,14 +7649,14 @@ end if;
 --  End list_code
 
 
-if Lst_Pos_7 /= -1 then
+if Lst_Pos_7 /= No_Token_Index then
 
    Row_Pos_28 := Lst_Pos_7;
 
       Row_Subres_2_15 := Lst_Res_7;
 
 else
-   Row_Pos_28 := -1;
+   Row_Pos_28 := No_Token_Index;
    goto Row_Exit_Label_28_0;
 
 end if;
@@ -7673,12 +7669,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_28 /= -1 then
+if Row_Pos_28 /= No_Token_Index then
 
    Transform_Res_24 := With_Decl
      (With_Decl_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_24.Token_Data := Parser.TDH;
+   Transform_Res_24.Unit := Parser.Unit;
    Transform_Res_24.Token_Start := pos;
    Transform_Res_24.Token_End := (if Row_Pos_28 = pos
                         then pos
@@ -7705,7 +7701,7 @@ end if;
 
 
    Set (With_Decl_Transform_Parse_0_Memo,
-        Row_Pos_28 /= -1,
+        Row_Pos_28 /= No_Token_Index,
         Transform_Res_24,
         Pos,
         Row_Pos_28);
@@ -7717,34 +7713,35 @@ end if;
 end With_Decl_Transform_Parse_0;
 
    
+
+
 Context_Clauses_List_Parse_0_Memo : List_With_Decl_Memos.Memo_Type;
 
 function Context_Clauses_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_With_Decl
 is
-      Lst_Pos_8 : Integer
-         :=0;
+      Lst_Pos_8 : Token_Index
+         := No_Token_Index;
       Lst_Res_8 : List_With_Decl
-         :=null;
-      Lst_Cpos_7 : Integer
-         :=0;
-      Row_Pos_27 : Integer
-         :=0;
-      Fncall_Pos_58 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_7 : Token_Index
+         := No_Token_Index;
+      Row_Pos_27 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_58 : Token_Index
+         := No_Token_Index;
       Fncall_Res_58 : With_Decl
-         :=null;
+         := null;
       Row_Subres_0_27 : With_Decl
-         :=null;
-      Tk_Pos_52 : Integer
-         :=0;
-      Tk_Res_52 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_52 : Token_Index
+         := No_Token_Index;
+      Tk_Res_52 : Token_Index
+         := No_Token_Index;
 
 
-   M       : List_With_Decl_Memos.Memo_Entry :=
-      Get (Context_Clauses_List_Parse_0_Memo, Pos);
+   M : List_With_Decl_Memos.Memo_Entry := Get (Context_Clauses_List_Parse_0_Memo, Pos);
 
 begin
 
@@ -7753,7 +7750,7 @@ begin
       Lst_Res_8 := M.Instance;
       return Lst_Res_8;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Lst_Res_8;
    end if;
 
@@ -7784,14 +7781,14 @@ Fncall_Res_58 := With_Decl_Transform_Parse_0(Parser, Row_Pos_27);
 Fncall_Pos_58 := Parser.Current_Pos;
 
 
-if Fncall_Pos_58 /= -1 then
+if Fncall_Pos_58 /= No_Token_Index then
 
    Row_Pos_27 := Fncall_Pos_58;
 
       Row_Subres_0_27 := Fncall_Res_58;
 
 else
-   Row_Pos_27 := -1;
+   Row_Pos_27 := No_Token_Index;
    goto Row_Exit_Label_27_0;
 
 end if;
@@ -7804,30 +7801,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_52 := Get_Token (Parser.TDH.all, Row_Pos_27);
+Tk_Res_52 := Row_Pos_27;
 
-if Tk_Res_52.Id /= QUEX_TKN_SEMICOLON then
-    Tk_Pos_52 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_52));
+begin
+   if T.Kind /= GPR_Semicolon then
+       Tk_Pos_52 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_27 then
-        Parser.Last_Fail.Pos := Row_Pos_27;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_SEMICOLON;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_52.Id;
-    end if;
-else
-    Tk_Pos_52 := Row_Pos_27 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_27 then
+           Parser.Last_Fail.Pos := Row_Pos_27;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Semicolon;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_52 := Row_Pos_27 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_52 /= -1 then
+if Tk_Pos_52 /= No_Token_Index then
 
    Row_Pos_27 := Tk_Pos_52;
 
 
 else
-   Row_Pos_27 := -1;
+   Row_Pos_27 := No_Token_Index;
    goto Row_Exit_Label_27_0;
 
 end if;
@@ -7840,7 +7842,7 @@ end if;
 --  End row_code
 
 
-   exit when Row_Pos_27 = -1;
+   exit when Row_Pos_27 = No_Token_Index;
 
    Lst_Pos_8 := Row_Pos_27;
    Lst_Cpos_7 := Row_Pos_27;
@@ -7869,7 +7871,7 @@ end if;
 end loop;
 
 if Lst_Res_8 /= null then
-   Lst_Res_8.Token_Data := Parser.TDH;
+   Lst_Res_8.Unit := Parser.Unit;
    Lst_Res_8.Token_Start := pos;
    Lst_Res_8.Token_End := (if Lst_Cpos_7 = pos
                         then pos
@@ -7886,7 +7888,7 @@ end if;
 
 
    Set (Context_Clauses_List_Parse_0_Memo,
-        Lst_Pos_8 /= -1,
+        Lst_Pos_8 /= No_Token_Index,
         Lst_Res_8,
         Pos,
         Lst_Pos_8);
@@ -7898,24 +7900,25 @@ end if;
 end Context_Clauses_List_Parse_0;
 
    
+
+
 Abstract_Present_Transform_Parse_0_Memo : Abstract_Present_Memos.Memo_Type;
 
 function Abstract_Present_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Abstract_Present
 is
-      Row_Pos_29 : Integer
-         :=0;
-      Tk_Pos_53 : Integer
-         :=0;
-      Tk_Res_53 : Token
-         :=No_Token;
+      Row_Pos_29 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_53 : Token_Index
+         := No_Token_Index;
+      Tk_Res_53 : Token_Index
+         := No_Token_Index;
       Transform_Res_25 : Abstract_Present
-         :=null;
+         := null;
 
 
-   M       : Abstract_Present_Memos.Memo_Entry :=
-      Get (Abstract_Present_Transform_Parse_0_Memo, Pos);
+   M : Abstract_Present_Memos.Memo_Entry := Get (Abstract_Present_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -7924,7 +7927,7 @@ begin
       Transform_Res_25 := M.Instance;
       return Transform_Res_25;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_25;
    end if;
 
@@ -7947,30 +7950,35 @@ Row_Pos_29 := pos;
 
 --  Start tok_code
 
-Tk_Res_53 := Get_Token (Parser.TDH.all, Row_Pos_29);
+Tk_Res_53 := Row_Pos_29;
 
-if Tk_Res_53.Id /= QUEX_TKN_ABSTRACT then
-    Tk_Pos_53 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_53));
+begin
+   if T.Kind /= GPR_Abstract then
+       Tk_Pos_53 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_29 then
-        Parser.Last_Fail.Pos := Row_Pos_29;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_ABSTRACT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_53.Id;
-    end if;
-else
-    Tk_Pos_53 := Row_Pos_29 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_29 then
+           Parser.Last_Fail.Pos := Row_Pos_29;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Abstract;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_53 := Row_Pos_29 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_53 /= -1 then
+if Tk_Pos_53 /= No_Token_Index then
 
    Row_Pos_29 := Tk_Pos_53;
 
 
 else
-   Row_Pos_29 := -1;
+   Row_Pos_29 := No_Token_Index;
    goto Row_Exit_Label_29_0;
 
 end if;
@@ -7983,12 +7991,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_29 /= -1 then
+if Row_Pos_29 /= No_Token_Index then
 
    Transform_Res_25 := Abstract_Present
      (Abstract_Present_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_25.Token_Data := Parser.TDH;
+   Transform_Res_25.Unit := Parser.Unit;
    Transform_Res_25.Token_Start := pos;
    Transform_Res_25.Token_End := (if Row_Pos_29 = pos
                         then pos
@@ -8006,7 +8014,7 @@ end if;
 
 
    Set (Abstract_Present_Transform_Parse_0_Memo,
-        Row_Pos_29 /= -1,
+        Row_Pos_29 /= No_Token_Index,
         Transform_Res_25,
         Pos,
         Row_Pos_29);
@@ -8018,32 +8026,33 @@ end if;
 end Abstract_Present_Transform_Parse_0;
 
    
+
+
 Qualifier_Names_Transform_Parse_0_Memo : Qualifier_Names_Memos.Memo_Type;
 
 function Qualifier_Names_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Qualifier_Names
 is
-      Row_Pos_30 : Integer
-         :=0;
-      Fncall_Pos_60 : Integer
-         :=0;
+      Row_Pos_30 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_60 : Token_Index
+         := No_Token_Index;
       Fncall_Res_60 : Identifier
-         :=null;
+         := null;
       Row_Subres_0_30 : Identifier
-         :=null;
-      Fncall_Pos_61 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_61 : Token_Index
+         := No_Token_Index;
       Fncall_Res_61 : Identifier
-         :=null;
+         := null;
       Row_Subres_1_25 : Identifier
-         :=null;
+         := null;
       Transform_Res_26 : Qualifier_Names
-         :=null;
+         := null;
 
 
-   M       : Qualifier_Names_Memos.Memo_Entry :=
-      Get (Qualifier_Names_Transform_Parse_0_Memo, Pos);
+   M : Qualifier_Names_Memos.Memo_Entry := Get (Qualifier_Names_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -8052,7 +8061,7 @@ begin
       Transform_Res_26 := M.Instance;
       return Transform_Res_26;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_26;
    end if;
 
@@ -8077,14 +8086,14 @@ Fncall_Res_60 := Identifier_Transform_Parse_0(Parser, Row_Pos_30);
 Fncall_Pos_60 := Parser.Current_Pos;
 
 
-if Fncall_Pos_60 /= -1 then
+if Fncall_Pos_60 /= No_Token_Index then
 
    Row_Pos_30 := Fncall_Pos_60;
 
       Row_Subres_0_30 := Fncall_Res_60;
 
 else
-   Row_Pos_30 := -1;
+   Row_Pos_30 := No_Token_Index;
    goto Row_Exit_Label_30_0;
 
 end if;
@@ -8103,8 +8112,9 @@ Fncall_Pos_61 := Parser.Current_Pos;
 
 
 
-if Fncall_Pos_61 = -1 then
-        Fncall_Res_61 := null;
+if Fncall_Pos_61 = No_Token_Index then
+        Fncall_Res_61 :=
+           null;
 
 
     Fncall_Pos_61 := Row_Pos_30;
@@ -8113,14 +8123,14 @@ end if;
 --  End opt_code
 
 
-if Fncall_Pos_61 /= -1 then
+if Fncall_Pos_61 /= No_Token_Index then
 
    Row_Pos_30 := Fncall_Pos_61;
 
       Row_Subres_1_25 := Fncall_Res_61;
 
 else
-   Row_Pos_30 := -1;
+   Row_Pos_30 := No_Token_Index;
    goto Row_Exit_Label_30_0;
 
 end if;
@@ -8133,12 +8143,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_30 /= -1 then
+if Row_Pos_30 /= No_Token_Index then
 
    Transform_Res_26 := Qualifier_Names
      (Qualifier_Names_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_26.Token_Data := Parser.TDH;
+   Transform_Res_26.Unit := Parser.Unit;
    Transform_Res_26.Token_Start := pos;
    Transform_Res_26.Token_End := (if Row_Pos_30 = pos
                         then pos
@@ -8168,7 +8178,7 @@ end if;
 
 
    Set (Qualifier_Names_Transform_Parse_0_Memo,
-        Row_Pos_30 /= -1,
+        Row_Pos_30 /= No_Token_Index,
         Transform_Res_26,
         Pos,
         Row_Pos_30);
@@ -8180,30 +8190,31 @@ end if;
 end Qualifier_Names_Transform_Parse_0;
 
    
+
+
 Project_Qualifier_Transform_Parse_0_Memo : Project_Qualifier_Memos.Memo_Type;
 
 function Project_Qualifier_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Qualifier
 is
-      Or_Pos_9 : Integer
-         :=0;
+      Or_Pos_9 : Token_Index
+         := No_Token_Index;
       Or_Res_9 : GPR_Node
-         :=null;
-      Fncall_Pos_59 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_59 : Token_Index
+         := No_Token_Index;
       Fncall_Res_59 : Abstract_Present
-         :=null;
-      Fncall_Pos_62 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_62 : Token_Index
+         := No_Token_Index;
       Fncall_Res_62 : Qualifier_Names
-         :=null;
+         := null;
       Transform_Res_27 : Project_Qualifier
-         :=null;
+         := null;
 
 
-   M       : Project_Qualifier_Memos.Memo_Entry :=
-      Get (Project_Qualifier_Transform_Parse_0_Memo, Pos);
+   M : Project_Qualifier_Memos.Memo_Entry := Get (Project_Qualifier_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -8212,7 +8223,7 @@ begin
       Transform_Res_27 := M.Instance;
       return Transform_Res_27;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_27;
    end if;
 
@@ -8227,24 +8238,26 @@ begin
 
 --  Start or_code
 
-Or_Pos_9 := -1;
+Or_Pos_9 := No_Token_Index;
 Or_Res_9 := null;
     
 Fncall_Res_59 := Abstract_Present_Transform_Parse_0(Parser, pos);
 Fncall_Pos_59 := Parser.Current_Pos;
 
-    if Fncall_Pos_59 /= -1 then
+    if Fncall_Pos_59 /= No_Token_Index then
         Or_Pos_9 := Fncall_Pos_59;
-        Or_Res_9 := GPR_Node (Fncall_Res_59);
+        Or_Res_9 := GPR_Node
+          (Fncall_Res_59);
         goto Exit_Or_9;
     end if;
     
 Fncall_Res_62 := Qualifier_Names_Transform_Parse_0(Parser, pos);
 Fncall_Pos_62 := Parser.Current_Pos;
 
-    if Fncall_Pos_62 /= -1 then
+    if Fncall_Pos_62 /= No_Token_Index then
         Or_Pos_9 := Fncall_Pos_62;
-        Or_Res_9 := GPR_Node (Fncall_Res_62);
+        Or_Res_9 := GPR_Node
+          (Fncall_Res_62);
         goto Exit_Or_9;
     end if;
 <<Exit_Or_9>>
@@ -8252,12 +8265,12 @@ Fncall_Pos_62 := Parser.Current_Pos;
 --  End or_code
 
 
-if Or_Pos_9 /= -1 then
+if Or_Pos_9 /= No_Token_Index then
 
    Transform_Res_27 := Project_Qualifier
      (Project_Qualifier_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_27.Token_Data := Parser.TDH;
+   Transform_Res_27.Unit := Parser.Unit;
    Transform_Res_27.Token_Start := pos;
    Transform_Res_27.Token_End := (if Or_Pos_9 = pos
                         then pos
@@ -8281,7 +8294,7 @@ end if;
 
 
    Set (Project_Qualifier_Transform_Parse_0_Memo,
-        Or_Pos_9 /= -1,
+        Or_Pos_9 /= No_Token_Index,
         Transform_Res_27,
         Pos,
         Or_Pos_9);
@@ -8293,38 +8306,39 @@ end if;
 end Project_Qualifier_Transform_Parse_0;
 
    
+
+
 Project_Extension_Transform_Parse_0_Memo : Project_Extension_Memos.Memo_Type;
 
 function Project_Extension_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Extension
 is
-      Row_Pos_31 : Integer
-         :=0;
-      Tk_Pos_54 : Integer
-         :=0;
-      Tk_Res_54 : Token
-         :=No_Token;
-      Tk_Pos_55 : Integer
-         :=0;
-      Tk_Res_55 : Token
-         :=No_Token;
+      Row_Pos_31 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_54 : Token_Index
+         := No_Token_Index;
+      Tk_Res_54 : Token_Index
+         := No_Token_Index;
+      Tk_Pos_55 : Token_Index
+         := No_Token_Index;
+      Tk_Res_55 : Token_Index
+         := No_Token_Index;
       Opt_Bool_Res_10 : Boolean
-         :=false;
+         := false;
       Row_Subres_1_26 : Boolean
-         :=false;
-      Fncall_Pos_63 : Integer
-         :=0;
+         := false;
+      Fncall_Pos_63 : Token_Index
+         := No_Token_Index;
       Fncall_Res_63 : String_Literal
-         :=null;
+         := null;
       Row_Subres_2_16 : String_Literal
-         :=null;
+         := null;
       Transform_Res_28 : Project_Extension
-         :=null;
+         := null;
 
 
-   M       : Project_Extension_Memos.Memo_Entry :=
-      Get (Project_Extension_Transform_Parse_0_Memo, Pos);
+   M : Project_Extension_Memos.Memo_Entry := Get (Project_Extension_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -8333,7 +8347,7 @@ begin
       Transform_Res_28 := M.Instance;
       return Transform_Res_28;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_28;
    end if;
 
@@ -8356,30 +8370,35 @@ Row_Pos_31 := pos;
 
 --  Start tok_code
 
-Tk_Res_54 := Get_Token (Parser.TDH.all, Row_Pos_31);
+Tk_Res_54 := Row_Pos_31;
 
-if Tk_Res_54.Id /= QUEX_TKN_EXTENDS then
-    Tk_Pos_54 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_54));
+begin
+   if T.Kind /= GPR_Extends then
+       Tk_Pos_54 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_31 then
-        Parser.Last_Fail.Pos := Row_Pos_31;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_EXTENDS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_54.Id;
-    end if;
-else
-    Tk_Pos_54 := Row_Pos_31 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_31 then
+           Parser.Last_Fail.Pos := Row_Pos_31;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Extends;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_54 := Row_Pos_31 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_54 /= -1 then
+if Tk_Pos_54 /= No_Token_Index then
 
    Row_Pos_31 := Tk_Pos_54;
 
 
 else
-   Row_Pos_31 := -1;
+   Row_Pos_31 := No_Token_Index;
    goto Row_Exit_Label_31_0;
 
 end if;
@@ -8395,26 +8414,31 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_55 := Get_Token (Parser.TDH.all, Row_Pos_31);
+Tk_Res_55 := Row_Pos_31;
 
-if Tk_Res_55.Id /= QUEX_TKN_ALL then
-    Tk_Pos_55 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_55));
+begin
+   if T.Kind /= GPR_All then
+       Tk_Pos_55 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_31 then
-        Parser.Last_Fail.Pos := Row_Pos_31;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_ALL;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_55.Id;
-    end if;
-else
-    Tk_Pos_55 := Row_Pos_31 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_31 then
+           Parser.Last_Fail.Pos := Row_Pos_31;
+           Parser.Last_Fail.Expected_Token_Id := GPR_All;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_55 := Row_Pos_31 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
     Opt_Bool_Res_10 := True;
 
-if Tk_Pos_55 = -1 then
+if Tk_Pos_55 = No_Token_Index then
         Opt_Bool_Res_10 := False;
 
 
@@ -8424,14 +8448,14 @@ end if;
 --  End opt_code
 
 
-if Tk_Pos_55 /= -1 then
+if Tk_Pos_55 /= No_Token_Index then
 
    Row_Pos_31 := Tk_Pos_55;
 
       Row_Subres_1_26 := Opt_Bool_Res_10;
 
 else
-   Row_Pos_31 := -1;
+   Row_Pos_31 := No_Token_Index;
    goto Row_Exit_Label_31_0;
 
 end if;
@@ -8446,14 +8470,14 @@ Fncall_Res_63 := String_Literal_Transform_Parse_0(Parser, Row_Pos_31);
 Fncall_Pos_63 := Parser.Current_Pos;
 
 
-if Fncall_Pos_63 /= -1 then
+if Fncall_Pos_63 /= No_Token_Index then
 
    Row_Pos_31 := Fncall_Pos_63;
 
       Row_Subres_2_16 := Fncall_Res_63;
 
 else
-   Row_Pos_31 := -1;
+   Row_Pos_31 := No_Token_Index;
    goto Row_Exit_Label_31_0;
 
 end if;
@@ -8466,12 +8490,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_31 /= -1 then
+if Row_Pos_31 /= No_Token_Index then
 
    Transform_Res_28 := Project_Extension
      (Project_Extension_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_28.Token_Data := Parser.TDH;
+   Transform_Res_28.Unit := Parser.Unit;
    Transform_Res_28.Token_Start := pos;
    Transform_Res_28.Token_End := (if Row_Pos_31 = pos
                         then pos
@@ -8498,7 +8522,7 @@ end if;
 
 
    Set (Project_Extension_Transform_Parse_0_Memo,
-        Row_Pos_31 /= -1,
+        Row_Pos_31 /= No_Token_Index,
         Transform_Res_28,
         Pos,
         Row_Pos_31);
@@ -8510,34 +8534,35 @@ end if;
 end Project_Extension_Transform_Parse_0;
 
    
+
+
 Declarative_Items_List_Parse_0_Memo : List_GPR_Node_Memos.Memo_Type;
 
 function Declarative_Items_List_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return List_GPR_Node
 is
-      Lst_Pos_9 : Integer
-         :=0;
+      Lst_Pos_9 : Token_Index
+         := No_Token_Index;
       Lst_Res_9 : List_GPR_Node
-         :=null;
-      Lst_Cpos_9 : Integer
-         :=0;
-      Row_Pos_35 : Integer
-         :=0;
-      Fncall_Pos_68 : Integer
-         :=0;
+         := null;
+      Lst_Cpos_9 : Token_Index
+         := No_Token_Index;
+      Row_Pos_35 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_68 : Token_Index
+         := No_Token_Index;
       Fncall_Res_68 : GPR_Node
-         :=null;
+         := null;
       Row_Subres_0_35 : GPR_Node
-         :=null;
-      Tk_Pos_58 : Integer
-         :=0;
-      Tk_Res_58 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_58 : Token_Index
+         := No_Token_Index;
+      Tk_Res_58 : Token_Index
+         := No_Token_Index;
 
 
-   M       : List_GPR_Node_Memos.Memo_Entry :=
-      Get (Declarative_Items_List_Parse_0_Memo, Pos);
+   M : List_GPR_Node_Memos.Memo_Entry := Get (Declarative_Items_List_Parse_0_Memo, Pos);
 
 begin
 
@@ -8546,7 +8571,7 @@ begin
       Lst_Res_9 := M.Instance;
       return Lst_Res_9;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Lst_Res_9;
    end if;
 
@@ -8577,14 +8602,14 @@ Fncall_Res_68 := Declarative_Item_Or_Parse_0(Parser, Row_Pos_35);
 Fncall_Pos_68 := Parser.Current_Pos;
 
 
-if Fncall_Pos_68 /= -1 then
+if Fncall_Pos_68 /= No_Token_Index then
 
    Row_Pos_35 := Fncall_Pos_68;
 
       Row_Subres_0_35 := Fncall_Res_68;
 
 else
-   Row_Pos_35 := -1;
+   Row_Pos_35 := No_Token_Index;
    goto Row_Exit_Label_35_0;
 
 end if;
@@ -8597,30 +8622,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_58 := Get_Token (Parser.TDH.all, Row_Pos_35);
+Tk_Res_58 := Row_Pos_35;
 
-if Tk_Res_58.Id /= QUEX_TKN_SEMICOLON then
-    Tk_Pos_58 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_58));
+begin
+   if T.Kind /= GPR_Semicolon then
+       Tk_Pos_58 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_35 then
-        Parser.Last_Fail.Pos := Row_Pos_35;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_SEMICOLON;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_58.Id;
-    end if;
-else
-    Tk_Pos_58 := Row_Pos_35 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_35 then
+           Parser.Last_Fail.Pos := Row_Pos_35;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Semicolon;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_58 := Row_Pos_35 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_58 /= -1 then
+if Tk_Pos_58 /= No_Token_Index then
 
    Row_Pos_35 := Tk_Pos_58;
 
 
 else
-   Row_Pos_35 := -1;
+   Row_Pos_35 := No_Token_Index;
    goto Row_Exit_Label_35_0;
 
 end if;
@@ -8633,7 +8663,7 @@ end if;
 --  End row_code
 
 
-   exit when Row_Pos_35 = -1;
+   exit when Row_Pos_35 = No_Token_Index;
 
    Lst_Pos_9 := Row_Pos_35;
    Lst_Cpos_9 := Row_Pos_35;
@@ -8662,7 +8692,7 @@ end if;
 end loop;
 
 if Lst_Res_9 /= null then
-   Lst_Res_9.Token_Data := Parser.TDH;
+   Lst_Res_9.Unit := Parser.Unit;
    Lst_Res_9.Token_Start := pos;
    Lst_Res_9.Token_End := (if Lst_Cpos_9 = pos
                         then pos
@@ -8679,7 +8709,7 @@ end if;
 
 
    Set (Declarative_Items_List_Parse_0_Memo,
-        Lst_Pos_9 /= -1,
+        Lst_Pos_9 /= No_Token_Index,
         Lst_Res_9,
         Pos,
         Lst_Pos_9);
@@ -8691,66 +8721,67 @@ end if;
 end Declarative_Items_List_Parse_0;
 
    
+
+
 Project_Declaration_Transform_Parse_0_Memo : Project_Declaration_Memos.Memo_Type;
 
 function Project_Declaration_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project_Declaration
 is
-      Row_Pos_34 : Integer
-         :=0;
-      Fncall_Pos_65 : Integer
-         :=0;
+      Row_Pos_34 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_65 : Token_Index
+         := No_Token_Index;
       Fncall_Res_65 : Project_Qualifier
-         :=null;
+         := null;
       Row_Subres_0_34 : Project_Qualifier
-         :=null;
-      Tk_Pos_56 : Integer
-         :=0;
-      Tk_Res_56 : Token
-         :=No_Token;
-      Fncall_Pos_66 : Integer
-         :=0;
+         := null;
+      Tk_Pos_56 : Token_Index
+         := No_Token_Index;
+      Tk_Res_56 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_66 : Token_Index
+         := No_Token_Index;
       Fncall_Res_66 : Expr
-         :=null;
+         := null;
       Row_Subres_2_17 : Expr
-         :=null;
-      Fncall_Pos_67 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_67 : Token_Index
+         := No_Token_Index;
       Fncall_Res_67 : Project_Extension
-         :=null;
+         := null;
       Row_Subres_3_9 : Project_Extension
-         :=null;
-      Tk_Pos_57 : Integer
-         :=0;
-      Tk_Res_57 : Token
-         :=No_Token;
-      Fncall_Pos_69 : Integer
-         :=0;
+         := null;
+      Tk_Pos_57 : Token_Index
+         := No_Token_Index;
+      Tk_Res_57 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_69 : Token_Index
+         := No_Token_Index;
       Fncall_Res_69 : List_GPR_Node
-         :=null;
+         := null;
       Row_Subres_5_2 : List_GPR_Node
-         :=null;
-      Tk_Pos_59 : Integer
-         :=0;
-      Tk_Res_59 : Token
-         :=No_Token;
-      Fncall_Pos_70 : Integer
-         :=0;
+         := null;
+      Tk_Pos_59 : Token_Index
+         := No_Token_Index;
+      Tk_Res_59 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_70 : Token_Index
+         := No_Token_Index;
       Fncall_Res_70 : Expr
-         :=null;
+         := null;
       Row_Subres_7_0 : Expr
-         :=null;
-      Tk_Pos_60 : Integer
-         :=0;
-      Tk_Res_60 : Token
-         :=No_Token;
+         := null;
+      Tk_Pos_60 : Token_Index
+         := No_Token_Index;
+      Tk_Res_60 : Token_Index
+         := No_Token_Index;
       Transform_Res_29 : Project_Declaration
-         :=null;
+         := null;
 
 
-   M       : Project_Declaration_Memos.Memo_Entry :=
-      Get (Project_Declaration_Transform_Parse_0_Memo, Pos);
+   M : Project_Declaration_Memos.Memo_Entry := Get (Project_Declaration_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -8759,7 +8790,7 @@ begin
       Transform_Res_29 := M.Instance;
       return Transform_Res_29;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_29;
    end if;
 
@@ -8788,8 +8819,9 @@ Fncall_Pos_65 := Parser.Current_Pos;
 
 
 
-if Fncall_Pos_65 = -1 then
-        Fncall_Res_65 := null;
+if Fncall_Pos_65 = No_Token_Index then
+        Fncall_Res_65 :=
+           null;
 
 
     Fncall_Pos_65 := Row_Pos_34;
@@ -8798,14 +8830,14 @@ end if;
 --  End opt_code
 
 
-if Fncall_Pos_65 /= -1 then
+if Fncall_Pos_65 /= No_Token_Index then
 
    Row_Pos_34 := Fncall_Pos_65;
 
       Row_Subres_0_34 := Fncall_Res_65;
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -8818,30 +8850,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_56 := Get_Token (Parser.TDH.all, Row_Pos_34);
+Tk_Res_56 := Row_Pos_34;
 
-if Tk_Res_56.Id /= QUEX_TKN_PROJECT then
-    Tk_Pos_56 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_56));
+begin
+   if T.Kind /= GPR_Project then
+       Tk_Pos_56 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_34 then
-        Parser.Last_Fail.Pos := Row_Pos_34;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_PROJECT;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_56.Id;
-    end if;
-else
-    Tk_Pos_56 := Row_Pos_34 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_34 then
+           Parser.Last_Fail.Pos := Row_Pos_34;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Project;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_56 := Row_Pos_34 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_56 /= -1 then
+if Tk_Pos_56 /= No_Token_Index then
 
    Row_Pos_34 := Tk_Pos_56;
 
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -8856,14 +8893,14 @@ Fncall_Res_66 := Static_Name_List_Parse_0(Parser, Row_Pos_34);
 Fncall_Pos_66 := Parser.Current_Pos;
 
 
-if Fncall_Pos_66 /= -1 then
+if Fncall_Pos_66 /= No_Token_Index then
 
    Row_Pos_34 := Fncall_Pos_66;
 
       Row_Subres_2_17 := Fncall_Res_66;
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -8882,8 +8919,9 @@ Fncall_Pos_67 := Parser.Current_Pos;
 
 
 
-if Fncall_Pos_67 = -1 then
-        Fncall_Res_67 := null;
+if Fncall_Pos_67 = No_Token_Index then
+        Fncall_Res_67 :=
+           null;
 
 
     Fncall_Pos_67 := Row_Pos_34;
@@ -8892,14 +8930,14 @@ end if;
 --  End opt_code
 
 
-if Fncall_Pos_67 /= -1 then
+if Fncall_Pos_67 /= No_Token_Index then
 
    Row_Pos_34 := Fncall_Pos_67;
 
       Row_Subres_3_9 := Fncall_Res_67;
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -8912,30 +8950,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_57 := Get_Token (Parser.TDH.all, Row_Pos_34);
+Tk_Res_57 := Row_Pos_34;
 
-if Tk_Res_57.Id /= QUEX_TKN_IS then
-    Tk_Pos_57 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_57));
+begin
+   if T.Kind /= GPR_Is then
+       Tk_Pos_57 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_34 then
-        Parser.Last_Fail.Pos := Row_Pos_34;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_IS;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_57.Id;
-    end if;
-else
-    Tk_Pos_57 := Row_Pos_34 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_34 then
+           Parser.Last_Fail.Pos := Row_Pos_34;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Is;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_57 := Row_Pos_34 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_57 /= -1 then
+if Tk_Pos_57 /= No_Token_Index then
 
    Row_Pos_34 := Tk_Pos_57;
 
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -8950,14 +8993,14 @@ Fncall_Res_69 := Declarative_Items_List_Parse_0(Parser, Row_Pos_34);
 Fncall_Pos_69 := Parser.Current_Pos;
 
 
-if Fncall_Pos_69 /= -1 then
+if Fncall_Pos_69 /= No_Token_Index then
 
    Row_Pos_34 := Fncall_Pos_69;
 
       Row_Subres_5_2 := Fncall_Res_69;
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -8970,30 +9013,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_59 := Get_Token (Parser.TDH.all, Row_Pos_34);
+Tk_Res_59 := Row_Pos_34;
 
-if Tk_Res_59.Id /= QUEX_TKN_END then
-    Tk_Pos_59 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_59));
+begin
+   if T.Kind /= GPR_End then
+       Tk_Pos_59 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_34 then
-        Parser.Last_Fail.Pos := Row_Pos_34;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_END;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_59.Id;
-    end if;
-else
-    Tk_Pos_59 := Row_Pos_34 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_34 then
+           Parser.Last_Fail.Pos := Row_Pos_34;
+           Parser.Last_Fail.Expected_Token_Id := GPR_End;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_59 := Row_Pos_34 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_59 /= -1 then
+if Tk_Pos_59 /= No_Token_Index then
 
    Row_Pos_34 := Tk_Pos_59;
 
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -9008,14 +9056,14 @@ Fncall_Res_70 := Static_Name_List_Parse_0(Parser, Row_Pos_34);
 Fncall_Pos_70 := Parser.Current_Pos;
 
 
-if Fncall_Pos_70 /= -1 then
+if Fncall_Pos_70 /= No_Token_Index then
 
    Row_Pos_34 := Fncall_Pos_70;
 
       Row_Subres_7_0 := Fncall_Res_70;
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -9028,30 +9076,35 @@ end if;
 
 --  Start tok_code
 
-Tk_Res_60 := Get_Token (Parser.TDH.all, Row_Pos_34);
+Tk_Res_60 := Row_Pos_34;
 
-if Tk_Res_60.Id /= QUEX_TKN_SEMICOLON then
-    Tk_Pos_60 := -1;
+declare
+   T : constant Token_Data_Type :=
+      Token_Vectors.Get (Parser.TDH.Tokens, Natural (Tk_Res_60));
+begin
+   if T.Kind /= GPR_Semicolon then
+       Tk_Pos_60 := No_Token_Index;
 
-    if Parser.Last_Fail.Pos <= Row_Pos_34 then
-        Parser.Last_Fail.Pos := Row_Pos_34;
-        Parser.Last_Fail.Expected_Token_Id := QUEX_TKN_SEMICOLON;
-        Parser.Last_Fail.Found_Token_Id := Tk_Res_60.Id;
-    end if;
-else
-    Tk_Pos_60 := Row_Pos_34 + 1;
-end if;
+       if Parser.Last_Fail.Pos <= Row_Pos_34 then
+           Parser.Last_Fail.Pos := Row_Pos_34;
+           Parser.Last_Fail.Expected_Token_Id := GPR_Semicolon;
+           Parser.Last_Fail.Found_Token_Id := T.Kind;
+       end if;
+   else
+          Tk_Pos_60 := Row_Pos_34 + 1;
+   end if;
+end;
 
 --  End tok_code
 
 
-if Tk_Pos_60 /= -1 then
+if Tk_Pos_60 /= No_Token_Index then
 
    Row_Pos_34 := Tk_Pos_60;
 
 
 else
-   Row_Pos_34 := -1;
+   Row_Pos_34 := No_Token_Index;
    goto Row_Exit_Label_34_0;
 
 end if;
@@ -9064,12 +9117,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_34 /= -1 then
+if Row_Pos_34 /= No_Token_Index then
 
    Transform_Res_29 := Project_Declaration
      (Project_Declaration_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_29.Token_Data := Parser.TDH;
+   Transform_Res_29.Unit := Parser.Unit;
    Transform_Res_29.Token_Start := pos;
    Transform_Res_29.Token_End := (if Row_Pos_34 = pos
                         then pos
@@ -9117,7 +9170,7 @@ end if;
 
 
    Set (Project_Declaration_Transform_Parse_0_Memo,
-        Row_Pos_34 /= -1,
+        Row_Pos_34 /= No_Token_Index,
         Transform_Res_29,
         Pos,
         Row_Pos_34);
@@ -9129,32 +9182,33 @@ end if;
 end Project_Declaration_Transform_Parse_0;
 
    
+
+
 Project_Transform_Parse_0_Memo : Project_Memos.Memo_Type;
 
 function Project_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Project
 is
-      Row_Pos_33 : Integer
-         :=0;
-      Fncall_Pos_64 : Integer
-         :=0;
+      Row_Pos_33 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_64 : Token_Index
+         := No_Token_Index;
       Fncall_Res_64 : List_With_Decl
-         :=null;
+         := null;
       Row_Subres_0_33 : List_With_Decl
-         :=null;
-      Fncall_Pos_71 : Integer
-         :=0;
+         := null;
+      Fncall_Pos_71 : Token_Index
+         := No_Token_Index;
       Fncall_Res_71 : Project_Declaration
-         :=null;
+         := null;
       Row_Subres_1_27 : Project_Declaration
-         :=null;
+         := null;
       Transform_Res_30 : Project
-         :=null;
+         := null;
 
 
-   M       : Project_Memos.Memo_Entry :=
-      Get (Project_Transform_Parse_0_Memo, Pos);
+   M : Project_Memos.Memo_Entry := Get (Project_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -9163,7 +9217,7 @@ begin
       Transform_Res_30 := M.Instance;
       return Transform_Res_30;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_30;
    end if;
 
@@ -9188,14 +9242,14 @@ Fncall_Res_64 := Context_Clauses_List_Parse_0(Parser, Row_Pos_33);
 Fncall_Pos_64 := Parser.Current_Pos;
 
 
-if Fncall_Pos_64 /= -1 then
+if Fncall_Pos_64 /= No_Token_Index then
 
    Row_Pos_33 := Fncall_Pos_64;
 
       Row_Subres_0_33 := Fncall_Res_64;
 
 else
-   Row_Pos_33 := -1;
+   Row_Pos_33 := No_Token_Index;
    goto Row_Exit_Label_33_0;
 
 end if;
@@ -9210,14 +9264,14 @@ Fncall_Res_71 := Project_Declaration_Transform_Parse_0(Parser, Row_Pos_33);
 Fncall_Pos_71 := Parser.Current_Pos;
 
 
-if Fncall_Pos_71 /= -1 then
+if Fncall_Pos_71 /= No_Token_Index then
 
    Row_Pos_33 := Fncall_Pos_71;
 
       Row_Subres_1_27 := Fncall_Res_71;
 
 else
-   Row_Pos_33 := -1;
+   Row_Pos_33 := No_Token_Index;
    goto Row_Exit_Label_33_0;
 
 end if;
@@ -9230,12 +9284,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_33 /= -1 then
+if Row_Pos_33 /= No_Token_Index then
 
    Transform_Res_30 := Project
      (Project_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_30.Token_Data := Parser.TDH;
+   Transform_Res_30.Unit := Parser.Unit;
    Transform_Res_30.Token_Start := pos;
    Transform_Res_30.Token_End := (if Row_Pos_33 = pos
                         then pos
@@ -9265,7 +9319,7 @@ end if;
 
 
    Set (Project_Transform_Parse_0_Memo,
-        Row_Pos_33 /= -1,
+        Row_Pos_33 /= No_Token_Index,
         Transform_Res_30,
         Pos,
         Row_Pos_33);
@@ -9277,26 +9331,27 @@ end if;
 end Project_Transform_Parse_0;
 
    
+
+
 Compilation_Unit_Transform_Parse_0_Memo : Compilation_Unit_Memos.Memo_Type;
 
 function Compilation_Unit_Transform_Parse_0 (Parser : in out Parser_Type;
-                               Pos    : Integer)
+                               Pos    : Token_Index)
                                return Compilation_Unit
 is
-      Row_Pos_32 : Integer
-         :=0;
-      Fncall_Pos_72 : Integer
-         :=0;
+      Row_Pos_32 : Token_Index
+         := No_Token_Index;
+      Fncall_Pos_72 : Token_Index
+         := No_Token_Index;
       Fncall_Res_72 : Project
-         :=null;
+         := null;
       Row_Subres_0_32 : Project
-         :=null;
+         := null;
       Transform_Res_31 : Compilation_Unit
-         :=null;
+         := null;
 
 
-   M       : Compilation_Unit_Memos.Memo_Entry :=
-      Get (Compilation_Unit_Transform_Parse_0_Memo, Pos);
+   M : Compilation_Unit_Memos.Memo_Entry := Get (Compilation_Unit_Transform_Parse_0_Memo, Pos);
 
 begin
 
@@ -9305,7 +9360,7 @@ begin
       Transform_Res_31 := M.Instance;
       return Transform_Res_31;
    elsif M.State = Failure then
-      Parser.Current_Pos := -1;
+      Parser.Current_Pos := No_Token_Index;
       return Transform_Res_31;
    end if;
 
@@ -9330,14 +9385,14 @@ Fncall_Res_72 := Project_Transform_Parse_0(Parser, Row_Pos_32);
 Fncall_Pos_72 := Parser.Current_Pos;
 
 
-if Fncall_Pos_72 /= -1 then
+if Fncall_Pos_72 /= No_Token_Index then
 
    Row_Pos_32 := Fncall_Pos_72;
 
       Row_Subres_0_32 := Fncall_Res_72;
 
 else
-   Row_Pos_32 := -1;
+   Row_Pos_32 := No_Token_Index;
    goto Row_Exit_Label_32_0;
 
 end if;
@@ -9350,12 +9405,12 @@ end if;
 --  End row_code
 
 
-if Row_Pos_32 /= -1 then
+if Row_Pos_32 /= No_Token_Index then
 
    Transform_Res_31 := Compilation_Unit
      (Compilation_Unit_Alloc.Alloc (Parser.Mem_Pool));
 
-   Transform_Res_31.Token_Data := Parser.TDH;
+   Transform_Res_31.Unit := Parser.Unit;
    Transform_Res_31.Token_Start := pos;
    Transform_Res_31.Token_End := (if Row_Pos_32 = pos
                         then pos
@@ -9379,7 +9434,7 @@ end if;
 
 
    Set (Compilation_Unit_Transform_Parse_0_Memo,
-        Row_Pos_32 /= -1,
+        Row_Pos_32 /= No_Token_Index,
         Transform_Res_31,
         Pos,
         Row_Pos_32);

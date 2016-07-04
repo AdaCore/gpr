@@ -37,10 +37,10 @@ package body GPR_Parser.AST.List is
    ----------
 
    overriding
-   function Kind (Node : access List_Type) return GPR_Node_Type_Kind is
+   function Kind (Node : access List_Type) return GPR_Node_Kind_Type is
       pragma Unreferenced (Node);
    begin
-      return List_Kind;
+      return GPR_List;
    end Kind;
 
    ---------------
@@ -91,12 +91,12 @@ package body GPR_Parser.AST.List is
 
    overriding
    procedure Get_Child (Node   : access List_Type;
-                        Index  : Natural;
+                        Index  : Positive;
                         Exists : out Boolean;
                         Result : out GPR_Node)
    is
    begin
-      if Index >= Length (Node.Vec) then
+      if Index > Node_Vectors.Last_Index (Node.Vec) then
          Exists := False;
       else
          Exists := True;

@@ -35,16 +35,98 @@
 
 
 
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded;      use Ada.Strings.Unbounded;
+with Ada.Unchecked_Deallocation;
 
 pragma Warnings (Off, "referenced");
+with Adalog.Abstract_Relation;   use Adalog.Abstract_Relation;
+with Adalog.Operations;          use Adalog.Operations;
+with Adalog.Predicates;          use Adalog.Predicates;
+with Adalog.Pure_Relations;      use Adalog.Pure_Relations;
+with Adalog.Variadic_Operations; use Adalog.Variadic_Operations;
+
 with Langkit_Support.Extensions; use Langkit_Support.Extensions;
 with Langkit_Support.PP_Utils;   use Langkit_Support.PP_Utils;
+with Langkit_Support.Relative_Get;
+with Langkit_Support.Slocs;      use Langkit_Support.Slocs;
 with Langkit_Support.Symbols;    use Langkit_Support.Symbols;
-with Langkit_Support.Tokens;     use Langkit_Support.Tokens;
+
+with GPR_Parser.Analysis.Internal;
 pragma Warnings (On, "referenced");
 
+
 package body GPR_Parser.AST.Types is
+
+   use Eq_Node, Eq_Node.Raw_Impl;
+
+   procedure Register_Destroyable is new
+      Analysis_Interfaces.Register_Destroyable
+        (AST_Envs.Lexical_Env_Type, AST_Envs.Lexical_Env, AST_Envs.Destroy);
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (T       : Env_Element_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return Env_Element
+   is
+      function Absolute_Get
+        (T : Env_Element_Array_Access; Index : Integer)
+         return Env_Element
+      is
+        (T.Items (Index + 1)); --  T.Items is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => Env_Element,
+         Sequence_Type => Env_Element_Array_Access,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : Env_Element;
+   begin
+      if Relative_Get (T, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return No_Env_Element;
+      else
+         raise Property_Error with "out-of-bounds array access";
+      end if;
+   end Get;
+
+   -------------
+   -- Inc_Ref --
+   -------------
+
+   procedure Inc_Ref (T : Env_Element_Array_Access) is
+   begin
+      T.Ref_Count := T.Ref_Count + 1;
+   end Inc_Ref;
+
+   -------------
+   -- Dec_Ref --
+   -------------
+
+   procedure Dec_Ref (T : in out Env_Element_Array_Access) is
+   begin
+      if T = null then
+         return;
+      end if;
+
+      if T.Ref_Count = 1 then
+         Free (T);
+      else
+         T.Ref_Count := T.Ref_Count - 1;
+         T := null;
+      end if;
+   end Dec_Ref;
+
 
 
    
@@ -63,11 +145,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Abstract_Present_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Abstract_Present_Kind;
+         return GPR_Abstract_Present;
       end Kind;
 
       ---------------
@@ -116,7 +198,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Abstract_Present_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -192,6 +274,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -208,11 +299,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Attribute_Decl_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Attribute_Decl_Kind;
+         return GPR_Attribute_Decl;
       end Kind;
 
       ---------------
@@ -290,18 +381,18 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Attribute_Decl_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Attr_Name);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Attr_Index);
                      Exists := True;
-                 when 2 =>
+                 when 3 =>
                      Result := GPR_Node (Node.F_Expr);
                      Exists := True;
              when others =>
@@ -330,18 +421,21 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "attr_name:");
                   Node.F_Attr_Name.Print (Level + 2);
                end if;
+
                if Node.F_Attr_Index /= null
                   and then not Is_Empty_List (Node.F_Attr_Index)
                then
                   Put_Line (Level + 1, "attr_index:");
                   Node.F_Attr_Index.Print (Level + 2);
                end if;
+
                if Node.F_Expr /= null
                   and then not Is_Empty_List (Node.F_Expr)
                then
                   Put_Line (Level + 1, "expr:");
                   Node.F_Expr.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -440,28 +534,34 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Attr_Name
-        (Node : Attribute_Decl) return GPR_Node
+        (Node : access Attribute_Decl_Type) return GPR_Node
       is
       begin
-         return GPR_Node
-           (Attribute_Decl_Type (Node.all).F_Attr_Name);
+         return Node.F_Attr_Name;
       end F_Attr_Name;
       function F_Attr_Index
-        (Node : Attribute_Decl) return GPR_Node
+        (Node : access Attribute_Decl_Type) return GPR_Node
       is
       begin
-         return GPR_Node
-           (Attribute_Decl_Type (Node.all).F_Attr_Index);
+         return Node.F_Attr_Index;
       end F_Attr_Index;
       function F_Expr
-        (Node : Attribute_Decl) return Term_List
+        (Node : access Attribute_Decl_Type) return Term_List
       is
       begin
-         return Term_List
-           (Attribute_Decl_Type (Node.all).F_Expr);
+         return Node.F_Expr;
       end F_Expr;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -480,11 +580,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Attribute_Reference_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Attribute_Reference_Kind;
+         return GPR_Attribute_Reference;
       end Kind;
 
       ---------------
@@ -552,15 +652,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Attribute_Reference_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Attribute_Name);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Attribute_Index);
                      Exists := True;
              when others =>
@@ -589,12 +689,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "attribute_name:");
                   Node.F_Attribute_Name.Print (Level + 2);
                end if;
+
                if Node.F_Attribute_Index /= null
                   and then not Is_Empty_List (Node.F_Attribute_Index)
                then
                   Put_Line (Level + 1, "attribute_index:");
                   Node.F_Attribute_Index.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -675,21 +777,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Attribute_Name
-        (Node : Attribute_Reference) return Identifier
+        (Node : access Attribute_Reference_Type) return Identifier
       is
       begin
-         return Identifier
-           (Attribute_Reference_Type (Node.all).F_Attribute_Name);
+         return Node.F_Attribute_Name;
       end F_Attribute_Name;
       function F_Attribute_Index
-        (Node : Attribute_Reference) return GPR_Node
+        (Node : access Attribute_Reference_Type) return GPR_Node
       is
       begin
-         return GPR_Node
-           (Attribute_Reference_Type (Node.all).F_Attribute_Index);
+         return Node.F_Attribute_Index;
       end F_Attribute_Index;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -708,11 +817,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Case_Construction_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Case_Construction_Kind;
+         return GPR_Case_Construction;
       end Kind;
 
       ---------------
@@ -780,15 +889,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Case_Construction_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Var_Ref);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Items);
                      Exists := True;
              when others =>
@@ -817,12 +926,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "var_ref:");
                   Node.F_Var_Ref.Print (Level + 2);
                end if;
+
                if Node.F_Items /= null
                   and then not Is_Empty_List (Node.F_Items)
                then
                   Put_Line (Level + 1, "items:");
                   Node.F_Items.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -903,21 +1014,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Var_Ref
-        (Node : Case_Construction) return Variable_Reference
+        (Node : access Case_Construction_Type) return Variable_Reference
       is
       begin
-         return Variable_Reference
-           (Case_Construction_Type (Node.all).F_Var_Ref);
+         return Node.F_Var_Ref;
       end F_Var_Ref;
       function F_Items
-        (Node : Case_Construction) return List_Case_Item
+        (Node : access Case_Construction_Type) return List_Case_Item
       is
       begin
-         return List_Case_Item
-           (Case_Construction_Type (Node.all).F_Items);
+         return Node.F_Items;
       end F_Items;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -936,11 +1054,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Case_Item_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Case_Item_Kind;
+         return GPR_Case_Item;
       end Kind;
 
       ---------------
@@ -1008,15 +1126,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Case_Item_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Choice);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Decls);
                      Exists := True;
              when others =>
@@ -1045,12 +1163,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "choice:");
                   Node.F_Choice.Print (Level + 2);
                end if;
+
                if Node.F_Decls /= null
                   and then not Is_Empty_List (Node.F_Decls)
                then
                   Put_Line (Level + 1, "decls:");
                   Node.F_Decls.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -1131,21 +1251,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Choice
-        (Node : Case_Item) return List_GPR_Node
+        (Node : access Case_Item_Type) return List_GPR_Node
       is
       begin
-         return List_GPR_Node
-           (Case_Item_Type (Node.all).F_Choice);
+         return Node.F_Choice;
       end F_Choice;
       function F_Decls
-        (Node : Case_Item) return List_GPR_Node
+        (Node : access Case_Item_Type) return List_GPR_Node
       is
       begin
-         return List_GPR_Node
-           (Case_Item_Type (Node.all).F_Decls);
+         return Node.F_Decls;
       end F_Decls;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -1164,11 +1291,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Compilation_Unit_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Compilation_Unit_Kind;
+         return GPR_Compilation_Unit;
       end Kind;
 
       ---------------
@@ -1226,12 +1353,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Compilation_Unit_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Project);
                      Exists := True;
              when others =>
@@ -1260,6 +1387,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "project:");
                   Node.F_Project.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -1322,14 +1450,22 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Project
-        (Node : Compilation_Unit) return Project
+        (Node : access Compilation_Unit_Type) return Project
       is
       begin
-         return Project
-           (Compilation_Unit_Type (Node.all).F_Project);
+         return Node.F_Project;
       end F_Project;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -1348,11 +1484,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Empty_Decl_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Empty_Decl_Kind;
+         return GPR_Empty_Decl;
       end Kind;
 
       ---------------
@@ -1401,7 +1537,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Empty_Decl_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -1477,6 +1613,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -1488,6 +1633,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -1506,11 +1660,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Prefix_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Prefix_Kind;
+         return GPR_Prefix;
       end Kind;
 
       ---------------
@@ -1578,15 +1732,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Prefix_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Prefix);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Suffix);
                      Exists := True;
              when others =>
@@ -1615,12 +1769,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "prefix:");
                   Node.F_Prefix.Print (Level + 2);
                end if;
+
                if Node.F_Suffix /= null
                   and then not Is_Empty_List (Node.F_Suffix)
                then
                   Put_Line (Level + 1, "suffix:");
                   Node.F_Suffix.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -1701,21 +1857,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Prefix
-        (Node : Prefix) return Expr
+        (Node : access Prefix_Type) return Expr
       is
       begin
-         return Expr
-           (Prefix_Type (Node.all).F_Prefix);
+         return Node.F_Prefix;
       end F_Prefix;
       function F_Suffix
-        (Node : Prefix) return Expr
+        (Node : access Prefix_Type) return Expr
       is
       begin
-         return Expr
-           (Prefix_Type (Node.all).F_Suffix);
+         return Node.F_Suffix;
       end F_Suffix;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -1728,14 +1891,22 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Tok
-        (Node : Single_Tok_Node) return Token
+        (Node : access Single_Tok_Node_Type) return Token_Type
       is
       begin
-         return Token
-           (Single_Tok_Node_Type (Node.all).F_Tok);
+         return Token (Node, Node.F_Tok);
       end F_Tok;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -1754,11 +1925,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Identifier_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Identifier_Kind;
+         return GPR_Identifier;
       end Kind;
 
       ---------------
@@ -1787,7 +1958,7 @@ package body GPR_Parser.AST.Types is
 
 
 
-                Append (Result, Image (Node.F_Tok));
+                Append (Result, Image (Token (Node, Node.F_Tok)));
 
 
          Append (Result, ')');
@@ -1811,7 +1982,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Identifier_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -1839,7 +2010,8 @@ package body GPR_Parser.AST.Types is
            (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
 
                Put_Line (Level + 1, "tok: "
-                         & Image (Node.F_Tok));
+                         & Image (Token (Node, Node.F_Tok)));
+
 
       end Print;
 
@@ -1889,6 +2061,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -1905,11 +2086,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Num_Literal_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Num_Literal_Kind;
+         return GPR_Num_Literal;
       end Kind;
 
       ---------------
@@ -1938,7 +2119,7 @@ package body GPR_Parser.AST.Types is
 
 
 
-                Append (Result, Image (Node.F_Tok));
+                Append (Result, Image (Token (Node, Node.F_Tok)));
 
 
          Append (Result, ')');
@@ -1962,7 +2143,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Num_Literal_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -1990,7 +2171,8 @@ package body GPR_Parser.AST.Types is
            (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
 
                Put_Line (Level + 1, "tok: "
-                         & Image (Node.F_Tok));
+                         & Image (Token (Node, Node.F_Tok)));
+
 
       end Print;
 
@@ -2040,6 +2222,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -2056,11 +2247,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access String_Literal_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return String_Literal_Kind;
+         return GPR_String_Literal;
       end Kind;
 
       ---------------
@@ -2089,7 +2280,7 @@ package body GPR_Parser.AST.Types is
 
 
 
-                Append (Result, Image (Node.F_Tok));
+                Append (Result, Image (Token (Node, Node.F_Tok)));
 
 
          Append (Result, ')');
@@ -2113,7 +2304,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access String_Literal_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -2141,7 +2332,8 @@ package body GPR_Parser.AST.Types is
            (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
 
                Put_Line (Level + 1, "tok: "
-                         & Image (Node.F_Tok));
+                         & Image (Token (Node, Node.F_Tok)));
+
 
       end Print;
 
@@ -2191,6 +2383,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -2207,11 +2408,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Expr_List_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Expr_List_Kind;
+         return GPR_Expr_List;
       end Kind;
 
       ---------------
@@ -2269,12 +2470,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Expr_List_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Exprs);
                      Exists := True;
              when others =>
@@ -2303,6 +2504,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "exprs:");
                   Node.F_Exprs.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -2365,14 +2567,22 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Exprs
-        (Node : Expr_List) return List_Term_List
+        (Node : access Expr_List_Type) return List_Term_List
       is
       begin
-         return List_Term_List
-           (Expr_List_Type (Node.all).F_Exprs);
+         return Node.F_Exprs;
       end F_Exprs;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -2391,11 +2601,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access External_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return External_Kind;
+         return GPR_External;
       end Kind;
 
       ---------------
@@ -2444,7 +2654,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access External_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -2520,6 +2730,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -2536,11 +2755,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access External_As_List_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return External_As_List_Kind;
+         return GPR_External_As_List;
       end Kind;
 
       ---------------
@@ -2589,7 +2808,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access External_As_List_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -2665,6 +2884,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -2681,11 +2909,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access External_Name_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return External_Name_Kind;
+         return GPR_External_Name;
       end Kind;
 
       ---------------
@@ -2734,7 +2962,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access External_Name_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -2810,6 +3038,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -2826,11 +3063,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access External_Reference_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return External_Reference_Kind;
+         return GPR_External_Reference;
       end Kind;
 
       ---------------
@@ -2908,18 +3145,18 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access External_Reference_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Kind);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_String_Lit);
                      Exists := True;
-                 when 2 =>
+                 when 3 =>
                      Result := GPR_Node (Node.F_Expr);
                      Exists := True;
              when others =>
@@ -2948,18 +3185,21 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "kind:");
                   Node.F_Kind.Print (Level + 2);
                end if;
+
                if Node.F_String_Lit /= null
                   and then not Is_Empty_List (Node.F_String_Lit)
                then
                   Put_Line (Level + 1, "string_lit:");
                   Node.F_String_Lit.Print (Level + 2);
                end if;
+
                if Node.F_Expr /= null
                   and then not Is_Empty_List (Node.F_Expr)
                then
                   Put_Line (Level + 1, "expr:");
                   Node.F_Expr.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -3058,28 +3298,34 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Kind
-        (Node : External_Reference) return GPR_Node
+        (Node : access External_Reference_Type) return GPR_Node
       is
       begin
-         return GPR_Node
-           (External_Reference_Type (Node.all).F_Kind);
+         return Node.F_Kind;
       end F_Kind;
       function F_String_Lit
-        (Node : External_Reference) return String_Literal
+        (Node : access External_Reference_Type) return String_Literal
       is
       begin
-         return String_Literal
-           (External_Reference_Type (Node.all).F_String_Lit);
+         return Node.F_String_Lit;
       end F_String_Lit;
       function F_Expr
-        (Node : External_Reference) return Term_List
+        (Node : access External_Reference_Type) return Term_List
       is
       begin
-         return Term_List
-           (External_Reference_Type (Node.all).F_Expr);
+         return Node.F_Expr;
       end F_Expr;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -3098,11 +3344,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Others_Designator_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Others_Designator_Kind;
+         return GPR_Others_Designator;
       end Kind;
 
       ---------------
@@ -3151,7 +3397,7 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Others_Designator_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
              pragma Unreferenced (Node);
@@ -3227,6 +3473,15 @@ package body GPR_Parser.AST.Types is
 
 
 
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
    
 
    --
@@ -3243,11 +3498,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Package_Decl_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Package_Decl_Kind;
+         return GPR_Package_Decl;
       end Kind;
 
       ---------------
@@ -3315,15 +3570,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Package_Decl_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Pkg_Name);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Pkg_Spec);
                      Exists := True;
              when others =>
@@ -3352,12 +3607,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "pkg_name:");
                   Node.F_Pkg_Name.Print (Level + 2);
                end if;
+
                if Node.F_Pkg_Spec /= null
                   and then not Is_Empty_List (Node.F_Pkg_Spec)
                then
                   Put_Line (Level + 1, "pkg_spec:");
                   Node.F_Pkg_Spec.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -3438,21 +3695,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Pkg_Name
-        (Node : Package_Decl) return Identifier
+        (Node : access Package_Decl_Type) return Identifier
       is
       begin
-         return Identifier
-           (Package_Decl_Type (Node.all).F_Pkg_Name);
+         return Node.F_Pkg_Name;
       end F_Pkg_Name;
       function F_Pkg_Spec
-        (Node : Package_Decl) return GPR_Node
+        (Node : access Package_Decl_Type) return GPR_Node
       is
       begin
-         return GPR_Node
-           (Package_Decl_Type (Node.all).F_Pkg_Spec);
+         return Node.F_Pkg_Spec;
       end F_Pkg_Spec;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -3471,11 +3735,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Package_Extension_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Package_Extension_Kind;
+         return GPR_Package_Extension;
       end Kind;
 
       ---------------
@@ -3543,15 +3807,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Package_Extension_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Prj_Name);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Pkg_Name);
                      Exists := True;
              when others =>
@@ -3580,12 +3844,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "prj_name:");
                   Node.F_Prj_Name.Print (Level + 2);
                end if;
+
                if Node.F_Pkg_Name /= null
                   and then not Is_Empty_List (Node.F_Pkg_Name)
                then
                   Put_Line (Level + 1, "pkg_name:");
                   Node.F_Pkg_Name.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -3666,21 +3932,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Prj_Name
-        (Node : Package_Extension) return Identifier
+        (Node : access Package_Extension_Type) return Identifier
       is
       begin
-         return Identifier
-           (Package_Extension_Type (Node.all).F_Prj_Name);
+         return Node.F_Prj_Name;
       end F_Prj_Name;
       function F_Pkg_Name
-        (Node : Package_Extension) return Identifier
+        (Node : access Package_Extension_Type) return Identifier
       is
       begin
-         return Identifier
-           (Package_Extension_Type (Node.all).F_Pkg_Name);
+         return Node.F_Pkg_Name;
       end F_Pkg_Name;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -3699,11 +3972,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Package_Renaming_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Package_Renaming_Kind;
+         return GPR_Package_Renaming;
       end Kind;
 
       ---------------
@@ -3771,15 +4044,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Package_Renaming_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Prj_Name);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Pkg_Name);
                      Exists := True;
              when others =>
@@ -3808,12 +4081,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "prj_name:");
                   Node.F_Prj_Name.Print (Level + 2);
                end if;
+
                if Node.F_Pkg_Name /= null
                   and then not Is_Empty_List (Node.F_Pkg_Name)
                then
                   Put_Line (Level + 1, "pkg_name:");
                   Node.F_Pkg_Name.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -3894,21 +4169,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Prj_Name
-        (Node : Package_Renaming) return Identifier
+        (Node : access Package_Renaming_Type) return Identifier
       is
       begin
-         return Identifier
-           (Package_Renaming_Type (Node.all).F_Prj_Name);
+         return Node.F_Prj_Name;
       end F_Prj_Name;
       function F_Pkg_Name
-        (Node : Package_Renaming) return Identifier
+        (Node : access Package_Renaming_Type) return Identifier
       is
       begin
-         return Identifier
-           (Package_Renaming_Type (Node.all).F_Pkg_Name);
+         return Node.F_Pkg_Name;
       end F_Pkg_Name;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -3927,11 +4209,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Package_Spec_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Package_Spec_Kind;
+         return GPR_Package_Spec;
       end Kind;
 
       ---------------
@@ -4009,18 +4291,18 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Package_Spec_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Extension);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Decls);
                      Exists := True;
-                 when 2 =>
+                 when 3 =>
                      Result := GPR_Node (Node.F_End_Name);
                      Exists := True;
              when others =>
@@ -4049,18 +4331,21 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "extension:");
                   Node.F_Extension.Print (Level + 2);
                end if;
+
                if Node.F_Decls /= null
                   and then not Is_Empty_List (Node.F_Decls)
                then
                   Put_Line (Level + 1, "decls:");
                   Node.F_Decls.Print (Level + 2);
                end if;
+
                if Node.F_End_Name /= null
                   and then not Is_Empty_List (Node.F_End_Name)
                then
                   Put_Line (Level + 1, "end_name:");
                   Node.F_End_Name.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -4159,28 +4444,34 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Extension
-        (Node : Package_Spec) return Package_Extension
+        (Node : access Package_Spec_Type) return Package_Extension
       is
       begin
-         return Package_Extension
-           (Package_Spec_Type (Node.all).F_Extension);
+         return Node.F_Extension;
       end F_Extension;
       function F_Decls
-        (Node : Package_Spec) return List_GPR_Node
+        (Node : access Package_Spec_Type) return List_GPR_Node
       is
       begin
-         return List_GPR_Node
-           (Package_Spec_Type (Node.all).F_Decls);
+         return Node.F_Decls;
       end F_Decls;
       function F_End_Name
-        (Node : Package_Spec) return Identifier
+        (Node : access Package_Spec_Type) return Identifier
       is
       begin
-         return Identifier
-           (Package_Spec_Type (Node.all).F_End_Name);
+         return Node.F_End_Name;
       end F_End_Name;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -4199,11 +4490,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Project_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Project_Kind;
+         return GPR_Project;
       end Kind;
 
       ---------------
@@ -4271,15 +4562,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Project_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Context_Clauses);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Project_Decl);
                      Exists := True;
              when others =>
@@ -4308,12 +4599,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "context_clauses:");
                   Node.F_Context_Clauses.Print (Level + 2);
                end if;
+
                if Node.F_Project_Decl /= null
                   and then not Is_Empty_List (Node.F_Project_Decl)
                then
                   Put_Line (Level + 1, "project_decl:");
                   Node.F_Project_Decl.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -4394,21 +4687,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Context_Clauses
-        (Node : Project) return List_With_Decl
+        (Node : access Project_Type) return List_With_Decl
       is
       begin
-         return List_With_Decl
-           (Project_Type (Node.all).F_Context_Clauses);
+         return Node.F_Context_Clauses;
       end F_Context_Clauses;
       function F_Project_Decl
-        (Node : Project) return Project_Declaration
+        (Node : access Project_Type) return Project_Declaration
       is
       begin
-         return Project_Declaration
-           (Project_Type (Node.all).F_Project_Decl);
+         return Node.F_Project_Decl;
       end F_Project_Decl;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -4427,11 +4727,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Project_Declaration_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Project_Declaration_Kind;
+         return GPR_Project_Declaration;
       end Kind;
 
       ---------------
@@ -4529,24 +4829,24 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Project_Declaration_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Qualifier);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Project_Name);
                      Exists := True;
-                 when 2 =>
+                 when 3 =>
                      Result := GPR_Node (Node.F_Extension);
                      Exists := True;
-                 when 3 =>
+                 when 4 =>
                      Result := GPR_Node (Node.F_Decls);
                      Exists := True;
-                 when 4 =>
+                 when 5 =>
                      Result := GPR_Node (Node.F_End_Name);
                      Exists := True;
              when others =>
@@ -4575,30 +4875,35 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "qualifier:");
                   Node.F_Qualifier.Print (Level + 2);
                end if;
+
                if Node.F_Project_Name /= null
                   and then not Is_Empty_List (Node.F_Project_Name)
                then
                   Put_Line (Level + 1, "project_name:");
                   Node.F_Project_Name.Print (Level + 2);
                end if;
+
                if Node.F_Extension /= null
                   and then not Is_Empty_List (Node.F_Extension)
                then
                   Put_Line (Level + 1, "extension:");
                   Node.F_Extension.Print (Level + 2);
                end if;
+
                if Node.F_Decls /= null
                   and then not Is_Empty_List (Node.F_Decls)
                then
                   Put_Line (Level + 1, "decls:");
                   Node.F_Decls.Print (Level + 2);
                end if;
+
                if Node.F_End_Name /= null
                   and then not Is_Empty_List (Node.F_End_Name)
                then
                   Put_Line (Level + 1, "end_name:");
                   Node.F_End_Name.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -4733,42 +5038,46 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Qualifier
-        (Node : Project_Declaration) return Project_Qualifier
+        (Node : access Project_Declaration_Type) return Project_Qualifier
       is
       begin
-         return Project_Qualifier
-           (Project_Declaration_Type (Node.all).F_Qualifier);
+         return Node.F_Qualifier;
       end F_Qualifier;
       function F_Project_Name
-        (Node : Project_Declaration) return Expr
+        (Node : access Project_Declaration_Type) return Expr
       is
       begin
-         return Expr
-           (Project_Declaration_Type (Node.all).F_Project_Name);
+         return Node.F_Project_Name;
       end F_Project_Name;
       function F_Extension
-        (Node : Project_Declaration) return Project_Extension
+        (Node : access Project_Declaration_Type) return Project_Extension
       is
       begin
-         return Project_Extension
-           (Project_Declaration_Type (Node.all).F_Extension);
+         return Node.F_Extension;
       end F_Extension;
       function F_Decls
-        (Node : Project_Declaration) return List_GPR_Node
+        (Node : access Project_Declaration_Type) return List_GPR_Node
       is
       begin
-         return List_GPR_Node
-           (Project_Declaration_Type (Node.all).F_Decls);
+         return Node.F_Decls;
       end F_Decls;
       function F_End_Name
-        (Node : Project_Declaration) return Expr
+        (Node : access Project_Declaration_Type) return Expr
       is
       begin
-         return Expr
-           (Project_Declaration_Type (Node.all).F_End_Name);
+         return Node.F_End_Name;
       end F_End_Name;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -4787,11 +5096,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Project_Extension_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Project_Extension_Kind;
+         return GPR_Project_Extension;
       end Kind;
 
       ---------------
@@ -4854,12 +5163,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Project_Extension_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Path_Name);
                      Exists := True;
              when others =>
@@ -4890,6 +5199,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "path_name:");
                   Node.F_Path_Name.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -4952,21 +5262,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Is_All
-        (Node : Project_Extension) return Boolean
+        (Node : access Project_Extension_Type) return Boolean
       is
       begin
-         return Boolean
-           (Project_Extension_Type (Node.all).F_Is_All);
+         return Node.F_Is_All;
       end F_Is_All;
       function F_Path_Name
-        (Node : Project_Extension) return String_Literal
+        (Node : access Project_Extension_Type) return String_Literal
       is
       begin
-         return String_Literal
-           (Project_Extension_Type (Node.all).F_Path_Name);
+         return Node.F_Path_Name;
       end F_Path_Name;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -4985,11 +5302,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Project_Qualifier_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Project_Qualifier_Kind;
+         return GPR_Project_Qualifier;
       end Kind;
 
       ---------------
@@ -5047,12 +5364,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Project_Qualifier_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Qualifier);
                      Exists := True;
              when others =>
@@ -5081,6 +5398,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "qualifier:");
                   Node.F_Qualifier.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -5143,14 +5461,22 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Qualifier
-        (Node : Project_Qualifier) return GPR_Node
+        (Node : access Project_Qualifier_Type) return GPR_Node
       is
       begin
-         return GPR_Node
-           (Project_Qualifier_Type (Node.all).F_Qualifier);
+         return Node.F_Qualifier;
       end F_Qualifier;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -5169,11 +5495,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Project_Reference_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Project_Reference_Kind;
+         return GPR_Project_Reference;
       end Kind;
 
       ---------------
@@ -5231,12 +5557,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Project_Reference_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Attr_Ref);
                      Exists := True;
              when others =>
@@ -5265,6 +5591,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "attr_ref:");
                   Node.F_Attr_Ref.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -5327,14 +5654,22 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Attr_Ref
-        (Node : Project_Reference) return Attribute_Reference
+        (Node : access Project_Reference_Type) return Attribute_Reference
       is
       begin
-         return Attribute_Reference
-           (Project_Reference_Type (Node.all).F_Attr_Ref);
+         return Node.F_Attr_Ref;
       end F_Attr_Ref;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -5353,11 +5688,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Qualifier_Names_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Qualifier_Names_Kind;
+         return GPR_Qualifier_Names;
       end Kind;
 
       ---------------
@@ -5425,15 +5760,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Qualifier_Names_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Qualifier_Id1);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Qualifier_Id2);
                      Exists := True;
              when others =>
@@ -5462,12 +5797,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "qualifier_id1:");
                   Node.F_Qualifier_Id1.Print (Level + 2);
                end if;
+
                if Node.F_Qualifier_Id2 /= null
                   and then not Is_Empty_List (Node.F_Qualifier_Id2)
                then
                   Put_Line (Level + 1, "qualifier_id2:");
                   Node.F_Qualifier_Id2.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -5548,21 +5885,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Qualifier_Id1
-        (Node : Qualifier_Names) return Identifier
+        (Node : access Qualifier_Names_Type) return Identifier
       is
       begin
-         return Identifier
-           (Qualifier_Names_Type (Node.all).F_Qualifier_Id1);
+         return Node.F_Qualifier_Id1;
       end F_Qualifier_Id1;
       function F_Qualifier_Id2
-        (Node : Qualifier_Names) return Identifier
+        (Node : access Qualifier_Names_Type) return Identifier
       is
       begin
-         return Identifier
-           (Qualifier_Names_Type (Node.all).F_Qualifier_Id2);
+         return Node.F_Qualifier_Id2;
       end F_Qualifier_Id2;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -5581,11 +5925,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access String_Literal_At_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return String_Literal_At_Kind;
+         return GPR_String_Literal_At;
       end Kind;
 
       ---------------
@@ -5653,15 +5997,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access String_Literal_At_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Str_Lit);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_At_Lit);
                      Exists := True;
              when others =>
@@ -5690,12 +6034,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "str_lit:");
                   Node.F_Str_Lit.Print (Level + 2);
                end if;
+
                if Node.F_At_Lit /= null
                   and then not Is_Empty_List (Node.F_At_Lit)
                then
                   Put_Line (Level + 1, "at_lit:");
                   Node.F_At_Lit.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -5776,21 +6122,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Str_Lit
-        (Node : String_Literal_At) return String_Literal
+        (Node : access String_Literal_At_Type) return String_Literal
       is
       begin
-         return String_Literal
-           (String_Literal_At_Type (Node.all).F_Str_Lit);
+         return Node.F_Str_Lit;
       end F_Str_Lit;
       function F_At_Lit
-        (Node : String_Literal_At) return Num_Literal
+        (Node : access String_Literal_At_Type) return Num_Literal
       is
       begin
-         return Num_Literal
-           (String_Literal_At_Type (Node.all).F_At_Lit);
+         return Node.F_At_Lit;
       end F_At_Lit;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -5809,11 +6162,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Term_List_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Term_List_Kind;
+         return GPR_Term_List;
       end Kind;
 
       ---------------
@@ -5871,12 +6224,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Term_List_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Terms);
                      Exists := True;
              when others =>
@@ -5905,6 +6258,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "terms:");
                   Node.F_Terms.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -5967,14 +6321,22 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Terms
-        (Node : Term_List) return List_GPR_Node
+        (Node : access Term_List_Type) return List_GPR_Node
       is
       begin
-         return List_GPR_Node
-           (Term_List_Type (Node.all).F_Terms);
+         return Node.F_Terms;
       end F_Terms;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -5993,11 +6355,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Typed_String_Decl_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Typed_String_Decl_Kind;
+         return GPR_Typed_String_Decl;
       end Kind;
 
       ---------------
@@ -6065,15 +6427,15 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Typed_String_Decl_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Type_Id);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_String_Literals);
                      Exists := True;
              when others =>
@@ -6102,12 +6464,14 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "type_id:");
                   Node.F_Type_Id.Print (Level + 2);
                end if;
+
                if Node.F_String_Literals /= null
                   and then not Is_Empty_List (Node.F_String_Literals)
                then
                   Put_Line (Level + 1, "string_literals:");
                   Node.F_String_Literals.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -6188,21 +6552,28 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Type_Id
-        (Node : Typed_String_Decl) return Identifier
+        (Node : access Typed_String_Decl_Type) return Identifier
       is
       begin
-         return Identifier
-           (Typed_String_Decl_Type (Node.all).F_Type_Id);
+         return Node.F_Type_Id;
       end F_Type_Id;
       function F_String_Literals
-        (Node : Typed_String_Decl) return List_String_Literal
+        (Node : access Typed_String_Decl_Type) return List_String_Literal
       is
       begin
-         return List_String_Literal
-           (Typed_String_Decl_Type (Node.all).F_String_Literals);
+         return Node.F_String_Literals;
       end F_String_Literals;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -6221,11 +6592,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Variable_Decl_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Variable_Decl_Kind;
+         return GPR_Variable_Decl;
       end Kind;
 
       ---------------
@@ -6303,18 +6674,18 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Variable_Decl_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Var_Name);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Var_Type);
                      Exists := True;
-                 when 2 =>
+                 when 3 =>
                      Result := GPR_Node (Node.F_Expr);
                      Exists := True;
              when others =>
@@ -6343,18 +6714,21 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "var_name:");
                   Node.F_Var_Name.Print (Level + 2);
                end if;
+
                if Node.F_Var_Type /= null
                   and then not Is_Empty_List (Node.F_Var_Type)
                then
                   Put_Line (Level + 1, "var_type:");
                   Node.F_Var_Type.Print (Level + 2);
                end if;
+
                if Node.F_Expr /= null
                   and then not Is_Empty_List (Node.F_Expr)
                then
                   Put_Line (Level + 1, "expr:");
                   Node.F_Expr.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -6453,28 +6827,34 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Var_Name
-        (Node : Variable_Decl) return Identifier
+        (Node : access Variable_Decl_Type) return Identifier
       is
       begin
-         return Identifier
-           (Variable_Decl_Type (Node.all).F_Var_Name);
+         return Node.F_Var_Name;
       end F_Var_Name;
       function F_Var_Type
-        (Node : Variable_Decl) return Expr
+        (Node : access Variable_Decl_Type) return Expr
       is
       begin
-         return Expr
-           (Variable_Decl_Type (Node.all).F_Var_Type);
+         return Node.F_Var_Type;
       end F_Var_Type;
       function F_Expr
-        (Node : Variable_Decl) return Term_List
+        (Node : access Variable_Decl_Type) return Term_List
       is
       begin
-         return Term_List
-           (Variable_Decl_Type (Node.all).F_Expr);
+         return Node.F_Expr;
       end F_Expr;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -6493,11 +6873,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access Variable_Reference_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return Variable_Reference_Kind;
+         return GPR_Variable_Reference;
       end Kind;
 
       ---------------
@@ -6575,18 +6955,18 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access Variable_Reference_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Variable_Name1);
                      Exists := True;
-                 when 1 =>
+                 when 2 =>
                      Result := GPR_Node (Node.F_Variable_Name2);
                      Exists := True;
-                 when 2 =>
+                 when 3 =>
                      Result := GPR_Node (Node.F_Attribute_Ref);
                      Exists := True;
              when others =>
@@ -6615,18 +6995,21 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "variable_name1:");
                   Node.F_Variable_Name1.Print (Level + 2);
                end if;
+
                if Node.F_Variable_Name2 /= null
                   and then not Is_Empty_List (Node.F_Variable_Name2)
                then
                   Put_Line (Level + 1, "variable_name2:");
                   Node.F_Variable_Name2.Print (Level + 2);
                end if;
+
                if Node.F_Attribute_Ref /= null
                   and then not Is_Empty_List (Node.F_Attribute_Ref)
                then
                   Put_Line (Level + 1, "attribute_ref:");
                   Node.F_Attribute_Ref.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -6725,28 +7108,34 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Variable_Name1
-        (Node : Variable_Reference) return Identifier
+        (Node : access Variable_Reference_Type) return Identifier
       is
       begin
-         return Identifier
-           (Variable_Reference_Type (Node.all).F_Variable_Name1);
+         return Node.F_Variable_Name1;
       end F_Variable_Name1;
       function F_Variable_Name2
-        (Node : Variable_Reference) return Identifier
+        (Node : access Variable_Reference_Type) return Identifier
       is
       begin
-         return Identifier
-           (Variable_Reference_Type (Node.all).F_Variable_Name2);
+         return Node.F_Variable_Name2;
       end F_Variable_Name2;
       function F_Attribute_Ref
-        (Node : Variable_Reference) return Attribute_Reference
+        (Node : access Variable_Reference_Type) return Attribute_Reference
       is
       begin
-         return Attribute_Reference
-           (Variable_Reference_Type (Node.all).F_Attribute_Ref);
+         return Node.F_Attribute_Ref;
       end F_Attribute_Ref;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
 
 
    
@@ -6765,11 +7154,11 @@ package body GPR_Parser.AST.Types is
       overriding
       function Kind
         (Node : access With_Decl_Type)
-         return GPR_Node_Type_Kind
+         return GPR_Node_Kind_Type
       is
          pragma Unreferenced (Node);
       begin
-         return With_Decl_Kind;
+         return GPR_With_Decl;
       end Kind;
 
       ---------------
@@ -6832,12 +7221,12 @@ package body GPR_Parser.AST.Types is
 
       overriding
       procedure Get_Child (Node   : access With_Decl_Type;
-                           Index  : Natural;
+                           Index  : Positive;
                            Exists : out Boolean;
                            Result : out GPR_Node) is
       begin
          case Index is
-                 when 0 =>
+                 when 1 =>
                      Result := GPR_Node (Node.F_Path_Names);
                      Exists := True;
              when others =>
@@ -6868,6 +7257,7 @@ package body GPR_Parser.AST.Types is
                   Put_Line (Level + 1, "path_names:");
                   Node.F_Path_Names.Print (Level + 2);
                end if;
+
 
       end Print;
 
@@ -6930,21 +7320,224 @@ package body GPR_Parser.AST.Types is
 
 
 
+
       function F_Is_Limited
-        (Node : With_Decl) return Boolean
+        (Node : access With_Decl_Type) return Boolean
       is
       begin
-         return Boolean
-           (With_Decl_Type (Node.all).F_Is_Limited);
+         return Node.F_Is_Limited;
       end F_Is_Limited;
       function F_Path_Names
-        (Node : With_Decl) return List_String_Literal
+        (Node : access With_Decl_Type) return List_String_Literal
       is
       begin
-         return List_String_Literal
-           (With_Decl_Type (Node.all).F_Path_Names);
+         return Node.F_Path_Names;
       end F_Path_Names;
 
+
+   --------------------
+   --  Logic helpers --
+   --------------------
+
+
+
+   
+
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Node    : List_Case_Item;
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node
+   is
+      function Absolute_Get
+        (L : List_Case_Item; Index : Integer)
+         return GPR_Node
+      is
+        (GPR_Node
+          (Lists_Case_Item.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+      --  L.Vec is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => GPR_Node,
+         Sequence_Type => List_Case_Item,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : GPR_Node;
+   begin
+      if Relative_Get (Node, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds AST list access";
+      end if;
+   end Get;
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Node    : List_GPR_Node;
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node
+   is
+      function Absolute_Get
+        (L : List_GPR_Node; Index : Integer)
+         return GPR_Node
+      is
+        (GPR_Node
+          (Lists_GPR_Node.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+      --  L.Vec is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => GPR_Node,
+         Sequence_Type => List_GPR_Node,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : GPR_Node;
+   begin
+      if Relative_Get (Node, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds AST list access";
+      end if;
+   end Get;
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Node    : List_String_Literal;
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node
+   is
+      function Absolute_Get
+        (L : List_String_Literal; Index : Integer)
+         return GPR_Node
+      is
+        (GPR_Node
+          (Lists_String_Literal.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+      --  L.Vec is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => GPR_Node,
+         Sequence_Type => List_String_Literal,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : GPR_Node;
+   begin
+      if Relative_Get (Node, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds AST list access";
+      end if;
+   end Get;
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Node    : List_Term_List;
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node
+   is
+      function Absolute_Get
+        (L : List_Term_List; Index : Integer)
+         return GPR_Node
+      is
+        (GPR_Node
+          (Lists_Term_List.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+      --  L.Vec is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => GPR_Node,
+         Sequence_Type => List_Term_List,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : GPR_Node;
+   begin
+      if Relative_Get (Node, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds AST list access";
+      end if;
+   end Get;
+
+
+   
+
+   
+
+   ---------
+   -- Get --
+   ---------
+
+   function Get
+     (Node    : List_With_Decl;
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node
+   is
+      function Absolute_Get
+        (L : List_With_Decl; Index : Integer)
+         return GPR_Node
+      is
+        (GPR_Node
+          (Lists_With_Decl.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+      --  L.Vec is 1-based but Index is 0-based
+
+      function Relative_Get is new Langkit_Support.Relative_Get
+        (Item_Type     => GPR_Node,
+         Sequence_Type => List_With_Decl,
+         Length        => Length,
+         Get           => Absolute_Get);
+
+      Result : GPR_Node;
+   begin
+      if Relative_Get (Node, Index, Result) then
+         return Result;
+      elsif Or_Null then
+         return null;
+      else
+         raise Property_Error with "out-of-bounds AST list access";
+      end if;
+   end Get;
 
 
 

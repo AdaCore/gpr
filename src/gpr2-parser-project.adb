@@ -26,7 +26,7 @@ with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 with Ada.Strings.Wide_Wide_Unbounded;
 
-with Langkit_Support.Tokens;
+with Langkit_Support.Slocs;
 
 with GPR_Parser;
 with GPR_Parser.AST;       use GPR_Parser.AST;
@@ -74,7 +74,7 @@ package body GPR2.Parser.Project is
    is
       use Ada.Characters.Conversions;
       V      : constant Wide_Wide_String :=
-                 F_Tok (Single_Tok_Node (Node)).Text.all;
+                 Data (F_Tok (Single_Tok_Node (Node))).Text.all;
       Offset : Natural := 0;
    begin
       if V (V'First) = '"' and then V (V'Last) = '"' then
@@ -121,8 +121,6 @@ package body GPR2.Parser.Project is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
       use GPR_Parser;
-      use Langkit_Support;
-      use Langkit_Support.Tokens;
       use GPR_Parser;
 
       function Parse_Stage_1 (Unit : Analysis_Unit) return Object;
@@ -137,14 +135,17 @@ package body GPR2.Parser.Project is
          Project : Object;
          --  The project being constructed
 
-         function Parser (Node : GPR_Node) return Visit_Status;
+         function Parser
+           (Node : access GPR_Node_Type'Class) return Visit_Status;
          --  Actual parser callabck for the project
 
          ------------
          -- Parser --
          ------------
 
-         function Parser (Node : GPR_Node) return Visit_Status is
+         function Parser
+           (Node : access GPR_Node_Type'Class) return Visit_Status
+         is
             Status : constant Visit_Status := Into;
 
             procedure Parse_Project_Declaration
@@ -187,10 +188,10 @@ package body GPR2.Parser.Project is
 
                if Present (Qual) then
                   case AST.Kind (F_Qualifier (Qual)) is
-                     when Abstract_Present_Kind =>
+                     when GPR_Abstract_Present =>
                         Project.Qualifier := K_Abstract;
 
-                     when Qualifier_Names_Kind =>
+                     when GPR_Qualifier_Names =>
                         declare
                            Names : constant not null Qualifier_Names :=
                                      Qualifier_Names (F_Qualifier (Qual));
@@ -254,7 +255,7 @@ package body GPR2.Parser.Project is
                Cur_Child  : GPR_Node;
             begin
                for J in 1 .. Num_Childs loop
-                  Cur_Child := Child (GPR_Node (Path_Names), J - 1);
+                  Cur_Child := Child (GPR_Node (Path_Names), J);
 
                   if Cur_Child /= null then
                      declare
@@ -271,13 +272,13 @@ package body GPR2.Parser.Project is
 
          begin
             case AST.Kind (Node) is
-               when Project_Declaration_Kind =>
+               when GPR_Project_Declaration =>
                   Parse_Project_Declaration (Project_Declaration (Node));
 
-               when External_Reference_Kind =>
+               when GPR_External_Reference =>
                   Parse_External_Reference (External_Reference (Node));
 
-               when With_Decl_Kind =>
+               when GPR_With_Decl =>
                   Parse_With_Decl (With_Decl (Node));
 
                when others =>
@@ -374,7 +375,8 @@ package body GPR2.Parser.Project is
       Packs   : in out GPR2.Project.Pack.Set.Object)
    is
 
-      function Parser (Node : GPR_Node) return Visit_Status;
+      function Parser
+        (Node : access GPR_Node_Type'Class) return Visit_Status;
       --  Actual parser callabck for the project
 
       function Get_Variable_Values
@@ -455,20 +457,21 @@ package body GPR2.Parser.Project is
         (Node   : not null Term_List;
          Single : out Boolean) return Containers.Value_List
       is
-         use Langkit_Support;
-         use Langkit_Support.Tokens;
          use GPR_Parser;
 
          Result : Containers.Value_List;
          --  The list of values returned by Get_Term_List
 
-         function Parser (Node : GPR_Node) return Visit_Status;
+         function Parser
+           (Node : access GPR_Node_Type'Class) return Visit_Status;
 
          ------------
          -- Parser --
          ------------
 
-         function Parser (Node : GPR_Node) return Visit_Status is
+         function Parser
+           (Node : access GPR_Node_Type'Class) return Visit_Status
+         is
             Status : Visit_Status := Into;
 
             procedure Handle_String (Node : not null String_Literal)
@@ -562,16 +565,16 @@ package body GPR2.Parser.Project is
 
          begin
             case Kind (Node) is
-               when Expr_List_Kind =>
+               when GPR_Expr_List =>
                   Single := False;
 
-               when String_Literal_Kind =>
+               when GPR_String_Literal =>
                   Handle_String (String_Literal (Node));
 
-               when Variable_Reference_Kind =>
+               when GPR_Variable_Reference =>
                   Handle_Variable (Variable_Reference (Node));
 
-               when External_Reference_Kind =>
+               when GPR_External_Reference =>
                   Handle_External_Variable (External_Reference (Node));
 
                when others =>
@@ -613,7 +616,6 @@ package body GPR2.Parser.Project is
       function Get_Variable_Values
         (Node : not null Variable_Reference) return Containers.Value_List
       is
-         use Langkit_Support.Tokens;
          Name_1  : constant not null Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
@@ -638,7 +640,9 @@ package body GPR2.Parser.Project is
       -- Parser --
       ------------
 
-      function Parser (Node : GPR_Node) return Visit_Status is
+      function Parser
+        (Node : access GPR_Node_Type'Class) return Visit_Status
+      is
 
          use GPR_Parser;
 
@@ -670,7 +674,7 @@ package body GPR2.Parser.Project is
          --  Recursive call to the Parser if the Child is not null
 
          function Get_Source_Reference
-           (Slr : Langkit_Support.Tokens.Source_Location_Range)
+           (Slr : Langkit_Support.Slocs.Source_Location_Range)
             return Source_Reference.Object is
            (Source_Reference.Create
               (Value (Self.File),
@@ -684,14 +688,13 @@ package body GPR2.Parser.Project is
          procedure Parse_Attribute_Decl_Kind
            (Node : not null Attribute_Decl)
          is
-            use Langkit_Support.Tokens;
             Sloc   : constant Source_Reference.Object :=
                        Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
             Name   : constant not null GPR_Node := F_Attr_Name (Node);
             Index  : constant GPR_Node := F_Attr_Index (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
             N_Str  : constant String :=
-                       (if Kind (Name) = External_Name_Kind
+                       (if Kind (Name) = GPR_External_Name
                         then "external"
                         else Get_Name_Type (Single_Tok_Node (Name)));
             Single : Boolean;
@@ -780,7 +783,7 @@ package body GPR2.Parser.Project is
             declare
                Childs : constant List_Case_Item := F_Items (Node);
             begin
-               for C in 0 .. Child_Count (Childs) loop
+               for C in 1 .. Child_Count (Childs) loop
                   Visit_Child (Child (GPR_Node (Childs), C));
                end loop;
             end;
@@ -803,7 +806,8 @@ package body GPR2.Parser.Project is
          procedure Parse_Case_Item (Node : not null Case_Item) is
             use GPR_Parser.AST.Types;
 
-            function Parser (Node : GPR_Node) return Visit_Status;
+            function Parser
+              (Node : access GPR_Node_Type'Class) return Visit_Status;
 
             Is_Case_Item_Matches : Boolean := False;
 
@@ -811,7 +815,9 @@ package body GPR2.Parser.Project is
             -- Parser --
             ------------
 
-            function Parser (Node : GPR_Node) return Visit_Status is
+            function Parser
+              (Node : access GPR_Node_Type'Class) return Visit_Status
+            is
                Status : constant Visit_Status := Into;
 
                procedure Handle_String   (Node : not null String_Literal);
@@ -821,7 +827,6 @@ package body GPR2.Parser.Project is
                -------------------
 
                procedure Handle_String (Node : not null String_Literal) is
-                  use Langkit_Support.Tokens;
                   Value : constant Name_Type :=
                             Unquote
                               (Name_Type
@@ -834,7 +839,7 @@ package body GPR2.Parser.Project is
 
             begin
                case Kind (Node) is
-                  when String_Literal_Kind =>
+                  when GPR_String_Literal =>
                      Handle_String (String_Literal (Node));
 
                   when others =>
@@ -942,19 +947,19 @@ package body GPR2.Parser.Project is
             --  Handle all kind of nodes when the parsing is open
 
             case AST.Kind (Node) is
-               when Attribute_Decl_Kind =>
+               when GPR_Attribute_Decl =>
                   Parse_Attribute_Decl_Kind (Attribute_Decl (Node));
 
-               when Variable_Decl_Kind =>
+               when GPR_Variable_Decl =>
                   Parse_Variable_Decl_Kind (Variable_Decl (Node));
 
-               when Package_Decl_Kind =>
+               when GPR_Package_Decl =>
                   Parse_Package_Decl_Kind (Package_Decl (Node));
 
-               when Case_Construction_Kind =>
+               when GPR_Case_Construction =>
                   Parse_Case_Construction (Case_Construction (Node));
 
-               when Case_Item_Kind =>
+               when GPR_Case_Item =>
                   Parse_Case_Item (Case_Item (Node));
 
                when others =>
@@ -965,7 +970,7 @@ package body GPR2.Parser.Project is
             --  We are on a closed parsing mode, only handle case alternatives
 
             case AST.Kind (Node) is
-               when Case_Item_Kind =>
+               when GPR_Case_Item =>
                   Parse_Case_Item (Case_Item (Node));
 
                when others =>

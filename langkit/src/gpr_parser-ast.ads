@@ -31,13 +31,31 @@
 
 
 
+
+
+with Ada.Finalization;
+with Ada.Iterator_Interfaces;
+with Ada.Unchecked_Deallocation;
+
 with System;
 
-with Langkit_Support.Extensions;         use Langkit_Support.Extensions;
+with Adalog.Abstract_Relation;   use Adalog.Abstract_Relation;
+with Adalog.Eq_Same;
+
+with Langkit_Support.Extensions;  use Langkit_Support.Extensions;
+with Langkit_Support.Iterators;
 with Langkit_Support.Lexical_Env;
-with Langkit_Support.Token_Data_Handler; use Langkit_Support.Token_Data_Handler;
-with Langkit_Support.Tokens;             use Langkit_Support.Tokens;
+with Langkit_Support.Slocs;       use Langkit_Support.Slocs;
+with Langkit_Support.Symbols;     use Langkit_Support.Symbols;
+with Langkit_Support.Text;        use Langkit_Support.Text;
+with Langkit_Support.Tree_Traversal_Iterator;
 with Langkit_Support.Vectors;
+
+with GPR_Parser.Analysis_Interfaces;
+use GPR_Parser.Analysis_Interfaces;
+with GPR_Parser.Lexer;
+use GPR_Parser.Lexer;
+use GPR_Parser.Lexer.Token_Data_Handlers;
 
 --  This package defines the base ("root") type for AST nodes. All node types
 --  that appear in the AST derive from it.
@@ -48,7 +66,10 @@ package GPR_Parser.AST is
    -- Root AST node --
    -------------------
 
-   type GPR_Node_Type is abstract tagged private;
+   type GPR_Node_Type is abstract tagged private
+     with Default_Iterator => Iterate,
+          Iterator_Element => GPR_Node,
+          Constant_Indexing => Element_Value;
    --  This "by-value" type is public to expose the fact that the various
    --  AST nodes are a hierarchy of tagged types, but it is not intended to be
    --  used directly, hence the "_Type" suffix. Please use instead the
@@ -86,14 +107,14 @@ package GPR_Parser.AST is
    --  Access to the arbitrary values stored in AST nodes
 
    type Extension_Destructor is
-     access procedure (Node      : GPR_Node;
+     access procedure (Node      : access GPR_Node_Type'Class;
                        Extension : Extension_Type)
      with Convention => C;
    --  Type for extension destructors. The parameter are the "Node" the
    --  extension was attached to and the "Extension" itself.
 
    function Get_Extension
-     (Node : GPR_Node;
+     (Node : access GPR_Node_Type'Class;
       ID   : Extension_ID;
       Dtor : Extension_Destructor) return Extension_Access;
    --  Get (and create if needed) the extension corresponding to ID for Node.
@@ -114,12 +135,116 @@ package GPR_Parser.AST is
    --  This type and constants are added waiting for a real metadata type
 
    package AST_Envs is new Langkit_Support.Lexical_Env
-     (GPR_Node,
-      Dummy_Metadata,
-      No_Metadata, Combine);
+     (Element_T        => GPR_Node,
+      Element_Metadata =>
+         Dummy_Metadata,
+      No_Element       => null,
+      Empty_Metadata   => No_Metadata,
+      Combine          => Combine);
 
+   subtype Lexical_Env is AST_Envs.Lexical_Env;
    subtype Env_Element is AST_Envs.Env_Element;
    No_Env_Element : constant Env_Element := (null, No_Metadata);
+   procedure Inc_Ref (Self : Lexical_Env) renames AST_Envs.Inc_Ref;
+   procedure Dec_Ref (Self : in out Lexical_Env) renames AST_Envs.Dec_Ref;
+
+   function Get
+     (A     : AST_Envs.Env_Element_Array;
+      Index : Integer)
+      return Env_Element;
+   --  Simple getter that raises Property_Error on out-of-bound accesses.
+   --  Useful for code generation.
+
+   
+
+   
+
+   type Lexical_Env_Array is array (Positive range <>) of Lexical_Env;
+   type Lexical_Env_Array_Record (N : Natural) is record
+      Ref_Count : Positive;
+      Items     : Lexical_Env_Array (1 .. N);
+   end record;
+
+   type Lexical_Env_Array_Access is access all Lexical_Env_Array_Record;
+
+
+   package Lexical_Env_Vectors is new Langkit_Support.Vectors
+     (Lexical_Env);
+   package Lexical_Env_Arrays renames Lexical_Env_Vectors.Elements_Arrays;
+
+   function Create (Items_Count : Natural) return Lexical_Env_Array_Access is
+     (new Lexical_Env_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
+   --  Create a new array for N uninitialized elements and give its only
+   --  ownership share to the caller.
+
+   function Get
+     (T       : Lexical_Env_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return Lexical_Env;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based. If
+   --  the result is ref-counted, a new owning reference is returned.
+
+   function Length (T : Lexical_Env_Array_Access) return Natural is (T.N);
+
+   procedure Inc_Ref (T : Lexical_Env_Array_Access);
+   procedure Dec_Ref (T : in out Lexical_Env_Array_Access);
+
+
+
+   
+
+   
+
+   type Env_Element_Array is array (Positive range <>) of Env_Element;
+   type Env_Element_Array_Record (N : Natural) is record
+      Ref_Count : Positive;
+      Items     : Env_Element_Array (1 .. N);
+   end record;
+
+   type Env_Element_Array_Access is access all Env_Element_Array_Record;
+
+   function Copy is new AST_Envs.Env_Element_Arrays.Copy
+     (Positive, Env_Element_Array);
+
+   function Create (Items : AST_Envs.Env_Element_Array) return Env_Element_Array_Access
+   is (new Env_Element_Array_Record'(N         => Items'Length,
+                             Items     => Copy (Items),
+                             Ref_Count => 1));
+
+   package Env_Element_Vectors is new Langkit_Support.Vectors
+     (Env_Element);
+   package Env_Element_Arrays renames Env_Element_Vectors.Elements_Arrays;
+
+   function Create (Items_Count : Natural) return Env_Element_Array_Access is
+     (new Env_Element_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
+   --  Create a new array for N uninitialized elements and give its only
+   --  ownership share to the caller.
+
+   function Get
+     (T       : Env_Element_Array_Access;
+      Index   : Integer;
+      Or_Null : Boolean := False) return Env_Element;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based. If
+   --  the result is ref-counted, a new owning reference is returned.
+
+   function Length (T : Env_Element_Array_Access) return Natural is (T.N);
+
+   procedure Inc_Ref (T : Env_Element_Array_Access);
+   procedure Dec_Ref (T : in out Env_Element_Array_Access);
+
+
+
+   function Group is new AST_Envs.Group
+     (Index_Type        => Positive,
+      Lexical_Env_Array => Lexical_Env_Array);
+
+   function Group
+     (Envs : Lexical_Env_Array_Access)
+      return Lexical_Env
+   is (Group (Envs.Items));
+   --  Convenience wrapper for uniform types handling in code generation
 
    
 
@@ -127,7 +252,8 @@ package GPR_Parser.AST is
 
    type GPR_Node_Array is array (Positive range <>) of GPR_Node;
    type GPR_Node_Array_Record (N : Natural) is record
-      Items : GPR_Node_Array (1 .. N);
+      Ref_Count : Positive;
+      Items     : GPR_Node_Array (1 .. N);
    end record;
 
    type GPR_Node_Array_Access is access all GPR_Node_Array_Record;
@@ -135,38 +261,163 @@ package GPR_Parser.AST is
 
    package GPR_Node_Vectors is new Langkit_Support.Vectors
      (GPR_Node);
+   package GPR_Node_Arrays renames GPR_Node_Vectors.Elements_Arrays;
+
+   function Create (Items_Count : Natural) return GPR_Node_Array_Access is
+     (new GPR_Node_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
+   --  Create a new array for N uninitialized elements and give its only
+   --  ownership share to the caller.
 
    function Get
      (T       : GPR_Node_Array_Access;
-      Index   : Natural;
-      Or_Null : Boolean := False) return GPR_Node
-   is
-     (if Index < T.Items'Length
-      then T.Items (Index + 1)
-      else (if Or_Null
-            then null
-            else raise Property_Error));
+      Index   : Integer;
+      Or_Null : Boolean := False) return GPR_Node;
+   --  When Index is positive, return the Index'th element in T. Otherwise,
+   --  return the element at index (Size - Index - 1). Index is zero-based. If
+   --  the result is ref-counted, a new owning reference is returned.
+
+   function Length (T : GPR_Node_Array_Access) return Natural is (T.N);
+
+   procedure Inc_Ref (T : GPR_Node_Array_Access);
+   procedure Dec_Ref (T : in out GPR_Node_Array_Access);
 
 
-
-   package GPR_Node_Arrays renames
-     GPR_Node_Vectors.Elements_Arrays;
 
    procedure Populate_Lexical_Env
-     (Node : GPR_Node; Root_Env : AST_Envs.Lexical_Env);
+     (Node     : access GPR_Node_Type'Class;
+      Root_Env : AST_Envs.Lexical_Env);
    --  Populate the lexical environment for node and all its children
 
    -----------------------------
    -- Miscellanous operations --
    -----------------------------
 
-   type GPR_Node_Type_Kind is new Natural;
-   --  Describe the concrete type (aka dynamic type) of an AST node (i.e. from
-   --  which concrete derivation it comes from).
-   --  See GPR_Parser.AST for possible values.
+   type GPR_Node_Kind_Type is
+     (GPR_List
+      , GPR_Abstract_Present
+      , GPR_Attribute_Decl
+      , GPR_Attribute_Reference
+      , GPR_Case_Construction
+      , GPR_Case_Item
+      , GPR_Compilation_Unit
+      , GPR_Empty_Decl
+      , GPR_Prefix
+      , GPR_Identifier
+      , GPR_Num_Literal
+      , GPR_String_Literal
+      , GPR_Expr_List
+      , GPR_External
+      , GPR_External_As_List
+      , GPR_External_Name
+      , GPR_External_Reference
+      , GPR_Others_Designator
+      , GPR_Package_Decl
+      , GPR_Package_Extension
+      , GPR_Package_Renaming
+      , GPR_Package_Spec
+      , GPR_Project
+      , GPR_Project_Declaration
+      , GPR_Project_Extension
+      , GPR_Project_Qualifier
+      , GPR_Project_Reference
+      , GPR_Qualifier_Names
+      , GPR_String_Literal_At
+      , GPR_Term_List
+      , GPR_Typed_String_Decl
+      , GPR_Variable_Decl
+      , GPR_Variable_Reference
+      , GPR_With_Decl
+     );
+   --  AST node concrete types
+
+   for GPR_Node_Kind_Type use
+     (GPR_List => 1
+      , GPR_Abstract_Present => 2
+      , GPR_Attribute_Decl => 3
+      , GPR_Attribute_Reference => 4
+      , GPR_Case_Construction => 5
+      , GPR_Case_Item => 6
+      , GPR_Compilation_Unit => 7
+      , GPR_Empty_Decl => 8
+      , GPR_Prefix => 9
+      , GPR_Identifier => 10
+      , GPR_Num_Literal => 11
+      , GPR_String_Literal => 12
+      , GPR_Expr_List => 13
+      , GPR_External => 14
+      , GPR_External_As_List => 15
+      , GPR_External_Name => 16
+      , GPR_External_Reference => 17
+      , GPR_Others_Designator => 18
+      , GPR_Package_Decl => 19
+      , GPR_Package_Extension => 20
+      , GPR_Package_Renaming => 21
+      , GPR_Package_Spec => 22
+      , GPR_Project => 23
+      , GPR_Project_Declaration => 24
+      , GPR_Project_Extension => 25
+      , GPR_Project_Qualifier => 26
+      , GPR_Project_Reference => 27
+      , GPR_Qualifier_Names => 28
+      , GPR_String_Literal_At => 29
+      , GPR_Term_List => 30
+      , GPR_Typed_String_Decl => 31
+      , GPR_Variable_Decl => 32
+      , GPR_Variable_Reference => 33
+      , GPR_With_Decl => 34
+     );
+
+      
+         subtype GPR_GPR_Node is
+            GPR_Node_Kind_Type range
+               GPR_Abstract_Present
+               .. GPR_With_Decl;
+      
+      
+      
+      
+      
+      
+      
+      
+         subtype GPR_Expr is
+            GPR_Node_Kind_Type range
+               GPR_Prefix
+               .. GPR_String_Literal;
+      
+      
+         subtype GPR_Single_Tok_Node is
+            GPR_Node_Kind_Type range
+               GPR_Identifier
+               .. GPR_String_Literal;
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
 
    function Kind (Node : access GPR_Node_Type)
-                  return GPR_Node_Type_Kind is abstract;
+                  return GPR_Node_Kind_Type is abstract;
    function Kind_Name
      (Node : access GPR_Node_Type) return String is abstract;
    --  Return the concrete kind for Node
@@ -179,6 +430,18 @@ package GPR_Parser.AST is
    --  TODO??? Hide it somehow: destruction is done automatically when the
    --  owning analysis unit is destroyed itself.
 
+   function Node_Env
+     (Node : access GPR_Node_Type)
+      return AST_Envs.Lexical_Env;
+   --  For nodes that introduce a new environment, return the parent lexical
+   --  environment. Return the "inherited" environment otherwise.
+
+   function Children_Env
+     (Node : access GPR_Node_Type)
+      return AST_Envs.Lexical_Env;
+   --  For nodes that introduce a new environment, return it. Return the
+   --  "inherited" environment otherwise.
+
    -------------------------------
    -- Tree traversal operations --
    -------------------------------
@@ -188,15 +451,16 @@ package GPR_Parser.AST is
    --  Return the number of children Node has
 
    procedure Get_Child (Node   : access GPR_Node_Type;
-                        Index  : Natural;
+                        Index  : Positive;
                         Exists : out Boolean;
                         Result : out GPR_Node) is abstract;
    --  Get the Index'th child of Node, storing it into Result. Store in Exists
    --  whether Node had such a child (if not, the content of Result is
    --  undefined).
+   --  Child indexing is 1-based.
 
    function Child (Node  : access GPR_Node_Type'Class;
-                   Index : Natural) return GPR_Node;
+                   Index : Positive) return GPR_Node;
    --  Return the Index'th child of Node, or null if Node has no such child
 
    function Children
@@ -207,12 +471,23 @@ package GPR_Parser.AST is
    --  the convenience of ada arrays, and you don't care about the small
    --  performance hit of creating an array.
 
+   function Parents
+     (Node         : access GPR_Node_Type'Class;
+      Include_Self : Boolean := True)
+      return GPR_Node_Array_Access;
+   --  Return the list of parents for this node. This node included in the list
+   --  iff Include_Self.
+
+   function Parent
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node;
+
    type Visit_Status is (Into, Over, Stop);
    --  Helper type to control the AST node traversal process. See Traverse.
 
    function Traverse
-     (Node  : GPR_Node;
-      Visit : access function (Node : GPR_Node)
+     (Node  : access GPR_Node_Type'Class;
+      Visit : access function (Node : access GPR_Node_Type'Class)
                                return Visit_Status)
      return Visit_Status;
    --  Given the parent node for a subtree, traverse all syntactic nodes of
@@ -232,36 +507,148 @@ package GPR_Parser.AST is
    --            original call to Traverse returns Stop.
 
    procedure Traverse
-     (Node  : GPR_Node;
-      Visit : access function (Node : GPR_Node)
-              return Visit_Status);
+     (Node  : access GPR_Node_Type'Class;
+      Visit : access function (Node : access GPR_Node_Type'Class)
+                               return Visit_Status);
    --  This is the same as Traverse function except that no result is returned
    --  i.e. the Traverse function is called and the result is simply discarded.
 
-   function Parents
-     (Node : access GPR_Node_Type)
-      return GPR_Node_Array_Access;
-   --  Return the list of parents for this node (this node included)
+   generic
+      type Data_Type is private;
+      Reset_After_Traversal : Boolean := False;
+   function Traverse_With_Data
+     (Node  : access GPR_Node_Type'Class;
+      Visit : access function (Node : access GPR_Node_Type'Class;
+                               Data : in out Data_type)
+                               return Visit_Status;
+      Data  : in out Data_Type)
+      return Visit_Status;
+   --  This is the same as the first Traverse function except it accepts an
+   --  argument that is passed to all Visit calls.
+   --
+   --  If Reset_After_Traversal is True, the Data formal is left unchanged when
+   --  Traverse_With_Data returns no matter what Visit does. Visit can change
+   --  it otherwise.
+
+   package GPR_Node_Iterators is new Langkit_Support.Iterators
+     (Element_Type => GPR_Node,
+      Element_Vectors => GPR_Node_Vectors);
+
+   type Traverse_Iterator is
+     new GPR_Node_Iterators.Iterator
+     with private;
+
+   function Traverse
+     (Root : access GPR_Node_Type'Class)
+      return Traverse_Iterator;
+   --  Return an iterator that yields all AST nodes under Root (included) in a
+   --  prefix DFS (depth first search) fasion.
+
+   type GPR_Node_Predicate_Type is interface;
+   type GPR_Node_Predicate is
+      access all GPR_Node_Predicate_Type'Class;
+   --  Predicate on AST nodes.
+   --
+   --  Useful predicates often rely on values from some context, so predicates
+   --  that are mere accesses to a function are not powerful enough. Having a
+   --  full interface for this makes it possible to package both the predicate
+   --  code and some data it needs.
+
+   function Evaluate
+     (P : access GPR_Node_Predicate_Type;
+      N : GPR_Node)
+      return Boolean is abstract;
+   --  Return the value of the predicate for the N node
+
+   procedure Destroy is new Ada.Unchecked_Deallocation
+     (GPR_Node_Predicate_Type'Class,
+      GPR_Node_Predicate);
+
+   type Find_Iterator is limited
+     new GPR_Node_Iterators.Iterator
+     with private;
+   --  Iterator type for Find (see below)
+
+   overriding
+   function Next (It       : in out Find_Iterator;
+                  Element  : out GPR_Node) return Boolean;
+
+   type Local_Find_Iterator is limited
+      new GPR_Node_Iterators.Iterator
+   with private;
+   --  Iterator type for the Find function that takes an access to function. It
+   --  is called Local_Find_Iterator because if you use a locally declared
+   --  function, the iterator itself will only be valid in the scope of the
+   --  function.
+
+   overriding function Next
+     (It       : in out Local_Find_Iterator;
+      Element  : out GPR_Node)
+      return Boolean;
+
+   function Find
+     (Root      : access GPR_Node_Type'Class;
+      Predicate : access function (N : GPR_Node) return Boolean)
+      return Local_Find_Iterator;
+   --  Return an iterator that yields all AST nodes under Root (included) that
+   --  satisfy the Predicate predicate.
+
+   function Find
+     (Root      : access GPR_Node_Type'Class;
+      Predicate : GPR_Node_Predicate)
+      return Find_Iterator;
+   --  Return an iterator that yields all AST nodes under Root (included) that
+   --  satisfy the Predicate predicate. Predicate will be destroyed when
+   --  Find_Iterator is exhausted.
+
+   function Find_First
+     (Root      : access GPR_Node_Type'Class;
+      Predicate : GPR_Node_Predicate)
+      return GPR_Node;
+   --  Return the first found AST node under Root (included) that satisfies the
+   --  Pred, or return null if there is no such node.
+
+   type GPR_Node_Kind_Filter is
+      new GPR_Node_Predicate_Type with
+   record
+      Kind : GPR_Node_Kind_Type;
+   end record;
+   --  Predicate that returns true for all AST nodes of some kind
+
+   function Evaluate
+     (P : access GPR_Node_Kind_Filter;
+      N : GPR_Node)
+      return Boolean;
+
+   function Previous_Sibling
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node;
+   --  Return the Node's previous sibling in the tree, if there is such a node
+
+   function Next_Sibling
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node;
+   --  Return the Node's next sibling in the tree, if there is such a node
 
    ----------------------------------------
    -- Source location-related operations --
    ----------------------------------------
 
-   function Sloc_Range (Node : GPR_Node;
+   function Sloc_Range (Node : access GPR_Node_Type'Class;
                         Snap : Boolean := False) return Source_Location_Range;
    --  Return the source location range corresponding to the set of tokens from
    --  which Node was parsed.
    --
    --  TODO??? Document the Snap formal.
 
-   function Compare (Node : GPR_Node;
+   function Compare (Node : access GPR_Node_Type'Class;
                      Sloc : Source_Location;
                      Snap : Boolean := False) return Relative_Position;
    --  Compare Sloc to the sloc range of Node.
    --
    --  TODO??? Document the Snap formal.
 
-   function Lookup (Node : GPR_Node;
+   function Lookup (Node : access GPR_Node_Type'Class;
                     Sloc : Source_Location;
                     Snap : Boolean := False) return GPR_Node;
    --  Look for the bottom-most AST node whose sloc range contains Sloc. Return
@@ -273,6 +660,34 @@ package GPR_Parser.AST is
    -- Lexical utilities --
    -----------------------
 
+   type Token_Type is private;
+   --  Reference to a token in an analysis unit.
+
+   No_Token : constant Token_Type;
+
+   function First_Token (TDH : Token_Data_Handler_Access) return Token_Type;
+   --  Internal helper. Return a reference to the first token in TDH.
+
+   function Last_Token (TDH : Token_Data_Handler_Access) return Token_Type;
+   --  Internal helper. Return a reference to the last token in TDH.
+
+   function "<" (Left, Right : Token_Type) return Boolean;
+   --  Assuming Left and Right belong to the same analysis unit, return whether
+   --  Left came before Right in the source file.
+
+   function Next (Token : Token_Type) return Token_Type;
+   --  Return a reference to the next token in the corresponding analysis unit.
+
+   function Previous (Token : Token_Type) return Token_Type;
+   --  Return a reference to the previous token in the corresponding analysis
+--  unit.
+
+   function Data (T : Token_Type) return Token_Data_Type;
+   --  Return the data associated to T
+
+   function Image (Token : Token_Type) return String;
+   --  Debug helper: return a human-readable text to represent a token
+
    type Child_Or_Trivia is (Child, Trivia);
    --  Discriminator for the Child_Record type
 
@@ -281,7 +696,7 @@ package GPR_Parser.AST is
          when Child =>
             Node : GPR_Node;
          when Trivia =>
-            Trivia : Token;
+            Trivia : Token_Data_Type;
       end case;
    end record;
    --  Variant that holds either an AST node or a token
@@ -290,18 +705,23 @@ package GPR_Parser.AST is
    package Children_Arrays renames Children_Vectors.Elements_Arrays;
 
    function Children_With_Trivia
-     (Node : GPR_Node) return Children_Arrays.Array_Type;
+     (Node : access GPR_Node_Type'Class)
+      return Children_Arrays.Array_Type;
    --  Return the children of this node interleaved with Trivia token nodes, so
    --  that:
    --  - Every trivia contained between Node.Start_Token and Node.End_Token - 1
    --    will be part of the returned array;
    --  - Nodes and trivias will be lexically ordered.
 
-   function Token_Start (Node : GPR_Node) return Natural;
-   --  Return the index of the first token used to parse Node
+   function Token_Start
+     (Node : access GPR_Node_Type'Class)
+      return Token_Type;
+   --  Return the first token used to parse Node
 
-   function Token_End (Node : GPR_Node) return Natural;
-   --  Return the index of the last token used to parse Node
+   function Token_End
+     (Node : access GPR_Node_Type'Class)
+      return Token_Type;
+   --  Return the last token used to parse Node
 
    -------------------
    -- Debug helpers --
@@ -312,7 +732,9 @@ package GPR_Parser.AST is
    --  Debug helper: return a textual representation of this node and all its
    --  children.
 
-   function Short_Image (Node : GPR_Node) return String;
+   function Short_Image
+     (Node : access GPR_Node_Type)
+      return Text_Type;
    --  Debug helper: return a short representation of the string, containing
    --  just the kind name and the sloc.
 
@@ -321,23 +743,73 @@ package GPR_Parser.AST is
    --  Debug helper: print to standard output Node and all its children. Level
    --  indicates the indentation level for the output.
 
-   procedure PP_Trivia (Node : GPR_Node; Level : Integer := 0);
+   procedure PP_Trivia
+     (Node  : access GPR_Node_Type'Class;
+      Level : Integer := 0);
    --  Debug helper: print to standard output Node and all its children along
    --  with the trivia associated to them. Level indicates the indentation
    --  level for the output.
 
    procedure Dump_Lexical_Env
-     (Node : GPR_Node; Root_Env : AST_Envs.Lexical_Env);
+     (Node     : access GPR_Node_Type'Class;
+      Root_Env : AST_Envs.Lexical_Env);
    --  Debug helper: dump the lexical environment of Node, and consequently any
    --  nested lexical environment. Used for debugging/testing purpose. Pass the
    --  root env explicitly so that we can tag it properly in the output.
 
    procedure Dump_One_Lexical_Env
-     (Self : AST_Envs.Lexical_Env;
-      Env_Id : String := "";
+     (Self          : AST_Envs.Lexical_Env;
+      Env_Id        : String := "";
       Parent_Env_Id : String := "");
    --  Debug helper: Dumps one lexical env. You can supply ids for env and its
    --  parent, so that they will be identified in the output.
+
+   ----------------------------------------
+   -- Tree traversal (Ada 2012 iterator) --
+   ----------------------------------------
+
+   type Children_Cursor is private;
+   --  Cursor for AST node children iteration
+
+   No_Children : constant Children_Cursor;
+
+   function Has_Element (C : Children_Cursor) return Boolean;
+   --  Whether C references a valid AST node child
+
+   package GPR_Node_Ada2012_Iterators is
+     new Ada.Iterator_Interfaces (Children_Cursor, Has_Element);
+
+   function Iterate
+     (Node : GPR_Node_Type)
+      return
+      GPR_Node_Ada2012_Iterators.Reversible_Iterator'Class;
+
+   function Element_Value
+     (Node : GPR_Node_Type; C : Children_Cursor)
+      return GPR_Node;
+
+   ------------------------------
+   -- Root AST node properties --
+   ------------------------------
+
+
+   ---------------------------
+   -- Adalog instantiations --
+   ---------------------------
+
+   package Eq_Node is new Adalog.Eq_Same (GPR_Node);
+   subtype Logic_Var is Eq_Node.Refs.Raw_Var;
+   subtype Logic_Var_Record is Eq_Node.Refs.Var;
+   Null_Var : constant Logic_Var := null;
+   Null_Var_Record : constant Logic_Var_Record := (Reset => True, others => <>);
+
+   subtype Logic_Equation is Relation;
+   Null_Logic_Equation : constant Logic_Equation := null;
+
+   function Get_Unit
+     (Node : access GPR_Node_Type'Class)
+      return Analysis_Unit_Interface;
+   --  Internal helper to get the unit that owns an AST node
 
 private
 
@@ -361,14 +833,24 @@ private
 
    type GPR_Node_Type is abstract tagged record
       Parent                 : GPR_Node := null;
-      Token_Data             : Token_Data_Handler_Access := null;
-      Token_Start, Token_End : Natural  := 0;
-      Parent_Env             : AST_Envs.Lexical_Env;
+
+      Unit                   : Analysis_Unit_Interface := null;
+      --  Reference to the analysis unit that owns this node
+
+      Token_Start, Token_End : Token_Index  := No_Token_Index;
       Extensions             : Extension_Vectors.Vector;
+
+      Self_Env               : AST_Envs.Lexical_Env;
+      --  Hold the environment this node defines, or the parent environment
+      --  otherwise.
+
+      
+   
+
    end record;
    --  TODO??? Remove this from the public API
 
-   procedure Free_Extensions (Node : access GPR_Node_Type);
+   procedure Free_Extensions (Node : access GPR_Node_Type'Class);
    --  Implementation helper to free the extensions associatde to Node
 
    function Is_Empty_List
@@ -378,25 +860,90 @@ private
    --  Return whether Node is an empty list (so this is wrong for all nodes
    --  that are not lists).
 
+   
+  procedure Free is new Ada.Unchecked_Deallocation
+    (Lexical_Env_Array_Record, Lexical_Env_Array_Access);
+
+   
+  procedure Free is new Ada.Unchecked_Deallocation
+    (Env_Element_Array_Record, Env_Element_Array_Access);
+
+   
+  procedure Free is new Ada.Unchecked_Deallocation
+    (GPR_Node_Array_Record, GPR_Node_Array_Access);
+
+
    function Do_Env_Actions
-     (Self       : access GPR_Node_Type;
-      Parent_Env : in out AST_Envs.Lexical_Env) return AST_Envs.Lexical_Env
+     (Self        : access GPR_Node_Type;
+      Current_Env : in out AST_Envs.Lexical_Env) return AST_Envs.Lexical_Env
    is (null);
    --  Internal procedure that will execute all necessary lexical env actions
    --  for Node. This is meant to be called by Populate_Lexical_Env, and not by
    --  the user.
    --
-   --  Parent_Env is the environment that is the parent scope for Self when
+   --  Current_Env is the environment that is the parent scope for Self when
    --  entering the function. It is an in out parameter because the
-   --  implementation can replace Parent_Env by a new Lexical_Env derived from
+   --  implementation can replace it by a new Lexical_Env derived from
    --  it.
    --
    --  The return value can be either null, or a new Lexical_Env that represent
    --  a new scope that will be used by Self's children.
-   --  The difference between replacing Parent_Env and returning a new env, is
-   --  that replacing Parent_Env will affect the env that the following
+   --  The difference between replacing Current_Env and returning a new env, is
+   --  that replacing Current_Env will affect the env that the following
    --  siblings of Self see, while returning a new env will only affect the
    --  environment seen by Self's children.
+
+   --------------------------------
+   -- Tree traversal (internals) --
+   --------------------------------
+
+   function Get_Parent
+     (N : GPR_Node) return GPR_Node
+   is (N.Parent);
+   function Children_Count (N : GPR_Node) return Natural
+   is (N.Child_Count);
+   function Get_Child
+     (N : GPR_Node; I : Natural) return GPR_Node
+   is (N.Child (I));
+
+   package Traversal_Iterators is new Langkit_Support.Tree_Traversal_Iterator
+     (GPR_Node,
+      null,
+      Element_Vectors => GPR_Node_Vectors,
+      Iterators => GPR_Node_Iterators);
+
+   type Traverse_Iterator
+   is new Traversal_Iterators.Traverse_Iterator with null record;
+
+   type Find_Iterator is limited
+      new Ada.Finalization.Limited_Controlled
+      and GPR_Node_Iterators.Iterator with
+   record
+      Traverse_It : Traverse_Iterator;
+      --  Traverse iterator to fetch all nodes
+
+      Predicate   : GPR_Node_Predicate;
+      --  Predicate used to filter the nodes Traverse_It yields
+   end record;
+
+   overriding procedure Finalize (It : in out Find_Iterator);
+
+   type Local_Find_Iterator is limited
+      new Ada.Finalization.Limited_Controlled
+      and GPR_Node_Iterators.Iterator with
+   record
+      Traverse_It : Traverse_Iterator;
+      --  Traverse iterator to fetch all nodes
+
+      Predicate   : access function (N : GPR_Node)
+                                     return Boolean;
+      --  Predicate used to filter the nodes Traverse_It yields
+   end record;
+   --  Iterator type for Find (see below)
+
+   ---------------------------------------------------
+   -- Source location-related operations (interals) --
+   ---------------------------------------------------
 
    function Lookup_Children
      (Node : access GPR_Node_Type;
@@ -411,17 +958,113 @@ private
    --  implementation is never supposed to be called. However, we lost the
    --  capacity to detect at compile time that this is not overriden.
 
-   procedure Lookup_Relative (Node       : GPR_Node;
-                              Sloc       : Source_Location;
-                              Position   : out Relative_Position;
-                              Node_Found : out GPR_Node;
-                              Snap       : Boolean := False);
+   procedure Lookup_Relative
+     (Node       : access GPR_Node_Type'Class;
+      Sloc       : Source_Location;
+      Position   : out Relative_Position;
+      Node_Found : out GPR_Node;
+      Snap       : Boolean := False);
    --  Implementation helper for the looking up process. TODO??? Do not expose
    --  it in the public API.
 
-   function Token_Start (Node : GPR_Node) return Natural is
-     (Node.Token_Start);
-   function Token_End (Node : GPR_Node) return Natural is
-     (Node.Token_End);
+   -----------------------------------
+   -- Lexical utilities (internals) --
+   -----------------------------------
+
+   type Token_Type is record
+      TDH           : Token_Data_Handler_Access;
+      --  Token data handler that owns this token
+
+      Token, Trivia : Token_Index;
+      --  Indices that identify what this token refers to.
+      --
+      --  * If this references a token, then Token is the corresponding index
+      --    in TDH.Tokens and Trivia is No_Token_Index.
+      --
+      --  * If this references a trivia that comes before the first token,
+      --    Token is No_Token_Index while Trivia is the corresponding index in
+      --    TDH.Trivias.
+      --
+      --  * If this references a trivia that comes after some token, Token is
+      --    the index for this token and Trivia is the corresponding index for
+      --    this trivia.
+      --
+      --  * If this references no token, both Token and Trivia are
+      --    No_Token_Index.
+   end record;
+
+   No_Token : constant Token_Type := (null, No_Token_Index, No_Token_Index);
+
+   function Token
+     (Node  : access GPR_Node_Type'Class;
+      Index : Token_Index)
+      return Token_Type
+   is
+     ((TDH => Node.Unit.Token_Data, Token => Index, Trivia => No_Token_Index));
+   --  Helper for properties. This is used to turn token indexes as stored in
+   --  AST nodes into Token_Type values.
+
+   function Token_Start
+     (Node : access GPR_Node_Type'Class)
+      return Token_Type
+   is
+     ((Node.Unit.Token_Data, Node.Token_Start, No_Token_Index));
+
+   function Token_End
+     (Node : access GPR_Node_Type'Class)
+      return Token_Type
+   is
+     ((Node.Unit.Token_Data, Node.Token_End, No_Token_Index));
+
+   function Get_Symbol (Token : Token_Type) return Symbol_Type is
+     (Symbol_Type (Data (Token).Text));
+   --  Assuming that Token refers to a token that contains a symbol, return the
+   --  corresponding symbol. This is an internal helper for properties code
+   --  generation.
+
+   ----------------------------------------
+   -- Tree traversal (Ada 2012 iterator) --
+   ----------------------------------------
+
+   type Children_Cursor is record
+      Node             : GPR_Node;
+      --  This cursor references a children in Node
+
+      Child_Index : Natural;
+      --  1-based index of Node's children this cursor references, or zero when
+      --  this cursor does not reference a valid child.
+   end record;
+
+   No_Children : constant Children_Cursor := (null, 0);
+
+   function Has_Element (C : Children_Cursor) return Boolean is
+     (C.Child_Index /= 0);
+
+   function Element_Value
+     (Node : GPR_Node_Type; C : Children_Cursor)
+      return GPR_Node is
+     (C.Node.Child (C.Child_Index));
+
+   type Iterator is new
+      GPR_Node_Ada2012_Iterators.Reversible_Iterator with
+   record
+      Node : GPR_Node;
+   end record;
+
+   overriding function First (Object : Iterator) return Children_Cursor;
+   overriding function Last (Object : Iterator) return Children_Cursor;
+   overriding function Next
+     (Object : Iterator;
+      C      : Children_Cursor)
+      return Children_Cursor;
+   overriding function Previous
+     (Object : Iterator;
+      C      : Children_Cursor)
+      return Children_Cursor;
+
+   function Get_Unit
+     (Node : access GPR_Node_Type'Class)
+      return Analysis_Unit_Interface
+   is (Node.Unit);
 
 end GPR_Parser.AST;

@@ -32,9 +32,11 @@ with Ada.Strings.Wide_Wide_Unbounded; use Ada.Strings.Wide_Wide_Unbounded;
 with Ada.Text_IO;                     use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 
-with Langkit_Support.Text;   use Langkit_Support.Text;
-with Langkit_Support.Tokens; use Langkit_Support.Tokens;
+with Langkit_Support.Slocs;   use Langkit_Support.Slocs;
+with Langkit_Support.Text;    use Langkit_Support.Text;
 
+with GPR_Parser.Analysis.Internal;
+use GPR_Parser.Analysis.Internal;
 with GPR_Parser.Lexer;
 with GPR_Parser.AST.Types.Parsers;
 use GPR_Parser.AST.Types.Parsers;
@@ -66,7 +68,8 @@ package body GPR_Parser.Analysis is
       Reparse           : Boolean;
       Get_Parser        : access function (Unit : Analysis_Unit)
                                            return Parser_Type;
-      With_Trivia       : Boolean)
+      With_Trivia       : Boolean;
+      Rule              : Grammar_Rule)
       return Analysis_Unit;
    --  Helper for Get_From_File and Get_From_Buffer: do all the common work
    --  using Get_Parser to either parse from a file or from a buffer. Return
@@ -88,14 +91,42 @@ package body GPR_Parser.Analysis is
    -- Create --
    ------------
 
-   function Create (Charset : String) return Analysis_Context is
+   function Create
+     (Charset : String := "utf-8")
+      return Analysis_Context
+   is
    begin
       return new Analysis_Context_Type'
-        (Units_Map  => <>,
+        (Ref_Count  => 1,
+         Units_Map  => <>,
          Symbols    => Create,
          Charset    => To_Unbounded_String (Charset),
-         Root_Scope => AST_Envs.Create (null));
+         Root_Scope => AST_Envs.Create
+                         (Parent        => null,
+                          Node          => null,
+                          Is_Refcounted => False));
    end Create;
+
+   -------------
+   -- Inc_Ref --
+   -------------
+
+   procedure Inc_Ref (Context : Analysis_Context) is
+   begin
+      Context.Ref_Count := Context.Ref_Count + 1;
+   end Inc_Ref;
+
+   -------------
+   -- Dec_Ref --
+   -------------
+
+   procedure Dec_Ref (Context : in out Analysis_Context) is
+   begin
+      Context.Ref_Count := Context.Ref_Count - 1;
+      if Context.Ref_Count = 0 then
+         Destroy (Context);
+      end if;
+   end Dec_Ref;
 
    --------------
    -- Get_Unit --
@@ -107,7 +138,8 @@ package body GPR_Parser.Analysis is
       Reparse           : Boolean;
       Get_Parser        : access function (Unit : Analysis_Unit)
                                            return Parser_Type;
-      With_Trivia : Boolean)
+      With_Trivia       : Boolean;
+      Rule              : Grammar_Rule)
       return Analysis_Unit
    is
       use Units_Maps;
@@ -135,15 +167,18 @@ package body GPR_Parser.Analysis is
 
       if Created then
          Unit := new Analysis_Unit_Type'
-           (Context      => Context,
-            Ref_Count    => 1,
-            AST_Root     => null,
-            File_Name    => Fname,
-            Charset     => <>,
-            TDH          => <>,
-            Diagnostics  => <>,
-            With_Trivia  => With_Trivia,
-            AST_Mem_Pool => No_Pool);
+           (Context          => Context,
+            Ref_Count        => 1,
+            AST_Root         => null,
+            File_Name        => Fname,
+            Charset          => <>,
+            TDH              => <>,
+            Diagnostics      => <>,
+            With_Trivia      => With_Trivia,
+            Is_Env_Populated => False,
+            Rule             => Rule,
+            AST_Mem_Pool     => No_Pool,
+            Destroyables     => Destroyable_Vectors.Empty_Vector);
          Initialize (Unit.TDH, Context.Symbols);
          Context.Units_Map.Insert (Fname, Unit);
       else
@@ -235,7 +270,7 @@ package body GPR_Parser.Analysis is
       Unit.AST_Mem_Pool := Create;
       Parser.Mem_Pool := Unit.AST_Mem_Pool;
 
-      Unit.AST_Root := Parse (Parser);
+      Unit.AST_Root := Parse (Parser, Rule => Unit.Rule);
       Unit.Diagnostics := Parser.Diagnostics;
       Clean_All_Memos;
    end Do_Parsing;
@@ -249,15 +284,18 @@ package body GPR_Parser.Analysis is
       Filename    : String;
       Charset     : String := "";
       Reparse     : Boolean := False;
-      With_Trivia : Boolean := False)
+      With_Trivia : Boolean := False;
+      Rule        : Grammar_Rule :=
+         Compilation_Unit_Rule)
       return Analysis_Unit
    is
       function Get_Parser (Unit : Analysis_Unit) return Parser_Type
       is (Create_From_File (Filename, To_String (Unit.Charset),
-                            Unit.TDH'Access, With_Trivia));
+                            Analysis_Unit_Interface (Unit), With_Trivia));
    begin
       return Get_Unit
-        (Context, Filename, Charset, Reparse, Get_Parser'Access, With_Trivia);
+        (Context, Filename, Charset, Reparse, Get_Parser'Access, With_Trivia,
+         Rule);
    end Get_From_File;
 
    ---------------------
@@ -269,15 +307,17 @@ package body GPR_Parser.Analysis is
       Filename    : String;
       Charset     : String := "";
       Buffer      : String;
-      With_Trivia : Boolean := False)
+      With_Trivia : Boolean := False;
+      Rule        : Grammar_Rule :=
+         Compilation_Unit_Rule)
       return Analysis_Unit
    is
       function Get_Parser (Unit : Analysis_Unit) return Parser_Type
       is (Create_From_Buffer (Buffer, To_String (Unit.Charset),
-                              Unit.TDH'Access, With_Trivia));
+                              Analysis_Unit_Interface (Unit), With_Trivia));
    begin
       return Get_Unit (Context, Filename, Charset, True, Get_Parser'Access,
-                       With_Trivia);
+                       With_Trivia, Rule);
    end Get_From_Buffer;
 
    ------------
@@ -319,7 +359,7 @@ package body GPR_Parser.Analysis is
          Unit.Context := null;
          Dec_Ref (Unit);
       end loop;
-      AST_Envs.Free (Context.Root_Scope);
+      AST_Envs.Destroy (Context.Root_Scope);
       Destroy (Context.Symbols);
       Free (Context);
    end Destroy;
@@ -356,7 +396,7 @@ package body GPR_Parser.Analysis is
       function Get_Parser (Unit : Analysis_Unit) return Parser_Type
       is (Create_From_File (To_String (Unit.File_Name),
                             To_String (Unit.Charset),
-                            Unit.TDH'Access));
+                            Analysis_Unit_Interface (Unit)));
    begin
       Update_Charset (Unit, Charset);
       Do_parsing (Unit, Get_Parser'Access);
@@ -373,7 +413,7 @@ package body GPR_Parser.Analysis is
    is
       function Get_Parser (Unit : Analysis_Unit) return Parser_Type
       is (Create_From_Buffer (Buffer, To_String (Unit.Charset),
-                              Unit.TDH'Access));
+                              Analysis_Unit_Interface (Unit)));
    begin
       Update_Charset (Unit, Charset);
       Do_parsing (Unit, Get_Parser'Access);
@@ -392,6 +432,10 @@ package body GPR_Parser.Analysis is
       end if;
       Free (Unit.TDH);
       Free (Unit.AST_Mem_Pool);
+      for D of Unit.Destroyables loop
+         D.Destroy (D.Object);
+      end loop;
+      Destroyable_Vectors.Destroy (Unit.Destroyables);
       Free (Unit_Var);
    end Destroy;
 
@@ -413,7 +457,10 @@ package body GPR_Parser.Analysis is
    ---------------
 
    procedure PP_Trivia (Unit : Analysis_Unit) is
-      Last_Token : constant Natural := Token_End (Unit.AST_Root);
+      Last_Token : constant Token_Index :=
+         Token_Index (Token_Vectors.Last_Index (Unit.TDH.Tokens) - 1);
+      --  Index for the last token in Unit excluding the Termination token
+      --  (hence the -1).
    begin
       for Tok of Get_Leading_Trivias (Unit.TDH) loop
          Put_Line (Image (Tok.Text.all));
@@ -432,6 +479,12 @@ package body GPR_Parser.Analysis is
 
    procedure Populate_Lexical_Env (Unit : Analysis_Unit) is
    begin
+      --  TODO??? Handle env invalidation when reparsing an unit
+      if Unit.Is_Env_Populated then
+         return;
+      end if;
+      Unit.Is_Env_Populated := True;
+
       Populate_Lexical_Env (Unit.AST_Root, Unit.Context.Root_Scope);
    end Populate_Lexical_Env;
 
@@ -449,8 +502,8 @@ package body GPR_Parser.Analysis is
    -----------------
 
    function Diagnostics (Unit : Analysis_Unit) return Diagnostics_Array is
-      Result : Diagnostics_Array (0 .. Natural (Unit.Diagnostics.Length) - 1);
-      I      : Natural := 0;
+      Result : Diagnostics_Array (1 .. Natural (Unit.Diagnostics.Length));
+      I      : Natural := 1;
    begin
       for D of Unit.Diagnostics loop
          Result (I) := D;
@@ -467,5 +520,31 @@ package body GPR_Parser.Analysis is
    begin
       Dump_Lexical_Env (Unit.AST_Root, Unit.Context.Root_Scope);
    end Dump_Lexical_Env;
+
+   --------------------------
+   -- Register_Destroyable --
+   --------------------------
+
+   overriding
+   procedure Register_Destroyable_Helper
+     (Unit    : access Analysis_Unit_Type;
+      Object  : System.Address;
+      Destroy : Destroy_Procedure)
+   is
+   begin
+      Destroyable_Vectors.Append (Unit.Destroyables, (Object, Destroy));
+   end Register_Destroyable_Helper;
+
+   --------------
+   -- Get_Unit --
+   --------------
+
+   function Get_Unit
+     (Node : access GPR_Node_Type'Class)
+      return Analysis_Unit
+   is
+   begin
+      return Convert (Get_Unit (Node));
+   end Get_Unit;
 
 end GPR_Parser.Analysis;
