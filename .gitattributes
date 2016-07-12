@@ -1,1 +1,2 @@
 langkit/src/* no-precommit-check
+testsuite/tests/* no-precommit-check
