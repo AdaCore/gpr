@@ -31,6 +31,8 @@ with GNAT.OS_Lib;
 
 with GPR2.Containers;
 with GPR2.Project.Definition;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Source;
 with GPR2.Source_Reference;
@@ -302,8 +304,8 @@ package body GPR2.Project.View is
    function Naming_Package (Self : Object) return Pack.Object is
    --  ?? for now we do not support the loaded config project
    begin
-      if Self.Has_Packages ("naming") then
-         return Self.Packages.Element ("naming");
+      if Self.Has_Packages (Registry.Pack.Naming) then
+         return Self.Packages.Element (Registry.Pack.Naming);
       else
          return Builtin_Naming_Package;
       end if;
@@ -491,55 +493,51 @@ package body GPR2.Project.View is
          end Ends_With;
 
          Languages : constant Project.Attribute.Object :=
-                       (if Self.Has_Attributes ("languages")
-                        then Self.Attribute ("languages")
+                       (if Self.Has_Attributes (Registry.Attribute.Languages)
+                        then Self.Attribute (Registry.Attribute.Languages)
                         else Builtin_Languages);
+
+         use type Project.Attribute.Object;
 
       begin
          --  For every languages defined for the view
 
          for Lang of Languages.Values loop
-            --  Check for a spec
-
-            if Naming.Has_Attributes ("spec_suffix", Lang) then
-               if Ends_With
-                 (Filename, Naming.Attribute ("spec_suffix", Lang).Value)
+            Check_Spec : declare
+               Spec_Suffix : constant Project.Attribute.Object :=
+                               Naming.Spec_Suffix (Lang);
+            begin
+               if Spec_Suffix /= Project.Attribute.Undefined
+                 and then Ends_With (Filename, Spec_Suffix.Value)
                then
                   Kind := GPR2.Source.S_Spec;
                   return Lang;
                end if;
-            end if;
+            end Check_Spec;
 
-            if Naming.Has_Attributes ("specification_suffix", Lang) then
-               if Ends_With
-                 (Filename, Naming.Attribute
-                    ("specification_suffix", Lang).Value)
-               then
-                  Kind := GPR2.Source.S_Spec;
-                  return Lang;
-               end if;
-            end if;
-
-            --  Check for a body
-
-            if Naming.Has_Attributes ("body_suffix", Lang) then
-               if Ends_With
-                 (Filename, Naming.Attribute ("body_suffix", Lang).Value)
+            Check_Body : declare
+               Body_Suffix : constant Project.Attribute.Object :=
+                               Naming.Body_Suffix (Lang);
+            begin
+               if Body_Suffix /= Project.Attribute.Undefined
+                 and then Ends_With (Filename, Body_Suffix.Value)
                then
                   Kind := GPR2.Source.S_Body;
                   return Lang;
                end if;
-            end if;
+            end Check_Body;
 
-            if Naming.Has_Attributes ("implementation_suffix", Lang) then
-               if Ends_With
-                 (Filename, Naming.Attribute
-                    ("implementation_suffix", Lang).Value)
+            Check_Separate : declare
+               Sep_Suffix : constant Project.Attribute.Object :=
+                              Naming.Separate_Suffix (Lang);
+            begin
+               if Sep_Suffix /= Project.Attribute.Undefined
+                 and then Ends_With (Filename, Sep_Suffix.Value)
                then
-                  Kind := GPR2.Source.S_Body;
+                  Kind := GPR2.Source.S_Separate;
                   return Lang;
                end if;
-            end if;
+            end Check_Separate;
          end loop;
 
          return No_Value;
@@ -603,17 +601,22 @@ package body GPR2.Project.View is
          -----------------------------
 
          function Is_Standard_GNAT_Naming return Boolean is
+            Spec_Suffix : constant Project.Attribute.Object :=
+                            Naming.Spec_Suffix ("ada");
+            Body_Suffix : constant Project.Attribute.Object :=
+                            Naming.Body_Suffix ("ada");
          begin
             return
-              (not Naming.Has_Attributes ("spec_suffix", "ada")
-               or else Naming.Attribute ("spec_suffix", "ada").Value = ".ads")
+              (Spec_Suffix = Project.Attribute.Undefined
+               or else Spec_Suffix.Value = ".ads")
                  or else
-              (not Naming.Has_Attributes ("body_suffix", "ada")
-               or else Naming.Attribute ("body_suffix", "ada").Value = ".adb")
+              (Body_Suffix = Project.Attribute.Undefined
+               or else Body_Suffix.Value = ".adb")
                  or else
-              (not Naming.Has_Attributes ("dot_replacement", "ada")
+              (not Naming.Has_Attributes
+                 (Registry.Attribute.Dot_Replacement, "ada")
                or else Naming.Attribute
-                 ("dot_replacement_suffix", "ada").Value = "-");
+                 (Registry.Attribute.Dot_Replacement, "ada").Value = "-");
          end Is_Standard_GNAT_Naming;
 
          Result : Unbounded_String :=
@@ -624,12 +627,13 @@ package body GPR2.Project.View is
 
          declare
             Suffix : constant Value_Type :=
-                       Naming.Attribute
-                         ((case Kind is
-                             when GPR2.Source.S_Spec     => "spec_suffix",
-                             when GPR2.Source.S_Body     => "body_suffix",
-                             when GPR2.Source.S_Separate => "sep_suffix"),
-                          Language).Value;
+                       (case Kind is
+                           when GPR2.Source.S_Spec =>
+                              Naming.Spec_Suffix (Language).Value,
+                           when GPR2.Source.S_Body =>
+                              Naming.Body_Suffix (Language).Value,
+                           when GPR2.Source.S_Separate =>
+                              Naming.Separate_Suffix (Language).Value);
          begin
             if Length (Result) > Suffix'Length then
                Delete
@@ -645,9 +649,10 @@ package body GPR2.Project.View is
          declare
             Dot_Repl : constant String :=
                          (if Naming.Has_Attributes
-                            ("dot_replacement", Language)
+                            (Registry.Attribute.Dot_Replacement, Language)
                           then Naming.Attribute
-                            ("dot_replacement", Language).Value
+                            (Registry.Attribute.Dot_Replacement,
+                             Language).Value
                           else ".");
 
          begin
@@ -789,16 +794,20 @@ begin
       Undef_Sloc : Source_Reference.Object renames Source_Reference.Undefined;
       Ada_Spec   : constant Project.Attribute.Object :=
                      Project.Attribute.Create
-                       ("spec_suffix", "ada", ".ads", Undef_Sloc);
+                       (Registry.Attribute.Spec_Suffix,
+                        "ada", ".ads", Undef_Sloc);
       Ada_Body   : constant Project.Attribute.Object :=
                      Project.Attribute.Create
-                       ("body_suffix", "ada", ".adb", Undef_Sloc);
+                       (Registry.Attribute.Body_Suffix,
+                        "ada", ".adb", Undef_Sloc);
       C_Spec     : constant Project.Attribute.Object :=
                      Project.Attribute.Create
-                       ("spec_suffix", "c", ".h", Undef_Sloc);
+                       (Registry.Attribute.Spec_Suffix,
+                        "c", ".h", Undef_Sloc);
       C_Body     : constant Project.Attribute.Object :=
                      Project.Attribute.Create
-                       ("body_suffix", "c", ".c", Undef_Sloc);
+                       (Registry.Attribute.Body_Suffix,
+                        "c", ".c", Undef_Sloc);
       Attrs      : Project.Attribute.Set.Object;
       Langs      : Containers.Value_List;
    begin
@@ -808,12 +817,14 @@ begin
       Attrs.Insert (Ada_Body);
       Attrs.Insert (C_Spec);
       Attrs.Insert (C_Body);
-      Builtin_Naming_Package := Pack.Create ("naming", Attrs, Undef_Sloc);
+      Builtin_Naming_Package :=
+        Pack.Create (Registry.Pack.Naming, Attrs, Undef_Sloc);
 
       --  Default languages attribute
 
       Langs.Append ("ada");
       Builtin_Languages :=
-        Project.Attribute.Create ("languages", Langs, Undef_Sloc);
+        Project.Attribute.Create
+          (Registry.Attribute.Languages, Langs, Undef_Sloc);
    end;
 end GPR2.Project.View;

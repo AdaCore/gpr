@@ -33,4 +33,12 @@ package GPR2.Project.Registry.Pack is
      with Pre => Exists (Name);
    --  Returns True if the package is allowed in the given project
 
+   --  Some common package names
+
+   Builder  : constant Name_Type := "builder";
+   Compiler : constant Name_Type := "compiler";
+   Binder   : constant Name_Type := "binder";
+   Linker   : constant Name_Type := "linker";
+   Naming   : constant Name_Type := "naming";
+
 end GPR2.Project.Registry.Pack;

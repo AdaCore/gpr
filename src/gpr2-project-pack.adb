@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Containers;
+with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pack is
 
@@ -49,6 +50,28 @@ package body GPR2.Project.Pack is
    begin
       return Self.Attrs.Filter (Name, Index);
    end Attributes;
+
+   -----------------
+   -- Body_Suffix --
+   -----------------
+
+   function Body_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Project.Attribute.Object is
+   begin
+      if Self.Has_Attributes (Registry.Attribute.Body_Suffix, Language) then
+         return Self.Attribute (Registry.Attribute.Body_Suffix, Language);
+
+      elsif Self.Has_Attributes
+        (Registry.Attribute.Implementation_Suffix, Language)
+      then
+         return Self.Attribute
+           (Registry.Attribute.Implementation_Suffix, Language);
+
+      else
+         return Project.Attribute.Undefined;
+      end if;
+   end Body_Suffix;
 
    ------------
    -- Create --
@@ -87,5 +110,45 @@ package body GPR2.Project.Pack is
    begin
       return To_String (Self.Name);
    end Name;
+
+   ---------------------
+   -- Separate_Suffix --
+   ---------------------
+
+   function Separate_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Project.Attribute.Object is
+   begin
+      if Self.Has_Attributes
+        (Registry.Attribute.Separate_Suffix, Language)
+      then
+         return Self.Attribute (Registry.Attribute.Separate_Suffix, Language);
+
+      else
+         return Project.Attribute.Undefined;
+      end if;
+   end Separate_Suffix;
+
+   -----------------
+   -- Spec_Suffix --
+   -----------------
+
+   function Spec_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Project.Attribute.Object is
+   begin
+      if Self.Has_Attributes (Registry.Attribute.Spec_Suffix, Language) then
+         return Self.Attribute (Registry.Attribute.Spec_Suffix, Language);
+
+      elsif Self.Has_Attributes
+        (Registry.Attribute.Specification_Suffix, Language)
+      then
+         return Self.Attribute
+           (Registry.Attribute.Specification_Suffix, Language);
+
+      else
+         return Project.Attribute.Undefined;
+      end if;
+   end Spec_Suffix;
 
 end GPR2.Project.Pack;

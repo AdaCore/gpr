@@ -26,6 +26,7 @@
 
 with GPR2.Containers;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference;
 
 private with Ada.Strings.Unbounded;
@@ -79,6 +80,24 @@ package GPR2.Project.Pack is
        and then Self.Has_Attributes (Name, Index)
        and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
+
+   --  To ease the use of some attributes (some have synonyms for example)
+   --  below are direct access to them.
+
+   function Spec_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Project.Attribute.Object
+     with Pre => Self.Name = No_Case_Name_Type (Registry.Pack.Naming);
+
+   function Body_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Project.Attribute.Object
+     with Pre => Self.Name = No_Case_Name_Type (Registry.Pack.Naming);
+
+   function Separate_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Project.Attribute.Object
+     with Pre => Self.Name = No_Case_Name_Type (Registry.Pack.Naming);
 
 private
 

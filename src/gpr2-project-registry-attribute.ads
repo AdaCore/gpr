@@ -67,8 +67,15 @@ package GPR2.Project.Registry.Attribute is
 
    --  Some common attribute names
 
-   Source_Dirs : constant Name_Type := "source_dirs";
-   Source_File : constant Name_Type := "source_file";
+   Languages             : constant Name_Type := "languages";
+   Source_Dirs           : constant Name_Type := "source_dirs";
+   Source_File           : constant Name_Type := "source_file";
+   Spec_Suffix           : constant Name_Type := "spec_suffix";
+   Specification_Suffix  : constant Name_Type := "specification_suffix";
+   Body_Suffix           : constant Name_Type := "body_suffix";
+   Implementation_Suffix : constant Name_Type := "implementation_suffix";
+   Separate_Suffix       : constant Name_Type := "separate_suffix";
+   Dot_Replacement       : constant Name_Type := "dot_replacement";
 
 private
 
