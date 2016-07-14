@@ -23,7 +23,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Strings.Less_Case_Insensitive;
 
 package body GPR2.Project.Registry.Pack is
 
@@ -33,7 +32,7 @@ package body GPR2.Project.Registry.Pack is
    --  A boolean array describing what project kind if allowed
 
    package Pack_Definition is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Projects_Kind, Ada.Strings.Less_Case_Insensitive);
+     (Name_Type, Projects_Kind, "<");
 
    Store : Pack_Definition.Map;
 

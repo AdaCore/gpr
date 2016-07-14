@@ -48,7 +48,7 @@ procedure Main is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
    begin
-      Text_IO.Put (Prj.Name & " ");
+      Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
@@ -75,7 +75,7 @@ procedure Main is
             end loop;
 
             for A of Prj.Attributes.Filter ("Object_Dir") loop
-               Text_IO.Put_Line ("A3:  " & A.Name);
+               Text_IO.Put_Line ("A3:  " & String (A.Name));
             end loop;
 
          end if;

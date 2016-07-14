@@ -45,7 +45,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & Att.Name);
+      Text_IO.Put ("   " & String (Att.Name));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index & ")");
@@ -62,7 +62,7 @@ procedure Main is
    procedure Display (Prj : Project.View.Object) is
       use GPR2.Project.Attribute.Set;
    begin
-      Text_IO.Put (Prj.Name & " ");
+      Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Kind'Img);
 

@@ -33,7 +33,8 @@ package GPR2.Project.Registry.Attribute is
    type Qualified_Name (<>) is private;
 
    function Create
-     (Name : Name_Type; Pack : String := "") return Qualified_Name;
+     (Name : Name_Type;
+      Pack : Optional_Name_Type := "") return Qualified_Name;
    --  Returns a fully qualified name for the given attribute and package names
 
    type Allowed_In is array (Project_Kind) of Boolean with Pack;

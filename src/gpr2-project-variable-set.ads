@@ -23,14 +23,13 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Strings.Less_Case_Insensitive;
 
 package GPR2.Project.Variable.Set is
 
    --  The variable name must not be case-sensitive
 
    package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Object, Ada.Strings.Less_Case_Insensitive);
+     (Name_Type, Object, "<");
 
    subtype Object is Set.Map;
 

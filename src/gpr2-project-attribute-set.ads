@@ -25,7 +25,6 @@
 with Ada.Iterator_Interfaces;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
-private with Ada.Strings.Less_Case_Insensitive;
 
 package GPR2.Project.Attribute.Set is
 
@@ -62,7 +61,10 @@ package GPR2.Project.Attribute.Set is
 
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
-     with Pre => not Self.Contains (Attribute.Name, Attribute.Index);
+     with Pre =>
+       not Self.Contains
+         (Attribute.Name,
+          Attribute.Index);
    --  Insert Attribute into the set
 
    --  Iterator
@@ -105,15 +107,15 @@ package GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "")
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "")
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Object
-     with Post => (if Name = "" and then Index = ""
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Object
+     with Post => (if Name = No_Name and then Index = ""
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
    --  the given filter.
@@ -146,8 +148,7 @@ private
    --  The key in this set is the attribute index
 
    package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Set_Attribute.Map,
-      Ada.Strings.Less_Case_Insensitive, Set_Attribute."=");
+     (Name_Type, Set_Attribute.Map, "<", Set_Attribute."=");
    --  The key in this Set is the attribute name (not case sensitive)
 
    type Cursor is record

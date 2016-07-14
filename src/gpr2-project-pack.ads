@@ -55,8 +55,8 @@ package GPR2.Project.Pack is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Boolean
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the package has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
@@ -64,8 +64,8 @@ package GPR2.Project.Pack is
 
    function Attributes
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Attribute.Set.Object
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Attribute.Set.Object
      with Pre => Self /= Undefined;
    --  Returns all attributes defined for the package. Possibly an empty list
    --  if it does not contain attributes or if Name and Index does not match
@@ -73,8 +73,8 @@ package GPR2.Project.Pack is
 
    function Attribute
      (Self  : Object;
-      Name  : String;
-      Index : String := "") return Project.Attribute.Object
+      Name  : Name_Type;
+      Index : Value_Type := "") return Project.Attribute.Object
      with Pre =>
        Self /= Undefined
        and then Self.Has_Attributes (Name, Index)
@@ -87,17 +87,17 @@ package GPR2.Project.Pack is
    function Spec_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
-     with Pre => Self.Name = No_Case_Name_Type (Registry.Pack.Naming);
+     with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
 
    function Body_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
-     with Pre => Self.Name = No_Case_Name_Type (Registry.Pack.Naming);
+     with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
 
    function Separate_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
-     with Pre => Self.Name = No_Case_Name_Type (Registry.Pack.Naming);
+     with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
 
 private
 

@@ -80,7 +80,7 @@ package body GPR2.Parser.Project is
       if V (V'First) = '"' and then V (V'Last) = '"' then
          Offset := 1;
       end if;
-      return To_String (V (V'First + Offset .. V'Last - Offset));
+      return Name_Type (To_String (V (V'First + Offset .. V'Last - Offset)));
    end Get_Name_Type;
 
    -------------------
@@ -201,16 +201,18 @@ package body GPR2.Parser.Project is
                                       (if Name_1 = null
                                        then ""
                                        else Characters.Handling.To_Lower
-                                         (Get_Name_Type
-                                            (Single_Tok_Node (Name_1))));
+                                         (String
+                                            (Get_Name_Type
+                                               (Single_Tok_Node (Name_1)))));
                            Name_2 : constant Identifier :=
                                       F_Qualifier_Id2 (Names);
                            Str_2  : constant String :=
                                       (if Name_2 = null
                                        then ""
                                        else Characters.Handling.To_Lower
-                                         (Get_Name_Type
-                                            (Single_Tok_Node (Name_2))));
+                                         (String
+                                            (Get_Name_Type
+                                               (Single_Tok_Node (Name_2)))));
                         begin
                            if Str_1 = "library" and then Str_2 = "" then
                               Project.Qualifier := K_Library;
@@ -241,7 +243,8 @@ package body GPR2.Parser.Project is
                end if;
 
                Project.Name :=
-                 To_Unbounded_String (Get_Name_Type (Single_Tok_Node (Name)));
+                 To_Unbounded_String
+                   (String (Get_Name_Type (Single_Tok_Node (Name))));
             end Parse_Project_Declaration;
 
             ---------------------
@@ -437,7 +440,8 @@ package body GPR2.Parser.Project is
          return Containers.Value_List
       is
          Name : constant Name_Type :=
-                  Get_Name_Type (Single_Tok_Node (F_Attribute_Name (Node)));
+                  Get_Name_Type
+                    (Single_Tok_Node (F_Attribute_Name (Node)));
          View : constant GPR2.Project.View.Object :=
                   GPR2.Project.Tree.View_For (Tree, Project, Context);
       begin
@@ -499,8 +503,10 @@ package body GPR2.Parser.Project is
             is
                Str  : constant not null String_Literal := F_String_Lit (Node);
                Name : constant Name_Type :=
-                        Unquote
-                          (Name_Type (Image (F_Tok (Single_Tok_Node (Str)))));
+                        Name_Type
+                          (Unquote
+                             (Value_Type
+                                (Image (F_Tok (Single_Tok_Node (Str))))));
                Expr : constant Term_List := F_Expr (Node);
             begin
                if Context.Contains (Name) then
@@ -598,7 +604,8 @@ package body GPR2.Parser.Project is
         (Project : Name_Type; Node : not null Identifier)
          return Containers.Value_List
       is
-         Name : constant Name_Type := Get_Name_Type (Node);
+         Name : constant Name_Type :=
+                  Name_Type (Get_Name_Type (Node));
          View : constant GPR2.Project.View.Object :=
                   GPR2.Project.Tree.View_For (Tree, Project, Context);
       begin
@@ -620,7 +627,7 @@ package body GPR2.Parser.Project is
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
          Name    : constant Name_Type :=
-                     Image (F_Tok (Single_Tok_Node (Name_1)));
+                     Name_Type (Image (F_Tok (Single_Tok_Node (Name_1))));
       begin
          if Present (Att_Ref) then
             return Get_Attribute_Ref (Name, Att_Ref);
@@ -632,7 +639,8 @@ package body GPR2.Parser.Project is
             return Vars (Name).Values;
 
          else
-            raise Constraint_Error with "variable " & Name & " does not exist";
+            raise Constraint_Error
+              with "variable " & String (Name) & " does not exist";
          end if;
       end Get_Variable_Values;
 
@@ -693,7 +701,7 @@ package body GPR2.Parser.Project is
             Name   : constant not null GPR_Node := F_Attr_Name (Node);
             Index  : constant GPR_Node := F_Attr_Index (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
-            N_Str  : constant String :=
+            N_Str  : constant Name_Type :=
                        (if Kind (Name) = GPR_External_Name
                         then "external"
                         else Get_Name_Type (Single_Tok_Node (Name)));
@@ -709,7 +717,9 @@ package body GPR2.Parser.Project is
                   A := GPR2.Project.Attribute.Create
                     (Name  => N_Str,
                      Index =>
-                       Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
+                       Value_Type
+                         (Get_Name_Type
+                              (F_Str_Lit (String_Literal_At (Index)))),
                      Value => Values.First_Element,
                      Sloc  => Sloc);
 
@@ -717,7 +727,9 @@ package body GPR2.Parser.Project is
                   A := GPR2.Project.Attribute.Create
                     (Name  => N_Str,
                      Index =>
-                       Get_Name_Type (F_Str_Lit (String_Literal_At (Index))),
+                       Value_Type
+                         (Get_Name_Type
+                              (F_Str_Lit (String_Literal_At (Index)))),
                      Values => Values,
                      Sloc   => Sloc);
                end if;
@@ -742,7 +754,9 @@ package body GPR2.Parser.Project is
                package A_Reg renames GPR2.Project.Registry.Attribute;
 
                Q_Name : constant A_Reg.Qualified_Name :=
-                          A_Reg.Create (A.Name, To_String (Pack_Name));
+                          A_Reg.Create
+                            (A.Name,
+                             Optional_Name_Type (To_String (Pack_Name)));
             begin
                if A_Reg.Exists (Q_Name) then
                   declare
@@ -827,10 +841,8 @@ package body GPR2.Parser.Project is
                -------------------
 
                procedure Handle_String (Node : not null String_Literal) is
-                  Value : constant Name_Type :=
-                            Unquote
-                              (Name_Type
-                                 (Image (F_Tok (Single_Tok_Node (Node)))));
+                  Value : constant Value_Type :=
+                            Unquote (Image (F_Tok (Single_Tok_Node (Node))));
                begin
                   Is_Case_Item_Matches :=
                     Is_Case_Item_Matches
@@ -875,7 +887,7 @@ package body GPR2.Parser.Project is
             --  children.
 
             In_Pack := True;
-            Pack_Name := To_Unbounded_String (P_Name);
+            Pack_Name := To_Unbounded_String (String (P_Name));
 
             Visit_Child (F_Pkg_Spec (Node));
 
@@ -885,7 +897,8 @@ package body GPR2.Parser.Project is
             --  Insert the package definition into the final result
 
             Packs.Insert
-              (P_Name, GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Sloc));
+              (Name_Type (P_Name),
+               GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Sloc));
 
             --  Skip all nodes for this construct
 
@@ -925,7 +938,7 @@ package body GPR2.Parser.Project is
                   Sloc   => Sloc);
             end if;
 
-            Vars.Include (V.Name, V);
+            Vars.Include (Name_Type (V.Name), V);
          end Parse_Variable_Decl_Kind;
 
          -----------------

@@ -45,10 +45,17 @@ package GPR2 is
    --  Name / Value
    --
 
-   subtype Name_Type is String
+   type Optional_Name_Type is new String;
+
+   No_Name : constant Optional_Name_Type;
+
+   subtype Name_Type is Optional_Name_Type
      with Dynamic_Predicate => Name_Type'Length > 0;
 
    subtype Value_Type is String;
+
+   overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
+   overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
 
    No_Value : constant Value_Type;
 
@@ -57,6 +64,10 @@ package GPR2 is
              and then Unquote'Result (Unquote'Result'Last) not in ''' | '"'
              and then (Unquote'Result'Length = Str'Length - 2
                        or else Unquote'Result'Length = Str'Length);
+
+   type Case_Sensitive_Name_Type is new String
+     with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
+   --  A non case sensitive name
 
    --
    --  Path name
@@ -100,6 +111,7 @@ private
    function "<" (Left, Right : Path_Name_Type) return Boolean
      is (Left.Value < Right.Value);
 
+   No_Name  : constant Optional_Name_Type := "";
    No_Value : constant Value_Type := "";
 
    function Create_File (Name : Name_Type) return Path_Name_Type;

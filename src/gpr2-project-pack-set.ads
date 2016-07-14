@@ -25,12 +25,11 @@
 --  A list of packages
 
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Strings.Less_Case_Insensitive;
 
 package GPR2.Project.Pack.Set is
 
-   package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Object, Ada.Strings.Less_Case_Insensitive);
+   package Set is
+     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object, "<");
 
    subtype Object is Set.Map;
 

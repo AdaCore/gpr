@@ -95,7 +95,7 @@ package GPR2.Project.View is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : String := "";
+      Name  : Optional_Name_Type := "";
       Index : String := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some attributes defined. If Name
@@ -104,7 +104,7 @@ package GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : String := "";
+      Name  : Optional_Name_Type := "";
       Index : String := "") return Attribute.Set.Object
      with Post =>
        (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty);
@@ -113,7 +113,7 @@ package GPR2.Project.View is
 
    function Attribute
      (Self  : Object;
-      Name  : String;
+      Name  : Name_Type;
       Index : String := "") return Attribute.Object
      with
        Pre  =>
@@ -124,13 +124,13 @@ package GPR2.Project.View is
 
    function Has_Variables
      (Self : Object;
-      Name : String := "") return Boolean
+      Name : Optional_Name_Type := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some variables defined
 
    function Variables
      (Self : Object;
-      Name : String := "") return Variable.Set.Object
+      Name : Optional_Name_Type := "") return Variable.Set.Object
      with Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
    --  Get the list of variables, possibly an empty list if it does not
    --  contain variables.
@@ -139,7 +139,7 @@ package GPR2.Project.View is
 
    function Has_Packages
      (Self : Object;
-      Name : String := "") return Boolean
+      Name : Optional_Name_Type := "") return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some packages defined
 

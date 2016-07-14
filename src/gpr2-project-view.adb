@@ -60,8 +60,8 @@ package body GPR2.Project.View is
 
    function Attribute
      (Self  : Object;
-      Name  : String;
-      Index : String := "") return Project.Attribute.Object is
+      Name  : Name_Type;
+      Index : Value_Type := "") return Project.Attribute.Object is
    begin
       return Definition.Get (Self).Attrs.Element (Name, Index);
    end Attribute;
@@ -72,8 +72,8 @@ package body GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Project.Attribute.Set.Object is
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Project.Attribute.Set.Object is
    begin
       return Definition.Get (Self).Attrs.Filter (Name, Index);
    end Attributes;
@@ -164,13 +164,13 @@ package body GPR2.Project.View is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Boolean is
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Boolean is
    begin
-      if Name = "" and then Index = "" then
+      if Name = No_Name and then Index = No_Value then
          return not Definition.Get (Self).Attrs.Is_Empty;
 
-      elsif Index = "" then
+      elsif Index = No_Value then
          return Definition.Get (Self).Attrs.Contains (Name);
 
       else
@@ -245,12 +245,12 @@ package body GPR2.Project.View is
 
    function Has_Packages
      (Self : Object;
-      Name : String := "") return Boolean is
+      Name : Optional_Name_Type := "") return Boolean is
    begin
-      if Name = "" then
+      if Name = No_Name then
          return not Definition.Get (Self).Packs.Is_Empty;
       else
-         return Definition.Get (Self).Packs.Contains (Name);
+         return Definition.Get (Self).Packs.Contains (Name_Type (Name));
       end if;
    end Has_Packages;
 
@@ -270,12 +270,12 @@ package body GPR2.Project.View is
 
    function Has_Variables
      (Self : Object;
-      Name : String := "") return Boolean is
+      Name : Optional_Name_Type := "") return Boolean is
    begin
-      if Name = "" then
+      if Name = No_Name then
          return not Definition.Get (Self).Vars.Is_Empty;
       else
-         return Definition.Get (Self).Vars.Contains (Name);
+         return Definition.Get (Self).Vars.Contains (Name_Type (Name));
       end if;
    end Has_Variables;
 
@@ -305,7 +305,7 @@ package body GPR2.Project.View is
    --  ?? for now we do not support the loaded config project
    begin
       if Self.Has_Packages (Registry.Pack.Naming) then
-         return Self.Packages.Element (Registry.Pack.Naming);
+         return Self.Packages.Element (Name_Type (Registry.Pack.Naming));
       else
          return Builtin_Naming_Package;
       end if;
@@ -453,13 +453,16 @@ package body GPR2.Project.View is
 
          if Language /= No_Value then
             declare
-               Src : constant GPR2.Source.Object :=
-                       GPR2.Source.Create
-                         (Create_File (Filename),
-                          Kind, Language,
-                          (if Language = "ada"
-                           then Unit_For (Filename, Language, Kind)
-                           else ""));
+               Lang : constant Name_Type := Name_Type (Language);
+               Src  : constant GPR2.Source.Object :=
+                        GPR2.Source.Create
+                          (Filename  => Create_File (Name_Type (Filename)),
+                           Kind      => Kind,
+                           Language  => Lang,
+                           Unit_Name =>
+                             (if Lang = "ada"
+                              then Value_Type (Unit_For (Filename, Lang, Kind))
+                              else No_Value));
             begin
                Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
             end;
@@ -505,7 +508,7 @@ package body GPR2.Project.View is
          for Lang of Languages.Values loop
             Check_Spec : declare
                Spec_Suffix : constant Project.Attribute.Object :=
-                               Naming.Spec_Suffix (Lang);
+                               Naming.Spec_Suffix (Name_Type (Lang));
             begin
                if Spec_Suffix /= Project.Attribute.Undefined
                  and then Ends_With (Filename, Spec_Suffix.Value)
@@ -517,7 +520,7 @@ package body GPR2.Project.View is
 
             Check_Body : declare
                Body_Suffix : constant Project.Attribute.Object :=
-                               Naming.Body_Suffix (Lang);
+                               Naming.Body_Suffix (Name_Type (Lang));
             begin
                if Body_Suffix /= Project.Attribute.Undefined
                  and then Ends_With (Filename, Body_Suffix.Value)
@@ -529,7 +532,7 @@ package body GPR2.Project.View is
 
             Check_Separate : declare
                Sep_Suffix : constant Project.Attribute.Object :=
-                              Naming.Separate_Suffix (Lang);
+                              Naming.Separate_Suffix (Name_Type (Lang));
             begin
                if Sep_Suffix /= Project.Attribute.Undefined
                  and then Ends_With (Filename, Sep_Suffix.Value)
@@ -559,7 +562,7 @@ package body GPR2.Project.View is
 
          procedure Add (A : Project.Attribute.Object) is
          begin
-            MD5.Update (C, A.Name & "/");
+            MD5.Update (C, String (A.Name) & "/");
             for Value of A.Values loop
                MD5.Update (C, Value);
             end loop;
@@ -649,10 +652,11 @@ package body GPR2.Project.View is
          declare
             Dot_Repl : constant String :=
                          (if Naming.Has_Attributes
-                            (Registry.Attribute.Dot_Replacement, Language)
+                            (Registry.Attribute.Dot_Replacement,
+                             Value_Type (Language))
                           then Naming.Attribute
                             (Registry.Attribute.Dot_Replacement,
-                             Language).Value
+                             Value_Type (Language)).Value
                           else ".");
 
          begin
@@ -660,7 +664,7 @@ package body GPR2.Project.View is
                if Index (Result, ".") /= 0 then
                   --  Message.Create
                   --   (Message.Error, "invalid name, contains dot");
-                  return To_String (Result);
+                  return Name_Type (To_String (Result));
 
                else
                   declare
@@ -729,7 +733,7 @@ package body GPR2.Project.View is
 
          --  ?? TODO: this is not currently supported
 
-         return To_String (Result);
+         return Name_Type (To_String (Result));
       end Unit_For;
 
       Current_Signature : constant MD5.Binary_Message_Digest :=
@@ -775,14 +779,16 @@ package body GPR2.Project.View is
 
    function Variables
      (Self : Object;
-      Name : String := "") return Variable.Set.Object is
+      Name : Optional_Name_Type := "") return Variable.Set.Object is
    begin
-      if Name = "" then
+      if Name = No_Name then
          return Definition.Get (Self).Vars;
 
       else
          return Result : Variable.Set.Object do
-            Result.Insert (Name, Definition.Get (Self).Vars (Name));
+            Result.Insert
+              (Name_Type (Name),
+               Definition.Get (Self).Vars (Name_Type (Name)));
          end return;
       end if;
    end Variables;

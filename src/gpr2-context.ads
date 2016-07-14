@@ -34,7 +34,7 @@ package GPR2.Context is
    use type MD5.Binary_Message_Digest;
 
    package Key_Value is
-     new Ada.Containers.Indefinite_Ordered_Maps (String, String);
+     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Value_Type);
 
    type Object is new Key_Value.Map with private;
    --  A parsing context containing the external values for a given project

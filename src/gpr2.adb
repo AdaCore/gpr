@@ -24,10 +24,32 @@
 
 with Ada.Directories;
 with Ada.Environment_Variables;
+with Ada.Strings.Equal_Case_Insensitive;
+with Ada.Strings.Less_Case_Insensitive;
 
 with GNAT.OS_Lib;
 
 package body GPR2 is
+
+   ---------
+   -- "<" --
+   ---------
+
+   overriding function "<" (Left, Right : Optional_Name_Type) return Boolean is
+      use Ada.Strings;
+   begin
+      return Less_Case_Insensitive (String (Left), String (Right));
+   end "<";
+
+   ---------
+   -- "=" --
+   ---------
+
+   overriding function "=" (Left, Right : Optional_Name_Type) return Boolean is
+      use Ada.Strings;
+   begin
+      return Equal_Case_Insensitive (String (Left), String (Right));
+   end "=";
 
    ------------
    -- Create --
@@ -37,11 +59,11 @@ package body GPR2 is
       use Ada;
       use GNAT;
 
-      GPR_Name : constant Name_Type :=
-                   (if Directories.Extension (Name) = "gpr"
-                    then Name
+      GPR_Name : constant String :=
+                   (if Directories.Extension (String (Name)) = "gpr"
+                    then String (Name)
                     else Directories.Compose
-                      (Name => Name, Extension => "gpr"));
+                      (Name => String (Name), Extension => "gpr"));
 
       use type OS_Lib.String_Access;
 
@@ -93,10 +115,11 @@ package body GPR2 is
 
    function Create_File (Name : Name_Type) return Path_Name_Type is
       use GNAT;
+      N : constant String := String (Name);
    begin
       return Path_Name_Type'
-        (As_Is => To_Unbounded_String (Name),
-         Value => To_Unbounded_String (OS_Lib.Normalize_Pathname (Name)));
+        (As_Is => To_Unbounded_String (N),
+         Value => To_Unbounded_String (OS_Lib.Normalize_Pathname (N)));
    end Create_File;
 
    -------------

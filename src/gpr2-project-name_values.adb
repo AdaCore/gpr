@@ -73,7 +73,7 @@ package body GPR2.Project.Name_Values is
 
    function Name (Self : Object) return Name_Type is
    begin
-      return To_String (Self.Name);
+      return Name_Type (To_String (Self.Name));
    end Name;
 
    -----------

@@ -35,24 +35,24 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Check (Project_Name : String);
+   procedure Check (Project_Name : Name_Type);
    --  Do check the given project's sources
 
-   procedure Output_Filename (Filename : Name_Type);
+   procedure Output_Filename (Filename : Full_Path_Name);
    --  Remove the leading tmp directory
 
    -----------
    -- Check --
    -----------
 
-   procedure Check (Project_Name : String) is
+   procedure Check (Project_Name : Name_Type) is
       Prj  : Project.Tree.Object;
       View : Project.View.Object;
    begin
       Prj := Project.Tree.Load (Create (Project_Name));
 
       View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & View.Name);
+      Text_IO.Put_Line ("Project: " & String (View.Name));
 
       for Source of View.Sources loop
          declare
@@ -62,7 +62,7 @@ procedure Main is
             Output_Filename (S.Filename);
 
             Text_IO.Set_Col (16);
-            Text_IO.Put ("   language: " & S.Language);
+            Text_IO.Put ("   language: " & String (S.Language));
 
             Text_IO.Set_Col (33);
             Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
@@ -80,7 +80,7 @@ procedure Main is
    -- Output_Filename --
    ---------------------
 
-   procedure Output_Filename (Filename : Name_Type) is
+   procedure Output_Filename (Filename : Full_Path_Name) is
       I : constant Positive := Strings.Fixed.Index (Filename, "source1/");
    begin
       Text_IO.Put (" > " & Filename (I + 8 .. Filename'Last));

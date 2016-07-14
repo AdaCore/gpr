@@ -24,7 +24,6 @@
 
 with Ada.Containers.Ordered_Sets; use Ada;
 with Ada.Environment_Variables;
-with Ada.Strings.Equal_Case_Insensitive;
 
 with GPR2.Message;
 with GPR2.Parser.Project;
@@ -390,8 +389,8 @@ package body GPR2.Project.Tree is
 
       for E of Data.Externals loop
          --  Fill all known external in the environment variables
-         if Environment_Variables.Exists (E) then
-            Root_Context.Include (E, Environment_Variables.Value (E));
+         if Environment_Variables.Exists (String (E)) then
+            Root_Context.Include (E, Environment_Variables.Value (String (E)));
          end if;
       end loop;
 
@@ -492,7 +491,8 @@ package body GPR2.Project.Tree is
 
             for Project of P_Data.Attrs.Element ("project_files").Values loop
                declare
-                  Pathname : constant Path_Name_Type := Create (Project);
+                  Pathname : constant Path_Name_Type :=
+                               Create (Name_Type (Project));
                   Ctx      : GPR2.Context.Object;
                   A_View   : constant GPR2.Project.View.Object :=
                                Recursive_Load
@@ -520,7 +520,8 @@ package body GPR2.Project.Tree is
                   --  as the validity check will come after it is fully
                   --  loaded/resolved.
                   if External.Kind = Single then
-                     P_Data.A_Context.Include (External.Index, External.Value);
+                     P_Data.A_Context.Include
+                       (Name_Type (External.Index), External.Value);
                   end if;
                end;
             end loop;
@@ -584,7 +585,7 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute " & A.Name & " cannot have index",
+                     "attribute " & String (A.Name) & " cannot have index",
                      Source_Reference.Object (A)));
             end if;
 
@@ -594,7 +595,7 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute " & A.Name & " cannot be a list",
+                     "attribute " & String (A.Name) & " cannot be a list",
                      Source_Reference.Object (A)));
             end if;
 
@@ -604,7 +605,7 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute " & A.Name & " must be a list",
+                     "attribute " & String (A.Name) & " must be a list",
                      Source_Reference.Object (A)));
             end if;
          end Check_Def;
@@ -623,7 +624,7 @@ package body GPR2.Project.Tree is
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "package " & P.Name & " cannot be used in "
+                        "package " & String (P.Name) & " cannot be used in "
                         & P_Kind'Img,
                         Source_Reference.Object (P)));
                end if;
@@ -641,8 +642,9 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "attribute " & A.Name
-                              & " cannot be used in package " & P.Name,
+                              "attribute " & String (A.Name)
+                              & " cannot be used in package "
+                              & String (P.Name),
                               Source_Reference.Object (A)));
                      end if;
 
@@ -665,7 +667,7 @@ package body GPR2.Project.Tree is
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "attribute " & A.Name
+                        "attribute " & String (A.Name)
                         & " cannot be used in " & P_Kind'Img,
                         Source_Reference.Object (A)));
                end if;
@@ -718,7 +720,7 @@ package body GPR2.Project.Tree is
       Tree : Object := Self;
    begin
       for View of Tree loop
-         if Strings.Equal_Case_Insensitive (View.Name, Name) then
+         if View.Name = Name then
             declare
                P_Data : constant Definition.Data := Definition.Get (View);
                P_Sig  : constant GPR2.Context.Binary_Signature :=

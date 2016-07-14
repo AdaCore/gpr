@@ -32,23 +32,23 @@ package body GPR2.Project.Attribute is
 
    function Create
      (Name  : Name_Type;
-      Index : Name_Type;
+      Index : Value_Type;
       Value : Value_Type;
       Sloc  : Source_Reference.Object) return Object is
    begin
       return A : Object := Create (Name, Value, Sloc) do
-         A.Index := To_Unbounded_String (Index);
+         A.Index := To_Unbounded_String (String (Index));
       end return;
    end Create;
 
    function Create
      (Name   : Name_Type;
-      Index  : Name_Type;
+      Index  : Value_Type;
       Values : Containers.Value_List;
       Sloc   : Source_Reference.Object) return Object is
    begin
       return A : Object := Create (Name, Values, Sloc) do
-         A.Index := To_Unbounded_String (Index);
+         A.Index := To_Unbounded_String (String (Index));
       end return;
    end Create;
 
@@ -89,7 +89,7 @@ package body GPR2.Project.Attribute is
    -- Index --
    -----------
 
-   function Index (Self : Object) return Name_Type is
+   function Index (Self : Object) return Value_Type is
    begin
       return To_String (Self.Index);
    end Index;
@@ -98,12 +98,13 @@ package body GPR2.Project.Attribute is
    -- Index_Equal --
    -----------------
 
-   function Index_Equal (Self : Object; Value : Name_Type) return Boolean is
+   function Index_Equal (Self : Object; Value : Value_Type) return Boolean is
    begin
       if Self.Index_Case_Sensitive then
-         return To_String (Self.Index) = Value;
+         return To_String (Self.Index) = String (Value);
       else
-         return Equal_Case_Insensitive (To_String (Self.Index), Value);
+         return Equal_Case_Insensitive
+           (To_String (Self.Index), String (Value));
       end if;
    end Index_Equal;
 
@@ -124,12 +125,12 @@ package body GPR2.Project.Attribute is
    -- Value_Equal --
    -----------------
 
-   function Value_Equal (Self : Object; Value : Name_Type) return Boolean is
+   function Value_Equal (Self : Object; Value : Value_Type) return Boolean is
    begin
       if Self.Value_Case_Sensitive then
-         return Self.Value = Value;
+         return Self.Value = String (Value);
       else
-         return Equal_Case_Insensitive (Self.Value, Value);
+         return Equal_Case_Insensitive (Self.Value, String (Value));
       end if;
    end Value_Equal;
 

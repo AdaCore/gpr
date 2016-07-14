@@ -56,7 +56,7 @@ package body GPR2.Context is
             C : MD5.Context;
          begin
             for E in P_Ctx.Iterate loop
-               MD5.Update (C, Key_Value.Key (E));
+               MD5.Update (C, String (Key_Value.Key (E)));
                MD5.Update (C, "=");
                MD5.Update (C, Key_Value.Element (E));
                MD5.Update (C, ";");

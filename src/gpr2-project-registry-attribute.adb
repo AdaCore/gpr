@@ -61,9 +61,13 @@ package body GPR2.Project.Registry.Attribute is
    ------------
 
    function Create
-     (Name : Name_Type; Pack : String := "") return Qualified_Name is
+     (Name : Name_Type;
+      Pack : Optional_Name_Type := "") return Qualified_Name is
    begin
-      return Qualified_Name (if Pack = "" then Name else Pack & '.' & Name);
+      return Qualified_Name
+        (if Pack = No_Name
+         then Name
+         else Name_Type (Pack) & '.' & Name);
    end Create;
 
    ------------

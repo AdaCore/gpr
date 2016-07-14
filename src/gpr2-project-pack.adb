@@ -33,8 +33,8 @@ package body GPR2.Project.Pack is
 
    function Attribute
      (Self  : Object;
-      Name  : String;
-      Index : String := "") return Project.Attribute.Object is
+      Name  : Name_Type;
+      Index : Value_Type := "") return Project.Attribute.Object is
    begin
       return Self.Attributes.Element (Name, Index);
    end Attribute;
@@ -45,8 +45,8 @@ package body GPR2.Project.Pack is
 
    function Attributes
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Project.Attribute.Set.Object is
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Project.Attribute.Set.Object is
    begin
       return Self.Attrs.Filter (Name, Index);
    end Attributes;
@@ -57,16 +57,18 @@ package body GPR2.Project.Pack is
 
    function Body_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object is
+      Language : Name_Type) return Project.Attribute.Object
+   is
+      Lang : constant Value_Type := Value_Type (Language);
    begin
-      if Self.Has_Attributes (Registry.Attribute.Body_Suffix, Language) then
-         return Self.Attribute (Registry.Attribute.Body_Suffix, Language);
+      if Self.Has_Attributes (Registry.Attribute.Body_Suffix, Lang) then
+         return Self.Attribute (Registry.Attribute.Body_Suffix, Lang);
 
       elsif Self.Has_Attributes
-        (Registry.Attribute.Implementation_Suffix, Language)
+        (Registry.Attribute.Implementation_Suffix, Lang)
       then
          return Self.Attribute
-           (Registry.Attribute.Implementation_Suffix, Language);
+           (Registry.Attribute.Implementation_Suffix, Lang);
 
       else
          return Project.Attribute.Undefined;
@@ -82,7 +84,8 @@ package body GPR2.Project.Pack is
       Attributes : Project.Attribute.Set.Object;
       Sloc       : Source_Reference.Object) return Object is
    begin
-      return Object'(Sloc with To_Unbounded_String (Name), Attributes);
+      return Object'
+        (Sloc with To_Unbounded_String (String (Name)), Attributes);
    end Create;
 
    --------------------
@@ -91,11 +94,11 @@ package body GPR2.Project.Pack is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Boolean is
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Boolean is
       use type Containers.Count_Type;
    begin
-      if Name = "" and then Index = "" then
+      if Name = No_Name and then Index = No_Value then
          return not Self.Attrs.Is_Empty;
       else
          return Self.Attrs.Contains (Name, Index);
@@ -108,7 +111,7 @@ package body GPR2.Project.Pack is
 
    function Name (Self : Object) return Name_Type is
    begin
-      return To_String (Self.Name);
+      return Name_Type (To_String (Self.Name));
    end Name;
 
    ---------------------
@@ -117,12 +120,14 @@ package body GPR2.Project.Pack is
 
    function Separate_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object is
+      Language : Name_Type) return Project.Attribute.Object
+   is
+      Lang : constant Value_Type := Value_Type (Language);
    begin
       if Self.Has_Attributes
-        (Registry.Attribute.Separate_Suffix, Language)
+        (Registry.Attribute.Separate_Suffix, Lang)
       then
-         return Self.Attribute (Registry.Attribute.Separate_Suffix, Language);
+         return Self.Attribute (Registry.Attribute.Separate_Suffix, Lang);
 
       else
          return Project.Attribute.Undefined;
@@ -135,16 +140,18 @@ package body GPR2.Project.Pack is
 
    function Spec_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object is
+      Language : Name_Type) return Project.Attribute.Object
+   is
+      Lang : constant Value_Type := Value_Type (Language);
    begin
-      if Self.Has_Attributes (Registry.Attribute.Spec_Suffix, Language) then
-         return Self.Attribute (Registry.Attribute.Spec_Suffix, Language);
+      if Self.Has_Attributes (Registry.Attribute.Spec_Suffix, Lang) then
+         return Self.Attribute (Registry.Attribute.Spec_Suffix, Lang);
 
       elsif Self.Has_Attributes
-        (Registry.Attribute.Specification_Suffix, Language)
+        (Registry.Attribute.Specification_Suffix, Lang)
       then
          return Self.Attribute
-           (Registry.Attribute.Specification_Suffix, Language);
+           (Registry.Attribute.Specification_Suffix, Lang);
 
       else
          return Project.Attribute.Undefined;

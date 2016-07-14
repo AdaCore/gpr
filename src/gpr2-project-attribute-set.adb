@@ -22,8 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Equal_Case_Insensitive; use Ada;
-with Ada.Strings.Unbounded;              use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package body GPR2.Project.Attribute.Set is
 
@@ -112,10 +111,10 @@ package body GPR2.Project.Attribute.Set is
 
    function Filter
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "") return Object is
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "") return Object is
    begin
-      if Name = "" and then Index = "" then
+      if Name = No_Name and then Index = No_Value then
          return Self;
 
       else
@@ -141,13 +140,13 @@ package body GPR2.Project.Attribute.Set is
       Index : Value_Type := "") return Cursor
    is
       Result : Cursor :=
-                 (CM  => Self.Attributes.Find (Name),
+                 (CM  => Self.Attributes.Find (Name_Type (Name)),
                   CA  => Set_Attribute.No_Element,
                   Set => null);
    begin
       if Set.Has_Element (Result.CM) then
          Result.Set := Self.Attributes.Constant_Reference (Result.CM).Element;
-         Result.CA := Result.Set.Find (Index);
+         Result.CA := Result.Set.Find (String (Index));
       end if;
 
       return Result;
@@ -193,7 +192,7 @@ package body GPR2.Project.Attribute.Set is
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
       Position : constant Set.Cursor :=
-                   Self.Attributes.Find (Attribute.Name);
+                   Self.Attributes.Find (Name_Type (Attribute.Name));
    begin
       if Set.Has_Element (Position) then
          declare
@@ -208,7 +207,7 @@ package body GPR2.Project.Attribute.Set is
             A : Set_Attribute.Map;
          begin
             A.Insert (To_String (Attribute.Index), Attribute);
-            Self.Attributes.Insert (Attribute.Name, A);
+            Self.Attributes.Insert (Name_Type (Attribute.Name), A);
          end;
       end if;
 
@@ -232,12 +231,13 @@ package body GPR2.Project.Attribute.Set is
      (Iter : Iterator'Class; Position : Cursor) return Boolean
    is
       A     : constant Attribute.Object := Position.Set.all (Position.CA);
-      Name  : constant String := To_String (Iter.Name);
-      Index : constant String := To_String (Iter.Index);
+      Name  : constant Optional_Name_Type :=
+                Optional_Name_Type (To_String (Iter.Name));
+      Index : constant Value_Type := To_String (Iter.Index);
    begin
       return
-        (Name = "" or else Strings.Equal_Case_Insensitive (A.Name, Name))
-        and then (Index = "" or else A.Index_Equal (Index));
+        (Name = No_Name or else A.Name = Name_Type (Name))
+        and then (Index = No_Value or else A.Index_Equal (Index));
    end Is_Matching;
 
    -------------
@@ -246,14 +246,14 @@ package body GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self  : Object;
-      Name  : String := "";
-      Index : String := "")
+      Name  : Optional_Name_Type := "";
+      Index : Value_Type := "")
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do
          It.Set   := Self;
-         It.Name  := To_Unbounded_String (Name);
-         It.Index := To_Unbounded_String (Index);
+         It.Name  := To_Unbounded_String (String (Name));
+         It.Index := To_Unbounded_String (String (Index));
       end return;
    end Iterate;
 

@@ -49,7 +49,7 @@ package body GPR2.Source is
       Registry.Store.Append
         (Registry.Data'
            (Filename,
-            To_Unbounded_String (Language),
+            To_Unbounded_String (String (Language)),
             To_Unbounded_String (Unit_Name),
             Kind,
             0));
@@ -83,7 +83,7 @@ package body GPR2.Source is
 
    function Language (Self : Object) return Name_Type is
    begin
-      return To_String (Registry.Store (Self.Id).Language);
+      return Name_Type (To_String (Registry.Store (Self.Id).Language));
    end Language;
 
    ----------------

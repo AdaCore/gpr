@@ -42,7 +42,7 @@ package GPR2.Project.Attribute is
 
    function Create
      (Name  : Name_Type;
-      Index : Name_Type;
+      Index : Value_Type;
       Value : Value_Type;
       Sloc  : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = Single
@@ -52,7 +52,7 @@ package GPR2.Project.Attribute is
 
    function Create
      (Name   : Name_Type;
-      Index  : Name_Type;
+      Index  : Value_Type;
       Values : Containers.Value_List;
       Sloc   : Source_Reference.Object) return Object
      with Post => Create'Result.Kind = List
@@ -82,15 +82,15 @@ package GPR2.Project.Attribute is
      with Pre => Self /= Undefined;
    --  Returns True if the attribute has an index
 
-   function Index (Self : Object) return Name_Type
+   function Index (Self : Object) return Value_Type
      with Pre => Self /= Undefined;
    --  Returns the attribute's index value
 
-   function Index_Equal (Self : Object; Value : Name_Type) return Boolean;
+   function Index_Equal (Self : Object; Value : Value_Type) return Boolean;
    --  Returns True if the attribute's index is equal to Value taking into
    --  account the case-sensitivity of the index.
 
-   function Value_Equal (Self : Object; Value : Name_Type) return Boolean
+   function Value_Equal (Self : Object; Value : Value_Type) return Boolean
      with Pre => Self.Kind = Single;
    --  Returns True if the attribute's value is equal to Value taking into
    --  account the case-sensitivity of the value.
