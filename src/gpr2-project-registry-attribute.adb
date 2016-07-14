@@ -837,6 +837,17 @@ begin
            Read_Only            => False,
            Is_Allowed_In        => Everywhere));
 
+   --  runtime_source_dirs
+   Store.Insert
+     ("runtime_source_dirs",
+      Def'(Index                => Yes,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
    --  naming.spec_suffix
    Store.Insert
      ("naming.spec_suffix",
