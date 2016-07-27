@@ -48,9 +48,23 @@ package GPR2.Project.Tree is
    function Load (Filename : Path_Name_Type) return Object;
    --  Load a root-project
 
+   procedure Load_Configuration
+     (Self     : in out Object;
+      Filename : Path_Name_Type);
+   --  Load a configuration project for this tree
+
    function Root_Project (Self : Object) return View.Object
-     with Post => Root_Project'Result /= View.Undefined;
+     with Pre  => Self /= Undefined,
+          Post => Root_Project'Result /= View.Undefined;
    --  Returns the root project for the given tree
+
+   function Has_Configuration_Project (Self : Object) return Boolean;
+   --  Returns True if a configuration project is loaded on this tree
+
+   function Configuration_Project (Self : Object) return View.Object
+     with Pre => Self /= Undefined
+                 and then Self.Has_Configuration_Project;
+   --  Returns the configuration project for the given tree
 
    function View_For
      (Self : Object;
@@ -144,6 +158,7 @@ private
 
    type Object is tagged record
       Root     : View.Object;
+      Conf     : View.Object;
       Messages : Log.Object;
    end record;
 
@@ -156,7 +171,10 @@ private
    type Constant_Reference_Type
      (View : not null access constant Project.View.Object) is null record;
 
-   Undefined  : constant Object := (Root => View.Undefined, Messages => <>);
+   Undefined  : constant Object :=
+                  (Root     => View.Undefined,
+                   Conf     => View.Undefined,
+                   Messages => <>);
 
    No_Element : constant Cursor :=
                   (Definition.Project_View_Store.Empty_Vector,

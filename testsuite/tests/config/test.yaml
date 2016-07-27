@@ -1,0 +1,5 @@
+description:
+    Simple configuration project test
+driver: build_and_run
+project_file: config
+main: main

@@ -1,0 +1,74 @@
+>>> Changed_Callback for demo.gpr
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> . toto Linux
+V:   Dir1 -> toto
+V:   Dir2 -> Linux
+V:   Dir3 -> one
+
+Config   K_CONFIGURATION
+A:   Archive_Builder -> ar cr
+A:   Archive_Builder_Append_Option -> q
+A:   Archive_Indexer -> ranlib
+A:   Archive_Suffix -> .a
+A:   Default_Language -> Ada
+A:   Library_Auto_Init_Supported -> true
+A:   Library_Builder -> /home/obry/dev/builds/install/libexec/gprbuild/gprlib
+A:   Library_Encapsulated_Options -> -shared -static-libgcc
+A:   Library_Encapsulated_Supported -> true
+A:   Library_Major_Minor_Id_Supported -> true
+A:   Library_Partial_Linker -> /home/obry/dev/builds/install/bin/gcc -nostdlib -Wl,-r -o
+A:   Library_Support -> full
+A:   Library_Version_Switches -> -Wl,-soname,
+A:   Object_Lister -> nm -g
+A:   Object_Lister_Matcher ->  [TDRB] (.*)
+A:   Run_Path_Option -> -Wl,-z,origin,-rpath,
+A:   Run_Path_Origin -> $ORIGIN
+A:   Runtime_Dir -> /home/obry/dev/builds/install/lib/gcc/x86_64-linux-gnu/6.1.1/
+A:   Shared_Library_Minimum_Switches -> -shared
+A:   Shared_Library_Prefix -> lib
+A:   Shared_Library_Suffix -> .so
+A:   Symbolic_Link_Supported -> true
+A:   Target -> x86_64-linux
+A:   Toolchain_Version -> GNAT 17.0
+V:   Target_Name -> x86_64-linux
+
+ Binder
+   Driver (Ada) -> /home/obry/dev/builds/install/libexec/gprbuild/gprbind
+   Objects_Path_File (Ada) -> ADA_PRJ_OBJECTS_FILE
+ Clean
+   Artifacts_In_Object_Dir -> toto gnatinspect.*
+   Object_Artifact_Extensions (Ada) -> .s .ci .gcno
+   Source_Artifact_Extensions (Ada) -> .dg .rep .stdout .stderr
+ Compiler
+   Config_Body_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => ""%f"");
+   Config_Body_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Body_File_Name => ""%f"", Index => %i);
+   Config_Body_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Body_File_Name  => ""*%b"",   Casing          => %c,   Dot_Replacement => ""%d"");
+   Config_File_Switches (Ada) -> -gnatec=
+   Config_File_Unique (Ada) -> False
+   Config_Spec_File_Name (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => ""%f"");
+   Config_Spec_File_Name_Index (Ada) -> pragma Source_File_Name_Project (%u, Spec_File_Name => ""%f"", Index => %i);
+   Config_Spec_File_Name_Pattern (Ada) -> pragma Source_File_Name_Project   (Spec_File_Name  => ""*%s"",   Casing          => %c,   Dot_Replacement => ""%d"");
+   Dependency_Kind (Ada) -> ALI_File
+   Driver (Ada) -> /home/obry/dev/builds/install/bin/gcc
+   Include_Path_File (Ada) -> ADA_PRJ_INCLUDE_FILE
+   Language_Kind (Ada) -> unit_based
+   Mapping_Body_Suffix (Ada) -> %b
+   Mapping_File_Switches (Ada) -> -gnatem=
+   Mapping_Spec_Suffix (Ada) -> %s
+   Multi_Unit_Object_Separator (Ada) -> ~
+   Multi_Unit_Switches (Ada) -> -gnateI
+   PIC_Option (Ada) -> -fPIC
+ Linker
+   Driver -> /home/obry/dev/builds/install/bin/gcc
+   Export_File_Format -> GNU
+   Export_File_Switch -> -Wl,--version-script=
+   Map_File_Option -> -Wl,-Map,
+   Max_Command_Line_Length -> 8192
+   Response_File_Format -> GCC_GNU
+ Naming
+   Body_Suffix (Ada) -> .adb
+   Casing -> lowercase
+   Dot_Replacement -> -
+   Spec_Suffix (Ada) -> .ads

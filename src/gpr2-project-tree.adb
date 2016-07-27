@@ -57,6 +57,15 @@ package body GPR2.Project.Tree is
    --  Load a project filename recurivelly and returns the corresponding root
    --  view.
 
+   ---------------------------
+   -- Configuration_Project --
+   ---------------------------
+
+   function Configuration_Project (Self : Object) return View.Object is
+   begin
+      return Self.Conf;
+   end Configuration_Project;
+
    ------------------------
    -- Constant_Reference --
    ------------------------
@@ -206,6 +215,15 @@ package body GPR2.Project.Tree is
       return Cursor'(Projects, 1, Iter.Root.Root);
    end First;
 
+   -------------------------------
+   -- Has_Configuration_Project --
+   -------------------------------
+
+   function Has_Configuration_Project (Self : Object) return Boolean is
+   begin
+      return Self.Conf /= View.Undefined;
+   end Has_Configuration_Project;
+
    -----------------
    -- Has_Context --
    -----------------
@@ -273,7 +291,9 @@ package body GPR2.Project.Tree is
 
    begin
       return Tree : Object :=
-        Object'(Root => Root_View, Messages => Messages)
+        Object'(Root     => Root_View,
+                Conf     => View.Undefined,
+                Messages => Messages)
       do
          --  Do nothing more if there is errors during the parsing
 
@@ -300,6 +320,33 @@ package body GPR2.Project.Tree is
          end if;
       end return;
    end Load;
+
+   ------------------------
+   -- Load_Configuration --
+   ------------------------
+
+   procedure Load_Configuration
+     (Self     : in out Object;
+      Filename : Path_Name_Type)
+   is
+      Project : constant Parser.Project.Object :=
+                  Parser.Project.Load (Filename, Self.Messages);
+      Data    : Definition.Data (Has_Context => False);
+   begin
+      --  Continue only if there is no parsing error on the configuration
+      --  project.
+
+      if Self.Messages.Is_Empty then
+         Data.Trees.Project := Project;
+         Data.Context_View := View.Undefined;
+
+         Self.Conf := Definition.Register (Data);
+
+         --  Finaly reload/reset the context
+
+         Set_Context (Self, Self.Context);
+      end if;
+   end Load_Configuration;
 
    ------------------
    -- Log_Messages --
@@ -687,6 +734,12 @@ package body GPR2.Project.Tree is
          Definition.Set (Self.Root_Project, Data);
       end;
 
+      --  Now the first step is to set the configuration project view if any
+
+      if Self.Conf /= View.Undefined then
+         Set_View (Self.Conf);
+      end if;
+
       --  Propagate the change in the project Tree. That is for each project in
       --  the tree we need to update the corresponding view. We do not handle
       --  the aggregated project here. Those projects are specifically in
@@ -717,8 +770,10 @@ package body GPR2.Project.Tree is
       Ctx  : GPR2.Context.Object) return View.Object
    is
       use type GPR2.Context.Binary_Signature;
-      Tree : Object := Self;
+      Tree : Object := Self with Warnings => Off;
    begin
+      --  First check for the view in the current tree
+
       for View of Tree loop
          if View.Name = Name then
             declare
@@ -733,7 +788,13 @@ package body GPR2.Project.Tree is
          end if;
       end loop;
 
-      return View.Undefined;
+      --  If not found let's check if it is the configuration project
+
+      if Self.Conf /= View.Undefined and then Self.Conf.Name = Name then
+         return Self.Conf;
+      else
+         return View.Undefined;
+      end if;
    end View_For;
 
 end GPR2.Project.Tree;

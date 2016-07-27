@@ -1,0 +1,5 @@
+
+project Config is
+   Value := "from_config";
+   for Object_Dir use "confobj";
+end config;

@@ -1,0 +1,5 @@
+description:
+    Check that a use config project has precedence over a configuration project
+driver: build_and_run
+project_file: config2
+main: main

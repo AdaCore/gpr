@@ -60,7 +60,7 @@ package body GPR2 is
       use GNAT;
 
       GPR_Name : constant String :=
-                   (if Directories.Extension (String (Name)) = "gpr"
+                   (if Directories.Extension (String (Name)) in "gpr" | "cgpr"
                     then String (Name)
                     else Directories.Compose
                       (Name => String (Name), Extension => "gpr"));
