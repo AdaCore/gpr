@@ -37,15 +37,21 @@ package GPR2.Source_Reference is
 
    function Create
      (Filename     : Full_Path_Name;
-      Line, Column : Positive) return Object'Class;
+      Line, Column : Natural) return Object'Class;
 
    function Filename (Self : Object) return Full_Path_Name;
    --  Returns the full pathname where the entity is defined
 
-   function Line   (Self : Object) return Positive;
+   function Has_Source_Reference (Self : Object) return Boolean;
+   --  Returns True if Self has source references. That is, in this case the
+   --  Line and Column have meaningful values.
+
+   function Line (Self : Object) return Positive
+     with Pre => Self.Has_Source_Reference;
    --  Returns the starting line of the entity declaration
 
-   function Column (Self : Object) return Positive;
+   function Column (Self : Object) return Positive
+     with Pre => Self.Has_Source_Reference;
    --  Returns the starting column of the entity declaration
 
 private
@@ -56,10 +62,10 @@ private
       Line     : Natural;
       Column   : Natural;
       Filename : Unbounded_String;
-   end record
-     with Dynamic_Predicate =>
-       (if Object.Filename /= Null_Unbounded_String
-        then Object.Line /= 0 and then Object.Column /= 0);
+   end record;
+
+   function Has_Source_Reference (Self : Object) return Boolean
+     is (Self.Column > 0 and then Self.Line > 0);
 
    Undefined : constant Object :=
                  (0, 0, Null_Unbounded_String);

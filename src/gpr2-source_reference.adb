@@ -39,7 +39,7 @@ package body GPR2.Source_Reference is
 
    function Create
      (Filename     : Full_Path_Name;
-      Line, Column : Positive) return Object'Class is
+      Line, Column : Natural) return Object'Class is
    begin
       return Object'(Line, Column, To_Unbounded_String (Filename));
    end Create;
