@@ -84,6 +84,13 @@ package body GPR2.Project.Attribute.Set is
       return Has_Element (Position);
    end Contains;
 
+   function Contains
+     (Self      : Object;
+      Attribute : Project.Attribute.Object) return Boolean is
+   begin
+      return Self.Contains (Attribute.Name, To_String (Attribute.Index));
+   end Contains;
+
    -------------
    -- Element --
    -------------

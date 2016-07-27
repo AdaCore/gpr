@@ -47,6 +47,11 @@ package GPR2.Project.Attribute.Set is
    --  Check whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
+   function Contains
+     (Self      : Object;
+      Attribute : Project.Attribute.Object) return Boolean;
+   --  Returns True if the set contains the given attribute
+
    procedure Clear (Self : in out Object);
    --  Removes all elements from Self
 
