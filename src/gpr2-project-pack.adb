@@ -95,7 +95,8 @@ package body GPR2.Project.Pack is
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Boolean is
+      Index : Value_Type := "") return Boolean
+   is
       use type Containers.Count_Type;
    begin
       if Name = No_Name and then Index = No_Value then

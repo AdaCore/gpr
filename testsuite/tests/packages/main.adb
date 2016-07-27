@@ -80,7 +80,6 @@ procedure Main is
                Display (A);
             end loop;
          end loop;
-
       end if;
    end Display;
 

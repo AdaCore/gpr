@@ -57,7 +57,7 @@ package body GPR2.Source_Reference is
    -- Line --
    ----------
 
-   function Line   (Self : Object) return Positive is
+   function Line (Self : Object) return Positive is
    begin
       return Self.Line;
    end Line;

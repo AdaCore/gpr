@@ -44,7 +44,7 @@ package GPR2.Project.Attribute.Set is
      (Self  : Object;
       Name  : Name_Type;
       Index : Value_Type := "") return Boolean;
-   --  Check whether the set constains the attribute with the given Name and
+   --  Check whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
    procedure Clear (Self : in out Object);

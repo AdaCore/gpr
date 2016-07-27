@@ -572,6 +572,8 @@ package body GPR2.Parser.Project is
          begin
             case Kind (Node) is
                when GPR_Expr_List =>
+                  --  We are opening not a single element but an expression
+                  --  list.
                   Single := False;
 
                when GPR_String_Literal =>
