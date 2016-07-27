@@ -39,7 +39,8 @@ package body GPR2.Project.Attribute.Set is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Is_Matching
-     (Iter : Iterator'Class; Position : Cursor) return Boolean;
+     (Iter : Iterator'Class; Position : Cursor) return Boolean
+     with Pre => Has_Element (Position);
    --  Returns True if the current Position is matching the Iterator
 
    -----------
@@ -168,7 +169,7 @@ package body GPR2.Project.Attribute.Set is
          Position.CA := Position.Set.First;
       end if;
 
-      if not Is_Matching (Iter, Position) then
+      if Has_Element (Position) and then not Is_Matching (Iter, Position) then
          return Next (Iter, Position);
       else
          return Position;
