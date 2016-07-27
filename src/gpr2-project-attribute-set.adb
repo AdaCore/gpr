@@ -186,6 +186,41 @@ package body GPR2.Project.Attribute.Set is
         and then Set_Attribute.Has_Element (Position.CA);
    end Has_Element;
 
+   -------------
+   -- Include --
+   -------------
+
+   procedure Include
+     (Self : in out Object; Attribute : Project.Attribute.Object)
+   is
+      Position : constant Set.Cursor :=
+                   Self.Attributes.Find (Name_Type (Attribute.Name));
+      Present  : Boolean := False;
+   begin
+      if Set.Has_Element (Position) then
+         declare
+            A : Set_Attribute.Map := Set.Element (Position);
+         begin
+            Present := A.Contains (To_String (Attribute.Index));
+            A.Include  (To_String (Attribute.Index), Attribute);
+            Self.Attributes.Replace_Element (Position, A);
+         end;
+
+      else
+         declare
+            A : Set_Attribute.Map;
+         begin
+            Present := A.Contains (To_String (Attribute.Index));
+            A.Include (To_String (Attribute.Index), Attribute);
+            Self.Attributes.Insert (Name_Type (Attribute.Name), A);
+         end;
+      end if;
+
+      if not Present then
+         Self.Length := Self.Length + 1;
+      end if;
+   end Include;
+
    ------------
    -- Insert --
    ------------

@@ -65,6 +65,11 @@ package GPR2.Project.Attribute.Set is
           Post => Self.Contains (Attribute.Name, Attribute.Index);
    --  Insert Attribute into the set
 
+   procedure Include
+     (Self : in out Object; Attribute : Project.Attribute.Object)
+     with Post => Self.Contains (Attribute.Name, Attribute.Index);
+   --  Insert or replace an Attribute into the set
+
    --  Iterator
 
    type Cursor is private;
