@@ -96,13 +96,17 @@ package GPR2 is
    function Value (File : Path_Name_Type) return Full_Path_Name;
    --  Returns the full pathname for the given Path_Name_Type
 
+   function Base_Name (File : Path_Name_Type) return Name_Type;
+   --  Returns the base name for File
+
 private
 
    use Ada.Strings.Unbounded;
 
    type Path_Name_Type is record
-      As_Is : Unbounded_String;
-      Value : Unbounded_String;
+      As_Is     : Unbounded_String;
+      Value     : Unbounded_String;
+      Base_Name : Unbounded_String;
    end record;
 
    overriding function "=" (Left, Right : Path_Name_Type) return Boolean is
@@ -110,6 +114,9 @@ private
 
    function "<" (Left, Right : Path_Name_Type) return Boolean
      is (Left.Value < Right.Value);
+
+   function Base_Name (File : Path_Name_Type) return Name_Type
+     is (Name_Type (To_String (File.Base_Name)));
 
    No_Name  : constant Optional_Name_Type := "";
    No_Value : constant Value_Type := "";

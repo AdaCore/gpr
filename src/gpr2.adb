@@ -77,9 +77,11 @@ package body GPR2 is
         or else not Environment_Variables.Exists ("ADA_PROJECT_PATH")
       then
          return Path_Name_Type'
-           (As_Is => To_Unbounded_String (GPR_Name),
-            Value => To_Unbounded_String
-                       (OS_Lib.Normalize_Pathname (GPR_Name)));
+           (As_Is     => To_Unbounded_String (GPR_Name),
+            Value     => To_Unbounded_String
+                           (OS_Lib.Normalize_Pathname (GPR_Name)),
+            Base_Name => To_Unbounded_String
+                           (Directories.Base_Name (GPR_Name)));
 
       else
          --  Otherwise, let's try to check Name in ADA_PROJECT_PATH
@@ -93,17 +95,21 @@ package body GPR2 is
          begin
             if File = null then
                return Path_Name_Type'
-                 (As_Is => To_Unbounded_String (GPR_Name),
-                  Value => To_Unbounded_String (GPR_Name));
+                 (As_Is     => To_Unbounded_String (GPR_Name),
+                  Value     => To_Unbounded_String (GPR_Name),
+                  Base_Name => To_Unbounded_String
+                                 (Directories.Base_Name (GPR_Name)));
 
             else
                N := To_Unbounded_String (File.all);
                OS_Lib.Free (File);
 
                return Path_Name_Type'
-                 (As_Is => N,
-                  Value => To_Unbounded_String
-                    (OS_Lib.Normalize_Pathname (To_String (N))));
+                 (As_Is     => N,
+                  Value     => To_Unbounded_String
+                                 (OS_Lib.Normalize_Pathname (To_String (N))),
+                  Base_Name => To_Unbounded_String
+                                 (Directories.Base_Name (To_String (N))));
             end if;
          end;
       end if;
@@ -114,12 +120,14 @@ package body GPR2 is
    -----------------
 
    function Create_File (Name : Name_Type) return Path_Name_Type is
+      use Ada;
       use GNAT;
       N : constant String := String (Name);
    begin
       return Path_Name_Type'
-        (As_Is => To_Unbounded_String (N),
-         Value => To_Unbounded_String (OS_Lib.Normalize_Pathname (N)));
+        (As_Is     => To_Unbounded_String (N),
+         Value     => To_Unbounded_String (OS_Lib.Normalize_Pathname (N)),
+         Base_Name => To_Unbounded_String (Directories.Base_Name (N)));
    end Create_File;
 
    -------------
