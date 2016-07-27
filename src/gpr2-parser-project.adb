@@ -854,6 +854,9 @@ package body GPR2.Parser.Project is
                   when GPR_String_Literal =>
                      Handle_String (String_Literal (Node));
 
+                  when GPR_Others_Designator =>
+                     Is_Case_Item_Matches := True;
+
                   when others =>
                      null;
                end case;
