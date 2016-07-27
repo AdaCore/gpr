@@ -23,7 +23,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
-with Ada.Characters.Handling;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
@@ -193,31 +192,33 @@ package body GPR2.Parser.Project is
 
                      when GPR_Qualifier_Names =>
                         declare
+                           Not_Present : constant Name_Type := "@";
+
                            Names : constant not null Qualifier_Names :=
                                      Qualifier_Names (F_Qualifier (Qual));
                            Name_1 : constant Identifier :=
                                       F_Qualifier_Id1 (Names);
-                           Str_1  : constant String :=
+                           Str_1  : constant Name_Type :=
                                       (if Name_1 = null
-                                       then ""
-                                       else Characters.Handling.To_Lower
-                                         (String
-                                            (Get_Name_Type
-                                               (Single_Tok_Node (Name_1)))));
+                                       then Not_Present
+                                       else Get_Name_Type
+                                              (Single_Tok_Node (Name_1)));
                            Name_2 : constant Identifier :=
                                       F_Qualifier_Id2 (Names);
-                           Str_2  : constant String :=
+                           Str_2  : constant Name_Type :=
                                       (if Name_2 = null
-                                       then ""
-                                       else Characters.Handling.To_Lower
-                                         (String
-                                            (Get_Name_Type
-                                               (Single_Tok_Node (Name_2)))));
+                                       then Not_Present
+                                       else Get_Name_Type
+                                              (Single_Tok_Node (Name_2)));
                         begin
-                           if Str_1 = "library" and then Str_2 = "" then
+                           if Str_1 = "library"
+                             and then Str_2 = Not_Present
+                           then
                               Project.Qualifier := K_Library;
 
-                           elsif Str_1 = "aggregate" and then Str_2 = "" then
+                           elsif Str_1 = "aggregate"
+                             and then Str_2 = Not_Present
+                           then
                               Project.Qualifier := K_Aggregate;
 
                            elsif Str_1 = "aggregate"
@@ -226,7 +227,7 @@ package body GPR2.Parser.Project is
                               Project.Qualifier := K_Aggregate_Library;
 
                            elsif Str_1 = "configuration"
-                             and then Str_2 = ""
+                             and then Str_2 = Not_Present
                            then
                               Project.Qualifier := K_Configuration;
 
