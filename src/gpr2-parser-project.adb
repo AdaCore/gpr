@@ -675,11 +675,10 @@ package body GPR2.Parser.Project is
                   Record_Value ("");
 
                else
-                  --  We are adding a variable value to the current non empty
-                  --  list, or the variable contains multiple values, so this
-                  --  is not a single valued attribute.
+                  --  If the variable contains multiple values the result
+                  --  won't be a single valued attribute.
 
-                  if Result.Length > 0 or else Values.Length > 1 then
+                  if Values.Length > 1 then
                      Single := False;
                   end if;
 
