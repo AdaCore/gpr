@@ -6,6 +6,7 @@ A:   Source_Dirs -> . toto Linux
 V:   Dir1 -> toto
 V:   Dir2 -> Linux
 V:   Dir3 -> one
+V:   Dir4 -> .a
 
 Config   K_CONFIGURATION
 A:   Archive_Builder -> ar cr

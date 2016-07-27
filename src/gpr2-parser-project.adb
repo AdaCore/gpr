@@ -803,7 +803,9 @@ package body GPR2.Parser.Project is
             else
                --  If a single name it can be either a project or a package
 
-               if Containers.Contains (Self.Imports, Name) then
+               if Containers.Contains (Self.Imports, Name)
+                 or else Name = "config"
+               then
                   --  This is a project reference: <project>'<attribute>
                   return Get_Attribute_Ref
                     (Project => Name,
