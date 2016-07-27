@@ -48,14 +48,27 @@ package body GPR2.Message is
       use Ada;
       use GNAT.Formatted_String;
 
-      Format : constant Formatted_String := +"%s:%d:%d: %s";
-
       Filename : constant Full_Path_Name := Self.Sloc.Filename;
    begin
-      return -(Format
-               & Directories.Simple_Name (Filename)
-               & Self.Sloc.Line & Self.Sloc.Column
-               & To_String (Self.Message));
+      if Self.Sloc.Has_Source_Reference then
+         declare
+            Format : constant Formatted_String := +"%s:%d:%d: %s";
+         begin
+            return -(Format
+                     & Directories.Simple_Name (Filename)
+                     & Self.Sloc.Line & Self.Sloc.Column
+                     & To_String (Self.Message));
+         end;
+
+      else
+         declare
+            Format : constant Formatted_String := +"%s: %s";
+         begin
+            return -(Format
+                     & Directories.Simple_Name (Filename)
+                     & To_String (Self.Message));
+         end;
+      end if;
    end Format;
 
    -----------
