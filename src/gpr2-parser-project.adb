@@ -317,9 +317,9 @@ package body GPR2.Parser.Project is
                               Source_Reference.Create
                                 (Filename => Value (Filename),
                                  Line     =>
-                                   Positive (D.Sloc_Range.Start_Line),
+                                   Natural (D.Sloc_Range.Start_Line),
                                  Column   =>
-                                   Positive (D.Sloc_Range.Start_Column));
+                                   Natural (D.Sloc_Range.Start_Column));
                   begin
                      Messages.Append
                        (GPR2.Message.Create
