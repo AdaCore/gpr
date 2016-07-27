@@ -22,7 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+with Ada.Characters.Handling;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 package body GPR2.Project.Attribute.Set is
 
@@ -140,6 +141,8 @@ package body GPR2.Project.Attribute.Set is
       Name  : Name_Type;
       Index : Value_Type := "") return Cursor
    is
+      use Ada.Characters.Handling;
+
       Result : Cursor :=
                  (CM  => Self.Attributes.Find (Name_Type (Name)),
                   CA  => Set_Attribute.No_Element,
@@ -147,7 +150,28 @@ package body GPR2.Project.Attribute.Set is
    begin
       if Set.Has_Element (Result.CM) then
          Result.Set := Self.Attributes.Constant_Reference (Result.CM).Element;
-         Result.CA := Result.Set.Find (String (Index));
+
+         --  If we have an attribute in the bucket let's check if the index
+         --  is case sensitive or not. If not we need to iterate through
+         --  all values to get the proper element.
+
+         if Index /= ""
+           and then not Result.Set.Is_Empty
+           and then not Result.Set.First_Element.Index_Case_Sensitive
+         then
+            --  The index is not case sensitive for this attribute, we need to
+            --  check the index by looping over all values.
+
+            for E in Result.Set.Iterate loop
+               if To_Lower (Set_Attribute.Key (E)) = To_Lower (Index) then
+                  Result.CA := E;
+                  exit;
+               end if;
+            end loop;
+
+         else
+            Result.CA := Result.Set.Find (String (Index));
+         end if;
       end if;
 
       return Result;
