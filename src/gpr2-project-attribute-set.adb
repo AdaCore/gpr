@@ -181,7 +181,8 @@ package body GPR2.Project.Attribute.Set is
 
    function Has_Element (Position : Cursor) return Boolean is
    begin
-      return Set_Attribute.Has_Element (Position.CA);
+      return Position.Set /= null
+        and then Set_Attribute.Has_Element (Position.CA);
    end Has_Element;
 
    ------------
