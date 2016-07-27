@@ -46,4 +46,14 @@ package GPR2.Containers is
 
    subtype Path_Name_List is Path_Name_Type_List.Vector;
 
+   function Contains
+     (List : Path_Name_List; Base_Name : Name_Type) return Boolean;
+   --  Returns True if Base_Name is part of the given List
+
+private
+
+   function Contains
+     (List : Path_Name_List; Base_Name : Name_Type) return Boolean
+     is (for some E of List => GPR2.Base_Name (E) = Base_Name);
+
 end GPR2.Containers;
