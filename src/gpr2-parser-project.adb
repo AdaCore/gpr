@@ -387,7 +387,9 @@ package body GPR2.Parser.Project is
       --  Parse and return the value for the given variable reference
 
       function Get_Attribute_Ref
-        (Project : Name_Type; Node : not null Attribute_Reference)
+        (Project : Name_Type;
+         Node    : not null Attribute_Reference;
+         Pack    : Optional_Name_Type := "")
          return Containers.Value_List;
 
       function Get_Variable_Ref
@@ -402,6 +404,18 @@ package body GPR2.Parser.Project is
       --  have parsed an expression list. In this later case it does not mean
       --  that we are retuning multiple values, just that the expression is a
       --  list surrounded by parentheses.
+
+      procedure Record_Attribute
+        (Set : in out GPR2.Project.Attribute.Set.Object;
+         A   : GPR2.Project.Attribute.Object);
+      --  Record an attribute into the given set. At the same time we increment
+      --  the Empty_Attribute_Count if this attribute has an empty value. This
+      --  is used to check whether we need to reparse the tree.
+
+      function Stop_Iteration return Boolean;
+      --  Returns true if a new parsing of the tree is needed. This is because
+      --  an attribute can have a forward reference to another attribute into
+      --  the same package.
 
       --  Global variables used to keep state during the parsing. While
       --  visiting child nodes we may need to record status (when in a package
@@ -427,30 +441,107 @@ package body GPR2.Parser.Project is
       --  set and Pack_Name contains the name of the package and all parsed
       --  attributes are recorded into Pack_Attrs set.
 
-      In_Pack     : Boolean := False;
-      Pack_Name   : Unbounded_String;
-      Pack_Attrs  : GPR2.Project.Attribute.Set.Object;
+      In_Pack              : Boolean := False;
+      Pack_Name            : Unbounded_String;
+      Pack_Attrs           : GPR2.Project.Attribute.Set.Object;
+      Att_Defined          : Boolean := True;
+      Is_Project_Reference : Boolean := False;
+      --  Is_Project_Reference is True when using: Project'<attribute>
+
+      Undefined_Attribute_Count          : Natural := 0;
+      Previous_Undefined_Attribute_Count : Natural := 0;
 
       -----------------------
       -- Get_Attribute_Ref --
       -----------------------
 
       function Get_Attribute_Ref
-        (Project : Name_Type; Node : not null Attribute_Reference)
-         return Containers.Value_List
+        (Project : Name_Type;
+         Node    : not null Attribute_Reference;
+         Pack    : Optional_Name_Type := "") return Containers.Value_List
       is
-         Name : constant Name_Type :=
-                  Get_Name_Type
-                    (Single_Tok_Node (F_Attribute_Name (Node)));
-         View : constant GPR2.Project.View.Object :=
-                  GPR2.Project.Tree.View_For (Tree, Project, Context);
+         use type GPR2.Project.View.Object;
+
+         Name   : constant Name_Type :=
+                    Get_Name_Type
+                      (Single_Tok_Node (F_Attribute_Name (Node)));
+         I_Node : constant GPR_Node := F_Attribute_Index (Node);
+         Index  : constant Value_Type :=
+                    (if Present (I_Node)
+                     then Value_Type (Get_Name_Type (Single_Tok_Node (I_Node)))
+                     else "");
+         View   : constant GPR2.Project.View.Object :=
+                    GPR2.Project.Tree.View_For (Tree, Project, Context);
+
+         Result : Containers.Value_List :=
+                    Containers.Value_Type_List.Empty_Vector;
+
       begin
-         if View.Has_Attributes (Name) then
-            return View.Attributes.Element (Name).Values;
+         if Project = Name_Type (To_String (Self.Name))
+           or else Is_Project_Reference
+         then
+            --  An attribute referencing a value in the current project
+
+            --  Record only if fully defined (add a boolean to control this)
+            --  and stop parsing when the number of undefined attribute is
+            --  stable.
+
+            if Pack = "" then
+               if Attrs.Contains (Name, Index) then
+                  Result := Attrs.Element (Name, Index).Values;
+               else
+                  Att_Defined := False;
+               end if;
+
+            elsif Pack_Name /= Null_Unbounded_String
+              and then Name_Type (To_String (Pack_Name)) = Name_Type (Pack)
+            then
+               --  This is the current parsed package, look into Pack_Attrs
+
+               if Pack_Attrs.Contains (Name, Index) then
+                  Result := Pack_Attrs.Element (Name, Index).Values;
+               else
+                  Att_Defined := False;
+               end if;
+
+            elsif Packs.Contains (Name_Type (Pack)) then
+               --  Or in another package in the same project
+               if Packs (Name_Type (Pack)).Has_Attributes (Name, Index) then
+                  Result := Packs.Element
+                    (Name_Type (Pack)).Attributes.Element (Name, Index).Values;
+               else
+                  Att_Defined := False;
+               end if;
+            end if;
 
          else
-            return Containers.Value_Type_List.Empty_Vector;
+            if View /= GPR2.Project.View.Undefined then
+               if Pack = "" then
+                  if View.Has_Attributes (Name) then
+                     Result := View.Attributes.Element (Name).Values;
+                  else
+                     Att_Defined := False;
+                  end if;
+
+               else
+                  if View.Has_Packages (Pack) then
+                     declare
+                        P : constant GPR2.Project.Pack.Object :=
+                              View.Packages.Element (Name_Type (Pack));
+                     begin
+                        if P.Has_Attributes (Name) then
+                           Result := P.Attributes.Element (Name).Values;
+                        end if;
+                     end;
+
+                  else
+                     Att_Defined := False;
+                  end if;
+               end if;
+            end if;
          end if;
+
+         return Result;
       end Get_Attribute_Ref;
 
       -------------------
@@ -469,6 +560,16 @@ package body GPR2.Parser.Project is
          function Parser
            (Node : access GPR_Node_Type'Class) return Visit_Status;
 
+         procedure Record_Value (Value : Value_Type)
+           with Post => Result.Length'Old =
+                         (if Result.Length'Old > 0 and then Single
+                          then Result.Length else Result.Length - 1);
+         --  Record Value into Result, either add it as a new value in the list
+         --  (Single = False) or append the value to the current one.
+
+         procedure Record_Values (Values : Containers.Value_List);
+         --  Same as above but for multiple values
+
          ------------
          -- Parser --
          ------------
@@ -479,20 +580,36 @@ package body GPR2.Parser.Project is
             Status : Visit_Status := Into;
 
             procedure Handle_String (Node : not null String_Literal)
-              with Pre  => Present (Node),
-                   Post => Result.Length'Old + 1 = Result.Length;
+              with Pre  => Present (Node);
             --  A simple static string
 
             procedure Handle_Variable (Node : not null Variable_Reference)
-              with Pre  => Present (Node),
-                   Post => Result.Length'Old < Result.Length;
+              with Pre => Present (Node);
             --  A variable
 
             procedure Handle_External_Variable
               (Node : not null External_Reference)
-              with Pre  => Present (Node),
-                   Post => Result.Length'Old < Result.Length;
+              with Pre  => Present (Node);
             --  An external variable
+
+            procedure Handle_Attribute_Reference
+              (Node : not null Attribute_Reference)
+              with Pre  => Present (Node);
+            --  An attribute reference for ProjectReference node only. The
+            --  other cases are handled in other parts.
+
+            --------------------------------
+            -- Handle_Attribute_Reference --
+            --------------------------------
+
+            procedure Handle_Attribute_Reference
+              (Node : not null Attribute_Reference) is
+            begin
+               if Is_Project_Reference then
+                  Record_Values (Get_Attribute_Ref ("project", Node));
+               end if;
+               Status := Over;
+            end Handle_Attribute_Reference;
 
             ------------------------------
             -- Handle_External_Variable --
@@ -511,7 +628,7 @@ package body GPR2.Parser.Project is
             begin
                if Context.Contains (Name) then
                   --  External in the context, use this value
-                  Result.Append (Context (Name));
+                  Record_Value (Context (Name));
 
                elsif Present (Expr) then
                   --  External not in the context but has a default value
@@ -520,12 +637,12 @@ package body GPR2.Parser.Project is
                      Default : constant Containers.Value_List :=
                                  Get_Term_List (Expr, Single);
                   begin
-                     Result.Append (Unquote (Default.First_Element));
+                     Record_Value (Unquote (Default.First_Element));
                   end;
 
                else
                   --  Not in the context and no default value
-                  Result.Append ("");
+                  Record_Value ("");
                end if;
 
                --  Skip all child nodes, we do not want to parse a second time
@@ -540,7 +657,7 @@ package body GPR2.Parser.Project is
 
             procedure Handle_String (Node : not null String_Literal) is
             begin
-               Result.Append
+               Record_Value
                  (Unquote
                     (Value_Type (Image (F_Tok (Single_Tok_Node (Node))))));
             end Handle_String;
@@ -554,7 +671,7 @@ package body GPR2.Parser.Project is
                           Get_Variable_Values (Node);
             begin
                if Values.Is_Empty then
-                  Result.Append ("");
+                  Record_Value ("");
 
                else
                   --  We are adding a variable value to the current non empty
@@ -565,8 +682,10 @@ package body GPR2.Parser.Project is
                      Single := False;
                   end if;
 
-                  Result.Append (Values);
+                  Record_Values (Values);
                end if;
+
+               Status := Over;
             end Handle_Variable;
 
          begin
@@ -585,6 +704,12 @@ package body GPR2.Parser.Project is
                when GPR_External_Reference =>
                   Handle_External_Variable (External_Reference (Node));
 
+               when GPR_Project_Reference =>
+                  Is_Project_Reference := True;
+
+               when GPR_Attribute_Reference =>
+                  Handle_Attribute_Reference (Attribute_Reference (Node));
+
                when others =>
                   null;
             end case;
@@ -592,9 +717,43 @@ package body GPR2.Parser.Project is
             return Status;
          end Parser;
 
+         ------------------
+         -- Record_Value --
+         ------------------
+
+         procedure Record_Value (Value : Value_Type) is
+         begin
+            if Single and then Result.Length > 0 then
+               declare
+                  New_Value : constant Value_Type :=
+                                Result (Result.Last_Index) & Value;
+               begin
+                  Result.Replace_Element (Result.Last_Index, New_Value);
+               end;
+
+            else
+               Result.Append (Value);
+            end if;
+         end Record_Value;
+
+         -------------------
+         -- Record_Values --
+         -------------------
+
+         procedure Record_Values (Values : Containers.Value_List) is
+         begin
+            for V of Values loop
+               Record_Value (V);
+            end loop;
+         end Record_Values;
+
       begin
          Single := True;
+         Is_Project_Reference := False;
+
          Traverse (GPR_Node (Node), Parser'Access);
+
+         Is_Project_Reference := False;
          return Result;
       end Get_Term_List;
 
@@ -632,7 +791,31 @@ package body GPR2.Parser.Project is
                      Name_Type (Image (F_Tok (Single_Tok_Node (Name_1))));
       begin
          if Present (Att_Ref) then
-            return Get_Attribute_Ref (Name, Att_Ref);
+            if Present (Name_2) then
+               --  This is a project/package reference:
+               --    <project>.<package>'<attribute>
+               return Get_Attribute_Ref
+                 (Project => Name,
+                  Pack    => Optional_Name_Type
+                               (Image (F_Tok (Single_Tok_Node (Name_2)))),
+                  Node    => Att_Ref);
+            else
+               --  If a single name it can be either a project or a package
+
+               if Containers.Contains (Self.Imports, Name) then
+                  --  This is a project reference: <project>'<attribute>
+                  return Get_Attribute_Ref
+                    (Project => Name,
+                     Pack    => "",
+                     Node    => Att_Ref);
+               else
+                  --  This is a package reference: <package>'<attribute>
+                  return Get_Attribute_Ref
+                    (Project => Name_Type (To_String (Self.Name)),
+                     Pack    => Name,
+                     Node    => Att_Ref);
+               end if;
+            end if;
 
          elsif Present (Name_2) then
             return Get_Variable_Ref (Name, Name_2);
@@ -698,83 +881,86 @@ package body GPR2.Parser.Project is
          procedure Parse_Attribute_Decl_Kind
            (Node : not null Attribute_Decl)
          is
-            Sloc   : constant Source_Reference.Object :=
-                       Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
-            Name   : constant not null GPR_Node := F_Attr_Name (Node);
-            Index  : constant GPR_Node := F_Attr_Index (Node);
-            Expr   : constant not null Term_List := F_Expr (Node);
-            N_Str  : constant Name_Type :=
-                       (if Kind (Name) = GPR_External_Name
-                        then "external"
-                        else Get_Name_Type (Single_Tok_Node (Name)));
-            Single : Boolean;
-            Values : constant Containers.Value_List :=
-                       Get_Term_List (Expr, Single);
-            A      : GPR2.Project.Attribute.Object;
+            Sloc  : constant Source_Reference.Object :=
+                      Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
+            Name  : constant not null GPR_Node := F_Attr_Name (Node);
+            Index : constant GPR_Node := F_Attr_Index (Node);
+            I_Str : constant Value_Type :=
+                      (if Present (Index)
+                       then Value_Type
+                              (Get_Name_Type
+                                (F_Str_Lit (String_Literal_At (Index))))
+                       else "");
+            Expr  : constant not null Term_List := F_Expr (Node);
+            N_Str : constant Name_Type :=
+                      (if Kind (Name) = GPR_External_Name
+                       then "external"
+                       else Get_Name_Type (Single_Tok_Node (Name)));
          begin
-            --  Name is either a string or an external
-
-            if Present (Index) then
-               if Single then
-                  A := GPR2.Project.Attribute.Create
-                    (Name  => N_Str,
-                     Index =>
-                       Value_Type
-                         (Get_Name_Type
-                              (F_Str_Lit (String_Literal_At (Index)))),
-                     Value => Values.First_Element,
-                     Sloc  => Sloc);
-
-               else
-                  A := GPR2.Project.Attribute.Create
-                    (Name  => N_Str,
-                     Index =>
-                       Value_Type
-                         (Get_Name_Type
-                              (F_Str_Lit (String_Literal_At (Index)))),
-                     Values => Values,
-                     Sloc   => Sloc);
-               end if;
-
-            else
-               if Single then
-                  A := GPR2.Project.Attribute.Create
-                    (Name  => N_Str,
-                     Value => Values.First_Element,
-                     Sloc  => Sloc);
-               else
-                  A := GPR2.Project.Attribute.Create
-                    (Name   => N_Str,
-                     Values => Values,
-                     Sloc   => Sloc);
-               end if;
-            end if;
-
-            --  Record attribute with proper casing definition if found
-
             declare
-               package A_Reg renames GPR2.Project.Registry.Attribute;
-
-               Q_Name : constant A_Reg.Qualified_Name :=
-                          A_Reg.Create
-                            (A.Name,
-                             Optional_Name_Type (To_String (Pack_Name)));
+               Single : Boolean;
+               Values : constant Containers.Value_List :=
+                          Get_Term_List (Expr, Single);
+               A      : GPR2.Project.Attribute.Object;
             begin
-               if A_Reg.Exists (Q_Name) then
-                  declare
-                     Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
-                  begin
-                     A.Set_Case
-                       (Def.Index_Case_Sensitive,
-                        Def.Value_Case_Sensitive);
-                  end;
+               --  Name is either a string or an external
+
+               if Present (Index) then
+                  if Single then
+                     A := GPR2.Project.Attribute.Create
+                       (Name  => N_Str,
+                        Index => I_Str,
+                        Value => Values.First_Element,
+                        Sloc  => Sloc);
+
+                  else
+                     A := GPR2.Project.Attribute.Create
+                       (Name   => N_Str,
+                        Index  => I_Str,
+                        Values => Values,
+                        Sloc   => Sloc);
+                  end if;
+
+               else
+                  if Single then
+                     A := GPR2.Project.Attribute.Create
+                       (Name  => N_Str,
+                        Value => Values.First_Element,
+                        Sloc  => Sloc);
+                  else
+                     A := GPR2.Project.Attribute.Create
+                       (Name   => N_Str,
+                        Values => Values,
+                        Sloc   => Sloc);
+                  end if;
                end if;
 
-               if In_Pack then
-                  Pack_Attrs.Insert (A);
-               else
-                  Attrs.Insert (A);
-               end if;
+               --  Record attribute with proper casing definition if found
+
+               declare
+                  package A_Reg renames GPR2.Project.Registry.Attribute;
+
+                  Q_Name : constant A_Reg.Qualified_Name :=
+                             A_Reg.Create
+                               (A.Name,
+                                Optional_Name_Type (To_String (Pack_Name)));
+               begin
+                  if A_Reg.Exists (Q_Name) then
+                     declare
+                        Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
+                     begin
+                        A.Set_Case
+                          (Def.Index_Case_Sensitive,
+                           Def.Value_Case_Sensitive);
+                     end;
+                  end if;
+
+                  if In_Pack then
+                     Record_Attribute (Pack_Attrs, A);
+                  else
+                     Record_Attribute (Attrs, A);
+                  end if;
+               end;
             end;
          end Parse_Attribute_Decl_Kind;
 
@@ -884,9 +1070,14 @@ package body GPR2.Parser.Project is
             P_Name : constant Name_Type :=
                        Get_Name_Type (Single_Tok_Node (Name));
          begin
-            --  First clear the package attributes container
+            --  First clear the package attributes container or restore the
+            --  previous values (stage 2) if it exists.
 
-            Pack_Attrs.Clear;
+            if Packs.Contains (P_Name) then
+               Pack_Attrs := Packs.Element (P_Name).Attributes;
+            else
+               Pack_Attrs.Clear;
+            end if;
 
             --  Entering a package, set the state and parse the corresponding
             --  children.
@@ -901,7 +1092,7 @@ package body GPR2.Parser.Project is
 
             --  Insert the package definition into the final result
 
-            Packs.Insert
+            Packs.Include
               (Name_Type (P_Name),
                GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Sloc));
 
@@ -961,6 +1152,8 @@ package body GPR2.Parser.Project is
          end Visit_Child;
 
       begin
+         Att_Defined := True;
+
          if Is_Open then
             --  Handle all kind of nodes when the parsing is open
 
@@ -999,14 +1192,49 @@ package body GPR2.Parser.Project is
          return Status;
       end Parser;
 
+      ----------------------
+      -- Record_Attribute --
+      ----------------------
+
+      procedure Record_Attribute
+        (Set : in out GPR2.Project.Attribute.Set.Object;
+         A   : GPR2.Project.Attribute.Object)
+      is
+         use type Containers.Value_List;
+      begin
+         if Att_Defined then
+            Set.Include (A);
+         else
+            Undefined_Attribute_Count := Undefined_Attribute_Count + 1;
+         end if;
+      end Record_Attribute;
+
+      --------------------
+      -- Stop_Iteration --
+      --------------------
+
+      function Stop_Iteration return Boolean is
+         Result : constant Boolean :=
+                    Previous_Undefined_Attribute_Count
+                      = Undefined_Attribute_Count;
+      begin
+         Previous_Undefined_Attribute_Count := Undefined_Attribute_Count;
+         Undefined_Attribute_Count := 0;
+         return Result;
+      end Stop_Iteration;
+
    begin
       Attrs.Clear;
       Vars.Clear;
       Packs.Clear;
 
-      --  Re-Analyze the project given the new context
+      --  Re-Analyze the project given the new definitions (variables or
+      --  attributes).
 
-      Traverse (Root (Self.Unit), Parser'Access);
+      loop
+         Traverse (Root (Self.Unit), Parser'Access);
+         exit when Stop_Iteration;
+      end loop;
    end Parse;
 
    ---------------
