@@ -160,7 +160,7 @@ package body GPR2.Project.Attribute.Set is
       Position : Cursor :=
                    (Iter.Set.Attributes.First,
                     CA  => Set_Attribute.No_Element,
-                    Set => <>);
+                    Set => null);
    begin
       if Set.Has_Element (Position.CM) then
          Position.Set :=
