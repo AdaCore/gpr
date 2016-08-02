@@ -73,6 +73,8 @@ private package GPR2.Project.Definition is
       Externals         : Containers.Name_List;
       --  List of externals directly or indirectly visible
       Signature         : Context.Binary_Signature;
+
+      --  Actual values for the view
       Imports           : Project_View_Store.Vector;
       Aggregated        : Project_View_Store.Vector;
       Attrs             : Project.Attribute.Set.Object;
@@ -80,6 +82,8 @@ private package GPR2.Project.Definition is
       Packs             : Project.Pack.Set.Object;
       Sources           : Project.Source.Set.Object;
       Sources_Signature : GNAT.MD5.Binary_Message_Digest;
+
+      --  Some general information
       Context_View      : View.Object;
       Status            : Relation_Status;
       Kind              : Project_Kind;
