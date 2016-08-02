@@ -320,10 +320,18 @@ package body GPR2.Project.View is
    --------------------
 
    function Naming_Package (Self : Object) return Pack.Object is
-   --  ?? for now we do not support the loaded config project
    begin
       if Self.Has_Packages (Registry.Pack.Naming) then
          return Self.Packages.Element (Name_Type (Registry.Pack.Naming));
+
+      elsif Self.Has_Configuration_Project
+        and then
+          Self.Configuration_Project.Has_Packages
+            (Project.Registry.Pack.Naming)
+      then
+         return Self.Configuration_Project.Packages.Element
+           (Project.Registry.Pack.Naming);
+
       else
          return Builtin_Naming_Package;
       end if;

@@ -1,0 +1,5 @@
+description:
+    Test for Naming in configuration project
+driver: build_and_run
+project_file: source2
+main: main
