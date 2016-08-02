@@ -78,6 +78,15 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Attrs.Filter (Name, Index);
    end Attributes;
 
+   ---------------------------
+   -- Configuration_Project --
+   ---------------------------
+
+   function Configuration_Project (Self : Object) return View.Object is
+   begin
+      return Definition.Get (Self).Conf;
+   end Configuration_Project;
+
    -------------
    -- Context --
    -------------
@@ -177,6 +186,15 @@ package body GPR2.Project.View is
          return not Attributes (Self, Name, Index).Is_Empty;
       end if;
    end Has_Attributes;
+
+   -------------------------------
+   -- Has_Configuration_Project --
+   -------------------------------
+
+   function Has_Configuration_Project (Self : Object) return Boolean is
+   begin
+      return Definition.Get (Self).Conf /= Undefined;
+   end Has_Configuration_Project;
 
    -----------------
    -- Has_Context --

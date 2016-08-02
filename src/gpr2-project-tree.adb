@@ -590,6 +590,8 @@ package body GPR2.Project.Tree is
             end if;
          end if;
 
+         P_Data.Conf := Self.Conf;
+
          Definition.Set (View, P_Data);
 
          --  Signal project change only if we have different and non default
