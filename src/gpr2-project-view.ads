@@ -182,7 +182,7 @@ package GPR2.Project.View is
 private
 
    type Object is tagged record
-      Id : View.Id;
+      Id : View.Id := 0;
    end record;
 
    function "<" (Left, Right : Object) return Boolean is

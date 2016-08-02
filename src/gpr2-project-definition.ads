@@ -85,7 +85,7 @@ private package GPR2.Project.Definition is
       Kind              : Project_Kind;
 
       --  The configuration view if any
-      Conf              : View.Object := View.Undefined;
+      Conf              : View.Object;
 
       case Has_Context is
          when True =>
