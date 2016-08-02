@@ -762,6 +762,10 @@ package body GPR2.Project.View is
       if Data.Sources_Signature /= Current_Signature then
          --  Read sources and set-up the corresponding definition
 
+         --  First reset the current set
+
+         Data.Sources.Clear;
+
          Populate_Sources : declare
             Root : constant Full_Path_Name :=
                      Directories.Containing_Directory
