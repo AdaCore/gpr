@@ -97,7 +97,7 @@ procedure Main is
    Prj : Project.Tree.Object;
 
 begin
-   Prj := Project.Tree.Load (Create ("demo.gpr"));
+   Project.Tree.Load (Prj, Create ("demo.gpr"));
 
    if Prj.Has_Messages then
       Text_IO.Put_Line ("Messages found:");

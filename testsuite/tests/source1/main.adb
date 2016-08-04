@@ -49,7 +49,7 @@ procedure Main is
       Prj  : Project.Tree.Object;
       View : Project.View.Object;
    begin
-      Prj := Project.Tree.Load (Create (Project_Name));
+      Project.Tree.Load (Prj, Create (Project_Name));
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));

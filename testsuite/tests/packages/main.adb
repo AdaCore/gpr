@@ -86,6 +86,6 @@ procedure Main is
    Prj : Project.Tree.Object;
 
 begin
-   Prj := Project.Tree.Load (Create ("demo.gpr"));
+   Project.Tree.Load (Prj, Create ("demo.gpr"));
    Display (Prj.Root_Project);
 end Main;

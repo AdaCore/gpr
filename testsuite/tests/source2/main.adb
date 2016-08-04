@@ -49,7 +49,7 @@ procedure Main is
       Prj  : Project.Tree.Object;
       View : Project.View.Object;
    begin
-      Prj := Project.Tree.Load (Create (Project_Name));
+      Project.Tree.Load (Prj, Create (Project_Name));
       Prj.Load_Configuration (Create ("config.cgpr"));
 
       View := Prj.Root_Project;

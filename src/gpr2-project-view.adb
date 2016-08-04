@@ -34,6 +34,7 @@ with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
+with GPR2.Project.Tree;
 with GPR2.Source;
 with GPR2.Source_Reference;
 
@@ -77,15 +78,6 @@ package body GPR2.Project.View is
    begin
       return Definition.Get (Self).Attrs.Filter (Name, Index);
    end Attributes;
-
-   ---------------------------
-   -- Configuration_Project --
-   ---------------------------
-
-   function Configuration_Project (Self : Object) return View.Object is
-   begin
-      return Definition.Get (Self).Conf;
-   end Configuration_Project;
 
    -------------
    -- Context --
@@ -186,15 +178,6 @@ package body GPR2.Project.View is
          return not Attributes (Self, Name, Index).Is_Empty;
       end if;
    end Has_Attributes;
-
-   -------------------------------
-   -- Has_Configuration_Project --
-   -------------------------------
-
-   function Has_Configuration_Project (Self : Object) return Boolean is
-   begin
-      return Definition.Get (Self).Conf /= Undefined;
-   end Has_Configuration_Project;
 
    -----------------
    -- Has_Context --
@@ -320,16 +303,17 @@ package body GPR2.Project.View is
    --------------------
 
    function Naming_Package (Self : Object) return Pack.Object is
+      Data : constant Definition.Data := Definition.Get (Self);
    begin
       if Self.Has_Packages (Registry.Pack.Naming) then
          return Self.Packages.Element (Name_Type (Registry.Pack.Naming));
 
-      elsif Self.Has_Configuration_Project
+      elsif Data.Tree.Has_Configuration_Project
         and then
-          Self.Configuration_Project.Has_Packages
+          Data.Tree.Configuration_Project.Has_Packages
             (Project.Registry.Pack.Naming)
       then
-         return Self.Configuration_Project.Packages.Element
+         return Data.Tree.Configuration_Project.Packages.Element
            (Project.Registry.Pack.Naming);
 
       else

@@ -34,6 +34,8 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 
+limited with GPR2.Project.Tree;
+
 private package GPR2.Project.Definition is
 
    use type View.Id;
@@ -88,8 +90,8 @@ private package GPR2.Project.Definition is
       Status            : Relation_Status;
       Kind              : Project_Kind;
 
-      --  The configuration view if any
-      Conf              : View.Object;
+      --  The project tree for this view
+      Tree              : access constant Project.Tree.Object;
 
       case Has_Context is
          when True =>

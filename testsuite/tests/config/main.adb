@@ -123,7 +123,7 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Prj := Project.Tree.Load (Create ("demo.gpr"));
+   Project.Tree.Load (Prj, Create ("demo.gpr"));
    Project.Tree.Load_Configuration (Prj, Create ("config.cgpr"));
 
    if Prj.Has_Messages then

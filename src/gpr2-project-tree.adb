@@ -39,7 +39,7 @@ package body GPR2.Project.Tree is
    type Iterator (Kind : Iterator_Kind; Filter : Project_Filter) is
      new Project_Iterator.Forward_Iterator with
    record
-     Root : Object;
+     Root : not null access constant Object;
    end record;
 
    overriding function First
@@ -270,55 +270,47 @@ package body GPR2.Project.Tree is
       Filter : Project_Filter := F_Default)
       return Project_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Kind, Filter, Self);
+      return Iterator'(Kind, Filter, Self.Self);
    end Iterate;
 
    ----------
    -- Load --
    ----------
 
-   function Load (Filename : Path_Name_Type) return Object is
-
+   procedure Load
+     (Self     : in out Object;
+      Filename : Path_Name_Type)
+   is
       Root_Context : GPR2.Context.Object;
-      Messages     : Log.Object;
-
-      Root_View : constant View.Object :=
-                    Recursive_Load (Filename,
-                                    View.Undefined,
-                                    Definition.Root,
-                                    Root_Context,
-                                    Messages);
 
    begin
-      return Tree : Object :=
-        Object'(Root     => Root_View,
-                Conf     => View.Undefined,
-                Messages => Messages)
-      do
-         --  Do nothing more if there is errors during the parsing
+      Self.Root := Recursive_Load
+        (Filename, View.Undefined, Definition.Root,
+         Root_Context, Self.Messages);
 
-         if Messages.Is_Empty then
-            for View of Tree loop
-               declare
-                  V_Data : Definition.Data := Definition.Get (View);
-               begin
-                  --  Compute the external dependencies for the views. This
-                  --  is the set of external used in the project and in all
-                  --  imported project.
+      --  Do nothing more if there is errors during the parsing
 
-                  for E of V_Data.Externals loop
-                     if not V_Data.Externals.Contains (E) then
-                        V_Data.Externals.Append (E);
-                     end if;
-                  end loop;
+      if Self.Messages.Is_Empty then
+         for View of Self loop
+            declare
+               V_Data : Definition.Data := Definition.Get (View);
+            begin
+               --  Compute the external dependencies for the views. This
+               --  is the set of external used in the project and in all
+               --  imported project.
 
-                  Definition.Set (View, V_Data);
-               end;
-            end loop;
+               for E of V_Data.Externals loop
+                  if not V_Data.Externals.Contains (E) then
+                     V_Data.Externals.Append (E);
+                  end if;
+               end loop;
 
-            Set_Context (Tree, Root_Context);
-         end if;
-      end return;
+               Definition.Set (View, V_Data);
+            end;
+         end loop;
+
+         Set_Context (Self, Root_Context);
+      end if;
    end Load;
 
    ------------------------
@@ -339,6 +331,7 @@ package body GPR2.Project.Tree is
       if Self.Messages.Is_Empty then
          Data.Trees.Project := Project;
          Data.Context_View := View.Undefined;
+         Data.Status := Definition.Root;
 
          Self.Conf := Definition.Register (Data);
 
@@ -590,7 +583,9 @@ package body GPR2.Project.Tree is
             end if;
          end if;
 
-         P_Data.Conf := Self.Conf;
+         --  Record the project tree
+
+         P_Data.Tree := Self.Self;
 
          Definition.Set (View, P_Data);
 
@@ -772,11 +767,10 @@ package body GPR2.Project.Tree is
       Ctx  : GPR2.Context.Object) return View.Object
    is
       use type GPR2.Context.Binary_Signature;
-      Tree : Object := Self with Warnings => Off;
    begin
       --  First check for the view in the current tree
 
-      for View of Tree loop
+      for View of Self.Self.all loop
          if View.Name = Name then
             declare
                P_Data : constant Definition.Data := Definition.Get (View);

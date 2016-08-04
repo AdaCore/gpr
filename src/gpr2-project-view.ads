@@ -91,17 +91,6 @@ package GPR2.Project.View is
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
    --  Returns the Context for the given project tree
 
-   --  Configuration associated with the view (inherited from the tree)
-
-   function Has_Configuration_Project (Self : Object) return Boolean;
-   --  Returns True if a configuration project is loaded on the corresponding
-   --  tree.
-
-   function Configuration_Project (Self : Object) return View.Object
-     with Pre => Self /= Undefined
-                 and then Self.Has_Configuration_Project;
-   --  Returns the configuration project for the corresponding tree
-
    --  Attributes
 
    function Has_Attributes

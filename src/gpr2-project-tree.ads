@@ -36,7 +36,7 @@ package GPR2.Project.Tree is
    use type GPR2.Project.View.Object;
    use type Ada.Containers.Count_Type;
 
-   type Object is tagged private
+   type Object is tagged limited private
      with Constant_Indexing => Constant_Reference,
           Default_Iterator  => Iterate,
           Iterator_Element  => View.Object;
@@ -45,7 +45,12 @@ package GPR2.Project.Tree is
 
    Undefined : constant Object;
 
-   function Load (Filename : Path_Name_Type) return Object;
+   function "=" (Left, Right : Object) return Boolean;
+   --  Returns True if Left and Right are the same tree
+
+   procedure Load
+     (Self     : in out Object;
+      Filename : Path_Name_Type);
    --  Load a root-project
 
    procedure Load_Configuration
@@ -155,11 +160,15 @@ package GPR2.Project.Tree is
 
 private
 
-   type Object is tagged record
+   type Object is tagged limited record
+      Self     : not null access Object := Object'Unchecked_Access;
       Root     : View.Object;
       Conf     : View.Object;
       Messages : Log.Object;
    end record;
+
+   function "=" (Left, Right : Object) return Boolean
+     is  (Left.Self = Right.Self);
 
    type Cursor is record
       Views   : Definition.Project_View_Store.Vector;
@@ -171,7 +180,8 @@ private
      (View : not null access constant Project.View.Object) is null record;
 
    Undefined  : constant Object :=
-                  (Root     => View.Undefined,
+                  (Self     => <>,
+                   Root     => View.Undefined,
                    Conf     => View.Undefined,
                    Messages => <>);
 
