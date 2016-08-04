@@ -62,8 +62,7 @@ package GPR2.Project.Tree is
    --  Returns True if a configuration project is loaded on this tree
 
    function Configuration_Project (Self : Object) return View.Object
-     with Pre => Self /= Undefined
-                 and then Self.Has_Configuration_Project;
+     with Pre => Self /= Undefined and then Self.Has_Configuration_Project;
    --  Returns the configuration project for the given tree
 
    function View_For
