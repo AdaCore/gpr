@@ -296,7 +296,8 @@ begin
            Value                => List,
            Value_Case_Sensitive => True,
            Read_Only            => False,
-           Is_Allowed_In        => (K_Aggregate => True, others => False)));
+           Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
+                                    others => False)));
 
    --  project_path
    Store.Insert
@@ -307,7 +308,8 @@ begin
            Value                => List,
            Value_Case_Sensitive => True,
            Read_Only            => False,
-           Is_Allowed_In        => (K_Aggregate => True, others => False)));
+           Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
+                                    others => False)));
 
    --  external
    Store.Insert
@@ -318,7 +320,8 @@ begin
            Value                => Single,
            Value_Case_Sensitive => True,
            Read_Only            => False,
-           Is_Allowed_In        => (K_Aggregate => True, others => False)));
+           Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
+                                    others => False)));
 
    --  library_dir
    Store.Insert
