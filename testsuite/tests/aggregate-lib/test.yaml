@@ -1,0 +1,5 @@
+description:
+    Test for aggregate libraries sources
+driver: build_and_run
+project_file: aggp
+main: main

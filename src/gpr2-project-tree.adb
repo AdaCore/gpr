@@ -166,7 +166,7 @@ package body GPR2.Project.Tree is
 
       procedure For_Aggregated (View : Project.View.Object) is
       begin
-         if View.Kind = K_Aggregate then
+         if View.Kind in K_Aggregate | K_Aggregate_Library then
             for A of Definition.Get (View).Aggregated loop
                Append (A);
             end loop;
@@ -202,8 +202,8 @@ package body GPR2.Project.Tree is
 
          Append (View);
 
-         --  Now if View is an aggregate project we need to run through all
-         --  aggregated projects.
+         --  Now if View is an aggregate or aggregate library project we need
+         --  to run through all aggregated projects.
 
          if Is_Set (Iter.Kind, I_Aggregated) then
             For_Aggregated (View);
@@ -526,7 +526,7 @@ package body GPR2.Project.Tree is
          --  Now we can record the aggregated projects based on the possibly
          --  new Project_Files attribute value.
 
-         if View.Qualifier = K_Aggregate then
+         if View.Qualifier in K_Aggregate | K_Aggregate_Library then
             P_Data.Aggregated.Clear;
 
             for Project of P_Data.Attrs.Element ("project_files").Values loop

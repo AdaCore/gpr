@@ -1,0 +1,4 @@
+project B is
+   for Source_Dirs use ("bsrc");
+   for Object_Dir  use "bobj";
+end B;

@@ -1,0 +1,13 @@
+project A is
+   type OS_Kind is ("Windows", "Linux");
+   OS : OS_Kind := external ("OS", "Windows");
+
+   case OS is
+      when "Windows" =>
+         for Source_Dirs use ("awsrc");
+         for Object_Dir use "windows-obj";
+      when "Linux" =>
+         for Source_Dirs use ("alsrc");
+         for Object_Dir use "linux-obj";
+   end case;
+end A;

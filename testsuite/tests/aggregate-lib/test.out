@@ -1,0 +1,27 @@
+//// OS set to Linux
+>>> Changed_Callback for A
+Demo     K_AGGREGATE_LIBRARY
+A:   Project_Files -> a.gpr b.gpr
+A        K_STANDARD
+A:   Object_Dir -> linux-obj
+A:   Source_Dirs -> alsrc
+B        K_STANDARD
+A:   Object_Dir -> bobj
+A:   Source_Dirs -> bsrc
+sources:
+ > /alsrc/pckal.ads
+ > /bsrc/pckb.ads
+
+//// OS set to Windows
+>>> Changed_Callback for A
+Demo     K_AGGREGATE_LIBRARY
+A:   Project_Files -> a.gpr b.gpr
+A        K_STANDARD
+A:   Object_Dir -> windows-obj
+A:   Source_Dirs -> awsrc
+B        K_STANDARD
+A:   Object_Dir -> bobj
+A:   Source_Dirs -> bsrc
+sources:
+ > /awsrc/pcka.ads
+ > /bsrc/pckb.ads

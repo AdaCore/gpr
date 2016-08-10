@@ -1,0 +1,4 @@
+
+aggregate library project Demo is
+   for Project_Files use ("a.gpr", "b.gpr");
+end Demo;

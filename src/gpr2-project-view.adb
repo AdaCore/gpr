@@ -787,23 +787,33 @@ package body GPR2.Project.View is
 
          Data.Sources.Clear;
 
-         Populate_Sources : declare
-            Root : constant Full_Path_Name :=
-                     Directories.Containing_Directory
-                       (Value (Data.Trees.Project.Path_Name));
-         begin
-            --  Handle Source_Dirs
+         if Data.Kind = K_Aggregate_Library then
+            --  Sources for an aggregate library is the cumulative set of
+            --  sources of the aggregated projects.
 
-            if Data.Attrs.Has_Source_Dirs then
-               for Dir of Data.Attrs.Source_Dirs.Values loop
-                  if OS_Lib.Is_Absolute_Path (Dir) then
-                     Handle_Directory (Dir);
-                  else
-                     Handle_Directory (Directories.Compose (Root, Dir));
-                  end if;
-               end loop;
-            end if;
-         end Populate_Sources;
+            for Agg of Data.Aggregated loop
+               Data.Sources.Union (Agg.Sources);
+            end loop;
+
+         else
+            Populate_Sources : declare
+               Root : constant Full_Path_Name :=
+                        Directories.Containing_Directory
+                          (Value (Data.Trees.Project.Path_Name));
+            begin
+               --  Handle Source_Dirs
+
+               if Data.Attrs.Has_Source_Dirs then
+                  for Dir of Data.Attrs.Source_Dirs.Values loop
+                     if OS_Lib.Is_Absolute_Path (Dir) then
+                        Handle_Directory (Dir);
+                     else
+                        Handle_Directory (Directories.Compose (Root, Dir));
+                     end if;
+                  end loop;
+               end if;
+            end Populate_Sources;
+         end if;
 
          --  Record back new definition for the view with updated sources
 
