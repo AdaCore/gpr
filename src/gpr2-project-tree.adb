@@ -529,7 +529,9 @@ package body GPR2.Project.Tree is
          if View.Qualifier in K_Aggregate | K_Aggregate_Library then
             P_Data.Aggregated.Clear;
 
-            for Project of P_Data.Attrs.Element ("project_files").Values loop
+            for Project of
+              P_Data.Attrs.Element (Registry.Attribute.Project_Files).Values
+            loop
                declare
                   Pathname : constant Path_Name_Type :=
                                Create (Name_Type (Project));
@@ -562,7 +564,7 @@ package body GPR2.Project.Tree is
             --  And finaly also record the External definition if any into
             --  the aggregate project context.
 
-            for C in P_Data.Attrs.Iterate ("external") loop
+            for C in P_Data.Attrs.Iterate (Registry.Attribute.External) loop
                declare
                   use all type Project.Registry.Attribute.Value_Kind;
 
@@ -588,8 +590,8 @@ package body GPR2.Project.Tree is
          P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
          if P_Data.Kind = K_Standard then
-            if P_Data.Attrs.Contains ("library_kind")
-              or else P_Data.Attrs.Contains ("library_name")
+            if P_Data.Attrs.Contains (Registry.Attribute.Library_Kind)
+              or else P_Data.Attrs.Contains (Registry.Attribute.Library_Name)
             then
                P_Data.Kind := K_Library;
             end if;
