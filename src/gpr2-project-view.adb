@@ -263,6 +263,11 @@ package body GPR2.Project.View is
 
    function Has_Sources (Self : Object) return Boolean is
       use type GPR2.Containers.Count_Type;
+
+      S : constant Project.Source.Set.Object := Self.Sources with Unreferenced;
+      --  Let's compute the set of sources to be able to get the right answer
+      --  below. Remember the sources are cached and computed only when
+      --  requested.
    begin
       return not Definition.Get (Self).Sources.Is_Empty;
    end Has_Sources;
