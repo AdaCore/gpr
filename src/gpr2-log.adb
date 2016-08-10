@@ -139,7 +139,7 @@ package body GPR2.Log is
    function Has_Element (Position : Cursor) return Boolean is
    begin
       return Position.P >= 1
-        and then Position.P <= Positive (Position.Store.Length);
+        and then Position.P <= Natural (Position.Store.Length);
    end Has_Element;
 
    function Has_Element
