@@ -130,17 +130,11 @@ package GPR2.Project.Attribute.Set is
 
    --  Some helper routines on attributes in the set
 
-   function Has_Source_Dirs (Self : Object) return Boolean is
-      (Self.Contains (Registry.Attribute.Source_Dirs));
+   function Has_Source_Dirs (Self : Object) return Boolean;
+   function Source_Dirs     (Self : Object) return Attribute.Object;
 
-   function Source_Dirs (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_Dirs));
-
-   function Has_Source_File (Self : Object) return Boolean is
-      (Self.Contains (Registry.Attribute.Source_File));
-
-   function Source_File (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_File));
+   function Has_Source_File (Self : Object) return Boolean;
+   function Source_File     (Self : Object) return Attribute.Object;
 
 private
 
@@ -182,5 +176,17 @@ private
       Attributes : Set.Map;
       Length     : Containers.Count_Type := 0;
    end record;
+
+   function Has_Source_Dirs (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Source_Dirs));
+
+   function Source_Dirs (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Source_Dirs));
+
+   function Has_Source_File (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Source_File));
+
+   function Source_File (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Source_File));
 
 end GPR2.Project.Attribute.Set;
