@@ -549,8 +549,11 @@ package body GPR2.Project.Tree is
                   then
                      return;
                   end if;
+
                   --  Record aggregated view into the aggregate's view
+
                   P_Data.Aggregated.Append (A_View);
+
                   --  And set the aggregated view recursivelly
                   Set_View (A_View);
                end;
