@@ -418,6 +418,7 @@ package body GPR2.Project.View is
       --  View definition data, will be updated and recorded back into the
       --  definition set.
 
+      Included_Sources : Source_Set.Set;
       Excluded_Sources : Source_Set.Set;
 
       ----------------------
@@ -477,11 +478,18 @@ package body GPR2.Project.View is
       begin
          --  Check the language, if no language found this is not a source for
          --  this project.
+         --
+         --  The source is added if not in the list of excluded sources and if
+         --  included sources is defined it must be in.
 
          if Language /= No_Value
            and then not
              Excluded_Sources.Contains
                (Name_Type (Directories.Simple_Name (Filename)))
+           and then
+             (Included_Sources.Is_Empty
+              or else Included_Sources.Contains
+                (Name_Type (Directories.Simple_Name (Filename))))
          then
             declare
                Lang : constant Name_Type := Name_Type (Language);
@@ -846,6 +854,20 @@ package body GPR2.Project.View is
                            .Value);
             begin
                Read_File (File, Excluded_Sources);
+            end;
+         end if;
+
+         --  If we have attribute Source_List_File
+
+         if Data.Attrs.Has_Source_List_File then
+            declare
+               File : constant Full_Path_Name :=
+                        Directories.Compose
+                          (Root,
+                           Data.Attrs.Element
+                             (Registry.Attribute.Source_List_File).Value);
+            begin
+               Read_File (File, Included_Sources);
             end;
          end if;
 

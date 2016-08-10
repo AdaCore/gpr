@@ -1,0 +1,9 @@
+Project: Demo
+ > /src/pck1.adb
+                  language: ada    Kind: S_BODY   unit: pck1
+ > /src/pck1.ads
+                  language: ada    Kind: S_SPEC   unit: pck1
+ > /src/pck3.adb
+                  language: ada    Kind: S_BODY   unit: pck3
+ > /src/pck3.ads
+                  language: ada    Kind: S_SPEC   unit: pck3

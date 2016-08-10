@@ -81,6 +81,7 @@ package GPR2.Project.Registry.Attribute is
    Separate_Suffix           : constant Name_Type := "separate_suffix";
    Source_Dirs               : constant Name_Type := "source_dirs";
    Source_File               : constant Name_Type := "source_file";
+   Source_List_File          : constant Name_Type := "source_list_file";
    Spec_Suffix               : constant Name_Type := "spec_suffix";
    Specification_Suffix      : constant Name_Type := "specification_suffix";
 

@@ -139,6 +139,9 @@ package GPR2.Project.Attribute.Set is
    function Has_Excluded_Source_List_File (Self : Object) return Boolean;
    function Excluded_Source_List_File (Self : Object) return Attribute.Object;
 
+   function Has_Source_List_File (Self : Object) return Boolean;
+   function Source_List_File     (Self : Object) return Attribute.Object;
+
 private
 
    --  An attribute set object is:
@@ -197,5 +200,11 @@ private
 
    function Excluded_Source_List_File (Self : Object) return Attribute.Object
      is (Self.Element (Registry.Attribute.Excluded_Source_List_File));
+
+   function Has_Source_List_File (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Source_List_File));
+
+   function Source_List_File (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Source_List_File));
 
 end GPR2.Project.Attribute.Set;

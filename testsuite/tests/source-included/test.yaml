@@ -1,0 +1,5 @@
+description:
+    Test for Source_List_File attribute
+driver: build_and_run
+project_file: source_included
+main: main
