@@ -563,31 +563,57 @@ package body GPR2.Project.View is
       function Signature return MD5.Binary_Message_Digest is
          C : MD5.Context;
 
-         procedure Add (A : Project.Attribute.Object);
-         --  Add attribute name and values into the MD5 context
+         procedure Handle (Data : Definition.Data);
+         --  Handle the given project's definition
 
-         ---------
-         -- Add --
-         ---------
+         ------------
+         -- Handle --
+         ------------
 
-         procedure Add (A : Project.Attribute.Object) is
+         procedure Handle (Data : Definition.Data) is
+
+            procedure Add (A : Project.Attribute.Object);
+            --  Add attribute name and values into the MD5 context
+
+            ---------
+            -- Add --
+            ---------
+
+            procedure Add (A : Project.Attribute.Object) is
+            begin
+               MD5.Update (C, String (A.Name) & "/");
+               for Value of A.Values loop
+                  MD5.Update (C, Value);
+               end loop;
+            end Add;
+
          begin
-            MD5.Update (C, String (A.Name) & "/");
-            for Value of A.Values loop
-               MD5.Update (C, Value);
-            end loop;
-         end Add;
+            --  The signature to detect the source change is based on the
+            --  attributes which are used to compute the actual source set.
+
+            if Data.Attrs.Has_Source_Dirs then
+               Add (Data.Attrs.Source_Dirs);
+            end if;
+
+            if Data.Attrs.Has_Source_File then
+               Add (Data.Attrs.Source_File);
+            end if;
+         end Handle;
 
       begin
-         --  The signature to detect the source change is based on the
-         --  attributes which are used to compute the actual source set.
+         Handle (Data);
 
-         if Data.Attrs.Has_Source_Dirs then
-            Add (Data.Attrs.Source_Dirs);
-         end if;
+         --  If an aggregate library project take into account the
+         --  aggregated projects.
 
-         if Data.Attrs.Has_Source_File then
-            Add (Data.Attrs.Source_File);
+         if Data.Kind = K_Aggregate_Library then
+            for A of Data.Aggregated loop
+               declare
+                  A_Data : constant Definition.Data := Definition.Get (A);
+               begin
+                  Handle (A_Data);
+               end;
+            end loop;
          end if;
 
          return MD5.Digest (C);
