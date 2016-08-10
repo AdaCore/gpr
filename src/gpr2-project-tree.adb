@@ -288,7 +288,7 @@ package body GPR2.Project.Tree is
         (Filename, View.Undefined, Definition.Root,
          Root_Context, Self.Messages);
 
-      --  Do nothing more if there is errors during the parsing
+      --  Do nothing more if there are errors during the parsing
 
       if Self.Messages.Is_Empty then
          for View of Self loop
@@ -398,7 +398,7 @@ package body GPR2.Project.Tree is
       begin
          Data.Trees.Project := Project;
 
-         --  Do the following only if there is no error messages
+         --  Do the following only if there are no error messages
 
          if Messages.Is_Empty then
             Data.Kind := Project.Qualifier;
@@ -419,9 +419,9 @@ package body GPR2.Project.Tree is
       View : Project.View.Object;
 
    begin
-      --  If there is parsing errors, do not go further
+      --  If there are parsing errors, do not go further
 
-      if not Messages.Is_Empty then
+      if Messages.Has_Element (Information => False, Warning => False) then
          return View;
       end if;
 
