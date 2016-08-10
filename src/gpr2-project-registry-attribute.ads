@@ -68,19 +68,21 @@ package GPR2.Project.Registry.Attribute is
 
    --  Some common attribute names
 
-   Body_Suffix           : constant Name_Type := "body_suffix";
-   Dot_Replacement       : constant Name_Type := "dot_replacement";
-   External              : constant Name_Type := "external";
-   Implementation_Suffix : constant Name_Type := "implementation_suffix";
-   Languages             : constant Name_Type := "languages";
-   Library_Kind          : constant Name_Type := "library_kind";
-   Library_Name          : constant Name_Type := "library_name";
-   Project_Files         : constant Name_Type := "project_files";
-   Separate_Suffix       : constant Name_Type := "separate_suffix";
-   Source_Dirs           : constant Name_Type := "source_dirs";
-   Source_File           : constant Name_Type := "source_file";
-   Spec_Suffix           : constant Name_Type := "spec_suffix";
-   Specification_Suffix  : constant Name_Type := "specification_suffix";
+   Body_Suffix               : constant Name_Type := "body_suffix";
+   Dot_Replacement           : constant Name_Type := "dot_replacement";
+   External                  : constant Name_Type := "external";
+   Excluded_Source_List_File : constant Name_Type :=
+                                 "excluded_source_list_file";
+   Implementation_Suffix     : constant Name_Type := "implementation_suffix";
+   Languages                 : constant Name_Type := "languages";
+   Library_Kind              : constant Name_Type := "library_kind";
+   Library_Name              : constant Name_Type := "library_name";
+   Project_Files             : constant Name_Type := "project_files";
+   Separate_Suffix           : constant Name_Type := "separate_suffix";
+   Source_Dirs               : constant Name_Type := "source_dirs";
+   Source_File               : constant Name_Type := "source_file";
+   Spec_Suffix               : constant Name_Type := "spec_suffix";
+   Specification_Suffix      : constant Name_Type := "specification_suffix";
 
 private
 

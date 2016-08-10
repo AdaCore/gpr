@@ -1,0 +1,5 @@
+description:
+    Test for Excluded_Source_List_File attribute
+driver: build_and_run
+project_file: source_excluded
+main: main

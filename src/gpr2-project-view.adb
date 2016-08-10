@@ -22,9 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
+with Ada.Text_IO;
 
 with GNAT.MD5;
 with GNAT.OS_Lib;
@@ -367,6 +369,9 @@ package body GPR2.Project.View is
       use GNAT;
       use type MD5.Binary_Message_Digest;
 
+      package Source_Set is
+        new Ada.Containers.Indefinite_Ordered_Sets (Name_Type);
+
       procedure Handle_Directory (Dir : Full_Path_Name);
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
@@ -396,12 +401,19 @@ package body GPR2.Project.View is
       --  signature is not the same recorded for the view, the source set
       --  need to be recomputed.
 
+      procedure Read_File
+        (Filename : Full_Path_Name;
+         Set      : in out Source_Set.Set);
+      --  Read Filename and insert each line in Set
+
       Naming : constant Pack.Object := Naming_Package (Self);
       --  Package Naming for the view
 
       Data : Definition.Data := Definition.Get (Self);
       --  View definition data, will be updated and recorded back into the
       --  definition set.
+
+      Excluded_Sources : Source_Set.Set;
 
       ----------------------
       -- Handle_Directory --
@@ -461,7 +473,11 @@ package body GPR2.Project.View is
          --  Check the language, if no language found this is not a source for
          --  this project.
 
-         if Language /= No_Value then
+         if Language /= No_Value
+           and then not
+             Excluded_Sources.Contains
+               (Name_Type (Directories.Simple_Name (Filename)))
+         then
             declare
                Lang : constant Name_Type := Name_Type (Language);
                Src  : constant GPR2.Source.Object :=
@@ -555,6 +571,28 @@ package body GPR2.Project.View is
 
          return No_Value;
       end Language_For;
+
+      ---------------
+      -- Read_File --
+      ---------------
+
+      procedure Read_File
+        (Filename : Full_Path_Name;
+         Set      : in out Source_Set.Set)
+      is
+         F      : Text_IO.File_Type;
+         Buffer : String (1 .. 1_024);
+         Last   : Natural;
+      begin
+         Text_IO.Open (F, Text_IO.In_File, Filename);
+
+         while not Text_IO.End_Of_File (F) loop
+            Text_IO.Get_Line (F, Buffer, Last);
+            Set.Include (Name_Type (Buffer (Buffer'First .. Last)));
+         end loop;
+
+         Text_IO.Close (F);
+      end Read_File;
 
       ---------------
       -- Signature --
@@ -774,6 +812,10 @@ package body GPR2.Project.View is
 
       Current_Signature : constant MD5.Binary_Message_Digest :=
                             Signature;
+
+      Root              : constant Full_Path_Name :=
+                            Directories.Containing_Directory
+                              (Value (Data.Trees.Project.Path_Name));
    begin
       --  Check if up-to-date using signature for source_dirs, source_files...
       --  An abstract or aggregate project has no sources.
@@ -787,6 +829,21 @@ package body GPR2.Project.View is
 
          Data.Sources.Clear;
 
+         --  If we have attribute Excluded_Source_List_File
+
+         if Data.Attrs.Has_Excluded_Source_List_File then
+            declare
+               File : constant Full_Path_Name :=
+                        Directories.Compose
+                          (Root,
+                           Data.Attrs.Element
+                             (Registry.Attribute.Excluded_Source_List_File)
+                           .Value);
+            begin
+               Read_File (File, Excluded_Sources);
+            end;
+         end if;
+
          if Data.Kind = K_Aggregate_Library then
             --  Sources for an aggregate library is the cumulative set of
             --  sources of the aggregated projects.
@@ -796,11 +853,7 @@ package body GPR2.Project.View is
             end loop;
 
          else
-            Populate_Sources : declare
-               Root : constant Full_Path_Name :=
-                        Directories.Containing_Directory
-                          (Value (Data.Trees.Project.Path_Name));
-            begin
+            Populate_Sources : begin
                --  Handle Source_Dirs
 
                if Data.Attrs.Has_Source_Dirs then
