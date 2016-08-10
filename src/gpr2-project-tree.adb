@@ -540,6 +540,15 @@ package body GPR2.Project.Tree is
                                   Definition.Aggregated, Ctx,
                                   Self.Messages);
                begin
+                  --  If there was error messages during the parsing of the
+                  --  aggregated project, just return now.
+
+                  if Self.Messages.Has_Element
+                    (Information => False,
+                     Warning     => False)
+                  then
+                     return;
+                  end if;
                   --  Record aggregated view into the aggregate's view
                   P_Data.Aggregated.Append (A_View);
                   --  And set the aggregated view recursivelly
