@@ -38,7 +38,7 @@ package GPR2.Project is
    I_Imported   : constant Iterator_Kind;
    I_Aggregated : constant Iterator_Kind;
    I_Recursive  : constant Iterator_Kind;
-   --  ?? missing extended, and I_Aggregated is not implemented
+   --  ?? missing extended
 
    I_Default   : constant Iterator_Kind;
 
