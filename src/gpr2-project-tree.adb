@@ -748,10 +748,10 @@ package body GPR2.Project.Tree is
 
       --  Propagate the change in the project Tree. That is for each project in
       --  the tree we need to update the corresponding view. We do not handle
-      --  the aggregated project here. Those projects are specifically in
-      --  Set_View. This is needed as parsing the aggregate project may change
-      --  the Project_Files attribute and so the actual aggregated project. So
-      --  we cannot use the current aggregated project list.
+      --  the aggregated projects here. Those projects are handled specifically
+      --  in Set_View. This is needed as parsing the aggregate project may
+      --  change the Project_Files attribute and so the actual aggregated
+      --  project. So we cannot use the current aggregated project list.
 
       for View in Self.Iterate
         (Kind => I_Project or I_Imported or I_Recursive)
