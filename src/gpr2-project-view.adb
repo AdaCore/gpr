@@ -750,8 +750,11 @@ package body GPR2.Project.View is
                             Signature;
    begin
       --  Check if up-to-date using signature for source_dirs, source_files...
+      --  An abstract or aggregate project has no sources.
 
-      if Data.Sources_Signature /= Current_Signature then
+      if Data.Sources_Signature /= Current_Signature
+        and then Data.Kind not in K_Abstract | K_Aggregate
+      then
          --  Read sources and set-up the corresponding definition
 
          --  First reset the current set
