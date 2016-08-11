@@ -1,0 +1,32 @@
+Log is empty: TRUE
+
+Log is empty: FALSE
+Has_Element (info) TRUE
+Has_Element (warn) TRUE
+Has_Element (error) TRUE
+Has_Element (read) FALSE
+Has_Element (unread) TRUE
+Count (err)  0
+
+Log is empty: FALSE
+Has_Element (info) TRUE
+Has_Element (warn) TRUE
+Has_Element (error) FALSE
+Has_Element (read) TRUE
+Has_Element (unread) TRUE
+Count (warn)  0
+
+Log is empty: FALSE
+Has_Element (info) TRUE
+Has_Element (warn) FALSE
+Has_Element (error) FALSE
+Has_Element (read) TRUE
+Has_Element (unread) TRUE
+Count (warn)  0
+
+Log is empty: FALSE
+Has_Element (info) FALSE
+Has_Element (warn) FALSE
+Has_Element (error) FALSE
+Has_Element (read) TRUE
+Has_Element (unread) FALSE

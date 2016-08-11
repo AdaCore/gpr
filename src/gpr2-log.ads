@@ -71,7 +71,9 @@ package GPR2.Log is
      (Self        : Object;
       Information : Boolean := True;
       Warning     : Boolean := True;
-      Error       : Boolean := True) return Boolean;
+      Error       : Boolean := True;
+      Read        : Boolean := True;
+      Unread      : Boolean := True) return Boolean;
    --  Returns True if the log contains some information/warning/error
    --  depending on the value specified.
 
@@ -100,12 +102,18 @@ package GPR2.Log is
       Position : Cursor) return Constant_Reference_Type;
 
    function Iterate
-     (Self        : Object;
+     (Self        : in out Object;
       Information : Boolean := True;
       Warning     : Boolean := True;
-      Error       : Boolean := True)
+      Error       : Boolean := True;
+      Read        : Boolean := True;
+      Unread      : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class;
-   --  Iterate over all log messages corresponding to the given Filter
+   --  Iterate over all log messages corresponding to the given Filter. The
+   --  Unread messages are marked as Read after this call (either explit call
+   --  or using a for-of ieterator). Using the Unread flag it is possible to
+   --  keep all messages into the list (no need to call Clear) and yet be able
+   --  to check for new Unread messages.
 
 private
 

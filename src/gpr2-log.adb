@@ -25,10 +25,9 @@
 package body GPR2.Log is
 
    use type Message.Level_Value;
+   use type Message.Status_Type;
 
-   type Iterator (Information, Warning, Error : Boolean) is
-     new Log_Iterator.Forward_Iterator with
-   record
+   type Iterator is new Log_Iterator.Forward_Iterator with record
      Log : Object;
    end record;
 
@@ -42,12 +41,17 @@ package body GPR2.Log is
      (Message     : GPR2.Message.Object;
       Information : Boolean;
       Warning     : Boolean;
-      Error       : Boolean) return Boolean is
-     ((Message.Level = GPR2.Message.Information and then Information)
-      or else (Message.Level = GPR2.Message.Warning and then Warning)
-      or else (Message.Level = GPR2.Message.Error and then Error));
+      Error       : Boolean;
+      Read        : Boolean;
+      Unread      : Boolean) return Boolean is
+     (((Message.Level = GPR2.Message.Information and then Information)
+       or else (Message.Level = GPR2.Message.Warning and then Warning)
+       or else (Message.Level = GPR2.Message.Error and then Error))
+      and then
+        ((Message.Status = GPR2.Message.Read and then Read)
+         or else (Message.Status = GPR2.Message.Unread and then Unread)));
    --  Returns True is the Message's Level match the information/warning/error
-   --  values.
+   --  values with the corresponding Read/Unread status.
 
    ------------
    -- Append --
@@ -117,19 +121,8 @@ package body GPR2.Log is
    -----------
 
    overriding function First (Iter : Iterator) return Cursor is
-      Position : constant Cursor :=
-                   Cursor'(Iter.Log.Store, Iter.Log.Store.First_Index);
    begin
-      if not Has_Element (Position)
-        or else
-          Match_Filter
-            (Element (Position),
-             Iter.Information, Iter.Warning, Iter.Error)
-      then
-         return Position;
-      else
-         return Next (Iter, Position);
-      end if;
+      return Cursor'(Iter.Log.Store, Iter.Log.Store.First_Index);
    end First;
 
    -----------------
@@ -146,10 +139,12 @@ package body GPR2.Log is
      (Self        : Object;
       Information : Boolean := True;
       Warning     : Boolean := True;
-      Error       : Boolean := True) return Boolean is
+      Error       : Boolean := True;
+      Read        : Boolean := True;
+      Unread      : Boolean := True) return Boolean is
    begin
       for M of Self.Store loop
-         if Match_Filter (M, Information, Warning, Error) then
+         if Match_Filter (M, Information, Warning, Error, Read, Unread) then
             return True;
          end if;
       end loop;
@@ -171,14 +166,26 @@ package body GPR2.Log is
    -------------
 
    function Iterate
-     (Self        : Object;
+     (Self        : in out Object;
       Information : Boolean := True;
       Warning     : Boolean := True;
-      Error       : Boolean := True)
+      Error       : Boolean := True;
+      Read        : Boolean := True;
+      Unread      : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class
    is
+      Iter : Iterator;
    begin
-      return Iterator'(Information, Warning, Error, Self);
+      --  Fill store with the matching elements and tag them as read
+
+      for M of Self.Store loop
+         if Match_Filter (M, Information, Warning, Error, Read, Unread) then
+            Iter.Log.Store.Append (M);
+            M.Set_Status (Message.Read);
+         end if;
+      end loop;
+
+      return Iter;
    end Iterate;
 
    ----------
@@ -188,19 +195,9 @@ package body GPR2.Log is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      New_Position : Cursor := Position;
+      pragma Unreferenced (Iter);
    begin
-      loop
-         New_Position.P := New_Position.P + 1;
-
-         exit when not Has_Element (New_Position)
-           or else
-             Match_Filter
-               (Element (New_Position),
-                Iter.Information, Iter.Warning, Iter.Error);
-      end loop;
-
-      return New_Position;
+      return Cursor'(Position.Store, Position.P + 1);
    end Next;
 
 end GPR2.Log;
