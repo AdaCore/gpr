@@ -89,8 +89,7 @@ package GPR2.Log is
 
    function Has_Element (Position : Cursor) return Boolean;
 
-   package Project_Iterator is
-     new Ada.Iterator_Interfaces (Cursor, Has_Element);
+   package Log_Iterator is new Ada.Iterator_Interfaces (Cursor, Has_Element);
 
    type Constant_Reference_Type
      (Message : not null access constant GPR2.Message.Object) is private
@@ -105,7 +104,7 @@ package GPR2.Log is
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True)
-      return Project_Iterator.Forward_Iterator'Class;
+      return Log_Iterator.Forward_Iterator'Class;
    --  Iterate over all log messages corresponding to the given Filter
 
 private

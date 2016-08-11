@@ -27,7 +27,7 @@ package body GPR2.Log is
    use type Message.Level_Value;
 
    type Iterator (Information, Warning, Error : Boolean) is
-     new Project_Iterator.Forward_Iterator with
+     new Log_Iterator.Forward_Iterator with
    record
      Log : Object;
    end record;
@@ -175,7 +175,8 @@ package body GPR2.Log is
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True)
-      return Project_Iterator.Forward_Iterator'Class is
+      return Log_Iterator.Forward_Iterator'Class
+   is
    begin
       return Iterator'(Information, Warning, Error, Self);
    end Iterate;
