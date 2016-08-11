@@ -37,7 +37,7 @@ package body GPR2.Message is
       Sloc    : Source_Reference.Object := Source_Reference.Undefined)
       return Object is
    begin
-      return Object'(Level, To_Unbounded_String (Message), Sloc);
+      return Object'(Level, Unread, To_Unbounded_String (Message), Sloc);
    end Create;
 
    ------------
@@ -89,6 +89,15 @@ package body GPR2.Message is
       return To_String (Self.Message);
    end Message;
 
+   ----------------
+   -- Set_Status --
+   ----------------
+
+   procedure Set_Status (Self : in out Object; Status : Status_Type) is
+   begin
+      Self.Status := Status;
+   end Set_Status;
+
    ----------
    -- Sloc --
    ----------
@@ -97,5 +106,14 @@ package body GPR2.Message is
    begin
       return Self.Sloc;
    end Sloc;
+
+   ------------
+   -- Status --
+   ------------
+
+   function Status (Self : Object) return Status_Type is
+   begin
+      return Self.Status;
+   end Status;
 
 end GPR2.Message;
