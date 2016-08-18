@@ -77,6 +77,7 @@ private package GPR2.Project.Definition is
       Signature         : Context.Binary_Signature;
 
       --  Actual values for the view
+      Extended          : View.Object;
       Imports           : Project_View_Store.Vector;
       Aggregated        : Project_View_Store.Vector;
       Attrs             : Project.Attribute.Set.Object;

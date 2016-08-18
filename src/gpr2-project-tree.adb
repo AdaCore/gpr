@@ -467,6 +467,21 @@ package body GPR2.Project.Tree is
 
       View := Definition.Register (Data);
 
+      --  Load the extended project if any
+
+      if Data.Trees.Project.Has_Extended then
+         Data.Extended :=
+           Recursive_Load
+             (Data.Trees.Project.Extended,
+              Context_View =>
+                (if Context_View = GPR2.Project.View.Undefined
+                 then View
+                 else Context_View),
+              Status       => Definition.Imported,
+              Root_Context => Root_Context,
+              Messages     => Messages);
+      end if;
+
       --  Now load all imported projects. If we have parsing the root
       --  project or an aggregate project then the context view become
       --  this project.
