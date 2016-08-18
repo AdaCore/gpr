@@ -22,11 +22,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  A specific view of a project as seen in a tree. A project view is retreived
+--  A specific view of a project as seen in a tree. A project view is retrieved
 --  from a tree, see Project.Tree package. A project view differ from a
---  standard project object from the parser as it does access to the actual
+--  standard project object from the parser as it gives access to the actual
 --  attributes, variables and packages values depending on the current context
---  for the corresponding tree.
+--  for the corresponding tree. It also gives the sources for the views and
+--  this include sources from extended project or aggregated project if needed.
 
 with GPR2.Containers;
 with GPR2.Context;
