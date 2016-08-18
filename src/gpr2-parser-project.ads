@@ -67,6 +67,13 @@ package GPR2.Parser.Project is
    --  kind may be different as computed based on the attributes present on
    --  the project.
 
+   function Has_Extended (Self : Object) return Boolean;
+   --  Returns True if an extended project is defined
+
+   function Extended (Self : Object) return Path_Name_Type
+     with Pre => Self.Has_Extended;
+   --  Returns the extended project
+
    function Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
    --  The name of the project file
@@ -108,6 +115,7 @@ private
       Qualifier : Project_Kind := K_Standard;
       Externals : Containers.Name_List;
       Imports   : Containers.Path_Name_List;
+      Extended  : Path_Name_Type;
       Unit      : Analysis_Unit;
       Context   : Analysis_Context;
       --  ??? Must be freed : Destroy (Context)

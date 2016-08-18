@@ -55,6 +55,15 @@ package body GPR2.Parser.Project is
      (Node /= null);
    --  Returns True if the Node is present (not null)
 
+   --------------
+   -- Extended --
+   --------------
+
+   function Extended (Self : Object) return Path_Name_Type is
+   begin
+      return Self.Extended;
+   end Extended;
+
    ---------------
    -- Externals --
    ---------------
@@ -81,6 +90,15 @@ package body GPR2.Parser.Project is
       end if;
       return Name_Type (To_String (V (V'First + Offset .. V'Last - Offset)));
    end Get_Name_Type;
+
+   ------------------
+   -- Has_Extended --
+   ------------------
+
+   function Has_Extended (Self : Object) return Boolean is
+   begin
+      return Self.Extended /= No_Path_Name;
+   end Has_Extended;
 
    -------------------
    -- Has_Externals --
@@ -180,6 +198,7 @@ package body GPR2.Parser.Project is
                Name : constant not null Expr := F_Project_Name (N);
                Qual : constant Types.Project_Qualifier :=
                         F_Qualifier (N);
+               Ext  : constant Project_Extension := F_Extension (N);
             begin
                --  If we have an explicit qualifier parse it now. If not the
                --  kind of project will be determined later during a second
@@ -241,6 +260,14 @@ package body GPR2.Parser.Project is
                         --  ?? an error
                         null;
                   end case;
+               end if;
+
+               --  Check if we have an extends declaration
+
+               if Present (Ext) then
+                  Project.Extended :=
+                    Create
+                      (Get_Name_Type (String_Literal (F_Path_Name (Ext))));
                end if;
 
                Project.Name :=
