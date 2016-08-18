@@ -77,6 +77,8 @@ package GPR2 is
    --  A project path-name, will always be normalized according to the running
    --  target.
 
+   No_Path_Name : constant Path_Name_Type;
+
    overriding function "=" (Left, Right : Path_Name_Type) return Boolean;
    --  Returns True if Left and Right are referencing the same project. That
    --  is, based on the normalized names.
@@ -118,8 +120,12 @@ private
    function Base_Name (File : Path_Name_Type) return Name_Type
      is (Name_Type (To_String (File.Base_Name)));
 
-   No_Name  : constant Optional_Name_Type := "";
-   No_Value : constant Value_Type := "";
+   No_Name      : constant Optional_Name_Type := "";
+   No_Value     : constant Value_Type := "";
+   No_Path_Name : constant Path_Name_Type :=
+                    (Null_Unbounded_String,
+                     Null_Unbounded_String,
+                     Null_Unbounded_String);
 
    function Create_File (Name : Name_Type) return Path_Name_Type;
    --  Create a Path_Name_Type for a file
