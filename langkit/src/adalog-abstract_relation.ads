@@ -58,6 +58,15 @@ package Adalog.Abstract_Relation is
       Ref_Count : Natural := 1;
    end record;
 
+   type Relation is access all I_Relation'Class;
+   --  Since relations are trees, they're not manipulated by value, but instead
+   --  via this class-wide access type.
+
+   type Relation_Array is array (Positive range <>) of Relation;
+   --  Some relations will need to keep/provide arrays of sub-relations
+
+   Empty_Array : constant Relation_Array (1 .. 0) := (others => <>);
+
    --  Base type for a type implementing the relation interface. A relation has
    --  the following properties:
    --
@@ -88,20 +97,18 @@ package Adalog.Abstract_Relation is
    --  freeing owned resources. This needs to be implemented by I_Relation
    --  implementers, and it will be called just before freeing Self in Dec_Ref.
 
-   type Relation is access all I_Relation'Class;
-   --  Since relations are trees, they're not manipulated by value, but instead
-   --  via this class-wide access type.
+   function Children (Self : I_Relation) return Relation_Array
+   is (Empty_Array);
 
    function Solve (Self : Relation) return Boolean is (Self.all.Solve);
    --  Shortcut to solve the underlying relation, used by Langkit
+
+   procedure Print_Relation (Self : Relation);
 
    procedure Inc_Ref (Self : Relation);
    procedure Dec_Ref (Self : in out Relation);
    --  Reference counting primitives to be used by Langkit. A Dec_Ref call
    --  bringing the reference count to 0 will Destroy the referenced relation
    --  object and put the pointer to null, hence the in out mode.
-
-   type Relation_Array is array (Positive range <>) of Relation;
-   --  Some relations will need to keep/provide arrays of sub-relations
 
 end Adalog.Abstract_Relation;

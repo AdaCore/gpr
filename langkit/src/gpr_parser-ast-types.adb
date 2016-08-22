@@ -100,6 +100,18 @@ package body GPR_Parser.AST.Types is
       end if;
    end Get;
 
+   ------------
+   -- Concat --
+   ------------
+
+   function Concat (L, R : Env_Element_Array_Access) return Env_Element_Array_Access is
+      use Env_Element_Arrays;
+      Ret : Env_Element_Array_Access := Create (Length (L) + Length (R));
+   begin
+      Ret.Items := (L.Items & R.Items);
+      return Ret;
+   end Concat;
+
    -------------
    -- Inc_Ref --
    -------------
@@ -127,6 +139,77 @@ package body GPR_Parser.AST.Types is
       end if;
    end Dec_Ref;
 
+
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
 
 
    
@@ -271,12 +354,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
 
 
 
@@ -449,16 +526,16 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Attr_Name /= null then
-                  Destroy (Node.F_Attr_Name);
-               end if;
-               if Node.F_Attr_Index /= null then
-                  Destroy (Node.F_Attr_Index);
-               end if;
-               if Node.F_Expr /= null then
-                  Destroy (Node.F_Expr);
-               end if;
          end if;
+            if Node.F_Attr_Name /= null then
+               Destroy (Node.F_Attr_Name);
+            end if;
+            if Node.F_Attr_Index /= null then
+               Destroy (Node.F_Attr_Index);
+            end if;
+            if Node.F_Expr /= null then
+               Destroy (Node.F_Expr);
+            end if;
       end Destroy;
 
       ---------------------
@@ -553,12 +630,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Expr;
       end F_Expr;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -710,13 +781,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Attribute_Name /= null then
-                  Destroy (Node.F_Attribute_Name);
-               end if;
-               if Node.F_Attribute_Index /= null then
-                  Destroy (Node.F_Attribute_Index);
-               end if;
          end if;
+            if Node.F_Attribute_Name /= null then
+               Destroy (Node.F_Attribute_Name);
+            end if;
+            if Node.F_Attribute_Index /= null then
+               Destroy (Node.F_Attribute_Index);
+            end if;
       end Destroy;
 
       ---------------------
@@ -790,12 +861,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Attribute_Index;
       end F_Attribute_Index;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -947,13 +1012,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Var_Ref /= null then
-                  Destroy (Node.F_Var_Ref);
-               end if;
-               if Node.F_Items /= null then
-                  Destroy (Node.F_Items);
-               end if;
          end if;
+            if Node.F_Var_Ref /= null then
+               Destroy (Node.F_Var_Ref);
+            end if;
+            if Node.F_Items /= null then
+               Destroy (Node.F_Items);
+            end if;
       end Destroy;
 
       ---------------------
@@ -1027,12 +1092,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Items;
       end F_Items;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -1184,13 +1243,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Choice /= null then
-                  Destroy (Node.F_Choice);
-               end if;
-               if Node.F_Decls /= null then
-                  Destroy (Node.F_Decls);
-               end if;
          end if;
+            if Node.F_Choice /= null then
+               Destroy (Node.F_Choice);
+            end if;
+            if Node.F_Decls /= null then
+               Destroy (Node.F_Decls);
+            end if;
       end Destroy;
 
       ---------------------
@@ -1264,12 +1323,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Decls;
       end F_Decls;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -1401,10 +1454,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Project /= null then
-                  Destroy (Node.F_Project);
-               end if;
          end if;
+            if Node.F_Project /= null then
+               Destroy (Node.F_Project);
+            end if;
       end Destroy;
 
       ---------------------
@@ -1457,12 +1510,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Project;
       end F_Project;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -1613,12 +1660,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -1632,12 +1673,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
 
 
 
@@ -1790,13 +1825,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Prefix /= null then
-                  Destroy (Node.F_Prefix);
-               end if;
-               if Node.F_Suffix /= null then
-                  Destroy (Node.F_Suffix);
-               end if;
          end if;
+            if Node.F_Prefix /= null then
+               Destroy (Node.F_Prefix);
+            end if;
+            if Node.F_Suffix /= null then
+               Destroy (Node.F_Suffix);
+            end if;
       end Destroy;
 
       ---------------------
@@ -1872,12 +1907,6 @@ package body GPR_Parser.AST.Types is
       end F_Suffix;
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -1898,12 +1927,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Token (Node, Node.F_Tok);
       end F_Tok;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -2058,12 +2081,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
 
 
 
@@ -2222,12 +2239,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -2383,12 +2394,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -2518,10 +2523,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Exprs /= null then
-                  Destroy (Node.F_Exprs);
-               end if;
          end if;
+            if Node.F_Exprs /= null then
+               Destroy (Node.F_Exprs);
+            end if;
       end Destroy;
 
       ---------------------
@@ -2574,12 +2579,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Exprs;
       end F_Exprs;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -2727,12 +2726,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
 
 
 
@@ -2884,12 +2877,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -3035,12 +3022,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
 
 
 
@@ -3213,16 +3194,16 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Kind /= null then
-                  Destroy (Node.F_Kind);
-               end if;
-               if Node.F_String_Lit /= null then
-                  Destroy (Node.F_String_Lit);
-               end if;
-               if Node.F_Expr /= null then
-                  Destroy (Node.F_Expr);
-               end if;
          end if;
+            if Node.F_Kind /= null then
+               Destroy (Node.F_Kind);
+            end if;
+            if Node.F_String_Lit /= null then
+               Destroy (Node.F_String_Lit);
+            end if;
+            if Node.F_Expr /= null then
+               Destroy (Node.F_Expr);
+            end if;
       end Destroy;
 
       ---------------------
@@ -3317,12 +3298,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Expr;
       end F_Expr;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -3470,12 +3445,6 @@ package body GPR_Parser.AST.Types is
 
 
 
-
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
 
 
 
@@ -3628,13 +3597,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Pkg_Name /= null then
-                  Destroy (Node.F_Pkg_Name);
-               end if;
-               if Node.F_Pkg_Spec /= null then
-                  Destroy (Node.F_Pkg_Spec);
-               end if;
          end if;
+            if Node.F_Pkg_Name /= null then
+               Destroy (Node.F_Pkg_Name);
+            end if;
+            if Node.F_Pkg_Spec /= null then
+               Destroy (Node.F_Pkg_Spec);
+            end if;
       end Destroy;
 
       ---------------------
@@ -3708,12 +3677,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Pkg_Spec;
       end F_Pkg_Spec;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -3865,13 +3828,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Prj_Name /= null then
-                  Destroy (Node.F_Prj_Name);
-               end if;
-               if Node.F_Pkg_Name /= null then
-                  Destroy (Node.F_Pkg_Name);
-               end if;
          end if;
+            if Node.F_Prj_Name /= null then
+               Destroy (Node.F_Prj_Name);
+            end if;
+            if Node.F_Pkg_Name /= null then
+               Destroy (Node.F_Pkg_Name);
+            end if;
       end Destroy;
 
       ---------------------
@@ -3945,12 +3908,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Pkg_Name;
       end F_Pkg_Name;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -4102,13 +4059,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Prj_Name /= null then
-                  Destroy (Node.F_Prj_Name);
-               end if;
-               if Node.F_Pkg_Name /= null then
-                  Destroy (Node.F_Pkg_Name);
-               end if;
          end if;
+            if Node.F_Prj_Name /= null then
+               Destroy (Node.F_Prj_Name);
+            end if;
+            if Node.F_Pkg_Name /= null then
+               Destroy (Node.F_Pkg_Name);
+            end if;
       end Destroy;
 
       ---------------------
@@ -4182,12 +4139,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Pkg_Name;
       end F_Pkg_Name;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -4359,16 +4310,16 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Extension /= null then
-                  Destroy (Node.F_Extension);
-               end if;
-               if Node.F_Decls /= null then
-                  Destroy (Node.F_Decls);
-               end if;
-               if Node.F_End_Name /= null then
-                  Destroy (Node.F_End_Name);
-               end if;
          end if;
+            if Node.F_Extension /= null then
+               Destroy (Node.F_Extension);
+            end if;
+            if Node.F_Decls /= null then
+               Destroy (Node.F_Decls);
+            end if;
+            if Node.F_End_Name /= null then
+               Destroy (Node.F_End_Name);
+            end if;
       end Destroy;
 
       ---------------------
@@ -4463,12 +4414,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_End_Name;
       end F_End_Name;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -4620,13 +4565,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Context_Clauses /= null then
-                  Destroy (Node.F_Context_Clauses);
-               end if;
-               if Node.F_Project_Decl /= null then
-                  Destroy (Node.F_Project_Decl);
-               end if;
          end if;
+            if Node.F_Context_Clauses /= null then
+               Destroy (Node.F_Context_Clauses);
+            end if;
+            if Node.F_Project_Decl /= null then
+               Destroy (Node.F_Project_Decl);
+            end if;
       end Destroy;
 
       ---------------------
@@ -4700,12 +4645,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Project_Decl;
       end F_Project_Decl;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -4917,22 +4856,22 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Qualifier /= null then
-                  Destroy (Node.F_Qualifier);
-               end if;
-               if Node.F_Project_Name /= null then
-                  Destroy (Node.F_Project_Name);
-               end if;
-               if Node.F_Extension /= null then
-                  Destroy (Node.F_Extension);
-               end if;
-               if Node.F_Decls /= null then
-                  Destroy (Node.F_Decls);
-               end if;
-               if Node.F_End_Name /= null then
-                  Destroy (Node.F_End_Name);
-               end if;
          end if;
+            if Node.F_Qualifier /= null then
+               Destroy (Node.F_Qualifier);
+            end if;
+            if Node.F_Project_Name /= null then
+               Destroy (Node.F_Project_Name);
+            end if;
+            if Node.F_Extension /= null then
+               Destroy (Node.F_Extension);
+            end if;
+            if Node.F_Decls /= null then
+               Destroy (Node.F_Decls);
+            end if;
+            if Node.F_End_Name /= null then
+               Destroy (Node.F_End_Name);
+            end if;
       end Destroy;
 
       ---------------------
@@ -5071,12 +5010,6 @@ package body GPR_Parser.AST.Types is
       end F_End_Name;
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -5213,10 +5146,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Path_Name /= null then
-                  Destroy (Node.F_Path_Name);
-               end if;
          end if;
+            if Node.F_Path_Name /= null then
+               Destroy (Node.F_Path_Name);
+            end if;
       end Destroy;
 
       ---------------------
@@ -5275,12 +5208,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Path_Name;
       end F_Path_Name;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -5412,10 +5339,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Qualifier /= null then
-                  Destroy (Node.F_Qualifier);
-               end if;
          end if;
+            if Node.F_Qualifier /= null then
+               Destroy (Node.F_Qualifier);
+            end if;
       end Destroy;
 
       ---------------------
@@ -5468,12 +5395,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Qualifier;
       end F_Qualifier;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -5605,10 +5526,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Attr_Ref /= null then
-                  Destroy (Node.F_Attr_Ref);
-               end if;
          end if;
+            if Node.F_Attr_Ref /= null then
+               Destroy (Node.F_Attr_Ref);
+            end if;
       end Destroy;
 
       ---------------------
@@ -5661,12 +5582,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Attr_Ref;
       end F_Attr_Ref;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -5818,13 +5733,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Qualifier_Id1 /= null then
-                  Destroy (Node.F_Qualifier_Id1);
-               end if;
-               if Node.F_Qualifier_Id2 /= null then
-                  Destroy (Node.F_Qualifier_Id2);
-               end if;
          end if;
+            if Node.F_Qualifier_Id1 /= null then
+               Destroy (Node.F_Qualifier_Id1);
+            end if;
+            if Node.F_Qualifier_Id2 /= null then
+               Destroy (Node.F_Qualifier_Id2);
+            end if;
       end Destroy;
 
       ---------------------
@@ -5898,12 +5813,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Qualifier_Id2;
       end F_Qualifier_Id2;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -6055,13 +5964,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Str_Lit /= null then
-                  Destroy (Node.F_Str_Lit);
-               end if;
-               if Node.F_At_Lit /= null then
-                  Destroy (Node.F_At_Lit);
-               end if;
          end if;
+            if Node.F_Str_Lit /= null then
+               Destroy (Node.F_Str_Lit);
+            end if;
+            if Node.F_At_Lit /= null then
+               Destroy (Node.F_At_Lit);
+            end if;
       end Destroy;
 
       ---------------------
@@ -6135,12 +6044,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_At_Lit;
       end F_At_Lit;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -6272,10 +6175,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Terms /= null then
-                  Destroy (Node.F_Terms);
-               end if;
          end if;
+            if Node.F_Terms /= null then
+               Destroy (Node.F_Terms);
+            end if;
       end Destroy;
 
       ---------------------
@@ -6328,12 +6231,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Terms;
       end F_Terms;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -6485,13 +6382,13 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Type_Id /= null then
-                  Destroy (Node.F_Type_Id);
-               end if;
-               if Node.F_String_Literals /= null then
-                  Destroy (Node.F_String_Literals);
-               end if;
          end if;
+            if Node.F_Type_Id /= null then
+               Destroy (Node.F_Type_Id);
+            end if;
+            if Node.F_String_Literals /= null then
+               Destroy (Node.F_String_Literals);
+            end if;
       end Destroy;
 
       ---------------------
@@ -6565,12 +6462,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_String_Literals;
       end F_String_Literals;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -6742,16 +6633,16 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Var_Name /= null then
-                  Destroy (Node.F_Var_Name);
-               end if;
-               if Node.F_Var_Type /= null then
-                  Destroy (Node.F_Var_Type);
-               end if;
-               if Node.F_Expr /= null then
-                  Destroy (Node.F_Expr);
-               end if;
          end if;
+            if Node.F_Var_Name /= null then
+               Destroy (Node.F_Var_Name);
+            end if;
+            if Node.F_Var_Type /= null then
+               Destroy (Node.F_Var_Type);
+            end if;
+            if Node.F_Expr /= null then
+               Destroy (Node.F_Expr);
+            end if;
       end Destroy;
 
       ---------------------
@@ -6846,12 +6737,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Expr;
       end F_Expr;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -7023,16 +6908,16 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Variable_Name1 /= null then
-                  Destroy (Node.F_Variable_Name1);
-               end if;
-               if Node.F_Variable_Name2 /= null then
-                  Destroy (Node.F_Variable_Name2);
-               end if;
-               if Node.F_Attribute_Ref /= null then
-                  Destroy (Node.F_Attribute_Ref);
-               end if;
          end if;
+            if Node.F_Variable_Name1 /= null then
+               Destroy (Node.F_Variable_Name1);
+            end if;
+            if Node.F_Variable_Name2 /= null then
+               Destroy (Node.F_Variable_Name2);
+            end if;
+            if Node.F_Attribute_Ref /= null then
+               Destroy (Node.F_Attribute_Ref);
+            end if;
       end Destroy;
 
       ---------------------
@@ -7127,12 +7012,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Attribute_Ref;
       end F_Attribute_Ref;
-
-
-   --------------------
-   --  Logic helpers --
-   --------------------
-
 
 
    
@@ -7271,10 +7150,10 @@ package body GPR_Parser.AST.Types is
       begin
          if Langkit_Support.Extensions.Has_Extensions then
             Node.Free_Extensions;
-               if Node.F_Path_Names /= null then
-                  Destroy (Node.F_Path_Names);
-               end if;
          end if;
+            if Node.F_Path_Names /= null then
+               Destroy (Node.F_Path_Names);
+            end if;
       end Destroy;
 
       ---------------------
@@ -7335,12 +7214,6 @@ package body GPR_Parser.AST.Types is
       end F_Path_Names;
 
 
-   --------------------
-   --  Logic helpers --
-   --------------------
-
-
-
    
 
 
@@ -7356,23 +7229,22 @@ package body GPR_Parser.AST.Types is
    function Get
      (Node    : List_Case_Item;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node
+      Or_Null : Boolean := False) return Case_Item
    is
       function Absolute_Get
         (L : List_Case_Item; Index : Integer)
-         return GPR_Node
+         return Case_Item
       is
-        (GPR_Node
-          (Lists_Case_Item.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+        (Lists_Case_Item.Node_Vectors.Get_At_Index (L.Vec, Index + 1));
       --  L.Vec is 1-based but Index is 0-based
 
       function Relative_Get is new Langkit_Support.Relative_Get
-        (Item_Type     => GPR_Node,
+        (Item_Type     => Case_Item,
          Sequence_Type => List_Case_Item,
          Length        => Length,
          Get           => Absolute_Get);
 
-      Result : GPR_Node;
+      Result : Case_Item;
    begin
       if Relative_Get (Node, Index, Result) then
          return Result;
@@ -7401,8 +7273,7 @@ package body GPR_Parser.AST.Types is
         (L : List_GPR_Node; Index : Integer)
          return GPR_Node
       is
-        (GPR_Node
-          (Lists_GPR_Node.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+        (Lists_GPR_Node.Node_Vectors.Get_At_Index (L.Vec, Index + 1));
       --  L.Vec is 1-based but Index is 0-based
 
       function Relative_Get is new Langkit_Support.Relative_Get
@@ -7434,23 +7305,22 @@ package body GPR_Parser.AST.Types is
    function Get
      (Node    : List_String_Literal;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node
+      Or_Null : Boolean := False) return String_Literal
    is
       function Absolute_Get
         (L : List_String_Literal; Index : Integer)
-         return GPR_Node
+         return String_Literal
       is
-        (GPR_Node
-          (Lists_String_Literal.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+        (Lists_String_Literal.Node_Vectors.Get_At_Index (L.Vec, Index + 1));
       --  L.Vec is 1-based but Index is 0-based
 
       function Relative_Get is new Langkit_Support.Relative_Get
-        (Item_Type     => GPR_Node,
+        (Item_Type     => String_Literal,
          Sequence_Type => List_String_Literal,
          Length        => Length,
          Get           => Absolute_Get);
 
-      Result : GPR_Node;
+      Result : String_Literal;
    begin
       if Relative_Get (Node, Index, Result) then
          return Result;
@@ -7473,23 +7343,22 @@ package body GPR_Parser.AST.Types is
    function Get
      (Node    : List_Term_List;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node
+      Or_Null : Boolean := False) return Term_List
    is
       function Absolute_Get
         (L : List_Term_List; Index : Integer)
-         return GPR_Node
+         return Term_List
       is
-        (GPR_Node
-          (Lists_Term_List.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+        (Lists_Term_List.Node_Vectors.Get_At_Index (L.Vec, Index + 1));
       --  L.Vec is 1-based but Index is 0-based
 
       function Relative_Get is new Langkit_Support.Relative_Get
-        (Item_Type     => GPR_Node,
+        (Item_Type     => Term_List,
          Sequence_Type => List_Term_List,
          Length        => Length,
          Get           => Absolute_Get);
 
-      Result : GPR_Node;
+      Result : Term_List;
    begin
       if Relative_Get (Node, Index, Result) then
          return Result;
@@ -7512,23 +7381,22 @@ package body GPR_Parser.AST.Types is
    function Get
      (Node    : List_With_Decl;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node
+      Or_Null : Boolean := False) return With_Decl
    is
       function Absolute_Get
         (L : List_With_Decl; Index : Integer)
-         return GPR_Node
+         return With_Decl
       is
-        (GPR_Node
-          (Lists_With_Decl.Node_Vectors.Get_At_Index (L.Vec, Index + 1)));
+        (Lists_With_Decl.Node_Vectors.Get_At_Index (L.Vec, Index + 1));
       --  L.Vec is 1-based but Index is 0-based
 
       function Relative_Get is new Langkit_Support.Relative_Get
-        (Item_Type     => GPR_Node,
+        (Item_Type     => With_Decl,
          Sequence_Type => List_With_Decl,
          Length        => Length,
          Get           => Absolute_Get);
 
-      Result : GPR_Node;
+      Result : With_Decl;
    begin
       if Relative_Get (Node, Index, Result) then
          return Result;

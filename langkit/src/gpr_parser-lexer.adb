@@ -172,10 +172,10 @@ package body GPR_Parser.Lexer is
 
          case Token_Id is
 
-            when GPR_Number | GPR_Label | GPR_String =>
+            when GPR_Label | GPR_String | GPR_Number =>
                Text := Add_String (TDH, Bounded_Text);
 
-            when GPR_Char | GPR_Tick | GPR_Is | GPR_All | GPR_Limited | GPR_Others | GPR_Package | GPR_Renames | GPR_Type | GPR_Use | GPR_External | GPR_When | GPR_With | GPR_Project | GPR_Extends | GPR_Null | GPR_For | GPR_External_As_List | GPR_Par_Open | GPR_Par_Close | GPR_Semicolon | GPR_Colon | GPR_Comma | GPR_Dot | GPR_Abstract | GPR_Amp | GPR_Case | GPR_Identifier | GPR_Pipe | GPR_Assign | GPR_Arrow | GPR_End | GPR_At =>
+            when GPR_Colon | GPR_All | GPR_Char | GPR_Limited | GPR_When | GPR_With | GPR_Project | GPR_Extends | GPR_External | GPR_Is | GPR_External_As_List | GPR_Par_Open | GPR_Par_Close | GPR_Identifier | GPR_Others | GPR_Package | GPR_Null | GPR_End | GPR_For | GPR_At | GPR_Use | GPR_Abstract | GPR_Comma | GPR_Dot | GPR_Renames | GPR_Case | GPR_Tick | GPR_Semicolon | GPR_Pipe | GPR_Assign | GPR_Amp | GPR_Arrow | GPR_Type =>
                Text := Text_Access (Find (TDH.Symbols, Bounded_Text));
 
 

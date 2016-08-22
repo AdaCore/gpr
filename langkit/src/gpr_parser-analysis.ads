@@ -33,6 +33,7 @@ with Ada.Strings.Unbounded.Hash;
 with System;
 
 with Langkit_Support.Bump_Ptr;           use Langkit_Support.Bump_Ptr;
+with Langkit_Support.Cheap_Sets;
 with Langkit_Support.Diagnostics;        use Langkit_Support.Diagnostics;
 with Langkit_Support.Symbols;            use Langkit_Support.Symbols;
 with Langkit_Support.Vectors;
@@ -155,10 +156,9 @@ package GPR_Parser.Analysis is
      (Charset : String := "utf-8")
       return Analysis_Context;
    --  Create a new Analysis_Context. The returned value has a ref-count set to
-   --  1. When done with it, invoke Destroy on it, in which case the ref-count
-   --  is ignored. If this value is shared with garbage collected languages,
-   --  use ref-counting primitives instead so that the context is destroyed
-   --  when nobody references it anymore.
+   --  1. If you use shared ownership, use ref-counting primitives (Inc_Ref and
+   --  Dec_Ref). Otherwise, just invoke Destroy when you are done with it: the
+   --  ref-count will be ignored.
    --
    --  Charset will be used as a default charset to decode input sources in
    --  analysis units. Please see GNATCOLL.Iconv for a couple of supported
@@ -169,13 +169,11 @@ package GPR_Parser.Analysis is
    --  error right here, but this would be really helpful for users.
 
    procedure Inc_Ref (Context : Analysis_Context);
-   --  Increase the reference count to an analysis context. Useful for bindings to
---  garbage collected languages.
+   --  Increase the reference count to an analysis context.
 
    procedure Dec_Ref (Context : in out Analysis_Context);
-   --  Decrease the reference count to an analysis context. Useful for bindings to
---  garbage collected languages. Destruction happens when the ref-count reaches
---  0.
+   --  Decrease the reference count to an analysis context. Destruction happens
+--  when the ref-count reaches 0.
 
    function Get_From_File
      (Context     : Analysis_Context;
@@ -312,6 +310,15 @@ package GPR_Parser.Analysis is
    procedure PP_Trivia (Unit : Analysis_Unit);
    --  Debug helper: output a minimal AST with mixed trivias
 
+   procedure Reference_Unit (From, Referenced : Analysis_Unit);
+   --  Set the Referenced unit as being referenced from the From unit. This is
+   --  useful for visibility purposes, and is mainly meant to be used in the
+   --  env hooks.
+
+   function Is_Referenced
+     (Unit, Referenced : Analysis_Unit) return Boolean;
+   --  Check whether the Referenced unit is referenced from Unit
+
 private
 
    type Analysis_Context_Type;
@@ -352,16 +359,36 @@ private
    package Destroyable_Vectors is new Langkit_Support.Vectors
      (Destroyable_Type);
 
+   package Analysis_Unit_Sets
+   is new Langkit_Support.Cheap_Sets (Analysis_Unit, null);
+
    type Analysis_Unit_Type is new Analysis_Unit_Interface_Type with
    record
       Context          : Analysis_Context;
+      --  The owning context for this analysis unit
+
       Ref_Count        : Natural;
+      --  Ref count for the analysis unit. Note that in the Ada API you'll
+      --  still have to call Inc_Ref/Dec_Ref manually.
+
       AST_Root         : GPR_Node;
+
       File_Name        : Unbounded_String;
+      --  The originating name for this analysis unit. This should be set even
+      --  if the analysis unit was parsed from a buffer.
+
       Charset          : Unbounded_String;
+      --  The parsing charset for this analysis unit, as a string
+
       TDH              : aliased Token_Data_Handler;
+      --  The token data handler that handles all token data during parsing and
+      --  owns it afterwards.
+
       Diagnostics      : Diagnostics_Vectors.Vector;
+      --  The list of diagnostics produced for this analysis unit
+
       With_Trivia      : Boolean;
+      --  Whether Trivia nodes were parsed and included in this analysis unit
 
       Is_Env_Populated : Boolean;
       --  Whether Populate_Lexical_Env was called on this unit. Used not to
@@ -377,6 +404,10 @@ private
 
       Destroyables     : Destroyable_Vectors.Vector;
       --  Collection of objects to destroy when destroying the analysis unit
+
+      Referenced_Units : Analysis_Unit_Sets.Set;
+      --  Units that are referenced from this one. Useful for
+      --  visibility/computation of the reference graph.
    end record;
 
    overriding
@@ -391,6 +422,16 @@ private
      (Unit    : access Analysis_Unit_Type;
       Object  : System.Address;
       Destroy : Destroy_Procedure);
+
+   overriding function Is_Referenced
+     (Unit, Referenced : access Analysis_Unit_Type) return Boolean;
+   --  Check whether the Referenced unit is referenced from Unit
+
+   function Is_Referenced
+     (Unit, Referenced : Analysis_Unit) return Boolean
+   is
+     (Unit.Is_Referenced (Referenced));
+   --  Check whether the Referenced unit is referenced from Unit
 
    function Root (Unit : Analysis_Unit) return GPR_Node is
      (Unit.AST_Root);

@@ -44,6 +44,15 @@ with Langkit_Support.PP_Utils;   use Langkit_Support.PP_Utils;
 with Langkit_Support.Relative_Get;
 with Langkit_Support.Symbols;    use Langkit_Support.Symbols;
 
+pragma Warnings (Off, "referenced");
+with Adalog.Abstract_Relation;   use Adalog.Abstract_Relation;
+with Adalog.Debug;
+with Adalog.Operations;          use Adalog.Operations;
+with Adalog.Predicates;          use Adalog.Predicates;
+with Adalog.Pure_Relations;      use Adalog.Pure_Relations;
+with Adalog.Variadic_Operations; use Adalog.Variadic_Operations;
+pragma Warnings (On, "referenced");
+
 package body GPR_Parser.AST is
 
    
@@ -82,6 +91,18 @@ package body GPR_Parser.AST is
          raise Property_Error with "out-of-bounds array access";
       end if;
    end Get;
+
+   ------------
+   -- Concat --
+   ------------
+
+   function Concat (L, R : Lexical_Env_Array_Access) return Lexical_Env_Array_Access is
+      use Lexical_Env_Arrays;
+      Ret : Lexical_Env_Array_Access := Create (Length (L) + Length (R));
+   begin
+      Ret.Items := (L.Items & R.Items);
+      return Ret;
+   end Concat;
 
    -------------
    -- Inc_Ref --
@@ -150,6 +171,18 @@ package body GPR_Parser.AST is
       end if;
    end Get;
 
+   ------------
+   -- Concat --
+   ------------
+
+   function Concat (L, R : Env_Element_Array_Access) return Env_Element_Array_Access is
+      use Env_Element_Arrays;
+      Ret : Env_Element_Array_Access := Create (Length (L) + Length (R));
+   begin
+      Ret.Items := (L.Items & R.Items);
+      return Ret;
+   end Concat;
+
    -------------
    -- Inc_Ref --
    -------------
@@ -213,6 +246,18 @@ package body GPR_Parser.AST is
          raise Property_Error with "out-of-bounds array access";
       end if;
    end Get;
+
+   ------------
+   -- Concat --
+   ------------
+
+   function Concat (L, R : GPR_Node_Array_Access) return GPR_Node_Array_Access is
+      use GPR_Node_Arrays;
+      Ret : GPR_Node_Array_Access := Create (Length (L) + Length (R));
+   begin
+      Ret.Items := (L.Items & R.Items);
+      return Ret;
+   end Concat;
 
    -------------
    -- Inc_Ref --
@@ -530,6 +575,10 @@ package body GPR_Parser.AST is
       Position : Relative_Position;
       Result   : GPR_Node;
    begin
+      if Sloc = No_Source_Location then
+         return null;
+      end if;
+
       Lookup_Relative (Node, Sloc, Position, Result, Snap);
       return Result;
    end Lookup;
@@ -630,6 +679,17 @@ package body GPR_Parser.AST is
          for I in First .. Last loop
             A (I) := Child (Node, I);
          end loop;
+      end return;
+   end Children;
+
+   function Children
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node_Array_Access
+   is
+      C : GPR_Node_Arrays.Array_Type := Children (Node);
+   begin
+      return Ret : GPR_Node_Array_Access := Create (C'Length) do
+         Ret.Items := C;
       end return;
    end Children;
 
@@ -1029,13 +1089,17 @@ package body GPR_Parser.AST is
 
          --  Call recursively on children. Use the Children_Env if available,
          --  else pass the existing Current_Env.
-         for Child of Children (Node) loop
+         for Child of GPR_Node_Arrays.Array_Type'
+            (Children (Node))
+         loop
             if Children_Env = null then
                Populate_Internal (Child, Current_Env);
             else
                Populate_Internal (Child, Children_Env);
             end if;
          end loop;
+
+         Node.Post_Env_Actions (Current_Env);
       end Populate_Internal;
 
       Env : AST_Envs.Lexical_Env := Root_Env;
@@ -1201,7 +1265,9 @@ package body GPR_Parser.AST is
               (Env, Get_Env_Id (Env), Get_Env_Id (Env.Parent));
          end if;
 
-         for Child of Children (Current) loop
+         for Child of GPR_Node_Arrays.Array_Type'
+            (Children (Current))
+         loop
             Internal (Child);
          end loop;
       end Internal;
@@ -1343,7 +1409,8 @@ package body GPR_Parser.AST is
    is
       N : GPR_Node := null;
    begin
-      for I in 1 .. Child_Count (Node.Parent) loop
+      for I in Node.Parent.First_Child_Index .. Node.Parent.Last_Child_Index
+      loop
          N := Child (Node.Parent, I);
          if N = Node then
             return I;
@@ -1416,5 +1483,23 @@ package body GPR_Parser.AST is
       end if;
    end Get;
 
+
+   --------------------------------
+   -- Assign_Names_To_Logic_Vars --
+   --------------------------------
+
+   procedure Assign_Names_To_Logic_Vars
+    (Node : access GPR_Node_Type'Class) is
+   begin
+      if Adalog.Debug.Debug then
+         for Child of GPR_Node_Arrays.Array_Type'
+            (Children (Node))
+         loop
+            if Child /= null then
+               Assign_Names_To_Logic_Vars (Child);
+            end if;
+         end loop;
+      end if;
+   end Assign_Names_To_Logic_Vars;
 
 end GPR_Parser.AST;

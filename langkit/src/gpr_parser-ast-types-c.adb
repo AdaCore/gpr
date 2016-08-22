@@ -125,6 +125,46 @@ package body GPR_Parser.AST.Types.C is
 
    
 
+   function gpr_gpr_node_children
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_gpr_node_array_Ptr) return int
+   is
+      N : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if N.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node := GPR_Node (N);
+         begin
+             
+             Value_P.all :=
+                    Typed_Node.Children
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_children;
+
+
+           
+
+   
+
    function gpr_gpr_node_token_start
      (Node    : gpr_base_node;
 

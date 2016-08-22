@@ -50,6 +50,8 @@
 
 with GNATCOLL.Refcount; use GNATCOLL.Refcount;
 
+with Adalog.Debug;      use Adalog.Debug;
+
 package body Adalog.Logic_Ref is
 
    -----------
@@ -78,6 +80,8 @@ package body Adalog.Logic_Ref is
    is
       Old : constant Var := Self.all;
    begin
+      Trace ("Setting the value of " & Image (Raw_Var (Self)) & " to "
+             & Element_Image (Data));
       --  First set the value
 
       Self.El := Data;
@@ -87,6 +91,7 @@ package body Adalog.Logic_Ref is
       --  True.
 
       for El of Pred_Sets.Elements (Self.Pending_Relations) loop
+         Trace ("Applying predicate on " & Image (Raw_Var (Self)));
          if not El.Apply then
             Self.all := Old;
             return False;
@@ -102,7 +107,10 @@ package body Adalog.Logic_Ref is
 
    function GetL (Self : Var) return Element_Type is
    begin
-      pragma Assert (Self.Reset = False);
+      --  TODO??? We removed an assert about Self.Reset being False, because
+      --  we want to be able to access the variable even if the element is
+      --  unset, eg. null. However, we need to have a definite null value for
+      --  elements, which could even replace the Reset flag altogether maybe.
       return Self.El;
    end GetL;
 
@@ -222,6 +230,7 @@ package body Adalog.Logic_Ref is
       use Pred_Sets;
       Dummy : Boolean := Remove (Self.Pending_Relations, Pred);
    begin
+      Trace ("In remove predicate");
       null;
    end Remove_Predicate;
 
@@ -261,5 +270,14 @@ package body Adalog.Logic_Ref is
    begin
       Add_Predicate (Self.all, Pred);
    end Add_Predicate;
+
+   -------------
+   -- Destroy --
+   -------------
+
+   procedure Destroy (Self : in out Var) is
+   begin
+      Pred_Sets.Destroy (Self.Pending_Relations);
+   end Destroy;
 
 end Adalog.Logic_Ref;

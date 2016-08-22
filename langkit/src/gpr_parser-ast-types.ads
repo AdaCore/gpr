@@ -376,7 +376,11 @@ package GPR_Parser.AST.Types is
 
    
 
-   type Env_Element_Array is array (Positive range <>) of Env_Element;
+   package Env_Element_Vectors is new Langkit_Support.Vectors
+     (Env_Element);
+   package Env_Element_Arrays renames Env_Element_Vectors.Elements_Arrays;
+
+   subtype Env_Element_Array is Env_Element_Arrays.Array_Type;
    type Env_Element_Array_Record (N : Natural) is record
       Ref_Count : Positive;
       Items     : Env_Element_Array (1 .. N);
@@ -392,10 +396,6 @@ package GPR_Parser.AST.Types is
                              Items     => Copy (Items),
                              Ref_Count => 1));
 
-   package Env_Element_Vectors is new Langkit_Support.Vectors
-     (Env_Element);
-   package Env_Element_Arrays renames Env_Element_Vectors.Elements_Arrays;
-
    function Create (Items_Count : Natural) return Env_Element_Array_Access is
      (new Env_Element_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
    --  Create a new array for N uninitialized elements and give its only
@@ -408,6 +408,8 @@ package GPR_Parser.AST.Types is
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based. If
    --  the result is ref-counted, a new owning reference is returned.
+
+   function Concat (L, R : Env_Element_Array_Access) return Env_Element_Array_Access;
 
    function Length (T : Env_Element_Array_Access) return Natural is (T.N);
 
@@ -3403,7 +3405,7 @@ private
    function Get
      (Node    : List_Case_Item;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node;
+      Or_Null : Boolean := False) return Case_Item;
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based.
 
@@ -3457,7 +3459,7 @@ private
    function Get
      (Node    : List_String_Literal;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node;
+      Or_Null : Boolean := False) return String_Literal;
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based.
 
@@ -3484,7 +3486,7 @@ private
    function Get
      (Node    : List_Term_List;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node;
+      Or_Null : Boolean := False) return Term_List;
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based.
 
@@ -3511,7 +3513,7 @@ private
    function Get
      (Node    : List_With_Decl;
       Index   : Integer;
-      Or_Null : Boolean := False) return GPR_Node;
+      Or_Null : Boolean := False) return With_Decl;
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based.
 

@@ -112,6 +112,21 @@ procedure gpr_env_element_array_dec_ref (A : Env_Element_Array_Access)
 
    
 
+   function gpr_gpr_node_children
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_gpr_node_array_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_gpr_node_children";
+   --  Return an array that contains the direct lexical children
+
+
+           
+
+   
+
    function gpr_gpr_node_token_start
      (Node    : gpr_base_node;
 

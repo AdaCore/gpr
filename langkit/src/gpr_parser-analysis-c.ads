@@ -174,10 +174,9 @@ package GPR_Parser.Analysis.C is
            Convention    => C,
            External_name => "gpr_create_analysis_context";
    --  Create a new Analysis_Context. The returned value has a ref-count set to
-   --  1. When done with it, invoke Destroy on it, in which case the ref-count
-   --  is ignored. If this value is shared with garbage collected languages,
-   --  use ref-counting primitives instead so that the context is destroyed
-   --  when nobody references it anymore.
+   --  1. If you use shared ownership, use ref-counting primitives (Inc_Ref and
+   --  Dec_Ref). Otherwise, just invoke Destroy when you are done with it: the
+   --  ref-count will be ignored.
    --
    --  Charset will be used as a default charset to decode input sources in
    --  analysis units. Please see GNATCOLL.Iconv for a couple of supported
@@ -195,17 +194,16 @@ package GPR_Parser.Analysis.C is
       with Export        => True,
            Convention    => C,
            External_name => "gpr_context_incref";
-   --  Increase the reference count to an analysis context. Useful for bindings
-   --  to garbage collected languages. Return the reference for convenience.
+   --  Increase the reference count to an analysis context. Return the
+   --  reference for convenience.
 
    procedure gpr_context_decref
      (Context : gpr_analysis_context)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_context_decref";
-   --  Decrease the reference count to an analysis context. Useful for bindings
-   --  to garbage collected languages. Destruction happens when the ref-count
-   --  reaches 0.
+   --  Decrease the reference count to an analysis context. Destruction happens
+   --  when the ref-count reaches 0.
 
    procedure gpr_destroy_analysis_context
      (Context : gpr_analysis_context)

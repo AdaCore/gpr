@@ -33,6 +33,7 @@
 
 
 
+
 with Ada.Finalization;
 with Ada.Iterator_Interfaces;
 with Ada.Unchecked_Deallocation;
@@ -144,7 +145,7 @@ package GPR_Parser.AST is
 
    subtype Lexical_Env is AST_Envs.Lexical_Env;
    subtype Env_Element is AST_Envs.Env_Element;
-   No_Env_Element : constant Env_Element := (null, No_Metadata);
+   No_Env_Element : constant Env_Element := (null, No_Metadata, True);
    procedure Inc_Ref (Self : Lexical_Env) renames AST_Envs.Inc_Ref;
    procedure Dec_Ref (Self : in out Lexical_Env) renames AST_Envs.Dec_Ref;
 
@@ -159,7 +160,11 @@ package GPR_Parser.AST is
 
    
 
-   type Lexical_Env_Array is array (Positive range <>) of Lexical_Env;
+   package Lexical_Env_Vectors is new Langkit_Support.Vectors
+     (Lexical_Env);
+   package Lexical_Env_Arrays renames Lexical_Env_Vectors.Elements_Arrays;
+
+   subtype Lexical_Env_Array is Lexical_Env_Arrays.Array_Type;
    type Lexical_Env_Array_Record (N : Natural) is record
       Ref_Count : Positive;
       Items     : Lexical_Env_Array (1 .. N);
@@ -167,10 +172,6 @@ package GPR_Parser.AST is
 
    type Lexical_Env_Array_Access is access all Lexical_Env_Array_Record;
 
-
-   package Lexical_Env_Vectors is new Langkit_Support.Vectors
-     (Lexical_Env);
-   package Lexical_Env_Arrays renames Lexical_Env_Vectors.Elements_Arrays;
 
    function Create (Items_Count : Natural) return Lexical_Env_Array_Access is
      (new Lexical_Env_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
@@ -185,6 +186,8 @@ package GPR_Parser.AST is
    --  return the element at index (Size - Index - 1). Index is zero-based. If
    --  the result is ref-counted, a new owning reference is returned.
 
+   function Concat (L, R : Lexical_Env_Array_Access) return Lexical_Env_Array_Access;
+
    function Length (T : Lexical_Env_Array_Access) return Natural is (T.N);
 
    procedure Inc_Ref (T : Lexical_Env_Array_Access);
@@ -196,7 +199,11 @@ package GPR_Parser.AST is
 
    
 
-   type Env_Element_Array is array (Positive range <>) of Env_Element;
+   package Env_Element_Vectors is new Langkit_Support.Vectors
+     (Env_Element);
+   package Env_Element_Arrays renames Env_Element_Vectors.Elements_Arrays;
+
+   subtype Env_Element_Array is Env_Element_Arrays.Array_Type;
    type Env_Element_Array_Record (N : Natural) is record
       Ref_Count : Positive;
       Items     : Env_Element_Array (1 .. N);
@@ -212,10 +219,6 @@ package GPR_Parser.AST is
                              Items     => Copy (Items),
                              Ref_Count => 1));
 
-   package Env_Element_Vectors is new Langkit_Support.Vectors
-     (Env_Element);
-   package Env_Element_Arrays renames Env_Element_Vectors.Elements_Arrays;
-
    function Create (Items_Count : Natural) return Env_Element_Array_Access is
      (new Env_Element_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
    --  Create a new array for N uninitialized elements and give its only
@@ -228,6 +231,8 @@ package GPR_Parser.AST is
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based. If
    --  the result is ref-counted, a new owning reference is returned.
+
+   function Concat (L, R : Env_Element_Array_Access) return Env_Element_Array_Access;
 
    function Length (T : Env_Element_Array_Access) return Natural is (T.N);
 
@@ -250,7 +255,11 @@ package GPR_Parser.AST is
 
    
 
-   type GPR_Node_Array is array (Positive range <>) of GPR_Node;
+   package GPR_Node_Vectors is new Langkit_Support.Vectors
+     (GPR_Node);
+   package GPR_Node_Arrays renames GPR_Node_Vectors.Elements_Arrays;
+
+   subtype GPR_Node_Array is GPR_Node_Arrays.Array_Type;
    type GPR_Node_Array_Record (N : Natural) is record
       Ref_Count : Positive;
       Items     : GPR_Node_Array (1 .. N);
@@ -258,10 +267,6 @@ package GPR_Parser.AST is
 
    type GPR_Node_Array_Access is access all GPR_Node_Array_Record;
 
-
-   package GPR_Node_Vectors is new Langkit_Support.Vectors
-     (GPR_Node);
-   package GPR_Node_Arrays renames GPR_Node_Vectors.Elements_Arrays;
 
    function Create (Items_Count : Natural) return GPR_Node_Array_Access is
      (new GPR_Node_Array_Record'(N => Items_Count, Ref_Count => 1, Items => <>));
@@ -275,6 +280,8 @@ package GPR_Parser.AST is
    --  When Index is positive, return the Index'th element in T. Otherwise,
    --  return the element at index (Size - Index - 1). Index is zero-based. If
    --  the result is ref-counted, a new owning reference is returned.
+
+   function Concat (L, R : GPR_Node_Array_Access) return GPR_Node_Array_Access;
 
    function Length (T : GPR_Node_Array_Access) return Natural is (T.N);
 
@@ -449,6 +456,18 @@ package GPR_Parser.AST is
    function Child_Count (Node : access GPR_Node_Type)
                          return Natural is abstract;
    --  Return the number of children Node has
+
+   function First_Child_Index
+     (Node : access GPR_Node_Type'Class)
+      return Natural
+   is (1);
+   --  Return the index of the first child Node has
+
+   function Last_Child_Index
+     (Node : access GPR_Node_Type'Class)
+      return Natural
+   is (Node.Child_Count);
+   --  Return the index of the last child Node has, or 0 if there is no child
 
    procedure Get_Child (Node   : access GPR_Node_Type;
                         Index  : Positive;
@@ -764,6 +783,11 @@ package GPR_Parser.AST is
    --  Debug helper: Dumps one lexical env. You can supply ids for env and its
    --  parent, so that they will be identified in the output.
 
+   procedure Assign_Names_To_Logic_Vars
+     (Node : access GPR_Node_Type'Class);
+   --  Debug helper: Assign names to every logical variable in the root node,
+   --  so that we can trace logical variables.
+
    ----------------------------------------
    -- Tree traversal (Ada 2012 iterator) --
    ----------------------------------------
@@ -797,7 +821,10 @@ package GPR_Parser.AST is
    -- Adalog instantiations --
    ---------------------------
 
-   package Eq_Node is new Adalog.Eq_Same (GPR_Node);
+   function El_Image (N : GPR_Node) return String is
+   (if N /= null then Image (N.Short_Image) else "None");
+
+   package Eq_Node is new Adalog.Eq_Same (GPR_Node, El_Image);
    subtype Logic_Var is Eq_Node.Refs.Raw_Var;
    subtype Logic_Var_Record is Eq_Node.Refs.Var;
    Null_Var : constant Logic_Var := null;
@@ -812,6 +839,28 @@ package GPR_Parser.AST is
    --  Internal helper to get the unit that owns an AST node
 
 private
+
+   use AST_Envs;
+
+   function Is_Visible_From
+     (Env, Referenced : AST_Envs.Lexical_Env) return Boolean
+   is
+     (Is_Referenced (Get_Unit (Env.Node), Get_Unit (Referenced.Node)));
+   --  Check whether Referenced's unit is referenced from Env's unit. Used for
+   --  property generation purposes.
+
+   function Children
+     (Node : access GPR_Node_Type'Class)
+     return GPR_Node_Array_Access;
+   --  Return an array containing all the children of Node.
+   --  This is an alternative to the Child/Child_Count pair, useful if you want
+   --  the convenience of ada arrays, and you don't care about the small
+   --  performance hit of creating an array.
+
+   ------------------------------
+   -- Root AST node properties --
+   ------------------------------
+
 
    --------------------------
    -- Extensions internals --
@@ -848,7 +897,6 @@ private
    
 
    end record;
-   --  TODO??? Remove this from the public API
 
    procedure Free_Extensions (Node : access GPR_Node_Type'Class);
    --  Implementation helper to free the extensions associatde to Node
@@ -893,6 +941,12 @@ private
    --  siblings of Self see, while returning a new env will only affect the
    --  environment seen by Self's children.
 
+   procedure Post_Env_Actions
+     (Self        : access GPR_Node_Type;
+      Current_Env : in out AST_Envs.Lexical_Env) is null;
+   --  Internal procedure that will execute all post add to env actions for
+   --  Node. This is meant to be called by Populate_Lexical_Env.
+
    --------------------------------
    -- Tree traversal (internals) --
    --------------------------------
@@ -900,17 +954,31 @@ private
    function Get_Parent
      (N : GPR_Node) return GPR_Node
    is (N.Parent);
+
    function Children_Count (N : GPR_Node) return Natural
    is (N.Child_Count);
+
+   function First_Child_Index_For_Traverse
+     (N : GPR_Node)
+      return Natural
+   is (N.First_Child_Index);
+
+   function Last_Child_Index_For_Traverse
+     (N : GPR_Node)
+      return Natural
+   is (N.Last_Child_Index);
+
    function Get_Child
      (N : GPR_Node; I : Natural) return GPR_Node
    is (N.Child (I));
 
    package Traversal_Iterators is new Langkit_Support.Tree_Traversal_Iterator
-     (GPR_Node,
-      null,
-      Element_Vectors => GPR_Node_Vectors,
-      Iterators => GPR_Node_Iterators);
+     (Element_type      => GPR_Node,
+      Null_Value        => null,
+      First_Child_Index => First_Child_Index_For_Traverse,
+      Last_Child_Index  => Last_Child_Index_For_Traverse,
+      Element_Vectors   => GPR_Node_Vectors,
+      Iterators         => GPR_Node_Iterators);
 
    type Traverse_Iterator
    is new Traversal_Iterators.Traverse_Iterator with null record;
