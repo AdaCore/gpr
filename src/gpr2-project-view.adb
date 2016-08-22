@@ -646,8 +646,8 @@ package body GPR2.Project.View is
                Add (Data.Attrs.Source_Dirs);
             end if;
 
-            if Data.Attrs.Has_Source_File then
-               Add (Data.Attrs.Source_File);
+            if Data.Attrs.Has_Source_Files then
+               Add (Data.Attrs.Source_Files);
             end if;
          end Handle;
 

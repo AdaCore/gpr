@@ -133,8 +133,8 @@ package GPR2.Project.Attribute.Set is
    function Has_Source_Dirs (Self : Object) return Boolean;
    function Source_Dirs     (Self : Object) return Attribute.Object;
 
-   function Has_Source_File (Self : Object) return Boolean;
-   function Source_File     (Self : Object) return Attribute.Object;
+   function Has_Source_Files (Self : Object) return Boolean;
+   function Source_Files     (Self : Object) return Attribute.Object;
 
    function Has_Excluded_Source_List_File (Self : Object) return Boolean;
    function Excluded_Source_List_File (Self : Object) return Attribute.Object;
@@ -189,11 +189,11 @@ private
    function Source_Dirs (Self : Object) return Attribute.Object is
      (Self.Element (Registry.Attribute.Source_Dirs));
 
-   function Has_Source_File (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_File));
+   function Has_Source_Files (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Source_Files));
 
-   function Source_File (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_File));
+   function Source_Files (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Source_Files));
 
    function Has_Excluded_Source_List_File (Self : Object) return Boolean is
      (Self.Contains (Registry.Attribute.Excluded_Source_List_File));
