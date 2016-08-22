@@ -80,7 +80,7 @@ package GPR2.Project.View is
    --  Context
 
    function Has_Context (Self : Object) return Boolean
-     with Pre  => Self /= Undefined;
+     with Pre => Self /= Undefined;
    --  Returns True if the project tree has some context. If any of the project
    --  in the tree has some external variables then a context is present. A
    --  project without context is fully static has it does not reference any
@@ -116,7 +116,7 @@ package GPR2.Project.View is
       Name  : Name_Type;
       Index : String := "") return Attribute.Object
      with
-       Pre  =>
+       Pre =>
          Self /= Undefined
          and then Self.Has_Attributes (Name, Index)
          and then Self.Attributes (Name, Index).Length = 1;
