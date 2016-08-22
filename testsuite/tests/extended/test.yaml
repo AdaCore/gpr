@@ -1,0 +1,5 @@
+description:
+    Simple test for extended projects
+driver: build_and_run
+project_file: extended
+main: main

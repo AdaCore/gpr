@@ -895,6 +895,13 @@ package body GPR2.Project.View is
             end Populate_Sources;
          end if;
 
+         --  Finally get the sources from the extended's project if defined
+
+         if Data.Extended /= View.Undefined then
+            --  ?? TODO: properly replace unit with same name
+            Data.Sources.Union (Data.Extended.Sources);
+         end if;
+
          --  Record back new definition for the view with updated sources
 
          Data.Sources_Signature := Current_Signature;

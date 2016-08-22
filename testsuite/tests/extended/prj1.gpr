@@ -1,0 +1,4 @@
+project Prj1 is
+   for source_dirs use ("p1");
+   for Object_Dir use "obj1";
+end Prj1;
