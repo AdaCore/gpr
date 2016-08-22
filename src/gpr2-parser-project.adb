@@ -337,7 +337,6 @@ package body GPR2.Parser.Project is
          Unit := Get_From_File (Context, Value (Filename));
 
          if Root (Unit) = null or else Has_Diagnostics (Unit) then
-
             if Has_Diagnostics (Unit) then
                for D of Diagnostics (Unit) loop
                   declare
