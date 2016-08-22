@@ -71,6 +71,7 @@ package GPR2.Project.Registry.Attribute is
    Body_Suffix               : constant Name_Type := "body_suffix";
    Dot_Replacement           : constant Name_Type := "dot_replacement";
    External                  : constant Name_Type := "external";
+   Excluded_Source_Files     : constant Name_Type := "excluded_source_files";
    Excluded_Source_List_File : constant Name_Type :=
                                  "excluded_source_list_file";
    Implementation_Suffix     : constant Name_Type := "implementation_suffix";

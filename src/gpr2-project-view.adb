@@ -650,6 +650,10 @@ package body GPR2.Project.View is
                Add (Data.Attrs.Source_Files);
             end if;
 
+            if Data.Attrs.Has_Excluded_Source_Files then
+               Add (Data.Attrs.Excluded_Source_Files);
+            end if;
+
             if Data.Attrs.Has_Excluded_Source_List_File then
                Add (Data.Attrs.Excluded_Source_List_File);
             end if;
@@ -863,6 +867,14 @@ package body GPR2.Project.View is
             begin
                Read_File (File, Excluded_Sources);
             end;
+         end if;
+
+         --  If we have attribute Excluded_Source_Files
+
+         if Data.Attrs.Has_Excluded_Source_Files then
+            for File of Data.Attrs.Excluded_Source_Files.Values loop
+               Excluded_Sources.Include (Optional_Name_Type (File));
+            end loop;
          end if;
 
          --  If we have attribute Source_List_File
