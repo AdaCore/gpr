@@ -879,6 +879,14 @@ package body GPR2.Project.View is
             end;
          end if;
 
+         --  If we have attribute Source_Files
+
+         if Data.Attrs.Has_Source_Files then
+            for File of Data.Attrs.Source_Files.Values loop
+               Included_Sources.Include (Optional_Name_Type (File));
+            end loop;
+         end if;
+
          if Data.Kind = K_Aggregate_Library then
             --  Sources for an aggregate library is the cumulative set of
             --  sources of the aggregated projects.
