@@ -649,6 +649,14 @@ package body GPR2.Project.View is
             if Data.Attrs.Has_Source_Files then
                Add (Data.Attrs.Source_Files);
             end if;
+
+            if Data.Attrs.Has_Excluded_Source_List_File then
+               Add (Data.Attrs.Excluded_Source_List_File);
+            end if;
+
+            if Data.Attrs.Has_Source_List_File then
+               Add (Data.Attrs.Source_List_File);
+            end if;
          end Handle;
 
       begin
