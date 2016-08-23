@@ -163,9 +163,9 @@ private
    --  The key in this Set is the attribute name (not case sensitive)
 
    type Cursor is record
-      CM    : Set.Cursor;               -- main map cursor
-      CA    : Set_Attribute.Cursor;     -- inner map cursor (Set below)
-      Set   : access Set_Attribute.Map; -- Set ref to current inner map
+      CM  : Set.Cursor;               -- main map cursor
+      CA  : Set_Attribute.Cursor;     -- inner map cursor (Set below)
+      Set : access Set_Attribute.Map; -- Set ref to current inner map
    end record;
 
    No_Element : constant Cursor :=
