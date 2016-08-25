@@ -493,15 +493,16 @@ package body GPR2.Project.View is
          then
             declare
                Lang : constant Name_Type := Name_Type (Language);
+               Unit : constant Optional_Name_Type :=
+                        (if Lang = "ada"
+                         then Unit_For (Filename, Lang, Kind)
+                         else No_Name);
                Src  : constant GPR2.Source.Object :=
                         GPR2.Source.Create
                           (Filename  => Create_File (Name_Type (Filename)),
                            Kind      => Kind,
                            Language  => Lang,
-                           Unit_Name =>
-                             (if Lang = "ada"
-                              then Value_Type (Unit_For (Filename, Lang, Kind))
-                              else No_Value));
+                           Unit_Name => Unit);
             begin
                Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
             end;

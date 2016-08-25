@@ -58,7 +58,7 @@ procedure Main is
       for Source of View.Sources loop
          declare
             S : constant GPR2.Source.Object := Source.Source;
-            U : constant Value_Type := S.Unit_Name;
+            U : constant Optional_Name_Type := S.Unit_Name;
          begin
             Output_Filename (S.Filename);
 
@@ -69,7 +69,7 @@ procedure Main is
             Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
 
             if U /= "" then
-               Text_IO.Put ("   unit: " & U);
+               Text_IO.Put ("   unit: " & String (U));
             end if;
 
             Text_IO.New_Line;

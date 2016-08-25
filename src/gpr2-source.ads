@@ -45,7 +45,7 @@ package GPR2.Source is
    --  Returns the other-part of the source. This is either the spec for a body
    --  or the body for a spec.
 
-   function Unit_Name (Self : Object) return Value_Type;
+   function Unit_Name (Self : Object) return Optional_Name_Type;
    --  Returns the unit name for the given source or the empty string if the
    --  language does not have support for unit.
 
@@ -56,7 +56,7 @@ package GPR2.Source is
      (Filename  : Path_Name_Type;
       Kind      : Kind_Type;
       Language  : Name_Type;
-      Unit_Name : Value_Type) return Object;
+      Unit_Name : Optional_Name_Type) return Object;
 
    procedure Set_Other_Part
      (Self       : in out Object;

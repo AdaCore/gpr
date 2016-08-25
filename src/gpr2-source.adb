@@ -44,13 +44,13 @@ package body GPR2.Source is
      (Filename  : Path_Name_Type;
       Kind      : Kind_Type;
       Language  : Name_Type;
-      Unit_Name : Value_Type) return Object is
+      Unit_Name : Optional_Name_Type) return Object is
    begin
       Registry.Store.Append
         (Registry.Data'
            (Filename,
             To_Unbounded_String (String (Language)),
-            To_Unbounded_String (Unit_Name),
+            To_Unbounded_String (String (Unit_Name)),
             Kind,
             0));
 
@@ -116,9 +116,10 @@ package body GPR2.Source is
    -- Unit_Name --
    ---------------
 
-   function Unit_Name (Self : Object) return Value_Type is
+   function Unit_Name (Self : Object) return Optional_Name_Type is
    begin
-      return To_String (Registry.Store (Self.Id).Unit_Name);
+      return Optional_Name_Type
+        (To_String (Registry.Store (Self.Id).Unit_Name));
    end Unit_Name;
 
 end GPR2.Source;
