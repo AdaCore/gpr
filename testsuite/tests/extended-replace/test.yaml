@@ -1,0 +1,5 @@
+description:
+    Simple test for extended projects (with replaced unit)
+driver: build_and_run
+project_file: extended_replace
+main: main

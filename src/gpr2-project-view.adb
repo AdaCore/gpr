@@ -374,6 +374,13 @@ package body GPR2.Project.View is
       use GNAT;
       use type MD5.Binary_Message_Digest;
 
+      type Insert_Mode is (Replace, Skip, Error);
+      --  Controls behavior when a duplicated unit/filename is found
+      --
+      --  Replace : the new source replace the previous one
+      --  Skip    : the new source is ignored
+      --  Error   : an error is raised
+
       package Source_Set is
         new Ada.Containers.Indefinite_Ordered_Sets (Name_Type);
 
@@ -409,6 +416,9 @@ package body GPR2.Project.View is
         (Filename : Full_Path_Name;
          Set      : in out Source_Set.Set);
       --  Read Filename and insert each line in Set
+
+      procedure Insert (Sources : Source.Set.Object; Mode : Insert_Mode);
+      --  Insert Sources into Data.Sources
 
       Naming : constant Pack.Object := Naming_Package (Self);
       --  Package Naming for the view
@@ -507,6 +517,32 @@ package body GPR2.Project.View is
             end;
          end if;
       end Handle_File;
+
+      ------------
+      -- Insert --
+      ------------
+
+      procedure Insert (Sources : Source.Set.Object; Mode : Insert_Mode) is
+         use type Source.Set.Set.Cursor;
+      begin
+         for Source of Sources loop
+            if Data.Sources.Contains (Source) then
+               case Mode is
+                  when Replace =>
+                     Data.Sources.Replace (Source);
+
+                  when Error =>
+                     null;
+
+                  when Skip =>
+                     null;
+               end case;
+
+            else
+               Data.Sources.Insert (Source);
+            end if;
+         end loop;
+      end Insert;
 
       ------------------
       -- Language_For --
@@ -904,7 +940,7 @@ package body GPR2.Project.View is
             --  sources of the aggregated projects.
 
             for Agg of Data.Aggregated loop
-               Data.Sources.Union (Agg.Sources);
+               Insert (Agg.Sources, Error);
             end loop;
 
          else
@@ -923,11 +959,11 @@ package body GPR2.Project.View is
             end Populate_Sources;
          end if;
 
-         --  Finally get the sources from the extended's project if defined
+         --  Finally get the sources from the extended's project if defined. We
+         --  only add the sources not already defined in the current set.
 
          if Data.Extended /= View.Undefined then
-            --  ?? TODO: properly replace unit with same name
-            Data.Sources.Union (Data.Extended.Sources);
+            Insert (Data.Extended.Sources, Skip);
          end if;
 
          --  Record back new definition for the view with updated sources
