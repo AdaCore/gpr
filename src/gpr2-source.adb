@@ -26,15 +26,26 @@ with GPR2.Source.Registry;
 
 package body GPR2.Source is
 
+   function Key (Self : Object) return Value_Type with Inline;
+   --  Returns the key for Self, this is used to compare a source object
+
    ---------
    -- "<" --
    ---------
 
    function "<" (Left, Right : Object) return Boolean is
    begin
-      return Registry.Store (Left.Id).Path_Name
-        <  Registry.Store (Right.Id).Path_Name;
+      return Key (Left) < Key (Right);
    end "<";
+
+   ---------
+   -- "=" --
+   ---------
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+   begin
+      return Key (Left) = Key (Right);
+   end "=";
 
    ------------
    -- Create --
@@ -67,6 +78,22 @@ package body GPR2.Source is
    begin
       return Value (Registry.Store (Self.Id).Path_Name);
    end Filename;
+
+   ---------
+   -- Key --
+   ---------
+
+   function Key (Self : Object) return Value_Type is
+      Data : constant Registry.Data := Registry.Store (Self.Id);
+   begin
+      if Data.Unit_Name = Null_Unbounded_String then
+         --  Not unit based
+         return Value (Data.Path_Name);
+
+      else
+         return Kind_Type'Image (Data.Kind) & "|" & To_String (Data.Unit_Name);
+      end if;
+   end Key;
 
    ----------
    -- Kind --

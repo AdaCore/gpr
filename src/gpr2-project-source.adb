@@ -24,16 +24,6 @@
 
 package body GPR2.Project.Source is
 
-   ---------
-   -- "<" --
-   ---------
-
-   function "<" (Left, Right : Object) return Boolean is
-      use type GPR2.Source.Object;
-   begin
-      return Left.Source < Right.Source;
-   end "<";
-
    ------------
    -- Create --
    ------------

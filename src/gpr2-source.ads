@@ -35,6 +35,10 @@ package GPR2.Source is
 
    function "<" (Left, Right : Object) return Boolean;
 
+   overriding function "=" (Left, Right : Object) return Boolean;
+   --  A source object is equal if it is the same unit for unit based language,
+   --  and if it is the same filename otherwise.
+
    function Filename (Self : Object) return Full_Path_Name;
    --  Retruns the filename for the given source
 

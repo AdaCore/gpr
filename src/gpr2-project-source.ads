@@ -30,7 +30,12 @@ package GPR2.Project.Source is
 
    type Object is tagged private;
 
+   subtype Source_Object is Object;
+
+   Undefined : constant Object;
+
    function "<" (Left, Right : Object) return Boolean;
+   overriding function "=" (Left, Right : Object) return Boolean;
 
    function Create
      (Source : GPR2.Source.Object;
@@ -45,9 +50,21 @@ package GPR2.Project.Source is
 
 private
 
+   use type GPR2.Source.Object;
+
    type Object is tagged record
       Source : GPR2.Source.Object;
       View   : Project.View.Object;
    end record;
+
+   Undefined : constant Object :=
+                 (Source => GPR2.Source.Undefined,
+                  View   => Project.View.Undefined);
+
+   function "<" (Left, Right : Object) return Boolean is
+     (Left.Source < Right.Source);
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+     (Left.Source = Right.Source);
 
 end GPR2.Project.Source;
