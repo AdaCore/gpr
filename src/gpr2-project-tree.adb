@@ -57,6 +57,17 @@ package body GPR2.Project.Tree is
    --  Load a project filename recurivelly and returns the corresponding root
    --  view.
 
+   --------------------
+   -- Append_Message --
+   --------------------
+
+   procedure Append_Message
+     (Self    : in out Object;
+      Message : GPR2.Message.Object) is
+   begin
+      Self.Messages.Append (Message);
+   end Append_Message;
+
    ---------------------------
    -- Configuration_Project --
    ---------------------------

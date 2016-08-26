@@ -26,6 +26,7 @@ with Ada.Iterator_Interfaces;
 
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Message;
 with GPR2.Project.View;
 
 private with GPR2.Project.Definition;
@@ -90,6 +91,11 @@ package GPR2.Project.Tree is
      with Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
    --  Returns the Logs, this contains information, warning and error messages
    --  found while handling the project.
+
+   procedure Append_Message
+     (Self    : in out Object;
+      Message : GPR2.Message.Object);
+   --  Add new message into the Log of Self
 
    --  Context
 
