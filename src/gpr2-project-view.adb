@@ -388,8 +388,7 @@ package body GPR2.Project.View is
 
       function Language_For
         (Filename : Full_Path_Name;
-         Kind     : out GPR2.Source.Kind_Type)
-         return Value_Type;
+         Kind     : out GPR2.Source.Kind_Type) return Value_Type;
       --  The language for Filename based on the Naming package. It also
       --  returns in Kind if Filename is a spec, a body or a separate.
 
