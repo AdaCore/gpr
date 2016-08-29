@@ -313,7 +313,24 @@ package body GPR2.Project.View is
       Data : constant Definition.Data := Definition.Get (Self);
    begin
       if Self.Has_Packages (Registry.Pack.Naming) then
-         return Self.Packages.Element (Name_Type (Registry.Pack.Naming));
+         declare
+            Naming : constant Pack.Object :=
+                       Self.Packages.Element (Registry.Pack.Naming);
+            Result : Project.Attribute.Set.Object :=
+                       Builtin_Naming_Package.Attributes;
+         begin
+            --  Result is built-in package attributes, now we want to replace
+            --  the attribute as defined in the project.
+
+            for A of Naming.Attributes loop
+               Result.Include (A);
+            end loop;
+
+            return Project.Pack.Create
+              (Name       => Registry.Pack.Naming,
+               Attributes => Result,
+               Sloc       => Source_Reference.Object (Naming));
+         end;
 
       elsif Data.Tree.Has_Configuration_Project
         and then
@@ -422,6 +439,21 @@ package body GPR2.Project.View is
 
       Naming : constant Pack.Object := Naming_Package (Self);
       --  Package Naming for the view
+
+      Dot_Repl : constant String :=
+                   Naming.Attribute
+                     (Registry.Attribute.Dot_Replacement).Value;
+      --  Get Dot_Replacement value
+
+      Is_Standard_GNAT_Naming : constant  Boolean :=
+                                  (Naming.Spec_Suffix ("ada").Value = ".ads")
+                                     and then
+                                  (Naming.Body_Suffix ("ada").Value = ".adb")
+                                     and then
+                                  (Dot_Repl = "-");
+      --  True if the current naming scheme is GNAT's default naming scheme.
+      --  This is to take into account shortened names like "Ada." (a-),
+      --  "System." (s-) and so on.
 
       Data : Definition.Data := Definition.Get (Self);
       --  View definition data, will be updated and recorded back into the
@@ -729,34 +761,6 @@ package body GPR2.Project.View is
       is
          use Ada.Strings;
 
-         function Is_Standard_GNAT_Naming return Boolean;
-         --  True if the current naming scheme is GNAT's default naming scheme.
-         --  This is to take into account shortened names like "Ada." (a-),
-         --  "System." (s-) and so on.
-
-         -----------------------------
-         -- Is_Standard_GNAT_Naming --
-         -----------------------------
-
-         function Is_Standard_GNAT_Naming return Boolean is
-            Spec_Suffix : constant Project.Attribute.Object :=
-                            Naming.Spec_Suffix ("ada");
-            Body_Suffix : constant Project.Attribute.Object :=
-                            Naming.Body_Suffix ("ada");
-         begin
-            return
-              (Spec_Suffix = Project.Attribute.Undefined
-               or else Spec_Suffix.Value = ".ads")
-                 or else
-              (Body_Suffix = Project.Attribute.Undefined
-               or else Body_Suffix.Value = ".adb")
-                 or else
-              (not Naming.Has_Attributes
-                 (Registry.Attribute.Dot_Replacement, "ada")
-               or else Naming.Attribute
-                 (Registry.Attribute.Dot_Replacement, "ada").Value = "-");
-         end Is_Standard_GNAT_Naming;
-
          Result : Unbounded_String :=
                     To_Unbounded_String (Directories.Simple_Name (Filename));
 
@@ -784,40 +788,30 @@ package body GPR2.Project.View is
          --  If Dot_Replacement is not a single dot, then there should not
          --  be any dot in the name.
 
-         declare
-            Dot_Repl : constant String :=
-                         (if Naming.Has_Attributes
-                            (Registry.Attribute.Dot_Replacement,
-                             Value_Type (Language))
-                          then Naming.Attribute
-                            (Registry.Attribute.Dot_Replacement,
-                             Value_Type (Language)).Value
-                          else ".");
+         if Dot_Repl /= "." then
+            if Index (Result, ".") /= 0 then
+               --  Message.Create
+               --   (Message.Error, "invalid name, contains dot");
+               return Name_Type (To_String (Result));
 
-         begin
-            if Dot_Repl /= "." then
-               if Index (Result, ".") /= 0 then
-                  --  Message.Create
-                  --   (Message.Error, "invalid name, contains dot");
-                  return Name_Type (To_String (Result));
+            else
+               declare
+                  I : Natural := 1;
+               begin
+                  loop
+                     I := Index (Result, Dot_Repl, From => I);
+                     exit when I = 0;
 
-               else
-                  declare
-                     I : Natural;
-                  begin
-                     loop
-                        I := Index (Result, Dot_Repl);
-                        exit when I = 0;
-
-                        Replace_Slice
-                          (Result, I, I + Dot_Repl'Length - 1, ".");
-                     end loop;
-                  end;
-               end if;
+                     Replace_Slice
+                       (Result, I, I + Dot_Repl'Length - 1, ".");
+                  end loop;
+               end;
             end if;
+         end if;
 
-            Translate (Result, Maps.Constants.Lower_Case_Map);
-         end;
+         --  Casing for the unit is all lowercase
+
+         Translate (Result, Maps.Constants.Lower_Case_Map);
 
          --  In the standard GNAT naming scheme, check for special cases:
          --  children or separates of A, G, I or S, and run time sources.
