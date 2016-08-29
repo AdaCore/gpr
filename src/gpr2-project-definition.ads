@@ -92,7 +92,7 @@ private package GPR2.Project.Definition is
       Kind              : Project_Kind;
 
       --  The project tree for this view
-      Tree              : access constant Project.Tree.Object;
+      Tree              : access Project.Tree.Object;
 
       case Has_Context is
          when True =>

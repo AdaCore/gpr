@@ -1,0 +1,5 @@
+description:
+    Test some source errors
+driver: build_and_run
+project_file: source_errors
+main: main

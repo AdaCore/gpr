@@ -53,7 +53,7 @@ procedure Main is
    begin
       Text_IO.Put_Line
         (">>> Changed_Callback for "
-         & Directories.Simple_Name (Value (Prj.Path_Name)));
+           & Directories.Simple_Name (Value (Prj.Path_Name)));
    end Changed_Callback;
 
    -------------
@@ -126,13 +126,18 @@ begin
    Project.Tree.Load (Prj, Create ("demo.gpr"));
    Project.Tree.Load_Configuration (Prj, Create ("config.cgpr"));
 
-   if Prj.Has_Messages then
-      Text_IO.Put_Line ("Messages found:");
+   Ctx := Prj.Context;
+   Ctx.Include ("OS", "Linux");
+   Prj.Set_Context (Ctx, Changed_Callback'Access);
 
-      declare
-         Mes : Log.Object := Prj.Log_Messages;
-      begin
-         for M of Mes loop
+   Display (Prj.Root_Project);
+
+exception
+   when GPR2.Project_Error =>
+      if Prj.Has_Messages then
+         Text_IO.Put_Line ("Messages found:");
+
+         for M of Prj.Log_Messages.all loop
             declare
                F : constant String := M.Sloc.Filename;
                I : constant Natural := Strings.Fixed.Index (F, "/config");
@@ -142,12 +147,5 @@ begin
                Text_IO.Put_Line (M.Format);
             end;
          end loop;
-      end;
-   end if;
-
-   Ctx := Prj.Context;
-   Ctx.Include ("OS", "Linux");
-   Prj.Set_Context (Ctx, Changed_Callback'Access);
-
-   Display (Prj.Root_Project);
+      end if;
 end Main;

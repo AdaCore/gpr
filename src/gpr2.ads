@@ -37,6 +37,11 @@ private with Ada.Strings.Unbounded;
 
 package GPR2 is
 
+   Project_Error : exception;
+   --  Raised when an error occurs. This exception is raised with a minimal
+   --  message but the actual messages are to be found in the Tree log
+   --  messages.
+
    type Project_Kind is
      (K_Configuration, K_Abstract,
       K_Standard, K_Library, K_Aggregate, K_Aggregate_Library);

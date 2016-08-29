@@ -126,25 +126,6 @@ begin
    Project.Tree.Load (Prj, Create ("demo.gpr"));
    Project.Tree.Load_Configuration (Prj, Create ("config.cgpr"));
 
-   if Prj.Has_Messages then
-      Text_IO.Put_Line ("Messages found:");
-
-      declare
-         Mes : Log.Object := Prj.Log_Messages;
-      begin
-         for M of Mes loop
-            declare
-               F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "/config");
-            begin
-               Text_IO.Put_Line ("> " & F (I .. F'Last));
-               Text_IO.Put_Line (M.Level'Img);
-               Text_IO.Put_Line (M.Format);
-            end;
-         end loop;
-      end;
-   end if;
-
    Ctx := Prj.Context;
    Ctx.Include ("OS", "Linux");
    Prj.Set_Context (Ctx, Changed_Callback'Access);
@@ -154,4 +135,21 @@ begin
    if Prj.Has_Configuration_Project then
       Display (Prj.Configuration_Project);
    end if;
+
+exception
+   when GPR2.Project_Error =>
+      if Prj.Has_Messages then
+         Text_IO.Put_Line ("Messages found:");
+
+         for M of Prj.Log_Messages.all loop
+            declare
+               F : constant String := M.Sloc.Filename;
+               I : constant Natural := Strings.Fixed.Index (F, "/config");
+            begin
+               Text_IO.Put_Line ("> " & F (I .. F'Last));
+               Text_IO.Put_Line (M.Level'Img);
+               Text_IO.Put_Line (M.Format);
+            end;
+         end loop;
+      end if;
 end Main;

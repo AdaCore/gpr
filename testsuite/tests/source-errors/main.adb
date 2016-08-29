@@ -22,92 +22,71 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Text_IO;
-with Ada.Directories;
 with Ada.Strings.Fixed;
-with Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
+with GPR2.Log;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Project.Attribute.Set;
-with GPR2.Project.Variable.Set;
-with GPR2.Context;
-with GPR2.Log;
+with GPR2.Source;
 
 procedure Main is
 
    use Ada;
-   use Ada.Strings;
-   use Ada.Strings.Unbounded;
    use GPR2;
    use GPR2.Project;
 
-   procedure Display (Prj : Project.View.Object; Full : Boolean := True);
+   procedure Check (Project_Name : Name_Type);
+   --  Do check the given project's sources
 
-   procedure Changed_Callback (Prj : Project.View.Object);
+   procedure Output_Filename (Filename : Full_Path_Name);
+   --  Remove the leading tmp directory
 
-   ----------------------
-   -- Changed_Callback --
-   ----------------------
+   -----------
+   -- Check --
+   -----------
 
-   procedure Changed_Callback (Prj : Project.View.Object) is
+   procedure Check (Project_Name : Name_Type) is
+      Prj  : Project.Tree.Object;
+      View : Project.View.Object;
    begin
-      Text_IO.Put_Line
-        (">>> Changed_Callback for "
-           & Directories.Simple_Name (Value (Prj.Path_Name)));
-   end Changed_Callback;
+      Project.Tree.Load (Prj, Create (Project_Name));
 
-   -------------
-   -- Display --
-   -------------
+      View := Prj.Root_Project;
+      Text_IO.Put_Line ("Project: " & String (View.Name));
 
-   procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
-      use GPR2.Project.Attribute.Set;
-      use GPR2.Project.Variable.Set.Set;
-   begin
-      Text_IO.Put (String (Prj.Name) & " ");
-      Text_IO.Set_Col (10);
-      Text_IO.Put_Line (Prj.Qualifier'Img);
+      for Source of View.Sources loop
+         declare
+            S : constant GPR2.Source.Object := Source.Source;
+            U : constant Optional_Name_Type := S.Unit_Name;
+         begin
+            Output_Filename (S.Filename);
 
-      if Full then
-         if Prj.Has_Attributes then
-            for A in Prj.Attributes.Iterate loop
-               Text_IO.Put ("A:   " & String (Attribute.Set.Element (A).Name));
-               Text_IO.Put (" ->");
+            Text_IO.Set_Col (16);
+            Text_IO.Put ("   language: " & String (S.Language));
 
-               for V of Attribute.Set.Element (A).Values loop
-                  Text_IO.Put (" " & V);
-               end loop;
-               Text_IO.New_Line;
-            end loop;
-         end if;
+            Text_IO.Set_Col (33);
+            Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
 
-         if Prj.Has_Variables then
-            for V in Prj.Variables.Iterate loop
-               Text_IO.Put ("V:   " & String (Key (V)));
-               Text_IO.Put (" -> ");
-               Text_IO.Put (String (Element (V).Value));
-               Text_IO.New_Line;
-            end loop;
-         end if;
-         Text_IO.New_Line;
-      end if;
-   end Display;
+            if U /= "" then
+               Text_IO.Put ("   unit: " & String (U));
+            end if;
 
-   Prj : Project.Tree.Object;
+            Text_IO.New_Line;
+         end;
+      end loop;
 
-begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
+   exception
+      when E : GPR2.Project_Error =>
+         Text_IO.Put_Line
+           ("BEFORE: Has unread Message: "
+            & Prj.Log_Messages.Has_Element (Read => False)'Img);
 
          for M of Prj.Log_Messages.all loop
             declare
                F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "/errors");
+               I : constant Natural := Strings.Fixed.Index
+                     (F, "/source-errors");
             begin
                Text_IO.Put_Line ("> " & F (I .. F'Last));
                Text_IO.Put_Line (M.Level'Img);
@@ -116,5 +95,25 @@ exception
                Text_IO.Put_Line (M.Message);
             end;
          end loop;
-      end if;
+
+         Text_IO.Put_Line
+           ("AFTER: Has unread Message: "
+            & Prj.Log_Messages.Has_Element (Read => False)'Img);
+         Text_IO.New_Line;
+   end Check;
+
+   ---------------------
+   -- Output_Filename --
+   ---------------------
+
+   procedure Output_Filename (Filename : Full_Path_Name) is
+      I : constant Positive := Strings.Fixed.Index (Filename, "source-errors/");
+   begin
+      Text_IO.Put (" > " & Filename (I + 14 .. Filename'Last));
+   end Output_Filename;
+
+begin
+   Check ("demo1.gpr");
+   Check ("demo2.gpr");
+   Check ("demo3.gpr");
 end Main;

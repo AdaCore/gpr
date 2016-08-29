@@ -337,6 +337,13 @@ package body GPR2.Project.Tree is
          end loop;
 
          Set_Context (Self, Root_Context);
+
+         if not Self.Messages.Is_Empty then
+            raise Project_Error with "semantic error";
+         end if;
+
+      else
+         raise Project_Error with "syntax error";
       end if;
    end Load;
 

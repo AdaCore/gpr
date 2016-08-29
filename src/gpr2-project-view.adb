@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Strings.Fixed;
@@ -32,6 +33,7 @@ with GNAT.MD5;
 with GNAT.OS_Lib;
 
 with GPR2.Containers;
+with GPR2.Message;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -419,7 +421,8 @@ package body GPR2.Project.View is
       function Unit_For
         (Filename : Full_Path_Name;
          Language : Name_Type;
-         Kind     : GPR2.Source.Kind_Type) return Name_Type;
+         Kind     : GPR2.Source.Kind_Type;
+         Ok       : out Boolean) return Name_Type;
       --  Given Filename, returns the unit name. This is meaningful for unit
       --  based language like Ada. For other languages the unit name is the
       --  same as the Filename.
@@ -461,6 +464,12 @@ package body GPR2.Project.View is
 
       Included_Sources : Source_Set.Set;
       Excluded_Sources : Source_Set.Set;
+
+      Tree             : constant not null access Project.Tree.Object :=
+                           Definition.Get (Self).Tree;
+
+      Message_Count    : constant Containers.Count_Type :=
+                           Tree.Log_Messages.Count;
 
       ----------------------
       -- Handle_Directory --
@@ -533,10 +542,11 @@ package body GPR2.Project.View is
                 (Name_Type (Directories.Simple_Name (Filename))))
          then
             declare
+               Ok   : Boolean := True;
                Lang : constant Name_Type := Name_Type (Language);
                Unit : constant Optional_Name_Type :=
                         (if Lang = "ada"
-                         then Unit_For (Filename, Lang, Kind)
+                         then Unit_For (Filename, Lang, Kind, Ok)
                          else No_Name);
                Src  : constant GPR2.Source.Object :=
                         GPR2.Source.Create
@@ -545,7 +555,9 @@ package body GPR2.Project.View is
                            Language  => Lang,
                            Unit_Name => Unit);
             begin
-               Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
+               if Ok then
+                  Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
+               end if;
             end;
          end if;
       end Handle_File;
@@ -757,7 +769,8 @@ package body GPR2.Project.View is
       function Unit_For
         (Filename : Full_Path_Name;
          Language : Name_Type;
-         Kind     : GPR2.Source.Kind_Type) return Name_Type
+         Kind     : GPR2.Source.Kind_Type;
+         Ok       : out Boolean) return Name_Type
       is
          use Ada.Strings;
 
@@ -765,6 +778,10 @@ package body GPR2.Project.View is
                     To_Unbounded_String (Directories.Simple_Name (Filename));
 
       begin
+         --  Let's pretend the filename/unit is part of the sources
+
+         Ok := True;
+
          --  First remove the suffix for the given language
 
          declare
@@ -790,8 +807,10 @@ package body GPR2.Project.View is
 
          if Dot_Repl /= "." then
             if Index (Result, ".") /= 0 then
-               --  Message.Create
-               --   (Message.Error, "invalid name, contains dot");
+               Ok := False;
+               Tree.Append_Message
+                 (Message.Create
+                    (Message.Error, "invalid name, contains dot"));
                return Name_Type (To_String (Result));
 
             else
@@ -853,12 +872,72 @@ package body GPR2.Project.View is
          --  Result contains the name of the unit in lower-cases. Check
          --  that this is a valid unit name.
 
-         --  ?? TODO: start with letter, cannot have 2 consecutive underscores,
-         --  cannot have aa dot after an underscore, only contains alphanumeric
-         --  characters...
+         --  Must start with a letter
+
+         if not Characters.Handling.Is_Letter (Element (Result, 1)) then
+            Ok := False;
+            Tree.Append_Message
+              (Message.Create
+                 (Message.Error,
+                  "unit '" & To_String (Result)
+                  & "' not valid, should start with a letter",
+                  GPR2.Source_Reference.Object (Data.Attrs.Source_Dirs)));
+         end if;
+
+         --  Cannot have 2 consecutive underscores, cannot have a dot after an
+         --  underscore and should contains only alphanumeric characters.
+
+         for K in 2 .. Length (Result) loop
+            declare
+               Prev    : constant Character := Element (Result, K - 1);
+               Current : constant Character := Element (Result, K);
+            begin
+               if Current = '_' then
+                  if Prev = '.' then
+                     Ok := False;
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & To_String (Result)
+                           & "' not valid, cannot contains"
+                           & " dot after underscore",
+                           GPR2.Source_Reference.Object
+                             (Data.Attrs.Source_Dirs)));
+
+                  elsif Prev = '_' then
+                     Ok := False;
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & To_String (Result)
+                           & "' not valid, two consecutive"
+                           & " underlines not permitted",
+                           GPR2.Source_Reference.Object
+                             (Data.Attrs.Source_Dirs)));
+                  end if;
+
+               elsif not Characters.Handling.Is_Alphanumeric (Current)
+                 and then Current /= '.'
+               then
+                  Ok := False;
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        "unit '" & To_String (Result)
+                        & "' not valid, should have only alpha numeric"
+                        & " characters",
+                        GPR2.Source_Reference.Object
+                          (Data.Attrs.Source_Dirs)));
+               end if;
+            end;
+         end loop;
 
          --  If there is a naming exception for the same unit, the file is not
          --  a source for the unit.
+
+         --  Get the naming exception if any
+         --  If the corresponding filename is not the same as Filename
+         --  => the file is not part of the sources
 
          --  ?? TODO: this is not currently supported
 
@@ -967,6 +1046,19 @@ package body GPR2.Project.View is
       end if;
 
       --  Then returns the sources
+
+      if Message_Count < Tree.Log_Messages.Count
+        and then
+          Tree.Log_Messages.Has_Element
+            (Information => False,
+             Warning     => False,
+             Error       => True,
+             Read        => False,
+             Unread      => True)
+      then
+         --  Some messages have been logged, raise an exception
+         raise Project_Error with "cannot retrieve the sources";
+      end if;
 
       return Data.Sources;
    end Sources;

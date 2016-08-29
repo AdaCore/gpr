@@ -1,0 +1,23 @@
+Project: Demo1
+BEFORE: Has unread Message: TRUE
+> /source-errors/demo1.gpr
+ERROR
+ 3
+ 4
+unit '1pck' not valid, should start with a letter
+AFTER: Has unread Message: FALSE
+
+Project: Demo2
+BEFORE: Has unread Message: TRUE
+> /source-errors/demo2.gpr
+ERROR
+ 4
+ 4
+unit 'pck._b' not valid, cannot contains dot after underscore
+AFTER: Has unread Message: FALSE
+
+Project: Demo3
+ > src2/pck__a.adb
+                  language: ada    Kind: S_BODY   unit: pck.a
+ > src2/pcka.ads
+                  language: ada    Kind: S_SPEC   unit: pcka

@@ -99,13 +99,12 @@ procedure Main is
 begin
    Project.Tree.Load (Prj, Create ("demo.gpr"));
 
-   if Prj.Has_Messages then
-      Text_IO.Put_Line ("Messages found:");
+exception
+   when GPR2.Project_Error =>
+      if Prj.Has_Messages then
+         Text_IO.Put_Line ("Messages found:");
 
-      declare
-         Mes : Log.Object := Prj.Log_Messages;
-      begin
-         for M of Mes loop
+         for M of Prj.Log_Messages.all loop
             declare
                F : constant String := M.Sloc.Filename;
                I : constant Natural := Strings.Fixed.Index (F, "/errors");
@@ -118,6 +117,5 @@ begin
                Text_IO.Put_Line (M.Format);
             end;
          end loop;
-      end;
-   end if;
+      end if;
 end Main;
