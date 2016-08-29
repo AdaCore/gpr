@@ -372,9 +372,9 @@ package body GPR2.Project.Tree is
    -- Log_Messages --
    ------------------
 
-   function Log_Messages (Self : Object) return Log.Object is
+   function Log_Messages (Self : Object) return not null access Log.Object is
    begin
-      return Self.Messages;
+      return Self.Self.Messages'Access;
    end Log_Messages;
 
    ----------

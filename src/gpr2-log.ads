@@ -82,8 +82,6 @@ package GPR2.Log is
 
    type Cursor is private;
 
-   No_Element : constant Cursor;
-
    function Element (Position : Cursor) return Message.Object
      with Post =>
        (if Has_Element (Position)
@@ -111,7 +109,7 @@ package GPR2.Log is
       Position : Cursor) return Reference_Type;
 
    function Iterate
-     (Self        : in out Object;
+     (Self        : Object;
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True;
@@ -130,15 +128,13 @@ private
      new Ada.Containers.Vectors (Positive, Message.Object);
 
    type Object is tagged record
-      Store : Message_Set.Vector;
+      Store : aliased Message_Set.Vector;
    end record;
 
    type Cursor is record
-      Store : Message_Set.Vector;
+      Store : not null access Message_Set.Vector;
       P     : Natural;
    end record;
-
-   No_Element : constant Cursor := (P => 0, Store => <>);
 
    type Constant_Reference_Type
      (Message : not null access constant GPR2.Message.Object) is null record;

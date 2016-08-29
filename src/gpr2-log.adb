@@ -27,8 +27,14 @@ package body GPR2.Log is
    use type Message.Level_Value;
    use type Message.Status_Type;
 
-   type Iterator is new Log_Iterator.Forward_Iterator with record
-     Log : Object;
+   type Iterator
+     (Information : Boolean;
+      Warning     : Boolean;
+      Error       : Boolean;
+      Read        : Boolean;
+      Unread      : Boolean)
+   is new Log_Iterator.Forward_Iterator with record
+     Store : not null access Message_Set.Vector;
    end record;
 
    overriding function First
@@ -52,6 +58,11 @@ package body GPR2.Log is
          or else (Message.Status = GPR2.Message.Unread and then Unread)));
    --  Returns True is the Message's Level match the information/warning/error
    --  values with the corresponding Read/Unread status.
+
+   procedure Set_Read (Position : Cursor)
+     with Post => not Has_Element (Position)
+                  or else Element (Position).Status = Message.Read;
+   --  Set Element at Position as read
 
    ------------
    -- Append --
@@ -79,15 +90,11 @@ package body GPR2.Log is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor)
-      return Constant_Reference_Type
-   is
-      pragma Unreferenced (Self);
+      Position : Cursor) return Constant_Reference_Type is
    begin
       return Constant_Reference_Type'
         (Message =>
-           Message_Set.Constant_Reference
-             (Position.Store, Position.P).Element);
+           Message_Set.Constant_Reference (Self.Store, Position.P).Element);
    end Constant_Reference;
 
    -----------
@@ -105,7 +112,7 @@ package body GPR2.Log is
 
    function Element (Position : Cursor) return Message.Object is
    begin
-      return Position.Store (Position.P);
+      return Position.Store.all (Position.P);
    end Element;
 
    function Element
@@ -121,8 +128,20 @@ package body GPR2.Log is
    -----------
 
    overriding function First (Iter : Iterator) return Cursor is
+      Position : constant Cursor := (Iter.Store, Iter.Store.First_Index);
    begin
-      return Cursor'(Iter.Log.Store, Iter.Log.Store.First_Index);
+      if not Has_Element (Position)
+        or else
+          Match_Filter
+            (Element (Position),
+             Iter.Information, Iter.Warning, Iter.Error,
+             Iter.Read, Iter.Unread)
+      then
+         Set_Read (Position);
+         return Position;
+      else
+         return Next (Iter, Position);
+      end if;
    end First;
 
    -----------------
@@ -166,26 +185,16 @@ package body GPR2.Log is
    -------------
 
    function Iterate
-     (Self        : in out Object;
+     (Self        : Object;
       Information : Boolean := True;
       Warning     : Boolean := True;
       Error       : Boolean := True;
       Read        : Boolean := True;
       Unread      : Boolean := True)
-      return Log_Iterator.Forward_Iterator'Class
-   is
-      Iter : Iterator;
+      return Log_Iterator.Forward_Iterator'Class is
    begin
-      --  Fill store with the matching elements and tag them as read
-
-      for M of Self.Store loop
-         if Match_Filter (M, Information, Warning, Error, Read, Unread) then
-            Iter.Log.Store.Append (M);
-            M.Set_Status (Message.Read);
-         end if;
-      end loop;
-
-      return Iter;
+      return Iterator'(Information,  Warning, Error, Read, Unread,
+                       Store => Self.Store'Unrestricted_Access);
    end Iterate;
 
    ----------
@@ -195,9 +204,22 @@ package body GPR2.Log is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      pragma Unreferenced (Iter);
+      New_Position : Cursor := Position;
    begin
-      return Cursor'(Position.Store, Position.P + 1);
+      loop
+         New_Position.P := New_Position.P + 1;
+
+         exit when New_Position.P > Natural (Iter.Store.Length)
+           or else
+             Match_Filter
+               (Element (New_Position),
+                Iter.Information, Iter.Warning, Iter.Error,
+                Iter.Read, Iter.Unread);
+      end loop;
+
+      Set_Read (New_Position);
+
+      return New_Position;
    end Next;
 
    ---------------
@@ -211,5 +233,16 @@ package body GPR2.Log is
       return Reference_Type'
         (Message => Message_Set.Reference (Self.Store, Position.P).Element);
    end Reference;
+
+   --------------
+   -- Set_Read --
+   --------------
+
+   procedure Set_Read (Position : Cursor) is
+   begin
+      if Has_Element (Position) then
+         Position.Store.all (Position.P).Set_Status (Message.Read);
+      end if;
+   end Set_Read;
 
 end GPR2.Log;

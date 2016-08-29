@@ -87,7 +87,7 @@ package GPR2.Project.Tree is
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this project tree
 
-   function Log_Messages (Self : Object) return Log.Object
+   function Log_Messages (Self : Object) return not null access Log.Object
      with Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
    --  Returns the Logs, this contains information, warning and error messages
    --  found while handling the project.
@@ -170,7 +170,7 @@ private
       Self     : not null access Object := Object'Unchecked_Access;
       Root     : View.Object;
       Conf     : View.Object;
-      Messages : Log.Object;
+      Messages : aliased Log.Object;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
