@@ -82,4 +82,5 @@ library project GPR2 is
    package Builder is
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
+
 end GPR2;
