@@ -106,7 +106,6 @@ package GPR2.Parser.Project is
 
 private
 
-   use Ada.Strings.Unbounded;
    use GPR_Parser.Analysis;
 
    type Object is tagged record

@@ -138,7 +138,6 @@ package body GPR2.Parser.Project is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
       use GPR_Parser;
-      use GPR_Parser;
 
       function Parse_Stage_1 (Unit : Analysis_Unit) return Object;
       --  Analyse project, record all externals variables and imports
@@ -266,8 +265,7 @@ package body GPR2.Parser.Project is
 
                if Present (Ext) then
                   Project.Extended :=
-                    Create
-                      (Get_Name_Type (String_Literal (F_Path_Name (Ext))));
+                    Create (Get_Name_Type (F_Path_Name (Ext)));
                end if;
 
                Project.Name :=
@@ -791,8 +789,7 @@ package body GPR2.Parser.Project is
         (Project : Name_Type; Node : not null Identifier)
          return Containers.Value_List
       is
-         Name : constant Name_Type :=
-                  Name_Type (Get_Name_Type (Node));
+         Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
                   GPR2.Project.Tree.View_For (Tree, Project, Context);
       begin
@@ -1034,7 +1031,6 @@ package body GPR2.Parser.Project is
          ---------------------
 
          procedure Parse_Case_Item (Node : not null Case_Item) is
-            use GPR_Parser.AST.Types;
 
             function Parser
               (Node : access GPR_Node_Type'Class) return Visit_Status;
@@ -1162,7 +1158,7 @@ package body GPR2.Parser.Project is
                   Sloc   => Sloc);
             end if;
 
-            Vars.Include (Name_Type (V.Name), V);
+            Vars.Include (V.Name, V);
          end Parse_Variable_Decl_Kind;
 
          -----------------

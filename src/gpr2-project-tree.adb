@@ -25,10 +25,8 @@
 with Ada.Containers.Ordered_Sets; use Ada;
 with Ada.Environment_Variables;
 
-with GPR2.Message;
 with GPR2.Parser.Project;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Definition;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;

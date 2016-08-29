@@ -29,8 +29,6 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Project.Pack is
 
    use type Containers.Count_Type;
@@ -100,8 +98,6 @@ package GPR2.Project.Pack is
      with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is new Source_Reference.Object with record
       Name  : Unbounded_String;

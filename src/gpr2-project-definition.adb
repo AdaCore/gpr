@@ -24,8 +24,6 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-with GPR2.Project.View;
-
 package body GPR2.Project.Definition is
 
    package Project_Views is

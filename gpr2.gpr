@@ -44,7 +44,7 @@ library project GPR2 is
    --------------
 
    Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmRuv", "-gnaty3abBcdefhiIklmnoOprstx");
+     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
    --  Common options used for the Debug and Release modes
 
    Debug_Options :=

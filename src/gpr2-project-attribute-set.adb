@@ -151,7 +151,7 @@ package body GPR2.Project.Attribute.Set is
       use Ada.Characters.Handling;
 
       Result : Cursor :=
-                 (CM  => Self.Attributes.Find (Name_Type (Name)),
+                 (CM  => Self.Attributes.Find (Name),
                   CA  => Set_Attribute.No_Element,
                   Set => null);
    begin
@@ -224,8 +224,7 @@ package body GPR2.Project.Attribute.Set is
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      Position : constant Set.Cursor :=
-                   Self.Attributes.Find (Name_Type (Attribute.Name));
+      Position : constant Set.Cursor := Self.Attributes.Find (Attribute.Name);
       Present  : Boolean := False;
    begin
       if Set.Has_Element (Position) then
@@ -243,7 +242,7 @@ package body GPR2.Project.Attribute.Set is
          begin
             Present := A.Contains (To_String (Attribute.Index));
             A.Include (To_String (Attribute.Index), Attribute);
-            Self.Attributes.Insert (Name_Type (Attribute.Name), A);
+            Self.Attributes.Insert (Attribute.Name, A);
          end;
       end if;
 
@@ -259,8 +258,7 @@ package body GPR2.Project.Attribute.Set is
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      Position : constant Set.Cursor :=
-                   Self.Attributes.Find (Name_Type (Attribute.Name));
+      Position : constant Set.Cursor := Self.Attributes.Find (Attribute.Name);
    begin
       if Set.Has_Element (Position) then
          declare
@@ -275,7 +273,7 @@ package body GPR2.Project.Attribute.Set is
             A : Set_Attribute.Map;
          begin
             A.Insert (To_String (Attribute.Index), Attribute);
-            Self.Attributes.Insert (Name_Type (Attribute.Name), A);
+            Self.Attributes.Insert (Attribute.Name, A);
          end;
       end if;
 

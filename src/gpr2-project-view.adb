@@ -32,7 +32,6 @@ with Ada.Text_IO;
 with GNAT.MD5;
 with GNAT.OS_Lib;
 
-with GPR2.Containers;
 with GPR2.Message;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
@@ -239,7 +238,6 @@ package body GPR2.Project.View is
    -----------------
 
    function Has_Imports (Self : Object) return Boolean is
-      use type Ada.Containers.Count_Type;
    begin
       return not Definition.Get (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
@@ -264,8 +262,6 @@ package body GPR2.Project.View is
    -----------------
 
    function Has_Sources (Self : Object) return Boolean is
-      use type GPR2.Containers.Count_Type;
-
       S : constant Project.Source.Set.Object := Self.Sources with Unreferenced;
       --  Let's compute the set of sources to be able to get the right answer
       --  below. Remember the sources are cached and computed only when
@@ -285,7 +281,7 @@ package body GPR2.Project.View is
       if Name = No_Name then
          return not Definition.Get (Self).Vars.Is_Empty;
       else
-         return Definition.Get (Self).Vars.Contains (Name_Type (Name));
+         return Definition.Get (Self).Vars.Contains (Name);
       end if;
    end Has_Variables;
 
@@ -618,8 +614,6 @@ package body GPR2.Project.View is
                        (if Self.Has_Attributes (Registry.Attribute.Languages)
                         then Self.Attribute (Registry.Attribute.Languages)
                         else Builtin_Languages);
-
-         use type Project.Attribute.Object;
 
       begin
          --  For every languages defined for the view

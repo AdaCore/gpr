@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Containers;
 with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pack is
@@ -95,9 +94,7 @@ package body GPR2.Project.Pack is
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Boolean
-   is
-      use type Containers.Count_Type;
+      Index : Value_Type := "") return Boolean is
    begin
       if Name = No_Name and then Index = No_Value then
          return not Self.Attrs.Is_Empty;

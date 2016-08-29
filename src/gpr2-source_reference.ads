@@ -25,8 +25,6 @@
 --  This package represents an entity source reference. It is used for
 --  variables, attributes and packages declared in projects.
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Source_Reference is
 
    type Object is tagged private;
@@ -55,8 +53,6 @@ package GPR2.Source_Reference is
    --  Returns the starting column of the entity declaration
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Line     : Natural;
