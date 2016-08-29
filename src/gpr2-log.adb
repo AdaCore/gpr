@@ -78,7 +78,7 @@ package body GPR2.Log is
    ------------------------
 
    function Constant_Reference
-     (Self     : aliased in out Object;
+     (Self     : aliased Object;
       Position : Cursor)
       return Constant_Reference_Type
    is

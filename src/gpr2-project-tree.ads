@@ -150,7 +150,7 @@ package GPR2.Project.Tree is
      with Implicit_Dereference => View;
 
    function Constant_Reference
-     (Self     : aliased in out Object;
+     (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type;
 
    function Iterate

@@ -98,7 +98,7 @@ package GPR2.Log is
      with Implicit_Dereference => Message;
 
    function Constant_Reference
-     (Self     : aliased in out Object;
+     (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type;
 
    function Iterate

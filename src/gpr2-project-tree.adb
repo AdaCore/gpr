@@ -82,7 +82,7 @@ package body GPR2.Project.Tree is
    ------------------------
 
    function Constant_Reference
-     (Self     : aliased in out Object;
+     (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type
    is
       pragma Unreferenced (Self);
