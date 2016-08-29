@@ -1,6 +1,6 @@
-Project: Demo
+Project: Demo1
  > main.adb       language: ada    Kind: S_BODY   unit: main
-Project: Demo
+Project: Demo2
  > file3.c        language: c      Kind: S_BODY
  > src/file3.h    language: c      Kind: S_SPEC
  > src/file.ab    language: ada    Kind: S_BODY   unit: file

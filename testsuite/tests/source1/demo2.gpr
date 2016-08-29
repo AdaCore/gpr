@@ -1,5 +1,5 @@
 
-project Demo is
+project Demo2 is
    for Languages use ("ada", "c");
    for Source_Dirs use (".", "src");
    for Object_Dir use "obj";
@@ -12,4 +12,4 @@ project Demo is
       for body_suffix ("c") use ".c";
    end Naming;
 
-end Demo;
+end Demo2;
