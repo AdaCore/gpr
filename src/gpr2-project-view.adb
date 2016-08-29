@@ -1018,6 +1018,10 @@ begin
                      Project.Attribute.Create
                        (Registry.Attribute.Body_Suffix,
                         "c", ".c", Undef_Sloc);
+      Dot_Repl   : constant Project.Attribute.Object :=
+                     Project.Attribute.Create
+                       (Registry.Attribute.Dot_Replacement,
+                        "", "-", Undef_Sloc);
       Attrs      : Project.Attribute.Set.Object;
       Langs      : Containers.Value_List;
    begin
@@ -1027,6 +1031,7 @@ begin
       Attrs.Insert (Ada_Body);
       Attrs.Insert (C_Spec);
       Attrs.Insert (C_Body);
+      Attrs.Insert (Dot_Repl);
       Builtin_Naming_Package :=
         Pack.Create (Registry.Pack.Naming, Attrs, Undef_Sloc);
 
