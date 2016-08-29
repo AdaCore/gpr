@@ -39,6 +39,7 @@ package GPR2.Log is
 
    type Object is tagged private
      with Constant_Indexing => Constant_Reference,
+          Variable_Indexing => Reference,
           Default_Iterator  => Iterate,
           Iterator_Element  => Message.Object;
 
@@ -101,6 +102,14 @@ package GPR2.Log is
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type;
 
+   type Reference_Type
+     (Message : not null access GPR2.Message.Object) is private
+     with Implicit_Dereference => Message;
+
+   function Reference
+     (Self     : aliased in out Object;
+      Position : Cursor) return Reference_Type;
+
    function Iterate
      (Self        : in out Object;
       Information : Boolean := True;
@@ -133,5 +142,8 @@ private
 
    type Constant_Reference_Type
      (Message : not null access constant GPR2.Message.Object) is null record;
+
+   type Reference_Type
+     (Message : not null access GPR2.Message.Object) is null record;
 
 end GPR2.Log;

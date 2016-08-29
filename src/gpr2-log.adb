@@ -200,4 +200,16 @@ package body GPR2.Log is
       return Cursor'(Position.Store, Position.P + 1);
    end Next;
 
+   ---------------
+   -- Reference --
+   ---------------
+
+   function Reference
+     (Self     : aliased in out Object;
+      Position : Cursor) return Reference_Type is
+   begin
+      return Reference_Type'
+        (Message => Message_Set.Reference (Self.Store, Position.P).Element);
+   end Reference;
+
 end GPR2.Log;
