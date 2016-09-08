@@ -1,0 +1,5 @@
+description:
+    Test for source exceptions (spec, body for Ada)
+driver: build_and_run
+project_file: source_exceptions
+main: main

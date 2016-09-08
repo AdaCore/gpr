@@ -1,0 +1,10 @@
+
+project Demo1 is
+   for Languages use ("ada");
+   for Source_Dirs use ("src");
+   for Object_Dir use "obj";
+
+   package Naming is
+      for Body ("pck") use "pck__unix.adb";
+   end Naming;
+end Demo1;

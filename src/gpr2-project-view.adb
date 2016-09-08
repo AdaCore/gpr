@@ -24,6 +24,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
@@ -389,6 +390,9 @@ package body GPR2.Project.View is
       use GNAT;
       use type MD5.Binary_Message_Digest;
 
+      package Unit_Naming is
+        new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
+
       type Insert_Mode is (Replace, Skip, Error);
       --  Controls behavior when a duplicated unit/filename is found
       --
@@ -416,7 +420,6 @@ package body GPR2.Project.View is
 
       function Unit_For
         (Filename : Full_Path_Name;
-         Language : Name_Type;
          Kind     : GPR2.Source.Kind_Type;
          Ok       : out Boolean) return Name_Type;
       --  Given Filename, returns the unit name. This is meaningful for unit
@@ -435,6 +438,15 @@ package body GPR2.Project.View is
 
       procedure Insert (Sources : Source.Set.Object; Mode : Insert_Mode);
       --  Insert Sources into Data.Sources
+
+      procedure Fill_Naming_Exceptions (Set : Project.Attribute.Set.Object)
+        with Pre =>
+          (for all A of Set =>
+             A.Name = Registry.Attribute.Spec
+             or else A.Name = Registry.Attribute.Specification
+             or else A.Name = Registry.Attribute.Body_N
+             or else A.Name = Registry.Attribute.Implementation);
+      --  Fill the Naming_Exceptions object with the given attribute set values
 
       Naming : constant Pack.Object := Naming_Package (Self);
       --  Package Naming for the view
@@ -458,14 +470,28 @@ package body GPR2.Project.View is
       --  View definition data, will be updated and recorded back into the
       --  definition set.
 
-      Included_Sources : Source_Set.Set;
-      Excluded_Sources : Source_Set.Set;
+      Included_Sources  : Source_Set.Set;
+      Excluded_Sources  : Source_Set.Set;
 
-      Tree             : constant not null access Project.Tree.Object :=
-                           Definition.Get (Self).Tree;
+      Tree              : constant not null access Project.Tree.Object :=
+                            Definition.Get (Self).Tree;
 
-      Message_Count    : constant Containers.Count_Type :=
-                           Tree.Log_Messages.Count;
+      Message_Count     : constant Containers.Count_Type :=
+                            Tree.Log_Messages.Count;
+
+      Naming_Exceptions : Unit_Naming.Map;
+
+      ----------------------------
+      -- Fill_Naming_Exceptions --
+      ----------------------------
+
+      procedure Fill_Naming_Exceptions (Set : Project.Attribute.Set.Object) is
+      begin
+         for A of Set loop
+            Naming_Exceptions.Insert
+              (Directories.Simple_Name (A.Value), Name_Type (A.Index));
+         end loop;
+      end Fill_Naming_Exceptions;
 
       ----------------------
       -- Handle_Directory --
@@ -542,7 +568,7 @@ package body GPR2.Project.View is
                Lang : constant Name_Type := Name_Type (Language);
                Unit : constant Optional_Name_Type :=
                         (if Lang = "ada"
-                         then Unit_For (Filename, Lang, Kind, Ok)
+                         then Unit_For (Filename, Kind, Ok)
                          else No_Name);
                Src  : constant GPR2.Source.Object :=
                         GPR2.Source.Create
@@ -762,11 +788,111 @@ package body GPR2.Project.View is
 
       function Unit_For
         (Filename : Full_Path_Name;
-         Language : Name_Type;
          Kind     : GPR2.Source.Kind_Type;
          Ok       : out Boolean) return Name_Type
       is
          use Ada.Strings;
+
+         function Compute_Unit_From_Filename return Unbounded_String;
+         --  This routine compute the unit from the filename
+
+         --------------------------------
+         -- Compute_Unit_From_Filename --
+         --------------------------------
+
+         function Compute_Unit_From_Filename return Unbounded_String is
+            Result : Unbounded_String :=
+                       To_Unbounded_String
+                         (Directories.Simple_Name (Filename));
+         begin
+            --  First remove the suffix for the given language
+
+            declare
+               Suffix : constant Value_Type :=
+                          (case Kind is
+                              when GPR2.Source.S_Spec     =>
+                                 Naming.Spec_Suffix ("ada").Value,
+                              when GPR2.Source.S_Body     =>
+                                 Naming.Body_Suffix ("ada").Value,
+                              when GPR2.Source.S_Separate =>
+                                 Naming.Separate_Suffix ("ada").Value);
+            begin
+               if Length (Result) > Suffix'Length then
+                  Delete
+                    (Result,
+                     From    => Length (Result) - Suffix'Length + 1,
+                     Through => Length (Result));
+               end if;
+            end;
+
+            --  If Dot_Replacement is not a single dot, then there should not
+            --  be any dot in the name.
+
+            if Dot_Repl /= "." then
+               if Index (Result, ".") /= 0 then
+                  Ok := False;
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error, "invalid name, contains dot"));
+
+               else
+                  declare
+                     I : Natural := 1;
+                  begin
+                     loop
+                        I := Index (Result, Dot_Repl, From => I);
+                        exit when I = 0;
+
+                        Replace_Slice
+                          (Result, I, I + Dot_Repl'Length - 1, ".");
+                     end loop;
+                  end;
+               end if;
+            end if;
+
+            --  Casing for the unit is all lowercase
+
+            Translate (Result, Maps.Constants.Lower_Case_Map);
+
+            --  In the standard GNAT naming scheme, check for special cases:
+            --  children or separates of A, G, I or S, and run time sources.
+
+            if Is_Standard_GNAT_Naming and then Length (Result) >= 3 then
+               declare
+                  S1 : constant Character := Element (Result, 1);
+                  S2 : constant Character := Element (Result, 2);
+                  S3 : constant Character := Element (Result, 3);
+
+               begin
+                  if S1 in 'a' | 'g' | 'i' | 's' then
+                     --  Children or separates of packages A, G, I or S. These
+                     --  names are x__ ... or x~... (where x is a, g, i, or s).
+                     --  Both versions (x__... and x~...) are allowed in all
+                     --  platforms, because it is not possible to know the
+                     --  platform before processing of the project files.
+
+                     if S2 = '_' and then S3 = '_' then
+                        --  Replace first _ by a dot
+                        Replace_Element (Result, 2, '.');
+
+                        --  and remove the second _
+                        Delete (Result, 3, 3);
+
+                     elsif S2 = '~' then
+                        Replace_Element (Result, 2, '.');
+
+                     elsif S2 = '.' then
+
+                        --  If it is potentially a run time source
+
+                        null;
+                     end if;
+                  end if;
+               end;
+            end if;
+
+            return Result;
+         end Compute_Unit_From_Filename;
 
          Result : Unbounded_String :=
                     To_Unbounded_String (Directories.Simple_Name (Filename));
@@ -776,91 +902,55 @@ package body GPR2.Project.View is
 
          Ok := True;
 
-         --  First remove the suffix for the given language
+         --  First check for a naming exception for this filename
 
-         declare
-            Suffix : constant Value_Type :=
-                       (case Kind is
-                           when GPR2.Source.S_Spec =>
-                              Naming.Spec_Suffix (Language).Value,
-                           when GPR2.Source.S_Body =>
-                              Naming.Body_Suffix (Language).Value,
-                           when GPR2.Source.S_Separate =>
-                              Naming.Separate_Suffix (Language).Value);
-         begin
-            if Length (Result) > Suffix'Length then
-               Delete
-                 (Result,
-                  From    => Length (Result) - Suffix'Length + 1,
-                  Through => Length (Result));
-            end if;
-         end;
+         if Naming_Exceptions.Contains (To_String (Result)) then
+            --  In this case we have the unit specified explicitly
 
-         --  If Dot_Replacement is not a single dot, then there should not
-         --  be any dot in the name.
+            Result := To_Unbounded_String
+              (String (Naming_Exceptions.Element (To_String (Result))));
 
-         if Dot_Repl /= "." then
-            if Index (Result, ".") /= 0 then
+            Translate (Result, Maps.Constants.Lower_Case_Map);
+
+         else
+            --  Let's compute the unit based on the filename
+
+            Result := Compute_Unit_From_Filename;
+
+            if Strings.Fixed.Index (To_String (Result), "__") /= 0 then
+               --  The filename has two underlines, skip it as it cannot be
+               --  part of the sources except if there is a naming exception
+               --  (checked above).
+
                Ok := False;
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error, "invalid name, contains dot"));
                return Name_Type (To_String (Result));
 
             else
-               declare
-                  I : Natural := 1;
-               begin
-                  loop
-                     I := Index (Result, Dot_Repl, From => I);
-                     exit when I = 0;
+               --  Then check that we do not have an exception for this unit
 
-                     Replace_Slice
-                       (Result, I, I + Dot_Repl'Length - 1, ".");
-                  end loop;
+               declare
+                  Unit : constant Value_Type :=
+                           Value_Type (To_String (Result));
+                  Attr : constant Project.Attribute.Object :=
+                           (case Kind is
+                               when GPR2.Source.S_Spec     =>
+                                  Naming.Specification (Unit),
+                               when GPR2.Source.S_Body     =>
+                                  Naming.Implementation (Unit),
+                               when GPR2.Source.S_Separate =>
+                                  Project.Attribute.Undefined);
+               begin
+                  if Attr /= Project.Attribute.Undefined
+                    and then Attr.Value /= Filename
+                  then
+                     --  We have a naming exception for this unit and the body
+                     --  does not corresponds to the current filename. We skip
+                     --  this unit.
+                     Ok := False;
+                     return Name_Type (Unit);
+                  end if;
                end;
             end if;
-         end if;
-
-         --  Casing for the unit is all lowercase
-
-         Translate (Result, Maps.Constants.Lower_Case_Map);
-
-         --  In the standard GNAT naming scheme, check for special cases:
-         --  children or separates of A, G, I or S, and run time sources.
-
-         if Is_Standard_GNAT_Naming and then Length (Result) >= 3 then
-            declare
-               S1 : constant Character := Element (Result, 1);
-               S2 : constant Character := Element (Result, 2);
-               S3 : constant Character := Element (Result, 3);
-
-            begin
-               if S1 in 'a' | 'g' | 'i' | 's' then
-                  --  Children or separates of packages A, G, I or S. These
-                  --  names are x__ ... or x~... (where x is a, g, i, or s).
-                  --  Both versions (x__... and x~...) are allowed in all
-                  --  platforms, because it is not possible to know the
-                  --  platform before processing of the project files.
-
-                  if S2 = '_' and then S3 = '_' then
-                     --  Replace first _ by a dot
-                     Replace_Element (Result, 2, '.');
-
-                     --  and remove the second _
-                     Delete (Result, 3, 3);
-
-                  elsif S2 = '~' then
-                     Replace_Element (Result, 2, '.');
-
-                  elsif S2 = '.' then
-
-                     --  If it is potentially a run time source
-
-                     null;
-                  end if;
-               end if;
-            end;
          end if;
 
          --  Result contains the name of the unit in lower-cases. Check
@@ -926,15 +1016,6 @@ package body GPR2.Project.View is
             end;
          end loop;
 
-         --  If there is a naming exception for the same unit, the file is not
-         --  a source for the unit.
-
-         --  Get the naming exception if any
-         --  If the corresponding filename is not the same as Filename
-         --  => the file is not part of the sources
-
-         --  ?? TODO: this is not currently supported
-
          return Name_Type (To_String (Result));
       end Unit_For;
 
@@ -951,6 +1032,17 @@ package body GPR2.Project.View is
       if Data.Sources_Signature /= Current_Signature
         and then Data.Kind not in K_Abstract | K_Aggregate
       then
+         --  Setup the naming exceptions look-up table if needed
+
+         Fill_Naming_Exceptions
+           (Naming.Attributes (Registry.Attribute.Spec));
+         Fill_Naming_Exceptions
+           (Naming.Attributes (Registry.Attribute.Specification));
+         Fill_Naming_Exceptions
+           (Naming.Attributes (Registry.Attribute.Body_N));
+         Fill_Naming_Exceptions
+           (Naming.Attributes (Registry.Attribute.Implementation));
+
          --  Read sources and set-up the corresponding definition
 
          --  First reset the current set
@@ -1037,21 +1129,21 @@ package body GPR2.Project.View is
 
          Data.Sources_Signature := Current_Signature;
          Definition.Set (Self, Data);
-      end if;
 
-      --  Then returns the sources
+         --  Then returns the sources
 
-      if Message_Count < Tree.Log_Messages.Count
-        and then
-          Tree.Log_Messages.Has_Element
-            (Information => False,
-             Warning     => False,
-             Error       => True,
-             Read        => False,
-             Unread      => True)
-      then
-         --  Some messages have been logged, raise an exception
-         raise Project_Error with "cannot retrieve the sources";
+         if Message_Count < Tree.Log_Messages.Count
+           and then
+             Tree.Log_Messages.Has_Element
+               (Information => False,
+                Warning     => False,
+                Error       => True,
+                Read        => False,
+                Unread      => True)
+         then
+            --  Some messages have been logged, raise an exception
+            raise Project_Error with "cannot retrieve the sources";
+         end if;
       end if;
 
       return Data.Sources;
