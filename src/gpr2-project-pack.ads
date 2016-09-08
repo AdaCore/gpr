@@ -87,17 +87,48 @@ package GPR2.Project.Pack is
    function Spec_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
-     with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
+     with
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
+       Post =>
+         (if Spec_Suffix'Result = Project.Attribute.Undefined
+          then
+            not Self.Has_Attributes
+                  (Registry.Attribute.Spec_Suffix,
+                   Value_Type (Language))
+              and then
+            not Self.Has_Attributes
+                  (Registry.Attribute.Specification_Suffix,
+                   Value_Type (Language)));
+   --  Handles Spec_Suffix and Specification_Suffix
 
    function Body_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
-     with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
+     with
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
+       Post =>
+         (if Body_Suffix'Result = Project.Attribute.Undefined
+          then
+            not Self.Has_Attributes
+                  (Registry.Attribute.Body_Suffix,
+                   Value_Type (Language))
+              and then
+            not Self.Has_Attributes
+                  (Registry.Attribute.Implementation_Suffix,
+                   Value_Type (Language)));
+   --  Handles Body_Suffix and Implementation_Suffix
 
    function Separate_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
-     with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
+     with
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
+       Post =>
+         (Separate_Suffix'Result = Project.Attribute.Undefined
+          xor Self.Has_Attributes
+            (Registry.Attribute.Separate_Suffix,
+             Value_Type (Language)));
+   --  Handles Separate_Suffix
 
    function Specification
      (Self : Object;
