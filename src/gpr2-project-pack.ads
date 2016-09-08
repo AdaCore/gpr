@@ -26,12 +26,14 @@
 
 with GPR2.Containers;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference;
 
 package GPR2.Project.Pack is
 
    use type Containers.Count_Type;
+   use type Project.Attribute.Object;
 
    type Object is new Source_Reference.Object with private;
 
@@ -96,6 +98,32 @@ package GPR2.Project.Pack is
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
      with Pre => Self.Name = Name_Type (Registry.Pack.Naming);
+
+   function Specification
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object
+     with
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
+       Post =>
+         (if Specification'Result = Project.Attribute.Undefined
+          then
+            not Self.Has_Attributes (Registry.Attribute.Spec)
+              and then
+            not Self.Has_Attributes (Registry.Attribute.Specification));
+   --  Handles Spec, Specification, this is only defined for the Ada language
+
+   function Implementation
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object
+     with
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
+       Post =>
+         (if Implementation'Result = Project.Attribute.Undefined
+          then
+            not Self.Has_Attributes (Registry.Attribute.Body_N)
+              and then
+            not Self.Has_Attributes (Registry.Attribute.Implementation));
+   --  Handles Body, Implementation, this is only defined for the Ada language
 
 private
 

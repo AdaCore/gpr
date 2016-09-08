@@ -85,6 +85,14 @@ package GPR2.Project.Registry.Attribute is
    Source_List_File          : constant Name_Type := "source_list_file";
    Spec_Suffix               : constant Name_Type := "spec_suffix";
    Specification_Suffix      : constant Name_Type := "specification_suffix";
+   Spec                      : constant Name_Type := "spec";
+   Specification             : constant Name_Type := "specification";
+   Body_N                    : constant Name_Type := "body";
+   Implementation            : constant Name_Type := "implementation";
+   Specification_Exceptions  : constant Name_Type :=
+                                 "specification_exceptions";
+   Implementation_Exceptions : constant Name_Type :=
+                                 "implementation_exceptions";
 
 private
 

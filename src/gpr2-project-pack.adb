@@ -22,8 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Project.Registry.Attribute;
-
 package body GPR2.Project.Pack is
 
    ---------------
@@ -103,6 +101,25 @@ package body GPR2.Project.Pack is
       end if;
    end Has_Attributes;
 
+   --------------------
+   -- Implementation --
+   --------------------
+
+   function Implementation
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object is
+   begin
+      if Self.Has_Attributes (Registry.Attribute.Body_N, Unit) then
+         return Self.Attribute (Registry.Attribute.Body_N, Unit);
+
+      elsif Self.Has_Attributes (Registry.Attribute.Implementation, Unit) then
+         return Self.Attribute (Registry.Attribute.Implementation, Unit);
+
+      else
+         return Project.Attribute.Undefined;
+      end if;
+   end Implementation;
+
    ----------
    -- Name --
    ----------
@@ -155,5 +172,24 @@ package body GPR2.Project.Pack is
          return Project.Attribute.Undefined;
       end if;
    end Spec_Suffix;
+
+   -------------------
+   -- Specification --
+   -------------------
+
+   function Specification
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object is
+   begin
+      if Self.Has_Attributes (Registry.Attribute.Spec, Unit) then
+         return Self.Attribute (Registry.Attribute.Spec, Unit);
+
+      elsif Self.Has_Attributes (Registry.Attribute.Specification, Unit) then
+         return Self.Attribute (Registry.Attribute.Specification, Unit);
+
+      else
+         return Project.Attribute.Undefined;
+      end if;
+   end Specification;
 
 end GPR2.Project.Pack;
