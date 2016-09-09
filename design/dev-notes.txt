@@ -1,0 +1,62 @@
+
+This is a temporary file listing the implemented and non implemented
+features.
+
+Note that implemented here means just that. It is implemented and
+tested but there is not yet guarantees that the behavior is equivalent
+to the current project support.
+
+Implemented
+===========
+
+- getting attribute definition
+
+- getting package definition
+
+- getting variable definition
+
+- attribute format/validation
+  - single or multiple values
+  - index allowed
+  - where it is defined (top level allowed, in a package)
+  - casing for the index and the value
+
+- conditional case statement
+
+- variable references
+
+- attribute references
+
+- loading of a configuration project
+
+- reference to a configuration project
+
+- aggregate projects
+
+- aggregate library projects
+
+- extended projects
+
+- sources attributes:
+  - spec[ification]_suffix, [body/implementation]_suffix, separate_suffix
+  - spec, body, specification, implementation
+  - dot_replacement
+
+Not implemented
+===============
+
+- limited with
+
+- sources attributes:
+  - specification_exceptions and implementation_exceptions
+
+- missing some/many consistency checks
+
+- typed variables
+
+- split built-in
+  => needs a modification of the langkit grammar
+
+- external_as_list built-in
+
+- support for source's artifacts (.o, .ali)
