@@ -742,6 +742,10 @@ package body GPR2.Project.View is
             --  The signature to detect the source change is based on the
             --  attributes which are used to compute the actual source set.
 
+            if Data.Attrs.Has_Languages then
+               Add (Data.Attrs.Languages);
+            end if;
+
             if Data.Attrs.Has_Source_Dirs then
                Add (Data.Attrs.Source_Dirs);
             end if;
@@ -760,6 +764,49 @@ package body GPR2.Project.View is
 
             if Data.Attrs.Has_Source_List_File then
                Add (Data.Attrs.Source_List_File);
+            end if;
+
+            --  Handle also the naming definitions
+
+            if Data.Packs.Contains (Project.Registry.Pack.Naming) then
+               Handle_Naming : declare
+                  use Registry.Attribute;
+
+                  Naming : constant Project.Pack.Object :=
+                             Data.Packs (Project.Registry.Pack.Naming);
+               begin
+                  if Naming.Has_Attributes (Dot_Replacement) then
+                     Add (Naming.Attribute (Dot_Replacement));
+                  end if;
+
+                  for Attr of Naming.Attributes (Spec_Suffix) loop
+                     Add (Attr);
+                  end loop;
+
+                  for Attr of Naming.Attributes (Body_Suffix) loop
+                     Add (Attr);
+                  end loop;
+
+                  for Attr of Naming.Attributes (Separate_Suffix) loop
+                     Add (Attr);
+                  end loop;
+
+                  for Attr of Naming.Attributes (Spec) loop
+                     Add (Attr);
+                  end loop;
+
+                  for Attr of Naming.Attributes (Body_N) loop
+                     Add (Attr);
+                  end loop;
+
+                  for Attr of Naming.Attributes (Specification) loop
+                     Add (Attr);
+                  end loop;
+
+                  for Attr of Naming.Attributes (Implementation) loop
+                     Add (Attr);
+                  end loop;
+               end Handle_Naming;
             end if;
          end Handle;
 
