@@ -130,6 +130,9 @@ package GPR2.Project.Attribute.Set is
 
    --  Some helper routines on attributes in the set
 
+   function Has_Languages (Self : Object) return Boolean;
+   function Languages     (Self : Object) return Attribute.Object;
+
    function Has_Source_Dirs (Self : Object) return Boolean;
    function Source_Dirs     (Self : Object) return Attribute.Object;
 
@@ -185,6 +188,12 @@ private
       Attributes : Set.Map;
       Length     : Containers.Count_Type := 0;
    end record;
+
+   function Has_Languages (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Languages));
+
+   function Languages (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Languages));
 
    function Has_Source_Dirs (Self : Object) return Boolean is
      (Self.Contains (Registry.Attribute.Source_Dirs));
