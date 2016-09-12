@@ -47,6 +47,8 @@ Not implemented
 
 - limited with
 
+- cyclic project dependencies checks
+
 - sources attributes:
   - specification_exceptions and implementation_exceptions
 
@@ -60,3 +62,5 @@ Not implemented
 - external_as_list built-in
 
 - support for source's artifacts (.o, .ali)
+
+- package renaming
