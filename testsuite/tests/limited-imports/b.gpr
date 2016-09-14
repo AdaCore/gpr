@@ -1,0 +1,4 @@
+
+limited with "a.gpr";
+project B is
+end B;

@@ -455,15 +455,20 @@ package body GPR2.Project.Tree is
          function Is_In_Imports (Data : Definition.Data) return Boolean is
          begin
             for Import of Data.Trees.Imports loop
-               if Is_In_Closure (Load (Import.Path_Name)) then
-                  Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "imports " & Value (Import.Path_Name),
-                        Source_Reference.Object
-                          (Data.Trees.Project.Imports.Element
-                            (Import.Path_Name))));
-                  return True;
+               --  Skip limited imports
+               if not Data.Trees.Project.Imports.Element
+                 (Import.Path_Name).Is_Limited
+               then
+                  if Is_In_Closure (Load (Import.Path_Name)) then
+                     Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "imports " & Value (Import.Path_Name),
+                           Source_Reference.Object
+                             (Data.Trees.Project.Imports.Element
+                                  (Import.Path_Name))));
+                     return True;
+                  end if;
                end if;
             end loop;
 
@@ -582,7 +587,9 @@ package body GPR2.Project.Tree is
                   Messages.Append (M);
                end loop;
 
-            else
+            elsif not Data.Trees.Project.Imports.Element
+                        (Project.Path_Name).Is_Limited
+            then
                Data.Imports.Append
                  (Recursive_Load
                     (Project.Path_Name,

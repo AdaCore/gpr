@@ -1,0 +1,4 @@
+with "b.gpr";
+with "c.gpr";
+project A is
+end A;
