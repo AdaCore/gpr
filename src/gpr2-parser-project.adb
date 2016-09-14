@@ -431,10 +431,13 @@ package body GPR2.Parser.Project is
          Node    : not null Attribute_Reference;
          Pack    : Optional_Name_Type := "")
          return Containers.Value_List;
+      --  Return the value for an attribute reference in the given project and
+      --  possibly the given package.
 
       function Get_Variable_Ref
         (Project : Name_Type; Node : not null Identifier)
          return Containers.Value_List;
+      --  Return the value for a variable reference in the given project
 
       function Get_Term_List
         (Node   : not null Term_List;
