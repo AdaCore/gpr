@@ -29,11 +29,21 @@ package body GPR2.Project.Import is
    ------------
 
    function Create
-     (Path_Name : Path_Name_Type;
-      Sloc      : Source_Reference.Object) return Object is
+     (Path_Name  : Path_Name_Type;
+      Sloc       : Source_Reference.Object;
+      Is_Limited : Boolean) return Object is
    begin
-      return Object'(Sloc with Path_Name);
+      return Object'(Sloc with Path_Name, Is_Limited);
    end Create;
+
+   ----------------
+   -- Is_Limited --
+   ----------------
+
+   function Is_Limited (Self : Object) return Boolean is
+   begin
+      return Self.Is_Limited;
+   end Is_Limited;
 
    ---------------
    -- Path_Name --

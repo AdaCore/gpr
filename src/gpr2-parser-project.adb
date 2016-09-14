@@ -307,7 +307,8 @@ package body GPR2.Parser.Project is
                            GPR2.Project.Import.Create
                              (Path,
                               Get_Source_Reference
-                                (Filename, Sloc_Range (Cur_Child))));
+                                (Filename, Sloc_Range (Cur_Child)),
+                              F_Is_Limited (N)));
                      end;
                   end if;
                end loop;

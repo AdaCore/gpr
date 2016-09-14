@@ -35,22 +35,28 @@ package GPR2.Project.Import is
    Undefined : constant Object;
 
    function Create
-     (Path_Name : Path_Name_Type;
-      Sloc      : Source_Reference.Object) return Object
+     (Path_Name  : Path_Name_Type;
+      Sloc       : Source_Reference.Object;
+      Is_Limited : Boolean) return Object
      with Pre => Sloc /= Source_Reference.Undefined;
 
    function Path_Name (Self : Object) return Path_Name_Type
      with Pre => Self /= Undefined;
    --  Full pathname of the corresponding project file
 
+   function Is_Limited (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if this is a limited import
+
 private
 
    type Object is new Source_Reference.Object with record
-      Path_Name : Path_Name_Type;
+      Path_Name  : Path_Name_Type;
+      Is_Limited : Boolean;
    end record;
 
    Undefined : constant Object :=
                  (Source_Reference.Undefined
-                  with Path_Name => No_Path_Name);
+                  with Path_Name => No_Path_Name, Is_Limited => False);
 
 end GPR2.Project.Import;
