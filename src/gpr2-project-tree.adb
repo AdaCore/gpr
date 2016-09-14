@@ -438,9 +438,10 @@ package body GPR2.Project.Tree is
 
             --  Now load all imported projects if any
 
-            for Project_Name of Data.Trees.Project.Imports loop
+            for Import of Data.Trees.Project.Imports loop
                Data.Trees.Imports.Insert
-                 (Project_Name, Parser.Project.Load (Project_Name, Messages));
+                 (Import.Path_Name,
+                  Parser.Project.Load (Import.Path_Name, Messages));
             end loop;
          end if;
 

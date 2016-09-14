@@ -28,6 +28,7 @@ with GPR2.Log;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
+with GPR2.Project.Import.Set;
 
 limited with GPR2.Project.Tree;
 
@@ -86,7 +87,7 @@ package GPR2.Parser.Project is
      with Pre => Self /= Undefined;
    --  Returns True if Project has some imported projects
 
-   function Imports (Self : Object) return Containers.Path_Name_List
+   function Imports (Self : Object) return GPR2.Project.Import.Set.Object
      with Pre  => Self /= Undefined,
           Post => (if Self.Has_Imports
                    then not Imports'Result.Is_Empty
@@ -113,7 +114,7 @@ private
       File      : Path_Name_Type;
       Qualifier : Project_Kind := K_Standard;
       Externals : Containers.Name_List;
-      Imports   : Containers.Path_Name_List;
+      Imports   : GPR2.Project.Import.Set.Object;
       Extended  : Path_Name_Type;
       Unit      : Analysis_Unit;
       Context   : Analysis_Context;

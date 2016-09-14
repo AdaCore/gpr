@@ -55,6 +55,15 @@ package body GPR2.Parser.Project is
      (Node /= null);
    --  Returns True if the Node is present (not null)
 
+   function Get_Source_Reference
+     (Path_Name : Path_Name_Type;
+      Slr       : Langkit_Support.Slocs.Source_Location_Range)
+      return Source_Reference.Object is
+     (Source_Reference.Create
+        (Value (Path_Name),
+         Positive (Slr.Start_Line),
+         Positive (Slr.Start_Column)));
+
    --------------
    -- Extended --
    --------------
@@ -122,7 +131,7 @@ package body GPR2.Parser.Project is
    -- Imports --
    -------------
 
-   function Imports (Self : Object) return Containers.Path_Name_List is
+   function Imports (Self : Object) return GPR2.Project.Import.Set.Object is
    begin
       return Self.Imports;
    end Imports;
@@ -293,7 +302,12 @@ package body GPR2.Parser.Project is
                                    (Get_Name_Type
                                       (String_Literal (Cur_Child)));
                      begin
-                        Project.Imports.Append (Path);
+                        Project.Imports.Insert
+                          (Path,
+                           GPR2.Project.Import.Create
+                             (Path,
+                              Get_Source_Reference
+                                (Filename, Sloc_Range (Cur_Child))));
                      end;
                   end if;
                end loop;
@@ -825,7 +839,7 @@ package body GPR2.Parser.Project is
             else
                --  If a single name it can be either a project or a package
 
-               if Containers.Contains (Self.Imports, Name)
+               if GPR2.Project.Import.Set.Contains (Self.Imports, Name)
                  or else Name = "config"
                then
                   --  This is a project reference: <project>'<attribute>
@@ -891,14 +905,6 @@ package body GPR2.Parser.Project is
          procedure Visit_Child (Child : GPR_Node);
          --  Recursive call to the Parser if the Child is not null
 
-         function Get_Source_Reference
-           (Slr : Langkit_Support.Slocs.Source_Location_Range)
-            return Source_Reference.Object is
-           (Source_Reference.Create
-              (Value (Self.File),
-               Positive (Slr.Start_Line),
-               Positive (Slr.Start_Column)));
-
          -------------------------------
          -- Parse_Attribute_Decl_Kind --
          -------------------------------
@@ -907,7 +913,9 @@ package body GPR2.Parser.Project is
            (Node : not null Attribute_Decl)
          is
             Sloc  : constant Source_Reference.Object :=
-                      Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
+                      Get_Source_Reference
+                        (Self.File,
+                         Sloc_Range (GPR_Node (Node)));
             Name  : constant not null GPR_Node := F_Attr_Name (Node);
             Index : constant GPR_Node := F_Attr_Index (Node);
             I_Str : constant Value_Type :=
@@ -1089,7 +1097,8 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Package_Decl_Kind (Node : not null Package_Decl) is
             Sloc   : constant Source_Reference.Object :=
-                       Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
+                       Get_Source_Reference
+                         (Self.File, Sloc_Range (GPR_Node (Node)));
             Name   : constant not null Identifier := F_Pkg_Name (Node);
             P_Name : constant Name_Type :=
                        Get_Name_Type (Single_Tok_Node (Name));
@@ -1131,7 +1140,8 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Variable_Decl_Kind (Node : not null Variable_Decl) is
             Sloc   : constant Source_Reference.Object :=
-                       Get_Source_Reference (Sloc_Range (GPR_Node (Node)));
+                       Get_Source_Reference
+                         (Self.File, Sloc_Range (GPR_Node (Node)));
             Name   : constant not null Identifier := F_Var_Name (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
             Single : Boolean;
