@@ -42,12 +42,13 @@ Implemented
   - spec, body, specification, implementation
   - dot_replacement
 
+- cyclic project dependencies checks
+
+
 Not implemented
 ===============
 
 - limited with
-
-- cyclic project dependencies checks
 
 - sources attributes:
   - specification_exceptions and implementation_exceptions

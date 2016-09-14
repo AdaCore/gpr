@@ -415,7 +415,67 @@ package body GPR2.Project.Tree is
       function Load (Filename : Path_Name_Type) return Definition.Data;
       --  Returns the Data definition for the given project
 
+      function Is_In_Closure
+        (Project_Name : Path_Name_Type;
+         Data         : Definition.Data;
+         Messages     : out Log.Object) return Boolean;
+      --  Returns True if Project_Name is in the closure of the project whose
+      --  Data definition is given.
+
+      -------------------
+      -- Is_In_Closure --
+      -------------------
+
+      function Is_In_Closure
+        (Project_Name : Path_Name_Type;
+         Data         : Definition.Data;
+         Messages     : out Log.Object) return Boolean
+      is
+
+         function Is_In_Closure (Data : Definition.Data) return Boolean;
+         --  True if Project_Name is in closure of Data
+
+         function Is_In_Imports (Data : Definition.Data) return Boolean;
+         --  True if Project_Name is in imports of Data
+
+         -------------------
+         -- Is_In_Closure --
+         -------------------
+
+         function Is_In_Closure (Data : Definition.Data) return Boolean is
+         begin
+            return Data.Trees.Imports.Contains (Project_Name)
+              or else Is_In_Imports (Data);
+         end Is_In_Closure;
+
+         -------------------
+         -- Is_In_Imports --
+         -------------------
+
+         function Is_In_Imports (Data : Definition.Data) return Boolean is
+         begin
+            for Import of Data.Trees.Imports loop
+               if Is_In_Closure (Load (Import.Path_Name)) then
+                  Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "imports " & Value (Import.Path_Name),
+                        Source_Reference.Object
+                          (Data.Trees.Project.Imports.Element
+                            (Import.Path_Name))));
+                  return True;
+               end if;
+            end loop;
+
+            return False;
+         end Is_In_Imports;
+
+      begin
+         return Is_In_Imports (Data);
+      end Is_In_Closure;
+
       ----------
+
       -- Load --
       ----------
 
@@ -504,16 +564,37 @@ package body GPR2.Project.Tree is
       --  this project.
 
       for Project of Data.Trees.Imports loop
-         Data.Imports.Append
-           (Recursive_Load
-              (Project.Path_Name,
-               Context_View =>
-                 (if Context_View = GPR2.Project.View.Undefined
-                  then View
-                  else Context_View),
-               Status       => Definition.Imported,
-               Root_Context => Root_Context,
-               Messages     => Messages));
+         declare
+            Closure_Message : Log.Object;
+         begin
+            if Is_In_Closure (Project.Path_Name, Data, Closure_Message) then
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "circular dependency detected",
+                     Source_Reference.Object
+                       (Data.Trees.Project.Imports.Element
+                            (Project.Path_Name))));
+
+               --  And then add closure circuitry information
+
+               for M of Closure_Message loop
+                  Messages.Append (M);
+               end loop;
+
+            else
+               Data.Imports.Append
+                 (Recursive_Load
+                    (Project.Path_Name,
+                     Context_View =>
+                       (if Context_View = GPR2.Project.View.Undefined
+                        then View
+                        else Context_View),
+                     Status       => Definition.Imported,
+                     Root_Context => Root_Context,
+                     Messages     => Messages));
+            end if;
+         end;
       end loop;
 
       --  And record back new data for this view

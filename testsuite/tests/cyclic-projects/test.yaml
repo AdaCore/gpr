@@ -1,0 +1,5 @@
+description:
+    Check for cyclic project dependencies
+driver: build_and_run
+project_file: cyclic_projects
+main: main
