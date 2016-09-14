@@ -1,0 +1,4 @@
+with "b.gpr";
+project A is
+   for Object_Dir use "toto";
+end A;

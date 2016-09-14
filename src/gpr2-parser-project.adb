@@ -439,6 +439,11 @@ package body GPR2.Parser.Project is
          return Containers.Value_List;
       --  Return the value for a variable reference in the given project
 
+      function Is_Limited_Import
+        (Self : Object; Project : Name_Type) return Boolean;
+      --  Returns True if the given project is made visible through a limited
+      --  immport clause.
+
       function Get_Term_List
         (Node   : not null Term_List;
          Single : out Boolean) return Containers.Value_List;
@@ -520,6 +525,22 @@ package body GPR2.Parser.Project is
                     Containers.Value_Type_List.Empty_Vector;
 
       begin
+         --   We do not want to have a reference to a limited import
+
+         if Project /= "project"
+           and then Project /= "config"
+           and then Is_Limited_Import (Self, Project)
+         then
+            Tree.Log_Messages.Append
+              (Message.Create
+                 (Message.Error,
+                  "cannot have a reference to a limited project",
+                  Get_Source_Reference
+                    (Self.File,
+                     Sloc_Range (Node))));
+            return Result;
+         end if;
+
          if Project = Name_Type (To_String (Self.Name))
            or else Is_Project_Reference
          then
@@ -871,6 +892,22 @@ package body GPR2.Parser.Project is
               with "variable " & String (Name) & " does not exist";
          end if;
       end Get_Variable_Values;
+
+      -----------------------
+      -- Is_Limited_Import --
+      -----------------------
+
+      function Is_Limited_Import
+        (Self : Object; Project : Name_Type) return Boolean is
+      begin
+         for Import of Self.Imports loop
+            if Base_Name (Import.Path_Name) = Project then
+               return Import.Is_Limited;
+            end if;
+         end loop;
+
+         raise Project_Error with "the project should have been found";
+      end Is_Limited_Import;
 
       ------------
       -- Parser --

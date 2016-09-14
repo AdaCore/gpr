@@ -1,0 +1,5 @@
+description:
+    Check for limited references
+driver: build_and_run
+project_file: limited_refs
+main: main

@@ -1,0 +1,5 @@
+
+limited with "a.gpr";
+project B is
+   for Object_Dir use A'Object_Dir;
+end B;
