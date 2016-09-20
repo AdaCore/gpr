@@ -179,7 +179,7 @@ package body GPR2.Parser.Project is
 
             procedure Parse_External_Reference
               (N : not null External_Reference);
-            --  A the name of the external into the Externals list
+            --  Put the name of the external into the Externals list
 
             procedure Parse_With_Decl (N : not null With_Decl);
             --  Add the name of the withed project into the Imports list
