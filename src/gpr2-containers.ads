@@ -40,6 +40,4 @@ package GPR2.Containers is
 
    subtype Value_List is Value_Type_List.Vector;
 
-private
-
 end GPR2.Containers;
