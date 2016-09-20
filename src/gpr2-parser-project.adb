@@ -184,6 +184,10 @@ package body GPR2.Parser.Project is
             procedure Parse_With_Decl (N : not null With_Decl);
             --  Add the name of the withed project into the Imports list
 
+            procedure Parse_Typed_String_Decl
+              (N : not null Typed_String_Decl);
+            --  A typed string declaration
+
             ------------------------------
             -- Parse_External_Reference --
             ------------------------------
@@ -282,6 +286,64 @@ package body GPR2.Parser.Project is
                    (String (Get_Name_Type (Single_Tok_Node (Name))));
             end Parse_Project_Declaration;
 
+            -----------------------------
+            -- Parse_Typed_String_Decl --
+            -----------------------------
+
+            procedure Parse_Typed_String_Decl
+              (N : not null Typed_String_Decl)
+            is
+               Name       : constant Name_Type :=
+                              Get_Name_Type (F_Type_Id (N));
+               Values     : constant not null List_String_Literal :=
+                              F_String_Literals (N);
+               Num_Childs : constant Natural := Child_Count (Values);
+               Cur_Child  : GPR_Node;
+               Set        : Containers.Value_Set;
+            begin
+               if Project.Types.Contains (Name) then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference
+                            (Filename, Sloc_Range (F_Type_Id (N))),
+                        Message =>
+                          "type " & String (Name) & " already defined"));
+
+               else
+                  for J in 1 .. Num_Childs loop
+                     Cur_Child := Child (GPR_Node (Values), J);
+
+                     if Cur_Child /= null then
+                        declare
+                           Value : constant Value_Type :=
+                                     Value_Type
+                                       (Get_Name_Type
+                                          (String_Literal (Cur_Child)));
+                        begin
+                           if Set.Contains (Value) then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (Cur_Child)),
+                                    Message =>
+                                      String (Name)
+                                    & " has duplicate value '"
+                                    & String (Value) & '''));
+                           else
+                              Set.Insert (Value);
+                           end if;
+                        end;
+                     end if;
+                  end loop;
+
+                  Project.Types.Insert (Name, Set);
+               end if;
+            end Parse_Typed_String_Decl;
+
             ---------------------
             -- Parse_With_Decl --
             ---------------------
@@ -324,6 +386,9 @@ package body GPR2.Parser.Project is
 
                when GPR_With_Decl =>
                   Parse_With_Decl (With_Decl (Node));
+
+               when GPR_Typed_String_Decl =>
+                  Parse_Typed_String_Decl (Typed_String_Decl (Node));
 
                when others =>
                   null;

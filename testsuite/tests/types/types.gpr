@@ -22,28 +22,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Some common containers for Name, Value and Path_Name
+with "gpr2";
 
-with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Indefinite_Ordered_Sets;
-
-package GPR2.Containers is
-
-   subtype Count_Type is Ada.Containers.Count_Type;
-
-   package Name_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Name_Type);
-
-   subtype Name_List is Name_Type_List.Vector;
-
-   package Value_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
-
-   subtype Value_List is Value_Type_List.Vector;
-
-   package Value_Type_Set is
-     new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);
-
-   subtype Value_Set is Value_Type_Set.Set;
-
-end GPR2.Containers;
+project Types is
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+end Types;

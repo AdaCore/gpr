@@ -1,0 +1,4 @@
+Messages found:
+demo.gpr:4:9: type T1 already defined
+Messages found:
+demo2.gpr:4:30: T2 has duplicate value 'one'

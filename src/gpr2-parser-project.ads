@@ -33,6 +33,7 @@ with GPR2.Project.Import.Set;
 limited with GPR2.Project.Tree;
 
 private with GPR_Parser.Analysis;
+private with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Parser.Project is
 
@@ -109,6 +110,10 @@ private
 
    use GPR_Parser.Analysis;
 
+   package Type_Set is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, GPR2.Containers.Value_Set,
+      "=" => GPR2.Containers.Value_Type_Set."=");
+
    type Object is tagged record
       Name      : Unbounded_String;
       File      : Path_Name_Type;
@@ -116,6 +121,7 @@ private
       Externals : Containers.Name_List;
       Imports   : GPR2.Project.Import.Set.Object;
       Extended  : Path_Name_Type;
+      Types     : Type_Set.Map;
       Unit      : Analysis_Unit;
       Context   : Analysis_Context;
       --  ??? Must be freed : Destroy (Context)

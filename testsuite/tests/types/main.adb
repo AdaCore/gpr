@@ -22,28 +22,51 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Some common containers for Name, Value and Path_Name
+with Ada.Text_IO;
+with Ada.Strings.Fixed;
 
-with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Indefinite_Ordered_Sets;
+with GPR2.Project.Tree;
 
-package GPR2.Containers is
+procedure Main is
 
-   subtype Count_Type is Ada.Containers.Count_Type;
+   use Ada;
+   use GPR2;
+   use GPR2.Project;
 
-   package Name_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Name_Type);
+   procedure Load (Filename : String);
 
-   subtype Name_List is Name_Type_List.Vector;
+   ----------
+   -- Load --
+   ----------
 
-   package Value_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
+   procedure Load (Filename : String) is
+      Prj : Project.Tree.Object;
+   begin
+      Project.Tree.Load (Prj, Create (Name_Type (Filename)));
+      Text_IO.Put_Line ("All good, no message.");
 
-   subtype Value_List is Value_Type_List.Vector;
+   exception
+      when GPR2.Project_Error =>
+         if Prj.Has_Messages then
+            Text_IO.Put_Line ("Messages found:");
 
-   package Value_Type_Set is
-     new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);
+            for M of Prj.Log_Messages.all loop
+               declare
+                  Mes : constant String := M.Format;
+                  L   : constant Natural :=
+                    Strings.Fixed.Index (Mes, "/types");
+               begin
+                  if L /= 0 then
+                     Text_IO.Put_Line (Mes (L .. Mes'Last));
+                  else
+                     Text_IO.Put_Line (Mes);
+                  end if;
+               end;
+            end loop;
+         end if;
+   end Load;
 
-   subtype Value_Set is Value_Type_Set.Set;
-
-end GPR2.Containers;
+begin
+   Load ("demo.gpr");
+   Load ("demo2.gpr");
+end Main;

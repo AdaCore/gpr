@@ -1,0 +1,5 @@
+
+abstract project Demo is
+   type T1 is ("one", "two", "ONE");
+   type T1 is ("one", "two", "one");
+end Demo;
