@@ -1,0 +1,5 @@
+
+abstract project Demo3 is
+   type T1 is ("one", "two", "ONE");
+   Val : T2 := "hh";
+end Demo3;

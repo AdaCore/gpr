@@ -1,0 +1,6 @@
+
+abstract project Demo is
+   type T1 is ("one", "two", "ONE");
+
+   Var : T1 := "x";
+end Demo;

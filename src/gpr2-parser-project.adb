@@ -1257,9 +1257,58 @@ package body GPR2.Parser.Project is
             V      : GPR2.Project.Variable.Object;
          begin
             if V_Type /= null then
-               --  The Type_Name
-               --  ?? check the type
-               null;
+               declare
+                  T_Name : constant Name_Type :=
+                             Get_Name_Type (Single_Tok_Node (V_Type));
+               begin
+                  --  Check that the type has been defined
+
+                  if Self.Types.Contains (T_Name) then
+                     --  Check that we have a single value
+
+                     if Single then
+                        --  Check that the value is part of the type
+
+                        if not Self.Types (T_Name).Contains
+                          (Values.First_Element)
+                        then
+                           Tree.Log_Messages.Append
+                             (Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    => Sloc,
+                                 Message =>
+                                   "value '"
+                                   & String (Values.First_Element)
+                                   & "' is illegal for typed string '"
+                                   & String
+                                       (Get_Name_Type
+                                         (Single_Tok_Node (Name))) & '''));
+                        end if;
+
+                     else
+                        Tree.Log_Messages.Append
+                          (Message.Create
+                             (Level   => Message.Error,
+                              Sloc    => Sloc,
+                              Message =>
+                                "expression for '"
+                                & String
+                                    (Get_Name_Type (Single_Tok_Node (Name)))
+                                & "' must be a single string"));
+                     end if;
+
+                  else
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference
+                               (Self.File, Sloc_Range (GPR_Node (V_Type))),
+                           Message =>
+                             "unknown string type '" & String (T_Name) & '''));
+                  end if;
+
+               end;
             end if;
 
             if Single then

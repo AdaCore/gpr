@@ -1,0 +1,5 @@
+description:
+    Some simple checks for typed variables
+driver: build_and_run
+project_file: typed_variables
+main: main
