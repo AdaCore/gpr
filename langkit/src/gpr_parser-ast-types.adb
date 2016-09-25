@@ -205,12 +205,6 @@ package body GPR_Parser.AST.Types is
 
    
 
-   
-
-   
-
-   
-
 
    
 
@@ -613,7 +607,7 @@ package body GPR_Parser.AST.Types is
 
 
       function F_Attr_Name
-        (Node : access Attribute_Decl_Type) return GPR_Node
+        (Node : access Attribute_Decl_Type) return Identifier
       is
       begin
          return Node.F_Attr_Name;
@@ -861,6 +855,237 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Attribute_Index;
       end F_Attribute_Index;
+
+
+   
+
+
+   
+
+   --
+   --  Primitives for Builtin_Function_Call
+   --
+
+   
+
+
+      ----------
+      -- Kind --
+      ----------
+
+      overriding
+      function Kind
+        (Node : access Builtin_Function_Call_Type)
+         return GPR_Node_Kind_Type
+      is
+         pragma Unreferenced (Node);
+      begin
+         return GPR_Builtin_Function_Call;
+      end Kind;
+
+      ---------------
+      -- Kind_Name --
+      ---------------
+
+      overriding
+      function Kind_Name (Node : access Builtin_Function_Call_Type) return String is
+         pragma Unreferenced (Node);
+      begin
+         return "BuiltinFunctionCall";
+      end Kind_Name;
+
+      -----------
+      -- Image --
+      -----------
+
+      overriding
+      function Image (Node : access Builtin_Function_Call_Type) return String is
+         Result : Unbounded_String;
+      begin
+         Append (Result, Kind_Name (Node));
+         Append (Result, '[');
+         Append (Result, Image (Sloc_Range (GPR_Node (Node))));
+         Append (Result, "](");
+
+
+                 if Node.F_Function_Name /= null then
+
+                Append (Result,
+                        Image (GPR_Node (Node.F_Function_Name)));
+
+                 else
+                    Append (Result, "None");
+                 end if;
+                 Append (Result, ", ");
+
+                 if Node.F_Parameters /= null then
+
+                Append (Result,
+                        Image (GPR_Node (Node.F_Parameters)));
+
+                 else
+                    Append (Result, "None");
+                 end if;
+
+         Append (Result, ')');
+         return To_String (Result);
+      end Image;
+
+      -----------------
+      -- Child_Count --
+      -----------------
+
+      overriding
+      function Child_Count (Node : access Builtin_Function_Call_Type) return Natural is
+         pragma Unreferenced (Node);
+      begin
+         return 2;
+      end Child_Count;
+
+      ---------------
+      -- Get_Child --
+      ---------------
+
+      overriding
+      procedure Get_Child (Node   : access Builtin_Function_Call_Type;
+                           Index  : Positive;
+                           Exists : out Boolean;
+                           Result : out GPR_Node) is
+      begin
+         case Index is
+                 when 1 =>
+                     Result := GPR_Node (Node.F_Function_Name);
+                     Exists := True;
+                 when 2 =>
+                     Result := GPR_Node (Node.F_Parameters);
+                     Exists := True;
+             when others =>
+                Exists := False;
+                Result := null;
+         end case;
+      end Get_Child;
+
+      -----------
+      -- Print --
+      -----------
+
+      overriding
+      procedure Print (Node  : access Builtin_Function_Call_Type;
+                       Level : Natural := 0)
+      is
+         Nod : constant GPR_Node :=
+            GPR_Node (Node);
+      begin
+         Put_Line
+           (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
+
+               if Node.F_Function_Name /= null
+                  and then not Is_Empty_List (Node.F_Function_Name)
+               then
+                  Put_Line (Level + 1, "function_name:");
+                  Node.F_Function_Name.Print (Level + 2);
+               end if;
+
+               if Node.F_Parameters /= null
+                  and then not Is_Empty_List (Node.F_Parameters)
+               then
+                  Put_Line (Level + 1, "parameters:");
+                  Node.F_Parameters.Print (Level + 2);
+               end if;
+
+
+      end Print;
+
+      -------------
+      -- Destroy --
+      -------------
+
+      overriding procedure Destroy
+        (Node : access Builtin_Function_Call_Type)
+      is
+      begin
+         if Langkit_Support.Extensions.Has_Extensions then
+            Node.Free_Extensions;
+         end if;
+            if Node.F_Function_Name /= null then
+               Destroy (Node.F_Function_Name);
+            end if;
+            if Node.F_Parameters /= null then
+               Destroy (Node.F_Parameters);
+            end if;
+      end Destroy;
+
+      ---------------------
+      -- Lookup_Children --
+      ---------------------
+
+      overriding
+      function Lookup_Children (Node : access Builtin_Function_Call_Type;
+                                Sloc : Source_Location;
+                                Snap : Boolean := False)
+        return GPR_Node
+      is
+
+         Nod : constant GPR_Node :=
+            GPR_Node (Node);
+         pragma Assert (Compare (Sloc_Range (Nod, Snap), Sloc) = Inside);
+
+         Child : GPR_Node;
+         Pos   : Relative_Position;
+
+
+      begin
+
+
+            if Node.F_Function_Name /= null then
+               Lookup_Relative (GPR_Node (Node.F_Function_Name),
+                                Sloc, Pos, Child, Snap);
+               case Pos is
+                  when Before =>
+                      return Nod;
+
+                  when Inside =>
+                      return Child;
+
+                  when After =>
+                      null;
+               end case;
+            end if;
+
+            if Node.F_Parameters /= null then
+               Lookup_Relative (GPR_Node (Node.F_Parameters),
+                                Sloc, Pos, Child, Snap);
+               case Pos is
+                  when Before =>
+                      return Nod;
+
+                  when Inside =>
+                      return Child;
+
+                  when After =>
+                      null;
+               end case;
+            end if;
+
+
+         return Nod;
+      end Lookup_Children;
+
+
+
+
+      function F_Function_Name
+        (Node : access Builtin_Function_Call_Type) return Identifier
+      is
+      begin
+         return Node.F_Function_Name;
+      end F_Function_Name;
+      function F_Parameters
+        (Node : access Builtin_Function_Call_Type) return Expr_List
+      is
+      begin
+         return Node.F_Parameters;
+      end F_Parameters;
 
 
    
@@ -2579,725 +2804,6 @@ package body GPR_Parser.AST.Types is
       begin
          return Node.F_Exprs;
       end F_Exprs;
-
-
-   
-
-
-   
-
-   --
-   --  Primitives for External
-   --
-
-   
-
-
-      ----------
-      -- Kind --
-      ----------
-
-      overriding
-      function Kind
-        (Node : access External_Type)
-         return GPR_Node_Kind_Type
-      is
-         pragma Unreferenced (Node);
-      begin
-         return GPR_External;
-      end Kind;
-
-      ---------------
-      -- Kind_Name --
-      ---------------
-
-      overriding
-      function Kind_Name (Node : access External_Type) return String is
-         pragma Unreferenced (Node);
-      begin
-         return "External";
-      end Kind_Name;
-
-      -----------
-      -- Image --
-      -----------
-
-      overriding
-      function Image (Node : access External_Type) return String is
-         Result : Unbounded_String;
-      begin
-         Append (Result, Kind_Name (Node));
-         Append (Result, '[');
-         Append (Result, Image (Sloc_Range (GPR_Node (Node))));
-         Append (Result, "](");
-
-
-         Append (Result, ')');
-         return To_String (Result);
-      end Image;
-
-      -----------------
-      -- Child_Count --
-      -----------------
-
-      overriding
-      function Child_Count (Node : access External_Type) return Natural is
-         pragma Unreferenced (Node);
-      begin
-         return 0;
-      end Child_Count;
-
-      ---------------
-      -- Get_Child --
-      ---------------
-
-      overriding
-      procedure Get_Child (Node   : access External_Type;
-                           Index  : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node) is
-             pragma Unreferenced (Node);
-             pragma Unreferenced (Result);
-      begin
-         case Index is
-             when others =>
-                Exists := False;
-                Result := null;
-         end case;
-      end Get_Child;
-
-      -----------
-      -- Print --
-      -----------
-
-      overriding
-      procedure Print (Node  : access External_Type;
-                       Level : Natural := 0)
-      is
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-      begin
-         Put_Line
-           (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
-
-
-      end Print;
-
-      -------------
-      -- Destroy --
-      -------------
-
-      overriding procedure Destroy
-        (Node : access External_Type)
-      is
-      begin
-         if Langkit_Support.Extensions.Has_Extensions then
-            Node.Free_Extensions;
-         end if;
-      end Destroy;
-
-      ---------------------
-      -- Lookup_Children --
-      ---------------------
-
-      overriding
-      function Lookup_Children (Node : access External_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node
-      is
-
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-         pragma Assert (Compare (Sloc_Range (Nod, Snap), Sloc) = Inside);
-
-         Child : GPR_Node;
-         Pos   : Relative_Position;
-
-             pragma Unreferenced (Child);
-             pragma Unreferenced (Pos);
-
-      begin
-
-
-
-         return Nod;
-      end Lookup_Children;
-
-
-
-
-
-
-   
-
-
-   
-
-   --
-   --  Primitives for External_As_List
-   --
-
-   
-
-
-      ----------
-      -- Kind --
-      ----------
-
-      overriding
-      function Kind
-        (Node : access External_As_List_Type)
-         return GPR_Node_Kind_Type
-      is
-         pragma Unreferenced (Node);
-      begin
-         return GPR_External_As_List;
-      end Kind;
-
-      ---------------
-      -- Kind_Name --
-      ---------------
-
-      overriding
-      function Kind_Name (Node : access External_As_List_Type) return String is
-         pragma Unreferenced (Node);
-      begin
-         return "ExternalAsList";
-      end Kind_Name;
-
-      -----------
-      -- Image --
-      -----------
-
-      overriding
-      function Image (Node : access External_As_List_Type) return String is
-         Result : Unbounded_String;
-      begin
-         Append (Result, Kind_Name (Node));
-         Append (Result, '[');
-         Append (Result, Image (Sloc_Range (GPR_Node (Node))));
-         Append (Result, "](");
-
-
-         Append (Result, ')');
-         return To_String (Result);
-      end Image;
-
-      -----------------
-      -- Child_Count --
-      -----------------
-
-      overriding
-      function Child_Count (Node : access External_As_List_Type) return Natural is
-         pragma Unreferenced (Node);
-      begin
-         return 0;
-      end Child_Count;
-
-      ---------------
-      -- Get_Child --
-      ---------------
-
-      overriding
-      procedure Get_Child (Node   : access External_As_List_Type;
-                           Index  : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node) is
-             pragma Unreferenced (Node);
-             pragma Unreferenced (Result);
-      begin
-         case Index is
-             when others =>
-                Exists := False;
-                Result := null;
-         end case;
-      end Get_Child;
-
-      -----------
-      -- Print --
-      -----------
-
-      overriding
-      procedure Print (Node  : access External_As_List_Type;
-                       Level : Natural := 0)
-      is
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-      begin
-         Put_Line
-           (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
-
-
-      end Print;
-
-      -------------
-      -- Destroy --
-      -------------
-
-      overriding procedure Destroy
-        (Node : access External_As_List_Type)
-      is
-      begin
-         if Langkit_Support.Extensions.Has_Extensions then
-            Node.Free_Extensions;
-         end if;
-      end Destroy;
-
-      ---------------------
-      -- Lookup_Children --
-      ---------------------
-
-      overriding
-      function Lookup_Children (Node : access External_As_List_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node
-      is
-
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-         pragma Assert (Compare (Sloc_Range (Nod, Snap), Sloc) = Inside);
-
-         Child : GPR_Node;
-         Pos   : Relative_Position;
-
-             pragma Unreferenced (Child);
-             pragma Unreferenced (Pos);
-
-      begin
-
-
-
-         return Nod;
-      end Lookup_Children;
-
-
-
-
-
-
-   
-
-
-   
-
-   --
-   --  Primitives for External_Name
-   --
-
-   
-
-
-      ----------
-      -- Kind --
-      ----------
-
-      overriding
-      function Kind
-        (Node : access External_Name_Type)
-         return GPR_Node_Kind_Type
-      is
-         pragma Unreferenced (Node);
-      begin
-         return GPR_External_Name;
-      end Kind;
-
-      ---------------
-      -- Kind_Name --
-      ---------------
-
-      overriding
-      function Kind_Name (Node : access External_Name_Type) return String is
-         pragma Unreferenced (Node);
-      begin
-         return "ExternalName";
-      end Kind_Name;
-
-      -----------
-      -- Image --
-      -----------
-
-      overriding
-      function Image (Node : access External_Name_Type) return String is
-         Result : Unbounded_String;
-      begin
-         Append (Result, Kind_Name (Node));
-         Append (Result, '[');
-         Append (Result, Image (Sloc_Range (GPR_Node (Node))));
-         Append (Result, "](");
-
-
-         Append (Result, ')');
-         return To_String (Result);
-      end Image;
-
-      -----------------
-      -- Child_Count --
-      -----------------
-
-      overriding
-      function Child_Count (Node : access External_Name_Type) return Natural is
-         pragma Unreferenced (Node);
-      begin
-         return 0;
-      end Child_Count;
-
-      ---------------
-      -- Get_Child --
-      ---------------
-
-      overriding
-      procedure Get_Child (Node   : access External_Name_Type;
-                           Index  : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node) is
-             pragma Unreferenced (Node);
-             pragma Unreferenced (Result);
-      begin
-         case Index is
-             when others =>
-                Exists := False;
-                Result := null;
-         end case;
-      end Get_Child;
-
-      -----------
-      -- Print --
-      -----------
-
-      overriding
-      procedure Print (Node  : access External_Name_Type;
-                       Level : Natural := 0)
-      is
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-      begin
-         Put_Line
-           (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
-
-
-      end Print;
-
-      -------------
-      -- Destroy --
-      -------------
-
-      overriding procedure Destroy
-        (Node : access External_Name_Type)
-      is
-      begin
-         if Langkit_Support.Extensions.Has_Extensions then
-            Node.Free_Extensions;
-         end if;
-      end Destroy;
-
-      ---------------------
-      -- Lookup_Children --
-      ---------------------
-
-      overriding
-      function Lookup_Children (Node : access External_Name_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node
-      is
-
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-         pragma Assert (Compare (Sloc_Range (Nod, Snap), Sloc) = Inside);
-
-         Child : GPR_Node;
-         Pos   : Relative_Position;
-
-             pragma Unreferenced (Child);
-             pragma Unreferenced (Pos);
-
-      begin
-
-
-
-         return Nod;
-      end Lookup_Children;
-
-
-
-
-
-
-   
-
-
-   
-
-   --
-   --  Primitives for External_Reference
-   --
-
-   
-
-
-      ----------
-      -- Kind --
-      ----------
-
-      overriding
-      function Kind
-        (Node : access External_Reference_Type)
-         return GPR_Node_Kind_Type
-      is
-         pragma Unreferenced (Node);
-      begin
-         return GPR_External_Reference;
-      end Kind;
-
-      ---------------
-      -- Kind_Name --
-      ---------------
-
-      overriding
-      function Kind_Name (Node : access External_Reference_Type) return String is
-         pragma Unreferenced (Node);
-      begin
-         return "ExternalReference";
-      end Kind_Name;
-
-      -----------
-      -- Image --
-      -----------
-
-      overriding
-      function Image (Node : access External_Reference_Type) return String is
-         Result : Unbounded_String;
-      begin
-         Append (Result, Kind_Name (Node));
-         Append (Result, '[');
-         Append (Result, Image (Sloc_Range (GPR_Node (Node))));
-         Append (Result, "](");
-
-
-                 if Node.F_Kind /= null then
-
-                Append (Result,
-                        Image (GPR_Node (Node.F_Kind)));
-
-                 else
-                    Append (Result, "None");
-                 end if;
-                 Append (Result, ", ");
-
-                 if Node.F_String_Lit /= null then
-
-                Append (Result,
-                        Image (GPR_Node (Node.F_String_Lit)));
-
-                 else
-                    Append (Result, "None");
-                 end if;
-                 Append (Result, ", ");
-
-                 if Node.F_Expr /= null then
-
-                Append (Result,
-                        Image (GPR_Node (Node.F_Expr)));
-
-                 else
-                    Append (Result, "None");
-                 end if;
-
-         Append (Result, ')');
-         return To_String (Result);
-      end Image;
-
-      -----------------
-      -- Child_Count --
-      -----------------
-
-      overriding
-      function Child_Count (Node : access External_Reference_Type) return Natural is
-         pragma Unreferenced (Node);
-      begin
-         return 3;
-      end Child_Count;
-
-      ---------------
-      -- Get_Child --
-      ---------------
-
-      overriding
-      procedure Get_Child (Node   : access External_Reference_Type;
-                           Index  : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node) is
-      begin
-         case Index is
-                 when 1 =>
-                     Result := GPR_Node (Node.F_Kind);
-                     Exists := True;
-                 when 2 =>
-                     Result := GPR_Node (Node.F_String_Lit);
-                     Exists := True;
-                 when 3 =>
-                     Result := GPR_Node (Node.F_Expr);
-                     Exists := True;
-             when others =>
-                Exists := False;
-                Result := null;
-         end case;
-      end Get_Child;
-
-      -----------
-      -- Print --
-      -----------
-
-      overriding
-      procedure Print (Node  : access External_Reference_Type;
-                       Level : Natural := 0)
-      is
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-      begin
-         Put_Line
-           (Level, Kind_Name (Nod) & "[" & Image (Sloc_Range (Nod)) & "]");
-
-               if Node.F_Kind /= null
-                  and then not Is_Empty_List (Node.F_Kind)
-               then
-                  Put_Line (Level + 1, "kind:");
-                  Node.F_Kind.Print (Level + 2);
-               end if;
-
-               if Node.F_String_Lit /= null
-                  and then not Is_Empty_List (Node.F_String_Lit)
-               then
-                  Put_Line (Level + 1, "string_lit:");
-                  Node.F_String_Lit.Print (Level + 2);
-               end if;
-
-               if Node.F_Expr /= null
-                  and then not Is_Empty_List (Node.F_Expr)
-               then
-                  Put_Line (Level + 1, "expr:");
-                  Node.F_Expr.Print (Level + 2);
-               end if;
-
-
-      end Print;
-
-      -------------
-      -- Destroy --
-      -------------
-
-      overriding procedure Destroy
-        (Node : access External_Reference_Type)
-      is
-      begin
-         if Langkit_Support.Extensions.Has_Extensions then
-            Node.Free_Extensions;
-         end if;
-            if Node.F_Kind /= null then
-               Destroy (Node.F_Kind);
-            end if;
-            if Node.F_String_Lit /= null then
-               Destroy (Node.F_String_Lit);
-            end if;
-            if Node.F_Expr /= null then
-               Destroy (Node.F_Expr);
-            end if;
-      end Destroy;
-
-      ---------------------
-      -- Lookup_Children --
-      ---------------------
-
-      overriding
-      function Lookup_Children (Node : access External_Reference_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node
-      is
-
-         Nod : constant GPR_Node :=
-            GPR_Node (Node);
-         pragma Assert (Compare (Sloc_Range (Nod, Snap), Sloc) = Inside);
-
-         Child : GPR_Node;
-         Pos   : Relative_Position;
-
-
-      begin
-
-
-            if Node.F_Kind /= null then
-               Lookup_Relative (GPR_Node (Node.F_Kind),
-                                Sloc, Pos, Child, Snap);
-               case Pos is
-                  when Before =>
-                      return Nod;
-
-                  when Inside =>
-                      return Child;
-
-                  when After =>
-                      null;
-               end case;
-            end if;
-
-            if Node.F_String_Lit /= null then
-               Lookup_Relative (GPR_Node (Node.F_String_Lit),
-                                Sloc, Pos, Child, Snap);
-               case Pos is
-                  when Before =>
-                      return Nod;
-
-                  when Inside =>
-                      return Child;
-
-                  when After =>
-                      null;
-               end case;
-            end if;
-
-            if Node.F_Expr /= null then
-               Lookup_Relative (GPR_Node (Node.F_Expr),
-                                Sloc, Pos, Child, Snap);
-               case Pos is
-                  when Before =>
-                      return Nod;
-
-                  when Inside =>
-                      return Child;
-
-                  when After =>
-                      null;
-               end case;
-            end if;
-
-
-         return Nod;
-      end Lookup_Children;
-
-
-
-
-      function F_Kind
-        (Node : access External_Reference_Type) return GPR_Node
-      is
-      begin
-         return Node.F_Kind;
-      end F_Kind;
-      function F_String_Lit
-        (Node : access External_Reference_Type) return String_Literal
-      is
-      begin
-         return Node.F_String_Lit;
-      end F_String_Lit;
-      function F_Expr
-        (Node : access External_Reference_Type) return Term_List
-      is
-      begin
-         return Node.F_Expr;
-      end F_Expr;
 
 
    

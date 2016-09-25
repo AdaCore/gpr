@@ -304,6 +304,7 @@ package GPR_Parser.AST is
       , GPR_Abstract_Present
       , GPR_Attribute_Decl
       , GPR_Attribute_Reference
+      , GPR_Builtin_Function_Call
       , GPR_Case_Construction
       , GPR_Case_Item
       , GPR_Compilation_Unit
@@ -313,10 +314,6 @@ package GPR_Parser.AST is
       , GPR_Num_Literal
       , GPR_String_Literal
       , GPR_Expr_List
-      , GPR_External
-      , GPR_External_As_List
-      , GPR_External_Name
-      , GPR_External_Reference
       , GPR_Others_Designator
       , GPR_Package_Decl
       , GPR_Package_Extension
@@ -342,36 +339,33 @@ package GPR_Parser.AST is
       , GPR_Abstract_Present => 2
       , GPR_Attribute_Decl => 3
       , GPR_Attribute_Reference => 4
-      , GPR_Case_Construction => 5
-      , GPR_Case_Item => 6
-      , GPR_Compilation_Unit => 7
-      , GPR_Empty_Decl => 8
-      , GPR_Prefix => 9
-      , GPR_Identifier => 10
-      , GPR_Num_Literal => 11
-      , GPR_String_Literal => 12
-      , GPR_Expr_List => 13
-      , GPR_External => 14
-      , GPR_External_As_List => 15
-      , GPR_External_Name => 16
-      , GPR_External_Reference => 17
-      , GPR_Others_Designator => 18
-      , GPR_Package_Decl => 19
-      , GPR_Package_Extension => 20
-      , GPR_Package_Renaming => 21
-      , GPR_Package_Spec => 22
-      , GPR_Project => 23
-      , GPR_Project_Declaration => 24
-      , GPR_Project_Extension => 25
-      , GPR_Project_Qualifier => 26
-      , GPR_Project_Reference => 27
-      , GPR_Qualifier_Names => 28
-      , GPR_String_Literal_At => 29
-      , GPR_Term_List => 30
-      , GPR_Typed_String_Decl => 31
-      , GPR_Variable_Decl => 32
-      , GPR_Variable_Reference => 33
-      , GPR_With_Decl => 34
+      , GPR_Builtin_Function_Call => 5
+      , GPR_Case_Construction => 6
+      , GPR_Case_Item => 7
+      , GPR_Compilation_Unit => 8
+      , GPR_Empty_Decl => 9
+      , GPR_Prefix => 10
+      , GPR_Identifier => 11
+      , GPR_Num_Literal => 12
+      , GPR_String_Literal => 13
+      , GPR_Expr_List => 14
+      , GPR_Others_Designator => 15
+      , GPR_Package_Decl => 16
+      , GPR_Package_Extension => 17
+      , GPR_Package_Renaming => 18
+      , GPR_Package_Spec => 19
+      , GPR_Project => 20
+      , GPR_Project_Declaration => 21
+      , GPR_Project_Extension => 22
+      , GPR_Project_Qualifier => 23
+      , GPR_Project_Reference => 24
+      , GPR_Qualifier_Names => 25
+      , GPR_String_Literal_At => 26
+      , GPR_Term_List => 27
+      , GPR_Typed_String_Decl => 28
+      , GPR_Variable_Decl => 29
+      , GPR_Variable_Reference => 30
+      , GPR_With_Decl => 31
      );
 
       
@@ -379,6 +373,7 @@ package GPR_Parser.AST is
             GPR_Node_Kind_Type range
                GPR_Abstract_Present
                .. GPR_With_Decl;
+      
       
       
       
@@ -397,10 +392,6 @@ package GPR_Parser.AST is
             GPR_Node_Kind_Type range
                GPR_Identifier
                .. GPR_String_Literal;
-      
-      
-      
-      
       
       
       

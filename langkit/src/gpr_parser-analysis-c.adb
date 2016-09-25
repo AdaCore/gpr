@@ -435,6 +435,8 @@ package body GPR_Parser.Analysis.C is
                new Text_Type'(To_Text ("AttributeDecl"))
             , GPR_Attribute_Reference =>
                new Text_Type'(To_Text ("AttributeReference"))
+            , GPR_Builtin_Function_Call =>
+               new Text_Type'(To_Text ("BuiltinFunctionCall"))
             , GPR_Case_Construction =>
                new Text_Type'(To_Text ("CaseConstruction"))
             , GPR_Case_Item =>
@@ -453,14 +455,6 @@ package body GPR_Parser.Analysis.C is
                new Text_Type'(To_Text ("StringLiteral"))
             , GPR_Expr_List =>
                new Text_Type'(To_Text ("ExprList"))
-            , GPR_External =>
-               new Text_Type'(To_Text ("External"))
-            , GPR_External_As_List =>
-               new Text_Type'(To_Text ("ExternalAsList"))
-            , GPR_External_Name =>
-               new Text_Type'(To_Text ("ExternalName"))
-            , GPR_External_Reference =>
-               new Text_Type'(To_Text ("ExternalReference"))
             , GPR_Others_Designator =>
                new Text_Type'(To_Text ("OthersDesignator"))
             , GPR_Package_Decl =>

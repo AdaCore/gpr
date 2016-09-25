@@ -22,8 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Text_IO;
 with Ada.Directories;
+with Ada.Text_IO;
+with Ada.Strings.Fixed;
 
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -140,4 +141,24 @@ begin
    for P of Prj2 loop
       Display (P, Full => False);
    end loop;
+
+exception
+   when GPR2.Project_Error =>
+      if Prj1.Has_Messages then
+         Text_IO.Put_Line ("Messages found:");
+
+         for M of Prj1.Log_Messages.all loop
+            declare
+               Mes : constant String := M.Format;
+               L   : constant Natural :=
+                 Strings.Fixed.Index (Mes, "/simple");
+            begin
+               if L /= 0 then
+                  Text_IO.Put_Line (Mes (L .. Mes'Last));
+               else
+                  Text_IO.Put_Line (Mes);
+               end if;
+            end;
+         end loop;
+      end if;
 end Main;

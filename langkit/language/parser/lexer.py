@@ -28,8 +28,6 @@ class Token(LexerToken):
     # GPR Keywords
     Project = WithSymbol()
     Extends = WithSymbol()
-    External = WithSymbol()
-    ExternalAsList = WithSymbol()
 
     # Punctuation
     ParOpen = WithSymbol()
@@ -87,8 +85,6 @@ gpr_lexer.add_rules(
 
     (NoCase("project"),                         Token.Project),
     (NoCase("extends"),                         Token.Extends),
-    (NoCase("external"),                        Token.External),
-    (NoCase("external_as_list"),                Token.ExternalAsList),
     (Literal("("),                              Token.ParOpen),
     (Literal(")"),                              Token.ParClose),
     (Literal(";"),                              Token.Semicolon),

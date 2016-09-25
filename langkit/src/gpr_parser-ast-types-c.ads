@@ -262,6 +262,36 @@ procedure gpr_env_element_array_dec_ref (A : Env_Element_Array_Access)
 
    
 
+   function gpr_builtin_function_call_f_function_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_base_node_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_builtin_function_call_f_function_name";
+   
+
+
+           
+
+   
+
+   function gpr_builtin_function_call_f_parameters
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_base_node_Ptr) return int
+      with Export        => True,
+           Convention    => C,
+           External_name => "gpr_builtin_function_call_f_parameters";
+   
+
+
+           
+
+   
+
    function gpr_case_construction_f_var_ref
      (Node    : gpr_base_node;
 
@@ -390,51 +420,6 @@ procedure gpr_env_element_array_dec_ref (A : Env_Element_Array_Access)
       with Export        => True,
            Convention    => C,
            External_name => "gpr_expr_list_f_exprs";
-   
-
-
-           
-
-   
-
-   function gpr_external_reference_f_kind
-     (Node    : gpr_base_node;
-
-
-      Value_P : gpr_base_node_Ptr) return int
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_external_reference_f_kind";
-   
-
-
-           
-
-   
-
-   function gpr_external_reference_f_string_lit
-     (Node    : gpr_base_node;
-
-
-      Value_P : gpr_base_node_Ptr) return int
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_external_reference_f_string_lit";
-   
-
-
-           
-
-   
-
-   function gpr_external_reference_f_expr
-     (Node    : gpr_base_node;
-
-
-      Value_P : gpr_base_node_Ptr) return int
-      with Export        => True,
-           Convention    => C,
-           External_name => "gpr_external_reference_f_expr";
    
 
 

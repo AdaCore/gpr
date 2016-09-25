@@ -4,7 +4,7 @@
 A        K_STANDARD
 A:   Object_Dir -> linux-obj
 Demo     K_AGGREGATE
-A:   external -> Linux
+A:   External -> Linux
 A:   Project_Files -> a.gpr
 A        K_STANDARD
 A:   Object_Dir -> linux-obj
@@ -14,7 +14,7 @@ A:   Object_Dir -> linux-obj
 A        K_STANDARD
 A:   Object_Dir -> windows-obj
 Demo     K_AGGREGATE
-A:   external -> Linux
+A:   External -> Linux
 A:   Project_Files -> a.gpr
 A        K_STANDARD
 A:   Object_Dir -> linux-obj

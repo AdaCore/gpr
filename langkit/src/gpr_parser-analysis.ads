@@ -74,6 +74,8 @@ package GPR_Parser.Analysis is
             ,
          Attribute_Reference_Rule
             ,
+         Builtin_Function_Call_Rule
+            ,
          Case_Construction_Rule
             ,
          Case_Item_Rule
@@ -95,14 +97,6 @@ package GPR_Parser.Analysis is
          Expression_Rule
             ,
          Expression_List_Rule
-            ,
-         External_Rule
-            ,
-         External_As_List_Rule
-            ,
-         External_Name_Rule
-            ,
-         External_Reference_Rule
             ,
          Identifier_Rule
             ,

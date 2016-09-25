@@ -93,6 +93,13 @@ package GPR_Parser.AST.Types is
 
    
 
+   type Builtin_Function_Call_Type;
+   type Builtin_Function_Call is access all Builtin_Function_Call_Type'Class;
+   
+
+
+   
+
    type Case_Construction_Type;
    type Case_Construction is access all Case_Construction_Type'Class;
    
@@ -165,34 +172,6 @@ package GPR_Parser.AST.Types is
 
    type Expr_List_Type;
    type Expr_List is access all Expr_List_Type'Class;
-   
-
-
-   
-
-   type External_Type;
-   type External is access all External_Type'Class;
-   
-
-
-   
-
-   type External_As_List_Type;
-   type External_As_List is access all External_As_List_Type'Class;
-   
-
-
-   
-
-   type External_Name_Type;
-   type External_Name is access all External_Name_Type'Class;
-   
-
-
-   
-
-   type External_Reference_Type;
-   type External_Reference is access all External_Reference_Type'Class;
    
 
 
@@ -507,7 +486,7 @@ package GPR_Parser.AST.Types is
       
    
    function F_Attr_Name
-     (Node : access Attribute_Decl_Type) return GPR_Node;
+     (Node : access Attribute_Decl_Type) return Identifier;
    
 
       
@@ -574,6 +553,60 @@ package GPR_Parser.AST.Types is
    
    function F_Attribute_Index
      (Node : access Attribute_Reference_Type) return GPR_Node;
+   
+
+
+
+   
+
+
+   
+
+   
+
+   --
+   --  Builtin_Function_Call
+   --
+
+   type Builtin_Function_Call_Type is 
+      new GPR_Node_Type with private;
+
+
+      overriding
+      function Kind (Node : access Builtin_Function_Call_Type) return GPR_Node_Kind_Type;
+      overriding
+      function Kind_Name (Node : access Builtin_Function_Call_Type) return String;
+      overriding
+      function Image (Node : access Builtin_Function_Call_Type) return String;
+
+
+      overriding
+      function Child_Count (Node : access Builtin_Function_Call_Type) return Natural;
+      overriding
+      procedure Get_Child (Node  : access Builtin_Function_Call_Type;
+                           Index : Positive;
+                           Exists : out Boolean;
+                           Result : out GPR_Node);
+
+      overriding
+      procedure Print (Node  : access Builtin_Function_Call_Type;
+                       Level : Natural := 0);
+
+      overriding procedure Destroy
+        (Node : access Builtin_Function_Call_Type);
+
+
+
+      
+   
+   function F_Function_Name
+     (Node : access Builtin_Function_Call_Type) return Identifier;
+   
+
+      
+   
+   function F_Parameters
+     (Node : access Builtin_Function_Call_Type) return Expr_List;
    
 
 
@@ -1044,192 +1077,6 @@ package GPR_Parser.AST.Types is
    
    function F_Exprs
      (Node : access Expr_List_Type) return List_Term_List;
-   
-
-
-
-   
-
-
-   
-
-   
-
-   --
-   --  External
-   --
-
-   type External_Type is 
-      new GPR_Node_Type with private;
-
-
-      overriding
-      function Kind (Node : access External_Type) return GPR_Node_Kind_Type;
-      overriding
-      function Kind_Name (Node : access External_Type) return String;
-      overriding
-      function Image (Node : access External_Type) return String;
-
-
-      overriding
-      function Child_Count (Node : access External_Type) return Natural;
-      overriding
-      procedure Get_Child (Node  : access External_Type;
-                           Index : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node);
-
-      overriding
-      procedure Print (Node  : access External_Type;
-                       Level : Natural := 0);
-
-      overriding procedure Destroy
-        (Node : access External_Type);
-
-
-
-
-
-   
-
-
-   
-
-   
-
-   --
-   --  External_As_List
-   --
-
-   type External_As_List_Type is 
-      new GPR_Node_Type with private;
-
-
-      overriding
-      function Kind (Node : access External_As_List_Type) return GPR_Node_Kind_Type;
-      overriding
-      function Kind_Name (Node : access External_As_List_Type) return String;
-      overriding
-      function Image (Node : access External_As_List_Type) return String;
-
-
-      overriding
-      function Child_Count (Node : access External_As_List_Type) return Natural;
-      overriding
-      procedure Get_Child (Node  : access External_As_List_Type;
-                           Index : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node);
-
-      overriding
-      procedure Print (Node  : access External_As_List_Type;
-                       Level : Natural := 0);
-
-      overriding procedure Destroy
-        (Node : access External_As_List_Type);
-
-
-
-
-
-   
-
-
-   
-
-   
-
-   --
-   --  External_Name
-   --
-
-   type External_Name_Type is 
-      new GPR_Node_Type with private;
-
-
-      overriding
-      function Kind (Node : access External_Name_Type) return GPR_Node_Kind_Type;
-      overriding
-      function Kind_Name (Node : access External_Name_Type) return String;
-      overriding
-      function Image (Node : access External_Name_Type) return String;
-
-
-      overriding
-      function Child_Count (Node : access External_Name_Type) return Natural;
-      overriding
-      procedure Get_Child (Node  : access External_Name_Type;
-                           Index : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node);
-
-      overriding
-      procedure Print (Node  : access External_Name_Type;
-                       Level : Natural := 0);
-
-      overriding procedure Destroy
-        (Node : access External_Name_Type);
-
-
-
-
-
-   
-
-
-   
-
-   
-
-   --
-   --  External_Reference
-   --
-
-   type External_Reference_Type is 
-      new GPR_Node_Type with private;
-
-
-      overriding
-      function Kind (Node : access External_Reference_Type) return GPR_Node_Kind_Type;
-      overriding
-      function Kind_Name (Node : access External_Reference_Type) return String;
-      overriding
-      function Image (Node : access External_Reference_Type) return String;
-
-
-      overriding
-      function Child_Count (Node : access External_Reference_Type) return Natural;
-      overriding
-      procedure Get_Child (Node  : access External_Reference_Type;
-                           Index : Positive;
-                           Exists : out Boolean;
-                           Result : out GPR_Node);
-
-      overriding
-      procedure Print (Node  : access External_Reference_Type;
-                       Level : Natural := 0);
-
-      overriding procedure Destroy
-        (Node : access External_Reference_Type);
-
-
-
-      
-   
-   function F_Kind
-     (Node : access External_Reference_Type) return GPR_Node;
-   
-
-      
-   
-   function F_String_Lit
-     (Node : access External_Reference_Type) return String_Literal;
-   
-
-      
-   
-   function F_Expr
-     (Node : access External_Reference_Type) return Term_List;
    
 
 
@@ -2276,7 +2123,7 @@ private
       new GPR_Node_Type with record
       
    
-            F_Attr_Name : aliased GPR_Node
+            F_Attr_Name : aliased Identifier
                := null;
             
             F_Attr_Index : aliased GPR_Node
@@ -2339,6 +2186,41 @@ private
 
       package Attribute_Reference_Alloc is
         new Tagged_Alloc (Attribute_Reference_Type);
+
+
+   
+
+   
+
+   type Builtin_Function_Call_Type is 
+      new GPR_Node_Type with record
+      
+   
+            F_Function_Name : aliased Identifier
+               := null;
+            
+            F_Parameters : aliased Expr_List
+               := null;
+            
+       
+
+
+   end record;
+
+
+   
+
+
+
+
+      overriding
+      function Lookup_Children (Node : access Builtin_Function_Call_Type;
+                                Sloc : Source_Location;
+                                Snap : Boolean := False)
+        return GPR_Node;
+
+      package Builtin_Function_Call_Alloc is
+        new Tagged_Alloc (Builtin_Function_Call_Type);
 
 
    
@@ -2664,128 +2546,6 @@ private
 
       package Expr_List_Alloc is
         new Tagged_Alloc (Expr_List_Type);
-
-
-   
-
-   
-
-   type External_Type is 
-      new GPR_Node_Type with record
-      
-   
-      null;
-
-   end record;
-
-
-   
-
-
-
-
-      overriding
-      function Lookup_Children (Node : access External_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node;
-
-      package External_Alloc is
-        new Tagged_Alloc (External_Type);
-
-
-   
-
-   
-
-   type External_As_List_Type is 
-      new GPR_Node_Type with record
-      
-   
-      null;
-
-   end record;
-
-
-   
-
-
-
-
-      overriding
-      function Lookup_Children (Node : access External_As_List_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node;
-
-      package External_As_List_Alloc is
-        new Tagged_Alloc (External_As_List_Type);
-
-
-   
-
-   
-
-   type External_Name_Type is 
-      new GPR_Node_Type with record
-      
-   
-      null;
-
-   end record;
-
-
-   
-
-
-
-
-      overriding
-      function Lookup_Children (Node : access External_Name_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node;
-
-      package External_Name_Alloc is
-        new Tagged_Alloc (External_Name_Type);
-
-
-   
-
-   
-
-   type External_Reference_Type is 
-      new GPR_Node_Type with record
-      
-   
-            F_Kind : aliased GPR_Node
-               := null;
-            
-            F_String_Lit : aliased String_Literal
-               := null;
-            
-            F_Expr : aliased Term_List
-               := null;
-            
-       
-
-
-   end record;
-
-
-   
-
-
-
-
-      overriding
-      function Lookup_Children (Node : access External_Reference_Type;
-                                Sloc : Source_Location;
-                                Snap : Boolean := False)
-        return GPR_Node;
-
-      package External_Reference_Alloc is
-        new Tagged_Alloc (External_Reference_Type);
 
 
    

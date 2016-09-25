@@ -64,6 +64,13 @@ package body GPR2.Parser.Project is
          Positive (Slr.Start_Line),
          Positive (Slr.Start_Column)));
 
+   function Get_String_Literal
+     (N     : not null access GPR_Node_Type'Class;
+      Error : out Boolean) return Value_Type;
+   --  Returns the first string literal found under this node. This is an
+   --  helper routine to get strings out of built-in parameters for example.
+   --  Set Error to True if the node was not a simple string-literal.
+
    --------------
    -- Extended --
    --------------
@@ -99,6 +106,68 @@ package body GPR2.Parser.Project is
       end if;
       return Name_Type (To_String (V (V'First + Offset .. V'Last - Offset)));
    end Get_Name_Type;
+
+   ------------------------
+   -- Get_String_Literal --
+   ------------------------
+
+   function Get_String_Literal
+     (N     : not null access GPR_Node_Type'Class;
+      Error : out Boolean) return Value_Type
+   is
+      function Parser
+        (Node : access GPR_Node_Type'Class) return Visit_Status;
+      --  Parser for the string-litteral tree
+
+      Result : Unbounded_String;
+
+      ------------
+      -- Parser --
+      ------------
+
+      function Parser
+        (Node : access GPR_Node_Type'Class) return Visit_Status
+      is
+
+         Status : Visit_Status := Into;
+
+         procedure Handle_String (Node : not null String_Literal)
+           with Pre  => Present (Node), Inline;
+         --  A simple static string
+
+         -------------------
+         -- Handle_String --
+         -------------------
+
+         procedure Handle_String (Node : not null String_Literal) is
+         begin
+            Result := To_Unbounded_String
+              (Unquote
+                 (Value_Type (Image (F_Tok (Single_Tok_Node (Node))))));
+         end Handle_String;
+
+      begin
+         case Kind (Node) is
+            when GPR_String_Literal =>
+               Handle_String (String_Literal (Node));
+
+            when GPR_Term_List | GPR_String_Literal_At | GPR_List =>
+               null;
+
+            when others =>
+               --  Everything else is an error
+               Error := True;
+               Status := Over;
+         end case;
+
+         return Status;
+      end Parser;
+
+   begin
+      Error := False;
+      Traverse (N, Parser'Access);
+      return Value_Type (To_String (Result));
+   end Get_String_Literal;
 
    ------------------
    -- Has_Extended --
@@ -177,8 +246,8 @@ package body GPR2.Parser.Project is
               (N : not null Project_Declaration);
             --  Parse a project declaration and set the qualifier if present
 
-            procedure Parse_External_Reference
-              (N : not null External_Reference);
+            procedure Parse_Builtin
+              (N : not null Builtin_Function_Call);
             --  Put the name of the external into the Externals list
 
             procedure Parse_With_Decl (N : not null With_Decl);
@@ -188,17 +257,90 @@ package body GPR2.Parser.Project is
               (N : not null Typed_String_Decl);
             --  A typed string declaration
 
-            ------------------------------
-            -- Parse_External_Reference --
-            ------------------------------
+            -------------------
+            -- Parse_Builtin --
+            -------------------
 
-            procedure Parse_External_Reference
-              (N : not null External_Reference)
+            procedure Parse_Builtin
+              (N : not null Builtin_Function_Call)
             is
-               Var : constant not null String_Literal := F_String_Lit (N);
+
+               procedure Parse_External_Reference
+                 (N : not null Builtin_Function_Call);
+               --  Put the name of the external into the Externals list
+
+               ------------------------------
+               -- Parse_External_Reference --
+               ------------------------------
+
+               procedure Parse_External_Reference
+                 (N : not null Builtin_Function_Call)
+               is
+                  Parameters : constant not null Expr_List := F_Parameters (N);
+               begin
+                  --  Only handle external here
+                  declare
+                     Exprs : constant List_Term_List := F_Exprs (Parameters);
+                  begin
+                     if Exprs = null then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sloc_Range (N)),
+                              Message =>
+                                "missing parameter for external built-in"));
+
+                     else
+                        --  We have External ("VAR" [, "VALUE"]), get the
+                        --  variable name.
+
+                        declare
+                           List  : constant not null Term_List :=
+                                     Item (Exprs, 1);
+                           Error : Boolean;
+                           Var   : constant Value_Type :=
+                                     Get_String_Literal (List, Error);
+                        begin
+                           if Error then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (List)),
+                                    Message =>
+                                      "external first parameter must be a "
+                                    & "simple litteral string"));
+
+                           elsif Var = "" then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (List)),
+                                    Message =>
+                                      "external variable name must not be "
+                                    & "empty"));
+
+                           else
+                              Project.Externals.Append
+                                (Optional_Name_Type (Var));
+                           end if;
+                        end;
+                     end if;
+                  end;
+               end Parse_External_Reference;
+
+               Function_Name : constant Name_Type :=
+                                 Get_Name_Type (F_Function_Name (N));
             begin
-               Project.Externals.Append (Get_Name_Type (Var));
-            end Parse_External_Reference;
+               if Function_Name = "external" then
+                  Parse_External_Reference (N);
+               end if;
+            end Parse_Builtin;
 
             -------------------------------
             -- Parse_Project_Declaration --
@@ -381,8 +523,8 @@ package body GPR2.Parser.Project is
                when GPR_Project_Declaration =>
                   Parse_Project_Declaration (Project_Declaration (Node));
 
-               when GPR_External_Reference =>
-                  Parse_External_Reference (External_Reference (Node));
+               when GPR_Builtin_Function_Call =>
+                  Parse_Builtin (Builtin_Function_Call (Node));
 
                when GPR_With_Decl =>
                   Parse_With_Decl (With_Decl (Node));
@@ -716,10 +858,9 @@ package body GPR2.Parser.Project is
               with Pre => Present (Node);
             --  A variable
 
-            procedure Handle_External_Variable
-              (Node : not null External_Reference)
-              with Pre  => Present (Node);
-            --  An external variable
+            procedure Handle_Builtin (Node : not null Builtin_Function_Call)
+              with Pre => Present (Node);
+            --  A built-in
 
             procedure Handle_Attribute_Reference
               (Node : not null Attribute_Reference)
@@ -740,45 +881,77 @@ package body GPR2.Parser.Project is
                Status := Over;
             end Handle_Attribute_Reference;
 
-            ------------------------------
-            -- Handle_External_Variable --
-            ------------------------------
+            --------------------
+            -- Handle_Builtin --
+            --------------------
 
-            procedure Handle_External_Variable
-              (Node : not null External_Reference)
-            is
-               Str  : constant not null String_Literal := F_String_Lit (Node);
-               Name : constant Name_Type :=
-                        Name_Type
-                          (Unquote
-                             (Value_Type
-                                (Image (F_Tok (Single_Tok_Node (Str))))));
-               Expr : constant Term_List := F_Expr (Node);
+            procedure Handle_Builtin (Node : not null Builtin_Function_Call) is
+
+               procedure Handle_External_Variable
+                 (Node : not null Builtin_Function_Call)
+                 with Pre  => Present (Node);
+               --  An external variable : External ("VAR"[, "VALUE"])
+
+               ------------------------------
+               -- Handle_External_Variable --
+               ------------------------------
+
+               procedure Handle_External_Variable
+                 (Node : not null Builtin_Function_Call)
+               is
+                  Parameters : constant not null List_Term_List :=
+                                 F_Exprs (F_Parameters (Node));
+                  Error      : Boolean;
+                  Var        : constant Name_Type :=
+                                 Name_Type
+                                   (Get_String_Literal
+                                      (Item (Parameters, 1), Error));
+                  Value_Node : constant Term_List :=
+                                 Item (Parameters, 2);
+               begin
+                  if Context.Contains (Var) then
+                     --  External in the context, use this value
+                     Record_Value (Context (Var));
+
+                  elsif Present (Value_Node) then
+                     --  External not in the context but has a default value
+                     declare
+                        Value : constant Value_Type :=
+                                  Get_String_Literal (Value_Node, Error);
+                     begin
+                        if Error then
+                           Tree.Log_Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Self.File, Sloc_Range (Parameters)),
+                                 Message =>
+                                   "external default parameter must be a "
+                                 & "simple litteral string"));
+                        else
+                           Record_Value (Unquote (Value));
+                        end if;
+                     end;
+
+                  else
+                     --  Not in the context and no default value
+                     Record_Value ("");
+                  end if;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_External_Variable;
+
+               Function_Name : constant Name_Type :=
+                                 Get_Name_Type (F_Function_Name (Node));
             begin
-               if Context.Contains (Name) then
-                  --  External in the context, use this value
-                  Record_Value (Context (Name));
-
-               elsif Present (Expr) then
-                  --  External not in the context but has a default value
-                  declare
-                     Single  : Boolean;
-                     Default : constant Containers.Value_List :=
-                                 Get_Term_List (Expr, Single);
-                  begin
-                     Record_Value (Unquote (Default.First_Element));
-                  end;
-
-               else
-                  --  Not in the context and no default value
-                  Record_Value ("");
+               if Function_Name = "external" then
+                  Handle_External_Variable (Node);
                end if;
-
-               --  Skip all child nodes, we do not want to parse a second time
-               --  the string_literal.
-
-               Status := Over;
-            end Handle_External_Variable;
+            end Handle_Builtin;
 
             -------------------
             -- Handle_String --
@@ -829,8 +1002,8 @@ package body GPR2.Parser.Project is
                when GPR_Variable_Reference =>
                   Handle_Variable (Variable_Reference (Node));
 
-               when GPR_External_Reference =>
-                  Handle_External_Variable (External_Reference (Node));
+               when GPR_Builtin_Function_Call =>
+                  Handle_Builtin (Builtin_Function_Call (Node));
 
                when GPR_Project_Reference =>
                   Is_Project_Reference := True;
@@ -1022,7 +1195,7 @@ package body GPR2.Parser.Project is
                       Get_Source_Reference
                         (Self.File,
                          Sloc_Range (GPR_Node (Node)));
-            Name  : constant not null GPR_Node := F_Attr_Name (Node);
+            Name  : constant not null Identifier := F_Attr_Name (Node);
             Index : constant GPR_Node := F_Attr_Index (Node);
             I_Str : constant Value_Type :=
                       (if Present (Index)
@@ -1032,9 +1205,7 @@ package body GPR2.Parser.Project is
                        else "");
             Expr  : constant not null Term_List := F_Expr (Node);
             N_Str : constant Name_Type :=
-                      (if Kind (Name) = GPR_External_Name
-                       then "external"
-                       else Get_Name_Type (Single_Tok_Node (Name)));
+                      Get_Name_Type (Single_Tok_Node (Name));
          begin
             declare
                Single : Boolean;

@@ -50,6 +50,11 @@ class AttributeReference(GPRNode):
     attribute_index = Field()
 
 
+class BuiltinFunctionCall(GPRNode):
+    function_name = Field()
+    parameters = Field()
+
+
 class VariableReference(GPRNode):
     variable_name1 = Field()
     variable_name2 = Field()
@@ -58,20 +63,6 @@ class VariableReference(GPRNode):
 
 class ProjectReference(GPRNode):
     attr_ref = Field()
-
-
-class External(GPRNode):
-    pass
-
-
-class ExternalAsList(GPRNode):
-    pass
-
-
-class ExternalReference(GPRNode):
-    kind = Field()
-    string_lit = Field()
-    expr = Field()
 
 
 A.add_rules(
@@ -93,21 +84,10 @@ A.add_rules(
         Opt(Row("'", A.attribute_reference)[1])
     ) ^ VariableReference,
 
-    external=Row(
-        "external"
-    ) ^ External,
-
-    external_as_list=Row(
-        "external_as_list"
-    ) ^ ExternalAsList,
-
-    external_reference=Row(
-        Or(A.external, A.external_as_list),
-        "(",
-        A.string_literal,
-        Opt(Row(",", A.expression)[1]),
-        ")"
-    ) ^ ExternalReference,
+    builtin_function_call=Row(
+        A.identifier,
+        A.expression_list
+    ) ^ BuiltinFunctionCall,
     # ----------------------------------------------------------------
 
     expression=List(A.term, sep="&") ^ TermList,
@@ -127,9 +107,9 @@ A.add_rules(
     term=Or(
         A.expression_list,
         A.string_literal_at,
+        A.builtin_function_call,
         A.variable_reference,
-        A.project_reference,
-        A.external_reference
+        A.project_reference
     ),
 
 )

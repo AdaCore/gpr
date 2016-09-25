@@ -525,6 +525,86 @@ package body GPR_Parser.AST.Types.C is
 
    
 
+   function gpr_builtin_function_call_f_function_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_base_node_Ptr) return int
+   is
+      N : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if N.all in Builtin_Function_Call_Type'Class then
+         declare
+            Typed_Node : constant Builtin_Function_Call := Builtin_Function_Call (N);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Function_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_builtin_function_call_f_function_name;
+
+
+           
+
+   
+
+   function gpr_builtin_function_call_f_parameters
+     (Node    : gpr_base_node;
+
+
+      Value_P : gpr_base_node_Ptr) return int
+   is
+      N : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if N.all in Builtin_Function_Call_Type'Class then
+         declare
+            Typed_Node : constant Builtin_Function_Call := Builtin_Function_Call (N);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Parameters))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_builtin_function_call_f_parameters;
+
+
+           
+
+   
+
    function gpr_case_construction_f_var_ref
      (Node    : gpr_base_node;
 
@@ -879,126 +959,6 @@ package body GPR_Parser.AST.Types.C is
          Set_Last_Exception (Exc);
          return 0;
    end gpr_expr_list_f_exprs;
-
-
-           
-
-   
-
-   function gpr_external_reference_f_kind
-     (Node    : gpr_base_node;
-
-
-      Value_P : gpr_base_node_Ptr) return int
-   is
-      N : constant GPR_Node := Unwrap (Node);
-   begin
-      Clear_Last_Exception;
-
-
-      if N.all in External_Reference_Type'Class then
-         declare
-            Typed_Node : constant External_Reference := External_Reference (N);
-         begin
-             
-             Value_P.all :=
-                    Wrap (GPR_Node (Typed_Node.F_Kind))
-             ;
-             return 1;
-         exception
-            when Exc : Property_Error =>
-               Set_Last_Exception (Exc, Is_Fatal => False);
-
-               return 0;
-         end;
-      else
-         return 0;
-      end if;
-   exception
-      when Exc : others =>
-         Set_Last_Exception (Exc);
-         return 0;
-   end gpr_external_reference_f_kind;
-
-
-           
-
-   
-
-   function gpr_external_reference_f_string_lit
-     (Node    : gpr_base_node;
-
-
-      Value_P : gpr_base_node_Ptr) return int
-   is
-      N : constant GPR_Node := Unwrap (Node);
-   begin
-      Clear_Last_Exception;
-
-
-      if N.all in External_Reference_Type'Class then
-         declare
-            Typed_Node : constant External_Reference := External_Reference (N);
-         begin
-             
-             Value_P.all :=
-                    Wrap (GPR_Node (Typed_Node.F_String_Lit))
-             ;
-             return 1;
-         exception
-            when Exc : Property_Error =>
-               Set_Last_Exception (Exc, Is_Fatal => False);
-
-               return 0;
-         end;
-      else
-         return 0;
-      end if;
-   exception
-      when Exc : others =>
-         Set_Last_Exception (Exc);
-         return 0;
-   end gpr_external_reference_f_string_lit;
-
-
-           
-
-   
-
-   function gpr_external_reference_f_expr
-     (Node    : gpr_base_node;
-
-
-      Value_P : gpr_base_node_Ptr) return int
-   is
-      N : constant GPR_Node := Unwrap (Node);
-   begin
-      Clear_Last_Exception;
-
-
-      if N.all in External_Reference_Type'Class then
-         declare
-            Typed_Node : constant External_Reference := External_Reference (N);
-         begin
-             
-             Value_P.all :=
-                    Wrap (GPR_Node (Typed_Node.F_Expr))
-             ;
-             return 1;
-         exception
-            when Exc : Property_Error =>
-               Set_Last_Exception (Exc, Is_Fatal => False);
-
-               return 0;
-         end;
-      else
-         return 0;
-      end if;
-   exception
-      when Exc : others =>
-         Set_Last_Exception (Exc);
-         return 0;
-   end gpr_external_reference_f_expr;
 
 
            

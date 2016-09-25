@@ -92,10 +92,6 @@ class OthersDesignator(GPRNode):
     pass
 
 
-class ExternalName(GPRNode):
-    pass
-
-
 A.add_rules(
     context_clauses=List(Row(A.with_decl, ";")[0], empty_valid=True),
 
@@ -165,7 +161,7 @@ A.add_rules(
     ) ^ VariableDecl,
 
     attribute_decl=Row(
-        "for", Or(A.identifier, A.external_name),
+        "for", A.identifier,
         Opt(Row("(", A.associative_array_index, ")")[1]),
         "use",
         A.expression
@@ -218,9 +214,5 @@ A.add_rules(
     choice=Or(A.string_literal, A.others_designator),
 
     discrete_choice_list=List(A.choice, sep="|"),
-
-    external_name=Row(
-        "external"
-    ) ^ ExternalName,
 
 )
