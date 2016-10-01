@@ -52,4 +52,14 @@ begin
 
    Text_IO.Put_Line
      (Prj.Root_Project.Attribute ("object_dir").Value);
+
+exception
+   when GPR2.Project_Error =>
+      if Prj.Has_Messages then
+         Text_IO.Put_Line ("Messages found:");
+
+         for M of Prj.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+      end if;
 end Main;
