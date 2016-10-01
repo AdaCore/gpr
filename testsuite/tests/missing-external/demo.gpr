@@ -1,0 +1,6 @@
+
+project Demo is
+   Var1 := external ("MyVAR1");
+   Var2 := external ("MyVAR2");
+   Var3 := external ("MyVAR3");
+end Demo;

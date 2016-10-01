@@ -1,0 +1,5 @@
+description:
+    Check for missing external variable
+driver: build_and_run
+project_file: missing_ext
+main: main

@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
+with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
@@ -31,6 +32,7 @@ with GPR_Parser;
 with GPR_Parser.AST;       use GPR_Parser.AST;
 with GPR_Parser.AST.Types; use GPR_Parser.AST.Types;
 
+with GPR2.Builtin;
 with GPR2.Message;
 with GPR2.Parser.Registry;
 with GPR2.Project.Attribute;
@@ -899,6 +901,8 @@ package body GPR2.Parser.Project is
                procedure Handle_External_Variable
                  (Node : not null Builtin_Function_Call)
                is
+                  use Ada.Exceptions;
+
                   Parameters : constant not null List_Term_List :=
                                  F_Exprs (F_Parameters (Node));
                   Error      : Boolean;
@@ -909,11 +913,7 @@ package body GPR2.Parser.Project is
                   Value_Node : constant Term_List :=
                                  Item (Parameters, 2);
                begin
-                  if Context.Contains (Var) then
-                     --  External in the context, use this value
-                     Record_Value (Context (Var));
-
-                  elsif Present (Value_Node) then
+                  if Present (Value_Node) then
                      --  External not in the context but has a default value
                      declare
                         Value : constant Value_Type :=
@@ -930,19 +930,31 @@ package body GPR2.Parser.Project is
                                    "external default parameter must be a "
                                  & "simple litteral string"));
                         else
-                           Record_Value (Unquote (Value));
+                           Record_Value
+                             (Builtin.External (Context, Var, Value));
                         end if;
                      end;
 
                   else
-                     --  Not in the context and no default value
-                     Record_Value ("");
+                     Record_Value (Builtin.External (Context, Var));
                   end if;
 
                   --  Skip all child nodes, we do not want to parse a second
                   --  time the string_literal.
 
                   Status := Over;
+
+               exception
+                  when E : Project_Error =>
+                     Tree.Log_Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                              Get_Source_Reference
+                                (Self.File, Sloc_Range (Parameters)),
+                           Message => Exception_Message (E)));
+                     Record_Value ("");
+                     Status := Over;
                end Handle_External_Variable;
 
                Function_Name : constant Name_Type :=
