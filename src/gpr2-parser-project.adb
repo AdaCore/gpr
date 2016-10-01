@@ -279,61 +279,57 @@ package body GPR2.Parser.Project is
                  (N : not null Builtin_Function_Call)
                is
                   Parameters : constant not null Expr_List := F_Parameters (N);
+                  Exprs      : constant List_Term_List := F_Exprs (Parameters);
                begin
-                  --  Only handle external here
-                  declare
-                     Exprs : constant List_Term_List := F_Exprs (Parameters);
-                  begin
-                     if Exprs = null then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference
-                                  (Filename, Sloc_Range (N)),
-                              Message =>
-                                "missing parameter for external built-in"));
+                  if Exprs = null then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference
+                               (Filename, Sloc_Range (N)),
+                           Message =>
+                             "missing parameter for external built-in"));
 
-                     else
-                        --  We have External ("VAR" [, "VALUE"]), get the
-                        --  variable name.
+                  else
+                     --  We have External ("VAR" [, "VALUE"]), get the
+                     --  variable name.
 
-                        declare
-                           List  : constant not null Term_List :=
+                     declare
+                        Var_Node : constant not null Term_List :=
                                      Item (Exprs, 1);
-                           Error : Boolean;
-                           Var   : constant Value_Type :=
-                                     Get_String_Literal (List, Error);
-                        begin
-                           if Error then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Sloc_Range (List)),
-                                    Message =>
-                                      "external first parameter must be a "
-                                    & "simple litteral string"));
+                        Error    : Boolean;
+                        Var      : constant Value_Type :=
+                                     Get_String_Literal (Var_Node, Error);
+                     begin
+                        if Error then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sloc_Range (Var_Node)),
+                                 Message =>
+                                   "external first parameter must be a "
+                                 & "simple litteral string"));
 
-                           elsif Var = "" then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Sloc_Range (List)),
-                                    Message =>
-                                      "external variable name must not be "
-                                    & "empty"));
+                        elsif Var = "" then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sloc_Range (Var_Node)),
+                                 Message =>
+                                   "external variable name must not be "
+                                 & "empty"));
 
-                           else
-                              Project.Externals.Append
-                                (Optional_Name_Type (Var));
-                           end if;
-                        end;
-                     end if;
-                  end;
+                        else
+                           Project.Externals.Append
+                             (Optional_Name_Type (Var));
+                        end if;
+                     end;
+                  end if;
                end Parse_External_Reference;
 
                Function_Name : constant Name_Type :=
