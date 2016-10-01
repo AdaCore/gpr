@@ -49,17 +49,7 @@ exception
          Text_IO.Put_Line ("Messages found:");
 
          for M of Prj.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/simple");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
+            Text_IO.Put_Line (M.Format);
          end loop;
       end if;
 end Main;
