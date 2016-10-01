@@ -103,11 +103,8 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
-
-   Ctx := Prj.Context;
    Ctx.Include ("OS", "Linux");
-   Prj.Set_Context (Ctx);
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
    Display (Prj.Root_Project);
 end Main;

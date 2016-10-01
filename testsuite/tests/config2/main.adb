@@ -43,19 +43,6 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object);
 
-   procedure Changed_Callback (Prj : Project.View.Object);
-
-   ----------------------
-   -- Changed_Callback --
-   ----------------------
-
-   procedure Changed_Callback (Prj : Project.View.Object) is
-   begin
-      Text_IO.Put_Line
-        (">>> Changed_Callback for "
-           & Directories.Simple_Name (Value (Prj.Path_Name)));
-   end Changed_Callback;
-
    -------------
    -- Display --
    -------------
@@ -105,7 +92,6 @@ procedure Main is
                Text_IO.New_Line;
             end loop;
          end if;
-         Text_IO.New_Line;
 
          if Prj.Has_Packages then
             for Pck of Prj.Packages loop
@@ -123,12 +109,9 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
-   Project.Tree.Load_Configuration (Prj, Create ("config.cgpr"));
-
-   Ctx := Prj.Context;
    Ctx.Include ("OS", "Linux");
-   Prj.Set_Context (Ctx, Changed_Callback'Access);
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   Project.Tree.Load_Configuration (Prj, Create ("config.cgpr"));
 
    Display (Prj.Root_Project);
 

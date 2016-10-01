@@ -51,7 +51,8 @@ package GPR2.Project.Tree is
 
    procedure Load
      (Self     : in out Object;
-      Filename : Path_Name_Type);
+      Filename : Path_Name_Type;
+      Context  : GPR2.Context.Object);
    --  Load a root-project
 
    procedure Load_Configuration

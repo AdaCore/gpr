@@ -23,11 +23,12 @@
 ------------------------------------------------------------------------------
 
 with Ada.Text_IO;
+
+with GPR2.Context;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
 
 procedure Main is
 
@@ -77,12 +78,10 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
-
    Text_IO.Put_Line ("//// OS set to Linux");
-   Ctx := Prj.Context;
    Ctx.Include ("OS", "Linux");
-   Prj.Set_Context (Ctx, Changed_Callback'Access);
+
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
    for P of Prj loop
       Display (P);

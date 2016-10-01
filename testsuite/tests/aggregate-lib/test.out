@@ -1,5 +1,4 @@
 //// OS set to Linux
->>> Changed_Callback for A
 Demo     K_AGGREGATE_LIBRARY
 A:   Project_Files -> a.gpr b.gpr
 A        K_STANDARD

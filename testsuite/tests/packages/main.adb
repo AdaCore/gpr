@@ -24,10 +24,10 @@
 
 with Ada.Text_IO;
 
+with GPR2.Context;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
-with GPR2.Context;
 
 procedure Main is
 
@@ -84,8 +84,9 @@ procedure Main is
    end Display;
 
    Prj : Project.Tree.Object;
+   Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
    Display (Prj.Root_Project);
 end Main;

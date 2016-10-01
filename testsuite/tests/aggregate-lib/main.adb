@@ -91,12 +91,10 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
-
    Text_IO.Put_Line ("//// OS set to Linux");
-   Ctx := Prj.Context;
    Ctx.Include ("OS", "Linux");
-   Prj.Set_Context (Ctx, Changed_Callback'Access);
+
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
    for P of Prj loop
       Display (P);

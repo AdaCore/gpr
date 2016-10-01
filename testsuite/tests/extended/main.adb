@@ -25,6 +25,7 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GPR2.Context;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Source;
@@ -82,10 +83,10 @@ procedure Main is
    end Output_Filename;
 
    Prj1, Prj2 : Project.Tree.Object;
-
+   Ctx        : Context.Object;
 begin
-   Project.Tree.Load (Prj1, Create ("prj1.gpr"));
-   Project.Tree.Load (Prj2, Create ("prj2.gpr"));
+   Project.Tree.Load (Prj1, Create ("prj1.gpr"), Ctx);
+   Project.Tree.Load (Prj2, Create ("prj2.gpr"), Ctx);
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 

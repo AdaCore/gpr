@@ -94,11 +94,12 @@ procedure Main is
    Ctx        : Context.Object;
 
 begin
-   Project.Tree.Load (Prj1, Create ("demo.gpr"));
-   Project.Tree.Load (Prj2, Create ("demo.gpr"));
+   Ctx.Include ("OS", "Linux");
+
+   Project.Tree.Load (Prj1, Create ("demo.gpr"), Ctx);
+   Project.Tree.Load (Prj2, Create ("demo.gpr"), Ctx);
 
    Ctx := Prj1.Context;
-   Ctx.Include ("OS", "Linux");
    Prj1.Set_Context (Ctx, Changed_Callback'Access);
 
    Ctx := Prj2.Context;

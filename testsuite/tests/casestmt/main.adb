@@ -25,6 +25,7 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GPR2.Context;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -68,10 +69,9 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"));
-
    Ctx.Include ("OS", "Linux");
-   Prj.Set_Context (Ctx);
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+
    Display (Prj.Root_Project);
 
    Ctx.Clear;

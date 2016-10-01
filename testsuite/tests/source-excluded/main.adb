@@ -25,6 +25,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Context;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Source;
@@ -47,9 +48,10 @@ procedure Main is
 
    procedure Check (Project_Name : Name_Type) is
       Prj  : Project.Tree.Object;
+      Ctx  : Context.Object;
       View : Project.View.Object;
    begin
-      Project.Tree.Load (Prj, Create (Project_Name));
+      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));

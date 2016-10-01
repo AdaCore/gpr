@@ -1,4 +1,3 @@
->>> Changed_Callback for demo.gpr
 Demo     K_STANDARD
 A:   Main -> main.adb
 A:   Object_Dir -> obj
@@ -8,4 +7,3 @@ V:   Dir2 -> Linux
 V:   Dir3 -> one
 V:   Dir4 -> from_config
 V:   Dir5 -> file/confobj
-

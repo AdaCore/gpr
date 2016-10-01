@@ -25,6 +25,7 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GPR2.Context;
 with GPR2.Project.Tree;
 
 procedure Main is
@@ -41,8 +42,9 @@ procedure Main is
 
    procedure Load (Filename : String) is
       Prj : Project.Tree.Object;
+      Ctx : Context.Object;
    begin
-      Project.Tree.Load (Prj, Create (Name_Type (Filename)));
+      Project.Tree.Load (Prj, Create (Name_Type (Filename)), Ctx);
       Text_IO.Put_Line ("All good, no message.");
 
    exception

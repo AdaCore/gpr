@@ -304,9 +304,10 @@ package body GPR2.Project.Tree is
 
    procedure Load
      (Self     : in out Object;
-      Filename : Path_Name_Type)
+      Filename : Path_Name_Type;
+      Context  : GPR2.Context.Object)
    is
-      Root_Context : GPR2.Context.Object;
+      Root_Context : GPR2.Context.Object := Context;
 
    begin
       Self.Root := Recursive_Load

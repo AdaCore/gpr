@@ -26,6 +26,7 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Context;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 
@@ -36,9 +37,9 @@ procedure Main is
    use GPR2.Project;
 
    Prj : Project.Tree.Object;
-
+   Ctx : Context.Object;
 begin
-   Project.Tree.Load (Prj, Create ("a.gpr"));
+   Project.Tree.Load (Prj, Create ("a.gpr"), Ctx);
 
 exception
    when GPR2.Project_Error =>
