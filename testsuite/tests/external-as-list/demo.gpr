@@ -1,0 +1,4 @@
+
+project Demo is
+   VAR := external_as_list ("SWITCHES", ",");
+end Demo;

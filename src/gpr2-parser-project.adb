@@ -119,7 +119,7 @@ package body GPR2.Parser.Project is
    is
       function Parser
         (Node : access GPR_Node_Type'Class) return Visit_Status;
-      --  Parser for the string-litteral tree
+      --  Parser for the string-literal tree
 
       Result : Unbounded_String;
 
@@ -271,6 +271,119 @@ package body GPR2.Parser.Project is
                  (N : not null Builtin_Function_Call);
                --  Put the name of the external into the Externals list
 
+               procedure Parse_External_As_List_Reference
+                 (N : not null Builtin_Function_Call);
+               --  Put the name of the external into the Externals list
+
+               --------------------------------------
+               -- Parse_External_As_List_Reference --
+               --------------------------------------
+
+               procedure Parse_External_As_List_Reference
+                 (N : not null Builtin_Function_Call)
+               is
+                  Parameters : constant not null Expr_List := F_Parameters (N);
+                  Exprs      : constant List_Term_List := F_Exprs (Parameters);
+               begin
+                  --  Note that this routine is only validating the syntax
+                  --  of the external_as_list built-in. It does not add the
+                  --  variable referenced by the built-in as dependencies
+                  --  as an external_as_list result cannot be used in a
+                  --  case statement.
+
+                  if Exprs = null then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference
+                               (Filename, Sloc_Range (N)),
+                           Message =>
+                             "missing parameters for external_as_list"
+                           & " built-in"));
+
+                  else
+                     --  We have External_As_List ("VAR", "SEP"]), check the
+                     --  variable name.
+
+                     declare
+                        Var_Node : constant not null Term_List :=
+                                     Item (Exprs, 1);
+                        Error    : Boolean;
+                        Var      : constant Value_Type :=
+                                     Get_String_Literal (Var_Node, Error);
+                     begin
+                        if Error then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sloc_Range (Var_Node)),
+                                 Message =>
+                                   "external_as_list first parameter must be "
+                                 & "a simple string"));
+
+                        elsif Var = "" then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sloc_Range (Var_Node)),
+                                 Message =>
+                                   "external_as_list variable name must not "
+                                 & "be empty"));
+                        end if;
+                     end;
+
+                     --  Check that the second parameter exists and is a string
+
+                     if Item (Exprs, 2) = null then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sloc_Range (Exprs)),
+                              Message =>
+                                "external_as_list requires a second parameter"
+                             ));
+                     else
+                        declare
+                           Sep_Node : constant not null Term_List :=
+                                        Item (Exprs, 2);
+                           Error    : Boolean;
+                           Sep      : constant Value_Type :=
+                                        Get_String_Literal (Sep_Node, Error);
+                        begin
+                           if Error then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (Sep_Node)),
+                                    Message =>
+                                      "external_as_list second parameter must "
+                                    & "be a simple string"));
+
+                           elsif Sep = "" then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (Sep_Node)),
+                                    Message =>
+                                      "external_as_list separator must not "
+                                    & "be empty"));
+                           end if;
+                        end;
+                     end if;
+                  end if;
+               end Parse_External_As_List_Reference;
+
                ------------------------------
                -- Parse_External_Reference --
                ------------------------------
@@ -311,7 +424,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Var_Node)),
                                  Message =>
                                    "external first parameter must be a "
-                                 & "simple litteral string"));
+                                 & "simple string"));
 
                         elsif Var = "" then
                            Messages.Append
@@ -337,6 +450,9 @@ package body GPR2.Parser.Project is
             begin
                if Function_Name = "external" then
                   Parse_External_Reference (N);
+
+               elsif Function_Name = "external_as_list" then
+                  Parse_External_As_List_Reference (N);
                end if;
             end Parse_Builtin;
 
@@ -890,6 +1006,41 @@ package body GPR2.Parser.Project is
                  with Pre  => Present (Node);
                --  An external variable : External ("VAR"[, "VALUE"])
 
+               procedure Handle_External_As_List_Variable
+                 (Node : not null Builtin_Function_Call)
+                 with Pre  => Present (Node);
+
+               --------------------------------------
+               -- Handle_External_As_List_Variable --
+               --------------------------------------
+
+               procedure Handle_External_As_List_Variable
+                 (Node : not null Builtin_Function_Call)
+               is
+                  use Ada.Exceptions;
+
+                  Parameters : constant not null List_Term_List :=
+                                 F_Exprs (F_Parameters (Node));
+                  Error : Boolean with Unreferenced;
+                  Var   : constant Name_Type :=
+                            Name_Type
+                              (Get_String_Literal
+                                 (Item (Parameters, 1), Error));
+                  Sep   : constant Name_Type :=
+                            Name_Type
+                              (Get_String_Literal
+                                 (Item (Parameters, 2), Error));
+               begin
+                  for V of Builtin.External_As_List (Context, Var, Sep) loop
+                     Record_Value (V);
+                  end loop;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_External_As_List_Variable;
+
                ------------------------------
                -- Handle_External_Variable --
                ------------------------------
@@ -924,7 +1075,7 @@ package body GPR2.Parser.Project is
                                      (Self.File, Sloc_Range (Parameters)),
                                  Message =>
                                    "external default parameter must be a "
-                                 & "simple litteral string"));
+                                 & "simple string"));
                         else
                            Record_Value
                              (Builtin.External (Context, Var, Value));
@@ -958,6 +1109,10 @@ package body GPR2.Parser.Project is
             begin
                if Function_Name = "external" then
                   Handle_External_Variable (Node);
+
+               elsif Function_Name = "external_as_list" then
+                  Single := False;
+                  Handle_External_As_List_Variable (Node);
                end if;
             end Handle_Builtin;
 

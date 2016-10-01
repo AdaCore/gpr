@@ -1,0 +1,10 @@
+Demo     K_STANDARD
+V:   VAR -> "-O2" "-g"
+Demo     K_STANDARD
+V:   VAR -> "-O2" "-g"
+Demo     K_STANDARD
+V:   VAR -> "-gnatv"
+Demo     K_STANDARD
+V:   VAR -> ""
+Demo     K_STANDARD
+V:   VAR ->

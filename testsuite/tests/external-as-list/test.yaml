@@ -1,0 +1,5 @@
+description:
+    Check the external_as_list built-in
+driver: build_and_run
+project_file: external_aslist
+main: main
