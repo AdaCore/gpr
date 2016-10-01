@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GNAT.String_Split;
+
 package body GPR2.Builtin is
 
    --------------
@@ -43,5 +45,41 @@ package body GPR2.Builtin is
          raise Project_Error with "undefined external reference";
       end if;
    end External;
+
+   ----------------------
+   -- External_As_List --
+   ----------------------
+
+   function External_As_List
+     (Context   : GPR2.Context.Object;
+      Variable  : Name_Type;
+      Separator : Name_Type) return Containers.Value_List
+   is
+      use GNAT.String_Split;
+
+      Result : Containers.Value_List;
+   begin
+      if Context.Contains (Variable) then
+         declare
+            Str    : constant String := String'(Context (Variable));
+            Slices : Slice_Set;
+         begin
+            Create (Slices, Str, String (Separator), Mode => Single);
+
+            for K in 1 .. Slice_Count (Slices) loop
+               declare
+                  Value : constant String := Slice (Slices, K);
+               begin
+                  --  We ingnore empty values at the start or at the end
+                  if Value /= "" or else K not in 1 | Slice_Count (Slices) then
+                     Result.Append (Value);
+                  end if;
+               end;
+            end loop;
+         end;
+      end if;
+
+      return Result;
+   end External_As_List;
 
 end GPR2.Builtin;

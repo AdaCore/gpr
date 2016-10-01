@@ -27,9 +27,12 @@
 --  the actual grammar so basically they take a set of string parameters and
 --  should return a single string or a list of string.
 
+with GPR2.Containers;
 with GPR2.Context;
 
 package GPR2.Builtin is
+
+   use type Containers.Value_List;
 
    No_Value : constant Value_Type;
    --  No value specified, different than the empty string
@@ -44,6 +47,13 @@ package GPR2.Builtin is
    --  The External built-in. Returns the value for Variable either in the
    --  context if found or the default value otherwise. If no default value
    --  is specified, the exception is raised.
+
+   function External_As_List
+     (Context   : GPR2.Context.Object;
+      Variable  : Name_Type;
+      Separator : Name_Type) return Containers.Value_List;
+   --  The External_As_List built-in. Returns a list of value which corresponds
+   --  to the data found in context's Variable split using the given separator.
 
 private
 
