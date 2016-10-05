@@ -50,6 +50,8 @@ Implemented
 
 - external_as_list built-in
 
+- split built-in
+
 
 Not implemented
 ===============
@@ -58,9 +60,6 @@ Not implemented
   - specification_exceptions and implementation_exceptions
 
 - missing some/many consistency checks
-
-- split built-in
-  => needs a modification of the langkit grammar
 
 - support for source's artifacts (.o, .ali)
 

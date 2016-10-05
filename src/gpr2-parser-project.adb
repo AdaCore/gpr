@@ -275,6 +275,10 @@ package body GPR2.Parser.Project is
                  (N : not null Builtin_Function_Call);
                --  Put the name of the external into the Externals list
 
+               procedure Parse_Split_Reference
+                 (N : not null Builtin_Function_Call);
+               --  Check that split parameters has the proper type
+
                --------------------------------------
                -- Parse_External_As_List_Reference --
                --------------------------------------
@@ -445,6 +449,110 @@ package body GPR2.Parser.Project is
                   end if;
                end Parse_External_Reference;
 
+               ---------------------------
+               -- Parse_Split_Reference --
+               ---------------------------
+
+               procedure Parse_Split_Reference
+                 (N : not null Builtin_Function_Call)
+               is
+                  Parameters : constant not null Expr_List := F_Parameters (N);
+                  Exprs      : constant List_Term_List := F_Exprs (Parameters);
+               begin
+                  --  Note that this routine is only validating the syntax
+                  --  of the split built-in.
+
+                  if Exprs = null then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference
+                               (Filename, Sloc_Range (N)),
+                           Message =>
+                             "missing parameters for split built-in"));
+
+                  else
+                     --  We have Split ("STR", "SEP"), check that STR and
+                     --  SEP are actually simple strings.
+
+                     declare
+                        Str_Node : constant not null Term_List :=
+                                     Item (Exprs, 1);
+                        Error    : Boolean;
+                        Str      : constant Value_Type :=
+                                     Get_String_Literal (Str_Node, Error);
+                     begin
+                        if Error then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sloc_Range (Str_Node)),
+                                 Message =>
+                                   "split first parameter must be "
+                                 & "a simple string"));
+
+                        elsif Str = "" then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sloc_Range (Str_Node)),
+                                 Message =>
+                                   "split first parameter must not "
+                                 & "be empty"));
+                        end if;
+                     end;
+
+                     --  Check that the second parameter exists and is a string
+
+                     if Item (Exprs, 2) = null then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference
+                                  (Filename, Sloc_Range (Exprs)),
+                              Message =>
+                                "split requires a second parameter"));
+                     else
+                        declare
+                           Sep_Node : constant not null Term_List :=
+                                         Item (Exprs, 2);
+                           Error    : Boolean;
+                           Sep      : constant Value_Type :=
+                                        Get_String_Literal (Sep_Node, Error);
+                        begin
+                           if Error then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (Sep_Node)),
+                                    Message =>
+                                      "split separator parameter must "
+                                    & "be a simple string"));
+
+                           elsif Sep = "" then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    =>
+                                      Get_Source_Reference
+                                        (Filename, Sloc_Range (Sep_Node)),
+                                    Message =>
+                                      "split separator parameter must not "
+                                    & "be empty"));
+                           end if;
+                        end;
+                     end if;
+                  end if;
+               end Parse_Split_Reference;
+
                Function_Name : constant Name_Type :=
                                  Get_Name_Type (F_Function_Name (N));
             begin
@@ -453,6 +561,9 @@ package body GPR2.Parser.Project is
 
                elsif Function_Name = "external_as_list" then
                   Parse_External_As_List_Reference (N);
+
+               elsif Function_Name = "split" then
+                  Parse_Split_Reference (N);
                end if;
             end Parse_Builtin;
 
@@ -1010,6 +1121,9 @@ package body GPR2.Parser.Project is
                --  An external_as_list variable :
                --    External_As_List ("VAR", "SEP")
 
+               procedure Handle_Split (Node : not null Builtin_Function_Call);
+               --  Handle the Split built-in : Split ("STR1", "SEP")
+
                --------------------------------------
                -- Handle_External_As_List_Variable --
                --------------------------------------
@@ -1102,6 +1216,35 @@ package body GPR2.Parser.Project is
                      Status := Over;
                end Handle_External_Variable;
 
+               ------------------
+               -- Handle_Split --
+               ------------------
+
+               procedure Handle_Split
+                 (Node : not null Builtin_Function_Call)
+               is
+                  Parameters : constant not null List_Term_List :=
+                                 F_Exprs (F_Parameters (Node));
+                  Error      : Boolean with Unreferenced;
+                  Str        : constant Name_Type :=
+                                 Name_Type
+                                   (Get_String_Literal
+                                      (Item (Parameters, 1), Error));
+                  Sep        : constant Name_Type :=
+                                 Name_Type
+                                   (Get_String_Literal
+                                      (Item (Parameters, 2), Error));
+               begin
+                  for V of Builtin.Split (Str, Sep) loop
+                     Record_Value (V);
+                  end loop;
+
+                  --  Skip all child nodes, we do not want to parse a second
+                  --  time the string_literal.
+
+                  Status := Over;
+               end Handle_Split;
+
                Function_Name : constant Name_Type :=
                                  Get_Name_Type (F_Function_Name (Node));
             begin
@@ -1111,6 +1254,10 @@ package body GPR2.Parser.Project is
                elsif Function_Name = "external_as_list" then
                   Single := False;
                   Handle_External_As_List_Variable (Node);
+
+               elsif Function_Name = "split" then
+                  Single := False;
+                  Handle_Split (Node);
                end if;
             end Handle_Builtin;
 

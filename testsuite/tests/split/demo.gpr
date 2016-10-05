@@ -1,0 +1,6 @@
+
+project Demo is
+   VAR1 := Split ("-gnatf,-gnatv", ",");
+   VAR2 := Split ("-gnatf    -gnatv", " ");
+   VAR3 := Split ("-gnatf,,,-gnatv,", ",");
+end Demo;
