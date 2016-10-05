@@ -48,6 +48,8 @@ Implemented
 
 - typed variables
 
+- external_as_list built-in
+
 
 Not implemented
 ===============
@@ -59,8 +61,6 @@ Not implemented
 
 - split built-in
   => needs a modification of the langkit grammar
-
-- external_as_list built-in
 
 - support for source's artifacts (.o, .ali)
 
