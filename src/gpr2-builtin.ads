@@ -52,8 +52,14 @@ package GPR2.Builtin is
      (Context   : GPR2.Context.Object;
       Variable  : Name_Type;
       Separator : Name_Type) return Containers.Value_List;
-   --  The External_As_List built-in. Returns a list of value which corresponds
+   --  The External_As_List built-in. Returns a list of values corresponding
    --  to the data found in context's Variable split using the given separator.
+
+   function Split
+     (Value     : Name_Type;
+      Separator : Name_Type) return Containers.Value_List;
+   --  The Split built-in. Returns a list of values corresponding
+   --  to the string value split using the given separator.
 
 private
 
