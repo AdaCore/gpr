@@ -303,7 +303,7 @@ package body GPR2.Parser.Project is
                            & " built-in"));
 
                   else
-                     --  We have External_As_List ("VAR", "SEP"]), check the
+                     --  We have External_As_List ("VAR", "SEP"), check the
                      --  variable name.
 
                      declare
@@ -347,8 +347,8 @@ package body GPR2.Parser.Project is
                                 Get_Source_Reference
                                   (Filename, Sloc_Range (Exprs)),
                               Message =>
-                                "external_as_list requires a second parameter"
-                             ));
+                                "external_as_list requires a second "
+                              & "parameter"));
                      else
                         declare
                            Sep_Node : constant not null Term_List :=
@@ -1021,15 +1021,15 @@ package body GPR2.Parser.Project is
 
                   Parameters : constant not null List_Term_List :=
                                  F_Exprs (F_Parameters (Node));
-                  Error : Boolean with Unreferenced;
-                  Var   : constant Name_Type :=
-                            Name_Type
-                              (Get_String_Literal
-                                 (Item (Parameters, 1), Error));
-                  Sep   : constant Name_Type :=
-                            Name_Type
-                              (Get_String_Literal
-                                 (Item (Parameters, 2), Error));
+                  Error      : Boolean with Unreferenced;
+                  Var        : constant Name_Type :=
+                                 Name_Type
+                                   (Get_String_Literal
+                                      (Item (Parameters, 1), Error));
+                  Sep        : constant Name_Type :=
+                                 Name_Type
+                                   (Get_String_Literal
+                                      (Item (Parameters, 2), Error));
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      Record_Value (V);
