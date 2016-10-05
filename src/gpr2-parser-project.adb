@@ -1002,13 +1002,13 @@ package body GPR2.Parser.Project is
             procedure Handle_Builtin (Node : not null Builtin_Function_Call) is
 
                procedure Handle_External_Variable
-                 (Node : not null Builtin_Function_Call)
-                 with Pre  => Present (Node);
+                 (Node : not null Builtin_Function_Call);
                --  An external variable : External ("VAR"[, "VALUE"])
 
                procedure Handle_External_As_List_Variable
-                 (Node : not null Builtin_Function_Call)
-                 with Pre  => Present (Node);
+                 (Node : not null Builtin_Function_Call);
+               --  An external_as_list variable :
+               --    External_As_List ("VAR", "SEP")
 
                --------------------------------------
                -- Handle_External_As_List_Variable --
