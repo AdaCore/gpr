@@ -1017,8 +1017,6 @@ package body GPR2.Parser.Project is
                procedure Handle_External_As_List_Variable
                  (Node : not null Builtin_Function_Call)
                is
-                  use Ada.Exceptions;
-
                   Parameters : constant not null List_Term_List :=
                                  F_Exprs (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
