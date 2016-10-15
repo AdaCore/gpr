@@ -1,0 +1,11 @@
+with "logging.gpr";
+
+project Build is
+
+   package Compiler renames Logging.Compiler;
+
+   package Binder is
+      for Switches ("Ada") use Logging.Binder'Switches ("Ada");
+   end Binder;
+
+end Build;

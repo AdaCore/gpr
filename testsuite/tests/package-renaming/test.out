@@ -1,0 +1,6 @@
+Build    K_STANDARD
+
+ Binder
+   Switches (Ada) -> -E
+ Compiler
+   Switches (Ada) -> -O2

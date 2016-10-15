@@ -52,6 +52,8 @@ Implemented
 
 - split built-in
 
+- package renaming
+
 
 Not implemented
 ===============
@@ -62,7 +64,5 @@ Not implemented
 - missing some/many consistency checks
 
 - support for source's artifacts (.o, .ali)
-
-- package renaming
 
 - package extension

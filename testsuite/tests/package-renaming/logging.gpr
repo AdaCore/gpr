@@ -1,0 +1,11 @@
+project Logging is
+
+   package Compiler is
+      for Switches ("Ada") use ("-O2");
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use ("-E");
+   end Binder;
+
+end Logging;
