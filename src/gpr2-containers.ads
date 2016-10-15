@@ -40,6 +40,7 @@ package GPR2.Containers is
      new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
 
    subtype Value_List is Value_Type_List.Vector;
+   subtype Extended_Index is Value_Type_List.Extended_Index;
 
    package Value_Type_Set is
      new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);

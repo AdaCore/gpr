@@ -850,25 +850,31 @@ package body GPR2.Parser.Project is
       Packs   : in out GPR2.Project.Pack.Set.Object)
    is
 
+      type Item_Values is record
+         Values : Containers.Value_List;
+         Single : Boolean := False;
+      end record
+        with Dynamic_Predicate =>
+          (if Item_Values.Single then Item_Values.Values.Length = 1);
+
       function Parser
         (Node : access GPR_Node_Type'Class) return Visit_Status;
       --  Actual parser callabck for the project
 
       function Get_Variable_Values
-        (Node : not null Variable_Reference) return Containers.Value_List;
+        (Node : not null Variable_Reference) return Item_Values;
       --  Parse and return the value for the given variable reference
 
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : not null Attribute_Reference;
-         Pack    : Optional_Name_Type := "")
-         return Containers.Value_List;
+         Pack    : Optional_Name_Type := "") return Item_Values;
       --  Return the value for an attribute reference in the given project and
       --  possibly the given package.
 
       function Get_Variable_Ref
-        (Project : Name_Type; Node : not null Identifier)
-         return Containers.Value_List;
+        (Project : Name_Type;
+         Node    : not null Identifier) return Item_Values;
       --  Return the value for a variable reference in the given project
 
       function Is_Limited_Import
@@ -876,9 +882,7 @@ package body GPR2.Parser.Project is
       --  Returns True if the given project is made visible through a limited
       --  immport clause.
 
-      function Get_Term_List
-        (Node   : not null Term_List;
-         Single : out Boolean) return Containers.Value_List;
+      function Get_Term_List (Node : not null Term_List) return Item_Values;
       --  Parse a list of value or a single value as found in an attribute.
       --  Single is set to True if we have a single value. It is false if we
       --  have parsed an expression list. In this later case it does not mean
@@ -938,8 +942,10 @@ package body GPR2.Parser.Project is
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : not null Attribute_Reference;
-         Pack    : Optional_Name_Type := "") return Containers.Value_List
+         Pack    : Optional_Name_Type := "") return Item_Values
       is
+         use type GPR2.Project.Attribute.Object;
+         use type GPR2.Project.Registry.Attribute.Value_Kind;
          use type GPR2.Project.View.Object;
 
          Name   : constant Name_Type :=
@@ -953,8 +959,8 @@ package body GPR2.Parser.Project is
          View   : constant GPR2.Project.View.Object :=
                     GPR2.Project.Tree.View_For (Tree, Project, Context);
 
-         Result : Containers.Value_List :=
-                    Containers.Value_Type_List.Empty_Vector;
+         Attr   : GPR2.Project.Attribute.Object;
+         Result : Item_Values;
 
       begin
          --   We do not want to have a reference to a limited import
@@ -973,6 +979,13 @@ package body GPR2.Parser.Project is
             return Result;
          end if;
 
+         --  For a project/attribute reference we need to check the attribute
+         --  definition to know wether the result is multi-valued or not.
+
+         Result.Single := GPR2.Project.Registry.Attribute.Get
+           (GPR2.Project.Registry.Attribute.Create (Name, Pack)).Value
+             = GPR2.Project.Registry.Attribute.Single;
+
          if Project = Name_Type (To_String (Self.Name))
            or else Is_Project_Reference
          then
@@ -984,7 +997,7 @@ package body GPR2.Parser.Project is
 
             if Pack = "" then
                if Attrs.Contains (Name, Index) then
-                  Result := Attrs.Element (Name, Index).Values;
+                  Attr := Attrs.Element (Name, Index);
                else
                   Att_Defined := False;
                end if;
@@ -995,7 +1008,7 @@ package body GPR2.Parser.Project is
                --  This is the current parsed package, look into Pack_Attrs
 
                if Pack_Attrs.Contains (Name, Index) then
-                  Result := Pack_Attrs.Element (Name, Index).Values;
+                  Attr := Pack_Attrs.Element (Name, Index);
                else
                   Att_Defined := False;
                end if;
@@ -1003,8 +1016,8 @@ package body GPR2.Parser.Project is
             elsif Packs.Contains (Name_Type (Pack)) then
                --  Or in another package in the same project
                if Packs (Name_Type (Pack)).Has_Attributes (Name, Index) then
-                  Result := Packs.Element
-                    (Name_Type (Pack)).Attributes.Element (Name, Index).Values;
+                  Attr := Packs.Element
+                    (Name_Type (Pack)).Attributes.Element (Name, Index);
                else
                   Att_Defined := False;
                end if;
@@ -1013,8 +1026,8 @@ package body GPR2.Parser.Project is
          else
             if View /= GPR2.Project.View.Undefined then
                if Pack = "" then
-                  if View.Has_Attributes (Name) then
-                     Result := View.Attributes.Element (Name).Values;
+                  if View.Has_Attributes (Name, Index) then
+                     Attr := View.Attributes.Element (Name, Index);
                   else
                      Att_Defined := False;
                   end if;
@@ -1025,8 +1038,8 @@ package body GPR2.Parser.Project is
                         P : constant GPR2.Project.Pack.Object :=
                               View.Packages.Element (Name_Type (Pack));
                      begin
-                        if P.Has_Attributes (Name) then
-                           Result := P.Attributes.Element (Name).Values;
+                        if P.Has_Attributes (Name, Index) then
+                           Attr := P.Attributes.Element (Name, Index);
                         end if;
                      end;
 
@@ -1037,6 +1050,12 @@ package body GPR2.Parser.Project is
             end if;
          end if;
 
+         if Attr /= GPR2.Project.Attribute.Undefined then
+            Result :=
+              (Attr.Values,
+               Attr.Kind = GPR2.Project.Registry.Attribute.Single);
+         end if;
+
          return Result;
       end Get_Attribute_Ref;
 
@@ -1044,26 +1063,25 @@ package body GPR2.Parser.Project is
       -- Get_Term_List --
       -------------------
 
-      function Get_Term_List
-        (Node   : not null Term_List;
-         Single : out Boolean) return Containers.Value_List
-      is
+      function Get_Term_List (Node : not null Term_List) return Item_Values is
          use GPR_Parser;
 
-         Result : Containers.Value_List;
+         Result : Item_Values;
          --  The list of values returned by Get_Term_List
 
          function Parser
            (Node : access GPR_Node_Type'Class) return Visit_Status;
 
-         procedure Record_Value (Value : Value_Type)
-           with Post => Result.Length'Old =
-                         (if Result.Length'Old > 0 and then Single
-                          then Result.Length else Result.Length - 1);
+         procedure Record_Value (Single : Boolean; Value : Value_Type)
+           with Post =>
+             Result.Values.Length'Old =
+               (if Result.Values.Length'Old > 0 and then Result.Single
+                then Result.Values.Length
+                else Result.Values.Length - 1);
          --  Record Value into Result, either add it as a new value in the list
          --  (Single = False) or append the value to the current one.
 
-         procedure Record_Values (Values : Containers.Value_List);
+         procedure Record_Values (Values : Item_Values);
          --  Same as above but for multiple values
 
          ------------
@@ -1144,7 +1162,7 @@ package body GPR2.Parser.Project is
                                       (Item (Parameters, 2), Error));
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
-                     Record_Value (V);
+                     Record_Value (False, V);
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1190,12 +1208,12 @@ package body GPR2.Parser.Project is
                                  & "simple string"));
                         else
                            Record_Value
-                             (Builtin.External (Context, Var, Value));
+                             (True, Builtin.External (Context, Var, Value));
                         end if;
                      end;
 
                   else
-                     Record_Value (Builtin.External (Context, Var));
+                     Record_Value (True, Builtin.External (Context, Var));
                   end if;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1212,7 +1230,7 @@ package body GPR2.Parser.Project is
                               Get_Source_Reference
                                 (Self.File, Sloc_Range (Parameters)),
                            Message => Exception_Message (E)));
-                     Record_Value ("");
+                     Record_Value (True, "");
                      Status := Over;
                end Handle_External_Variable;
 
@@ -1236,7 +1254,7 @@ package body GPR2.Parser.Project is
                                       (Item (Parameters, 2), Error));
                begin
                   for V of Builtin.Split (Str, Sep) loop
-                     Record_Value (V);
+                     Record_Value (False, V);
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1252,11 +1270,11 @@ package body GPR2.Parser.Project is
                   Handle_External_Variable (Node);
 
                elsif Function_Name = "external_as_list" then
-                  Single := False;
+                  Result.Single := False;
                   Handle_External_As_List_Variable (Node);
 
                elsif Function_Name = "split" then
-                  Single := False;
+                  Result.Single := False;
                   Handle_Split (Node);
                end if;
             end Handle_Builtin;
@@ -1268,7 +1286,8 @@ package body GPR2.Parser.Project is
             procedure Handle_String (Node : not null String_Literal) is
             begin
                Record_Value
-                 (Unquote
+                 (Result.Single,
+                  Unquote
                     (Value_Type (Image (F_Tok (Single_Tok_Node (Node))))));
             end Handle_String;
 
@@ -1277,20 +1296,12 @@ package body GPR2.Parser.Project is
             ---------------------
 
             procedure Handle_Variable (Node : not null Variable_Reference) is
-               Values : constant Containers.Value_List :=
-                          Get_Variable_Values (Node);
+               Values : constant Item_Values := Get_Variable_Values (Node);
             begin
-               if Values.Is_Empty then
-                  Record_Value ("");
+               if Values.Values.Is_Empty then
+                  Record_Value (Result.Single, "");
 
                else
-                  --  If the variable contains multiple values the result
-                  --  won't be a single valued attribute.
-
-                  if Values.Length > 1 then
-                     Single := False;
-                  end if;
-
                   Record_Values (Values);
                end if;
 
@@ -1302,7 +1313,7 @@ package body GPR2.Parser.Project is
                when GPR_Expr_List =>
                   --  We are opening not a single element but an expression
                   --  list.
-                  Single := False;
+                  Result.Single := False;
 
                when GPR_String_Literal =>
                   Handle_String (String_Literal (Node));
@@ -1330,18 +1341,26 @@ package body GPR2.Parser.Project is
          -- Record_Value --
          ------------------
 
-         procedure Record_Value (Value : Value_Type) is
+         procedure Record_Value (Single : Boolean; Value : Value_Type) is
          begin
-            if Single and then Result.Length > 0 then
+            if Result.Single and then Result.Values.Length > 0 then
                declare
+                  Last      : constant Containers.Extended_Index :=
+                                Result.Values.Last_Index;
                   New_Value : constant Value_Type :=
-                                Result (Result.Last_Index) & Value;
+                                Result.Values (Last) & Value;
                begin
-                  Result.Replace_Element (Result.Last_Index, New_Value);
+                  Result.Values.Replace_Element (Last, New_Value);
                end;
 
             else
-               Result.Append (Value);
+               Result.Values.Append (Value);
+            end if;
+
+            if (Result.Single and then not Single)
+              or else Result.Values.Length > 1
+            then
+               Result.Single := False;
             end if;
          end Record_Value;
 
@@ -1349,20 +1368,21 @@ package body GPR2.Parser.Project is
          -- Record_Values --
          -------------------
 
-         procedure Record_Values (Values : Containers.Value_List) is
+         procedure Record_Values (Values : Item_Values) is
          begin
-            for V of Values loop
-               Record_Value (V);
+            for V of Values.Values loop
+               Record_Value (Values.Single, V);
             end loop;
          end Record_Values;
 
       begin
-         Single := True;
+         Result.Single := True;
          Is_Project_Reference := False;
 
          Traverse (GPR_Node (Node), Parser'Access);
 
          Is_Project_Reference := False;
+
          return Result;
       end Get_Term_List;
 
@@ -1371,18 +1391,30 @@ package body GPR2.Parser.Project is
       ----------------------
 
       function Get_Variable_Ref
-        (Project : Name_Type; Node : not null Identifier)
-         return Containers.Value_List
+        (Project : Name_Type;
+         Node    : not null Identifier) return Item_Values
       is
+         use type GPR2.Project.Registry.Attribute.Value_Kind;
+
          Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
                   GPR2.Project.Tree.View_For (Tree, Project, Context);
+
+         Result : Item_Values;
+
       begin
          if View.Has_Variables (Name) then
-            return View.Variables (Name).First_Element.Values;
-         else
-            return Containers.Value_Type_List.Empty_Vector;
+            declare
+               V : constant GPR2.Project.Variable.Object :=
+                     View.Variables (Name).First_Element;
+            begin
+               Result :=
+                 (V.Values,
+                  V.Kind = GPR2.Project.Registry.Attribute.Single);
+            end;
          end if;
+
+         return Result;
       end Get_Variable_Ref;
 
       -------------------------
@@ -1390,8 +1422,10 @@ package body GPR2.Parser.Project is
       -------------------------
 
       function Get_Variable_Values
-        (Node : not null Variable_Reference) return Containers.Value_List
+        (Node   : not null Variable_Reference) return Item_Values
       is
+         use type GPR2.Project.Registry.Attribute.Value_Kind;
+
          Name_1  : constant not null Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
@@ -1407,6 +1441,7 @@ package body GPR2.Parser.Project is
                   Pack    => Optional_Name_Type
                                (Image (F_Tok (Single_Tok_Node (Name_2)))),
                   Node    => Att_Ref);
+
             else
                --  If a single name it can be either a project or a package
 
@@ -1431,7 +1466,9 @@ package body GPR2.Parser.Project is
             return Get_Variable_Ref (Name, Name_2);
 
          elsif Vars.Contains (Name) then
-            return Vars (Name).Values;
+            return
+              (Vars (Name).Values,
+               Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);
 
          else
             raise Constraint_Error
@@ -1516,39 +1553,35 @@ package body GPR2.Parser.Project is
                       Get_Name_Type (Single_Tok_Node (Name));
          begin
             declare
-               Single : Boolean;
-               Values : constant Containers.Value_List :=
-                          Get_Term_List (Expr, Single);
+               Values : constant Item_Values := Get_Term_List (Expr);
                A      : GPR2.Project.Attribute.Object;
             begin
-               --  Name is either a string or an external
-
                if Present (Index) then
-                  if Single then
+                  if Values.Single then
                      A := GPR2.Project.Attribute.Create
                        (Name  => N_Str,
                         Index => I_Str,
-                        Value => Values.First_Element,
+                        Value => Values.Values.First_Element,
                         Sloc  => Sloc);
 
                   else
                      A := GPR2.Project.Attribute.Create
                        (Name   => N_Str,
                         Index  => I_Str,
-                        Values => Values,
+                        Values => Values.Values,
                         Sloc   => Sloc);
                   end if;
 
                else
-                  if Single then
+                  if Values.Single then
                      A := GPR2.Project.Attribute.Create
                        (Name  => N_Str,
-                        Value => Values.First_Element,
+                        Value => Values.Values.First_Element,
                         Sloc  => Sloc);
                   else
                      A := GPR2.Project.Attribute.Create
                        (Name   => N_Str,
-                        Values => Values,
+                        Values => Values.Values,
                         Sloc   => Sloc);
                   end if;
                end if;
@@ -1589,9 +1622,9 @@ package body GPR2.Parser.Project is
          procedure Parse_Case_Construction
            (Node : not null Case_Construction)
          is
-            Var   : constant not null Variable_Reference := F_Var_Ref (Node);
-            Value : constant Value_Type :=
-                      Get_Variable_Values (Var).First_Element;
+            Var    : constant not null Variable_Reference := F_Var_Ref (Node);
+            Value  : constant Value_Type :=
+                       Get_Variable_Values (Var).Values.First_Element;
          begin
             Case_Values.Prepend (Value);
             --  Set status to close for now, this will be open when a
@@ -1729,9 +1762,7 @@ package body GPR2.Parser.Project is
                          (Self.File, Sloc_Range (GPR_Node (Node)));
             Name   : constant not null Identifier := F_Var_Name (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
-            Single : Boolean;
-            Values : constant Containers.Value_List :=
-                       Get_Term_List (Expr, Single);
+            Values : constant Item_Values := Get_Term_List (Expr);
             V_Type : constant Types.Expr := F_Var_Type (Node);
             V      : GPR2.Project.Variable.Object;
          begin
@@ -1745,11 +1776,11 @@ package body GPR2.Parser.Project is
                   if Self.Types.Contains (T_Name) then
                      --  Check that we have a single value
 
-                     if Single then
+                     if Values.Single then
                         --  Check that the value is part of the type
 
                         if not Self.Types (T_Name).Contains
-                          (Values.First_Element)
+                          (Values.Values.First_Element)
                         then
                            Tree.Log_Messages.Append
                              (Message.Create
@@ -1757,7 +1788,7 @@ package body GPR2.Parser.Project is
                                  Sloc    => Sloc,
                                  Message =>
                                    "value '"
-                                   & String (Values.First_Element)
+                                   & String (Values.Values.First_Element)
                                    & "' is illegal for typed string '"
                                    & String
                                        (Get_Name_Type
@@ -1790,15 +1821,15 @@ package body GPR2.Parser.Project is
                end;
             end if;
 
-            if Single then
+            if Values.Single then
                V := GPR2.Project.Variable.Create
                  (Name  => Get_Name_Type (Single_Tok_Node (Name)),
-                  Value => Values.First_Element,
+                  Value => Values.Values.First_Element,
                   Sloc  => Sloc);
             else
                V := GPR2.Project.Variable.Create
                  (Name   => Get_Name_Type (Single_Tok_Node (Name)),
-                  Values => Values,
+                  Values => Values.Values,
                   Sloc   => Sloc);
             end if;
 

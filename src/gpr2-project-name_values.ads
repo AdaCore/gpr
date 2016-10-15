@@ -85,7 +85,7 @@ package GPR2.Project.Name_Values is
 private
 
    type Object is new Source_Reference.Object with record
-      Kind   : Registry.Attribute.Value_Kind;
+      Kind   : Registry.Attribute.Value_Kind := List;
       Name   : Unbounded_String;
       Values : Containers.Value_List;
    end record;
