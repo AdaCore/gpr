@@ -1504,19 +1504,19 @@ package body GPR2.Parser.Project is
 
          Status : Visit_Status := Into;
 
-         procedure Parse_Attribute_Decl_Kind (Node : not null Attribute_Decl)
+         procedure Parse_Attribute_Decl (Node : not null Attribute_Decl)
            with Pre => Is_Open;
          --  Parse attribute declaration and append it into Attrs set
 
-         procedure Parse_Variable_Decl_Kind (Node : not null Variable_Decl)
+         procedure Parse_Variable_Decl (Node : not null Variable_Decl)
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
-         procedure Parse_Package_Decl_Kind (Node : not null Package_Decl)
+         procedure Parse_Package_Decl (Node : not null Package_Decl)
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
-         procedure Parse_Package_Renaming_Kind
+         procedure Parse_Package_Renaming
            (Node : not null Package_Renaming)
            with Pre => Is_Open;
          --  Parse a package renaming
@@ -1534,11 +1534,11 @@ package body GPR2.Parser.Project is
          procedure Visit_Child (Child : GPR_Node);
          --  Recursive call to the Parser if the Child is not null
 
-         -------------------------------
-         -- Parse_Attribute_Decl_Kind --
-         -------------------------------
+         --------------------------
+         -- Parse_Attribute_Decl --
+         --------------------------
 
-         procedure Parse_Attribute_Decl_Kind
+         procedure Parse_Attribute_Decl
            (Node : not null Attribute_Decl)
          is
             Sloc  : constant Source_Reference.Object :=
@@ -1618,7 +1618,7 @@ package body GPR2.Parser.Project is
                   end if;
                end;
             end;
-         end Parse_Attribute_Decl_Kind;
+         end Parse_Attribute_Decl;
 
          -----------------------------
          -- Parse_Case_Construction --
@@ -1714,11 +1714,11 @@ package body GPR2.Parser.Project is
             Is_Open := Is_Case_Item_Matches;
          end Parse_Case_Item;
 
-         -----------------------------
-         -- Parse_Package_Decl_Kind --
-         -----------------------------
+         ------------------------
+         -- Parse_Package_Decl --
+         ------------------------
 
-         procedure Parse_Package_Decl_Kind (Node : not null Package_Decl) is
+         procedure Parse_Package_Decl (Node : not null Package_Decl) is
             Sloc   : constant Source_Reference.Object :=
                        Get_Source_Reference
                          (Self.File, Sloc_Range (GPR_Node (Node)));
@@ -1755,15 +1755,13 @@ package body GPR2.Parser.Project is
             --  Skip all nodes for this construct
 
             Status := Over;
-         end Parse_Package_Decl_Kind;
+         end Parse_Package_Decl;
 
-         ---------------------------------
-         -- Parse_Package_Renaming_Kind --
-         ---------------------------------
+         ----------------------------
+         -- Parse_Package_Renaming --
+         ----------------------------
 
-         procedure Parse_Package_Renaming_Kind
-           (Node : not null Package_Renaming)
-         is
+         procedure Parse_Package_Renaming (Node : not null Package_Renaming) is
             use type GPR2.Project.View.Object;
 
             Sloc    : constant Source_Reference.Object :=
@@ -1809,13 +1807,13 @@ package body GPR2.Parser.Project is
             end if;
 
             Status := Over;
-         end Parse_Package_Renaming_Kind;
+         end Parse_Package_Renaming;
 
-         ------------------------------
-         -- Parse_Variable_Decl_Kind --
-         ------------------------------
+         -------------------------
+         -- Parse_Variable_Decl --
+         -------------------------
 
-         procedure Parse_Variable_Decl_Kind (Node : not null Variable_Decl) is
+         procedure Parse_Variable_Decl (Node : not null Variable_Decl) is
             Sloc   : constant Source_Reference.Object :=
                        Get_Source_Reference
                          (Self.File, Sloc_Range (GPR_Node (Node)));
@@ -1893,7 +1891,7 @@ package body GPR2.Parser.Project is
             end if;
 
             Vars.Include (V.Name, V);
-         end Parse_Variable_Decl_Kind;
+         end Parse_Variable_Decl;
 
          -----------------
          -- Visit_Child --
@@ -1917,16 +1915,16 @@ package body GPR2.Parser.Project is
 
             case AST.Kind (Node) is
                when GPR_Attribute_Decl =>
-                  Parse_Attribute_Decl_Kind (Attribute_Decl (Node));
+                  Parse_Attribute_Decl (Attribute_Decl (Node));
 
                when GPR_Variable_Decl =>
-                  Parse_Variable_Decl_Kind (Variable_Decl (Node));
+                  Parse_Variable_Decl (Variable_Decl (Node));
 
                when GPR_Package_Decl =>
-                  Parse_Package_Decl_Kind (Package_Decl (Node));
+                  Parse_Package_Decl (Package_Decl (Node));
 
                when GPR_Package_Renaming =>
-                  Parse_Package_Renaming_Kind (Package_Renaming (Node));
+                  Parse_Package_Renaming (Package_Renaming (Node));
 
                when GPR_Case_Construction =>
                   Parse_Case_Construction (Case_Construction (Node));
