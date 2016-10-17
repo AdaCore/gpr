@@ -1777,7 +1777,8 @@ package body GPR2.Parser.Project is
             View    : constant GPR2.Project.View.Object :=
                         GPR2.Project.Tree.View_For (Tree, Project, Context);
          begin
-            --  Clear any previous value
+            --  Clear any previous value. This node is parsed as a child
+            --  process of Parse_Package_Decl routine above.
 
             Pack_Attrs.Clear;
 
