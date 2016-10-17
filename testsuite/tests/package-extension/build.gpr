@@ -1,0 +1,13 @@
+with "logging.gpr";
+
+project Build is
+
+   package Compiler extends Logging.Compiler is
+      for Default_Switches use ("-ext");
+   end Compiler;
+
+   package Binder is
+      for Switches ("Ada") use Logging.Binder'Switches ("Ada");
+   end Binder;
+
+end Build;

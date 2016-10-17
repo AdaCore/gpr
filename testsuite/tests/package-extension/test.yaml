@@ -1,0 +1,5 @@
+description:
+    Check for package extension
+driver: build_and_run
+project_file: package_extension
+main: main

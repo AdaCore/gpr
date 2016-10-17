@@ -54,6 +54,8 @@ Implemented
 
 - package renaming
 
+- package extension
+
 
 Not implemented
 ===============
@@ -64,5 +66,3 @@ Not implemented
 - missing some/many consistency checks
 
 - support for source's artifacts (.o, .ali)
-
-- package extension

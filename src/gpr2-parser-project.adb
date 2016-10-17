@@ -1521,6 +1521,11 @@ package body GPR2.Parser.Project is
            with Pre => Is_Open;
          --  Parse a package renaming
 
+         procedure Parse_Package_Extension
+           (Node : not null Package_Extension)
+           with Pre => Is_Open;
+         --  Parse a package extension
+
          procedure Parse_Case_Construction (Node : not null Case_Construction)
            with Pre  => Is_Open,
                 Post => Case_Values.Length'Old = Case_Values.Length;
@@ -1757,6 +1762,61 @@ package body GPR2.Parser.Project is
             Status := Over;
          end Parse_Package_Decl;
 
+         -----------------------------
+         -- Parse_Package_Extension --
+         -----------------------------
+
+         procedure Parse_Package_Extension
+           (Node : not null Package_Extension)
+         is
+            use type GPR2.Project.View.Object;
+
+            Sloc    : constant Source_Reference.Object :=
+                        Get_Source_Reference
+                          (Self.File, Sloc_Range (GPR_Node (Node)));
+            Prj     : constant not null Identifier := F_Prj_Name (Node);
+            Project : constant Name_Type :=
+                        Get_Name_Type (Single_Tok_Node (Prj));
+            Name    : constant not null Identifier := F_Pkg_Name (Node);
+            P_Name  : constant Name_Type :=
+                        Get_Name_Type (Single_Tok_Node (Name));
+
+            View    : constant GPR2.Project.View.Object :=
+                        GPR2.Project.Tree.View_For (Tree, Project, Context);
+         begin
+            --  Clear any previous value. This node is parsed as a child
+            --  process of Parse_Package_Decl routine above.
+
+            Pack_Attrs.Clear;
+
+            --  Check if the Project.Package reference exists
+
+            if View = GPR2.Project.View.Undefined then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "project '" & String (Project) & "' is undefined"));
+
+            elsif not View.Packages.Contains (P_Name) then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "package '" & String (Project) & '.' & String (P_Name)
+                     & "' is undefined"));
+
+            else
+               --  Then just copy the attributes into the current package
+
+               Pack_Attrs := View.Packages.Element (P_Name).Attributes;
+            end if;
+
+            Status := Over;
+         end Parse_Package_Extension;
+
          ----------------------------
          -- Parse_Package_Renaming --
          ----------------------------
@@ -1926,6 +1986,9 @@ package body GPR2.Parser.Project is
 
                when GPR_Package_Renaming =>
                   Parse_Package_Renaming (Package_Renaming (Node));
+
+               when GPR_Package_Extension =>
+                  Parse_Package_Extension (Package_Extension (Node));
 
                when GPR_Case_Construction =>
                   Parse_Case_Construction (Case_Construction (Node));
