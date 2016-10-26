@@ -23,21 +23,24 @@
 ------------------------------------------------------------------------------
 
 with "langkit_support";
-with "langkit/install/share/gpr/gpr_parser";
+with "gpr_parser";
 
 library project GPR2 is
 
-   for Source_Dirs use ("src");
-
-   for Object_Dir use "obj";
-
-   for Library_Dir use "lib";
-   for Library_Name use "gpr2";
-
-   type Build_Type is ("Debug", "Release");
-   Build : Build_Type := external ("PRJ_BUILD", "Debug");
+   type Build_Type is ("debug", "release");
+   Build : Build_Type := external ("BUILD", "debug");
 
    Processors := External ("PROCESSORS", "0");
+
+   type Library_Kind is ("static", "relocatable", "static-pic");
+   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+
+   for Source_Dirs use ("src");
+   for Library_Name use "gpr2";
+
+   for Object_Dir use ".build/obj-" & Library_Type;
+   for Library_Dir use ".build/lib-" & Library_Type;
+   for Library_Kind use Library_Type;
 
    --------------
    -- Compiler --
@@ -56,11 +59,11 @@ library project GPR2 is
    package Compiler is
 
       case Build is
-         when "Debug" =>
+         when "debug" =>
             for Default_Switches ("Ada") use Common_Options & Debug_Options;
             for Default_Switches ("C") use ("-g");
 
-         when "Release" =>
+         when "release" =>
             for Default_Switches ("Ada") use Common_Options & Release_Options;
             for Default_Switches ("C") use ("-O2");
       end case;

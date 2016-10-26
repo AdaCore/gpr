@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gnatcoll";
 with "gnatcoll_iconv";
 with "langkit_support";
 
@@ -30,19 +29,20 @@ library project GPR_Parser is
 
    Quex_Root := external ("QUEX_ROOT");
 
-   type Build_Mode_Type is ("dev", "prod");
-   Build_Mode : Build_Mode_Type := external ("BUILD_MODE", "dev");
+   type Build_Mode_Type is ("debug", "release");
+   Build_Mode : Build_Mode_Type := external ("BUILD", "release");
 
-   type Library_Kind_Type is ("static", "relocatable");
-   Library_Kind : Library_Kind_Type := external ("LIBRARY_TYPE", "relocatable");
+   type Library_Kind_Type is ("static", "relocatable", "static-pic");
+   Library_Kind : Library_Kind_Type :=
+     external ("LIBRARY_TYPE", "relocatable");
 
    for Languages use ("Ada", "C");
    for Library_Name use "gpr_parser";
    for Library_Kind use Library_Kind;
 
    for Source_Dirs use ("src");
-   for Library_Dir use "lib/" & Library_Kind;
-   for Object_Dir  use "obj/" & Library_Kind;
+   for Library_Dir use ".build/lib-" & Library_Kind;
+   for Object_Dir  use ".build/obj-" & Library_Kind;
 
    Common_C_Cargs :=
      ("-I" & Quex_Root,
@@ -51,7 +51,7 @@ library project GPR_Parser is
 
    package Compiler is
       case Build_Mode is
-         when "dev" =>
+         when "debug" =>
             for Default_Switches ("Ada") use ("-g", "-O0");
             for Default_Switches ("C") use Common_C_Cargs & ("-g3", "-O0");
 
@@ -60,7 +60,7 @@ library project GPR_Parser is
             --  Valgrind runs. We almost never have to debug this file so
             --  this is acceptable.
 
-         when "prod" =>
+         when "release" =>
             --  Debug information is useful even with optimization for
             --  profiling, for instance.
             for Default_Switches ("Ada") use ("-g", "-Ofast", "-gnatp");

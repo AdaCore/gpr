@@ -1,6 +1,6 @@
 ##############################################################################
 ##                                                                          ##
-##                            PGPR PROJECT PARSER                           ##
+##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
 ##            Copyright (C) 2016, Free Software Foundation, Inc.            ##
 ##                                                                          ##
@@ -22,34 +22,29 @@
 ##                                                                          ##
 ##############################################################################
 
-QUEX_ROOT=/opt/quex/quex-0.65.4
+# Makefile targets
+# ----------------
+#
+# Setup:                   make [VAR=VALUE] setup (see below)
+# Build libgpr2:           make
+# Install libgpr2:         make install
 
-ENABLE_SHARED := $(shell gprbuild -c -q -p \
-	-P../config/test_shared 2>/dev/null && echo "yes")
+# Variables which can be set:
+#
+#   prefix        : root install directory
+#   ENABLE_SHARED : yes / no (or empty)
+#   BUILD         : debug release
+#   PROCESSORS    : nb parallel compilations (0 to use all cores)
+#   TARGET        : target triplet for cross-compilation
 
 HOST    = $(shell gcc -dumpmachine)
 TARGET := $(shell gcc -dumpmachine)
+
 prefix	      := $(dir $(shell which gnatls))..
 BUILD         = release
+PROCESSORS    = 0
 BUILD_DIR     =
 SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
-
-# check for out-of-tree build
-ifeq ($(SOURCE_DIR),.)
-RBD=
-PGPRP=gpr_parser.gpr
-MAKEPREFIX=
-else
-RBD=--relocate-build-tree
-PGPR=$(SOURCE_DIR)/gpr_parser.gpr
-MAKEPREFIX=$(SOURCE_DIR)/
-endif
-
-ifeq ($(ENABLE_SHARED), yes)
-   PGPR_TYPES=static relocatable static-pic
-else
-   PGPR_TYPES=static
-endif
 
 # Load current setup if any
 -include makefile.setup
@@ -61,23 +56,63 @@ else
 GTARGET=--target=$(TARGET)
 endif
 
+# check for out-of-tree build
+ifeq ($(SOURCE_DIR),.)
+RBD=
+GPR2=gpr2.gpr
+MAKEPREFIX=
+else
+RBD=--relocate-build-tree
+GPR2=$(SOURCE_DIR)/gpr2.gpr
+MAKEPREFIX=$(SOURCE_DIR)/
+endif
+
+ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
+	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
+
+ifeq ($(ENABLE_SHARED), yes)
+   LIBGPR2_TYPES=static relocatable static-pic
+else
+   LIBGPR2_TYPES=static
+endif
+
 # Used to pass extra options to GPRBUILD, like -d for instance
 GPRBUILD_OPTIONS=
 
 BUILDER=gprbuild -p -m $(GTARGET) $(RBD) -j${PROCESSORS} -XBUILD=${BUILD} ${GPRBUILD_OPTIONS}
 INSTALLER=gprinstall -p -f --target=$(TARGET) $(RBD) --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)
-UNINSTALLER=$(INSTALLER) -p -f --install-name=gpr_parser --uninstall
+UNINSTALLER=$(INSTALLER) -p -f --install-name=gpr2 --uninstall
+
+#########
+# build #
+#########
 
 all: build
 
-generate:
-	-rm src/*
-	python manage.py generate
+build: ${LIBGPR2_TYPES:%=build-%}
 
-GPROPTS=-XQUEX_ROOT=$(QUEX_ROOT)
+build-%:
+	$(BUILDER) -XLIBRARY_TYPE=$* $(GPR2)
 
-# Setup
+###########
+# Install #
+###########
+
+uninstall:
+ifneq (,$(wildcard $(prefix)/lib/gnat/manifests/gpr2))
+	$(UNINSTALLER) $(GPR2)
+endif
+
+install: uninstall ${LIBGPR2_TYPES:%=install-%}
+
+install-%:
+	$(INSTALLER) -XLIBRARY_TYPE=$* -XGPR_PARSER_BUILD=$* \
+		--build-name=$* --build-var=LIBRARY_TYPE $(GPR2)
+
+#########
+# setup #
+#########
 
 .SILENT: setup
 
@@ -87,35 +122,13 @@ setup:
 	echo "BUILD=$(BUILD)" >> makefile.setup
 	echo "PROCESSORS=$(PROCESSORS)" >> makefile.setup
 	echo "TARGET=$(TARGET)" >> makefile.setup
+	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
 
-# Build
+###########
+# Cleanup #
+###########
 
-build: generate ${PGPR_TYPES:%=build-%}
-	-echo
-
-build-%:
-	gprbuild -p -m -XLIBRARY_TYPE=$* $(GPROPTS) gpr_parser.gpr
-
-force:
-
-# Install
-
-uninstall:
-	-gprinstall -f --uninstall --prefix=$(prefix) gpr_parser.gpr
-
-install: uninstall force ${PGPR_TYPES:%=install-%}
-
-install-%:
-	gprinstall -p --prefix=$(prefix) -XLIBRARY_TYPE=$* \
-		--build-name=$* --build-var=LIBRARY_TYPE \
-		$(GPROPTS) gpr_parser.gpr
-
-# Clean
-
-clean: ${PGPR_TYPES:%=clean-%} clean-final
+clean: ${LIBGPR2_TYPES:%=clean-%}
 
 clean-%:
-	gprclean -XLIBRARY_TYPE=$* $(GPROPTS) gpr_parser.gpr
-
-clean-final:
-	rm -fr build .build
+	-$(CLEANER) -XLIBRARY_TYPE=$* -XGPR_PARSER_BUILD=$* $(GPR2)

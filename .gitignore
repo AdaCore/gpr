@@ -1,10 +1,6 @@
 # Build artifacts
 langkit/build
-langkit/install
-langkit/lib
 langkit/src/gpr.qx
-lib
-obj
 *~
 main
 main.exe
@@ -15,3 +11,6 @@ main.exe
 # Testsuite output
 out
 testsuite/out
+
+.build
+makefile.setup
