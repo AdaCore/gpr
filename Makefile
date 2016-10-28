@@ -100,7 +100,7 @@ build-%:
 ###########
 
 uninstall:
-ifneq (,$(wildcard $(prefix)/lib/gnat/manifests/gpr2))
+ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
 	$(UNINSTALLER) $(GPR2)
 endif
 
