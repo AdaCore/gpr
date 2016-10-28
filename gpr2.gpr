@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "langkit_support";
 with "gpr_parser";
 
 library project GPR2 is
