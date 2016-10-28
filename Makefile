@@ -107,7 +107,7 @@ endif
 install: uninstall ${LIBGPR2_TYPES:%=install-%}
 
 install-%:
-	$(INSTALLER) -XLIBRARY_TYPE=$* -XGPR_PARSER_BUILD=$* \
+	$(INSTALLER) -XLIBRARY_TYPE=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE $(GPR2)
 
 #########
@@ -131,4 +131,4 @@ setup:
 clean: ${LIBGPR2_TYPES:%=clean-%}
 
 clean-%:
-	-$(CLEANER) -XLIBRARY_TYPE=$* -XGPR_PARSER_BUILD=$* $(GPR2)
+	-$(CLEANER) -XLIBRARY_TYPE=$* $(GPR2)
