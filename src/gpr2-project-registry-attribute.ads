@@ -68,31 +68,36 @@ package GPR2.Project.Registry.Attribute is
 
    --  Some common attribute names
 
-   Body_Suffix               : constant Name_Type := "body_suffix";
-   Dot_Replacement           : constant Name_Type := "dot_replacement";
-   External                  : constant Name_Type := "external";
-   Excluded_Source_Files     : constant Name_Type := "excluded_source_files";
-   Excluded_Source_List_File : constant Name_Type :=
-                                 "excluded_source_list_file";
-   Implementation_Suffix     : constant Name_Type := "implementation_suffix";
-   Languages                 : constant Name_Type := "languages";
-   Library_Kind              : constant Name_Type := "library_kind";
-   Library_Name              : constant Name_Type := "library_name";
-   Project_Files             : constant Name_Type := "project_files";
-   Separate_Suffix           : constant Name_Type := "separate_suffix";
-   Source_Dirs               : constant Name_Type := "source_dirs";
-   Source_Files              : constant Name_Type := "source_files";
-   Source_List_File          : constant Name_Type := "source_list_file";
-   Spec_Suffix               : constant Name_Type := "spec_suffix";
-   Specification_Suffix      : constant Name_Type := "specification_suffix";
-   Spec                      : constant Name_Type := "spec";
-   Specification             : constant Name_Type := "specification";
-   Body_N                    : constant Name_Type := "body";
-   Implementation            : constant Name_Type := "implementation";
-   Specification_Exceptions  : constant Name_Type :=
-                                 "specification_exceptions";
-   Implementation_Exceptions : constant Name_Type :=
-                                 "implementation_exceptions";
+   Body_N                      : constant Name_Type := "body";
+   Body_Suffix                 : constant Name_Type := "body_suffix";
+   Dot_Replacement             : constant Name_Type := "dot_replacement";
+   Excluded_Patterns           : constant Name_Type := "excluded_patterns";
+   Excluded_Source_Files       : constant Name_Type := "excluded_source_files";
+   Excluded_Source_List_File   : constant Name_Type :=
+                                   "excluded_source_list_file";
+   External                    : constant Name_Type := "external";
+   Implementation              : constant Name_Type := "implementation";
+   Implementation_Exceptions   : constant Name_Type :=
+                                   "implementation_exceptions";
+   Implementation_Suffix       : constant Name_Type := "implementation_suffix";
+   Included_Artifacts_Patterns : constant Name_Type :=
+                                   "included_artifacts_patterns";
+   Included_Patterns           : constant Name_Type := "included_patterns";
+   Languages                   : constant Name_Type := "languages";
+   Library_Kind                : constant Name_Type := "library_kind";
+   Library_Name                : constant Name_Type := "library_name";
+   Project_Files               : constant Name_Type := "project_files";
+   Root_Dir                    : constant Name_Type := "root_dir";
+   Separate_Suffix             : constant Name_Type := "separate_suffix";
+   Source_Dirs                 : constant Name_Type := "source_dirs";
+   Source_Files                : constant Name_Type := "source_files";
+   Source_List_File            : constant Name_Type := "source_list_file";
+   Spec                        : constant Name_Type := "spec";
+   Spec_Suffix                 : constant Name_Type := "spec_suffix";
+   Specification               : constant Name_Type := "specification";
+   Specification_Exceptions    : constant Name_Type :=
+                                   "specification_exceptions";
+   Specification_Suffix        : constant Name_Type := "specification_suffix";
 
 private
 
