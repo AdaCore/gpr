@@ -35,10 +35,12 @@ package GPR2.Project.Registry.Pack is
 
    --  Some common package names
 
+   Binder   : constant Name_Type := "binder";
    Builder  : constant Name_Type := "builder";
    Compiler : constant Name_Type := "compiler";
-   Binder   : constant Name_Type := "binder";
+   Install  : constant Name_Type := "install";
    Linker   : constant Name_Type := "linker";
    Naming   : constant Name_Type := "naming";
+   Remote   : constant Name_Type := "remote";
 
 end GPR2.Project.Registry.Pack;
