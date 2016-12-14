@@ -2072,6 +2072,17 @@ begin
            Read_Only            => False,
            Is_Allowed_In        => Everywhere));
 
+   --  install.required_artifacts
+   Store.Insert
+     ("install.required_artifacts",
+      Def'(Index                => Yes,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => True,
+           Value                => List,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
    --  install.mode
    Store.Insert
      ("install.mode",
