@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,49 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
+with GPR2.Source;
 
-library project GPR2 is
+with GPR2.Project.View;
 
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
+package GPR2.Project.Source is
 
-   Processors := External ("PROCESSORS", "0");
+   type Object is tagged private;
 
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+   subtype Source_Object is Object;
 
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
+   Undefined : constant Object;
 
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
+   function "<" (Left, Right : Object) return Boolean;
+   overriding function "=" (Left, Right : Object) return Boolean;
 
-   --------------
-   -- Compiler --
-   --------------
+   function Create
+     (Source : GPR2.Source.Object;
+      View   : Project.View.Object) return Object;
+   --  Constructor for Object
 
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
+   function View (Self : Object) return Project.View.Object;
+   --  The view the source is in
 
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
+   function Source (Self : Object) return GPR2.Source.Object;
+   --  The source object
 
-   Release_Options :=
-     ("-O2", "-gnatn");
+private
 
-   package Compiler is
+   use type GPR2.Source.Object;
 
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
+   type Object is tagged record
+      Source : GPR2.Source.Object;
+      View   : Project.View.Object;
+   end record;
 
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
+   Undefined : constant Object :=
+                 (Source => GPR2.Source.Undefined,
+                  View   => Project.View.Undefined);
 
-   end Compiler;
+   function "<" (Left, Right : Object) return Boolean is
+     (Left.Source < Right.Source);
 
-   ------------
-   -- Binder --
-   ------------
+   overriding function "=" (Left, Right : Object) return Boolean is
+     (Left.Source = Right.Source);
 
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
-
-   -------------
-   -- Builder --
-   -------------
-
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
-
-end GPR2;
+end GPR2.Project.Source;

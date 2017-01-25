@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,47 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
+--  This package contains the implementation of all GPR built-ins like
+--  External, External_As_List, Split. The built-in specs are following closely
+--  the actual grammar so basically they take a set of string parameters and
+--  should return a single string or a list of string.
 
-library project GPR2 is
+with GPR2.Containers;
+with GPR2.Context;
 
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
+package GPR2.Builtin is
 
-   Processors := External ("PROCESSORS", "0");
+   use type Containers.Value_List;
 
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+   No_Value : constant Value_Type;
+   --  No value specified, different than the empty string
 
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
+   function External
+     (Context       : GPR2.Context.Object;
+      Variable      : Name_Type;
+      Default_Value : Value_Type := No_Value) return Value_Type
+     with Post =>
+       (if Context.Contains (Variable)
+        then External'Result = Context (Variable));
+   --  The External built-in. Returns the value for Variable either in the
+   --  context if found or the default value otherwise. If no default value
+   --  is specified, the exception is raised.
 
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
+   function External_As_List
+     (Context   : GPR2.Context.Object;
+      Variable  : Name_Type;
+      Separator : Name_Type) return Containers.Value_List;
+   --  The External_As_List built-in. Returns a list of values corresponding
+   --  to the data found in context's Variable split using the given separator.
 
-   --------------
-   -- Compiler --
-   --------------
+   function Split
+     (Value     : Name_Type;
+      Separator : Name_Type) return Containers.Value_List;
+   --  The Split built-in. Returns a list of values corresponding
+   --  to the string value split using the given separator.
 
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
+private
 
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
+   No_Value : constant Value_Type := Value_Type'(1 => ASCII.NUL);
 
-   Release_Options :=
-     ("-O2", "-gnatn");
-
-   package Compiler is
-
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
-
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
-
-   end Compiler;
-
-   ------------
-   -- Binder --
-   ------------
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
-
-   -------------
-   -- Builder --
-   -------------
-
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
-
-end GPR2;
+end GPR2.Builtin;

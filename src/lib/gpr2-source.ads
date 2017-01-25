@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,56 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
+--  This package defines a source Object. This source object is shared with all
+--  loaded project tree.
 
-library project GPR2 is
+package GPR2.Source is
 
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
+   type Object is tagged private;
 
-   Processors := External ("PROCESSORS", "0");
+   Undefined : constant Object;
 
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+   type Kind_Type is (S_Spec, S_Body, S_Separate);
 
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
+   function "<" (Left, Right : Object) return Boolean;
 
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
+   overriding function "=" (Left, Right : Object) return Boolean;
+   --  A source object is equal if it is the same unit for unit based language,
+   --  and if it is the same filename otherwise.
 
-   --------------
-   -- Compiler --
-   --------------
+   function Filename (Self : Object) return Full_Path_Name;
+   --  Retruns the filename for the given source
 
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
+   function Kind (Self : Object) return Kind_Type;
+   --  Returns the kind of source
 
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
+   function Other_Part (Self : Object) return Object;
+   --  Returns the other-part of the source. This is either the spec for a body
+   --  or the body for a spec.
 
-   Release_Options :=
-     ("-O2", "-gnatn");
+   function Unit_Name (Self : Object) return Optional_Name_Type;
+   --  Returns the unit name for the given source or the empty string if the
+   --  language does not have support for unit.
 
-   package Compiler is
+   function Language (Self : Object) return Name_Type;
+   --  Returns the language for the given source
 
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
+   function Create
+     (Filename  : Path_Name_Type;
+      Kind      : Kind_Type;
+      Language  : Name_Type;
+      Unit_Name : Optional_Name_Type) return Object;
 
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
+   procedure Set_Other_Part
+     (Self       : in out Object;
+      Other_Part : in out Object);
 
-   end Compiler;
+private
 
-   ------------
-   -- Binder --
-   ------------
+   type Object is tagged record
+      Id : Natural;
+   end record;
 
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
+   Undefined : constant Object := Object'(Id => 0);
 
-   -------------
-   -- Builder --
-   -------------
-
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
-
-end GPR2;
+end GPR2.Source;

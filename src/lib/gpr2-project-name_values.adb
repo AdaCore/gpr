@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,76 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
+package body GPR2.Project.Name_Values is
 
-library project GPR2 is
+   ------------------
+   -- Count_Values --
+   ------------------
 
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
-
-   Processors := External ("PROCESSORS", "0");
-
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
-
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
-
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
-
-   --------------
-   -- Compiler --
-   --------------
-
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
-
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
-
-   Release_Options :=
-     ("-O2", "-gnatn");
-
-   package Compiler is
-
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
-
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
-
-   end Compiler;
+   function Count_Values (Self : Object) return Containers.Count_Type is
+   begin
+      return Self.Values.Length;
+   end Count_Values;
 
    ------------
-   -- Binder --
+   -- Create --
    ------------
 
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
+   function Create
+     (Name  : Name_Type;
+      Value : Value_Type;
+      Sloc  : Source_Reference.Object) return Object is
+   begin
+      return Object'
+        (Sloc
+         with Single,
+              To_Unbounded_String (String (Name)),
+              Containers.Value_Type_List.To_Vector (String (Value), 1));
+   end Create;
 
-   -------------
-   -- Builder --
-   -------------
+   function Create
+     (Name   : Name_Type;
+      Values : Containers.Value_List;
+      Sloc   : Source_Reference.Object) return Object is
+   begin
+      return Object'
+        (Sloc with List, To_Unbounded_String (String (Name)), Values);
+   end Create;
 
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
+   ----------
+   -- Kind --
+   ----------
 
-end GPR2;
+   function Kind (Self : Object'Class) return Registry.Attribute.Value_Kind is
+   begin
+      return Self.Kind;
+   end Kind;
+
+   ----------
+   -- Name --
+   ----------
+
+   function Name (Self : Object) return Name_Type is
+   begin
+      return Name_Type (To_String (Self.Name));
+   end Name;
+
+   -----------
+   -- Value --
+   -----------
+
+   function Value (Self : Object) return Value_Type is
+   begin
+      return Self.Values.First_Element;
+   end Value;
+
+   ------------
+   -- Values --
+   ------------
+
+   function Values (Self : Object) return Containers.Value_List is
+   begin
+      return Self.Values;
+   end Values;
+
+end GPR2.Project.Name_Values;

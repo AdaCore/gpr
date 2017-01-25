@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,41 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
+with GPR2.Source_Reference;
 
-library project GPR2 is
+package GPR2.Project.Import is
 
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
+   use type GPR2.Source_Reference.Object;
 
-   Processors := External ("PROCESSORS", "0");
+   type Object is new Source_Reference.Object with private;
 
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+   subtype Import_Type is Object;
 
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
+   Undefined : constant Object;
 
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
+   function Create
+     (Path_Name  : Path_Name_Type;
+      Sloc       : Source_Reference.Object;
+      Is_Limited : Boolean) return Object
+     with Pre => Sloc /= Source_Reference.Undefined;
 
-   --------------
-   -- Compiler --
-   --------------
+   function Path_Name (Self : Object) return Path_Name_Type
+     with Pre => Self /= Undefined;
+   --  Full pathname of the corresponding project file
 
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
+   function Is_Limited (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if this is a limited import
 
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
+private
 
-   Release_Options :=
-     ("-O2", "-gnatn");
+   type Object is new Source_Reference.Object with record
+      Path_Name  : Path_Name_Type;
+      Is_Limited : Boolean;
+   end record;
 
-   package Compiler is
+   Undefined : constant Object :=
+                 (Source_Reference.Undefined
+                  with Path_Name => No_Path_Name, Is_Limited => False);
 
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
-
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
-
-   end Compiler;
-
-   ------------
-   -- Binder --
-   ------------
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
-
-   -------------
-   -- Builder --
-   -------------
-
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
-
-end GPR2;
+end GPR2.Project.Import;

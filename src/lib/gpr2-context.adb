@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,49 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
+package body GPR2.Context is
 
-library project GPR2 is
+   ---------------
+   -- Signature --
+   ---------------
 
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
+   function Signature
+     (Self      : Object;
+      Externals : Containers.Name_List) return Context.Binary_Signature
+   is
+      Position : Context.Key_Value.Cursor;
+      P_Ctx    : Context.Object;
+   begin
+      --  Compute the project's own context. That is, the context based only on
+      --  the project's external variables.
 
-   Processors := External ("PROCESSORS", "0");
+      for E of Externals loop
+         Position := Self.Find (E);
 
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+         if Context.Key_Value.Has_Element (Position) then
+            P_Ctx.Insert
+              (Context.Key_Value.Key (Position),
+               Context.Key_Value.Element (Position));
+         end if;
+      end loop;
 
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
+      if P_Ctx.Is_Empty then
+         return Context.Default_Signature;
 
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
+      else
+         declare
+            C : MD5.Context;
+         begin
+            for E in P_Ctx.Iterate loop
+               MD5.Update (C, String (Key_Value.Key (E)));
+               MD5.Update (C, "=");
+               MD5.Update (C, Key_Value.Element (E));
+               MD5.Update (C, ";");
+            end loop;
 
-   --------------
-   -- Compiler --
-   --------------
+            return MD5.Digest (C);
+         end;
+      end if;
+   end Signature;
 
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
-
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
-
-   Release_Options :=
-     ("-O2", "-gnatn");
-
-   package Compiler is
-
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
-
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
-
-   end Compiler;
-
-   ------------
-   -- Binder --
-   ------------
-
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
-
-   -------------
-   -- Builder --
-   -------------
-
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
-
-end GPR2;
+end GPR2.Context;

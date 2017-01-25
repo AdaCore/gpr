@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,67 +22,44 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr_parser";
-
-library project GPR2 is
-
-   type Build_Type is ("debug", "release");
-   Build : Build_Type := external ("BUILD", "debug");
-
-   Processors := External ("PROCESSORS", "0");
-
-   type Library_Kind is ("static", "relocatable", "static-pic");
-   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
-
-   for Source_Dirs use ("src/lib");
-   for Library_Name use "gpr2";
-
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
-   for Library_Kind use Library_Type;
-
-   --------------
-   -- Compiler --
-   --------------
-
-   Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
-   --  Common options used for the Debug and Release modes
-
-   Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
-
-   Release_Options :=
-     ("-O2", "-gnatn");
-
-   package Compiler is
-
-      case Build is
-         when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use ("-g");
-
-         when "release" =>
-            for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use ("-O2");
-      end case;
-
-   end Compiler;
+package body GPR2.Source_Reference is
 
    ------------
-   -- Binder --
+   -- Column --
    ------------
 
-   package Binder is
-      for Default_Switches ("Ada") use ("-Es");
-   end Binder;
+   function Column (Self : Object) return Positive is
+   begin
+      return Self.Column;
+   end Column;
 
-   -------------
-   -- Builder --
-   -------------
+   ------------
+   -- Create --
+   ------------
 
-   package Builder is
-      for Switches (others) use ("-m", "-j" & Processors);
-   end Builder;
+   function Create
+     (Filename     : Full_Path_Name;
+      Line, Column : Natural) return Object'Class is
+   begin
+      return Object'(Line, Column, To_Unbounded_String (Filename));
+   end Create;
 
-end GPR2;
+   --------------
+   -- Filename --
+   --------------
+
+   function Filename (Self : Object) return Full_Path_Name is
+   begin
+      return To_String (Self.Filename);
+   end Filename;
+
+   ----------
+   -- Line --
+   ----------
+
+   function Line (Self : Object) return Positive is
+   begin
+      return Self.Line;
+   end Line;
+
+end GPR2.Source_Reference;
