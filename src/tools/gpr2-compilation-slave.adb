@@ -1,0 +1,193 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--                           GPR2 PROJECT MANAGER                           --
+--                                                                          --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--                                                                          --
+-- This library is free software;  you can redistribute it and/or modify it --
+-- under terms of the  GNU General Public License  as published by the Free --
+-- Software  Foundation;  either version 3,  or (at your  option) any later --
+-- version. This library is distributed in the hope that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE.                            --
+--                                                                          --
+-- As a special exception under Section 7 of GPL version 3, you are granted --
+-- additional permissions described in the GCC Runtime Library Exception,   --
+-- version 3.1, as published by the Free Software Foundation.               --
+--                                                                          --
+-- You should have received a copy of the GNU General Public License and    --
+-- a copy of the GCC Runtime Library Exception along with this program;     --
+-- see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see    --
+-- <http://www.gnu.org/licenses/>.                                          --
+--                                                                          --
+------------------------------------------------------------------------------
+
+with Ada.Calendar;
+with Ada.Directories;
+with Ada.Text_IO;
+
+with GNAT.OS_Lib;
+
+with GPR.Opt;
+with GPR.Compilation.Slave;
+
+with GPR2.Compilation.Sync;
+with GPR2.Containers;
+with GPR2.Project.Pack;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
+with GPR2.Project.View;
+
+package body GPR2.Compilation.Slave is
+
+   use Ada;
+
+   ----------------------------
+   -- Register_Remote_Slaves --
+   ----------------------------
+
+   procedure Register_Remote_Slaves
+     (Tree        : GPR2.Project.Tree.Object;
+      Synchronize : Boolean)
+   is
+      use Ada.Directories;
+      use GNAT.OS_Lib;
+
+      use type GPR.Opt.Verbosity_Level_Type;
+      use type Calendar.Time;
+      use type Containers.Count_Type;
+
+      Start, Stop : Calendar.Time;
+
+      procedure Insert
+        (List   : out Sync.Str_Vect.Vector;
+         Values : GPR2.Containers.Value_List);
+      --  Inserts all values into the vector
+
+      Excluded_Patterns          : Sync.Str_Vect.Vector;
+      Included_Patterns          : Sync.Str_Vect.Vector;
+      Included_Artifact_Patterns : Sync.Str_Vect.Vector;
+
+      ------------
+      -- Insert --
+      ------------
+
+      procedure Insert
+        (List   : out Sync.Str_Vect.Vector;
+         Values : GPR2.Containers.Value_List) is
+      begin
+         for V of Values loop
+            List.Append (V);
+         end loop;
+      end Insert;
+
+      package Attrs renames GPR2.Project.Registry.Attribute;
+
+      Project  : constant GPR2.Project.View.Object :=
+                   Tree.Root_Project;
+
+      Root_Dir : Unbounded_String renames GPR.Compilation.Slave.Root_Dir;
+
+   begin
+      Root_Dir := To_Unbounded_String
+        (Containing_Directory (GPR2.Value (Project.Path_Name)));
+
+      --  Check for Root_Dir attribute and Excluded_Patterns
+
+      if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
+         declare
+            use GPR2.Project.Registry;
+
+            Pck : constant GPR2.Project.Pack.Object :=
+                    Project.Packages.Element
+                      (GPR2.Project.Registry.Pack.Remote);
+         begin
+            if Pck.Has_Attributes (Attrs.Root_Dir) then
+               declare
+                  RD : constant String :=
+                         Pck.Attribute (Attrs.Root_Dir).Value;
+               begin
+                  if Is_Absolute_Path (RD) then
+                     Root_Dir := To_Unbounded_String (RD);
+                  else
+                     Root_Dir := To_Unbounded_String
+                       (Normalize_Pathname
+                          (To_String (Root_Dir) & Directory_Separator & RD));
+                  end if;
+
+                  if not Exists (To_String (Root_Dir))
+                    or else not Is_Directory (To_String (Root_Dir))
+                  then
+                     Text_IO.Put_Line
+                       ("error: " & To_String (Root_Dir)
+                        & " is not a directory"
+                        & " or does not exist");
+                     OS_Exit (1);
+
+                  else
+                     Text_IO.Put_Line
+                       ("root dir : " & To_String (Root_Dir));
+                  end if;
+               end;
+
+            elsif Pck.Has_Attributes (Attrs.Excluded_Patterns) then
+               Insert
+                 (Excluded_Patterns,
+                  Pck.Attribute (Attrs.Excluded_Patterns).Values);
+
+            elsif Pck.Has_Attributes (Attrs.Included_Patterns) then
+               Insert
+                 (Included_Patterns,
+                  Pck.Attribute (Attrs.Included_Patterns).Values);
+
+            elsif Pck.Has_Attributes (Attrs.Included_Artifacts_Patterns) then
+               Insert
+                 (Included_Artifact_Patterns,
+                  Pck.Attribute (Attrs.Included_Artifacts_Patterns).Values);
+            end if;
+         end;
+      end if;
+
+      --  Check if Excluded_Patterns and Included_Patterns are set
+
+      if Included_Patterns.Length /= 0
+        and then Excluded_Patterns.Length /= 0
+      then
+         Text_IO.Put_Line
+           ("error: Excluded_Patterns and Included_Patterns are exclusive");
+         OS_Exit (1);
+      end if;
+
+      --  Then registers the build slaves
+
+      Start := Calendar.Clock;
+
+      for S of GPR.Compilation.Slave.Slaves_Data loop
+         GPR.Compilation.Slave.Register_Remote_Slave
+           (S,
+            String (Project.Name),
+            Excluded_Patterns,
+            Included_Patterns,
+            Included_Artifact_Patterns,
+            Synchronize);
+      end loop;
+
+      if Synchronize then
+         Sync.Wait;
+      end if;
+
+      Stop := Calendar.Clock;
+
+      if GPR.Opt.Verbosity_Level > GPR.Opt.Low then
+         Text_IO.Put ("  All data synchronized in ");
+         Text_IO.Put (Duration'Image (Stop - Start));
+         Text_IO.Put_Line (" seconds");
+      end if;
+
+      --  We are in remote mode, the initialization was successful, start tasks
+      --  now.
+
+      GPR.Compilation.Slave.Start_Waiting_Task;
+   end Register_Remote_Slaves;
+
+end GPR2.Compilation.Slave;
