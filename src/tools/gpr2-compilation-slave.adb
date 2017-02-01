@@ -29,7 +29,6 @@ with Ada.Text_IO;
 with GNAT.OS_Lib;
 
 with GPR.Opt;
-with GPR.Compilation.Slave;
 
 with GPR2.Compilation.Sync;
 with GPR2.Containers;

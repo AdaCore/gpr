@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-2017, Free Software Foundation, Inc.         --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,26 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR.Compilation.Slave;
+with GPR.Compilation.Protocol;
 
-with GPR2.Project.Tree;
-with GPR2.Compilation.Protocol;
-
-package GPR2.Compilation.Slave is
-
-   procedure Register_Remote_Slaves
-     (Tree               : GPR2.Project.Tree.Object;
-      Synchronize        : Boolean);
-   --  Same as above. Synchronize is set to true if the project has to be
-   --  synchronized to the remote slave.
-
-   procedure Unregister_Remote_Slaves (From_Signal : Boolean := False)
-     renames GPR.Compilation.Slave.Unregister_Remote_Slaves;
-
-   function Channel (Host : String) return Protocol.Communication_Channel
-     renames GPR.Compilation.Slave.Channel;
-
-   procedure Record_Slaves (Option : String)
-     renames GPR.Compilation.Slave.Record_Slaves;
-
-end GPR2.Compilation.Slave;
+package GPR2.Compilation.Protocol renames GPR.Compilation.Protocol;

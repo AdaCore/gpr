@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-2017, Free Software Foundation, Inc.         --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,26 +22,60 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR.Compilation.Slave;
+with "gpr2";
 
-with GPR2.Project.Tree;
-with GPR2.Compilation.Protocol;
+project GPR2.Tools is
 
-package GPR2.Compilation.Slave is
+   type Build_Type is ("debug", "release");
+   Build : Build_Type := external ("BUILD", "debug");
 
-   procedure Register_Remote_Slaves
-     (Tree               : GPR2.Project.Tree.Object;
-      Synchronize        : Boolean);
-   --  Same as above. Synchronize is set to true if the project has to be
-   --  synchronized to the remote slave.
+   Processors := External ("PROCESSORS", "0");
 
-   procedure Unregister_Remote_Slaves (From_Signal : Boolean := False)
-     renames GPR.Compilation.Slave.Unregister_Remote_Slaves;
+   for Source_Dirs use ("src/tools");
+   for Object_Dir use ".build/obj-tools";
 
-   function Channel (Host : String) return Protocol.Communication_Channel
-     renames GPR.Compilation.Slave.Channel;
+   for Main use ("gprremote.adb");
 
-   procedure Record_Slaves (Option : String)
-     renames GPR.Compilation.Slave.Record_Slaves;
+   --------------
+   -- Compiler --
+   --------------
 
-end GPR2.Compilation.Slave;
+   Common_Options :=
+     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
+   --  Common options used for the Debug and Release modes
+
+   Debug_Options :=
+     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
+
+   Release_Options :=
+     ("-O2", "-gnatn");
+
+   package Compiler is
+
+      case Build is
+         when "debug" =>
+            for Default_Switches ("Ada") use Common_Options & Debug_Options;
+
+         when "release" =>
+            for Default_Switches ("Ada") use Common_Options & Release_Options;
+      end case;
+
+   end Compiler;
+
+   ------------
+   -- Binder --
+   ------------
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-Es");
+   end Binder;
+
+   -------------
+   -- Builder --
+   -------------
+
+   package Builder is
+      for Switches (others) use ("-m", "-j" & Processors);
+   end Builder;
+
+end GPR2.Tools;

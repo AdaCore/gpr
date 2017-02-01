@@ -2,7 +2,7 @@
 ##                                                                          ##
 ##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
-##            Copyright (C) 2016, Free Software Foundation, Inc.            ##
+##          Copyright (C) 2016-2017, Free Software Foundation, Inc.         ##
 ##                                                                          ##
 ## This library is free software;  you can redistribute it and/or modify it ##
 ## under terms of the  GNU General Public License  as published by the Free ##
@@ -60,10 +60,12 @@ endif
 ifeq ($(SOURCE_DIR),.)
 RBD=
 GPR2=gpr2.gpr
+GPR2TOOLS=gpr2-tools.gpr
 MAKEPREFIX=
 else
 RBD=--relocate-build-tree
 GPR2=$(SOURCE_DIR)/gpr2.gpr
+GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 MAKEPREFIX=$(SOURCE_DIR)/
 endif
 
@@ -88,12 +90,15 @@ UNINSTALLER=$(INSTALLER) -p -f --install-name=gpr2 --uninstall
 # build #
 #########
 
-all: build
+all: build build-tools
 
 build: ${LIBGPR2_TYPES:%=build-%}
 
 build-%:
-	$(BUILDER) -XLIBRARY_TYPE=$* $(GPR2)
+	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPR2)
+
+build-tools:
+	$(BUILDER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static $(GPR2TOOLS)
 
 ###########
 # Install #
@@ -107,7 +112,7 @@ endif
 install: uninstall ${LIBGPR2_TYPES:%=install-%}
 
 install-%:
-	$(INSTALLER) -XLIBRARY_TYPE=$* \
+	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE $(GPR2)
 
 #########
@@ -131,4 +136,4 @@ setup:
 clean: ${LIBGPR2_TYPES:%=clean-%}
 
 clean-%:
-	-$(CLEANER) -XLIBRARY_TYPE=$* $(GPR2)
+	-$(CLEANER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPR2)
