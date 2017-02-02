@@ -35,6 +35,13 @@ package GPR2.Compilation.Slave is
    --  Same as above. Synchronize is set to true if the project has to be
    --  synchronized to the remote slave.
 
+   function Compute_Env
+     (Tree : GPR2.Project.Tree.Object; Auto : Boolean) return String;
+   --  Compute a slave environment based on the command line parameter and
+   --  the project variables. We want the same slave environment for identical
+   --  build. Data is a string that must be taken into account in the returned
+   --  value.
+
    procedure Unregister_Remote_Slaves (From_Signal : Boolean := False)
      renames GPR.Compilation.Slave.Unregister_Remote_Slaves;
 

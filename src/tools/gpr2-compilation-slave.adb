@@ -23,10 +23,14 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
+with Ada.Command_Line;
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Text_IO;
 
+with GNAT.MD5;
 with GNAT.OS_Lib;
+with GNAT.Sockets;
 
 with GPR.Opt;
 
@@ -40,6 +44,85 @@ with GPR2.Project.View;
 package body GPR2.Compilation.Slave is
 
    use Ada;
+
+   -----------------
+   -- Compute_Env --
+   -----------------
+
+   function Compute_Env
+     (Tree : GPR2.Project.Tree.Object; Auto : Boolean) return String
+   is
+      use Ada.Command_Line;
+      use GNAT;
+      use GNAT.MD5;
+      use GPR2;
+
+      use type GNAT.OS_Lib.String_Access;
+      use all type GPR2.Project.Registry.Attribute.Value_Kind;
+
+      User      : OS_Lib.String_Access := OS_Lib.Getenv ("USER");
+      User_Name : OS_Lib.String_Access := OS_Lib.Getenv ("USERNAME");
+      Default   : constant String :=
+                    (if User = null
+                     then (if User_Name = null
+                       then "unknown" else User_Name.all)
+                     else User.all)
+                    & '@' & GNAT.Sockets.Host_Name;
+
+      package S_Set is new Ada.Containers.Indefinite_Ordered_Sets (String);
+
+      Set : S_Set.Set;
+      Ctx : Context;
+
+   begin
+      OS_Lib.Free (User);
+      OS_Lib.Free (User_Name);
+
+      if Auto then
+         --  In this mode the slave environment is computed based on
+         --  the project variable value and the command line arguments.
+
+         --  First adds all command line arguments
+
+         for K in 1 .. Argument_Count loop
+            --  Skip arguments that are not changing the actual compilation and
+            --  this will ensure that the same environment will be created for
+            --  gprclean.
+
+            if Argument (K) not in "-p" | "-d" | "-c" | "-q"
+              and then
+                (Argument (K)'Length < 2
+                 or else Argument (K) (1 .. 2) /= "-j")
+            then
+               Set.Insert (Argument (K));
+            end if;
+         end loop;
+
+         --  Then all the global variables for the project tree
+
+         for Project of Tree loop
+            if Project.Has_Variables then
+               for V of Project.Variables loop
+                  if V.Kind = Single then
+                     Set.Include (String (V.Name) & "=" & String (V.Value));
+                  end if;
+               end loop;
+            end if;
+         end loop;
+
+         --  Compute the MD5 sum of the sorted elements in the set
+
+         for S of Set loop
+            Update (Ctx, S);
+         end loop;
+
+         return Default & "-" & Digest (Ctx);
+
+      else
+         --  Otherwise use the default <user_name> & '@' & <host_name>
+         return Default;
+      end if;
+   end Compute_Env;
 
    ----------------------------
    -- Register_Remote_Slaves --
