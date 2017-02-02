@@ -39,7 +39,6 @@ with GPR2.Containers;
 with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
-with GPR2.Project.View;
 
 package body GPR2.Compilation.Slave is
 
@@ -171,8 +170,7 @@ package body GPR2.Compilation.Slave is
       Root_Dir : Unbounded_String renames GPR.Compilation.Slave.Root_Dir;
 
    begin
-      Root_Dir := To_Unbounded_String
-        (Containing_Directory (GPR2.Value (Project.Path_Name)));
+      Root_Dir := To_Unbounded_String (Remote_Root_Directory (Project));
 
       --  Check for Root_Dir attribute and Excluded_Patterns
 
@@ -184,35 +182,7 @@ package body GPR2.Compilation.Slave is
                     Project.Packages.Element
                       (GPR2.Project.Registry.Pack.Remote);
          begin
-            if Pck.Has_Attributes (Attrs.Root_Dir) then
-               declare
-                  RD : constant String :=
-                         Pck.Attribute (Attrs.Root_Dir).Value;
-               begin
-                  if Is_Absolute_Path (RD) then
-                     Root_Dir := To_Unbounded_String (RD);
-                  else
-                     Root_Dir := To_Unbounded_String
-                       (Normalize_Pathname
-                          (To_String (Root_Dir) & Directory_Separator & RD));
-                  end if;
-
-                  if not Exists (To_String (Root_Dir))
-                    or else not Is_Directory (To_String (Root_Dir))
-                  then
-                     Text_IO.Put_Line
-                       ("error: " & To_String (Root_Dir)
-                        & " is not a directory"
-                        & " or does not exist");
-                     OS_Exit (1);
-
-                  else
-                     Text_IO.Put_Line
-                       ("root dir : " & To_String (Root_Dir));
-                  end if;
-               end;
-
-            elsif Pck.Has_Attributes (Attrs.Excluded_Patterns) then
+            if Pck.Has_Attributes (Attrs.Excluded_Patterns) then
                Insert
                  (Excluded_Patterns,
                   Pck.Attribute (Attrs.Excluded_Patterns).Values);
@@ -228,6 +198,18 @@ package body GPR2.Compilation.Slave is
                   Pck.Attribute (Attrs.Included_Artifacts_Patterns).Values);
             end if;
          end;
+      end if;
+
+      if not Exists (To_String (Root_Dir))
+        or else not Is_Directory (To_String (Root_Dir))
+      then
+         Text_IO.Put_Line
+           ("error: "
+            & To_String (Root_Dir) & " is not a directory or does not exist");
+         OS_Exit (1);
+
+      else
+         Text_IO.Put_Line ("root dir : " & To_String (Root_Dir));
       end if;
 
       --  Check if Excluded_Patterns and Included_Patterns are set
@@ -271,5 +253,47 @@ package body GPR2.Compilation.Slave is
 
       GPR.Compilation.Slave.Start_Waiting_Task;
    end Register_Remote_Slaves;
+
+   ---------------------------
+   -- Remote_Root_Directory --
+   ---------------------------
+
+   function Remote_Root_Directory
+     (Project : GPR2.Project.View.Object) return String
+   is
+      use Ada.Directories;
+      use GNAT.OS_Lib;
+
+      package Attrs renames GPR2.Project.Registry.Attribute;
+
+      Root_Dir : constant String :=
+                   (Containing_Directory (GPR2.Value (Project.Path_Name)));
+   begin
+      if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
+         declare
+            use GPR2.Project.Registry;
+
+            Pck : constant GPR2.Project.Pack.Object :=
+                    Project.Packages.Element
+                      (GPR2.Project.Registry.Pack.Remote);
+         begin
+            if Pck.Has_Attributes (Attrs.Root_Dir) then
+               declare
+                  RD : constant String :=
+                         Pck.Attribute (Attrs.Root_Dir).Value;
+               begin
+                  if Is_Absolute_Path (RD) then
+                     return RD;
+                  else
+                     return Normalize_Pathname
+                       (Root_Dir & Directory_Separator & RD);
+                  end if;
+               end;
+            end if;
+         end;
+      end if;
+
+      return Root_Dir;
+   end Remote_Root_Directory;
 
 end GPR2.Compilation.Slave;

@@ -24,8 +24,9 @@
 
 with GPR.Compilation.Slave;
 
-with GPR2.Project.Tree;
 with GPR2.Compilation.Protocol;
+with GPR2.Project.Tree;
+with GPR2.Project.View;
 
 package GPR2.Compilation.Slave is
 
@@ -41,6 +42,12 @@ package GPR2.Compilation.Slave is
    --  the project variables. We want the same slave environment for identical
    --  build. Data is a string that must be taken into account in the returned
    --  value.
+
+   function Remote_Root_Directory
+     (Project : GPR2.Project.View.Object) return String;
+   --  Returns the root directory for the project taking into account the
+   --  remote package Root_Dir attribute. That is, this is the root directory
+   --  used for the synchronization for example.
 
    procedure Unregister_Remote_Slaves (From_Signal : Boolean := False)
      renames GPR.Compilation.Slave.Unregister_Remote_Slaves;
