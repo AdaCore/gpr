@@ -260,7 +260,7 @@ package body GPR2.Compilation.Slave is
 
       Stop := Calendar.Clock;
 
-      if GPR.Opt.Verbosity_Level > GPR.Opt.Low then
+      if Synchronize and then GPR.Opt.Verbosity_Level > GPR.Opt.Low then
          Text_IO.Put ("  All data synchronized in ");
          Text_IO.Put (Duration'Image (Stop - Start));
          Text_IO.Put_Line (" seconds");
