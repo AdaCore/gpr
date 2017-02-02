@@ -106,19 +106,36 @@ procedure GPRremote is
    ------------------
 
    procedure Cmd_Syncfrom is
+
+      procedure Output (Message : String);
+
+      ------------
+      -- Output --
+      ------------
+
+      procedure Output (Message : String) is
+      begin
+         Text_IO.Put_Line (Message);
+         Text_IO.Flush;
+      end Output;
+
       Host    : constant String := To_String (Args (Arg_Host));
-      Channel : constant Compilation.Protocol.Communication_Channel :=
-                  Compilation.Slave.Channel (Host);
+      Channel : Compilation.Protocol.Communication_Channel;
       Result  : Compilation.Protocol.Command_Kind with Unreferenced;
 
       Total_File        : Natural;
       Total_Transferred : Natural;
       Remote_Files      : Compilation.Sync.Files.Set;
+
    begin
       Load_Project (To_String (Args (Arg_First_Param)));
 
       GPR2.Compilation.Slave.Register_Remote_Slaves
         (Project, Synchronize => False);
+
+      --  Get the channel for the given host
+
+      Channel := Compilation.Slave.Channel (Host);
 
       --  Send sync command to slave
 
@@ -132,7 +149,7 @@ procedure GPRremote is
          Total_File,
          Total_Transferred,
          Remote_Files,
-         False, null);
+         False, Output'Access);
 
       Compilation.Slave.Unregister_Remote_Slaves;
    end Cmd_Syncfrom;
