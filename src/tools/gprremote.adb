@@ -26,6 +26,7 @@ with GNAT.Command_Line;
 with GNAT.Exception_Traces;
 with GNAT.Traceback.Symbolic;
 
+with GPR.Opt;
 with GPR.Util;
 with GPR_Version;
 
@@ -241,9 +242,17 @@ begin
 
    Activate_Symbolic_Traceback;
 
+   --  Set corresponding slave environment
+
    if GPR.Util.Slave_Env = null then
-      --  ??? implement the --slave-env option
-      GPR.Util.Slave_Env := new String'("remenv");
+      GPR.Util.Slave_Env := new String'
+        (Compilation.Slave.Compute_Env (Project, GPR.Util.Slave_Env_Auto));
+
+      if GPR.Util.Slave_Env_Auto and not GPR.Opt.Quiet_Output then
+         Put ("slave environment is ");
+         Put (GPR.Util.Slave_Env.all);
+         New_Line;
+      end if;
    end if;
 
    declare
