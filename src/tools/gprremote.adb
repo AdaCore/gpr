@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Command_Line;
-with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
@@ -145,7 +144,7 @@ procedure GPRremote is
 
       Result := Compilation.Sync.Receive_Files
         (Channel,
-         Directories.Current_Directory,  -- ???
+         Compilation.Slave.Remote_Root_Directory (Project.Root_Project),
          Total_File,
          Total_Transferred,
          Remote_Files,
