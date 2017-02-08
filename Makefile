@@ -109,11 +109,15 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
 	$(UNINSTALLER) $(GPR2)
 endif
 
-install: uninstall ${LIBGPR2_TYPES:%=install-%}
+install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE $(GPR2)
+
+install-tools:
+	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+		--build-name=static --mode=usage $(GPR2TOOLS)
 
 #########
 # setup #
