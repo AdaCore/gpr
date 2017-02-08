@@ -18,18 +18,18 @@
 
 with Ada.Command_Line;
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
 with GNAT.Exception_Traces;
+with GNAT.OS_Lib;
 with GNAT.Traceback.Symbolic;
 
 with GPR.Opt;
 with GPR.Util;
 with GPR_Version;
-
-with GNAT.OS_Lib;
 
 with GPR2.Compilation.Protocol;
 with GPR2.Compilation.Slave;
@@ -56,7 +56,7 @@ procedure GPRremote is
 
    procedure Cmd_Info;
 
-   procedure Cmd_Exec is null;
+   procedure Cmd_Exec;
 
    procedure Cmd_Syncto;
 
@@ -64,15 +64,19 @@ procedure GPRremote is
 
    procedure Cmd_Sync_Exec is null;
 
-   Arg_Host        : constant := 1;
-   Arg_Cmd         : constant := 2;
-   Arg_First_Param : constant := 3;
+   Arg_Host         : constant := 1;
+   Arg_Cmd          : constant := 2;
+   Arg_Project      : constant := 3;
+   Arg_First_Option : constant := 4;
 
    Help    : aliased Boolean := False;
    Verbose : aliased Boolean := False;
    Version : aliased Boolean := False;
    Args    : array (1 .. Command_Line.Argument_Count) of Unbounded_String;
    Last    : Natural := 0;
+
+   Exit_Status : Natural := 0;
+   --  GPRremote's exit status
 
    Project : GPR2.Project.Tree.Object;
 
@@ -90,6 +94,131 @@ procedure GPRremote is
       Exception_Traces.Set_Trace_Decorator
         (Traceback.Symbolic.Symbolic_Traceback'Access);
    end Activate_Symbolic_Traceback;
+
+   --------------
+   -- Cmd_Exec --
+   --------------
+
+   procedure Cmd_Exec is
+      use all type Compilation.Protocol.Command_Kind;
+
+      Host         : constant String := To_String (Args (Arg_Host));
+      Project_Name : constant String := To_String (Args (Arg_Project));
+      Channel      : Compilation.Protocol.Communication_Channel;
+      Root_Dir     : Unbounded_String;
+
+      function Filter_Path
+        (O   : String;
+         Sep : String := Compilation.Protocol.WD_Path_Tag) return String;
+      --  Make O PATH relative to RD. For option -gnatec and -gnatem makes
+      --  the specified filename absolute in the slave environment and send
+      --  the file to the slave.
+
+      -----------------
+      -- Filter_Path --
+      -----------------
+
+      function Filter_Path
+        (O   : String;
+         Sep : String := Compilation.Protocol.WD_Path_Tag) return String
+      is
+         RD  : constant String := To_String (Root_Dir);
+         Pos : constant Natural := Strings.Fixed.Index (O, RD);
+      begin
+         if Pos = 0 then
+            return O;
+         else
+            return O (O'First .. Pos - 1)
+              & Sep & Filter_Path (O (Pos + RD'Length + 1 .. O'Last));
+         end if;
+      end Filter_Path;
+
+      Options : GNAT.OS_Lib.Argument_List (1 .. Last - Arg_First_Option + 1);
+
+   begin
+      Load_Project (Project_Name);
+
+      Root_Dir := To_Unbounded_String
+        (Compilation.Slave.Remote_Root_Directory (Project.Root_Project));
+
+      Compilation.Slave.Register_Remote_Slaves
+        (Project, Synchronize => False);
+
+      --  Get the channel for the given host
+
+      Channel := Compilation.Slave.Channel (Host);
+
+      --  Set options
+
+      for K in Arg_First_Option .. Last loop
+         Options (K - Arg_First_Option + 1) :=
+           new String'(To_String (Args (K)));
+      end loop;
+
+      --  Send sync command to slave
+
+      Compilation.Protocol.Send_Exec
+        (Channel,
+         Project_Name,
+         ".",
+         Language => "",
+         Options  => Options,
+         Obj_Name => "",
+         Dep_Name => "",
+         Env      => "",
+         Filter   => Filter_Path'Access);
+
+      --  Clear options
+
+      for K in Options'Range loop
+         GNAT.OS_Lib.Free (Options (K));
+      end loop;
+
+      Wait_Ack : declare
+         Cmd : constant Compilation.Protocol.Command :=
+                 Compilation.Protocol.Get_Command (Channel);
+      begin
+         if Cmd.Kind = AK then
+            null;
+         else
+            raise Compilation.Protocol.Wrong_Command
+              with "expected AK command, found " & Cmd.Kind'Img;
+         end if;
+      end Wait_Ack;
+
+      --  In this mode the output will be sent first
+
+      declare
+         Cmd : constant Compilation.Protocol.Command :=
+                 Compilation.Protocol.Get_Command (Channel);
+      begin
+         if Cmd.Kind = DP then
+            Put_Line (To_String (Cmd.Output));
+         else
+            raise Compilation.Protocol.Wrong_Command
+              with "expected DP command, found " & Cmd.Kind'Img;
+         end if;
+      end;
+
+      --  And then a KO or OK depending on the exit status of the remote
+      --  command is sent.
+
+      declare
+         Cmd : constant Compilation.Protocol.Command :=
+                 Compilation.Protocol.Get_Command (Channel);
+      begin
+         if Cmd.Kind in OK then
+            null;
+         elsif Cmd.Kind = KO then
+            Exit_Status := 1;
+         else
+            raise Compilation.Protocol.Wrong_Command
+              with "expected OK/NOK command, found " & Cmd.Kind'Img;
+         end if;
+      end;
+
+      Compilation.Slave.Unregister_Remote_Slaves;
+   end Cmd_Exec;
 
    --------------
    -- Cmd_Info --
@@ -127,7 +256,7 @@ procedure GPRremote is
       Remote_Files      : Compilation.Sync.Files.Set;
 
    begin
-      Load_Project (To_String (Args (Arg_First_Param)));
+      Load_Project (To_String (Args (Arg_Project)));
 
       GPR2.Compilation.Slave.Register_Remote_Slaves
         (Project, Synchronize => False);
@@ -159,7 +288,7 @@ procedure GPRremote is
 
    procedure Cmd_Syncto is
    begin
-      Load_Project (To_String (Args (Arg_First_Param)));
+      Load_Project (To_String (Args (Arg_Project)));
 
       Compilation.Slave.Register_Remote_Slaves
         (Project, Synchronize => True);
@@ -227,7 +356,7 @@ procedure GPRremote is
 
       Check_Version_And_Help
         ("GPRREMOTE",
-         "2016",
+         "2017",
          Version_String => GPR_Version.Gpr_Version_String);
 
       Getopt (Config);
@@ -299,7 +428,7 @@ begin
       end if;
    end;
 
-   GNAT.OS_Lib.OS_Exit (0);
+   GNAT.OS_Lib.OS_Exit (Exit_Status);
 
 exception
    when E : others =>
