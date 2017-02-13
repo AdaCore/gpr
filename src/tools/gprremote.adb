@@ -225,8 +225,40 @@ procedure GPRremote is
    --------------
 
    procedure Cmd_Info is
+      use all type Compilation.Protocol.Command_Kind;
+
+      Host    : constant String := To_String (Args (Arg_Host));
+      Channel : Compilation.Protocol.Communication_Channel;
+
+      Version_String   : Unbounded_String;
+      Current_UTC_Time : GPR.Stamps.Time_Stamp_Type;
+      GPR_Hash         : Unbounded_String;
+      Success          : Boolean;
    begin
-      null;
+      Load_Project (To_String (Args (Arg_Project)));
+
+      GPR2.Compilation.Slave.Register_Remote_Slaves
+        (Project, Synchronize => False);
+
+      --  Get the channel for the given host
+
+      Channel := Compilation.Slave.Channel (Host);
+
+      Compilation.Protocol.Send_Info_Request (Channel);
+
+      Compilation.Protocol.Get_Info_Response
+        (Channel, Version_String, Current_UTC_Time, GPR_Hash, Success);
+
+      if Success then
+         Put_Line ("version  : " & To_String (Version_String));
+         Put_Line ("UTC time : " & String (Current_UTC_Time));
+
+      else
+         raise Compilation.Protocol.Wrong_Command
+           with "cannot get information from slave";
+      end if;
+
+      Compilation.Slave.Unregister_Remote_Slaves;
    end Cmd_Info;
 
    ------------------
