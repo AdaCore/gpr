@@ -29,7 +29,7 @@ with GNAT.Traceback.Symbolic;
 
 with GPR.Opt;
 with GPR.Util;
-with GPR_Version;
+with GPR.Version;
 
 with GPR2.Compilation.Protocol;
 with GPR2.Compilation.Slave;
@@ -389,7 +389,7 @@ procedure GPRremote is
       Check_Version_And_Help
         ("GPRREMOTE",
          "2017",
-         Version_String => GPR_Version.Gpr_Version_String);
+         Version_String => GPR.Version.Gpr_Version_String);
 
       Getopt (Config);
 

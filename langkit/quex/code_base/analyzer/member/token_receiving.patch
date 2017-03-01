@@ -1,0 +1,11 @@
+--- quex/code_base/analyzer/member/token-receiving.i	2012-10-22 18:13:44.511983645 -0700
++++ quex/code_base/analyzer/member/token-receiving.i.bad	2012-10-22 18:13:39.667983639 -0700
+@@ -117,7 +117,7 @@
+ #       endif
+ 
+ #       if defined(QUEX_OPTION_TOKEN_REPETITION_SUPPORT)
+-        if( __QUEX_SETTING_TOKEN_ID_REPETITION_TEST(me->token->_id) ) {
++        if( __QUEX_SETTING_TOKEN_ID_REPETITION_TEST ) {
+             QUEX_ASSERT_REPEATED_TOKEN_NOT_ZERO(self_token_p());
+             __QUEX_REPEATED_TOKEN_DECREMENT_N(self_token_p()); /* First rep. is sent now. */
+         }

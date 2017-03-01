@@ -1,4 +1,7 @@
 langkit/src/* no-precommit-check
+langkit/quex/*/*/* no-precommit-check
+langkit/quex/*/*/*/* no-precommit-check
+langkit/quex/*/*/*/*/* no-precommit-check
 testsuite/tests/* no-precommit-check
 testsuite/tests/*/* no-precommit-check
 testsuite/tests/*/* no-precommit-check

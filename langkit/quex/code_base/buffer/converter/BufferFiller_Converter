@@ -1,0 +1,191 @@
+/* -*- C++ -*-  vim: set syntax=cpp:
+ * (C) 2007-2008 Frank-Rene Schaefer */
+#ifndef __QUEX_INCLUDE_GUARD__BUFFER__CONVERTER__BUFFER_FILLER_CONVERTER
+#define __QUEX_INCLUDE_GUARD__BUFFER__CONVERTER__BUFFER_FILLER_CONVERTER
+
+#if ! defined(__QUEX_OPTION_CONVERTER)
+#   error "This file should only be included if __QUEX_OPTION_CONVERTER is defined!"
+#endif
+/*
+ *  PURPOSE: (NOTE: This has to be reworked)
+ *  
+ *  Reads data from a stream and converts the incoming characters into a
+ *  character format required by the user. The user can specify the coding
+ *  format of the input stream as well as the coding format in which he
+ *  wants it to be put into his buffer.
+ *
+ *  NOTE: Streams for the quex::buffer comply to three simple requirements:
+ *
+ *        tell()          returning a value of the current input position
+ *        seek(pos)       sets the the current input position in the stream
+ *        read_characters(buffer, N) fills the buffer with N characters from the stream.
+ *                                   returns the number of actually filled characters.
+ *  
+ *
+ *  MAIN GOAL: The main goal of a 'FixedSizeCharacterStream' class is to 
+ *             fill a buffer with N characters starting from consecutive 
+ *             stream positions.
+ *
+ *  ASSUMPTION: 
+ *  
+ *  -- The input character format is arbitrary. It can be anything that is
+ *     supported by 'iconv'. Flexible character length codings are supported.
+ *  
+ *  -- The user's characters format has a fixed character size for each
+ *     character. Any coding that involves different byte numbers for different
+ *     characters or 'history' cannot be provided as user format.
+ *  
+ *  PRINCIPLE: 
+ *  
+ *               ________             _______            ________
+ *              |        |           |       ¦          |        |
+ *              |  FILE  |  ------>  |  raw  |  ------> | Buffer |
+ *              |________|           |_______|          |________|
+ *
+ *  A data stream (FILE) delivers characters in an arbitrary coding format.
+ *  These characters are stored bytewise inside a 'raw buffer'. Then this data is
+ *  transformed into the users coding format. The result is directly put into
+ *  the user's buffer. 
+ *  
+ *  (1) Fill as many bytes from the stream into the raw buffer
+ *                                                                stream_position
+ *                                                                |           
+ *       Stream:         ||aa.aa.aa.bb.cc.cc.cc.cc.dd.dd.ee.ee.ee.ee.ff.ff.gg.||
+ *                         
+ *                         raw_buffer.iterator
+ *                         |                        
+ *       Raw Buffer:     ||aa.aa.aa.bb.cc.cc.cc.cc.dd.dd.ee.ee.ee||
+ *  
+ *  
+ *  (2) Convert characters in the raw buffer and store into users buffer
+ *
+ *
+ *        User's Buffer: ||AA.AA.BB.BB.CC.CC________________________||
+ *  
+ *
+ *                                   yes
+ *  (2b) User's buffer is filled? --------> **EXIT/DONE**
+ *         |
+ *         |  no
+ *         *
+ *  (3a) Copy unconverted bytes to the beginning of the raw buffer
+ *  
+ *        Raw Buffer:    ||ee.ee.ee______________________________||
+ *  
+ *
+ *  (3b) Load remaining bytes from the stream into raw buffer
+ *
+ *                         raw_buffer.iterator
+ *                         |
+ *        Raw Buffer:    ||ee.ee.ee.ee.ff.ff.gg.hh.ii.ii.________||
+ *         
+ *        Goto (2)
+ *  
+ *  (4) Convert characters from raw buffer and store them into user's buffer
+ *  
+ *        User's Buffer: ||AA.AA.BB.BB.CC.CC.DD.DD.EE.EE.FF.FF.GG.GG||
+ *  
+ *  (4b) goto (2b)
+ *
+ *  NOTE: The 'raw_buffer.iterator' remains between calls to "read_characters()".
+ *        This is equivalent to having some bytes in the pipeline.
+ **********************************************************************************/
+#if ! defined (__QUEX_OPTION_PLAIN_C)
+#   include <iostream> 
+#   include <cerrno>
+#   include <stdexcept>
+#   include <cstddef>
+#else
+#   include <stddef.h>     /* gets: ptrdiff_t */
+#endif
+#include <quex/code_base/definitions>
+#include <quex/code_base/buffer/InputPolicy>
+#include <quex/code_base/buffer/Buffer>
+#include <quex/code_base/buffer/BufferFiller>
+#include <quex/code_base/buffer/converter/Converter>
+
+#include <quex/code_base/temporary_macros_on>
+
+QUEX_NAMESPACE_MAIN_OPEN
+
+    TEMPLATIFIER(RawBuffer, InputHandleT) {
+        uint8_t*                             begin;
+        uint8_t*                             end;
+        uint8_t*                             memory_end;
+        
+        uint8_t*                             iterator;
+        ptrdiff_t                            iterators_character_index;
+        
+        STREAM_POSITION_TYPE(InputHandleT)   end_stream_position;
+
+        bool                                 _external_owner_f;
+    } TEMPLATIFIER_END(RawBuffer);
+
+    TEMPLATIFIER(BufferFiller_Converter, InputHandleT) {
+
+        /* Derived QuexBufferFiller from implemented as 'first member is base class'.
+         * (This is the 'C' way to express derivation) */
+        QUEX_NAME(BufferFiller)   base;
+
+        InputHandleT*             ih;
+
+        QUEX_NAME(Converter)*     converter;
+
+        TEMPLATED(RawBuffer)      raw_buffer;
+
+        /* Store information of the character index at the begin of the raw buffer. This 
+         * may facilitate the 'seek' in some cases. See also [Ref 1] in the implementation. */
+        ptrdiff_t                 hint_begin_character_index;
+
+        /* Position where the whole analysis starts. It is the position '0' on reset.       */
+        STREAM_POSITION_TYPE(InputHandleT)  start_position;  
+
+    } TEMPLATIFIER_END(BufferFiller_Converter);
+
+
+    TEMPLATE_IN(InputHandleT)    TEMPLATED(BufferFiller_Converter)*
+    QUEX_NAME(BufferFiller_Converter_new)(InputHandleT*          input_handle,
+                                          QUEX_NAME(Converter)*  converter,
+                                          const char*            FromCoding,
+                                          const char*            ToCoding,
+                                          size_t                 RawBufferSize);
+
+    TEMPLATE_IN(InputHandleT) void    QUEX_NAME(BufferFiller_Converter_move_away_passed_content)(TEMPLATED(BufferFiller_Converter)*);
+    TEMPLATE_IN(InputHandleT) size_t  QUEX_NAME(__BufferFiller_Converter_fill_raw_buffer)(TEMPLATED(BufferFiller_Converter)*);
+
+    TEMPLATE_IN(InputHandleT) void    QUEX_NAME(RawBuffer_init)(TEMPLATED(RawBuffer)* me, 
+                                                                uint8_t* Begin, size_t SizeInBytes,
+                                                                STREAM_POSITION_TYPE(InputHandleT) StartPosition);
+
+#ifdef QUEX_OPTION_ASSERTS
+#   define QUEX_ASSERT_BUFFER_INFO(BI)                         \
+    __quex_assert( BI != 0x0 );                                \
+    __quex_assert((BI)->iterator >= (BI)->begin);              \
+    __quex_assert((BI)->iterator <= (BI)->end);                \
+    __quex_assert((BI)->end >= (BI)->begin);                   \
+    __quex_assert((BI)->end <= (BI)->memory_end);             
+
+#   define QUEX_ASSERT_BUFFER_INFO_EASY(BI)                    \
+    __quex_assert( BI != 0x0 );                                \
+    __quex_assert((BI)->iterator >= (BI)->begin);              \
+    __quex_assert((BI)->iterator <= (BI)->end);                     
+
+#else
+#   define QUEX_ASSERT_BUFFER_INFO(BI)      /* empty */
+#   define QUEX_ASSERT_BUFFER_INFO_EASY(BI) /* empty */
+#endif
+
+QUEX_NAMESPACE_MAIN_CLOSE
+
+
+#include <quex/code_base/temporary_macros_off>
+
+#ifdef QUEX_OPTION_CONVERTER_ICONV
+#   include <quex/code_base/buffer/converter/iconv/Converter_IConv>
+#endif
+#ifdef QUEX_OPTION_CONVERTER_ICU
+#   include <quex/code_base/buffer/converter/icu/Converter_ICU>
+#endif
+ 
+
+#endif /* __QUEX_INCLUDE_GUARD__BUFFER__CONVERTER__BUFFER_FILLER_CONVERTER */

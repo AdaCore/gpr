@@ -1,0 +1,80 @@
+# vim: set syntax=make: -*- makefile -*-
+# HELPER: find -type d -or -path "*.svn*" -or -path "*TEST*" -or -path "*DESIGN*" -or -path "*.swp" -or -path "*.swo" -or -path "*README*" -or -path "*.tar*" -or -path "*tbz" -or -path "*DELETED*" -or -path "*.txt" -or -path "*.mkd" -prune -or -print
+QUEX_CODE_BASE_PATH = $(QUEX_PATH)/quex/code_base
+
+__QUEX_CORE = \
+    $(addprefix $(QUEX_CODE_BASE_PATH)/, \
+    ./MemoryManager.i \
+    ./MemoryManager \
+    ./compatibility/stdint.h \
+    ./compatibility/stdbool-pseudo.h \
+    ./compatibility/iconv-argument-types.h \
+    ./compatibility/win/borland_stdint.h \
+    ./compatibility/win/msc_stdint.h \
+    ./compatibility/win/msc_stdint.h \
+    ./compatibility/stdbool.h \
+    ./token/CppDefault.qx \
+    ./token/CDefault.qx \
+    ./token/TXT-C \
+    ./token/TXT-C.i \
+    ./token/TXT-Cpp \
+    ./token/TXT-Cpp.i \
+    ./token/TokenQueue \
+    ./token/TokenPolicy \
+    ./buffer/BufferFiller \
+    ./buffer/Buffer \
+    ./buffer/BufferFiller.i \
+    ./buffer/Buffer.i \
+    ./buffer/converter/BufferFiller_Converter.i \
+    ./buffer/converter/Converter \
+    ./buffer/converter/BufferFiller_Converter \
+    ./buffer/converter/icu/Converter_ICU \
+    ./buffer/converter/icu/special_headers.h \
+    ./buffer/converter/icu/Converter_ICU.i \
+    ./buffer/converter/iconv/Converter_IConv.i \
+    ./buffer/converter/iconv/Converter_IConv \
+    ./buffer/converter/iconv/special_headers.h \
+    ./buffer/converter/recode/Converter_Recode.i \
+    ./buffer/converter/recode/Converter_Recode \
+    ./buffer/MemoryPositionMimiker \
+    ./buffer/Buffer_debug.i \
+    ./buffer/InputPolicy \
+    ./buffer/plain/BufferFiller_Plain \
+    ./buffer/plain/BufferFiller_Plain.i \
+    ./buffer/asserts \
+    ./converter_helper/from-unicode-buffer \
+    ./converter_helper/from-unicode-buffer.i \
+    ./asserts \
+    ./definitions \
+    ./temporary_macros_on \
+    ./analyzer/dumpster.i \
+    ./analyzer/Accumulator \
+    ./analyzer/Accumulator.i \
+    ./analyzer/TXT-Cpp \
+    ./analyzer/Mode \
+    ./analyzer/PostCategorizer.i \
+    ./analyzer/PostCategorizer \
+    ./analyzer/member/basic \
+    ./analyzer/member/basic.i \
+    ./analyzer/asserts \
+    ./analyzer/member/include-stack.i \
+    ./analyzer/member/mode-handling.i \
+    ./analyzer/member/buffer-access.i \
+    ./analyzer/member/token-receiving.i \
+    ./analyzer/member/constructor.i \
+    ./analyzer/member/misc.i \
+    ./analyzer/configuration/TXT \
+    ./analyzer/configuration/validation \
+    ./analyzer/configuration/undefine \
+    ./temporary_macros_off \
+    ./test_environment/StrangeStream)
+
+ifeq ($(QUEX_PATH), $(QUEX_DEV_PATH))
+    QUEX_CORE = $(__QUEX_CORE)
+else
+    QUEX_CORE =#
+endif
+
+#echo:
+#	@echo $(QUEX_CORE)
+

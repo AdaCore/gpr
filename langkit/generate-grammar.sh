@@ -14,7 +14,8 @@ GPYTHON=/opt/gpython/
 LANGKIT=$HOME/dev/builds/langkit/build/build
 
 #  QUEX installation
-QUEX=/opt/quex/quex-0.65.4
+# QUEX=/opt/quex/quex-0.65.4
+QUEX=$PWD/.
 
 #  Now, set the environment and build/install
 
@@ -22,4 +23,4 @@ export PATH=$GPYTHON/bin:$PATH
 export PYTHONPATH=$LANGKIT:$PYTHONPATH
 export PYTHONPATH=/usr/lib/python2.7/dist-packages:$PYTHONPATH
 
-make QUEX_ROOT=$QUEX build install
+python manage.py generate
