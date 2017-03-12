@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
 with Ada.Command_Line;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
@@ -58,11 +59,7 @@ procedure GPRremote is
 
    procedure Cmd_Exec;
 
-   procedure Cmd_Syncto;
-
    procedure Cmd_Syncfrom;
-
-   procedure Cmd_Sync_Exec is null;
 
    Arg_Host         : constant := 1;
    Arg_Cmd          : constant := 2;
@@ -80,8 +77,13 @@ procedure GPRremote is
 
    Project : GPR2.Project.Tree.Object;
 
-   procedure Load_Project (Filename : String);
-   --  Load a project file
+   type Command_Kind is (Info, Exec, Syncto, Syncfrom);
+
+   procedure Prolog (Cmd : Command_Kind);
+   --  The prolog to each command to setup the communication layer
+
+   procedure Epilog (Cmd : Command_Kind);
+   --  The epilog to each command to close the communication layer
 
    ---------------------------------
    -- Activate_Symbolic_Traceback --
@@ -136,13 +138,8 @@ procedure GPRremote is
       Options : GNAT.OS_Lib.Argument_List (1 .. Last - Arg_First_Option + 1);
 
    begin
-      Load_Project (Project_Name);
-
       Root_Dir := To_Unbounded_String
         (Compilation.Slave.Remote_Root_Directory (Project.Root_Project));
-
-      Compilation.Slave.Register_Remote_Slaves
-        (Project, Synchronize => False);
 
       --  Get the channel for the given host
 
@@ -216,8 +213,6 @@ procedure GPRremote is
               with "expected OK/NOK command, found " & Cmd.Kind'Img;
          end if;
       end;
-
-      Compilation.Slave.Unregister_Remote_Slaves;
    end Cmd_Exec;
 
    --------------
@@ -235,11 +230,6 @@ procedure GPRremote is
       GPR_Hash         : Unbounded_String;
       Success          : Boolean;
    begin
-      Load_Project (To_String (Args (Arg_Project)));
-
-      GPR2.Compilation.Slave.Register_Remote_Slaves
-        (Project, Synchronize => False);
-
       --  Get the channel for the given host
 
       Channel := Compilation.Slave.Channel (Host);
@@ -257,8 +247,6 @@ procedure GPRremote is
          raise Compilation.Protocol.Wrong_Command
            with "cannot get information from slave";
       end if;
-
-      Compilation.Slave.Unregister_Remote_Slaves;
    end Cmd_Info;
 
    ------------------
@@ -288,11 +276,6 @@ procedure GPRremote is
       Remote_Files      : Compilation.Sync.Files.Set;
 
    begin
-      Load_Project (To_String (Args (Arg_Project)));
-
-      GPR2.Compilation.Slave.Register_Remote_Slaves
-        (Project, Synchronize => False);
-
       --  Get the channel for the given host
 
       Channel := Compilation.Slave.Channel (Host);
@@ -310,38 +293,17 @@ procedure GPRremote is
          Total_Transferred,
          Remote_Files,
          False, Output'Access);
-
-      Compilation.Slave.Unregister_Remote_Slaves;
    end Cmd_Syncfrom;
 
-   ----------------
-   -- Cmd_Syncto --
-   ----------------
+   ------------
+   -- Epilog --
+   ------------
 
-   procedure Cmd_Syncto is
+   procedure Epilog (Cmd : Command_Kind) is
+      pragma Unreferenced (Cmd);
    begin
-      Load_Project (To_String (Args (Arg_Project)));
-
-      Compilation.Slave.Register_Remote_Slaves
-        (Project, Synchronize => True);
       Compilation.Slave.Unregister_Remote_Slaves;
-   end Cmd_Syncto;
-
-   ------------------
-   -- Load_Project --
-   ------------------
-
-   procedure Load_Project (Filename : String) is
-      Pathname : constant GPR2.Path_Name_Type :=
-                   GPR2.Create (GPR2.Optional_Name_Type (Filename));
-      Context  : GPR2.Context.Object;
-   begin
-      if Verbose then
-         Put_Line ("loading project: " & GPR2.Value (Pathname));
-      end if;
-
-      Project.Load (Pathname, Context);
-   end Load_Project;
+   end Epilog;
 
    ------------------------
    -- Parse_Command_Line --
@@ -414,6 +376,46 @@ procedure GPRremote is
          OS_Exit (1);
    end Parse_Command_Line;
 
+   ------------
+   -- Prolog --
+   ------------
+
+   procedure Prolog (Cmd : Command_Kind) is
+
+      procedure Load_Project (Filename : String);
+      --  Load a project file
+
+      ------------------
+      -- Load_Project --
+      ------------------
+
+      procedure Load_Project (Filename : String) is
+         Pathname : constant GPR2.Path_Name_Type :=
+                      GPR2.Create (GPR2.Optional_Name_Type (Filename));
+         Context  : GPR2.Context.Object;
+      begin
+         if Verbose then
+            Put_Line ("loading project: " & GPR2.Value (Pathname));
+         end if;
+
+         Project.Load (Pathname, Context);
+      end Load_Project;
+
+      Project_Name : constant String := To_String (Args (Arg_Project));
+      Sync         : Boolean := False;
+   begin
+      Load_Project (Project_Name);
+
+      if Cmd = Syncto then
+         Sync := True;
+      else
+         Sync := False;
+      end if;
+
+      Compilation.Slave.Register_Remote_Slaves
+        (Project, Synchronize => Sync);
+   end Prolog;
+
 begin
    Parse_Command_Line;
 
@@ -434,30 +436,34 @@ begin
 
    declare
       Host    : constant String := To_String (Args (Arg_Host));
-      Command : constant String := To_String (Args (Arg_Cmd));
+      Command : constant String :=
+                  Characters.Handling.To_Upper (To_String (Args (Arg_Cmd)));
+      Cmd     : Command_Kind;
    begin
-      --  First connect to the host
+      --  Check that we have a valid command
 
-      Compilation.Slave.Record_Slaves (Host);
+      if (for some V in Command_Kind => Command_Kind'Image (V) = Command) then
+         Cmd := Command_Kind'Value (Command);
 
-      if Command = "info" then
-         Cmd_Info;
+         --  First connect to the host
 
-      elsif Command = "exec" then
-         Cmd_Exec;
+         Compilation.Slave.Record_Slaves (Host);
 
-      elsif Command = "syncto" then
-         Cmd_Syncto;
+         Prolog (Cmd);
 
-      elsif Command = "syncfrom" then
-         Cmd_Syncfrom;
+         case Cmd is
+            when Info     => Cmd_Info;
+            when Exec     => Cmd_Exec;
+            when Syncto   => null; --  all is done in prolog/epilog
+            when Syncfrom => Cmd_Syncfrom;
+         end case;
 
-      elsif Command = "syncexec" then
-         Cmd_Sync_Exec;
+         Epilog (Cmd);
 
       else
          Put_Line ("GPRremote: unknown command '" & Command & ''');
       end if;
+
    end;
 
    GNAT.OS_Lib.OS_Exit (Exit_Status);
