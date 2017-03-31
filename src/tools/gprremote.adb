@@ -49,6 +49,9 @@ procedure GPRremote is
 
    use type GNAT.OS_Lib.String_Access;
 
+   Usage_Error : exception;
+   --  Raised when a wrong usage is detected
+
    procedure Parse_Command_Line;
    --  Parse command line parameters
 
@@ -424,6 +427,17 @@ procedure GPRremote is
          Sync := False;
       end if;
 
+      if Cmd in Exec | Syncexec then
+         if Last < Arg_First_Option then
+            raise Usage_Error with "missing aguments (command to execute)";
+         end if;
+
+      else
+         if Last >= Arg_First_Option then
+            raise Usage_Error with "too many aguments";
+         end if;
+      end if;
+
       Compilation.Slave.Register_Remote_Slaves
         (Project, Synchronize => Sync);
    end Prolog;
@@ -482,6 +496,10 @@ begin
    GNAT.OS_Lib.OS_Exit (Exit_Status);
 
 exception
+   when E : Usage_Error =>
+      Put_Line ("gprremote: " & Exception_Message (E));
+      GNAT.OS_Lib.OS_Exit (1);
+
    when E : others =>
       Put_Line
         ("Unrecoverable error in GPRremote :" & Exception_Information (E));
