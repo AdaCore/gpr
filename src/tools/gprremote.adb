@@ -61,6 +61,8 @@ procedure GPRremote is
 
    procedure Cmd_Syncfrom;
 
+   procedure Cmd_Syncexec;
+
    Arg_Host         : constant := 1;
    Arg_Cmd          : constant := 2;
    Arg_Project      : constant := 3;
@@ -77,7 +79,7 @@ procedure GPRremote is
 
    Project : GPR2.Project.Tree.Object;
 
-   type Command_Kind is (Info, Exec, Syncto, Syncfrom);
+   type Command_Kind is (Info, Exec, Syncto, Syncfrom, Syncexec);
 
    procedure Prolog (Cmd : Command_Kind);
    --  The prolog to each command to setup the communication layer
@@ -250,6 +252,16 @@ procedure GPRremote is
    end Cmd_Info;
 
    ------------------
+   -- Cmd_Syncexec --
+   ------------------
+
+   procedure Cmd_Syncexec is
+   begin
+      Cmd_Exec;
+      Cmd_Syncfrom;
+   end Cmd_Syncexec;
+
+   ------------------
    -- Cmd_Syncfrom --
    ------------------
 
@@ -406,7 +418,7 @@ procedure GPRremote is
    begin
       Load_Project (Project_Name);
 
-      if Cmd = Syncto then
+      if Cmd in Syncto | Syncexec then
          Sync := True;
       else
          Sync := False;
@@ -456,6 +468,7 @@ begin
             when Exec     => Cmd_Exec;
             when Syncto   => null; --  all is done in prolog/epilog
             when Syncfrom => Cmd_Syncfrom;
+            when Syncexec => Cmd_Syncexec;
          end case;
 
          Epilog (Cmd);
