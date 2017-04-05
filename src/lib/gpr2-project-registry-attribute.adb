@@ -36,7 +36,7 @@ package body GPR2.Project.Registry.Attribute is
      (Left, Right : Qualified_Name) return Boolean is
      (Ada.Strings.Less_Case_Insensitive (String (Left), String (Right)));
 
-   package Attribute_Definitions is new Containers.Indefinite_Ordered_Maps
+   package Attribute_Definitions is new Ada.Containers.Indefinite_Ordered_Maps
      (Qualified_Name, Def, Less_Case_Insensitive);
 
    Store : Attribute_Definitions.Map;

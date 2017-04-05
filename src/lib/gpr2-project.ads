@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Containers;
+
 package GPR2.Project is
 
    --  This package is the root of the high level abstraction of a hierarchy of
@@ -59,6 +61,17 @@ package GPR2.Project is
 
    function Is_Set (Set, Kind : Project_Filter) return Boolean
      is ((Set and Kind) = Kind);
+
+   function Paths (Parent : Path_Name_Type) return Containers.Name_List;
+   --  Returns the list of search paths for imported projects in Parent. Parent
+   --  is No_Path_Name for the root project.
+
+   function Create
+     (Name  : Name_Type;
+      Paths : Containers.Name_List := Containers.Name_Type_List.Empty_Vector)
+      return Path_Name_Type;
+   --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
+   --  Name is not an absolute path name it is looked into Paths.
 
 private
 

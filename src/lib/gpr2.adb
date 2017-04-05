@@ -23,7 +23,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
-with Ada.Environment_Variables;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Less_Case_Insensitive;
 
@@ -51,70 +50,6 @@ package body GPR2 is
       return Equal_Case_Insensitive (String (Left), String (Right));
    end "=";
 
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Name : Name_Type) return Path_Name_Type is
-      use Ada;
-      use GNAT;
-
-      GPR_Name : constant String :=
-                   (if Directories.Extension (String (Name)) in "gpr" | "cgpr"
-                    then String (Name)
-                    else Directories.Compose
-                      (Name => String (Name), Extension => "gpr"));
-
-      use type OS_Lib.String_Access;
-
-   begin
-      --  If the file exists or an absolute path has been specificed or there
-      --  is no ADA_PROJECT_PATH, just create the Path_Name_Type using the
-      --  given Name.
-
-      if OS_Lib.Is_Absolute_Path (GPR_Name)
-        or else OS_Lib.Is_Regular_File (GPR_Name)
-        or else not Environment_Variables.Exists ("ADA_PROJECT_PATH")
-      then
-         return Path_Name_Type'
-           (As_Is     => To_Unbounded_String (GPR_Name),
-            Value     => To_Unbounded_String
-                           (OS_Lib.Normalize_Pathname (GPR_Name)),
-            Base_Name => To_Unbounded_String
-                           (Directories.Base_Name (GPR_Name)));
-
-      else
-         --  Otherwise, let's try to check Name in ADA_PROJECT_PATH
-
-         declare
-            File : OS_Lib.String_Access :=
-                     OS_Lib.Locate_Regular_File
-                       (GPR_Name,
-                        Environment_Variables.Value ("ADA_PROJECT_PATH"));
-            N    : Unbounded_String;
-         begin
-            if File = null then
-               return Path_Name_Type'
-                 (As_Is     => To_Unbounded_String (GPR_Name),
-                  Value     => To_Unbounded_String (GPR_Name),
-                  Base_Name => To_Unbounded_String
-                                 (Directories.Base_Name (GPR_Name)));
-
-            else
-               N := To_Unbounded_String (File.all);
-               OS_Lib.Free (File);
-
-               return Path_Name_Type'
-                 (As_Is     => N,
-                  Value     => To_Unbounded_String
-                                 (OS_Lib.Normalize_Pathname (To_String (N))),
-                  Base_Name => To_Unbounded_String
-                                 (Directories.Base_Name (To_String (N))));
-            end if;
-         end;
-      end if;
-   end Create;
-
    -----------------
    -- Create_File --
    -----------------
@@ -122,12 +57,17 @@ package body GPR2 is
    function Create_File (Name : Name_Type) return Path_Name_Type is
       use Ada;
       use GNAT;
+
+      function "+"
+        (Str : String) return Unbounded_String renames To_Unbounded_String;
+
       N : constant String := String (Name);
    begin
       return Path_Name_Type'
-        (As_Is     => To_Unbounded_String (N),
-         Value     => To_Unbounded_String (OS_Lib.Normalize_Pathname (N)),
-         Base_Name => To_Unbounded_String (Directories.Base_Name (N)));
+        (As_Is     => +N,
+         Value     => +OS_Lib.Normalize_Pathname (N),
+         Base_Name => +Directories.Base_Name (N),
+         Dir_Name  => +Directories.Containing_Directory (N));
    end Create_File;
 
    -------------

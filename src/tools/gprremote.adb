@@ -406,7 +406,7 @@ procedure GPRremote is
 
       procedure Load_Project (Filename : String) is
          Pathname : constant GPR2.Path_Name_Type :=
-                      GPR2.Create (GPR2.Optional_Name_Type (Filename));
+                      GPR2.Project.Create (GPR2.Optional_Name_Type (Filename));
          Context  : GPR2.Context.Object;
       begin
          if Verbose then

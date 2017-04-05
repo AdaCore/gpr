@@ -644,8 +644,14 @@ package body GPR2.Parser.Project is
                --  Check if we have an extends declaration
 
                if Present (Ext) then
-                  Project.Extended :=
-                    Create (Get_Name_Type (F_Path_Name (Ext)));
+                  declare
+                     Paths : constant Containers.Name_List :=
+                               GPR2.Project.Paths (Filename);
+                  begin
+                     Project.Extended :=
+                       GPR2.Project.Create
+                         (Get_Name_Type (F_Path_Name (Ext)), Paths);
+                  end;
                end if;
 
                Project.Name :=
@@ -720,6 +726,8 @@ package body GPR2.Parser.Project is
                               F_Path_Names (N);
                Num_Childs : constant Natural := Child_Count (N);
                Cur_Child  : GPR_Node;
+               Paths      : constant Containers.Name_List :=
+                              GPR2.Project.Paths (Filename);
             begin
                for J in 1 .. Num_Childs loop
                   Cur_Child := Child (GPR_Node (Path_Names), J);
@@ -727,9 +735,9 @@ package body GPR2.Parser.Project is
                   if Cur_Child /= null then
                      declare
                         Path : constant Path_Name_Type :=
-                                 Create
+                                 GPR2.Project.Create
                                    (Get_Name_Type
-                                      (String_Literal (Cur_Child)));
+                                      (String_Literal (Cur_Child)), Paths);
                      begin
                         Project.Imports.Insert
                           (Path,

@@ -95,16 +95,14 @@ package GPR2 is
      with Dynamic_Predicate =>
        (for some C of Full_Path_Name => C in '/' | '\');
 
-   function Create (Name : Name_Type) return Path_Name_Type;
-   --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
-   --  the Name is not found in the current working directly, the project file
-   --  is looked for in the ADA_PROJECT_PATH if Is_Project is True.
-
    function Value (File : Path_Name_Type) return Full_Path_Name;
    --  Returns the full pathname for the given Path_Name_Type
 
    function Base_Name (File : Path_Name_Type) return Name_Type;
    --  Returns the base name for File
+
+   function Dir_Name (File : Path_Name_Type) return Full_Path_Name;
+   --  Return the directory part if File full path name
 
 private
 
@@ -114,6 +112,7 @@ private
       As_Is     : Unbounded_String;
       Value     : Unbounded_String;
       Base_Name : Unbounded_String;
+      Dir_Name  : Unbounded_String;
    end record;
 
    overriding function "=" (Left, Right : Path_Name_Type) return Boolean is
@@ -125,10 +124,14 @@ private
    function Base_Name (File : Path_Name_Type) return Name_Type
      is (Name_Type (To_String (File.Base_Name)));
 
+   function Dir_Name (File : Path_Name_Type) return Full_Path_Name
+     is (Full_Path_Name (To_String (File.Dir_Name)));
+
    No_Name      : constant Optional_Name_Type := "";
    No_Value     : constant Value_Type := "";
    No_Path_Name : constant Path_Name_Type :=
                     (Null_Unbounded_String,
+                     Null_Unbounded_String,
                      Null_Unbounded_String,
                      Null_Unbounded_String);
 

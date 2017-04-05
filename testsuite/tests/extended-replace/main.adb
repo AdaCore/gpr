@@ -86,8 +86,8 @@ procedure Main is
    Prj1, Prj2 : Project.Tree.Object;
    Ctx        : Context.Object;
 begin
-   Project.Tree.Load (Prj1, Create ("prj1.gpr"), Ctx);
-   Project.Tree.Load (Prj2, Create ("prj2.gpr"), Ctx);
+   Project.Tree.Load (Prj1, Project.Create ("prj1.gpr"), Ctx);
+   Project.Tree.Load (Prj2, Project.Create ("prj2.gpr"), Ctx);
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 

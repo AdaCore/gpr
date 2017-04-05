@@ -27,6 +27,7 @@ with Ada.Environment_Variables;
 
 with GPR2.Parser.Project;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Import;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -119,7 +120,7 @@ package body GPR2.Project.Tree is
 
       use type View.Id;
 
-      package Seen_Project is new Containers.Ordered_Sets (View.Object);
+      package Seen_Project is new Ada.Containers.Ordered_Sets (View.Object);
 
       Seen : Seen_Project.Set;
       --  Keep track of already seen projects. Better than using the P vector
@@ -493,6 +494,8 @@ package body GPR2.Project.Tree is
                      (Has_Context =>
                         (Context_View = GPR2.Project.View.Undefined)
                       or else Project.Qualifier = K_Aggregate);
+         Paths   : constant Containers.Name_List :=
+                     GPR2.Project.Paths (Filename);
       begin
          Data.Trees.Project := Project;
 
@@ -505,9 +508,16 @@ package body GPR2.Project.Tree is
             --  Now load all imported projects if any
 
             for Import of Data.Trees.Project.Imports loop
-               Data.Trees.Imports.Insert
-                 (Import.Path_Name,
-                  Parser.Project.Load (Import.Path_Name, Messages));
+               declare
+                  Import_Filename : constant Path_Name_Type :=
+                                      Create
+                                        (Name_Type (Value (Import.Path_Name)),
+                                         Paths);
+               begin
+                  Data.Trees.Imports.Insert
+                    (Import_Filename,
+                     Parser.Project.Load (Import_Filename, Messages));
+               end;
             end loop;
          end if;
 
@@ -555,7 +565,9 @@ package body GPR2.Project.Tree is
       if Data.Trees.Project.Has_Extended then
          Data.Extended :=
            Recursive_Load
-             (Data.Trees.Project.Extended,
+             (Create
+                (Name_Type (Value (Data.Trees.Project.Extended)),
+                 GPR2.Project.Paths (Filename)),
               Context_View =>
                 (if Context_View = GPR2.Project.View.Undefined
                  then View
@@ -651,6 +663,7 @@ package body GPR2.Project.Tree is
                            Context.Signature (P_Data.Externals);
          Context       : constant GPR2.Context.Object :=
                            View.Context;
+         Paths         : Containers.Name_List;
       begin
          Parser.Project.Parse
            (P_Data.Trees.Project,
@@ -666,12 +679,17 @@ package body GPR2.Project.Tree is
          if View.Qualifier in K_Aggregate | K_Aggregate_Library then
             P_Data.Aggregated.Clear;
 
+            --  Pathname for Project_Files projects are relative to the
+            --  aggregate project only.
+
+            Paths.Append (Name_Type (Dir_Name (View.Path_Name)));
+
             for Project of
               P_Data.Attrs.Element (Registry.Attribute.Project_Files).Values
             loop
                declare
                   Pathname : constant Path_Name_Type :=
-                               Create (Name_Type (Project));
+                               Create (Name_Type (Project), Paths);
                   Ctx      : GPR2.Context.Object;
                   A_View   : constant GPR2.Project.View.Object :=
                                Recursive_Load
