@@ -873,6 +873,28 @@ begin
            Read_Only            => False,
            Is_Allowed_In        => Everywhere));
 
+   --  naming.specification_suffix
+   Store.Insert
+     ("naming.specification_suffix",
+      Def'(Index                => Yes,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
+   --  naming.implementation_suffix
+   Store.Insert
+     ("naming.implementation_suffix",
+      Def'(Index                => Yes,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
    --  naming.separate_suffix
    Store.Insert
      ("naming.separate_suffix",
