@@ -585,7 +585,11 @@ package body GPR2.Project.Tree is
          declare
             Closure_Message : Log.Object;
          begin
-            if Is_In_Closure (Project.Path_Name, Data, Closure_Message) then
+            if Is_In_Closure
+              (Data.Trees.Project.Path_Name,
+               Load (Project.Path_Name),
+               Closure_Message)
+            then
                Messages.Append
                  (Message.Create
                     (Message.Error,
