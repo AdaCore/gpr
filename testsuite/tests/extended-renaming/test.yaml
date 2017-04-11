@@ -1,0 +1,5 @@
+description:
+    Test for extended projects and package renaming
+driver: build_and_run
+project_file: extended_renaming
+main: main

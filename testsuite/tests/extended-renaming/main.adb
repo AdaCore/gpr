@@ -26,8 +26,9 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Context;
-with GPR2.Project.View;
+with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
+with GPR2.Project.View;
 with GPR2.Source;
 
 procedure Main is
@@ -36,10 +37,32 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Display (Prj : Project.View.Object; Full : Boolean := True);
-
    procedure Output_Filename (Filename : Full_Path_Name);
    --  Remove the leading tmp directory
+
+   procedure Display (Prj : Project.View.Object; Full : Boolean := True);
+
+   procedure Display (Att : Project.Attribute.Object);
+
+   -------------
+   -- Display --
+   -------------
+
+   procedure Display (Att : Project.Attribute.Object) is
+   begin
+      Text_IO.Put ("   " & String (Att.Name));
+
+      if Att.Has_Index then
+         Text_IO.Put (" (" & Att.Index & ")");
+      end if;
+
+      Text_IO.Put (" ->");
+
+      for V of Att.Values loop
+         Text_IO.Put (" " & V);
+      end loop;
+      Text_IO.New_Line;
+   end Display;
 
    -------------
    -- Display --
@@ -47,30 +70,18 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
    begin
-      Text_IO.Put (String (Prj.Name) & " ");
-      Text_IO.Set_Col (10);
+      Text_IO.Put (String ("Project: " & Prj.Name) & " ");
+      Text_IO.Set_Col (20);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      for Source of Prj.Sources loop
-         declare
-            S : constant GPR2.Source.Object := Source.Source;
-            U : constant Optional_Name_Type := S.Unit_Name;
-         begin
-            Output_Filename (S.Filename);
-
-            Text_IO.Set_Col (16);
-            Text_IO.Put ("   language: " & String (S.Language));
-
-            Text_IO.Set_Col (33);
-            Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
-
-            if U /= "" then
-               Text_IO.Put ("   unit: " & String (U));
-            end if;
-
-            Text_IO.New_Line;
-         end;
-      end loop;
+      if Prj.Has_Packages then
+         for Pck of Prj.Packages loop
+            Text_IO.Put_Line (" " & String (Pck.Name));
+            for A of Pck.Attributes loop
+               Display (A);
+            end loop;
+         end loop;
+      end if;
    end Display;
 
    ---------------------
@@ -83,23 +94,13 @@ procedure Main is
       Text_IO.Put (" > " & Filename (I + 8 .. Filename'Last));
    end Output_Filename;
 
-   Prj1, Prj2 : Project.Tree.Object;
-   Ctx        : Context.Object;
+   Prj : Project.Tree.Object;
+   Ctx : Context.Object;
+
 begin
-   Project.Tree.Load (Prj1, Project.Create ("prj1.gpr"), Ctx);
-   Project.Tree.Load (Prj2, Project.Create ("prj2.gpr"), Ctx);
+   Project.Tree.Load (Prj, Project.Create ("src/a.gpr"), Ctx);
 
-   Text_IO.Put_Line ("**************** Iterator Prj1");
-
-   for P of Prj1 loop
+   for P of Prj loop
       Display (P, Full => False);
-   end loop;
-
-   Text_IO.Put_Line ("**************** Iterator Prj2");
-
-   for C in Prj2.Iterate
-     (Kind => I_Project + I_Imported + I_Recursive)
-   loop
-      Display (Project.Tree.Element (C), Full => False);
    end loop;
 end Main;

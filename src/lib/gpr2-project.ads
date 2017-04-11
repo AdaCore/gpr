@@ -83,7 +83,8 @@ private
    I_Recursive  : constant Iterator_Kind := 2#10000#;
 
    I_Default   : constant Iterator_Kind :=
-                   I_Project or I_Imported or I_Aggregated or I_Recursive;
+                   I_Project or I_Imported or I_Extended
+                     or I_Aggregated or I_Recursive;
 
    F_Invalid           : constant Project_Filter := 2#00000000#;
    F_Standard          : constant Project_Filter := 2#00000001#;

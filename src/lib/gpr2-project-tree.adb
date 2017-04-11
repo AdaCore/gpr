@@ -219,7 +219,11 @@ package body GPR2.Project.Tree is
                Data : constant Definition.Data := Definition.Get (View);
             begin
                if Data.Extended /= Project.View.Undefined then
-                  Append (Data.Extended);
+                  if Is_Set (Iter.Kind, I_Recursive) then
+                     For_Project (Data.Extended);
+                  else
+                     Append (Data.Extended);
+                  end if;
                end if;
             end;
          end if;

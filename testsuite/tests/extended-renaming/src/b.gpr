@@ -1,0 +1,4 @@
+with "c";
+project b is
+   package compiler renames c.compiler;
+end b;

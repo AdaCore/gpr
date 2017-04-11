@@ -1,0 +1,7 @@
+Project: c         K_STANDARD
+ compiler
+   driver -> toto
+Project: b         K_STANDARD
+ compiler
+   driver -> toto
+Project: a         K_STANDARD
