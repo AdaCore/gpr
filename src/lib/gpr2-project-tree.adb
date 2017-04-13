@@ -846,7 +846,7 @@ package body GPR2.Project.Tree is
                     (Message.Create
                        (Message.Error,
                         "package " & String (P.Name) & " cannot be used in "
-                        & P_Kind'Img,
+                        & Image (P_Kind),
                         Source_Reference.Object (P)));
                end if;
 
@@ -889,7 +889,7 @@ package body GPR2.Project.Tree is
                     (Message.Create
                        (Message.Error,
                         "attribute " & String (A.Name)
-                        & " cannot be used in " & P_Kind'Img,
+                        & " cannot be used in " & Image (P_Kind),
                         Source_Reference.Object (A)));
                end if;
 
