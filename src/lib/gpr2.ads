@@ -46,6 +46,9 @@ package GPR2 is
      (K_Configuration, K_Abstract,
       K_Standard, K_Library, K_Aggregate, K_Aggregate_Library);
 
+   function Image (Kind : Project_Kind) return String;
+   --  Returns a human representation of kind value
+
    --
    --  Name / Value
    --
@@ -137,5 +140,14 @@ private
 
    function Create_File (Name : Name_Type) return Path_Name_Type;
    --  Create a Path_Name_Type for a file
+
+   function Image (Kind : Project_Kind) return String is
+     ((case Kind is
+         when K_Standard          => "a standard",
+         when K_Configuration     => "a configurartion",
+         when K_Abstract          => "an abstract",
+         when K_Library           => "a library",
+         when K_Aggregate         => "an aggregate",
+         when K_Aggregate_Library => "an aggregate library") & " project");
 
 end GPR2;
