@@ -1,0 +1,5 @@
+project lib4 is
+   for library_dir use "here";
+   for library_name use "name";
+   for library_kind use "static";
+end lib4;

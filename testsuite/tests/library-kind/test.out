@@ -1,0 +1,12 @@
+lib1     K_STANDARD
+a library project
+lib2     K_STANDARD
+a library project
+lib3     K_STANDARD
+a library project
+lib4     K_STANDARD
+a library project
+lib5     K_LIBRARY
+a library project
+Demo     K_ABSTRACT
+an abstract project

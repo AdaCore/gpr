@@ -755,6 +755,7 @@ package body GPR2.Project.Tree is
          if P_Data.Kind = K_Standard then
             if P_Data.Attrs.Contains (Registry.Attribute.Library_Kind)
               or else P_Data.Attrs.Contains (Registry.Attribute.Library_Name)
+              or else P_Data.Attrs.Contains (Registry.Attribute.Library_Dir)
             then
                P_Data.Kind := K_Library;
             end if;

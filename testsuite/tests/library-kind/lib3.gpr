@@ -1,0 +1,3 @@
+project lib3 is
+   for library_kind use "static";
+end lib3;

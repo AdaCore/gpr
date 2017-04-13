@@ -1,0 +1,5 @@
+description:
+    Test library kind detection
+driver: build_and_run
+project_file: lib_kind
+main: main

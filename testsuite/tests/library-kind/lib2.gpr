@@ -1,0 +1,3 @@
+project lib2 is
+   for library_dir use "here";
+end lib2;
