@@ -928,11 +928,14 @@ package body GPR2.Project.Tree is
          Set_View (Element (View));
       end loop;
 
-      --  We now have an up-to-date tree, do some validity checks
+      --  We now have an up-to-date tree, do some validity checks if there is
+      --  no issue detected yet.
 
-      for View of Self loop
-         Validity_Check (View);
-      end loop;
+      if Self.Messages.Is_Empty then
+         for View of Self loop
+            Validity_Check (View);
+         end loop;
+      end if;
    end Set_Context;
 
    --------------

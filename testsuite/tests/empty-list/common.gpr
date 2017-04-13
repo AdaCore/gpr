@@ -1,0 +1,13 @@
+project common is
+   var1 := ();
+   var2 := ("a");
+
+   package compiler is
+      for default_switches ("ada") use var1;
+   end compiler;
+
+   package binder is
+      for default_switches ("ada") use var2;
+   end binder;
+
+end common;

@@ -1,0 +1,5 @@
+description:
+    Test empty list
+driver: build_and_run
+project_file: empty_list
+main: main

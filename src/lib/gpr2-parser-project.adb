@@ -1306,13 +1306,7 @@ package body GPR2.Parser.Project is
             procedure Handle_Variable (Node : not null Variable_Reference) is
                Values : constant Item_Values := Get_Variable_Values (Node);
             begin
-               if Values.Values.Is_Empty then
-                  Record_Value (Result.Single, "");
-
-               else
-                  Record_Values (Values);
-               end if;
-
+               Record_Values (Values);
                Status := Over;
             end Handle_Variable;
 
@@ -1381,6 +1375,12 @@ package body GPR2.Parser.Project is
             for V of Values.Values loop
                Record_Value (Values.Single, V);
             end loop;
+
+            --  If we add a list, then the final value must be a list
+
+            if not Values.Single then
+               Result.Single := False;
+            end if;
          end Record_Values;
 
       begin
