@@ -698,29 +698,46 @@ package body GPR2.Project.Tree is
                declare
                   Pathname : constant Path_Name_Type :=
                                Create (Name_Type (Project), Paths);
-                  Ctx      : GPR2.Context.Object;
-                  A_View   : constant GPR2.Project.View.Object :=
-                               Recursive_Load
-                                 (Pathname, View,
-                                  Definition.Aggregated, Ctx,
-                                  Self.Messages);
                begin
-                  --  If there was error messages during the parsing of the
-                  --  aggregated project, just return now.
+                  if Pathname = View.Path_Name then
+                     --  We are loading recursively the aggregate project
 
-                  if Self.Messages.Has_Element
-                    (Information => False,
-                     Warning     => False)
-                  then
-                     return;
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "project cannot aggregate itself "
+                           & String (Base_Name (Pathname)),
+                           Source_Reference.Object
+                             (P_Data.Attrs.Element
+                                  (Registry.Attribute.Project_Files))));
+
+                  else
+                     declare
+                        Ctx    : GPR2.Context.Object;
+                        A_View : constant GPR2.Project.View.Object :=
+                                   Recursive_Load
+                                     (Pathname, View,
+                                      Definition.Aggregated, Ctx,
+                                      Self.Messages);
+                     begin
+                        --  If there was error messages during the parsing of
+                        --  the aggregated project, just return now.
+
+                        if Self.Messages.Has_Element
+                          (Information => False,
+                           Warning     => False)
+                        then
+                           return;
+                        end if;
+
+                        --  Record aggregated view into the aggregate's view
+
+                        P_Data.Aggregated.Append (A_View);
+
+                        --  And set the aggregated view recursivelly
+                        Set_View (A_View);
+                     end;
                   end if;
-
-                  --  Record aggregated view into the aggregate's view
-
-                  P_Data.Aggregated.Append (A_View);
-
-                  --  And set the aggregated view recursivelly
-                  Set_View (A_View);
                end;
             end loop;
 

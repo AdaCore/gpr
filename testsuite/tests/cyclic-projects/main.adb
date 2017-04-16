@@ -36,30 +36,42 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   Prj : Project.Tree.Object;
-   Ctx : Context.Object;
+   procedure Load (Filename : Name_Type);
+
+   ----------
+   -- Load --
+   ----------
+
+   procedure Load (Filename : Name_Type) is
+      Prj : Project.Tree.Object;
+      Ctx : Context.Object;
+   begin
+      Project.Tree.Load (Prj, Create (Filename), Ctx);
+
+   exception
+      when GPR2.Project_Error =>
+         if Prj.Has_Messages then
+            Text_IO.Put_Line ("Messages found for " & String (Filename));
+
+            for M of Prj.Log_Messages.all loop
+               declare
+                  Mes : constant String := M.Format;
+                  F   : constant Natural :=
+                          Strings.Fixed.Index (Mes, "imports ");
+                  L   : constant Natural :=
+                          Strings.Fixed.Index (Mes, "/cyclic-projects");
+               begin
+                  if F /= 0 and then L /= 0 then
+                     Text_IO.Put_Line (Mes (1 .. F + 7) & Mes (L .. Mes'Last));
+                  else
+                     Text_IO.Put_Line (Mes);
+                  end if;
+               end;
+            end loop;
+         end if;
+   end Load;
+
 begin
-   Project.Tree.Load (Prj, Create ("a.gpr"), Ctx);
-
-exception
-   when GPR2.Project_Error =>
-      if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
-
-         for M of Prj.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               F   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "imports ");
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/cyclic-projects");
-            begin
-               if F /= 0 and then L /= 0 then
-                  Text_IO.Put_Line (Mes (1 .. F + 7) & Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
-         end loop;
-      end if;
+   Load ("a.gpr");
+   Load ("agg.gpr");
 end Main;
