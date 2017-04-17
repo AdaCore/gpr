@@ -74,4 +74,5 @@ procedure Main is
 begin
    Load ("a.gpr");
    Load ("agg.gpr");
+   Load ("agg2.gpr");
 end Main;

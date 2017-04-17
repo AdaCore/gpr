@@ -1,0 +1,3 @@
+aggregate project agg2 is
+   for project_files use ("d.gpr");
+end agg2;

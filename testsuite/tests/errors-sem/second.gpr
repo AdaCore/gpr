@@ -1,4 +1,4 @@
 
 aggregate project second is
-   for Project_Files use "first.gpr";
+   for Project_Files use "last.gpr";
 end second;
