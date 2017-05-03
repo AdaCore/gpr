@@ -497,15 +497,14 @@ package body GPR2.Project.Tree is
       ----------
 
       function Load (Filename : Path_Name_Type) return Definition.Data is
+         Paths   : constant Containers.Name_List :=
+                     GPR2.Project.Paths (Filename);
          Project : constant Parser.Project.Object :=
                      Parser.Project.Load (Filename, Messages);
-
          Data    : Definition.Data
                      (Has_Context =>
                         (Context_View = GPR2.Project.View.Undefined)
                       or else Project.Qualifier = K_Aggregate);
-         Paths   : constant Containers.Name_List :=
-                     GPR2.Project.Paths (Filename);
       begin
          Data.Trees.Project := Project;
 
