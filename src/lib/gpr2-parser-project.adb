@@ -980,7 +980,9 @@ package body GPR2.Parser.Project is
          Result : Item_Values;
 
       begin
-         --   We do not want to have a reference to a limited import
+         --  We do not want to have a reference to a limited import, we do not
+         --  check when a special project reference is found Project'Name or
+         --  Config'Name.
 
          if Project /= "project"
            and then Project /= "config"
@@ -1506,7 +1508,8 @@ package body GPR2.Parser.Project is
             end if;
          end loop;
 
-         raise Project_Error with "the project should have been found";
+         raise Project_Error
+           with "the project " & String (Project) & " should have been found";
       end Is_Limited_Import;
 
       ------------
