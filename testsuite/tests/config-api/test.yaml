@@ -1,0 +1,5 @@
+description:
+    Check configuration API
+driver: build_and_run
+project_file: config_api
+main: main

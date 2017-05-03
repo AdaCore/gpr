@@ -310,7 +310,8 @@ package body GPR2.Project.Tree is
    procedure Load
      (Self     : in out Object;
       Filename : Path_Name_Type;
-      Context  : GPR2.Context.Object)
+      Context  : GPR2.Context.Object;
+      Config   : View.Object := View.Undefined)
    is
       Root_Context : GPR2.Context.Object := Context;
 
@@ -322,6 +323,10 @@ package body GPR2.Project.Tree is
       --  Do nothing more if there are errors during the parsing
 
       if Self.Messages.Is_Empty then
+         --  Set configuration project if any
+
+         Self.Conf := Config;
+
          for View of Self loop
             declare
                V_Data : Definition.Data := Definition.Get (View);

@@ -1,0 +1,13 @@
+
+project Demo is
+   type Me is ("one", "two");
+   Dir1 := "toto";
+   Dir2 := external ("OS");
+   Dir3 : Me := "one";
+   Dir4 := Config'Archive_Suffix;
+   Dir5 := "file" & Config'Archive_Suffix;
+
+   for Source_Dirs use (".", Dir1, Dir2);
+   for Object_Dir use "obj";
+   for Main use ("main.adb");
+end Demo;

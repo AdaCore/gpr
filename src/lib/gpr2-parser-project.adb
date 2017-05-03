@@ -828,6 +828,15 @@ package body GPR2.Parser.Project is
          Project.Unit    := Unit;
          Project.Context := Context;
 
+         --  If this is a configuration project, then we register it under the
+         --  "config" name as this is what is expected on this implementation.
+         --  That is, referencing the configuration is done using
+         --  Config'Archive_Suffix for example.
+
+         if Project.Qualifier = K_Configuration then
+            Project.Name := To_Unbounded_String ("Config");
+         end if;
+
          --  Finaly register this project into the registry
 
          Registry.Register (Filename, Project);

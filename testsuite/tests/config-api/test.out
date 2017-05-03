@@ -1,0 +1,11 @@
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> . toto Linux
+V:   Dir1 -> toto
+V:   Dir2 -> Linux
+V:   Dir3 -> one
+V:   Dir4 -> .a
+V:   Dir5 -> file.a
+
+Config   K_CONFIGURATION
