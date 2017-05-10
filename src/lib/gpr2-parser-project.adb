@@ -896,8 +896,8 @@ package body GPR2.Parser.Project is
 
       function Is_Limited_Import
         (Self : Object; Project : Name_Type) return Boolean;
-      --  Returns True if the given project is made visible through a limited
-      --  immport clause.
+      --  Returns True if the given project exists and is made visible through
+      --  a limited immport clause.
 
       function Get_Term_List (Node : not null Term_List) return Item_Values;
       --  Parse a list of value or a single value as found in an attribute.
@@ -1508,8 +1508,7 @@ package body GPR2.Parser.Project is
             end if;
          end loop;
 
-         raise Project_Error
-           with "the project " & String (Project) & " should have been found";
+         return False;
       end Is_Limited_Import;
 
       ------------
