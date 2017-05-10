@@ -955,20 +955,31 @@ package body GPR2.Project.Tree is
                   declare
                      Q_Name : constant Registry.Attribute.Qualified_Name :=
                                 Registry.Attribute.Create (A.Name, P.Name);
-                     Def    : constant Registry.Attribute.Def :=
-                                Registry.Attribute.Get (Q_Name);
+                     Def    : Registry.Attribute.Def;
                   begin
-                     if not Def.Is_Allowed_In (P_Kind) then
+                     if Registry.Attribute.Exists (Q_Name) then
+                        Def := Registry.Attribute.Get (Q_Name);
+
+                        if not Def.Is_Allowed_In (P_Kind) then
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "attribute " & String (A.Name)
+                                 & " cannot be used in package "
+                                 & String (P.Name),
+                                 Source_Reference.Object (A)));
+                        end if;
+
+                        Check_Def (Def, A);
+
+                     else
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
                               "attribute " & String (A.Name)
-                              & " cannot be used in package "
-                              & String (P.Name),
+                              & " not supported in package " & String (P.Name),
                               Source_Reference.Object (A)));
                      end if;
-
-                     Check_Def (Def, A);
                   end;
                end loop;
             end if;
