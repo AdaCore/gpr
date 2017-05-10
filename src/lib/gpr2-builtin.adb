@@ -42,7 +42,8 @@ package body GPR2.Builtin is
          return Default_Value;
 
       else
-         raise Project_Error with "undefined external reference";
+         raise Project_Error
+           with "undefined external reference """ & String (Variable) & '"';
       end if;
    end External;
 

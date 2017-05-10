@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:3:22: undefined external reference
+demo.gpr:3:22: undefined external reference "MyVAR1"
