@@ -939,9 +939,31 @@ begin
            Read_Only            => False,
            Is_Allowed_In        => Everywhere));
 
+   --  naming.specification
+   Store.Insert
+     ("naming.specification",
+      Def'(Index                => Optional,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
    --  naming.body
    Store.Insert
      ("naming.body",
+      Def'(Index                => Optional,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
+   --  naming.implementation
+   Store.Insert
+     ("naming.implementation",
       Def'(Index                => Optional,
            Others_Allowed       => False,
            Index_Case_Sensitive => False,
