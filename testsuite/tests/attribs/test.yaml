@@ -1,0 +1,5 @@
+description:
+    simple test to check attribute and variable values
+driver: build_and_run
+project_file: attribs
+main: main

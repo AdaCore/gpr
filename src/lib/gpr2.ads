@@ -68,10 +68,13 @@ package GPR2 is
    No_Value : constant Value_Type;
 
    function Unquote (Str : Value_Type) return Value_Type with
-     Post => Unquote'Result (Unquote'Result'First) not in ''' | '"'
-             and then Unquote'Result (Unquote'Result'Last) not in ''' | '"'
-             and then (Unquote'Result'Length = Str'Length - 2
-                       or else Unquote'Result'Length = Str'Length);
+     Post => (if Unquote'Result'Length >= 2
+                and then
+                 ((Str (Str'First) = ''' and then Str (Str'Last) = ''')
+                  or else
+                  (Str (Str'First) = '"' and then Str (Str'Last) = '"'))
+              then
+               Str (Str'First + 1 .. Str'Last - 1) = Unquote'Result);
 
    type Case_Sensitive_Name_Type is new String
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;

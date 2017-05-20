@@ -76,7 +76,7 @@ package body GPR2 is
 
    function Unquote (Str : Value_Type) return Value_Type is
    begin
-      if Str'Length > 2
+      if Str'Length >= 2
         and then
           ((Str (Str'First) = ''' and then Str (Str'Last) = ''')
            or else (Str (Str'First) = '"' and then Str (Str'Last) = '"'))

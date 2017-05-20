@@ -1,0 +1,5 @@
+
+project Demo is
+   Dir := "";
+   for Object_Dir use "";
+end Demo;
