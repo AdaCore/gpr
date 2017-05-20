@@ -26,7 +26,8 @@ with GPR2.Source.Registry;
 
 package body GPR2.Source is
 
-   function Key (Self : Object) return Value_Type with Inline;
+   function Key (Self : Object) return Value_Type
+     with Inline, Pre => Self /= Undefined;
    --  Returns the key for Self, this is used to compare a source object
 
    ---------
@@ -44,7 +45,12 @@ package body GPR2.Source is
 
    overriding function "=" (Left, Right : Object) return Boolean is
    begin
-      return Key (Left) = Key (Right);
+      if Left.Id = 0 and then Right.Id = 0 then
+         return True;
+      else
+         return not (Left.Id = 0 xor Right.Id = 0)
+           and then Key (Left) = Key (Right);
+      end if;
    end "=";
 
    ------------
