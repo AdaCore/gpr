@@ -677,6 +677,9 @@ package body GPR2.Project.View is
                end if;
             end Check_Spec;
 
+            --  ??? if the body and separate suffixes are identical we should
+            --  parse the source to actually get the proper kind.
+
             Check_Body : declare
                Body_Suffix : constant Project.Attribute.Object :=
                                Naming.Body_Suffix (Name_Type (Lang));
