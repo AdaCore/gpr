@@ -46,9 +46,10 @@ procedure GPRdump is
    procedure Parse_Command_Line;
    --  Parse command line parameters
 
-   Help            : aliased Boolean := False;
-   Display_Sources : aliased Boolean := False;
-   Project_Path    : Unbounded_String;
+   Help                : aliased Boolean := False;
+   Display_Sources     : aliased Boolean := False;
+   Display_All_Sources : aliased Boolean := False;
+   Project_Path        : Unbounded_String;
 
    ------------------------
    -- Parse_Command_Line --
@@ -82,6 +83,11 @@ procedure GPRdump is
       Define_Switch
         (Config, Display_Sources'Access,
          "-s", Long_Switch => "--sources",
+         Help => "display sources");
+
+      Define_Switch
+        (Config, Display_All_Sources'Access,
+         "-a", Long_Switch => "--all-sources",
          Help => "display sources");
 
       Set_Usage (Config, Usage => "[switches] <project>");
@@ -128,9 +134,17 @@ procedure GPRdump is
       else
          for Source of View.Sources loop
             declare
+               use type GPR2.Source.Object;
+               use type GPR2.Source.Kind_Type;
+
                S : constant GPR2.Source.Object := Source.Source;
             begin
-               Text_IO.Put_Line (S.Filename);
+               if Display_All_Sources
+                 or else S.Other_Part = GPR2.Source.Undefined
+                 or else S.Kind = GPR2.Source.S_Body
+               then
+                  Text_IO.Put_Line (S.Filename);
+               end if;
             end;
          end loop;
       end if;
@@ -148,7 +162,7 @@ begin
    begin
       Project.Load (Pathname, Context);
 
-      if Display_Sources then
+      if Display_Sources or Display_All_Sources then
          Sources (Project.Root_Project);
       end if;
    exception
