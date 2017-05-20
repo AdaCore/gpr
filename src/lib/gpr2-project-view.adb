@@ -389,6 +389,7 @@ package body GPR2.Project.View is
       use Ada;
       use GNAT;
       use type MD5.Binary_Message_Digest;
+      use type GPR2.Source.Object;
 
       package Unit_Naming is
         new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
@@ -402,6 +403,9 @@ package body GPR2.Project.View is
 
       package Source_Set is
         new Ada.Containers.Indefinite_Ordered_Sets (Name_Type);
+
+      package Unit_Set is new Ada.Containers.Indefinite_Ordered_Maps
+        (Name_Type, GPR2.Source.Object);
 
       procedure Handle_Directory (Dir : Full_Path_Name);
       --  Handle the specified directory, that is read all files in Dir and
@@ -472,6 +476,8 @@ package body GPR2.Project.View is
 
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
+
+      Units             : Unit_Set.Map;
 
       Tree              : constant not null access Project.Tree.Object :=
                             Definition.Get (Self).Tree;
@@ -570,7 +576,7 @@ package body GPR2.Project.View is
                         (if Lang = "ada"
                          then Unit_For (Filename, Kind, Ok)
                          else No_Name);
-               Src  : constant GPR2.Source.Object :=
+               Src  : GPR2.Source.Object :=
                         GPR2.Source.Create
                           (Filename  => Create_File (Name_Type (Filename)),
                            Kind      => Kind,
@@ -578,6 +584,20 @@ package body GPR2.Project.View is
                            Unit_Name => Unit);
             begin
                if Ok then
+                  if Unit /= No_Name then
+                     if Units.Contains (Unit) then
+                        declare
+                           Other_Src : GPR2.Source.Object := Units (Unit);
+                        begin
+                           Src.Set_Other_Part (Other_Src);
+                           Other_Src.Set_Other_Part (Src);
+                        end;
+
+                     else
+                        Units.Insert (Unit, Src);
+                     end if;
+                  end if;
+
                   Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
                end if;
             end;
