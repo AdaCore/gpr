@@ -62,8 +62,7 @@ package body GPR2.Project is
       GPR_Name : constant String :=
                    (if Directories.Extension (String (Name)) in "gpr" | "cgpr"
                     then String (Name)
-                    else Directories.Compose
-                           (Name => String (Name), Extension => "gpr"));
+                    else String (Name) & ".gpr");
 
    begin
       --  If the file exists or an absolute path has been specificed or there
