@@ -677,8 +677,12 @@ package body GPR2.Project.View is
                end if;
             end Check_Spec;
 
-            --  ??? if the body and separate suffixes are identical we should
-            --  parse the source to actually get the proper kind.
+            --  If the body and separate suffixes are identical we cannot get
+            --  here a proper kind. We should parse the source to actually get
+            --  the proper kind. Note that this is not done here but at the
+            --  point it is really needed, that is when the S.Kind accessor is
+            --  called. So we defer the parsing when needed if at all needed.
+            --  See GPR2.Source.Kind implementation.
 
             Check_Body : declare
                Body_Suffix : constant Project.Attribute.Object :=

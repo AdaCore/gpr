@@ -1,0 +1,5 @@
+description:
+    Test for simple source parser (get separate kind)
+driver: build_and_run
+project_file: source3
+main: main

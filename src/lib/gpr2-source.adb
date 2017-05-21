@@ -23,12 +23,17 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Source.Registry;
+with GPR2.Source.Parser;
 
 package body GPR2.Source is
 
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self /= Undefined;
    --  Returns the key for Self, this is used to compare a source object
+
+   procedure Parse (Self : Object) with Inline;
+   --  Run the parser on the given source and register information in the
+   --  registry.
 
    ---------
    -- "<" --
@@ -108,6 +113,7 @@ package body GPR2.Source is
 
    function Kind (Self : Object) return Kind_Type is
    begin
+      Parse (Self);
       return Registry.Store (Self.Id).Kind;
    end Kind;
 
@@ -133,6 +139,35 @@ package body GPR2.Source is
          return Object'(Id => Other_Id);
       end if;
    end Other_Part;
+
+   -----------
+   -- Parse --
+   -----------
+
+   procedure Parse (Self : Object) is
+      S : Registry.Data := Registry.Store (Self.Id);
+   begin
+      if not S.Parsed then
+         declare
+            Data : constant Source.Parser.Data :=
+                     Source.Parser.Check (S.Path_Name);
+         begin
+            --  Check if separate unit
+
+            if Data.Is_Separate then
+               S.Kind := S_Separate;
+            end if;
+
+            --  Record that this is now parsed
+
+            S.Parsed := True;
+
+            --  Update registry
+
+            Registry.Store (Self.Id) := S;
+         end;
+      end if;
+   end Parse;
 
    --------------------
    -- Set_Other_Part --
