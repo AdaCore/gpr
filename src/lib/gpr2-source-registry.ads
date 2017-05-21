@@ -32,6 +32,7 @@ private package GPR2.Source.Registry is
       Unit_Name  : Unbounded_String;
       Kind       : Kind_Type;
       Other_Part : Natural;
+      Parsed     : Boolean := False;
    end record;
 
    package Source_Store is new Ada.Containers.Vectors (Positive, Data);

@@ -65,11 +65,12 @@ package body GPR2.Source is
    begin
       Registry.Store.Append
         (Registry.Data'
-           (Filename,
-            To_Unbounded_String (String (Language)),
-            To_Unbounded_String (String (Unit_Name)),
-            Kind,
-            0));
+           (Path_Name  => Filename,
+            Language   => To_Unbounded_String (String (Language)),
+            Unit_Name  => To_Unbounded_String (String (Unit_Name)),
+            Kind       => Kind,
+            Other_Part => 0,
+            Parsed     => False));
 
       return Result : Object do
          Result.Id := Registry.Store.Last_Index;
