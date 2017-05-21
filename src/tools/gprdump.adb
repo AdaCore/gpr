@@ -140,7 +140,8 @@ procedure GPRdump is
                S : constant GPR2.Source.Object := Source.Source;
             begin
                if Display_All_Sources
-                 or else S.Other_Part = GPR2.Source.Undefined
+                 or else (S.Other_Part = GPR2.Source.Undefined
+                          and then S.Kind /= GPR2.Source.S_Separate)
                  or else S.Kind = GPR2.Source.S_Body
                then
                   Text_IO.Put_Line (S.Filename);
