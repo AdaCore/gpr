@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
+with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 
@@ -787,6 +788,11 @@ package body GPR2.Parser.Project is
          return Registry.Get (Filename);
 
       else
+         if not Directories.Exists (Value (Filename)) then
+            raise Project_Error with
+              "project file " & Value (Filename) & " not found";
+         end if;
+
          Unit := Get_From_File (Context, Value (Filename));
 
          if Root (Unit) = null or else Has_Diagnostics (Unit) then
