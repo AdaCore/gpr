@@ -789,8 +789,12 @@ package body GPR2.Parser.Project is
 
       else
          if not Directories.Exists (Value (Filename)) then
-            raise Project_Error with
-              "project file " & Value (Filename) & " not found";
+            Messages.Append
+              (GPR2.Message.Create
+                 (Level   => Message.Error,
+                  Message =>
+                    "project file " & Value (Filename) & " not found"));
+            return Undefined;
          end if;
 
          Unit := Get_From_File (Context, Value (Filename));
