@@ -28,6 +28,7 @@ with GPR.Version;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
@@ -132,20 +133,16 @@ procedure GPRdump is
          Text_IO.Put_Line ("no sources");
 
       else
-         for Source of View.Sources loop
+         for C in View.Sources.Iterate
+           (Filter => (if Display_All_Sources
+                       then GPR2.Project.Source.Set.S_All
+                       else GPR2.Project.Source.Set.S_Compilable))
+         loop
             declare
-               use type GPR2.Source.Object;
-               use type GPR2.Source.Kind_Type;
-
-               S : constant GPR2.Source.Object := Source.Source;
+               S : constant GPR2.Source.Object :=
+                     Project.Source.Set.Element (C).Source;
             begin
-               if Display_All_Sources
-                 or else (S.Other_Part = GPR2.Source.Undefined
-                          and then S.Kind /= GPR2.Source.S_Separate)
-                 or else S.Kind = GPR2.Source.S_Body
-               then
-                  Text_IO.Put_Line (S.Filename);
-               end if;
+               Text_IO.Put_Line (S.Filename);
             end;
          end loop;
       end if;
