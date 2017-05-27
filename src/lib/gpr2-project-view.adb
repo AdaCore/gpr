@@ -609,7 +609,7 @@ package body GPR2.Project.View is
       ------------
 
       procedure Insert (Sources : Source.Set.Object; Mode : Insert_Mode) is
-         use type Source.Set.Set.Cursor;
+         use type Source.Set.Cursor;
       begin
          for Source of Sources loop
             if Data.Sources.Contains (Source) then

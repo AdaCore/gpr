@@ -22,18 +22,91 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Sets;
+with Ada.Iterator_Interfaces;
+
+private with Ada.Containers.Ordered_Sets;
 
 package GPR2.Project.Source.Set is
 
-   package Set is new Ada.Containers.Ordered_Sets (Object);
-
-   type Object is new Set.Set with private;
+   type Object is tagged private
+     with Constant_Indexing => Constant_Reference,
+          Default_Iterator  => Iterate,
+          Iterator_Element  => Project.Source.Object;
 
    subtype Source_Set is Object;
 
+   function Is_Empty (Self : Object) return Boolean;
+
+   procedure Clear (Self : in out Object);
+
+   function Length (Self : Object) return Containers.Count_Type;
+
+   procedure Insert (Self : in out Object; Source : Project.Source.Object);
+
+   function Contains
+     (Self : Object; Source : Project.Source.Object) return Boolean;
+
+   procedure Replace (Self : in out Object; Source : Project.Source.Object);
+
+   type Cursor is private;
+
+   No_Element : constant Cursor;
+
+   function Element (Position : Cursor) return Project.Source.Object
+     with Post =>
+       (if Has_Element (Position)
+        then Element'Result /= Project.Source.Undefined
+        else Element'Result = Project.Source.Undefined);
+
+   function Has_Element (Position : Cursor) return Boolean;
+
+   package Source_Iterator is
+     new Ada.Iterator_Interfaces (Cursor, Has_Element);
+
+   type Constant_Reference_Type
+     (Source : not null access constant Project.Source.Object) is private
+     with Implicit_Dereference => Source;
+
+   function Constant_Reference
+     (Self     : aliased Object;
+      Position : Cursor) return Constant_Reference_Type;
+
+   type Source_Filter is mod 2 ** 8;
+
+   S_Compilable : constant Source_Filter;
+   S_Spec       : constant Source_Filter;
+   S_Body       : constant Source_Filter;
+   S_Separate   : constant Source_Filter;
+   S_All        : constant Source_Filter;
+
+   function Iterate
+     (Self   : Object;
+      Filter : Source_Filter := S_All)
+      return Source_Iterator.Forward_Iterator'Class;
+
 private
 
-   type Object is new Set.Set with null record;
+   package Set is new Ada.Containers.Ordered_Sets (Project.Source.Object);
+
+   type Object is tagged record
+      S : Set.Set;
+   end record;
+
+   type Cursor is record
+      Sources : access constant Object;
+      Current : Set.Cursor;
+   end record;
+
+   No_Element : constant Cursor := (null, Set.No_Element);
+
+   type Constant_Reference_Type
+     (Source : not null access constant Project.Source.Object) is null record;
+
+   S_Compilable : constant Source_Filter := 1;
+   S_Spec       : constant Source_Filter := 2;
+   S_Body       : constant Source_Filter := 4;
+   S_Separate   : constant Source_Filter := 8;
+   S_All        : constant Source_Filter :=
+                    S_Compilable + S_Spec + S_Body + S_Separate;
 
 end GPR2.Project.Source.Set;
