@@ -69,7 +69,7 @@ package GPR2.Source is
 private
 
    type Object is tagged record
-      Id : Natural;
+      Id : Natural := 0;
    end record;
 
    Undefined : constant Object := Object'(Id => 0);
