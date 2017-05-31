@@ -61,10 +61,13 @@ package GPR2.Source is
       Kind      : Kind_Type;
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object;
+   --  Constructor for a source object
 
    procedure Set_Other_Part
      (Self       : in out Object;
       Other_Part : in out Object);
+   --  Set the other-part for Self. The other-part is the body for a spec or
+   --  the spec for a body or separate unit.
 
 private
 
