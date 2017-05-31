@@ -1,0 +1,5 @@
+description:
+    Test for withed units
+driver: build_and_run
+project_file: withunits
+main: main

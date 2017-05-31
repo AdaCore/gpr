@@ -75,6 +75,7 @@ package body GPR2.Source is
             Unit_Name  => To_Unbounded_String (String (Unit_Name)),
             Kind       => Kind,
             Other_Part => 0,
+            Units      => <>,
             Parsed     => False));
 
       return Result : Object do
@@ -158,6 +159,10 @@ package body GPR2.Source is
                S.Kind := S_Separate;
             end if;
 
+            --  Record the withed units
+
+            S.Units := Data.Units;
+
             --  Record that this is now parsed
 
             S.Parsed := True;
@@ -190,5 +195,15 @@ package body GPR2.Source is
       return Optional_Name_Type
         (To_String (Registry.Store (Self.Id).Unit_Name));
    end Unit_Name;
+
+   ------------------
+   -- Withed_Units --
+   ------------------
+
+   function Withed_Units (Self : Object) return Source_Reference.Set.Object is
+   begin
+      Parse (Self);
+      return Registry.Store (Self.Id).Units;
+   end Withed_Units;
 
 end GPR2.Source;

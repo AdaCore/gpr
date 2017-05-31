@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,22 +22,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
+with "gpr2";
 
-private package GPR2.Source.Registry is
-
-   type Data is record
-      Path_Name  : Path_Name_Type;
-      Language   : Unbounded_String;
-      Unit_Name  : Unbounded_String;
-      Kind       : Kind_Type;
-      Other_Part : Natural;
-      Units      : Source_Reference.Set.Object;
-      Parsed     : Boolean := False;
-   end record;
-
-   package Source_Store is new Ada.Containers.Vectors (Positive, Data);
-
-   Store : Source_Store.Vector;
-
-end GPR2.Source.Registry;
+project WithUnits is
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+end WithUnits;

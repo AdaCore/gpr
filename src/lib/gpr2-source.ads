@@ -25,6 +25,8 @@
 --  This package defines a source Object. This source object is shared with all
 --  loaded project tree.
 
+with GPR2.Source_Reference.Set;
+
 package GPR2.Source is
 
    type Object is tagged private;
@@ -55,6 +57,9 @@ package GPR2.Source is
 
    function Language (Self : Object) return Name_Type;
    --  Returns the language for the given source
+
+   function Withed_Units (Self : Object) return Source_Reference.Set.Object;
+   --  Returns the list of withed units on this source
 
    function Create
      (Filename  : Path_Name_Type;
