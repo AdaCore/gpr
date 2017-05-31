@@ -404,9 +404,6 @@ package body GPR2.Project.View is
       package Source_Set is
         new Ada.Containers.Indefinite_Ordered_Sets (Name_Type);
 
-      package Unit_Set is new Ada.Containers.Indefinite_Ordered_Maps
-        (Name_Type, GPR2.Source.Object);
-
       procedure Handle_Directory (Dir : Full_Path_Name);
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
@@ -476,8 +473,6 @@ package body GPR2.Project.View is
 
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
-
-      Units             : Unit_Set.Map;
 
       Tree              : constant not null access Project.Tree.Object :=
                             Definition.Get (Self).Tree;
@@ -570,6 +565,11 @@ package body GPR2.Project.View is
                 (Name_Type (Directories.Simple_Name (Filename))))
          then
             declare
+               use all type GPR2.Source.Kind_Type;
+
+               procedure Register_Src;
+               --  Register Src below into U_Def. Updating the necessary fields
+
                Ok   : Boolean := True;
                Lang : constant Name_Type := Name_Type (Language);
                Unit : constant Optional_Name_Type :=
@@ -582,19 +582,53 @@ package body GPR2.Project.View is
                            Kind      => Kind,
                            Language  => Lang,
                            Unit_Name => Unit);
+               U_Def : Definition.Unit;
+
+               ------------------
+               -- Register_Src --
+               ------------------
+
+               procedure Register_Src is
+               begin
+                  if Kind = S_Spec then
+                     U_Def.Spec := Src;
+
+                     --  And make sure the bodies (body & separate) are
+                     --  referencing this as the spec.
+
+                     for S of U_Def.Bodies loop
+                        S.Set_Other_Part (Src);
+                     end loop;
+
+                  else
+                     U_Def.Bodies.Append (Src);
+                  end if;
+               end Register_Src;
+
             begin
                if Ok then
                   if Unit /= No_Name then
-                     if Units.Contains (Unit) then
+                     if Data.Units.Contains (Unit) then
+                        U_Def := Data.Units (Unit);
+
                         declare
-                           Other_Src : GPR2.Source.Object := Units (Unit);
+                           Other_Src : GPR2.Source.Object :=
+                                         (if U_Def.Spec = GPR2.Source.Undefined
+                                          then U_Def.Bodies.First_Element
+                                          else U_Def.Spec);
                         begin
                            Src.Set_Other_Part (Other_Src);
                            Other_Src.Set_Other_Part (Src);
                         end;
 
+                        Register_Src;
+
+                        Data.Units.Replace (Unit, U_Def);
+
                      else
-                        Units.Insert (Unit, Src);
+                        Register_Src;
+
+                        Data.Units.Insert (Unit, U_Def);
                      end if;
                   end if;
 
