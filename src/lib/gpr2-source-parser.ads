@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Source_Reference.Set;
+
 private package GPR2.Source.Parser is
 
    --  This is to get some information from the Ada sources. We need for
@@ -32,6 +34,7 @@ private package GPR2.Source.Parser is
 
    type Data is record
       Is_Separate : Boolean := False;
+      Units       : Source_Reference.Set.Object;
    end record;
 
    function Check (Filename : Path_Name_Type) return Data;

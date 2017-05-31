@@ -26,6 +26,8 @@ with Ada.Characters.Handling;
 with Ada.Strings.Maps.Constants;
 with Ada.Streams.Stream_IO;
 
+with GPR2.Source_Reference.Identifier;
+
 package body GPR2.Source.Parser is
 
    use Ada;
@@ -57,6 +59,8 @@ package body GPR2.Source.Parser is
          Buffer  : Stream_Element_Array (1 .. Size_Chunk);
          Current : Stream_Element_Offset := -1;
          Last    : Stream_Element_Offset := -1;
+         Is_Id   : Boolean; --  True when last parsing was an identifier
+         Line    : Positive := 1;
       end record;
 
       procedure Open
@@ -94,6 +98,31 @@ package body GPR2.Source.Parser is
             if Tok = "separate" then
                R.Is_Separate := True;
                exit Check_Context;
+
+            elsif Tok = "with" then
+               declare
+                  Unit : Unbounded_String;
+               begin
+                  Read_Unit : loop
+                     declare
+                        Tok : constant String := IO.Get_Token (H);
+                     begin
+                        exit Read_Unit when Tok = ""
+                          or else not (H.Is_Id or else Tok = ".");
+                        Unit := Unit & Tok;
+                     end;
+                  end loop Read_Unit;
+
+                  --  Check for a null unit, this can happen if the source is
+                  --  partial or invalid.
+
+                  if Unit /= Null_Unbounded_String then
+                     R.Units.Insert
+                       (Source_Reference.Identifier.Create
+                          (Value (Filename), H.Line, 1,
+                           Name_Type (To_String (Unit))));
+                  end if;
+               end;
             end if;
 
             --  Stop parsing when reaching the unit declaration or when
@@ -233,6 +262,8 @@ package body GPR2.Source.Parser is
          end Skip_EOL;
 
       begin
+         File.Is_Id := False;
+
          Read_Token : loop
             C := Next_Char;
 
@@ -246,13 +277,18 @@ package body GPR2.Source.Parser is
             elsif P = '-' and then C = '-' then
                Skip_EOL;
                Clear_Context;
+               File.Line := File.Line + 1;
 
             elsif Strings.Maps.Is_In (C, Ada_Word) then
                Get_Word;
+               File.Is_Id := True;
                exit Read_Token;
 
             elsif C in '.' | ';' then
                exit Read_Token;
+
+            elsif C in ASCII.LF then
+               File.Line := File.Line + 1;
             end if;
 
             P := C;
@@ -271,6 +307,7 @@ package body GPR2.Source.Parser is
       begin
          Stream_IO.Open (File.FD, Stream_IO.In_File, Value (Filename));
          Fill_Buffer (File);
+         File.Line := 1;
       end Open;
 
    end IO;
