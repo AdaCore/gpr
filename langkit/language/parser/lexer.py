@@ -1,6 +1,6 @@
 from langkit.lexer import (
-    Lexer, LexerToken, NoCase, Literal, Pattern, Eof, NoText, Ignore, WithText,
-    WithSymbol, Case, Alt, WithSymbol, Failure
+    Eof, Ignore, Lexer, LexerToken, Literal, NoCaseLit, Pattern, WithSymbol,
+    WithText
 )
 
 
@@ -51,8 +51,6 @@ class Token(LexerToken):
     Label = WithText()
     Char = WithSymbol()
 
-    # Fail token
-    LexFail = NoText()
 
 gpr_lexer = Lexer(Token)
 
@@ -66,25 +64,25 @@ gpr_lexer.add_rules(
     (Eof(),                                     Token.Termination),
     (Pattern(r"[ \t\r\n]+"),                    Ignore()),
     (Pattern(r"--(.?)+"),                       Ignore()),
-    (NoCase("all"),                             Token.All),
-    (NoCase("abstract"),                        Token.Abstract),
-    (NoCase("at"),                              Token.At),
-    (NoCase("case"),                            Token.Case),
-    (NoCase("end"),                             Token.End),
-    (NoCase("for"),                             Token.For),
-    (NoCase("is"),                              Token.Is),
-    (NoCase("limited"),                         Token.Limited),
-    (NoCase("null"),                            Token.Null),
-    (NoCase("others"),                          Token.Others),
-    (NoCase("package"),                         Token.Package),
-    (NoCase("renames"),                         Token.Renames),
-    (NoCase("type"),                            Token.Type),
-    (NoCase("use"),                             Token.Use),
-    (NoCase("when"),                            Token.When),
-    (NoCase("with"),                            Token.With),
+    (NoCaseLit("all"),                             Token.All),
+    (NoCaseLit("abstract"),                        Token.Abstract),
+    (NoCaseLit("at"),                              Token.At),
+    (NoCaseLit("case"),                            Token.Case),
+    (NoCaseLit("end"),                             Token.End),
+    (NoCaseLit("for"),                             Token.For),
+    (NoCaseLit("is"),                              Token.Is),
+    (NoCaseLit("limited"),                         Token.Limited),
+    (NoCaseLit("null"),                            Token.Null),
+    (NoCaseLit("others"),                          Token.Others),
+    (NoCaseLit("package"),                         Token.Package),
+    (NoCaseLit("renames"),                         Token.Renames),
+    (NoCaseLit("type"),                            Token.Type),
+    (NoCaseLit("use"),                             Token.Use),
+    (NoCaseLit("when"),                            Token.When),
+    (NoCaseLit("with"),                            Token.With),
 
-    (NoCase("project"),                         Token.Project),
-    (NoCase("extends"),                         Token.Extends),
+    (NoCaseLit("project"),                         Token.Project),
+    (NoCaseLit("extends"),                         Token.Extends),
     (Literal("("),                              Token.ParOpen),
     (Literal(")"),                              Token.ParClose),
     (Literal(";"),                              Token.Semicolon),
@@ -104,6 +102,4 @@ gpr_lexer.add_rules(
     (Pattern(r"[_a-zA-Z][_a-zA-Z0-9]*"),        Token.Identifier),
 
     (gpr_lexer.patterns.p_string,               Token.String),
-
-    (Failure(),                                 Token.LexFail),
 )

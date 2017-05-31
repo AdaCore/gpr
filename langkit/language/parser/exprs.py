@@ -1,5 +1,5 @@
-from langkit.parsers import Opt, List, Or, Row, Enum, Tok, Null
-from langkit.compiled_types import Field, abstract, EnumType
+from langkit.parsers import Opt, List, Or, Row, Tok
+from langkit.dsl import Field, abstract
 
 from language.parser import A, GPRNode
 from language.parser.lexer import Token
@@ -70,12 +70,13 @@ A.add_rules(
     string_literal=Tok(Token.String, keep=True) ^ StringLiteral,
     num_literal=Tok(Token.Number, keep=True) ^ NumLiteral,
 
-    static_name=List(A.identifier, sep=".", revtree=Prefix),
+    static_name=Or(A.identifier,
+                   Prefix(A.static_name, '.', A.identifier)),
     # ----------------------------------------------------------------
 
     attribute_reference=Row(
         A.identifier,
-        Opt("(", Or(A.others_designator, A.string_literal), ")")[1]
+        Opt(Row("(", Or(A.others_designator, A.string_literal), ")")[1])
     ) ^ AttributeReference,
 
     variable_reference=Row(
@@ -101,7 +102,7 @@ A.add_rules(
     ) ^ StringLiteralAt,
 
     project_reference=Row(
-        "project", "'", A.attribute_reference
+        Tok("project"), "'", A.attribute_reference
     ) ^ ProjectReference,
 
     term=Or(

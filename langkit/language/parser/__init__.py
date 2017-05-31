@@ -1,4 +1,4 @@
-from langkit.compiled_types import abstract, ASTNode, root_grammar_class
+from langkit.dsl import abstract, ASTNode
 from langkit.parsers import Grammar
 
 gpr_grammar = Grammar(main_rule_name='compilation_unit')
@@ -6,9 +6,8 @@ A = gpr_grammar
 
 
 @abstract
-@root_grammar_class
 class GPRNode(ASTNode):
-    pass
+    _generic_list_type = 'BaseList'
 
 
 def eval_grammar():
@@ -21,5 +20,6 @@ def eval_grammar():
 
     del language
     return A
+
 
 ada_grammar = eval_grammar()

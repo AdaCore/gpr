@@ -1,5 +1,5 @@
-from langkit.compiled_types import Field, abstract
-from langkit.parsers import List, Opt, Row, Or
+from langkit.dsl import Field
+from langkit.parsers import Row
 
 from language.parser import A, GPRNode
 

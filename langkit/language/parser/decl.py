@@ -1,6 +1,6 @@
 from language.parser import A
-from langkit.parsers import Opt, List, Or, Row, _, Enum, Tok
-from langkit.compiled_types import Field, EnumType, abstract
+from langkit.parsers import Opt, List, Or, Row, Tok
+from langkit.dsl import Field
 
 from language.parser import GPRNode
 
