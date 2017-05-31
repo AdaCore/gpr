@@ -48,7 +48,7 @@ private package GPR2.Project.Definition is
    --  the project parser object.
    --  Imports contains the list of all imported projects for Project.
 
-   type Tree is tagged record
+   type Tree is record
       Project : Parser.Project.Object;
       Imports : Parser.Project.Set.Object;
    end record;
