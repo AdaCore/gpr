@@ -3,7 +3,7 @@
 --                                                                          --
 --                            GPR PROJECT PARSER                            --
 --                                                                          --
---            Copyright (C) 2015-2016, Free Software Foundation, Inc.       --
+--            Copyright (C) 2015-2017, Free Software Foundation, Inc.       --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -31,30 +31,26 @@
 
 #include <stdint.h>
 
-
 struct token {
-    /* Kind for this token (identifier, keyword, ...). */
-    uint16_t id;
-    /* For token kinds that don't keep text, NULL.  Pointer to an
-       UTF-32-encoded string otherwise (native endianity). */
-    const uint32_t *text;
-    /* Size (in 32-bit words) for text. */
-    size_t text_length;
-    /* Source location for this token.  */
-    uint32_t start_line, end_line;
-    uint16_t start_column, end_column;
+  /* Kind for this token (identifier, keyword, ...). */
+  uint16_t id;
+  /* For token kinds that don't keep text, NULL.  Pointer to an
+     UTF-32-encoded string otherwise (native endianity). */
+  const uint32_t *text;
+  /* Size (in 32-bit words) for text. */
+  size_t text_length;
+  /* Source location for this token.  */
+  uint32_t start_line, end_line;
+  uint16_t start_column, end_column;
+  uint32_t offset;
 };
-
 
 typedef struct Lexer Lexer;
 
-Lexer*
-gpr_lexer_from_buffer(uint32_t *buffer, size_t length);
+Lexer *gpr_lexer_from_buffer(uint32_t *buffer, size_t length);
 
-void
-gpr_free_lexer(Lexer* lexer);
+void gpr_free_lexer(Lexer *lexer);
 
-int
-gpr_next_token(Lexer* lexer, struct token* tok);
+int gpr_next_token(Lexer *lexer, struct token *tok);
 
 #endif

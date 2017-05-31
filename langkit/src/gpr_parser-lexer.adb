@@ -3,7 +3,7 @@
 --                                                                          --
 --                            GPR PROJECT PARSER                            --
 --                                                                          --
---            Copyright (C) 2015-2016, Free Software Foundation, Inc.       --
+--            Copyright (C) 2015-2017, Free Software Foundation, Inc.       --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -36,13 +36,24 @@ with Interfaces.C; use Interfaces.C;
 
 with System;
 
+with GNAT.Byte_Order_Mark;
+
 with GNATCOLL.Iconv;
 with GNATCOLL.Mmap;    use GNATCOLL.Mmap;
 
 with Langkit_Support.Symbols; use Langkit_Support.Symbols;
 with Langkit_Support.Text;    use Langkit_Support.Text;
 
+
 package body GPR_Parser.Lexer is
+
+   Quex_Leading_Characters : constant := 2;
+   Quex_Trailing_Characters : constant := 1;
+   Quex_Extra_Characters : constant :=
+      Quex_Leading_Characters + Quex_Trailing_Characters;
+   --  Quex requires its input buffer to have two leading reserved bytes and
+   --  one trailing. These are not part of the true payload, but must be
+   --  available anyway.
 
    use Token_Vectors, Trivia_Vectors, Integer_Vectors;
 
@@ -52,6 +63,7 @@ package body GPR_Parser.Lexer is
       Text_Length              : size_t;
       Start_Line, End_Line     : Unsigned_32;
       Start_Column, End_Column : Unsigned_16;
+      Offset                   : Unsigned_32;
    end record
       with Convention => C;
    type Interface_Token_Access is access all Quex_Token_Type;
@@ -60,16 +72,19 @@ package body GPR_Parser.Lexer is
 
    procedure Decode_Buffer
      (Buffer, Charset : String;
+      Read_BOM        : Boolean;
       Decoded_Buffer  : out Text_Access;
-      Length          : out Natural);
+      Source_First    : out Positive;
+      Source_Last     : out Natural);
    --  Allocate a Text_Type buffer, set it to Decoded_Buffer, decode Buffer
-   --  into it using Charset and set Length to the number of decoded characters
-   --  in Decoded_Buffer. It is up to the caller to deallocate Decoded_Buffer
-   --  when done with it.
+   --  into it using Charset and Source_First/Source_Last to the actual slice
+   --  in Decoded_Buffer that hold the input source text. It is up to the
+   --  caller to deallocate Decoded_Buffer when done with it.
    --
    --  Quex quirk: this actually allocates more than the actual buffer to keep
    --  Quex happy. The two first characters are set to null and there is an
-   --  extra null character at the end of the buffer.
+   --  extra null character at the end of the buffer. See the Quex_*_Characters
+   --  constants above.
 
    function Lexer_From_Buffer (Buffer  : System.Address;
                                Length  : Size_T)
@@ -91,36 +106,42 @@ package body GPR_Parser.Lexer is
 
    generic
       With_Trivia : Boolean;
-   procedure Process_All_Tokens (Lexer : Lexer_Type;
-                                 TDH   : in out Token_Data_Handler);
+   procedure Process_All_Tokens
+     (Lexer : Lexer_Type; TDH : in out Token_Data_Handler);
 
    ------------------------
    -- Process_All_Tokens --
    ------------------------
 
-   procedure Process_All_Tokens (Lexer : Lexer_Type;
-                                 TDH   : in out Token_Data_Handler)
+   procedure Process_All_Tokens
+     (Lexer : Lexer_Type; TDH : in out Token_Data_Handler)
    is
 
       Token                 : aliased Quex_Token_Type;
-      Token_Id              : Token_Kind;
-      Text                  : Text_Access;
+      Token_Id              : Token_Kind := GPR_Termination;
+      Symbol                : Symbol_Type;
       Continue              : Boolean := True;
       Last_Token_Was_Trivia : Boolean := False;
 
-      function Bounded_Text return Text_Type;
-      --  Return a copy of the text in Token.  Do not call this if the token
-      --  has no text associated.
+
+      function Source_First return Positive is
+        (Natural (Token.Offset) + TDH.Source_First - 1);
+      --  Index in TDH.Source_Buffer for the first character corresponding to
+      --  the current token.
+
+      function Source_Last return Natural is
+        (Source_First + Natural (Token.Text_Length) - 1);
+      --  Likewise, for the last character
 
       function Sloc_Range return Source_Location_Range is
-        ((Token.Start_Line,
-          Token.End_Line,
-          Token.Start_Column,
-          Token.End_Column));
+        ((Line_Number (Token.Start_Line),
+          Line_Number (Token.End_Line),
+          Column_Number (Token.Start_Column),
+          Column_Number (Token.End_Column)));
       --  Create a sloc range value corresponding to Token
 
       procedure Prepare_For_Trivia
-        with Inline_Always;
+        with Inline;
       --  Append an entry for the current token in the Tokens_To_Trivias
       --  correspondence vector.
 
@@ -140,25 +161,7 @@ package body GPR_Parser.Lexer is
          end if;
       end Prepare_For_Trivia;
 
-      ------------------
-      -- Bounded_Text --
-      ------------------
-
-      function Bounded_Text return Text_Type
-      is
-         Length : constant Natural := Natural (Token.Text_Length);
-         Buffer : Text_Type (1 .. Length);
-         for Buffer'Address use Token.Text;
-      begin
-         return Buffer;
-      end Bounded_Text;
-
    begin
-      --  In the case we are reparsing an analysis unit, we want to get rid of
-      --  the tokens from the old one.
-
-      Reset (TDH);
-
       --  The first entry in the Tokens_To_Trivias map is for leading trivias
       Prepare_For_Trivia;
 
@@ -168,27 +171,47 @@ package body GPR_Parser.Lexer is
          --  token.
 
          Continue := Next_Token (Lexer, Token'Unrestricted_Access) /= 0;
+
+
          Token_Id := Token_Kind'Enum_Val (Token.Id);
+         Symbol := null;
 
          case Token_Id is
 
-            when GPR_Number | GPR_Label | GPR_String =>
-               Text := Add_String (TDH, Bounded_Text);
+            when GPR_Amp | GPR_Is | GPR_Limited | GPR_Char | GPR_Type | GPR_Case | GPR_Pipe | GPR_Par_Close | GPR_Abstract | GPR_Null | GPR_With | GPR_Semicolon | GPR_Project | GPR_Extends | GPR_End | GPR_Par_Open | GPR_Package | GPR_At | GPR_Others | GPR_Colon | GPR_For | GPR_Dot | GPR_All | GPR_Assign | GPR_Identifier | GPR_Arrow | GPR_When | GPR_Comma | GPR_Tick | GPR_Use | GPR_Renames =>
+               declare
+                  Bounded_Text : Text_Type (1 .. Natural (Token.Text_Length))
+                     with Address => Token.Text;
 
-            when GPR_Dot | GPR_Amp | GPR_Tick | GPR_Pipe | GPR_Assign | GPR_Arrow | GPR_Is | GPR_Char | GPR_When | GPR_For | GPR_Others | GPR_Null | GPR_Case | GPR_Package | GPR_Abstract | GPR_Renames | GPR_Type | GPR_Colon | GPR_Use | GPR_Limited | GPR_With | GPR_Project | GPR_End | GPR_Extends | GPR_Par_Open | GPR_Comma | GPR_Par_Close | GPR_Semicolon | GPR_All | GPR_Identifier | GPR_At =>
-               Text := Text_Access (Find (TDH.Symbols, Bounded_Text));
+                  Symbol_Text  : constant Text_Type :=
+                        Bounded_Text;
+               begin
+                  Symbol := Find (TDH.Symbols, Symbol_Text);
+               end;
 
 
             when others =>
-               Text := null;
+               null;
 
          end case;
 
-         Append
-           (TDH.Tokens,
-            (Kind       => Token_Kind'Enum_Val (Token.Id),
-             Text       => Text,
-             Sloc_Range => Sloc_Range));
+         --  Special case for the termination token: Quex yields inconsistent
+         --  offsets/sizes. Make sure we get the end of the buffer so that the
+         --  rest of our machinery (in particular source slices) works well
+         --  with it.
+
+         TDH.Tokens.Append
+           ((Kind         => Token_Id,
+             Source_First => (if Token_Id = GPR_Termination
+                              then TDH.Source_Last + 1
+                              else Source_First),
+             Source_Last  => (if Token_Id = GPR_Termination
+                              then TDH.Source_Last
+                              else Source_Last),
+             Symbol       => Symbol,
+             Sloc_Range   => Sloc_Range));
+
+
          Prepare_For_Trivia;
 
       end loop;
@@ -204,6 +227,7 @@ package body GPR_Parser.Lexer is
 
    procedure Lex_From_Filename
      (Filename, Charset : String;
+      Read_BOM          : Boolean;
       TDH               : in out Token_Data_Handler;
       With_Trivia       : Boolean)
    is
@@ -221,7 +245,7 @@ package body GPR_Parser.Lexer is
 
    begin
       begin
-         Lex_From_Buffer (Buffer, Charset, TDH, With_Trivia);
+         Lex_From_Buffer (Buffer, Charset, Read_BOM, TDH, With_Trivia);
       exception
          when Unknown_Charset | Invalid_Input =>
             Free (Region);
@@ -236,23 +260,34 @@ package body GPR_Parser.Lexer is
    -- Lex_From_Buffer --
    ---------------------
 
-   procedure Lex_From_Buffer (Buffer, Charset : String;
-                              TDH             : in out Token_Data_Handler;
-                              With_Trivia     : Boolean)
+   procedure Lex_From_Buffer
+     (Buffer, Charset : String;
+      Read_BOM        : Boolean;
+      TDH             : in out Token_Data_Handler;
+      With_Trivia     : Boolean)
    is
       Decoded_Buffer : Text_Access;
-      Length         : Natural;
+      Source_First   : Positive;
+      Source_Last    : Natural;
       Lexer          : Lexer_Type;
    begin
-      Decode_Buffer (Buffer, Charset, Decoded_Buffer, Length);
-      Lexer := Lexer_From_Buffer (Decoded_Buffer.all'Address, size_t (Length));
+      Decode_Buffer
+        (Buffer, Charset, Read_BOM, Decoded_Buffer, Source_First, Source_Last);
+      Lexer := Lexer_From_Buffer
+        (Decoded_Buffer.all'Address,
+         size_t (Source_Last - Source_First + 1));
+
+      --  In the case we are reparsing an analysis unit, we want to get rid of
+      --  the tokens from the old one.
+
+      Reset (TDH, Decoded_Buffer, Source_First, Source_Last);
+
       if With_Trivia then
          Process_All_Tokens_With_Trivia (Lexer, TDH);
       else
          Process_All_Tokens_No_Trivia (Lexer, TDH);
       end if;
       Free_Lexer (Lexer);
-      Free (Decoded_Buffer);
    end Lex_From_Buffer;
 
    -------------------
@@ -261,22 +296,28 @@ package body GPR_Parser.Lexer is
 
    procedure Decode_Buffer
      (Buffer, Charset : String;
+      Read_BOM        : Boolean;
       Decoded_Buffer  : out Text_Access;
-      Length          : out Natural)
+      Source_First    : out Positive;
+      Source_Last     : out Natural)
    is
+      use GNAT.Byte_Order_Mark;
       use GNATCOLL.Iconv;
 
       --  In the worst case, we have one character per input byte, so the
       --  following is supposed to be big enough.
 
-      Result : Text_Access := new Text_Type (1 .. Buffer'Length + 3);
+      Result : Text_Access :=
+         new Text_Type (1 .. Buffer'Length + Quex_Extra_Characters);
       State  : Iconv_T;
       Status : Iconv_Result;
+      BOM    : BOM_Kind := Unknown;
 
       Input_Index, Output_Index : Positive;
 
-      First_Output_Index : constant Positive := 1 + 2 * 4;
-      --  Index of the first byte in Output at which Iconv must decode Buffer
+      First_Output_Index : constant Positive :=
+         1 + Quex_Leading_Characters * 4;
+      --  Index of the first byte in Result at which Iconv must decode Buffer
 
       Output : Byte_Sequence (1 .. 4 * Buffer'Size);
       for Output'Address use Result.all'Address;
@@ -284,13 +325,26 @@ package body GPR_Parser.Lexer is
 
    begin
       Decoded_Buffer := Result;
+      Source_First := Result'First + Quex_Leading_Characters;
 
       --  GNATCOLL.Iconv raises a Constraint_Error for empty strings: handle
       --  them here.
 
       if Buffer'Length = 0 then
-         Length := 0;
+         Source_Last := Source_First - 1;
          return;
+      end if;
+
+      --  If we have a byte order mark, it overrides the requested Charset
+
+      Input_Index := Buffer'First;
+      if Read_BOM then
+         declare
+            Len : Natural;
+         begin
+            GNAT.Byte_Order_Mark.Read_BOM (Buffer, Len, BOM);
+            Input_Index := Input_Index + Len;
+         end;
       end if;
 
       --  Create the Iconv converter. We will notice unknown charsets here
@@ -302,8 +356,21 @@ package body GPR_Parser.Lexer is
            (if Default_Bit_Order = Low_Order_First
             then UTF32LE
             else UTF32BE);
+
+         BOM_Kind_To_Charset : constant
+            array (UTF8_All .. UTF32_BE) of String_Access :=
+           (UTF8_All => UTF8'Unrestricted_Access,
+            UTF16_LE => UTF16LE'Unrestricted_Access,
+            UTF16_BE => UTF16BE'Unrestricted_Access,
+            UTF32_LE => UTF32LE'Unrestricted_Access,
+            UTF32_BE => UTF32BE'Unrestricted_Access);
+
+         Actual_Charset : constant String :=
+           (if BOM in UTF8_All .. UTF32_BE
+            then BOM_Kind_To_Charset (BOM).all
+            else Charset);
       begin
-         State := Iconv_Open (To_Code, Charset);
+         State := Iconv_Open (To_Code, Actual_Charset);
       exception
          when Unsupported_Conversion =>
             Free (Result);
@@ -312,12 +379,12 @@ package body GPR_Parser.Lexer is
 
       --  Perform the conversion itself
 
-      Input_Index := Buffer'First;
       Output_Index := First_Output_Index;
       Iconv (State,
              Buffer, Input_Index,
              Output (Output_Index .. Output'Last), Output_Index,
              Status);
+      Source_Last := (Output_Index - 1 - Output'First) / 4 + Result'First;
 
       --  Raise an error if the input was invalid
 
@@ -353,16 +420,9 @@ package body GPR_Parser.Lexer is
       end;
 
       Iconv_Close (State);
-      Length := (Output_Index - First_Output_Index) / 4;
    end Decode_Buffer;
 
    Token_Kind_Names : constant array (Token_Kind) of String_Access := (
-          GPR_Lexing_Failure =>
-             new String'("Lexing_Failure")
-              ,
-          GPR_Termination =>
-             new String'("Termination")
-              ,
           GPR_End =>
              new String'("End")
               ,
@@ -381,11 +441,11 @@ package body GPR_Parser.Lexer is
           GPR_Extends =>
              new String'("Extends")
               ,
-          GPR_Lex_Fail =>
-             new String'("Lex_Fail")
-              ,
           GPR_Type =>
              new String'("Type")
+              ,
+          GPR_Colon =>
+             new String'("Colon")
               ,
           GPR_String =>
              new String'("String")
@@ -393,8 +453,8 @@ package body GPR_Parser.Lexer is
           GPR_Others =>
              new String'("Others")
               ,
-          GPR_Comma =>
-             new String'("Comma")
+          GPR_Amp =>
+             new String'("Amp")
               ,
           GPR_Tick =>
              new String'("Tick")
@@ -411,17 +471,14 @@ package body GPR_Parser.Lexer is
           GPR_Package =>
              new String'("Package")
               ,
-          GPR_Par_Open =>
-             new String'("Par_Open")
+          GPR_All =>
+             new String'("All")
               ,
           GPR_Project =>
              new String'("Project")
               ,
           GPR_Arrow =>
              new String'("Arrow")
-              ,
-          GPR_Amp =>
-             new String'("Amp")
               ,
           GPR_Identifier =>
              new String'("Identifier")
@@ -435,11 +492,11 @@ package body GPR_Parser.Lexer is
           GPR_Limited =>
              new String'("Limited")
               ,
-          GPR_All =>
-             new String'("All")
+          GPR_Par_Open =>
+             new String'("Par_Open")
               ,
-          GPR_Par_Close =>
-             new String'("Par_Close")
+          GPR_Null =>
+             new String'("Null")
               ,
           GPR_Semicolon =>
              new String'("Semicolon")
@@ -456,17 +513,116 @@ package body GPR_Parser.Lexer is
           GPR_Char =>
              new String'("Char")
               ,
-          GPR_Colon =>
-             new String'("Colon")
+          GPR_Comma =>
+             new String'("Comma")
               ,
           GPR_At =>
              new String'("At")
               ,
-          GPR_Null =>
-             new String'("Null")
+          GPR_Par_Close =>
+             new String'("Par_Close")
               ,
           GPR_Is =>
              new String'("Is")
+              ,
+          GPR_Lexing_Failure =>
+             new String'("Lexing_Failure")
+              ,
+          GPR_Termination =>
+             new String'("Termination")
+   );
+
+   Token_Kind_To_Literals : constant array (Token_Kind) of String_Access := (
+   
+
+       GPR_Limited => new String'("limited")
+       
+           ,
+       GPR_All => new String'("all")
+       
+           ,
+       GPR_Abstract => new String'("abstract")
+       
+           ,
+       GPR_Assign => new String'(":=")
+       
+           ,
+       GPR_At => new String'("at")
+       
+           ,
+       GPR_Null => new String'("null")
+       
+           ,
+       GPR_Use => new String'("use")
+       
+           ,
+       GPR_End => new String'("end")
+       
+           ,
+       GPR_For => new String'("for")
+       
+           ,
+       GPR_Amp => new String'("&")
+       
+           ,
+       GPR_Par_Close => new String'(")")
+       
+           ,
+       GPR_Par_Open => new String'("(")
+       
+           ,
+       GPR_When => new String'("when")
+       
+           ,
+       GPR_Comma => new String'(",")
+       
+           ,
+       GPR_Dot => new String'(".")
+       
+           ,
+       GPR_Extends => new String'("extends")
+       
+           ,
+       GPR_Semicolon => new String'(";")
+       
+           ,
+       GPR_Colon => new String'(":")
+       
+           ,
+       GPR_Type => new String'("type")
+       
+           ,
+       GPR_Is => new String'("is")
+       
+           ,
+       GPR_Arrow => new String'("=>")
+       
+           ,
+       GPR_Others => new String'("others")
+       
+           ,
+       GPR_With => new String'("with")
+       
+           ,
+       GPR_Case => new String'("case")
+       
+           ,
+       GPR_Tick => new String'("'")
+       
+           ,
+       GPR_Renames => new String'("renames")
+       
+           ,
+       GPR_Package => new String'("package")
+       
+           ,
+       GPR_Project => new String'("project")
+       
+           ,
+       GPR_Pipe => new String'("|")
+       
+           ,
+      others => new String'("")
    );
 
    ---------------------
@@ -475,5 +631,46 @@ package body GPR_Parser.Lexer is
 
    function Token_Kind_Name (Token_Id : Token_Kind) return String is
      (Token_Kind_Names (Token_Id).all);
+
+   ------------------------
+   -- Token_Kind_Literal --
+   ------------------------
+
+   function Token_Kind_Literal (Token_Id : Token_Kind) return String is
+     (Token_Kind_To_Literals (Token_Id).all);
+
+   -----------------------
+   -- Token_Error_Image --
+   -----------------------
+
+   function Token_Error_Image (Token_Id : Token_Kind) return String is
+      Literal : constant String := Token_Kind_Literal (Token_Id);
+   begin
+      return (if Literal /= ""
+              then "'" & Literal & "'"
+              else Token_Kind_Name (Token_Id));
+   end Token_Error_Image;
+
+   ------------------
+   -- Force_Symbol --
+   ------------------
+
+   function Force_Symbol
+     (TDH : Token_Data_Handler;
+      T   : in out Token_Data_Type) return Symbol_Type is
+   begin
+      if T.Symbol = null then
+         declare
+            Text : Text_Type renames
+               TDH.Source_Buffer (T.Source_First ..  T.Source_Last);
+         begin
+            T.Symbol := Find
+              (TDH.Symbols,
+                  Text
+               );
+         end;
+      end if;
+      return T.Symbol;
+   end Force_Symbol;
 
 end GPR_Parser.Lexer;

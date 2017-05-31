@@ -3,7 +3,7 @@
 --                                                                          --
 --                            GPR PROJECT PARSER                            --
 --                                                                          --
---            Copyright (C) 2015-2016, Free Software Foundation, Inc.       --
+--            Copyright (C) 2015-2017, Free Software Foundation, Inc.       --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,13 +29,10 @@
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Conversion;
 
-with System;
-
 with Langkit_Support.Slocs; use Langkit_Support.Slocs;
 with Langkit_Support.Text;  use Langkit_Support.Text;
 
-with GPR_Parser.Analysis_Interfaces;
-use GPR_Parser.Analysis_Interfaces;
+with GPR_Parser.Lexer; use GPR_Parser.Lexer;
 
 package body GPR_Parser.Debug is
 
@@ -61,45 +58,30 @@ package body GPR_Parser.Debug is
    -- PTok --
    ----------
 
-   procedure PTok (Node : GPR_Node; T : Token_Index) is
-      --  TODO??? This is very kludgy: in order to workaround visibility
-      --  issues, we do gory unsafe conversion in order to turn token indices
-      --  into token records.
-      --
-      --  We should get rid of this fixing GDB to make it easier to call
-      --  tagged types primitives. This way we will be able to invoke regular
-      --  AST node primitives directly from GDB to get token records.
-
-      type Dummy_Node is tagged record
-         Parent : System.Address;
-         Unit   : Analysis_Unit_Interface;
-      end record;
-
-      type Dummy_Node_Access is access Dummy_Node;
-
-      type Dummy_Token_Type is record
-         TDH           : Token_Data_Handler_Access;
-         Token, Trivia : Token_Index;
-      end record;
-
-      function Convert is new Ada.Unchecked_Conversion
-        (Dummy_Token_Type, Token_Type);
-      function Convert is new Ada.Unchecked_Conversion
-        (GPR_Node, Dummy_Node_Access);
-
-      N   : constant Dummy_Node_Access := Convert (Node);
-      Tok : constant Token_Type :=
-         Convert ((TDH    => N.Unit.Token_Data,
-                   Token  => T,
-                   Trivia => No_Token_Index));
-      D : constant Token_Data_Type := Data (Tok);
-
+   procedure PTok (TDH : Token_Data_Handler_Access; T : Token_Index) is
+      Index : constant Natural := Natural (T);
    begin
-      Put (Token_Kind_Name (D.Kind));
-      if D.Text /= null then
-         Put (" " & Image (D.Text.all, With_Quotes => True));
+      if Index not in TDH.Tokens.First_Index .. TDH.Tokens.Last_Index then
+         Put_Line ("<invalid token>");
+
+      else
+         declare
+            D : constant Lexer.Token_Data_Type := TDH.Tokens.Get (Index);
+         begin
+            Put (Token_Kind_Name (D.Kind));
+            Put (" " & Image (Text (TDH.all, D), With_Quotes => True));
+            Put_Line (" [" & Image (D.Sloc_Range) & "]");
+         end;
       end if;
-      Put_Line (" [" & Image (D.Sloc_Range) & "]");
    end PTok;
+
+   ----------
+   -- PEnv --
+   ----------
+
+   procedure PEnv (Env : Lexical_Env) is
+   begin
+      Dump_Lexical_Env_Parent_Chain (Env);
+   end PEnv;
 
 end GPR_Parser.Debug;

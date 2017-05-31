@@ -29,10 +29,6 @@ with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
 
-with GPR_Parser;
-with GPR_Parser.AST;       use GPR_Parser.AST;
-with GPR_Parser.AST.Types; use GPR_Parser.AST.Types;
-
 with GPR2.Builtin;
 with GPR2.Message;
 with GPR2.Parser.Registry;
@@ -101,7 +97,7 @@ package body GPR2.Parser.Project is
    is
       use Ada.Characters.Conversions;
       V      : constant Wide_Wide_String :=
-                 Data (F_Tok (Single_Tok_Node (Node))).Text.all;
+                 Text (F_Tok (Single_Tok_Node (Node)));
       Offset : Natural := 0;
    begin
       if V (V'First) = '"' and then V (V'Last) = '"' then
@@ -154,7 +150,7 @@ package body GPR2.Parser.Project is
             when GPR_String_Literal =>
                Handle_String (String_Literal (Node));
 
-            when GPR_Term_List | GPR_String_Literal_At | GPR_List =>
+            when GPR_Term_List | GPR_String_Literal_At | GPR_Base_List =>
                null;
 
             when others =>
@@ -218,7 +214,6 @@ package body GPR2.Parser.Project is
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
-      use GPR_Parser;
 
       function Parse_Stage_1 (Unit : Analysis_Unit) return Object;
       --  Analyse project, record all externals variables and imports
@@ -288,7 +283,7 @@ package body GPR2.Parser.Project is
                  (N : not null Builtin_Function_Call)
                is
                   Parameters : constant not null Expr_List := F_Parameters (N);
-                  Exprs      : constant List_Term_List := F_Exprs (Parameters);
+                  Exprs      : constant Term_List_List := F_Exprs (Parameters);
                begin
                   --  Note that this routine is only validating the syntax
                   --  of the external_as_list built-in. It does not add the
@@ -397,7 +392,7 @@ package body GPR2.Parser.Project is
                  (N : not null Builtin_Function_Call)
                is
                   Parameters : constant not null Expr_List := F_Parameters (N);
-                  Exprs      : constant List_Term_List := F_Exprs (Parameters);
+                  Exprs      : constant Term_List_List := F_Exprs (Parameters);
                begin
                   if Exprs = null then
                      Messages.Append
@@ -458,7 +453,7 @@ package body GPR2.Parser.Project is
                  (N : not null Builtin_Function_Call)
                is
                   Parameters : constant not null Expr_List := F_Parameters (N);
-                  Exprs      : constant List_Term_List := F_Exprs (Parameters);
+                  Exprs      : constant Term_List_List := F_Exprs (Parameters);
                begin
                   --  Note that this routine is only validating the syntax
                   --  of the split built-in.
@@ -576,8 +571,7 @@ package body GPR2.Parser.Project is
               (N : not null Project_Declaration)
             is
                Name : constant not null Expr := F_Project_Name (N);
-               Qual : constant Types.Project_Qualifier :=
-                        F_Qualifier (N);
+               Qual : constant Project_Qualifier := F_Qualifier (N);
                Ext  : constant Project_Extension := F_Extension (N);
             begin
                --  If we have an explicit qualifier parse it now. If not the
@@ -585,7 +579,7 @@ package body GPR2.Parser.Project is
                --  pass.
 
                if Present (Qual) then
-                  case AST.Kind (F_Qualifier (Qual)) is
+                  case Kind (F_Qualifier (Qual)) is
                      when GPR_Abstract_Present =>
                         Project.Qualifier := K_Abstract;
 
@@ -669,7 +663,7 @@ package body GPR2.Parser.Project is
             is
                Name       : constant Name_Type :=
                               Get_Name_Type (F_Type_Id (N));
-               Values     : constant not null List_String_Literal :=
+               Values     : constant not null String_Literal_List :=
                               F_String_Literals (N);
                Num_Childs : constant Natural := Child_Count (Values);
                Cur_Child  : GPR_Node;
@@ -723,7 +717,7 @@ package body GPR2.Parser.Project is
             ---------------------
 
             procedure Parse_With_Decl (N : not null With_Decl) is
-               Path_Names : constant not null List_String_Literal :=
+               Path_Names : constant not null String_Literal_List :=
                               F_Path_Names (N);
                Num_Childs : constant Natural := Child_Count (N);
                Cur_Child  : GPR_Node;
@@ -753,7 +747,7 @@ package body GPR2.Parser.Project is
             end Parse_With_Decl;
 
          begin
-            case AST.Kind (Node) is
+            case Kind (Node) is
                when GPR_Project_Declaration =>
                   Parse_Project_Declaration (Project_Declaration (Node));
 
@@ -1093,8 +1087,6 @@ package body GPR2.Parser.Project is
       -------------------
 
       function Get_Term_List (Node : not null Term_List) return Item_Values is
-         use GPR_Parser;
-
          Result : Item_Values;
          --  The list of values returned by Get_Term_List
 
@@ -1178,7 +1170,7 @@ package body GPR2.Parser.Project is
                procedure Handle_External_As_List_Variable
                  (Node : not null Builtin_Function_Call)
                is
-                  Parameters : constant not null List_Term_List :=
+                  Parameters : constant not null Term_List_List :=
                                  F_Exprs (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
                   Var        : constant Name_Type :=
@@ -1209,7 +1201,7 @@ package body GPR2.Parser.Project is
                is
                   use Ada.Exceptions;
 
-                  Parameters : constant not null List_Term_List :=
+                  Parameters : constant not null Term_List_List :=
                                  F_Exprs (F_Parameters (Node));
                   Error      : Boolean;
                   Var        : constant Name_Type :=
@@ -1270,7 +1262,7 @@ package body GPR2.Parser.Project is
                procedure Handle_Split
                  (Node : not null Builtin_Function_Call)
                is
-                  Parameters : constant not null List_Term_List :=
+                  Parameters : constant not null Term_List_List :=
                                  F_Exprs (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
                   Str        : constant Name_Type :=
@@ -1528,9 +1520,6 @@ package body GPR2.Parser.Project is
       function Parser
         (Node : access GPR_Node_Type'Class) return Visit_Status
       is
-
-         use GPR_Parser;
-
          Status : Visit_Status := Into;
 
          procedure Parse_Attribute_Decl (Node : not null Attribute_Decl)
@@ -1673,7 +1662,7 @@ package body GPR2.Parser.Project is
             Is_Open := False;
 
             declare
-               Childs : constant List_Case_Item := F_Items (Node);
+               Childs : constant Case_Item_List := F_Items (Node);
             begin
                for C in 1 .. Child_Count (Childs) loop
                   Visit_Child (Child (GPR_Node (Childs), C));
@@ -1741,7 +1730,7 @@ package body GPR2.Parser.Project is
                return Status;
             end Parser;
 
-            Choices : constant List_GPR_Node := F_Choice (Node);
+            Choices : constant GPR_Node_List := F_Choice (Node);
 
          begin
             Traverse (GPR_Node (Choices), Parser'Access);
@@ -1910,7 +1899,7 @@ package body GPR2.Parser.Project is
             Name   : constant not null Identifier := F_Var_Name (Node);
             Expr   : constant not null Term_List := F_Expr (Node);
             Values : constant Item_Values := Get_Term_List (Expr);
-            V_Type : constant Types.Expr := F_Var_Type (Node);
+            V_Type : constant GPR_Parser.Analysis.Expr := F_Var_Type (Node);
             V      : GPR2.Project.Variable.Object;
          begin
             if V_Type /= null then
@@ -2003,7 +1992,7 @@ package body GPR2.Parser.Project is
          if Is_Open then
             --  Handle all kind of nodes when the parsing is open
 
-            case AST.Kind (Node) is
+            case Kind (Node) is
                when GPR_Attribute_Decl =>
                   Parse_Attribute_Decl (Attribute_Decl (Node));
 
@@ -2032,7 +2021,7 @@ package body GPR2.Parser.Project is
          else
             --  We are on a closed parsing mode, only handle case alternatives
 
-            case AST.Kind (Node) is
+            case Kind (Node) is
                when GPR_Case_Item =>
                   Parse_Case_Item (Case_Item (Node));
 

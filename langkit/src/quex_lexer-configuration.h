@@ -3,7 +3,7 @@
 --                                                                          --
 --                            GPR PROJECT PARSER                            --
 --                                                                          --
---            Copyright (C) 2015-2016, Free Software Foundation, Inc.       --
+--            Copyright (C) 2015-2017, Free Software Foundation, Inc.       --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -51,7 +51,7 @@
 #endif
 
 #define QUEX_SETTING_VERSION           "0.65.4"
-#define QUEX_SETTING_BUILD_DATE        "Mon Sep 26 21:18:32 2016"
+#define QUEX_SETTING_BUILD_DATE        "Wed May 31 16:46:12 2017"
 #define QUEX_SETTING_ANALYZER_VERSION  "0.0.0-pre-release"
 
 #ifndef    __QUEX_OPTION_PLAIN_C
@@ -92,11 +92,11 @@
 #   define __QUEX_SETTING_INITIAL_LEXER_MODE_ID    (QUEX_NAME(ModeID_ONE_AND_ONLY))
 #endif
 /* NOTE: QUEX_TYPE_TOKEN_ID is later on defined inside the token class header. */
-#define    __QUEX_SETTING_TOKEN_ID_TERMINATION       ((QUEX_TYPE_TOKEN_ID)QUEX_TKN_TERMINATION)
-#define    __QUEX_SETTING_TOKEN_ID_UNINITIALIZED     ((QUEX_TYPE_TOKEN_ID)QUEX_TKN_UNINITIALIZED)
-#define    __QUEX_SETTING_TOKEN_ID_INDENT            ((QUEX_TYPE_TOKEN_ID)QUEX_TKN_INDENT)
-#define    __QUEX_SETTING_TOKEN_ID_DEDENT            ((QUEX_TYPE_TOKEN_ID)QUEX_TKN_DEDENT)
-#define    __QUEX_SETTING_TOKEN_ID_NODENT            ((QUEX_TYPE_TOKEN_ID)QUEX_TKN_NODENT)
+#define    __QUEX_SETTING_TOKEN_ID_TERMINATION       ((QUEX_TYPE_TOKEN_ID)GPR_TKN_TERMINATION)
+#define    __QUEX_SETTING_TOKEN_ID_UNINITIALIZED     ((QUEX_TYPE_TOKEN_ID)GPR_TKN_UNINITIALIZED)
+#define    __QUEX_SETTING_TOKEN_ID_INDENT            ((QUEX_TYPE_TOKEN_ID)GPR_TKN_INDENT)
+#define    __QUEX_SETTING_TOKEN_ID_DEDENT            ((QUEX_TYPE_TOKEN_ID)GPR_TKN_DEDENT)
+#define    __QUEX_SETTING_TOKEN_ID_NODENT            ((QUEX_TYPE_TOKEN_ID)GPR_TKN_NODENT)
 #define    __QUEX_SETTING_TOKEN_ID_REPETITION_TEST(TokenID) (false)
 
 #ifndef    __QUEX_OPTION_LITTLE_ENDIAN

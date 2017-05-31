@@ -3,7 +3,7 @@
 --                                                                          --
 --                            GPR PROJECT PARSER                            --
 --                                                                          --
---            Copyright (C) 2015-2016, Free Software Foundation, Inc.       --
+--            Copyright (C) 2015-2017, Free Software Foundation, Inc.       --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,10 +29,8 @@
 --  This package defines subprograms whose only purpose it to be used from a
 --  debugger. This is supposed to make developpers' life easier.
 
-with GPR_Parser.AST;
-use GPR_Parser.AST;
-with GPR_Parser.Lexer;
-use GPR_Parser.Lexer;
+with GPR_Parser.Analysis; use GPR_Parser.Analysis;
+with GPR_Parser.Lexer;    use GPR_Parser.Lexer;
 use GPR_Parser.Lexer.Token_Data_Handlers;
 
 package GPR_Parser.Debug is
@@ -47,8 +45,12 @@ package GPR_Parser.Debug is
    --  dispatching primitive whereas these are difficult to call from GDB.
    --  Besides, it removes the Level parameter.
 
-   procedure PTok (Node : GPR_Node; T : Token_Index);
-   --  "Print Token". Print the data associated to the T token. Node must be in
-   --  the same analysis unit as the token that T represents.
+   procedure PTok (TDH : Token_Data_Handler_Access; T : Token_Index);
+   --  "Print Token". Print the data associated to the T token in the given
+   --  token data handler.
+
+   procedure PEnv (Env : Lexical_Env);
+   --  "Print lexical Environment". Print the content of Env and all its parent
+   --  chain.
 
 end GPR_Parser.Debug;

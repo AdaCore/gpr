@@ -3,7 +3,7 @@
 --                                                                          --
 --                            GPR PROJECT PARSER                            --
 --                                                                          --
---            Copyright (C) 2015-2016, Free Software Foundation, Inc.       --
+--            Copyright (C) 2015-2017, Free Software Foundation, Inc.       --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -28,12 +28,19 @@
 
 
 
+
+
+
+
+with Ada.Finalization;
+
 pragma Warnings (Off, "is an internal GNAT unit");
 with Ada.Strings.Wide_Wide_Unbounded.Aux;
 use Ada.Strings.Wide_Wide_Unbounded.Aux;
 pragma Warnings (On, "is an internal GNAT unit");
 
 with System.Memory;
+use type System.Address;
 
 with GNATCOLL.Iconv;
 
@@ -41,16 +48,14 @@ with Langkit_Support.Diagnostics; use Langkit_Support.Diagnostics;
 with Langkit_Support.Extensions;  use Langkit_Support.Extensions;
 with Langkit_Support.Text;        use Langkit_Support.Text;
 
-with GPR_Parser.Analysis;
-use GPR_Parser.Analysis;
-with GPR_Parser.AST;
-use GPR_Parser.AST;
-with GPR_Parser.AST.C;
-use GPR_Parser.AST.C;
-with GPR_Parser.Lexer;
-use GPR_Parser.Lexer;
+with GPR_Parser.Analysis; use GPR_Parser.Analysis;
+with GPR_Parser.Lexer;    use GPR_Parser.Lexer;
+
+
+
 
 package body GPR_Parser.Analysis.C is
+
 
    function Value_Or_Empty (S : chars_ptr) return String
    --  If S is null, return an empty string. Return Value (S) otherwise.
@@ -78,20 +83,23 @@ package body GPR_Parser.Analysis.C is
    -------------------------
 
    function gpr_create_analysis_context
-     (Charset : chars_ptr)
+     (Charset            : chars_ptr
+     )
       return gpr_analysis_context
    is
    begin
       Clear_Last_Exception;
 
       declare
-         C : constant String := (if Charset = Null_Ptr
-                                 then ""
-                                 else Value (Charset));
+         C : constant String :=
+           (if Charset = Null_Ptr
+            then "utf-8"
+            else Value (Charset));
+
+
       begin
-         return Wrap (if C'Length = 0
-                      then Create
-                      else Create (C));
+         return Wrap (Create (C
+         ));
       end;
    exception
       when Exc : others =>
@@ -137,9 +145,7 @@ package body GPR_Parser.Analysis.C is
      (Context           : gpr_analysis_context;
       Filename, Charset : chars_ptr;
       Reparse           : int;
-      With_Trivia       : int)
-      return gpr_analysis_unit
-   is
+      With_Trivia       : int) return gpr_analysis_unit is
    begin
       Clear_Last_Exception;
 
@@ -165,9 +171,7 @@ package body GPR_Parser.Analysis.C is
       Filename, Charset : chars_ptr;
       Buffer            : chars_ptr;
       Buffer_Size       : size_t;
-      With_Trivia       : int)
-      return gpr_analysis_unit
-   is
+      With_Trivia       : int) return gpr_analysis_unit is
    begin
       Clear_Last_Exception;
 
@@ -192,10 +196,10 @@ package body GPR_Parser.Analysis.C is
          return gpr_analysis_unit (System.Null_Address);
    end;
 
+
    function gpr_remove_analysis_unit
      (Context  : gpr_analysis_context;
-      Filename : chars_ptr) return int
-   is
+      Filename : chars_ptr) return int is
    begin
       Clear_Last_Exception;
 
@@ -216,9 +220,8 @@ package body GPR_Parser.Analysis.C is
          return 0;
    end;
 
-   function gpr_unit_root (Unit : gpr_analysis_unit)
-                                           return gpr_base_node
-   is
+   function gpr_unit_root
+     (Unit : gpr_analysis_unit) return gpr_base_node is
    begin
       Clear_Last_Exception;
 
@@ -235,36 +238,88 @@ package body GPR_Parser.Analysis.C is
 
    procedure gpr_unit_first_token
      (Unit  : gpr_analysis_unit;
-      Token : gpr_token_Ptr)
-   is
-      U : constant Analysis_Unit := Unwrap (Unit);
-      T : constant Token_Type := First_Token (U);
+      Token : access gpr_token) is
    begin
-      Token.all := Wrap (T);
+      Clear_Last_Exception;
+
+      declare
+         U : constant Analysis_Unit := Unwrap (Unit);
+         T : constant Token_Type := First_Token (U);
+      begin
+         Token.all := Wrap (T);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
    end;
 
    procedure gpr_unit_last_token
      (Unit  : gpr_analysis_unit;
-      Token : gpr_token_Ptr)
-   is
-      U : constant Analysis_Unit := Unwrap (Unit);
-      T : constant Token_Type := Last_Token (U);
+      Token : access gpr_token) is
    begin
-      Token.all := Wrap (T);
+      Clear_Last_Exception;
+
+      declare
+         U : constant Analysis_Unit := Unwrap (Unit);
+         T : constant Token_Type := Last_Token (U);
+      begin
+         Token.all := Wrap (T);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   function gpr_unit_token_count
+     (Unit : gpr_analysis_unit) return int is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         U : constant Analysis_Unit := Unwrap (Unit);
+      begin
+         return int (Token_Count (U));
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return -1;
+   end;
+
+   function gpr_unit_trivia_count
+     (Unit : gpr_analysis_unit) return int is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         U : constant Analysis_Unit := Unwrap (Unit);
+      begin
+         return int (Trivia_Count (U));
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return -1;
    end;
 
    function gpr_unit_filename
-     (Unit : gpr_analysis_unit)
-      return chars_ptr
-   is
-      U : constant Analysis_Unit := Unwrap (Unit);
+     (Unit : gpr_analysis_unit) return chars_ptr is
    begin
-      return New_String (Get_Filename (U));
+      Clear_Last_Exception;
+
+      declare
+         U : constant Analysis_Unit := Unwrap (Unit);
+      begin
+         return New_String (Get_Filename (U));
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return Null_Ptr;
    end;
 
    function gpr_unit_diagnostic_count
-     (Unit : gpr_analysis_unit) return unsigned
-   is
+     (Unit : gpr_analysis_unit) return unsigned is
    begin
       Clear_Last_Exception;
 
@@ -282,7 +337,7 @@ package body GPR_Parser.Analysis.C is
    function gpr_unit_diagnostic
      (Unit         : gpr_analysis_unit;
       N            : unsigned;
-      Diagnostic_P : gpr_diagnostic_Ptr) return int
+      Diagnostic_P : access gpr_diagnostic) return int
    is
    begin
       Clear_Last_Exception;
@@ -310,9 +365,7 @@ package body GPR_Parser.Analysis.C is
    end;
 
    function gpr_node_unit
-     (Node : gpr_base_node)
-      return gpr_analysis_unit
-   is
+     (Node : gpr_base_node) return gpr_analysis_unit is
    begin
       Clear_Last_Exception;
 
@@ -329,8 +382,7 @@ package body GPR_Parser.Analysis.C is
    end;
 
    function gpr_unit_incref
-     (Unit : gpr_analysis_unit) return gpr_analysis_unit
-   is
+     (Unit : gpr_analysis_unit) return gpr_analysis_unit is
    begin
       Clear_Last_Exception;
 
@@ -346,8 +398,7 @@ package body GPR_Parser.Analysis.C is
          return gpr_analysis_unit (System.Null_Address);
    end;
 
-   procedure gpr_unit_decref (Unit : gpr_analysis_unit)
-   is
+   procedure gpr_unit_decref (Unit : gpr_analysis_unit) is
    begin
       Clear_Last_Exception;
 
@@ -362,17 +413,23 @@ package body GPR_Parser.Analysis.C is
    end;
 
    function gpr_unit_context
-     (Unit : gpr_analysis_unit)
-      return gpr_analysis_context
-   is
-      U : constant Analysis_Unit := Unwrap (Unit);
+     (Unit : gpr_analysis_unit) return gpr_analysis_context is
    begin
-      return Wrap (U.Context);
+      Clear_Last_Exception;
+
+      declare
+         U : constant Analysis_Unit := Unwrap (Unit);
+      begin
+         return Wrap (U.Context);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return gpr_analysis_context (System.Null_Address);
    end;
 
    procedure gpr_unit_reparse_from_file
-     (Unit : gpr_analysis_unit; Charset : chars_ptr)
-   is
+     (Unit : gpr_analysis_unit; Charset : chars_ptr) is
    begin
       Clear_Last_Exception;
 
@@ -390,8 +447,7 @@ package body GPR_Parser.Analysis.C is
      (Unit        : gpr_analysis_unit;
       Charset     : chars_ptr;
       Buffer      : chars_ptr;
-      Buffer_Size : size_t)
-   is
+      Buffer_Size : size_t) is
    begin
       Clear_Last_Exception;
 
@@ -407,9 +463,8 @@ package body GPR_Parser.Analysis.C is
          Set_Last_Exception (Exc);
    end;
 
-   procedure gpr_unit_populate_lexical_env
-     (Unit : gpr_analysis_unit)
-   is
+   function gpr_unit_populate_lexical_env
+     (Unit : gpr_analysis_unit) return int is
    begin
       Clear_Last_Exception;
 
@@ -417,10 +472,16 @@ package body GPR_Parser.Analysis.C is
          U : constant Analysis_Unit := Unwrap (Unit);
       begin
          Populate_Lexical_Env (U);
+      exception
+         when Exc : Property_Error =>
+            Set_Last_Exception (Exc, Is_Fatal => False);
+            return 0;
       end;
+      return 1;
    exception
       when Exc : others =>
          Set_Last_Exception (Exc);
+         return 0;
    end;
 
    ---------------------------------
@@ -428,72 +489,10 @@ package body GPR_Parser.Analysis.C is
    ---------------------------------
 
    Node_Kind_Names : constant array (GPR_Node_Kind_Type) of Text_Access :=
-     (GPR_List => new Text_Type'(To_Text ("list"))
-            , GPR_Abstract_Present =>
-               new Text_Type'(To_Text ("AbstractPresent"))
-            , GPR_Attribute_Decl =>
-               new Text_Type'(To_Text ("AttributeDecl"))
-            , GPR_Attribute_Reference =>
-               new Text_Type'(To_Text ("AttributeReference"))
-            , GPR_Builtin_Function_Call =>
-               new Text_Type'(To_Text ("BuiltinFunctionCall"))
-            , GPR_Case_Construction =>
-               new Text_Type'(To_Text ("CaseConstruction"))
-            , GPR_Case_Item =>
-               new Text_Type'(To_Text ("CaseItem"))
-            , GPR_Compilation_Unit =>
-               new Text_Type'(To_Text ("CompilationUnit"))
-            , GPR_Empty_Decl =>
-               new Text_Type'(To_Text ("EmptyDecl"))
-            , GPR_Prefix =>
-               new Text_Type'(To_Text ("Prefix"))
-            , GPR_Identifier =>
-               new Text_Type'(To_Text ("Identifier"))
-            , GPR_Num_Literal =>
-               new Text_Type'(To_Text ("NumLiteral"))
-            , GPR_String_Literal =>
-               new Text_Type'(To_Text ("StringLiteral"))
-            , GPR_Expr_List =>
-               new Text_Type'(To_Text ("ExprList"))
-            , GPR_Others_Designator =>
-               new Text_Type'(To_Text ("OthersDesignator"))
-            , GPR_Package_Decl =>
-               new Text_Type'(To_Text ("PackageDecl"))
-            , GPR_Package_Extension =>
-               new Text_Type'(To_Text ("PackageExtension"))
-            , GPR_Package_Renaming =>
-               new Text_Type'(To_Text ("PackageRenaming"))
-            , GPR_Package_Spec =>
-               new Text_Type'(To_Text ("PackageSpec"))
-            , GPR_Project =>
-               new Text_Type'(To_Text ("Project"))
-            , GPR_Project_Declaration =>
-               new Text_Type'(To_Text ("ProjectDeclaration"))
-            , GPR_Project_Extension =>
-               new Text_Type'(To_Text ("ProjectExtension"))
-            , GPR_Project_Qualifier =>
-               new Text_Type'(To_Text ("ProjectQualifier"))
-            , GPR_Project_Reference =>
-               new Text_Type'(To_Text ("ProjectReference"))
-            , GPR_Qualifier_Names =>
-               new Text_Type'(To_Text ("QualifierNames"))
-            , GPR_String_Literal_At =>
-               new Text_Type'(To_Text ("StringLiteralAt"))
-            , GPR_Term_List =>
-               new Text_Type'(To_Text ("TermList"))
-            , GPR_Typed_String_Decl =>
-               new Text_Type'(To_Text ("TypedStringDecl"))
-            , GPR_Variable_Decl =>
-               new Text_Type'(To_Text ("VariableDecl"))
-            , GPR_Variable_Reference =>
-               new Text_Type'(To_Text ("VariableReference"))
-            , GPR_With_Decl =>
-               new Text_Type'(To_Text ("WithDecl"))
-      );
+     (GPR_Abstract_Present => new Text_Type'(To_Text ("AbstractPresent")), GPR_Attribute_Decl => new Text_Type'(To_Text ("AttributeDecl")), GPR_Attribute_Reference => new Text_Type'(To_Text ("AttributeReference")), GPR_Case_Item_List => new Text_Type'(To_Text ("CaseItemList")), GPR_GPR_Node_List => new Text_Type'(To_Text ("GPRNodeList")), GPR_String_Literal_List => new Text_Type'(To_Text ("StringLiteralList")), GPR_Term_List_List => new Text_Type'(To_Text ("TermListList")), GPR_With_Decl_List => new Text_Type'(To_Text ("WithDeclList")), GPR_Builtin_Function_Call => new Text_Type'(To_Text ("BuiltinFunctionCall")), GPR_Case_Construction => new Text_Type'(To_Text ("CaseConstruction")), GPR_Case_Item => new Text_Type'(To_Text ("CaseItem")), GPR_Compilation_Unit => new Text_Type'(To_Text ("CompilationUnit")), GPR_Empty_Decl => new Text_Type'(To_Text ("EmptyDecl")), GPR_Prefix => new Text_Type'(To_Text ("Prefix")), GPR_Identifier => new Text_Type'(To_Text ("Identifier")), GPR_Num_Literal => new Text_Type'(To_Text ("NumLiteral")), GPR_String_Literal => new Text_Type'(To_Text ("StringLiteral")), GPR_Expr_List => new Text_Type'(To_Text ("ExprList")), GPR_Others_Designator => new Text_Type'(To_Text ("OthersDesignator")), GPR_Package_Decl => new Text_Type'(To_Text ("PackageDecl")), GPR_Package_Extension => new Text_Type'(To_Text ("PackageExtension")), GPR_Package_Renaming => new Text_Type'(To_Text ("PackageRenaming")), GPR_Package_Spec => new Text_Type'(To_Text ("PackageSpec")), GPR_Project => new Text_Type'(To_Text ("Project")), GPR_Project_Declaration => new Text_Type'(To_Text ("ProjectDeclaration")), GPR_Project_Extension => new Text_Type'(To_Text ("ProjectExtension")), GPR_Project_Qualifier => new Text_Type'(To_Text ("ProjectQualifier")), GPR_Project_Reference => new Text_Type'(To_Text ("ProjectReference")), GPR_Qualifier_Names => new Text_Type'(To_Text ("QualifierNames")), GPR_String_Literal_At => new Text_Type'(To_Text ("StringLiteralAt")), GPR_Term_List => new Text_Type'(To_Text ("TermList")), GPR_Typed_String_Decl => new Text_Type'(To_Text ("TypedStringDecl")), GPR_Variable_Decl => new Text_Type'(To_Text ("VariableDecl")), GPR_Variable_Reference => new Text_Type'(To_Text ("VariableReference")), GPR_With_Decl => new Text_Type'(To_Text ("WithDecl")));
 
-   function gpr_node_kind (Node : gpr_base_node)
-      return gpr_node_kind_enum
-   is
+   function gpr_node_kind
+     (Node : gpr_base_node) return gpr_node_kind_enum is
    begin
       Clear_Last_Exception;
 
@@ -509,9 +508,8 @@ package body GPR_Parser.Analysis.C is
          return gpr_node_kind_enum'First;
    end;
 
-   function gpr_kind_name (Kind : gpr_node_kind_enum)
-                                           return gpr_text
-   is
+   function gpr_kind_name
+     (Kind : gpr_node_kind_enum) return gpr_text is
    begin
       Clear_Last_Exception;
 
@@ -529,9 +527,24 @@ package body GPR_Parser.Analysis.C is
          return (System.Null_Address, 0, Is_Allocated => 0);
    end;
 
-   function gpr_node_short_image (Node : gpr_base_node)
-                                                  return gpr_text
+   function gpr_node_is_ghost (Node : gpr_base_node) return int
    is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         N : constant GPR_Node := Unwrap (Node);
+      begin
+         return Boolean'Pos (N.Is_Ghost);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end;
+
+   function gpr_node_short_image
+     (Node : gpr_base_node) return gpr_text is
    begin
       Clear_Last_Exception;
       declare
@@ -548,8 +561,7 @@ package body GPR_Parser.Analysis.C is
 
    procedure gpr_node_sloc_range
      (Node         : gpr_base_node;
-      Sloc_Range_P : gpr_source_location_range_Ptr)
-   is
+      Sloc_Range_P : access gpr_source_location_range) is
    begin
       Clear_Last_Exception;
 
@@ -565,14 +577,13 @@ package body GPR_Parser.Analysis.C is
 
    function gpr_lookup_in_node
      (Node : gpr_base_node;
-      Sloc : gpr_source_location_Ptr) return gpr_base_node
-   is
+      Sloc : gpr_source_location) return gpr_base_node is
    begin
       Clear_Last_Exception;
 
       declare
          N : constant GPR_Node := Unwrap (Node);
-         S : constant Source_Location := Unwrap (Sloc.all);
+         S : constant Source_Location := Unwrap (Sloc);
       begin
          return Wrap (Lookup (N, S));
       end;
@@ -582,9 +593,8 @@ package body GPR_Parser.Analysis.C is
          return gpr_base_node (System.Null_Address);
    end;
 
-   function gpr_node_child_count (Node : gpr_base_node)
-                                                  return unsigned
-   is
+   function gpr_node_child_count
+     (Node : gpr_base_node) return unsigned is
    begin
       Clear_Last_Exception;
 
@@ -602,8 +612,7 @@ package body GPR_Parser.Analysis.C is
    function gpr_node_child
      (Node    : gpr_base_node;
       N       : unsigned;
-      Child_P : gpr_base_node_Ptr) return int
-   is
+      Child_P : access gpr_base_node) return int is
    begin
       Clear_Last_Exception;
 
@@ -630,8 +639,7 @@ package body GPR_Parser.Analysis.C is
    end;
 
    function gpr_text_to_locale_string
-     (Text : gpr_text) return System.Address
-   is
+     (Text : gpr_text) return System.Address is
    begin
       Clear_Last_Exception;
 
@@ -701,9 +709,8 @@ package body GPR_Parser.Analysis.C is
    -- Extensions handling --
    -------------------------
 
-   function gpr_register_extension (Name : chars_ptr)
-      return unsigned
-   is
+   function gpr_register_extension
+     (Name : chars_ptr) return unsigned is
    begin
       Clear_Last_Exception;
 
@@ -718,8 +725,7 @@ package body GPR_Parser.Analysis.C is
      (Node   : gpr_base_node;
       Ext_Id : unsigned;
       Dtor   : gpr_node_extension_destructor)
-      return System.Address
-   is
+      return System.Address is
    begin
       Clear_Last_Exception;
 
@@ -754,8 +760,7 @@ package body GPR_Parser.Analysis.C is
 
    procedure Set_Last_Exception
      (Exc      : Exception_Occurrence;
-      Is_Fatal : Boolean := True)
-   is
+      Is_Fatal : Boolean := True) is
    begin
       --  If it's the first time, allocate room for the exception information
 
@@ -812,23 +817,80 @@ package body GPR_Parser.Analysis.C is
    end;
 
    procedure gpr_token_next
-     (Token      : gpr_token_Ptr;
-      Next_Token : gpr_token_Ptr)
+     (Token      : gpr_token;
+      Next_Token : access gpr_token)
    is
-      T  : constant Token_Type := Unwrap (Token.all);
-      NT : constant Token_Type := Next (T);
    begin
-      Next_Token.all := Wrap (NT);
+      Clear_Last_Exception;
+      declare
+         T  : constant Token_Type := Unwrap (Token);
+         NT : constant Token_Type := Next (T);
+      begin
+         Next_Token.all := Wrap (NT);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
    end;
 
    procedure gpr_token_previous
-     (Token          : gpr_token_Ptr;
-      Previous_Token : gpr_token_Ptr)
+     (Token          : gpr_token;
+      Previous_Token : access gpr_token)
    is
-      T  : constant Token_Type := Unwrap (Token.all);
-      PT : constant Token_Type := Previous (T);
    begin
-      Previous_Token.all := Wrap (PT);
+      Clear_Last_Exception;
+      declare
+         T  : constant Token_Type := Unwrap (Token);
+         PT : constant Token_Type := Previous (T);
+      begin
+         Previous_Token.all := Wrap (PT);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   function gpr_token_range_text
+     (First, Last : gpr_token;
+      Text        : access gpr_text) return int
+   is
+   begin
+      Clear_Last_Exception;
+      declare
+         FD : constant Token_Data_Type := Data (Unwrap (First));
+         LD : constant Token_Data_Type := Data (Unwrap (Last));
+      begin
+         if First.Token_Data /= Last.Token_Data then
+            return 0;
+         end if;
+         Text.all := Wrap
+           (FD.Source_Buffer,
+            Positive (FD.Source_First),
+            Natural (LD.Source_Last));
+         return 1;
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end;
+
+   function gpr_token_is_equivalent
+     (Left  : gpr_token;
+      Right : gpr_token) return gpr_bool
+   is
+   begin
+      Clear_Last_Exception;
+         declare
+         L  : constant Token_Type := Unwrap (Left);
+         R  : constant Token_Type := Unwrap (Right);
+      begin
+         return gpr_bool (Boolean'Pos (Is_Equivalent (L, R)));
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
    end;
 
    ------------
@@ -836,40 +898,3042 @@ package body GPR_Parser.Analysis.C is
    ------------
 
    function Unwrap
-     (Unit : Analysis_Unit_Interface;
-      Text : gpr_text)
-      return Symbol_Type
+     (Unit : Analysis_Unit; Text : gpr_text) return Symbol_Type
    is
       T : Text_Type (1 .. Natural (Text.Length));
       for T'Address use Text.Chars;
    begin
-     return Find (Unit.Token_Data.Symbols, T, False);
+     return Find (Unit.TDH.Symbols, T, False);
    end Unwrap;
 
    ----------------
    -- Wrap_Alloc --
    ----------------
 
-   function Wrap_Alloc (S : Text_Type) return gpr_text
-   is
+   function Wrap_Alloc (S : Text_Type) return gpr_text is
       T : Text_Access := new Text_Type'(S);
    begin
       return gpr_text'(T.all'Address, T.all'Length, Is_Allocated => 1);
    end Wrap_Alloc;
 
-   procedure gpr_destroy_text (T : gpr_text_Ptr) is
-      use System;
+   ----------
+   -- Wrap --
+   ----------
+
+   function Wrap
+     (S     : Text_Cst_Access;
+      First : Positive;
+      Last  : Natural) return gpr_text
+   is
+      Substring : Text_Type renames S (First .. Last);
    begin
-      if T.Is_Allocated /= 0 and then T.Chars /= System.Null_Address then
-         declare
-            TT : Text_Type (1 .. Natural (T.Length));
-            for TT'Address use T.Chars;
-            TA : Text_Access := TT'Unrestricted_Access;
-         begin
-            Free (TA);
-         end;
-         T.Chars := System.Null_Address;
-      end if;
+      return (if First > Last
+              then (Chars        => System.Null_Address,
+                    Length       => 0,
+                    Is_Allocated => 0)
+              else (Chars        => S (First)'Address,
+                    Length       => Substring'Length,
+                    Is_Allocated => 0));
+   end Wrap;
+
+   procedure gpr_destroy_text (T : access gpr_text) is
+   begin
+      Clear_Last_Exception;
+      declare
+         use System;
+      begin
+         if T.Is_Allocated /= 0 and then T.Chars /= System.Null_Address then
+            declare
+               TT : Text_Type (1 .. Natural (T.Length));
+               for TT'Address use T.Chars;
+               TA : Text_Access := TT'Unrestricted_Access;
+            begin
+               Free (TA);
+            end;
+            T.Chars := System.Null_Address;
+         end if;
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
    end;
+
+
+   ----------
+   -- Wrap --
+   ----------
+
+   function Wrap (Token : Token_Type) return gpr_token is
+      function Convert is new Ada.Unchecked_Conversion
+        (Token_Data_Handler_Access, System.Address);
+   begin
+      if Token = No_Token then
+         return (Token_Data   => System.Null_Address,
+                 Token_Index  => -1,
+                 Trivia_Index => -1,
+                 others       => <>);
+      end if;
+
+      declare
+         D : constant Token_Data_Type := Data (Token);
+         K : Token_Kind := D.Kind;
+      begin
+         return (Token_Data   => Convert (Token.TDH),
+                 Token_Index  => int (Token.Token),
+                 Trivia_Index => int (Token.Trivia),
+                 Kind         => K'Enum_Rep,
+                 Text         => Wrap
+                   (Text_Cst_Access (Token.TDH.Source_Buffer),
+                    D.Source_First,
+                    D.Source_Last),
+                 Sloc_Range   => Wrap (D.Sloc_Range));
+      end;
+   end Wrap;
+
+   ------------
+   -- Unwrap --
+   ------------
+
+   function Unwrap (Token : gpr_token) return Token_Type is
+      use System;
+
+      --  The following unchecked conversion makes it possible to restore the
+      --  Ada type of token data handler accesses from the C API. All
+      --  read/writes for the pointed values are made in Ada through values of
+      --  the same access type. Thus, strict aliasing issues should not arise
+      --  for these.
+      --
+      --  See <https://gcc.gnu.org/onlinedocs/gnat_ugn/
+      --       Optimization-and-Strict-Aliasing.html>.
+
+      pragma Warnings (Off, "possible aliasing problem for type");
+      function Convert is new Ada.Unchecked_Conversion
+        (System.Address, Token_Data_Handler_Access);
+      pragma Warnings (On, "possible aliasing problem for type");
+
+   begin
+      return (if Token.Token_Data = Null_Address
+              then No_Token
+              else (TDH    => Convert (Token.Token_Data),
+                    Token  => Token_Index (Token.Token_Index),
+                    Trivia => Token_Index (Token.Trivia_Index)));
+   end Unwrap;
+
+   
+
+
+
+procedure gpr_gpr_node_array_inc_ref (A : GPR_Node_Array_Access) is
+begin
+   Clear_Last_Exception;
+   Inc_Ref (A);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end;
+
+procedure gpr_gpr_node_array_dec_ref (A : GPR_Node_Array_Access) is
+begin
+   Clear_Last_Exception;
+   declare
+      A_Var : GPR_Node_Array_Access := A;
+   begin
+      Dec_Ref (A_Var);
+   end;
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end;
+
+
+
+   
+
+
+
+procedure gpr_lexical_env_array_inc_ref (A : Lexical_Env_Array_Access) is
+begin
+   Clear_Last_Exception;
+   Inc_Ref (A);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end;
+
+procedure gpr_lexical_env_array_dec_ref (A : Lexical_Env_Array_Access) is
+begin
+   Clear_Last_Exception;
+   declare
+      A_Var : Lexical_Env_Array_Access := A;
+   begin
+      Dec_Ref (A_Var);
+   end;
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end;
+
+
+
+   
+
+
+
+procedure gpr_entity_array_inc_ref (A : Entity_Array_Access) is
+begin
+   Clear_Last_Exception;
+   Inc_Ref (A);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end;
+
+procedure gpr_entity_array_dec_ref (A : Entity_Array_Access) is
+begin
+   Clear_Last_Exception;
+   declare
+      A_Var : Entity_Array_Access := A;
+   begin
+      Dec_Ref (A_Var);
+   end;
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end;
+
+
+
+   function gpr_lexical_env_empty return gpr_lexical_env is
+   begin
+      return Wrap (Empty_Env);
+   end;
+
+   function gpr_lexical_env_parent
+     (Env : gpr_lexical_env) return gpr_lexical_env is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : constant AST_Envs.Lexical_Env := Unwrap (Env);
+      begin
+         return Wrap (AST_Envs.Get_Env (E.Parent));
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return gpr_lexical_env (System.Null_Address);
+   end;
+
+   function gpr_lexical_env_node
+     (Env : gpr_lexical_env) return gpr_base_node is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : constant AST_Envs.Lexical_Env := Unwrap (Env);
+      begin
+         return Wrap (E.Node);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return gpr_base_node (System.Null_Address);
+   end;
+
+   function gpr_lexical_env_get
+     (Env  : gpr_lexical_env;
+      Name : gpr_text)
+      return Entity_Array_Access is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : constant AST_Envs.Lexical_Env := Unwrap (Env);
+      begin
+         --  TODO??? The root environment is not tied to any node, so we cannot
+         --  get a symbol to look it up. We should probably solve this
+         --  automatically creating an anonymous unit to embed the root
+         --  environment.
+         if E.Node = null then
+            raise Property_Error with "LexicalEnv.Get on null LexicalEnv";
+         end if;
+
+         declare
+            U : constant Analysis_Unit := E.Node.Unit;
+            N : constant Symbol_Type := Unwrap (U, Name);
+         begin
+            return Create (if N = null
+                           then (1 .. 0 => <>)
+                           else AST_Envs.Get (E, N));
+         end;
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return null;
+   end;
+
+   procedure gpr_lexical_env_inc_ref
+     (Env : gpr_lexical_env) is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : constant AST_Envs.Lexical_Env := Unwrap (Env);
+      begin
+         Inc_Ref (E);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   procedure gpr_lexical_env_dec_ref
+     (Env : gpr_lexical_env) is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : AST_Envs.Lexical_Env := Unwrap (Env);
+      begin
+         Dec_Ref (E);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   procedure gpr_env_rebindings_inc_ref
+     (Self : gpr_env_rebindings_type) is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : constant AST_Envs.Env_Rebindings := Unwrap (Self);
+      begin
+         Inc_Ref (E);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   procedure gpr_env_rebindings_dec_ref
+     (Self : gpr_env_rebindings_type) is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : AST_Envs.Env_Rebindings := Unwrap (Self);
+      begin
+         Dec_Ref (E);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   -------------------------
+   -- Equation primitives --
+   -------------------------
+
+   procedure gpr_equation_inc_ref
+     (Self : gpr_equation_type) is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : constant Logic_Equation := Unwrap (Self);
+      begin
+         Inc_Ref (E);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   procedure gpr_equation_dec_ref
+     (Self : gpr_equation_type) is
+   begin
+      Clear_Last_Exception;
+
+      declare
+         E : Logic_Equation := Unwrap (Self);
+      begin
+         Dec_Ref (E);
+      end;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+   end;
+
+   ---------------------------------------
+   -- Kind-specific AST node primitives --
+   ---------------------------------------
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_parent
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.Parent))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_parent;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_parents
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_gpr_node_array) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Typed_Node.Parents
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_parents;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_children
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_gpr_node_array) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Typed_Node.Children
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_children;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_token_start
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_token) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (Typed_Node.Token_Start)
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_token_start;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_token_end
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_token) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (Typed_Node.Token_End)
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_token_end;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_previous_sibling
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.Previous_Sibling))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_previous_sibling;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_gpr_node_next_sibling
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in GPR_Node_Type'Class then
+         declare
+            Typed_Node : constant GPR_Node :=
+               GPR_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.Next_Sibling))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_gpr_node_next_sibling;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_attribute_decl_f_attr_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Attribute_Decl_Type'Class then
+         declare
+            Typed_Node : constant Attribute_Decl :=
+               Attribute_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Attr_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_attribute_decl_f_attr_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_attribute_decl_f_attr_index
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Attribute_Decl_Type'Class then
+         declare
+            Typed_Node : constant Attribute_Decl :=
+               Attribute_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Attr_Index))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_attribute_decl_f_attr_index;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_attribute_decl_f_expr
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Attribute_Decl_Type'Class then
+         declare
+            Typed_Node : constant Attribute_Decl :=
+               Attribute_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Expr))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_attribute_decl_f_expr;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_attribute_reference_f_attribute_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Attribute_Reference_Type'Class then
+         declare
+            Typed_Node : constant Attribute_Reference :=
+               Attribute_Reference (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Attribute_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_attribute_reference_f_attribute_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_attribute_reference_f_attribute_index
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Attribute_Reference_Type'Class then
+         declare
+            Typed_Node : constant Attribute_Reference :=
+               Attribute_Reference (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Attribute_Index))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_attribute_reference_f_attribute_index;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_builtin_function_call_f_function_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Builtin_Function_Call_Type'Class then
+         declare
+            Typed_Node : constant Builtin_Function_Call :=
+               Builtin_Function_Call (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Function_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_builtin_function_call_f_function_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_builtin_function_call_f_parameters
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Builtin_Function_Call_Type'Class then
+         declare
+            Typed_Node : constant Builtin_Function_Call :=
+               Builtin_Function_Call (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Parameters))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_builtin_function_call_f_parameters;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_case_construction_f_var_ref
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Case_Construction_Type'Class then
+         declare
+            Typed_Node : constant Case_Construction :=
+               Case_Construction (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Var_Ref))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_case_construction_f_var_ref;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_case_construction_f_items
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Case_Construction_Type'Class then
+         declare
+            Typed_Node : constant Case_Construction :=
+               Case_Construction (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Items))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_case_construction_f_items;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_case_item_f_choice
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Case_Item_Type'Class then
+         declare
+            Typed_Node : constant Case_Item :=
+               Case_Item (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Choice))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_case_item_f_choice;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_case_item_f_decls
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Case_Item_Type'Class then
+         declare
+            Typed_Node : constant Case_Item :=
+               Case_Item (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Decls))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_case_item_f_decls;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_compilation_unit_f_project
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Compilation_Unit_Type'Class then
+         declare
+            Typed_Node : constant Compilation_Unit :=
+               Compilation_Unit (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Project))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_compilation_unit_f_project;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_prefix_f_prefix
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Prefix_Type'Class then
+         declare
+            Typed_Node : constant Prefix :=
+               Prefix (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Prefix))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_prefix_f_prefix;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_prefix_f_suffix
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Prefix_Type'Class then
+         declare
+            Typed_Node : constant Prefix :=
+               Prefix (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Suffix))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_prefix_f_suffix;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_single_tok_node_f_tok
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_token) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Single_Tok_Node_Type'Class then
+         declare
+            Typed_Node : constant Single_Tok_Node :=
+               Single_Tok_Node (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (Token (Unwrapped_Node, Typed_Node.F_Tok))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_single_tok_node_f_tok;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_expr_list_f_exprs
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Expr_List_Type'Class then
+         declare
+            Typed_Node : constant Expr_List :=
+               Expr_List (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Exprs))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_expr_list_f_exprs;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_decl_f_pkg_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Decl_Type'Class then
+         declare
+            Typed_Node : constant Package_Decl :=
+               Package_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Pkg_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_decl_f_pkg_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_decl_f_pkg_spec
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Decl_Type'Class then
+         declare
+            Typed_Node : constant Package_Decl :=
+               Package_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Pkg_Spec))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_decl_f_pkg_spec;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_extension_f_prj_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Extension_Type'Class then
+         declare
+            Typed_Node : constant Package_Extension :=
+               Package_Extension (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Prj_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_extension_f_prj_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_extension_f_pkg_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Extension_Type'Class then
+         declare
+            Typed_Node : constant Package_Extension :=
+               Package_Extension (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Pkg_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_extension_f_pkg_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_renaming_f_prj_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Renaming_Type'Class then
+         declare
+            Typed_Node : constant Package_Renaming :=
+               Package_Renaming (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Prj_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_renaming_f_prj_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_renaming_f_pkg_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Renaming_Type'Class then
+         declare
+            Typed_Node : constant Package_Renaming :=
+               Package_Renaming (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Pkg_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_renaming_f_pkg_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_spec_f_extension
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Spec_Type'Class then
+         declare
+            Typed_Node : constant Package_Spec :=
+               Package_Spec (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Extension))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_spec_f_extension;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_spec_f_decls
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Spec_Type'Class then
+         declare
+            Typed_Node : constant Package_Spec :=
+               Package_Spec (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Decls))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_spec_f_decls;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_package_spec_f_end_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Package_Spec_Type'Class then
+         declare
+            Typed_Node : constant Package_Spec :=
+               Package_Spec (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_End_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_package_spec_f_end_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_f_context_clauses
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Type'Class then
+         declare
+            Typed_Node : constant Project :=
+               Project (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Context_Clauses))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_f_context_clauses;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_f_project_decl
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Type'Class then
+         declare
+            Typed_Node : constant Project :=
+               Project (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Project_Decl))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_f_project_decl;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_declaration_f_qualifier
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Declaration_Type'Class then
+         declare
+            Typed_Node : constant Project_Declaration :=
+               Project_Declaration (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Qualifier))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_declaration_f_qualifier;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_declaration_f_project_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Declaration_Type'Class then
+         declare
+            Typed_Node : constant Project_Declaration :=
+               Project_Declaration (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Project_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_declaration_f_project_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_declaration_f_extension
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Declaration_Type'Class then
+         declare
+            Typed_Node : constant Project_Declaration :=
+               Project_Declaration (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Extension))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_declaration_f_extension;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_declaration_f_decls
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Declaration_Type'Class then
+         declare
+            Typed_Node : constant Project_Declaration :=
+               Project_Declaration (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Decls))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_declaration_f_decls;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_declaration_f_end_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Declaration_Type'Class then
+         declare
+            Typed_Node : constant Project_Declaration :=
+               Project_Declaration (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_End_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_declaration_f_end_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_extension_f_is_all
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_bool) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Extension_Type'Class then
+         declare
+            Typed_Node : constant Project_Extension :=
+               Project_Extension (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    gpr_bool (Boolean'Pos (Typed_Node.F_Is_All))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_extension_f_is_all;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_extension_f_path_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Extension_Type'Class then
+         declare
+            Typed_Node : constant Project_Extension :=
+               Project_Extension (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Path_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_extension_f_path_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_qualifier_f_qualifier
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Qualifier_Type'Class then
+         declare
+            Typed_Node : constant Project_Qualifier :=
+               Project_Qualifier (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Qualifier))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_qualifier_f_qualifier;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_project_reference_f_attr_ref
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Project_Reference_Type'Class then
+         declare
+            Typed_Node : constant Project_Reference :=
+               Project_Reference (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Attr_Ref))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_project_reference_f_attr_ref;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_qualifier_names_f_qualifier_id1
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Qualifier_Names_Type'Class then
+         declare
+            Typed_Node : constant Qualifier_Names :=
+               Qualifier_Names (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Qualifier_Id1))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_qualifier_names_f_qualifier_id1;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_qualifier_names_f_qualifier_id2
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Qualifier_Names_Type'Class then
+         declare
+            Typed_Node : constant Qualifier_Names :=
+               Qualifier_Names (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Qualifier_Id2))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_qualifier_names_f_qualifier_id2;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_string_literal_at_f_str_lit
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in String_Literal_At_Type'Class then
+         declare
+            Typed_Node : constant String_Literal_At :=
+               String_Literal_At (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Str_Lit))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_string_literal_at_f_str_lit;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_string_literal_at_f_at_lit
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in String_Literal_At_Type'Class then
+         declare
+            Typed_Node : constant String_Literal_At :=
+               String_Literal_At (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_At_Lit))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_string_literal_at_f_at_lit;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_term_list_f_terms
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Term_List_Type'Class then
+         declare
+            Typed_Node : constant Term_List :=
+               Term_List (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Terms))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_term_list_f_terms;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_typed_string_decl_f_type_id
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Typed_String_Decl_Type'Class then
+         declare
+            Typed_Node : constant Typed_String_Decl :=
+               Typed_String_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Type_Id))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_typed_string_decl_f_type_id;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_typed_string_decl_f_string_literals
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Typed_String_Decl_Type'Class then
+         declare
+            Typed_Node : constant Typed_String_Decl :=
+               Typed_String_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_String_Literals))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_typed_string_decl_f_string_literals;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_variable_decl_f_var_name
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Variable_Decl_Type'Class then
+         declare
+            Typed_Node : constant Variable_Decl :=
+               Variable_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Var_Name))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_variable_decl_f_var_name;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_variable_decl_f_var_type
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Variable_Decl_Type'Class then
+         declare
+            Typed_Node : constant Variable_Decl :=
+               Variable_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Var_Type))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_variable_decl_f_var_type;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_variable_decl_f_expr
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Variable_Decl_Type'Class then
+         declare
+            Typed_Node : constant Variable_Decl :=
+               Variable_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Expr))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_variable_decl_f_expr;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_variable_reference_f_variable_name1
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Variable_Reference_Type'Class then
+         declare
+            Typed_Node : constant Variable_Reference :=
+               Variable_Reference (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Variable_Name1))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_variable_reference_f_variable_name1;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_variable_reference_f_variable_name2
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Variable_Reference_Type'Class then
+         declare
+            Typed_Node : constant Variable_Reference :=
+               Variable_Reference (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Variable_Name2))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_variable_reference_f_variable_name2;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_variable_reference_f_attribute_ref
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in Variable_Reference_Type'Class then
+         declare
+            Typed_Node : constant Variable_Reference :=
+               Variable_Reference (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Attribute_Ref))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_variable_reference_f_attribute_ref;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_with_decl_f_is_limited
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_bool) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in With_Decl_Type'Class then
+         declare
+            Typed_Node : constant With_Decl :=
+               With_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    gpr_bool (Boolean'Pos (Typed_Node.F_Is_Limited))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_with_decl_f_is_limited;
+
+
+           
+
+   
+
+   
+   
+
+   function gpr_with_decl_f_path_names
+     (Node    : gpr_base_node;
+
+
+      Value_P : access gpr_base_node) return int
+
+   is
+
+      Unwrapped_Node : constant GPR_Node := Unwrap (Node);
+   begin
+      Clear_Last_Exception;
+
+
+      if Unwrapped_Node.all in With_Decl_Type'Class then
+         declare
+            Typed_Node : constant With_Decl :=
+               With_Decl (Unwrapped_Node);
+         begin
+             
+             Value_P.all :=
+                    Wrap (GPR_Node (Typed_Node.F_Path_Names))
+             ;
+             return 1;
+         exception
+            when Exc : Property_Error =>
+               Set_Last_Exception (Exc, Is_Fatal => False);
+               return 0;
+         end;
+      else
+         return 0;
+      end if;
+   exception
+      when Exc : others =>
+         Set_Last_Exception (Exc);
+         return 0;
+   end gpr_with_decl_f_path_names;
+
+
+
+      
+
+
+
+procedure gpr_entity_inc_ref (R : gpr_entity_Ptr) is
+begin
+   Clear_Last_Exception;
+   Inc_Ref (R.all);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end gpr_entity_inc_ref;
+
+procedure gpr_entity_dec_ref (R : gpr_entity_Ptr) is
+begin
+   Clear_Last_Exception;
+   Dec_Ref (R.all);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end gpr_entity_dec_ref;
+
+
+      
+
+
+
+procedure gpr_entity_info_inc_ref (R : gpr_entity_info_Ptr) is
+begin
+   Clear_Last_Exception;
+   Inc_Ref (R.all);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end gpr_entity_info_inc_ref;
+
+procedure gpr_entity_info_dec_ref (R : gpr_entity_info_Ptr) is
+begin
+   Clear_Last_Exception;
+   Dec_Ref (R.all);
+exception
+   when Exc : others =>
+      Set_Last_Exception (Exc);
+end gpr_entity_info_dec_ref;
+
+
+      
+
+
+
+
+
+
 
 end GPR_Parser.Analysis.C;
