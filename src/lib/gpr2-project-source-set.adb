@@ -92,7 +92,9 @@ package body GPR2.Project.Source.Set is
       Position : constant Cursor :=
                    Cursor'(Iter.Root, Set.First (Iter.Root.S));
    begin
-      if Match_Filter (Iter, Set.Element (Position.Current)) then
+      if not Has_Element (Position)
+        or else Match_Filter (Iter, Set.Element (Position.Current))
+      then
          return Position;
       else
          return Next (Iter, Position);
