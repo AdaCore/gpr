@@ -34,7 +34,7 @@ with GPR2.Project.Pack.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
-with GPR2.Source;
+with GPR2.Source.Set;
 
 limited with GPR2.Project.Tree;
 
@@ -69,12 +69,9 @@ private package GPR2.Project.Definition is
    --  structure will be used to compute the dependencies of a given source
    --  file.
 
-   package Source_Set is
-     new Ada.Containers.Vectors (Positive, GPR2.Source.Object);
-
    type Unit is record
       Spec   : GPR2.Source.Object;
-      Bodies : Source_Set.Vector;
+      Bodies : GPR2.Source.Set.Object;
    end record;
 
    package Unit_Sources is
