@@ -34,10 +34,12 @@ package body GPR2.Message is
    function Create
      (Level   : Level_Value;
       Message : String;
-      Sloc    : Source_Reference.Object := Source_Reference.Undefined)
+      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined)
       return Object is
    begin
-      return Object'(Level, Unread, To_Unbounded_String (Message), Sloc);
+      return Object'
+        (Level, Unread, To_Unbounded_String (Message),
+         Source_Reference.Object (Sloc));
    end Create;
 
    ------------

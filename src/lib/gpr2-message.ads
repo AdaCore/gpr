@@ -39,7 +39,7 @@ package GPR2.Message is
    function Create
      (Level   : Level_Value;
       Message : String;
-      Sloc    : Source_Reference.Object := Source_Reference.Undefined)
+      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined)
       return Object
      with Post => Create'Result.Status = Unread;
    --  Constructor for a log message
