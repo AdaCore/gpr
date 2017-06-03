@@ -31,6 +31,8 @@ package GPR2.Source_Reference is
 
    subtype Source_Reference is Object;
 
+   function "<" (Left, Right : Object) return Boolean;
+
    Undefined : constant Object;
 
    function Create
@@ -59,6 +61,11 @@ private
       Column   : Natural;
       Filename : Unbounded_String;
    end record;
+
+   function "<" (Left, Right : Object) return Boolean is
+     (Left.Filename < Right.Filename
+       or else
+      (Left.Filename = Right.Filename and then Left.Line < Right.Line));
 
    function Has_Source_Reference (Self : Object) return Boolean
      is (Self.Column > 0 and then Self.Line > 0);
