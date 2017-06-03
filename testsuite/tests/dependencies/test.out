@@ -1,0 +1,92 @@
+Project: Demo
+
+ > src/abc.adb   unit: abc
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/api.adb   unit: api
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/api-call.adb   unit: api.call
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/call.adb   unit: call
+..... DIRECT
+   > src/tst.adb
+   > src/tst.ads
+..... UNIT
+   > src/tst.adb
+   > src/tst.ads
+..... CLOSURE
+   > src/abc.adb
+   > src/api.adb
+   > src/tst.adb
+   > src/abc.ads
+   > src/abc-plop.ads
+   > src/api.ads
+   > src/tst.ads
+
+ > src/tst.adb   unit: tst
+..... DIRECT
+   > src/api.adb
+   > src/abc-plop.ads
+   > src/api.ads
+..... UNIT
+   > src/abc.adb
+   > src/api.adb
+   > src/abc.ads
+   > src/abc-plop.ads
+   > src/api.ads
+..... CLOSURE
+   > src/abc.adb
+   > src/api.adb
+   > src/abc.ads
+   > src/abc-plop.ads
+   > src/api.ads
+
+ > src/abc.ads   unit: abc
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/abc-plop.ads   unit: abc.plop
+..... DIRECT
+   > src/api.adb
+   > src/api.ads
+..... UNIT
+   > src/api.adb
+   > src/api.ads
+..... CLOSURE
+   > src/api.adb
+   > src/api.ads
+
+ > src/api.ads   unit: api
+..... DIRECT
+api.ads:1:1: withed unit Toto not found
+api.ads:3:1: withed unit titi not found
+..... UNIT
+..... CLOSURE
+
+ > src/tst.ads   unit: tst
+..... DIRECT
+   > src/abc.adb
+   > src/api.adb
+   > src/abc.ads
+   > src/api.ads
+..... UNIT
+   > src/abc.adb
+   > src/api.adb
+   > src/abc.ads
+   > src/abc-plop.ads
+   > src/api.ads
+..... CLOSURE
+   > src/abc.adb
+   > src/api.adb
+   > src/abc.ads
+   > src/abc-plop.ads
+   > src/api.ads
