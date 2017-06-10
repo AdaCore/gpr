@@ -48,6 +48,8 @@ package GPR2.Project.Source.Set is
 
    procedure Replace (Self : in out Object; Source : Project.Source.Object);
 
+   function First_Element (Self : Object) return Project.Source.Object;
+
    type Cursor is private;
 
    No_Element : constant Cursor;

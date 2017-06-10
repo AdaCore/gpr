@@ -101,6 +101,15 @@ package body GPR2.Project.Source.Set is
       end if;
    end First;
 
+   -------------------
+   -- First_Element --
+   -------------------
+
+   function First_Element (Self : Object) return Project.Source.Object is
+   begin
+      return Self.S.First_Element;
+   end First_Element;
+
    -----------------
    -- Has_Element --
    -----------------
