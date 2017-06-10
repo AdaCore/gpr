@@ -67,6 +67,17 @@ package body GPR2.Project.Tree is
       Self.Messages.Append (Message);
    end Append_Message;
 
+   ----------------
+   -- Clear_View --
+   ----------------
+
+   procedure Clear_View
+     (Self : in out Object;
+      Unit : Name_Type) is
+   begin
+      Self.Units.Exclude (Unit);
+   end Clear_View;
+
    ---------------------------
    -- Configuration_Project --
    ---------------------------
@@ -245,6 +256,23 @@ package body GPR2.Project.Tree is
       return Cursor'(Projects, 1, Iter.Root.Root);
    end First;
 
+   --------------
+   -- Get_View --
+   --------------
+
+   function Get_View
+     (Self : Object;
+      Unit : Name_Type) return Project.View.Object
+   is
+      Pos : constant Unit_View.Cursor := Self.Units.Find (Unit);
+   begin
+      if Unit_View.Has_Element (Pos) then
+         return Unit_View.Element (Pos);
+      else
+         return Project.View.Undefined;
+      end if;
+   end Get_View;
+
    -------------------------------
    -- Has_Configuration_Project --
    -------------------------------
@@ -410,6 +438,18 @@ package body GPR2.Project.Tree is
          return No_Element;
       end if;
    end Next;
+
+   -----------------
+   -- Record_View --
+   -----------------
+
+   procedure Record_View
+     (Self : in out Object;
+      View : GPR2.Project.View.Object;
+      Unit : Name_Type) is
+   begin
+      Self.Units.Include (Unit, View);
+   end Record_View;
 
    --------------------
    -- Recursive_Load --
