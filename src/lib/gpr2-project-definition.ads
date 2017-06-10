@@ -22,8 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
+
 with GNAT.MD5;
 
 with GPR2.Containers;
@@ -34,7 +34,7 @@ with GPR2.Project.Pack.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
-with GPR2.Source.Set;
+with GPR2.Unit.Set;
 
 limited with GPR2.Project.Tree;
 
@@ -44,7 +44,6 @@ private package GPR2.Project.Definition is
    use type View.Object;
    use type Parser.Project.Object;
    use type Ada.Containers.Count_Type;
-   use type GPR2.Source.Object;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded tree. That is there is always a single instance of
@@ -60,22 +59,6 @@ private package GPR2.Project.Definition is
      new Ada.Containers.Vectors (Positive, View.Object);
 
    type Relation_Status is (Root, Imported, Aggregated);
-
-   --  Unit / Sources
-   --
-   --  We keep record for every unit the list of sources that are associated.
-   --  This can be a spec only or a body only or both. Note that we keep a list
-   --  for the bodies are we also want to record the separate units. This data
-   --  structure will be used to compute the dependencies of a given source
-   --  file.
-
-   type Unit is record
-      Spec   : GPR2.Source.Object;
-      Bodies : GPR2.Source.Set.Object;
-   end record;
-
-   package Unit_Sources is
-     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Unit);
 
    --  Data contains a project view data. We have all the attributes, variables
    --  and pakcages with the final values as parsed with the project's context
@@ -106,7 +89,7 @@ private package GPR2.Project.Definition is
       Sources           : Project.Source.Set.Object;
       Sources_Signature : GNAT.MD5.Binary_Message_Digest;
 
-      Units             : Unit_Sources.Map;
+      Units             : Unit.Set.Object;
 
       --  Some general information
       Context_View      : View.Object;

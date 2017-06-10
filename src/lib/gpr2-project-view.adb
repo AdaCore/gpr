@@ -41,6 +41,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Source;
 with GPR2.Source_Reference;
+with GPR2.Unit;
 
 package body GPR2.Project.View is
 
@@ -384,7 +385,22 @@ package body GPR2.Project.View is
    -- Sources --
    -------------
 
-   function Sources (Self : Object) return Source.Set.Object is
+   function Sources (Self : Object) return Project.Source.Set.Object is
+   begin
+      Self.Update_Sources;
+
+      declare
+         Data : constant Definition.Data := Definition.Get (Self);
+      begin
+         return Data.Sources;
+      end;
+   end Sources;
+
+   --------------------
+   -- Update_Sources --
+   --------------------
+
+   procedure Update_Sources (Self : Object) is
 
       use Ada;
       use GNAT;
@@ -576,50 +592,37 @@ package body GPR2.Project.View is
                         (if Lang = "ada"
                          then Unit_For (Filename, Kind, Ok)
                          else No_Name);
-               Src  : GPR2.Source.Object :=
+               Src  : constant GPR2.Source.Object :=
                         GPR2.Source.Create
                           (Filename  => Create_File (Name_Type (Filename)),
                            Kind      => Kind,
                            Language  => Lang,
                            Unit_Name => Unit);
-               U_Def : Definition.Unit;
+
+               U_Def : GPR2.Unit.Object;
 
                ------------------
                -- Register_Src --
                ------------------
 
                procedure Register_Src is
+                  P_Src : constant Project.Source.Object :=
+                            Project.Source.Create (Src, Self);
                begin
                   if Kind = S_Spec then
-                     U_Def.Spec := Src;
-
-                     --  And make sure the bodies (body & separate) are
-                     --  referencing this as the spec.
-
-                     for S of U_Def.Bodies loop
-                        S.Set_Other_Part (Src);
-                     end loop;
-
+                     U_Def.Update_Spec (P_Src);
                   else
-                     U_Def.Bodies.Append (Src);
+                     U_Def.Update_Bodies (P_Src);
                   end if;
                end Register_Src;
 
             begin
                if Ok then
                   if Unit /= No_Name then
+                     Data.Tree.Record_View (Self, Unit => Unit);
+
                      if Data.Units.Contains (Unit) then
                         U_Def := Data.Units (Unit);
-
-                        declare
-                           Other_Src : GPR2.Source.Object :=
-                                         (if U_Def.Spec = GPR2.Source.Undefined
-                                          then U_Def.Bodies.First_Element
-                                          else U_Def.Spec);
-                        begin
-                           Src.Set_Other_Part (Other_Src);
-                           Other_Src.Set_Other_Part (Src);
-                        end;
 
                         Register_Src;
 
@@ -1157,6 +1160,15 @@ package body GPR2.Project.View is
 
          Data.Sources.Clear;
 
+         --  Clear the units record, note that we also want to record the
+         --  unit_name -> view lookup table in the tree.
+
+         for U of Data.Units loop
+            Data.Tree.Clear_View (Unit => U.Spec.Source.Unit_Name);
+         end loop;
+
+         Data.Units.Clear;
+
          --  If we have attribute Excluded_Source_List_File
 
          if Data.Attrs.Has_Excluded_Source_List_File then
@@ -1253,9 +1265,7 @@ package body GPR2.Project.View is
             raise Project_Error with "cannot retrieve the sources";
          end if;
       end if;
-
-      return Data.Sources;
-   end Sources;
+   end Update_Sources;
 
    ---------------
    -- Variables --

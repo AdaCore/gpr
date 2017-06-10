@@ -158,6 +158,13 @@ package GPR2.Project.View is
 
    function Sources (Self : Object) return Project.Source.Set.Object
      with Pre => Self /= Undefined;
+   --  Returns all the sources for the view, note that this routine ensure that
+   --  the current sources are up-to-date by calling Update_Sources below.
+
+   procedure Update_Sources (Self : Object)
+     with Pre => Self /= Undefined;
+   --  Ensure that the view sources are up-to-date. This is needed before
+   --  computing the dependecies of a source in the project tree.
 
    --  Following routines are for internal use only and convert from a View
    --  unique Id.

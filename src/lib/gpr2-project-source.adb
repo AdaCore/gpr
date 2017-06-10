@@ -28,6 +28,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference.Set;
 with GPR2.Source_Reference.Identifier;
+with GPR2.Unit;
 
 package body GPR2.Project.Source is
 
@@ -52,10 +53,10 @@ package body GPR2.Project.Source is
    is
       procedure Insert
         (Deps : in out GPR2.Project.Source.Set.Object;
-         Unit : Definition.Unit) with Inline;
-      --  ???
+         Unit : GPR2.Unit.Object) with Inline;
+      --  Insert Unit into Deps (result of this routine)
 
-      procedure To_Analyse (Src : GPR2.Source.Object);
+      procedure To_Analyse (Src : GPR2.Project.Source.Object);
       --  Record Src's withed units to be analysed (insert into Buf)
 
       ------------
@@ -64,7 +65,7 @@ package body GPR2.Project.Source is
 
       procedure Insert
         (Deps : in out GPR2.Project.Source.Set.Object;
-         Unit : Definition.Unit)
+         Unit : GPR2.Unit.Object)
       is
          procedure Insert
            (Deps : in out GPR2.Project.Source.Set.Object;
@@ -85,10 +86,10 @@ package body GPR2.Project.Source is
          end Insert;
 
       begin
-         Insert (Deps, Object'(Unit.Spec, Self.View));
+         Insert (Deps, Unit.Spec);
 
          for B of Unit.Bodies loop
-            Insert (Deps, Object'(B, Self.View));
+            Insert (Deps, B);
          end loop;
       end Insert;
 
@@ -109,10 +110,10 @@ package body GPR2.Project.Source is
       -- To_Analyse --
       ----------------
 
-      procedure To_Analyse (Src : GPR2.Source.Object) is
+      procedure To_Analyse (Src : GPR2.Project.Source.Object) is
       begin
-         if Src /= GPR2.Source.Undefined then
-            for W of Src.Withed_Units loop
+         if Src /= GPR2.Project.Source.Undefined then
+            for W of Src.Source.Withed_Units loop
                if not Done.Contains (W) then
                   Buf.Insert (W);
                end if;
@@ -121,19 +122,29 @@ package body GPR2.Project.Source is
       end To_Analyse;
 
    begin
+      --  First we need to ensure that all views are up-to-date regarding the
+      --  sources/unit. The sources are recomputed only if required.
+
+      for V of Data.Tree.all loop
+         V.Update_Sources;
+      end loop;
+
       --  For Unit or Closure add dependencies from the other part
 
       if Mode in Unit | Closure then
-         To_Analyse (Self.Source.Other_Part);
+         To_Analyse (Object'(Self.Source.Other_Part, Self.View));
       end if;
 
       For_Every_Unit : loop
          exit For_Every_Unit when Buf.Is_Empty;
 
          declare
-            W  : constant Source_Reference.Identifier.Object :=
-                   Source_Reference.Identifier.Object (Buf.First_Element);
-            SU : Definition.Unit;
+            use type Project.View.Object;
+
+            W    : constant Source_Reference.Identifier.Object :=
+                     Source_Reference.Identifier.Object (Buf.First_Element);
+            View : Project.View.Object;
+            SU   : GPR2.Unit.Object;
          begin
             --  Remove the unit just taken from the list
 
@@ -142,31 +153,48 @@ package body GPR2.Project.Source is
             if not Done.Contains (W) then
                Done.Include (W);
 
-               if Data.Units.Contains (W.Identifier) then
-                  SU := Data.Units (W.Identifier);
+               View := Data.Tree.Get_View (Unit => W.Identifier);
 
-                  --  At least the dependencies are the spec and body of the
-                  --  withed unit.
-
-                  Insert (Deps, SU);
-
-                  --  Finaly, for the Closure mode add the dependencies of
-                  --  withed unit from the direct withed spec and bodies.
-
-                  if Mode = Closure then
-                     To_Analyse (SU.Spec);
-
-                     for B of SU.Bodies loop
-                        To_Analyse (B);
-                     end loop;
-                  end if;
-
-               else
+               if View = Project.View.Undefined then
                   Data.Tree.Log_Messages.Append
                     (Message.Create
                        (Message.Warning,
                         "withed unit " & String (W.Identifier) & " not found",
                         W));
+
+               else
+                  declare
+                     Data : constant Definition.Data := Definition.Get (View);
+                     --  The view information for the unit Identifier
+                  begin
+                     if Data.Units.Contains (W.Identifier) then
+                        SU := Data.Units (W.Identifier);
+
+                        --  At least the dependencies are the spec and body of
+                        --  the withed unit.
+
+                        Insert (Deps, SU);
+
+                        --  Finaly, for the Closure mode add the dependencies
+                        --  of withed unit from the direct withed spec and
+                        --  bodies.
+
+                        if Mode = Closure then
+                           To_Analyse (SU.Spec);
+
+                           for B of SU.Bodies loop
+                              To_Analyse (B);
+                           end loop;
+                        end if;
+
+                     else
+                        --  This should never happen, if the unit has been
+                        --  found to be in the View, it should be there.
+
+                        raise Project_Error
+                          with "internal error in dependencies";
+                     end if;
+                  end;
                end if;
             end if;
          end;
