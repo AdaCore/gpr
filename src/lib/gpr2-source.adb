@@ -174,8 +174,8 @@ package body GPR2.Source is
    --------------------
 
    procedure Set_Other_Part
-     (Self       : in out Object;
-      Other_Part : in out Object) is
+     (Self       : Object;
+      Other_Part : Object) is
    begin
       Registry.Store (Self.Id).Other_Part := Other_Part.Id;
       Registry.Store (Other_Part.Id).Other_Part := Self.Id;

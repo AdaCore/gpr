@@ -64,8 +64,8 @@ package GPR2.Source is
    --  Constructor for a source object
 
    procedure Set_Other_Part
-     (Self       : in out Object;
-      Other_Part : in out Object);
+     (Self       : Object;
+      Other_Part : Object);
    --  Set the other-part for Self. The other-part is the body for a spec or
    --  the spec for a body or separate unit.
 
