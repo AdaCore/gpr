@@ -95,10 +95,12 @@ all: build build-tools
 build: ${LIBGPR2_TYPES:%=build-%}
 
 build-%:
-	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPR2)
+	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
+		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2)
 
 build-tools:
-	$(BUILDER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static $(GPR2TOOLS)
+	$(BUILDER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+		-XLANGKIT_SUPPORT_BUILD=static $(GPR2TOOLS)
 
 ###########
 # Install #
@@ -113,11 +115,13 @@ install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
+		-XLANGKIT_SUPPORT_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE $(GPR2)
 
 install-tools:
 	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
-		--build-name=static --mode=usage $(GPR2TOOLS)
+		-XLANGKIT_SUPPORT_BUILD=static --build-name=static \
+		--mode=usage $(GPR2TOOLS)
 
 #########
 # setup #

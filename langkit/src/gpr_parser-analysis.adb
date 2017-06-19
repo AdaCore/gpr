@@ -1382,8 +1382,8 @@ package body GPR_Parser.Analysis is
 
    function Create (Items : AST_Envs.Entity_Array) return Entity_Array_Access
    is (new Entity_Array_Record'(N         => Items'Length,
-                             Items     => Entity_Array (Items),
-                             Ref_Count => 1));
+                           Items     => Entity_Array (Items),
+                           Ref_Count => 1));
 
 
    function Child_Number
@@ -2524,6 +2524,16 @@ package body GPR_Parser.Analysis is
       Populate_Internal (Node, Env);
    end Populate_Lexical_Env;
 
+   ---------------
+   -- El_Image  --
+   ---------------
+
+   function El_Image (Node : GPR_Node) return Text_Type
+   is ("`"
+       & To_Text (To_String (Node.Unit.File_Name))
+       & " " & To_Text (Image (Sloc_Range (Node)))
+       & "`");
+
    -----------------
    -- Short_Image --
    -----------------
@@ -3028,7 +3038,6 @@ package body GPR_Parser.Analysis is
 
 
 
-
    -------------
    -- Combine --
    -------------
@@ -3455,8 +3464,23 @@ package body GPR_Parser.Analysis is
    -- El_Image --
    --------------
 
-   function El_Image (N : Entity) return String
-   is (if N.El /= null then Image (N.El.Short_Image) else "None");
+   function El_Image (N : Entity) return String is
+   begin
+      if N.El /= null then
+         declare
+            Node_Image : String := Image (N.El.Short_Image);
+         begin
+            return
+            (if N.Info.Rebindings /= null
+             then "<| "
+             & Node_Image (Node_Image'First + 1 .. Node_Image'Last -1) & " "
+             & Image (AST_Envs.Image (N.Info.Rebindings)) & " |>"
+             else Node_Image);
+         end;
+      else
+         return "None";
+      end if;
+   end El_Image;
 
    ---------------
    -- Can_Reach --

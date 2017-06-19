@@ -49,7 +49,7 @@ QUEX_NAMESPACE_LEXEME_NULL_CLOSE
 
 
 
-#   line 8 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 8 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
 
 
     /* Redefine the stamp action to add the end line and end column to tokens */
@@ -64,32 +64,32 @@ QUEX_NAMESPACE_LEXEME_NULL_CLOSE
 typedef struct quex_Token_tag {
     QUEX_TYPE_TOKEN_ID    _id;
 
-#   line 15 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 15 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
     const QUEX_TYPE_CHARACTER* text;
 
 #   line 44 "quex_lexer-token.h"
 
-#   line 16 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 16 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
     size_t                     len;
 
 #   line 49 "quex_lexer-token.h"
 
-#   line 17 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 17 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
     size_t                     end_line;
 
 #   line 54 "quex_lexer-token.h"
 
-#   line 18 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 18 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
     uint16_t                   end_column;
 
 #   line 59 "quex_lexer-token.h"
 
-#   line 20 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 20 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
     uint32_t                   offset;
 
 #   line 64 "quex_lexer-token.h"
 
-#   line 19 "/home/pmderodat/build/libadalang/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 19 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
     uint16_t                   last_id;
 
 #   line 69 "quex_lexer-token.h"

@@ -96,8 +96,7 @@ package body GPR2.Parser.Project is
      (Node : not null access Single_Tok_Node_Type'Class) return Name_Type
    is
       use Ada.Characters.Conversions;
-      V      : constant Wide_Wide_String :=
-                 Text (F_Tok (Single_Tok_Node (Node)));
+      V      : constant Wide_Wide_String := Text (F_Tok (Node));
       Offset : Natural := 0;
    begin
       if V (V'First) = '"' and then V (V'Last) = '"' then
@@ -141,8 +140,7 @@ package body GPR2.Parser.Project is
          procedure Handle_String (Node : not null String_Literal) is
          begin
             Result := To_Unbounded_String
-              (Unquote
-                 (Value_Type (Image (F_Tok (Single_Tok_Node (Node))))));
+              (Unquote (Value_Type (String'(Text (F_Tok (Node))))));
          end Handle_String;
 
       begin
@@ -165,6 +163,7 @@ package body GPR2.Parser.Project is
    begin
       Error := False;
       Traverse (N, Parser'Access);
+
       return Value_Type (To_String (Result));
    end Get_String_Literal;
 
@@ -1308,8 +1307,7 @@ package body GPR2.Parser.Project is
             begin
                Record_Value
                  (Result.Single,
-                  Unquote
-                    (Value_Type (Image (F_Tok (Single_Tok_Node (Node))))));
+                  Unquote (Value_Type (String'(Text (F_Tok (Node))))));
             end Handle_String;
 
             ---------------------
@@ -1451,7 +1449,7 @@ package body GPR2.Parser.Project is
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
          Name    : constant Name_Type :=
-                     Name_Type (Image (F_Tok (Single_Tok_Node (Name_1))));
+                     Name_Type (String'(Text (F_Tok (Name_1))));
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -1460,7 +1458,7 @@ package body GPR2.Parser.Project is
                return Get_Attribute_Ref
                  (Project => Name,
                   Pack    => Optional_Name_Type
-                               (Image (F_Tok (Single_Tok_Node (Name_2)))),
+                               (String'(Text (F_Tok (Name_2)))),
                   Node    => Att_Ref);
 
             else
@@ -1707,8 +1705,7 @@ package body GPR2.Parser.Project is
                -------------------
 
                procedure Handle_String (Node : not null String_Literal) is
-                  Value : constant Value_Type :=
-                            Unquote (Image (F_Tok (Single_Tok_Node (Node))));
+                  Value : constant Value_Type := Unquote (Text (F_Tok (Node)));
                begin
                   Is_Case_Item_Matches :=
                     Is_Case_Item_Matches

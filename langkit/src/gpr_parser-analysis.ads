@@ -180,6 +180,12 @@ package GPR_Parser.Analysis is
    function Is_Null
      (Node : access GPR_Node_Type'Class) return Boolean;
 
+   function Short_Image
+     (Node : access GPR_Node_Type)
+      return Text_Type;
+   --  Return a short representation of the node, containing just the kind
+   --  name and the sloc.
+
    Property_Error : exception;
    --  Raised when an error occurs while evaluating a property.
 
@@ -500,13 +506,16 @@ package GPR_Parser.Analysis is
       Node : GPR_Node;
    end record;
 
+   function El_Image (Node : GPR_Node) return Text_Type;
+
    package AST_Envs is new Langkit_Support.Lexical_Env
      (Element_T        => GPR_Node,
       Element_Metadata => Metadata,
       No_Element       => null,
       Empty_Metadata   => No_Metadata,
       Combine          => Combine,
-      Getter_State_T   => Env_Getter_State_T);
+      Getter_State_T   => Env_Getter_State_T,
+      Element_Image    => El_Image);
 
    --  The following subtypes are introduced to ease code generation, so we
    --  don't have to deal with the AST_Envs suffix.
@@ -727,6 +736,7 @@ package GPR_Parser.Analysis is
    function Get_Unit
      (Node : access GPR_Node_Type'Class)
       return Analysis_Unit;
+
    --  Return the unit that owns an AST node.
 
    -------------------------------
@@ -1071,12 +1081,6 @@ package GPR_Parser.Analysis is
      (Node : access GPR_Node_Type) return String is abstract;
    --  Debug helper: return a textual representation of this node and all its
    --  children.
-
-   function Short_Image
-     (Node : access GPR_Node_Type)
-      return Text_Type;
-   --  Debug helper: return a short representation of the string, containing
-   --  just the kind name and the sloc.
 
    procedure Print (Node        : access GPR_Node_Type;
                     Line_Prefix : String := "") is abstract;

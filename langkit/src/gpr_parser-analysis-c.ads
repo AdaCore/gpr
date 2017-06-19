@@ -863,7 +863,7 @@ type gpr_metadata_Ptr is access Metadata;
       with Export        => True,
            Convention    => C,
            External_name => "gpr_gpr_node_children";
-   --  Return an array that contains the direct lexical children
+   --  Return an array that contains the direct lexical children.
 
            
    
@@ -914,7 +914,7 @@ type gpr_metadata_Ptr is access Metadata;
       with Export        => True,
            Convention    => C,
            External_name => "gpr_gpr_node_previous_sibling";
-   --  Return the node's previous sibling, if there is one
+   --  Return the node's previous sibling, if there is one.
 
            
    
@@ -931,7 +931,7 @@ type gpr_metadata_Ptr is access Metadata;
       with Export        => True,
            Convention    => C,
            External_name => "gpr_gpr_node_next_sibling";
-   --  Return the node's next sibling, if there is one
+   --  Return the node's next sibling, if there is one.
 
            
    

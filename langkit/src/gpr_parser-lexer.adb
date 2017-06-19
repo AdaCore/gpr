@@ -178,7 +178,7 @@ package body GPR_Parser.Lexer is
 
          case Token_Id is
 
-            when GPR_Amp | GPR_Is | GPR_Limited | GPR_Char | GPR_Type | GPR_Case | GPR_Pipe | GPR_Par_Close | GPR_Abstract | GPR_Null | GPR_With | GPR_Semicolon | GPR_Project | GPR_Extends | GPR_End | GPR_Par_Open | GPR_Package | GPR_At | GPR_Others | GPR_Colon | GPR_For | GPR_Dot | GPR_All | GPR_Assign | GPR_Identifier | GPR_Arrow | GPR_When | GPR_Comma | GPR_Tick | GPR_Use | GPR_Renames =>
+            when GPR_Package | GPR_Type | GPR_Renames | GPR_Others | GPR_With | GPR_Identifier | GPR_Char | GPR_Comma | GPR_Assign | GPR_Pipe | GPR_Use | GPR_Is | GPR_When | GPR_Project | GPR_Abstract | GPR_Extends | GPR_Par_Close | GPR_Semicolon | GPR_Par_Open | GPR_Amp | GPR_All | GPR_Arrow | GPR_At | GPR_Case | GPR_End | GPR_Null | GPR_For | GPR_Colon | GPR_Tick | GPR_Limited | GPR_Dot =>
                declare
                   Bounded_Text : Text_Type (1 .. Natural (Token.Text_Length))
                      with Address => Token.Text;

@@ -292,15 +292,19 @@ package body GPR_Parser.Analysis.Parsers is
       Parse_Lists : Free_Parse_List;
 
       
-      Declarative_Items_List_Parse_0_Memo : GPR_Node_List_Memos.Memo_Type;
-      
-      Simple_Declarative_Items_List_Parse_0_Memo : GPR_Node_List_Memos.Memo_Type;
-      
       Discrete_Choice_List_List_Parse_0_Memo : GPR_Node_List_Memos.Memo_Type;
       
       Context_Clauses_List_Parse_0_Memo : With_Decl_List_Memos.Memo_Type;
       
+      Declarative_Items_List_Parse_0_Memo : GPR_Node_List_Memos.Memo_Type;
+      
+      Simple_Declarative_Items_List_Parse_0_Memo : GPR_Node_List_Memos.Memo_Type;
+      
       Term_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
+      
+      Choice_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
+      
+      Static_Name_Or_Parse_0_Memo : Expr_Memos.Memo_Type;
       
       Declarative_Item_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
       
@@ -308,17 +312,9 @@ package body GPR_Parser.Analysis.Parsers is
       
       Associative_Array_Index_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
       
-      Choice_Or_Parse_0_Memo : GPR_Node_Memos.Memo_Type;
-      
-      Static_Name_Or_Parse_0_Memo : Expr_Memos.Memo_Type;
-      
-      String_Literal_At_Transform_Parse_0_Memo : String_Literal_At_Memos.Memo_Type;
-      
       Project_Reference_Transform_Parse_0_Memo : Project_Reference_Memos.Memo_Type;
       
-      Variable_Decl_Transform_Parse_0_Memo : Variable_Decl_Memos.Memo_Type;
-      
-      Attribute_Decl_Transform_Parse_0_Memo : Attribute_Decl_Memos.Memo_Type;
+      Compilation_Unit_Transform_Parse_0_Memo : Compilation_Unit_Memos.Memo_Type;
       
       Package_Decl_Transform_Parse_0_Memo : Package_Decl_Memos.Memo_Type;
       
@@ -344,8 +340,6 @@ package body GPR_Parser.Analysis.Parsers is
       
       Num_Literal_Transform_Parse_0_Memo : Num_Literal_Memos.Memo_Type;
       
-      Compilation_Unit_Transform_Parse_0_Memo : Compilation_Unit_Memos.Memo_Type;
-      
       Attribute_Reference_Transform_Parse_0_Memo : Attribute_Reference_Memos.Memo_Type;
       
       Variable_Reference_Transform_Parse_0_Memo : Variable_Reference_Memos.Memo_Type;
@@ -355,6 +349,8 @@ package body GPR_Parser.Analysis.Parsers is
       Expression_Transform_Parse_0_Memo : Term_List_Memos.Memo_Type;
       
       Expression_List_Transform_Parse_0_Memo : Expr_List_Memos.Memo_Type;
+      
+      String_Literal_At_Transform_Parse_0_Memo : String_Literal_At_Memos.Memo_Type;
       
       With_Decl_Transform_Parse_0_Memo : With_Decl_Memos.Memo_Type;
       
@@ -369,6 +365,10 @@ package body GPR_Parser.Analysis.Parsers is
       Project_Declaration_Transform_Parse_0_Memo : Project_Declaration_Memos.Memo_Type;
       
       Project_Transform_Parse_0_Memo : Project_Memos.Memo_Type;
+      
+      Variable_Decl_Transform_Parse_0_Memo : Variable_Decl_Memos.Memo_Type;
+      
+      Attribute_Decl_Transform_Parse_0_Memo : Attribute_Decl_Memos.Memo_Type;
    end record;
 
    
@@ -9051,20 +9051,18 @@ end Compilation_Unit_Transform_Parse_0;
       Parser := New_Parser;
 
       --  Reset the memo tables in the private part
-         Clear (Parser.Private_Part.Declarative_Items_List_Parse_0_Memo);
-         Clear (Parser.Private_Part.Simple_Declarative_Items_List_Parse_0_Memo);
          Clear (Parser.Private_Part.Discrete_Choice_List_List_Parse_0_Memo);
          Clear (Parser.Private_Part.Context_Clauses_List_Parse_0_Memo);
+         Clear (Parser.Private_Part.Declarative_Items_List_Parse_0_Memo);
+         Clear (Parser.Private_Part.Simple_Declarative_Items_List_Parse_0_Memo);
          Clear (Parser.Private_Part.Term_Or_Parse_0_Memo);
+         Clear (Parser.Private_Part.Choice_Or_Parse_0_Memo);
+         Clear (Parser.Private_Part.Static_Name_Or_Parse_0_Memo);
          Clear (Parser.Private_Part.Declarative_Item_Or_Parse_0_Memo);
          Clear (Parser.Private_Part.Simple_Declarative_Item_Or_Parse_0_Memo);
          Clear (Parser.Private_Part.Associative_Array_Index_Or_Parse_0_Memo);
-         Clear (Parser.Private_Part.Choice_Or_Parse_0_Memo);
-         Clear (Parser.Private_Part.Static_Name_Or_Parse_0_Memo);
-         Clear (Parser.Private_Part.String_Literal_At_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Project_Reference_Transform_Parse_0_Memo);
-         Clear (Parser.Private_Part.Variable_Decl_Transform_Parse_0_Memo);
-         Clear (Parser.Private_Part.Attribute_Decl_Transform_Parse_0_Memo);
+         Clear (Parser.Private_Part.Compilation_Unit_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Package_Decl_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Package_Renaming_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Package_Extension_Transform_Parse_0_Memo);
@@ -9077,12 +9075,12 @@ end Compilation_Unit_Transform_Parse_0;
          Clear (Parser.Private_Part.Identifier_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.String_Literal_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Num_Literal_Transform_Parse_0_Memo);
-         Clear (Parser.Private_Part.Compilation_Unit_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Attribute_Reference_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Variable_Reference_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Builtin_Function_Call_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Expression_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Expression_List_Transform_Parse_0_Memo);
+         Clear (Parser.Private_Part.String_Literal_At_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.With_Decl_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Abstract_Present_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Qualifier_Names_Transform_Parse_0_Memo);
@@ -9090,6 +9088,8 @@ end Compilation_Unit_Transform_Parse_0;
          Clear (Parser.Private_Part.Project_Extension_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Project_Declaration_Transform_Parse_0_Memo);
          Clear (Parser.Private_Part.Project_Transform_Parse_0_Memo);
+         Clear (Parser.Private_Part.Variable_Decl_Transform_Parse_0_Memo);
+         Clear (Parser.Private_Part.Attribute_Decl_Transform_Parse_0_Memo);
    end Reset;
 
    -------------
