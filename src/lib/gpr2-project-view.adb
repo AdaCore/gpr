@@ -1293,28 +1293,45 @@ begin
 
    declare
       Undef_Sloc : Source_Reference.Object renames Source_Reference.Undefined;
-      Ada_Spec   : constant Project.Attribute.Object :=
-                     Project.Attribute.Create
-                       (Registry.Attribute.Spec_Suffix,
-                        "ada", ".ads", Undef_Sloc);
-      Ada_Body   : constant Project.Attribute.Object :=
-                     Project.Attribute.Create
-                       (Registry.Attribute.Body_Suffix,
-                        "ada", ".adb", Undef_Sloc);
-      C_Spec     : constant Project.Attribute.Object :=
-                     Project.Attribute.Create
-                       (Registry.Attribute.Spec_Suffix,
-                        "c", ".h", Undef_Sloc);
-      C_Body     : constant Project.Attribute.Object :=
-                     Project.Attribute.Create
-                       (Registry.Attribute.Body_Suffix,
-                        "c", ".c", Undef_Sloc);
-      Dot_Repl   : constant Project.Attribute.Object :=
-                     Project.Attribute.Create
-                       (Registry.Attribute.Dot_Replacement,
-                        "", "-", Undef_Sloc);
-      Attrs      : Project.Attribute.Set.Object;
-      Langs      : Containers.Value_List;
+
+      function Create
+        (Name : Name_Type; Index, Value : Value_Type)
+         return Project.Attribute.Object;
+      --  Create attribute Name for the Naming package
+
+      ------------
+      -- Create --
+      ------------
+
+      function Create
+        (Name : Name_Type; Index, Value : Value_Type)
+         return Project.Attribute.Object
+      is
+         A   : Project.Attribute.Object :=
+                 Project.Attribute.Create (Name, Index, Value, Undef_Sloc);
+         Def : constant Project.Registry.Attribute.Def :=
+                 Project.Registry.Attribute.Get
+                   (Project.Registry.Attribute.Create
+                      (Name, Registry.Pack.Naming));
+      begin
+         A.Set_Case (Def.Index_Case_Sensitive, Def.Value_Case_Sensitive);
+         return A;
+      end Create;
+
+      Ada_Spec : constant Project.Attribute.Object :=
+                   Create (Registry.Attribute.Spec_Suffix, "ada", ".ads");
+      Ada_Body : constant  Project.Attribute.Object :=
+                   Create (Registry.Attribute.Body_Suffix, "ada", ".adb");
+      C_Spec   : constant Project.Attribute.Object :=
+                   Create (Registry.Attribute.Spec_Suffix, "c", ".h");
+      C_Body   : constant Project.Attribute.Object :=
+                   Create (Registry.Attribute.Body_Suffix, "c", ".c");
+      Dot_Repl : constant Project.Attribute.Object :=
+                   Project.Attribute.Create
+                     (Registry.Attribute.Dot_Replacement,
+                      "", "-", Undef_Sloc);
+      Attrs    : Project.Attribute.Set.Object;
+      Langs    : Containers.Value_List;
    begin
       --  Default naming package
 
