@@ -1231,7 +1231,8 @@ package body GPR2.Project.View is
                      if OS_Lib.Is_Absolute_Path (Dir) then
                         Handle_Directory (Dir);
                      else
-                        Handle_Directory (Directories.Compose (Root, Dir));
+                        Handle_Directory
+                          (Root & OS_Lib.Directory_Separator & Dir);
                      end if;
                   end loop;
                end if;
