@@ -1570,9 +1570,12 @@ package body GPR2.Parser.Project is
             Index : constant GPR_Node := F_Attr_Index (Node);
             I_Str : constant Value_Type :=
                       (if Present (Index)
-                       then Value_Type
-                              (Get_Name_Type
-                                (F_Str_Lit (String_Literal_At (Index))))
+                       then
+                          (if Kind (Index) = GPR_Others_Designator
+                           then "others"
+                           else Value_Type
+                                  (Get_Name_Type
+                                    (F_Str_Lit (String_Literal_At (Index)))))
                        else "");
             Expr  : constant not null Term_List := F_Expr (Node);
             N_Str : constant Name_Type :=
