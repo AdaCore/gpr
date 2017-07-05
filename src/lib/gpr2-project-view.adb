@@ -524,12 +524,12 @@ package body GPR2.Project.View is
          --  Recursivityy is controlled by a double * at the end of the
          --  directory.
 
-         Dir_Search   : Directories.Search_Type;
-         Dir_Entry    : Directories.Directory_Entry_Type;
          Dir_Name     : constant Full_Path_Name :=
                           (if Is_Recursive
                            then Dir (Dir'First .. Dir'Last - 1)
                            else Dir);
+         Dir_Search   : Directories.Search_Type;
+         Dir_Entry    : Directories.Directory_Entry_Type;
       begin
          Directories.Start_Search (Dir_Search, Dir_Name, "*");
 
