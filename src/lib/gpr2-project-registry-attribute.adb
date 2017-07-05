@@ -129,7 +129,7 @@ begin
            Others_Allowed       => False,
            Index_Case_Sensitive => False,
            Value                => List,
-           Value_Case_Sensitive => True,
+           Value_Case_Sensitive => False,
            Read_Only            => False,
            Is_Allowed_In        => No_Aggregates));
 
