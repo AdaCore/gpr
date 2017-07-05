@@ -45,6 +45,8 @@ BUILD         = release
 PROCESSORS    = 0
 BUILD_DIR     =
 SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
+ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
+	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
 
 # Load current setup if any
 -include makefile.setup
@@ -68,9 +70,6 @@ GPR2=$(SOURCE_DIR)/gpr2.gpr
 GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 MAKEPREFIX=$(SOURCE_DIR)/
 endif
-
-ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
-	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
 
 ifeq ($(ENABLE_SHARED), yes)
    LIBGPR2_TYPES=static relocatable static-pic
