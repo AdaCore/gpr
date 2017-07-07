@@ -1,4 +1,4 @@
-from langkit.dsl import abstract, ASTNode
+from langkit.dsl import Annotations, ASTNode, abstract
 from langkit.parsers import Grammar
 
 gpr_grammar = Grammar(main_rule_name='compilation_unit')
@@ -7,7 +7,7 @@ A = gpr_grammar
 
 @abstract
 class GPRNode(ASTNode):
-    _generic_list_type = 'BaseList'
+    annotations = Annotations(generic_list_type='BaseList')
 
 
 def eval_grammar():

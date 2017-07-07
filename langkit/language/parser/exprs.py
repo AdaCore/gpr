@@ -1,5 +1,5 @@
 from langkit.parsers import Opt, List, Or, Row, Tok
-from langkit.dsl import Field, abstract
+from langkit.dsl import Annotations, Field, abstract
 
 from language.parser import A, GPRNode
 from language.parser.lexer import Token
@@ -16,15 +16,15 @@ class SingleTokNode(Expr):
 
 
 class Identifier(SingleTokNode):
-    _repr_name = "Id"
+    annotations = Annotations(repr_name='Id')
 
 
 class StringLiteral(SingleTokNode):
-    _repr_name = "Str"
+    annotations = Annotations(repr_name='Str')
 
 
 class NumLiteral(SingleTokNode):
-    _repr_name = "Num"
+    annotations = Annotations(repr_name='Num')
 
 
 class Prefix(Expr):
