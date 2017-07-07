@@ -697,24 +697,14 @@ package body GPR_Parser.Analysis is
    -------------
 
    procedure Destroy (Context : in out Analysis_Context) is
-      Std_Unit : Analysis_Unit := Get_From_File (Context, "standard.ads");
-
       procedure Free is new Ada.Unchecked_Deallocation
         (Analysis_Context_Private_Part_Type, Analysis_Context_Private_Part);
    begin
-
-      --  TODO: This is a hack to make sure that we don't deallocate standard
-      --  too early, because every unit is going to depend on it. Waiting for
-      --  proper handling of lazy links in referenced envs.
-      Inc_Ref (Std_Unit);
-
       for Unit of Context.Units_Map loop
          Unit.Context := null;
          Dec_Ref (Unit);
       end loop;
       AST_Envs.Destroy (Context.Root_Scope);
-
-      Dec_Ref (Std_Unit);
 
       Destroy (Context.Symbols);
 
@@ -2498,7 +2488,7 @@ package body GPR_Parser.Analysis is
         (Node      : access GPR_Node_Type'Class;
          Bound_Env : Lexical_Env)
       is
-         Initial_Env : Lexical_Env := Bound_Env;
+         Initial_Env : Lexical_Env;
       begin
          if Node = null then
             return;
@@ -2511,8 +2501,7 @@ package body GPR_Parser.Analysis is
          Initial_Env := Node.Pre_Env_Actions (Bound_Env, Root_Env);
 
          --  Call recursively on children
-         for C of GPR_Node_Array'(Children (Node))
-         loop
+         for C of GPR_Node_Array'(Children (Node)) loop
             Populate_Internal (C, Node.Self_Env);
          end loop;
 
@@ -2524,15 +2513,14 @@ package body GPR_Parser.Analysis is
       Populate_Internal (Node, Env);
    end Populate_Lexical_Env;
 
-   ---------------
-   -- El_Image  --
-   ---------------
+   -------------------------------
+   -- Node_File_And_Sloc_Image  --
+   -------------------------------
 
-   function El_Image (Node : GPR_Node) return Text_Type
-   is ("`"
-       & To_Text (To_String (Node.Unit.File_Name))
-       & " " & To_Text (Image (Sloc_Range (Node)))
-       & "`");
+   function Node_File_And_Sloc_Image
+     (Node : GPR_Node) return Text_Type
+   is (To_Text (To_String (Node.Unit.File_Name))
+       & ":" & To_Text (Image (Start_Sloc (Sloc_Range (Node)))));
 
    -----------------
    -- Short_Image --
@@ -2655,8 +2643,7 @@ package body GPR_Parser.Analysis is
       begin
          for R of Refs loop
             declare
-               Env : constant Lexical_Env := R.Resolver.all
-                 ((R.From_Node, No_Entity_Info));
+               Env : constant Lexical_Env := Get_Refd_Env (R);
             begin
                if Env /= Empty_Env then
                   if Is_First then
@@ -2674,26 +2661,6 @@ package body GPR_Parser.Analysis is
             end;
          end loop;
       end Dump_Referenced;
-
-      ---------------------------
-      -- Dump_Trans_Referenced --
-      ---------------------------
-
-      procedure Dump_Trans_Referenced
-        (Name : String; Refs : AST_Envs.Lexical_Env_Vectors.Vector) is
-      begin
-         if Refs.Length > 0 then
-            Put_Line ("    " & Name & ":");
-            for R of Refs loop
-               Put ("      ");
-               Dump_One_Lexical_Env
-                 (Self           => R,
-                  Dump_Addresses => Dump_Addresses,
-                  Dump_Content   => False);
-               New_Line;
-            end loop;
-         end if;
-      end Dump_Trans_Referenced;
 
    begin
       if Env_Id'Length /= 0 then
@@ -2728,8 +2695,6 @@ package body GPR_Parser.Analysis is
       Put_Line (":");
 
       Dump_Referenced ("Referenced", Self.Referenced_Envs);
-      Dump_Trans_Referenced
-        ("Transitive referenced", Self.Transitive_Referenced_Envs);
 
       if Self.Env = null then
          Put_Line ("    <null>");
@@ -3460,11 +3425,11 @@ package body GPR_Parser.Analysis is
       end loop;
    end Assign_Names_To_Logic_Vars;
 
-   --------------
-   -- El_Image --
-   --------------
+   -----------
+   -- Image --
+   -----------
 
-   function El_Image (N : Entity) return String is
+   function Image (N : Entity) return String is
    begin
       if N.El /= null then
          declare
@@ -3480,7 +3445,7 @@ package body GPR_Parser.Analysis is
       else
          return "None";
       end if;
-   end El_Image;
+   end Image;
 
    ---------------
    -- Can_Reach --

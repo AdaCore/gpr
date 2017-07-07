@@ -5602,7 +5602,7 @@ quex_Token_take_text(quex_Token*              __this,
     (void)Begin;
     (void)End;
 
-#   line 37 "/home/obry/dev/repositories/git/gpr/langkit/build/include/gpr_parser/gpr.qx"
+#   line 37 "/chelles.b/users/fofanov/repo/gpr/langkit/build/include/gpr_parser/gpr.qx"
 
         if( Begin != LexemeNull ) {
             self.text = Begin;

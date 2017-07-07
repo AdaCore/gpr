@@ -506,7 +506,11 @@ package GPR_Parser.Analysis is
       Node : GPR_Node;
    end record;
 
-   function El_Image (Node : GPR_Node) return Text_Type;
+   function Node_File_And_Sloc_Image
+     (Node : GPR_Node) return Text_Type;
+   --  Return a "sourcefile:lineno:columnno" corresponding to the starting sloc
+   --  of Node. Used to create a human-readable representation for env.
+   --  rebindings.
 
    package AST_Envs is new Langkit_Support.Lexical_Env
      (Element_T        => GPR_Node,
@@ -515,7 +519,7 @@ package GPR_Parser.Analysis is
       Empty_Metadata   => No_Metadata,
       Combine          => Combine,
       Getter_State_T   => Env_Getter_State_T,
-      Element_Image    => El_Image);
+      Element_Image    => Node_File_And_Sloc_Image);
 
    --  The following subtypes are introduced to ease code generation, so we
    --  don't have to deal with the AST_Envs suffix.
@@ -1407,11 +1411,11 @@ package GPR_Parser.Analysis is
    -- Adalog instantiations --
    ---------------------------
 
-   function El_Image (N : Entity) return String;
+   function Image (N : Entity) return String;
 
    package Eq_Node is new Langkit_Support.Adalog.Eq_Same
      (LR_Type       => Entity,
-      Element_Image => El_Image,
+      Element_Image => Image,
       Inc_Ref       => AST_Envs.Inc_Ref,
       Dec_Ref       => AST_Envs.Dec_Ref);
    subtype Logic_Var is Eq_Node.Refs.Raw_Var;

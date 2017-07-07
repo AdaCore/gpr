@@ -1285,7 +1285,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1330,7 +1329,6 @@ end;
       Value_P : access gpr_gpr_node_array) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1375,7 +1373,6 @@ end;
       Value_P : access gpr_gpr_node_array) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1420,7 +1417,6 @@ end;
       Value_P : access gpr_token) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1465,7 +1461,6 @@ end;
       Value_P : access gpr_token) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1510,7 +1505,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1555,7 +1549,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1600,7 +1593,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1645,7 +1637,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1690,7 +1681,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1735,7 +1725,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1780,7 +1769,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1825,7 +1813,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1870,7 +1857,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1915,7 +1901,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -1960,7 +1945,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2005,7 +1989,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2050,7 +2033,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2095,7 +2077,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2140,7 +2121,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2185,7 +2165,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2230,7 +2209,6 @@ end;
       Value_P : access gpr_token) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2275,7 +2253,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2320,7 +2297,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2365,7 +2341,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2410,7 +2385,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2455,7 +2429,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2500,7 +2473,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2545,7 +2517,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2590,7 +2561,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2635,7 +2605,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2680,7 +2649,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2725,7 +2693,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2770,7 +2737,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2815,7 +2781,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2860,7 +2825,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2905,7 +2869,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2950,7 +2913,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -2995,7 +2957,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3040,7 +3001,6 @@ end;
       Value_P : access gpr_bool) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3085,7 +3045,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3130,7 +3089,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3175,7 +3133,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3220,7 +3177,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3265,7 +3221,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3310,7 +3265,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3355,7 +3309,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3400,7 +3353,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3445,7 +3397,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3490,7 +3441,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3535,7 +3485,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3580,7 +3529,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3625,7 +3573,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3670,7 +3617,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3715,7 +3661,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3760,7 +3705,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3805,7 +3749,6 @@ end;
       Value_P : access gpr_bool) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;
@@ -3850,7 +3793,6 @@ end;
       Value_P : access gpr_base_node) return int
 
    is
-
       Unwrapped_Node : constant GPR_Node := Unwrap (Node);
    begin
       Clear_Last_Exception;

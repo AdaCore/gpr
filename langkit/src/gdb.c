@@ -34,7 +34,7 @@
 asm(
 ".pushsection \".debug_gdb_scripts\", \"MS\",@progbits,1\n"
 ".byte 1 /* Python */\n"
-".asciz \"/home/obry/dev/repositories/git/gpr/langkit/build/gdbinit.py\"\n"
+".asciz \"/chelles.b/users/fofanov/repo/gpr/langkit/build/gdbinit.py\"\n"
 ".popsection\n"
 );
 #endif
