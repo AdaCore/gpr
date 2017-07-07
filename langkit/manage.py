@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 
 import os.path
-import subprocess
-import sys
 
 from os import listdir
 from datetime import date
@@ -11,10 +9,7 @@ from datetime import date
 from env import setenv
 setenv()
 
-from gnatpython import fileutils
-
-from langkit.libmanage import ManageScript, get_cpu_count
-from langkit.utils import Colors, printcol
+from langkit.libmanage import ManageScript
 
 
 class Manage(ManageScript):

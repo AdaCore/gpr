@@ -9,15 +9,14 @@ The LibGPR2 library depends on some other external libraries:
 
 - GNATcoll
 
-- Langkit_Support
+- Langkit
 
 Both must be installed on the system to be able to compile LibGPR2.
 
-To regenerate the GPR parser from the Langkit grammar
-(langkit/generate-grammar.sh) the following additional external
-modules are required:
+To regenerate the GPR parser from the Langkit grammar the following
+additional external modules are required:
 
-- GNATpython
+- Python
 
 - Langkit (build directory)
 

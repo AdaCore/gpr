@@ -128,13 +128,16 @@ install-tools:
 
 .SILENT: setup
 
-setup:
+setup: langkit/src
 	echo "prefix=$(prefix)" > makefile.setup
 	echo "ENABLE_SHARED=$(ENABLE_SHARED)" >> makefile.setup
 	echo "BUILD=$(BUILD)" >> makefile.setup
 	echo "PROCESSORS=$(PROCESSORS)" >> makefile.setup
 	echo "TARGET=$(TARGET)" >> makefile.setup
 	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
+
+langkit/src:
+	make -C langkit setup
 
 ###########
 # Cleanup #
@@ -144,3 +147,4 @@ clean: ${LIBGPR2_TYPES:%=clean-%}
 
 clean-%:
 	-$(CLEANER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPR2)
+	make -C langkit clean
