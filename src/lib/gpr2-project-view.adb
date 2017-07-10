@@ -381,6 +381,24 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Signature;
    end Signature;
 
+   ------------
+   -- Source --
+   ------------
+
+   function Source
+     (Self : Object; File : Path_Name_Type) return Project.Source.Object is
+   begin
+      Self.Update_Sources;
+
+      for S of Definition.Get (Self).Sources loop
+         if S.Source.Filename = Value (File) then
+            return S;
+         end if;
+      end loop;
+
+      return Project.Source.Undefined;
+   end Source;
+
    -------------
    -- Sources --
    -------------
@@ -453,7 +471,8 @@ package body GPR2.Project.View is
          Set      : in out Source_Set.Set);
       --  Read Filename and insert each line in Set
 
-      procedure Insert (Sources : Source.Set.Object; Mode : Insert_Mode);
+      procedure Insert
+        (Sources : Project.Source.Set.Object; Mode : Insert_Mode);
       --  Insert Sources into Data.Sources
 
       procedure Fill_Naming_Exceptions (Set : Project.Attribute.Set.Object)
@@ -648,8 +667,10 @@ package body GPR2.Project.View is
       -- Insert --
       ------------
 
-      procedure Insert (Sources : Source.Set.Object; Mode : Insert_Mode) is
-         use type Source.Set.Cursor;
+      procedure Insert
+        (Sources : Project.Source.Set.Object; Mode : Insert_Mode)
+      is
+         use type Project.Source.Set.Cursor;
       begin
          for Source of Sources loop
             if Data.Sources.Contains (Source) then

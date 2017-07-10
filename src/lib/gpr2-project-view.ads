@@ -161,6 +161,11 @@ package GPR2.Project.View is
    --  Returns all the sources for the view, note that this routine ensure that
    --  the current sources are up-to-date by calling Update_Sources below.
 
+   function Source
+     (Self : Object; File : Path_Name_Type) return Project.Source.Object
+     with Pre => Self /= Undefined;
+   --  Get project source object corresponding to the give File
+
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
    --  Ensure that the view sources are up-to-date. This is needed before
