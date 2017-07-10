@@ -114,7 +114,7 @@ package body GPR2.Project.Source is
       begin
          if Src /= GPR2.Project.Source.Undefined then
             for W of Src.Source.Withed_Units loop
-               if not Done.Contains (W) then
+               if not Done.Contains (W) and then not Buf.Contains (W) then
                   Buf.Insert (W);
                end if;
             end loop;
