@@ -1087,6 +1087,17 @@ package body GPR2.Project.Tree is
       end if;
    end Set_Context;
 
+   --------------------
+   -- Update_Sources --
+   --------------------
+
+   procedure Update_Sources (Self : Object) is
+   begin
+      for V of Self loop
+         V.Update_Sources;
+      end loop;
+   end Update_Sources;
+
    --------------
    -- View_For --
    --------------

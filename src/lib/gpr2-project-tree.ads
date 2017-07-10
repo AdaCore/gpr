@@ -189,6 +189,12 @@ package GPR2.Project.Tree is
    --  Get the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
+   procedure Update_Sources (Self : Object)
+     with Pre => Self /= Undefined;
+   --  Ensure that all views' sources are up-to-date. This is needed before
+   --  computing the dependecies of a source in the project tree. This routine
+   --  is called where needed and is there for internal use only.
+
 private
 
    package Unit_View is
