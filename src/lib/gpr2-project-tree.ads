@@ -191,6 +191,13 @@ package GPR2.Project.Tree is
    --  Get the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
+   function Get_View
+     (Self   : Object;
+      Source : Path_Name_Type) return Project.View.Object
+     with Pre => Self /= Undefined;
+   --  Get the view in which unit is defined, returns Undefined if the unit
+   --  has not been found.
+
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
    --  Ensure that all views' sources are up-to-date. This is needed before

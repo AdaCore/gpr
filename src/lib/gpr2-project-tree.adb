@@ -271,6 +271,30 @@ package body GPR2.Project.Tree is
    --------------
 
    function Get_View
+     (Self   : Object;
+      Source : Path_Name_Type) return Project.View.Object
+   is
+      Pos : Name_View.Cursor :=
+              Self.Sources.Find (Name_Type (Value (Source)));
+   begin
+      if Name_View.Has_Element (Pos) then
+         return Name_View.Element (Pos);
+
+      else
+         --  Try to update sources and check again
+
+         Update_Sources (Self);
+         Pos := Self.Sources.Find (Name_Type (Value (Source)));
+
+         if Name_View.Has_Element (Pos) then
+            return Name_View.Element (Pos);
+         else
+            return Project.View.Undefined;
+         end if;
+      end if;
+   end Get_View;
+
+   function Get_View
      (Self : Object;
       Unit : Name_Type) return Project.View.Object
    is
