@@ -94,6 +94,9 @@ package GPR2 is
    --  Returns True if Left and Right are referencing the same project. That
    --  is, based on the normalized names.
 
+   function Create_File (Name : Name_Type) return Path_Name_Type;
+   --  Create a Path_Name_Type for a file
+
    function "<" (Left, Right : Path_Name_Type) return Boolean;
    --  Returns True based on the normalized names
 
@@ -140,9 +143,6 @@ private
                      Null_Unbounded_String,
                      Null_Unbounded_String,
                      Null_Unbounded_String);
-
-   function Create_File (Name : Name_Type) return Path_Name_Type;
-   --  Create a Path_Name_Type for a file
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
