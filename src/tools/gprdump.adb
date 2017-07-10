@@ -22,6 +22,7 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
+with GNAT.Strings;
 
 with GPR.Util;
 with GPR.Version;
@@ -44,13 +45,45 @@ procedure GPRdump is
    procedure Sources (View : Project.View.Object);
    --  Display view sources
 
+   procedure Full_Closure (Tree : Project.Tree.Object; Filename : String);
+
    procedure Parse_Command_Line;
    --  Parse command line parameters
 
    Help                : aliased Boolean := False;
    Display_Sources     : aliased Boolean := False;
    Display_All_Sources : aliased Boolean := False;
+   Source              : aliased GNAT.Strings.String_Access;
    Project_Path        : Unbounded_String;
+
+   ------------------
+   -- Full_Closure --
+   ------------------
+
+   procedure Full_Closure (Tree : Project.Tree.Object; Filename : String) is
+      use type Project.View.Object;
+
+      File   : constant GPR2.Path_Name_Type :=
+                 GPR2.Create_File (Name_Type (Filename));
+      View   : constant GPR2.Project.View.Object :=
+                 Tree.Get_View (File);
+   begin
+      if View = Project.View.Undefined then
+         Text_IO.Put_Line ("view for " & Filename & " not found.");
+
+      else
+         declare
+            Source : constant GPR2.Project.Source.Object :=
+                       View.Source (File);
+         begin
+            for S of Source.Dependencies
+              (Mode => GPR2.Project.Source.Closure)
+            loop
+               Text_IO.Put_Line (S.Source.Filename);
+            end loop;
+         end;
+      end if;
+   end Full_Closure;
 
    ------------------------
    -- Parse_Command_Line --
@@ -90,6 +123,11 @@ procedure GPRdump is
         (Config, Display_All_Sources'Access,
          "-a", Long_Switch => "--all-sources",
          Help => "display sources");
+
+      Define_Switch
+        (Config, Source'Access,
+         "-d:", Long_Switch => "--deps:",
+         Help => "display full closure");
 
       Set_Usage (Config, Usage => "[switches] <project>");
 
@@ -152,6 +190,8 @@ begin
    Parse_Command_Line;
 
    declare
+      use type GNAT.Strings.String_Access;
+
       Pathname : constant GPR2.Path_Name_Type :=
                    GPR2.Project.Create
                      (GPR2.Optional_Name_Type (To_String (Project_Path)));
@@ -162,6 +202,10 @@ begin
 
       if Display_Sources or Display_All_Sources then
          Sources (Project.Root_Project);
+      end if;
+
+      if Source /= null and then Source.all /= "" then
+         Full_Closure (Project, Source.all);
       end if;
    exception
       when E : others =>
