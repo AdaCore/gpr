@@ -28,6 +28,7 @@ with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Project.View;
+with GPR2.Unit;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with GPR2.Project.Definition;
@@ -170,15 +171,16 @@ package GPR2.Project.Tree is
    --  Unit/View
 
    procedure Record_View
-     (Self : in out Object;
-      View : GPR2.Project.View.Object;
-      Unit : Name_Type)
+     (Self   : in out Object;
+      View   : GPR2.Project.View.Object;
+      Source : Full_Path_Name;
+      Unit   : Name_Type)
      with Pre => Self /= Undefined;
    --  Record the view in which unit is defined
 
    procedure Clear_View
      (Self : in out Object;
-      Unit : Name_Type)
+      Unit : GPR2.Unit.Object)
      with Pre => Self /= Undefined;
    --  Clear the view set for the given unit
 
@@ -197,15 +199,16 @@ package GPR2.Project.Tree is
 
 private
 
-   package Unit_View is
+   package Name_View is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, View.Object);
-   --  Map to find in which view a unit is defined
+   --  Map to find in which view a unit/source is defined
 
    type Object is tagged limited record
       Self     : not null access Object := Object'Unchecked_Access;
       Root     : View.Object;
       Conf     : View.Object;
-      Units    : Unit_View.Map;
+      Units    : Name_View.Map;
+      Sources  : Name_View.Map;
       Messages : aliased Log.Object;
    end record;
 
@@ -226,6 +229,7 @@ private
                    Root     => View.Undefined,
                    Conf     => View.Undefined,
                    Units    => <>,
+                   Sources  => <>,
                    Messages => <>);
 
    No_Element : constant Cursor :=

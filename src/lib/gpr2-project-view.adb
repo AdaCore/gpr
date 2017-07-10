@@ -592,9 +592,11 @@ package body GPR2.Project.View is
                         (if Lang = "ada"
                          then Unit_For (Filename, Kind, Ok)
                          else No_Name);
+               File : constant Path_Name_Type :=
+                        Create_File (Name_Type (Filename));
                Src  : constant GPR2.Source.Object :=
                         GPR2.Source.Create
-                          (Filename  => Create_File (Name_Type (Filename)),
+                          (Filename  => File,
                            Kind      => Kind,
                            Language  => Lang,
                            Unit_Name => Unit);
@@ -619,7 +621,8 @@ package body GPR2.Project.View is
             begin
                if Ok then
                   if Unit /= No_Name then
-                     Data.Tree.Record_View (Self, Unit => Unit);
+                     Data.Tree.Record_View
+                       (Self, Source => Value (File), Unit => Unit);
 
                      if Data.Units.Contains (Unit) then
                         U_Def := Data.Units (Unit);
@@ -1164,7 +1167,7 @@ package body GPR2.Project.View is
          --  unit_name -> view lookup table in the tree.
 
          for U of Data.Units loop
-            Data.Tree.Clear_View (Unit => U.Spec.Source.Unit_Name);
+            Data.Tree.Clear_View (Unit => U);
          end loop;
 
          Data.Units.Clear;

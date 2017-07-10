@@ -73,9 +73,19 @@ package body GPR2.Project.Tree is
 
    procedure Clear_View
      (Self : in out Object;
-      Unit : Name_Type) is
+      Unit : GPR2.Unit.Object) is
    begin
-      Self.Units.Exclude (Unit);
+      --  Clear the unit
+
+      Self.Units.Exclude (Unit.Spec.Source.Unit_Name);
+
+      --  Clear the corresponding sources
+
+      Self.Sources.Exclude (Name_Type (Unit.Spec.Source.Filename));
+
+      for B of Unit.Bodies loop
+         Self.Sources.Exclude (Name_Type (B.Source.Filename));
+      end loop;
    end Clear_View;
 
    ---------------------------
@@ -264,12 +274,22 @@ package body GPR2.Project.Tree is
      (Self : Object;
       Unit : Name_Type) return Project.View.Object
    is
-      Pos : constant Unit_View.Cursor := Self.Units.Find (Unit);
+      Pos : Name_View.Cursor := Self.Units.Find (Unit);
    begin
-      if Unit_View.Has_Element (Pos) then
-         return Unit_View.Element (Pos);
+      if Name_View.Has_Element (Pos) then
+         return Name_View.Element (Pos);
+
       else
-         return Project.View.Undefined;
+         --  Try to update the sources and check again
+
+         Update_Sources (Self);
+         Pos := Self.Units.Find (Unit);
+
+         if Name_View.Has_Element (Pos) then
+            return Name_View.Element (Pos);
+         else
+            return Project.View.Undefined;
+         end if;
       end if;
    end Get_View;
 
@@ -444,11 +464,13 @@ package body GPR2.Project.Tree is
    -----------------
 
    procedure Record_View
-     (Self : in out Object;
-      View : GPR2.Project.View.Object;
-      Unit : Name_Type) is
+     (Self   : in out Object;
+      View   : GPR2.Project.View.Object;
+      Source : Full_Path_Name;
+      Unit   : Name_Type) is
    begin
       Self.Units.Include (Unit, View);
+      Self.Sources.Include (Name_Type (Source), View);
    end Record_View;
 
    --------------------
