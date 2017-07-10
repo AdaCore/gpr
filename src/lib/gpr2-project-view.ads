@@ -164,7 +164,8 @@ package GPR2.Project.View is
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
    --  Ensure that the view sources are up-to-date. This is needed before
-   --  computing the dependecies of a source in the project tree.
+   --  computing the dependecies of a source in the project tree. This routine
+   --  is called where needed and is there for internal use only.
 
    --  Following routines are for internal use only and convert from a View
    --  unique Id.
