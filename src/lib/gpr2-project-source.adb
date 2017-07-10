@@ -125,9 +125,7 @@ package body GPR2.Project.Source is
       --  First we need to ensure that all views are up-to-date regarding the
       --  sources/unit. The sources are recomputed only if required.
 
-      for V of Data.Tree.all loop
-         V.Update_Sources;
-      end loop;
+      Data.Tree.Update_Sources;
 
       --  For Unit or Closure add dependencies from the other part
 
