@@ -55,7 +55,7 @@ class BuildAndRunDriver(BaseDriver):
         ))
         old_path = os.environ.get('GPR_PROJECT_PATH', '')
         os.environ['GPR_PROJECT_PATH'] = (
-            '{}:{}'.format(gpr_path, old_path)
+            gpr_path + os.pathsep + old_path
             if old_path else
             gpr_path
         )
