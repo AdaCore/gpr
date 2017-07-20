@@ -6,3 +6,4 @@ testsuite/tests/* no-precommit-check
 testsuite/tests/*/* no-precommit-check
 testsuite/tests/*/* no-precommit-check
 testsuite/tests/*/*/* no-precommit-check
+testsuite/testsuite_support/__init__.py no-precommit-check
