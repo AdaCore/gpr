@@ -88,13 +88,14 @@ c_header = """
 
 """
 
-FROM = "build/include/gpr_parser"
-TO = "src"
-
 if __name__ == '__main__':
-    Manage().run()
+    m = Manage()
+    m.run()
 
-    for filename in listdir(FROM):
+    gpr_parser_files = os.path.join(
+        m.dirs.root_build_dir, 'include', 'gpr_parser')
+
+    for filename in listdir(gpr_parser_files):
         extension = os.path.splitext(filename)[1]
         basename = os.path.basename(filename)
         header = ""
@@ -107,7 +108,10 @@ if __name__ == '__main__':
         if header != "":
             header = header % date.today().year
 
-            with open(os.path.join(TO, basename), "w") as f:
+            filepath = os.path.join(gpr_parser_files, filename)
+            with open(filepath) as f:
+                old_content = f.read()
+
+            with open(filepath, 'w') as f:
                 f.write(header)
-                with open(os.path.join(FROM, filename)) as fin:
-                    f.write(fin.read())
+                f.write(old_content)

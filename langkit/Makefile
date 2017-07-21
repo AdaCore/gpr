@@ -25,6 +25,8 @@
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 CURRENT_DIR := $(patsubst %/,%,$(dir $(mkfile_path)))
 
+DEST := "build"
+
 #  langkit build directory (for now we use the build directory directly
 #  until the langkit project has stabilized and there is a library installed
 #  into the environment.
@@ -36,8 +38,8 @@ export QUEX=$(CURRENT_DIR)/.
 export PYTHONPATH=$(LANGKIT)
 
 setup:
-	mkdir -p src
-	python manage.py generate
+	mkdir -p ${DEST}
+	python manage.py --build-dir=${DEST} generate
 
 clean:
-	rm -fr build src
+	rm -fr build

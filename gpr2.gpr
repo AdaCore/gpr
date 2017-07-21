@@ -31,12 +31,14 @@ library project GPR2 is
    Build : Build_Type := external ("BUILD", "debug");
 
    Processors := External ("PROCESSORS", "0");
+   Langkit_Generated_Src := External ("LANGKIT_GENERATED_SRC", "langkit/build");
 
    type Library_Kind is ("static", "relocatable", "static-pic");
    Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
 
    for Languages use ("Ada", "C");
-   for Source_Dirs use ("src/lib", "langkit", "langkit/src");
+   for Source_Dirs use ("src/lib", "langkit",
+                        Langkit_Generated_Src & "/include/gpr_parser");
    for Library_Name use "gpr2";
 
    for Object_Dir use ".build/obj-" & Library_Type;

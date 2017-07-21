@@ -64,11 +64,13 @@ RBD=
 GPR2=gpr2.gpr
 GPR2TOOLS=gpr2-tools.gpr
 MAKEPREFIX=
+LANGKIT_GENERATED_SRC=langkit/build
 else
 RBD=--relocate-build-tree
 GPR2=$(SOURCE_DIR)/gpr2.gpr
 GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 MAKEPREFIX=$(SOURCE_DIR)/
+LANGKIT_GENERATED_SRC=$(shell pwd)/langkit/build
 endif
 
 ifeq ($(ENABLE_SHARED), yes)
@@ -80,8 +82,11 @@ endif
 # Used to pass extra options to GPRBUILD, like -d for instance
 GPRBUILD_OPTIONS=
 
-BUILDER=gprbuild -p -m $(GTARGET) $(RBD) -j${PROCESSORS} -XBUILD=${BUILD} ${GPRBUILD_OPTIONS}
-INSTALLER=gprinstall -p -f --target=$(TARGET) $(RBD) --prefix=${prefix}
+BUILDER=gprbuild -p -m $(GTARGET) $(RBD) -j${PROCESSORS} -XBUILD=${BUILD} \
+	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} ${GPRBUILD_OPTIONS}
+INSTALLER=gprinstall -p -f --target=$(TARGET) \
+	  -XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} $(RBD) \
+	  --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --install-name=gpr2 --uninstall
 
@@ -128,7 +133,7 @@ install-tools:
 
 .SILENT: setup
 
-setup: langkit/src
+setup: langkit/build
 	echo "prefix=$(prefix)" > makefile.setup
 	echo "ENABLE_SHARED=$(ENABLE_SHARED)" >> makefile.setup
 	echo "BUILD=$(BUILD)" >> makefile.setup
@@ -136,8 +141,11 @@ setup: langkit/src
 	echo "TARGET=$(TARGET)" >> makefile.setup
 	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
 
-langkit/src:
-	make -C langkit setup
+langkit:
+	mkdir -p langkit
+
+langkit/build: langkit
+	make -C ${SOURCE_DIR}/langkit setup DEST=$(shell pwd)/langkit/build
 
 ###########
 # Cleanup #
