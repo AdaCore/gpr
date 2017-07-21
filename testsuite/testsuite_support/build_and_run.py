@@ -48,18 +48,6 @@ class BuildAndRunDriver(BaseDriver):
 
     @catch_test_errors
     def run(self):
-        # Make the "gpr2.gpr" project file available to testcases
-        gpr_path = os.path.abspath(os.path.join(
-            self.testsuite_dir,
-            '..'
-        ))
-        old_path = os.environ.get('GPR_PROJECT_PATH', '')
-        os.environ['GPR_PROJECT_PATH'] = (
-            gpr_path + os.pathsep + old_path
-            if old_path else
-            gpr_path
-        )
-
-        # Then, build the program and run it
+        # Build the program and run it
         self.run_and_check(['gprbuild', '-q', '-p', '-P', self.project_file])
         self.run_and_check([os.path.join('.', self.main_program)])
