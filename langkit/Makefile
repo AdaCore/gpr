@@ -23,7 +23,7 @@
 ##############################################################################
 
 MKFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-CURRENT_DIR := $(patsubst %/,%,$(dir $(mkfile_path)))
+CURRENT_DIR := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
 DEST := "build"
 
@@ -33,7 +33,7 @@ DEST := "build"
 export LANGKIT=$(HOME)/dev/builds/langkit/build/build
 
 #  QUEX installation
-export QUEX=$(CURRENT_DIR)/.
+export QUEX_PATH=$(CURRENT_DIR)/quex
 
 export PYTHONPATH=$(LANGKIT)
 

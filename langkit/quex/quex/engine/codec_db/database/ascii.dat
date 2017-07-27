@@ -1,0 +1,3 @@
+// Describes mapping from Unicode Code pointer to Character code in ascii (['English'])
+// [SourceInterval.begin] [SourceInterval.Size]  [TargetInterval.begin] (all in hexidecimal)
+0x0 0x80 0x0
