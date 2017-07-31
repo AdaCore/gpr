@@ -49,5 +49,6 @@ class BuildAndRunDriver(BaseDriver):
     @catch_test_errors
     def run(self):
         # Build the program and run it
-        self.run_and_check(['gprbuild', '-q', '-p', '-P', self.project_file])
+        self.run_and_check(['gprbuild', '-g1', '-q', '-p',
+                            '-P', self.project_file, '-bargs', '-Es'])
         self.run_and_check([os.path.join('.', self.main_program)])
