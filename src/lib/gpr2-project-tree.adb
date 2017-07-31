@@ -700,7 +700,9 @@ package body GPR2.Project.Tree is
 
       for E of Data.Externals loop
          --  Fill all known external in the environment variables
-         if Environment_Variables.Exists (String (E)) then
+         if not Root_Context.Contains (E)
+           and then Environment_Variables.Exists (String (E))
+         then
             Root_Context.Include (E, Environment_Variables.Value (String (E)));
          end if;
       end loop;
