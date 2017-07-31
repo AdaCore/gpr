@@ -75,6 +75,13 @@ package GPR2.Project.Tree is
      with Pre => Self /= Undefined and then Self.Has_Configuration_Project;
    --  Returns the configuration project for the given tree
 
+   function Has_Runtime_Project (Self : Object) return Boolean;
+   --  Returns True if a configuration project is loaded on this tree
+
+   function Runtime_Project (Self : Object) return View.Object
+     with Pre => Self /= Undefined and then Self.Has_Runtime_Project;
+   --  Returns the configuration project for the given tree
+
    function View_For
      (Self : Object;
       Name : Name_Type;
@@ -214,6 +221,7 @@ private
       Self     : not null access Object := Object'Unchecked_Access;
       Root     : View.Object;
       Conf     : View.Object;
+      Runtime  : View.Object;
       Units    : Name_View.Map;
       Sources  : Name_View.Map;
       Messages : aliased Log.Object;
@@ -235,6 +243,7 @@ private
                   (Self     => <>,
                    Root     => View.Undefined,
                    Conf     => View.Undefined,
+                   Runtime  => View.Undefined,
                    Units    => <>,
                    Sources  => <>,
                    Messages => <>);

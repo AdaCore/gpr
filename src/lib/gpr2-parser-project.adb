@@ -989,6 +989,7 @@ package body GPR2.Parser.Project is
 
          if Project /= "project"
            and then Project /= "config"
+           and then Project /= "runtime"
            and then Is_Limited_Import (Self, Project)
          then
             Tree.Log_Messages.Append
@@ -1466,6 +1467,7 @@ package body GPR2.Parser.Project is
 
                if GPR2.Project.Import.Set.Contains (Self.Imports, Name)
                  or else Name = "config"
+                 or else Name = "runtime"
                then
                   --  This is a project reference: <project>'<attribute>
                   return Get_Attribute_Ref

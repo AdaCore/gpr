@@ -1,0 +1,5 @@
+description:
+    Check runtime configuration
+driver: build_and_run
+project_file: runtime
+main: main

@@ -22,10 +22,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Sets; use Ada;
+with Ada.Containers.Ordered_Sets;
 with Ada.Environment_Variables;
 
-with GPR2.Parser.Project;
+with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import;
 with GPR2.Project.Name_Values;
@@ -33,7 +33,11 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference;
 
+with GNAT.OS_Lib;
+
 package body GPR2.Project.Tree is
+
+   use Ada;
 
    type Iterator (Kind : Iterator_Kind; Filter : Project_Filter) is
      new Project_Iterator.Forward_Iterator with
@@ -55,6 +59,11 @@ package body GPR2.Project.Tree is
       Messages     : out Log.Object) return View.Object;
    --  Load a project filename recurivelly and returns the corresponding root
    --  view.
+
+   function Create_Runtime_View (Self : Object) return View.Object
+     with Pre => Self /= Undefined
+                 and then Self.Configuration_Project /= View.Undefined;
+   --  Create the runtime view given the configuration project
 
    --------------------
    -- Append_Message --
@@ -123,6 +132,55 @@ package body GPR2.Project.Tree is
    begin
       return Self.Root_Project.Context;
    end Context;
+
+   -------------------------
+   -- Create_Runtime_View --
+   -------------------------
+
+   function Create_Runtime_View (Self : Object) return View.Object is
+      DS   : Character renames GNAT.OS_Lib.Directory_Separator;
+      Data : Project.Definition.Data (Has_Context => False);
+   begin
+      --  Check runtime path
+
+      if Self.Conf.Has_Attributes ("runtime_dir", "ada") then
+         --  Runtime_Dir (Ada) exists, this is the Source_Dirs for the Runtime
+         --  project view.
+
+         declare
+            Runtime_Dir : constant String :=
+                            Self.Conf.Attribute ("runtime_dir", "ada").Value;
+         begin
+            Data.Attrs.Insert
+              (Project.Attribute.Create
+                 (Name  => Project.Registry.Attribute.Source_Dirs,
+                  Value => Runtime_Dir & DS & "adainclude",
+                  Sloc  => Source_Reference.Undefined));
+         end;
+
+         --  The only language supported is Ada
+
+         Data.Attrs.Insert
+           (Project.Attribute.Create
+              (Name  => Project.Registry.Attribute.Languages,
+               Value => "ada",
+               Sloc  => Source_Reference.Undefined));
+
+         Data.Tree   := Self.Self;
+         Data.Status := Definition.Root;
+         Data.Kind   := K_Standard;
+
+         Data.Trees.Project := Parser.Project.Create
+           (Name      => "Runtime",
+            File      => Create_File ("runtime.gpr"),
+            Qualifier => K_Standard);
+
+         return Project.Definition.Register (Data);
+
+      else
+         return Project.View.Undefined;
+      end if;
+   end Create_Runtime_View;
 
    -------------
    -- Element --
@@ -352,6 +410,15 @@ package body GPR2.Project.Tree is
    begin
       return not Self.Messages.Is_Empty;
    end Has_Messages;
+
+   -------------------------
+   -- Has_Runtime_Project --
+   -------------------------
+
+   function Has_Runtime_Project (Self : Object) return Boolean is
+   begin
+      return Self.Runtime /= View.Undefined;
+   end Has_Runtime_Project;
 
    -------------
    -- Is_Root --
@@ -732,6 +799,15 @@ package body GPR2.Project.Tree is
       return Self.Root;
    end Root_Project;
 
+   ---------------------
+   -- Runtime_Project --
+   ---------------------
+
+   function Runtime_Project (Self : Object) return View.Object is
+   begin
+      return Self.Runtime;
+   end Runtime_Project;
+
    -----------------
    -- Set_Context --
    -----------------
@@ -1105,9 +1181,12 @@ package body GPR2.Project.Tree is
       end;
 
       --  Now the first step is to set the configuration project view if any
+      --  and to create the runtime project if possible.
 
       if Self.Conf /= View.Undefined then
          Set_View (Self.Conf);
+
+         Self.Runtime := Create_Runtime_View (Self);
       end if;
 
       --  Propagate the change in the project Tree. That is for each project in
@@ -1171,10 +1250,18 @@ package body GPR2.Project.Tree is
          end if;
       end loop;
 
-      --  If not found let's check if it is the configuration project
+      --  If not found let's check if it is the configuration or runtime
+      --  project. Note that this means that any Runtime or Config user's
+      --  project name will have precedence.
 
       if Self.Conf /= View.Undefined and then Self.Conf.Name = Name then
          return Self.Conf;
+
+      elsif Self.Runtime /= View.Undefined
+        and then Self.Runtime.Name = Name
+      then
+         return Self.Runtime;
+
       else
          return View.Undefined;
       end if;

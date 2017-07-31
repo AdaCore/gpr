@@ -1,0 +1,21 @@
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> .
+V:   RTL -> .../adainclude
+
+Config   K_CONFIGURATION
+Runtime  K_STANDARD
+A:   languages -> ada
+A:   source_dirs -> .../adainclude
+
+ > adainclude/a-calend.adb   Kind: S_BODY   unit: Ada.Calendar
+ > adainclude/a-strunb.adb   Kind: S_BODY   unit: Ada.Strings.Unbounded
+ > adainclude/a-tags.adb     Kind: S_BODY   unit: Ada.Tags
+ > adainclude/a-calend.ads   Kind: S_SPEC   unit: Ada.Calendar
+ > adainclude/a-contai.ads   Kind: S_SPEC   unit: Ada.Containers
+ > adainclude/a-string.ads   Kind: S_SPEC   unit: Ada.Strings
+ > adainclude/a-strunb.ads   Kind: S_SPEC   unit: Ada.Strings.Unbounded
+ > adainclude/a-tags.ads     Kind: S_SPEC   unit: Ada.Tags
+ > adainclude/a-uncdea.ads   Kind: S_SPEC   unit: Ada.Unchecked_Deallocation
+ > adainclude/ada.ads        Kind: S_SPEC   unit: Ada
