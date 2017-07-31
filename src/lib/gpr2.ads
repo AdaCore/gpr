@@ -22,8 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 --
---  This is the root package of the GPR2 project support library. There is two
---  child units:
+--  This is the root package of the GPR2 project support library. There is
+--  different child units:
 --
 --     Parser
 --        This child unit and all the children are for the low-level parsing
@@ -32,6 +32,27 @@
 --     Project
 --        This child unit and all the childrent are the high-level API to
 --         work with projects. This is the end-user API.
+--
+--     Message
+--        Messages (warnings, error,information) with source referebce
+--
+--     Context
+--        Context of a project
+--
+--     Builting
+--        The project's build-in implementation
+--
+--     Log
+--        Set of messages
+--
+--     Source
+--        Represent a source file
+--
+--     Source_Reference
+--        Represent a source file reference (line, column).
+--
+--     Unit
+--        A unit with its spec and possible bodies
 
 private with Ada.Strings.Unbounded;
 
