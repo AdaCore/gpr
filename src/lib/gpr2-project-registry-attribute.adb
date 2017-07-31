@@ -818,6 +818,17 @@ begin
            Read_Only            => False,
            Is_Allowed_In        => Everywhere));
 
+   --  runtime_dir
+   Store.Insert
+     ("runtime_dir",
+      Def'(Index                => Yes,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
    --  runtime_library_dir
    Store.Insert
      ("runtime_library_dir",
