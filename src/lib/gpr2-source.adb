@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
+
 with GPR2.Source.Registry;
 with GPR2.Source.Parser;
 
@@ -97,6 +99,7 @@ package body GPR2.Source is
    ---------
 
    function Key (Self : Object) return Value_Type is
+      use Ada.Characters;
       Data : constant Registry.Data := Registry.Store (Self.Id);
    begin
       if Data.Unit_Name = Null_Unbounded_String then
@@ -104,7 +107,8 @@ package body GPR2.Source is
          return Value (Data.Path_Name);
 
       else
-         return Kind_Type'Image (Data.Kind) & "|" & To_String (Data.Unit_Name);
+         return Kind_Type'Image (Data.Kind)
+           & "|" & Handling.To_Lower (To_String (Data.Unit_Name));
       end if;
    end Key;
 
