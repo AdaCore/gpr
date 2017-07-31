@@ -58,10 +58,11 @@ package body GPR2.Parser.Project is
      (Path_Name : Path_Name_Type;
       Slr       : Langkit_Support.Slocs.Source_Location_Range)
       return Source_Reference.Object is
-     (Source_Reference.Create
-        (Value (Path_Name),
-         Positive (Slr.Start_Line),
-         Positive (Slr.Start_Column)));
+     (Source_Reference.Object
+        (Source_Reference.Create
+           (Value (Path_Name),
+            Positive (Slr.Start_Line),
+            Positive (Slr.Start_Column))));
 
    function Get_String_Literal
      (N     : not null access GPR_Node_Type'Class;
