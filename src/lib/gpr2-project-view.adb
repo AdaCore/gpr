@@ -406,12 +406,7 @@ package body GPR2.Project.View is
    function Sources (Self : Object) return Project.Source.Set.Object is
    begin
       Self.Update_Sources;
-
-      declare
-         Data : constant Definition.Data := Definition.Get (Self);
-      begin
-         return Data.Sources;
-      end;
+      return Definition.Get (Self).Sources;
    end Sources;
 
    --------------------
