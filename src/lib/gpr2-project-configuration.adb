@@ -24,6 +24,7 @@
 
 with Ada.Strings.Fixed;
 
+with Ada.Directories;
 with GNAT.OS_Lib;
 
 with GPR.Tempdir;
@@ -171,6 +172,10 @@ package body GPR2.Project.Configuration is
            (Message.Create
               (Message.Error,
                "cannot create configuration file, fail to execute gprconfig"));
+      end if;
+
+      if Directories.Exists (Conf_Filename) then
+         Directories.Delete_File (Conf_Filename);
       end if;
 
       return Result;
