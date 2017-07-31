@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--          Copyright (C) 2016-2017, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -109,9 +109,10 @@ exception
          for M of Prj.Log_Messages.all loop
             declare
                F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "/errors");
+               I : constant Natural :=
+                              Strings.Fixed.Index (F, "errors-syntax");
             begin
-               Text_IO.Put_Line ("> " & F (I .. F'Last));
+               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
                Text_IO.Put_Line (M.Level'Img);
                Text_IO.Put_Line (M.Sloc.Line'Img);
                Text_IO.Put_Line (M.Sloc.Column'Img);

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--          Copyright (C) 2016-2017, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -78,7 +78,7 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Full_Path_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "extended/");
+      I : constant Positive := Strings.Fixed.Index (Filename, "extended");
    begin
       Text_IO.Put (" > " & Filename (I + 8 .. Filename'Last));
    end Output_Filename;
