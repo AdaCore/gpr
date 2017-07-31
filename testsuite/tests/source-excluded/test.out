@@ -1,5 +1,5 @@
 Project: Demo
  > /src/pck2.adb
-                  language: ada    Kind: S_BODY   unit: pck2
+                  language: ada    Kind: S_BODY   unit: Pck2
  > /src/pck2.ads
-                  language: ada    Kind: S_SPEC   unit: pck2
+                  language: ada    Kind: S_SPEC   unit: Pck2

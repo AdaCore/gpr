@@ -1,7 +1,7 @@
 **************** Iterator Prj1
 Prj1     K_STANDARD
- > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: pck1
+ > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: Pck1
 **************** Iterator Prj2
 Prj2     K_STANDARD
- > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: pck1
- > /p2/pck2.ads   language: ada    Kind: S_SPEC   unit: pck2
+ > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: Pck1
+ > /p2/pck2.ads   language: ada    Kind: S_SPEC   unit: Pck2

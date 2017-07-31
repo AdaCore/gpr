@@ -34,7 +34,9 @@ private package GPR2.Source.Parser is
 
    type Data is record
       Is_Separate : Boolean := False;
-      Units       : Source_Reference.Set.Object;
+      Sep_From    : Unbounded_String;
+      W_Units     : Source_Reference.Set.Object;
+      Unit_Name   : Unbounded_String;
    end record;
 
    function Check (Filename : Path_Name_Type) return Data;

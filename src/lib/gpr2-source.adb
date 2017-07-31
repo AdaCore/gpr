@@ -165,7 +165,13 @@ package body GPR2.Source is
 
             --  Record the withed units
 
-            S.Units := Data.Units;
+            S.Units := Data.W_Units;
+
+            --  The unit-name from the source if possible
+
+            if Data.Unit_Name /= Null_Unbounded_String then
+               S.Unit_Name := Data.Unit_Name;
+            end if;
 
             --  Record that this is now parsed
 
@@ -196,6 +202,7 @@ package body GPR2.Source is
 
    function Unit_Name (Self : Object) return Optional_Name_Type is
    begin
+      Parse (Self);
       return Optional_Name_Type
         (To_String (Registry.Store (Self.Id).Unit_Name));
    end Unit_Name;

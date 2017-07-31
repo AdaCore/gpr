@@ -34,14 +34,17 @@ package body GPR2.Source.Parser is
 
    --  The following IO package is a temporary solution before the full and
    --  real implementation is based on LibAdaLang. Note that we do not want to
-   --  parse the whole Ada syntax here at the moment. The two elements that are
+   --  parse the whole Ada syntax here at the moment. The elements that are
    --  needed are:
    --
    --  1. whether the package is a separate unit. the parsing is necessary as
    --  it is not possible to get this information while the body suffix and
    --  separate suffix are identical.
    --
-   --  2. the dependent units. we need the withed entities to be able to
+   --  2. the actual unit name as declared in the package, this is needed to
+   --  get correct unit name for krunched filenames.
+   --
+   --  3. the dependent units. we need the withed entities to be able to
    --  compute the full dependencies of a given unit to compile.
    --
    --  So basically we just need to get the context of the unit and we never
@@ -85,7 +88,37 @@ package body GPR2.Source.Parser is
    -----------
 
    function Check (Filename : Path_Name_Type) return Data is
+
       H : IO.Handle;
+
+      function Read_Unit return Unbounded_String with Inline;
+      --  Read a unit name
+
+      ---------------
+      -- Read_Unit --
+      ---------------
+
+      function Read_Unit return Unbounded_String is
+         Unit : Unbounded_String;
+      begin
+         Read_Unit : loop
+            declare
+               Tok : constant String := IO.Get_Token (H);
+            begin
+               exit Read_Unit when Tok in "" | "is" | "renames" | "with"
+                 or else not (H.Is_Id or else Tok = ".");
+
+               --  Skip token body as in "package body"
+
+               if Tok /= "body" then
+                  Unit := Unit & Tok;
+               end if;
+            end;
+         end loop Read_Unit;
+
+         return Unit;
+      end Read_Unit;
+
       R : Data;
    begin
       IO.Open (H, Filename);
@@ -97,39 +130,42 @@ package body GPR2.Source.Parser is
          begin
             if Tok = "separate" then
                R.Is_Separate := True;
-               exit Check_Context;
+
+               --  Read the unit it is a separate which is surrounded by
+               --  parenthesis.
+
+               declare
+                  Tok : constant String := IO.Get_Token (H);
+               begin
+                  if Tok = "(" then
+                     R.Sep_From := Read_Unit;
+                  end if;
+               end;
 
             elsif Tok = "with" then
                declare
-                  Unit : Unbounded_String;
+                  Unit : constant Unbounded_String := Read_Unit;
                begin
-                  Read_Unit : loop
-                     declare
-                        Tok : constant String := IO.Get_Token (H);
-                     begin
-                        exit Read_Unit when Tok = ""
-                          or else not (H.Is_Id or else Tok = ".");
-                        Unit := Unit & Tok;
-                     end;
-                  end loop Read_Unit;
-
                   --  Check for a null unit, this can happen if the source is
                   --  partial or invalid.
 
                   if Unit /= Null_Unbounded_String then
-                     R.Units.Insert
+                     R.W_Units.Insert
                        (Source_Reference.Identifier.Create
                           (Value (Filename), H.Line, 1,
                            Name_Type (To_String (Unit))));
                   end if;
                end;
+
+            elsif Tok in "procedure" | "package" | "function" then
+               R.Unit_Name := Read_Unit;
+               exit Check_Context;
             end if;
 
             --  Stop parsing when reaching the unit declaration or when
             --  end-of-file.
 
-            exit Check_Context
-              when Tok in "procedure" | "package" | "function" | "";
+            exit Check_Context when Tok = "";
          end;
       end loop Check_Context;
 
@@ -284,7 +320,7 @@ package body GPR2.Source.Parser is
                File.Is_Id := True;
                exit Read_Token;
 
-            elsif C in '.' | ';' then
+            elsif C in '.' | ';' | '(' | ')' then
                exit Read_Token;
 
             elsif C in ASCII.LF then

@@ -1,5 +1,5 @@
 Project: Demo
  > src/pck.ada.2
-                  language: ada    Kind: S_BODY   unit: pck
+                  language: ada    Kind: S_BODY   unit: Pck
  > src/pck.ada.1
-                  language: ada    Kind: S_SPEC   unit: pck
+                  language: ada    Kind: S_SPEC   unit: Pck

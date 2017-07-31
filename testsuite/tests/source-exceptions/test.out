@@ -1,8 +1,8 @@
 Project: Demo1
  > src/pck__unix.adb
-                  language: ada    Kind: S_BODY   unit: pck
- > src/pck.ads    language: ada    Kind: S_SPEC   unit: pck
+                  language: ada    Kind: S_BODY   unit: Pck
+ > src/pck.ads    language: ada    Kind: S_SPEC   unit: Pck
 Project: Demo2
  > src/pck__win.adb
-                  language: ada    Kind: S_BODY   unit: pck
- > src/pck.ads    language: ada    Kind: S_SPEC   unit: pck
+                  language: ada    Kind: S_BODY   unit: Pck
+ > src/pck.ads    language: ada    Kind: S_SPEC   unit: Pck
