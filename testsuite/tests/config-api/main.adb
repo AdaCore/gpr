@@ -124,9 +124,9 @@ begin
       for M of Cnf.Log_Messages loop
          declare
             F : constant String := M.Sloc.Filename;
-            I : constant Natural := Strings.Fixed.Index (F, "/config-api");
+            I : constant Natural := Strings.Fixed.Index (F, "config-api");
          begin
-            Text_IO.Put_Line ("> " & F (I .. F'Last));
+            Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
             Text_IO.Put_Line (M.Level'Img);
             Text_IO.Put_Line (M.Format);
          end;
@@ -154,9 +154,9 @@ exception
          for M of Prj.Log_Messages.all loop
             declare
                F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "/config-api");
+               I : constant Natural := Strings.Fixed.Index (F, "config-api");
             begin
-               Text_IO.Put_Line ("> " & F (I .. F'Last));
+               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
                Text_IO.Put_Line (M.Level'Img);
                Text_IO.Put_Line (M.Format);
             end;
