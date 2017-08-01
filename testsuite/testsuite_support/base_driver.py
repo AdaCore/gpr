@@ -1,7 +1,7 @@
 import os
 import os.path
-import pipes
-import subprocess
+import sys
+import string
 
 from gnatpython import fileutils
 from gnatpython.ex import Run, STDOUT
@@ -62,6 +62,7 @@ class BaseDriver(TestDriver):
         try:
             _ = self.test_env['description']
         except KeyError:
+            print(_)
             raise SetupError('test.yaml: missing "description" field')
 
         self.check_file(self.expected_file)
@@ -191,6 +192,13 @@ class BaseDriver(TestDriver):
             self.result.actual_output += self.read_file(self.output_file)
             raise TestError(
                 '{} returned status code {}'.format(program, p.status))
+
+        #  convert Windows directory separators to expected one
+        if sys.platform == 'win32':
+            content = string.replace(self.read_file(self.output_file),
+                                     '\\', '/')
+            with open(self.output_file, 'w') as f:
+                return f.write(content)
 
     #
     # Analysis helpers
