@@ -87,11 +87,11 @@ procedure Main is
                Text_IO.Put (" ->");
 
                for V of Element (A).Values loop
-                  K := Strings.Fixed.Index (V, "/adainclude");
+                  K := Strings.Fixed.Index (V, "adainclude");
                   if K = 0 then
                      Text_IO.Put (" " & V (V'First .. V'Last));
                   else
-                     Text_IO.Put (" ..." & V (K .. V'Last));
+                     Text_IO.Put (" ..." & V (K - 1 .. V'Last));
                   end if;
 
                end loop;
@@ -107,12 +107,12 @@ procedure Main is
                declare
                   Val : constant String := String (Element (V).Value);
                begin
-                  K := Strings.Fixed.Index (Val, "/adainclude");
+                  K := Strings.Fixed.Index (Val, "adainclude");
 
                   if K = 0 then
                      Text_IO.Put (Val);
                   else
-                     Text_IO.Put ("..." & Val (K .. Val'Last));
+                     Text_IO.Put ("..." & Val (K - 1 .. Val'Last));
                   end if;
                end;
 
@@ -140,7 +140,7 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Full_Path_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "adainclude/");
+      I : constant Positive := Strings.Fixed.Index (Filename, "adainclude");
    begin
       Text_IO.Put (" > " & Filename (I .. Filename'Last));
    end Output_Filename;
@@ -158,9 +158,9 @@ begin
       for M of Cnf.Log_Messages loop
          declare
             F : constant String := M.Sloc.Filename;
-            I : constant Natural := Strings.Fixed.Index (F, "/runtime");
+            I : constant Natural := Strings.Fixed.Index (F, "runtime");
          begin
-            Text_IO.Put_Line ("> " & F (I .. F'Last));
+            Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
             Text_IO.Put_Line (M.Level'Img);
             Text_IO.Put_Line (M.Format);
          end;
@@ -211,9 +211,9 @@ exception
          for M of Prj.Log_Messages.all loop
             declare
                F : constant String := M.Sloc.Filename;
-               I : constant Natural := Strings.Fixed.Index (F, "/runtime");
+               I : constant Natural := Strings.Fixed.Index (F, "runtime");
             begin
-               Text_IO.Put_Line ("> " & F (I .. F'Last));
+               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
                Text_IO.Put_Line (M.Level'Img);
                Text_IO.Put_Line (M.Format);
             end;

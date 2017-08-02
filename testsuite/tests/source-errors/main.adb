@@ -88,9 +88,9 @@ procedure Main is
             declare
                F : constant String := M.Sloc.Filename;
                I : constant Natural := Strings.Fixed.Index
-                     (F, "/source-errors");
+                     (F, "source-errors");
             begin
-               Text_IO.Put_Line ("> " & F (I .. F'Last));
+               Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
                Text_IO.Put_Line (M.Level'Img);
                Text_IO.Put_Line (M.Sloc.Line'Img);
                Text_IO.Put_Line (M.Sloc.Column'Img);

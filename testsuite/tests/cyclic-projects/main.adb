@@ -59,10 +59,11 @@ procedure Main is
                   F   : constant Natural :=
                           Strings.Fixed.Index (Mes, "imports ");
                   L   : constant Natural :=
-                          Strings.Fixed.Index (Mes, "/cyclic-projects");
+                          Strings.Fixed.Index (Mes, "cyclic-projects");
                begin
                   if F /= 0 and then L /= 0 then
-                     Text_IO.Put_Line (Mes (1 .. F + 7) & Mes (L .. Mes'Last));
+                     Text_IO.Put_Line
+                       (Mes (1 .. F + 7) & Mes (L - 1 .. Mes'Last));
                   else
                      Text_IO.Put_Line (Mes);
                   end if;

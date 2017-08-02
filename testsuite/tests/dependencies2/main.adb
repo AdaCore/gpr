@@ -114,7 +114,7 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Full_Path_Name) is
-      I : constant Positive := Strings.Fixed.Index (Filename, "dependencies2/");
+      I : constant Positive := Strings.Fixed.Index (Filename, "dependencies2");
    begin
       Text_IO.Put (" > " & Filename (I + 13 .. Filename'Last));
    end Output_Filename;
