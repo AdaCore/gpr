@@ -63,6 +63,9 @@ SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
 ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
 	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
 
+# Load current setup if any
+-include makefile.setup
+
 # target options for cross-build
 ifeq ($(HOST),$(TARGET))
 GTARGET=
@@ -75,9 +78,6 @@ ifeq ($(ENABLE_SHARED), yes)
 else
    LIBGPR2_TYPES=static
 endif
-
-# Load current setup if any
--include makefile.setup
 
 # Used to pass extra options to GPRBUILD, like -d for instance
 GPRBUILD_OPTIONS=
