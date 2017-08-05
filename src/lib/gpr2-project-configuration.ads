@@ -77,6 +77,11 @@ package GPR2.Project.Configuration is
    function Target (Self : Object) return Optional_Name_Type;
    --  Return the target used for the configuration
 
+   function Runtime
+     (Self : Object; Language : Name_Type) return Optional_Name_Type;
+   --  Returns the runtime specificed for Language or the empty string if no
+   --  specific runtime has been specified for this language.
+
 private
 
    type Description is record

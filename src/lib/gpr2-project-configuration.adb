@@ -202,6 +202,24 @@ package body GPR2.Project.Configuration is
       return Self.Messages;
    end Log_Messages;
 
+   -------------
+   -- Runtime --
+   -------------
+
+   function Runtime
+     (Self : Object; Language : Name_Type) return Optional_Name_Type is
+   begin
+      for Description of Self.Descriptions loop
+         if Optional_Name_Type (To_String (Description.Language))
+           = Language
+         then
+            return Optional_Name_Type (To_String (Description.Runtime));
+         end if;
+      end loop;
+
+      return "";
+   end Runtime;
+
    ------------
    -- Target --
    ------------
