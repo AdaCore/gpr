@@ -74,6 +74,9 @@ package GPR2.Project.Configuration is
    function Corresponding_View (Self : Object) return Project.View.Object;
    --  Get project for the given configuration object
 
+   function Target (Self : Object) return Optional_Name_Type;
+   --  Return the target used for the configuration
+
 private
 
    type Description is record

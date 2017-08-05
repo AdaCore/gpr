@@ -202,4 +202,13 @@ package body GPR2.Project.Configuration is
       return Self.Messages;
    end Log_Messages;
 
+   ------------
+   -- Target --
+   ------------
+
+   function Target (Self : Object) return Optional_Name_Type is
+   begin
+      return Optional_Name_Type (To_String (Self.Target));
+   end Target;
+
 end GPR2.Project.Configuration;
