@@ -67,6 +67,31 @@ package body GPR2.Project.Configuration is
          Name     => +Name);
    end Create;
 
+   function Create
+     (Filename : Path_Name_Type;
+      Target   : Name_Type := "all") return Object
+   is
+      Result  : Object;
+      Project : constant Parser.Project.Object :=
+                  Parser.Project.Load (Filename, Result.Messages);
+      Data    : GPR2.Project.Definition.Data (Has_Context => False);
+   begin
+      --  Continue only if there is no parsing error on the configuration
+      --  project.
+
+      Data.Trees.Project := Project;
+      Data.Context_View  := View.Undefined;
+      Data.Status        := Definition.Root;
+
+      Result.Conf         := Definition.Register (Data);
+      Result.Target       :=
+        (if Target = "all"
+         then Null_Unbounded_String
+         else To_Unbounded_String (String (Target)));
+
+      return Result;
+   end Create;
+
    ------------------
    -- Has_Messages --
    ------------------

@@ -64,6 +64,11 @@ package GPR2.Project.Configuration is
       Target   : Name_Type := "all") return Object;
    --  Create a configuration based on the settings requested
 
+   function Create
+     (Filename : Path_Name_Type;
+      Target   : Name_Type := "all") return Object;
+   --  Create a configuration object for the given configuration file
+
    function Corresponding_View (Self : Object) return Project.View.Object;
    --  Get project for the given configuration object
 
@@ -78,8 +83,9 @@ private
    end record;
 
    type Object is tagged record
-      Messages : Log.Object;
-      Conf     : Project.View.Object;
+      Messages     : Log.Object;
+      Target       : Unbounded_String;
+      Conf         : Project.View.Object;
    end record;
 
 end GPR2.Project.Configuration;
