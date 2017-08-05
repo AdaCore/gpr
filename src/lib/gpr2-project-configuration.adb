@@ -173,24 +173,7 @@ package body GPR2.Project.Configuration is
       Result.Conf := View.Undefined;
 
       if Success then
-         declare
-            Project : constant Parser.Project.Object :=
-                        Parser.Project.Load
-                          (Create (Name_Type (Conf_Filename)),
-                           Result.Messages);
-            Data    : GPR2.Project.Definition.Data (Has_Context => False);
-         begin
-            --  Continue only if there is no parsing error on the configuration
-            --  project.
-
-            if Result.Messages.Is_Empty then
-               Data.Trees.Project := Project;
-               Data.Context_View := View.Undefined;
-               Data.Status := Definition.Root;
-
-               Result.Conf := Definition.Register (Data);
-            end if;
-         end;
+         Result := Create (Create (Name_Type (Conf_Filename)), Target);
 
       else
          Result.Messages.Append

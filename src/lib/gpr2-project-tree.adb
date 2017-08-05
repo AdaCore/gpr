@@ -502,24 +502,16 @@ package body GPR2.Project.Tree is
 
    procedure Load_Configuration
      (Self     : in out Object;
-      Filename : Path_Name_Type)
-   is
-      Project : constant Parser.Project.Object :=
-                  Parser.Project.Load (Filename, Self.Messages);
-      Data    : Definition.Data (Has_Context => False);
+      Filename : Path_Name_Type) is
    begin
-      --  Continue only if there is no parsing error on the configuration
-      --  project.
+      Self.Conf := Configuration.Create (Filename);
 
-      if Self.Messages.Is_Empty then
-         Data.Trees.Project := Project;
-         Data.Context_View := View.Undefined;
-         Data.Status := Definition.Root;
+      if Self.Conf.Has_Messages then
+         for M of Self.Conf.Log_Messages loop
+            Self.Messages.Append (M);
+         end loop;
 
-         Self.Conf := Definition.Register (Data);
-
-         --  Finaly reload/reset the context
-
+      else
          Set_Context (Self, Self.Context);
       end if;
    end Load_Configuration;
