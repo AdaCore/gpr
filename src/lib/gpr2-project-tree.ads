@@ -86,6 +86,9 @@ package GPR2.Project.Tree is
      with Pre => Self /= Undefined and then Self.Has_Runtime_Project;
    --  Returns the configuration project for the given tree
 
+   function Target (Self : Object) return Name_Type;
+   --  Return the target for the project tree
+
    function View_For
      (Self : Object;
       Name : Name_Type;

@@ -25,6 +25,8 @@
 with Ada.Containers.Ordered_Sets;
 with Ada.Environment_Variables;
 
+with GPR.Sdefault;
+
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import;
@@ -1207,6 +1209,33 @@ package body GPR2.Project.Tree is
          end loop;
       end if;
    end Set_Context;
+
+   ------------
+   -- Target --
+   ------------
+
+   function Target (Self : Object) return Name_Type is
+      use type Configuration.Object;
+      use type Attribute.Object;
+   begin
+      if Self.Conf /= Configuration.Undefined
+        and then Self.Conf.Target /= ""
+      then
+         return Self.Conf.Target;
+
+      elsif Self.Conf /= Configuration.Undefined
+        and then
+          Self.Conf.Corresponding_View.Attribute (Registry.Attribute.Target)
+            /= Attribute.Undefined
+      then
+         return Name_Type
+           (Self.Conf.Corresponding_View.Attribute
+              (Registry.Attribute.Target).Value);
+
+      else
+         return Name_Type (GPR.Sdefault.Hostname);
+      end if;
+   end Target;
 
    --------------------
    -- Update_Sources --
