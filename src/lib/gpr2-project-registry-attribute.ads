@@ -99,6 +99,7 @@ package GPR2.Project.Registry.Attribute is
    Specification_Exceptions    : constant Name_Type :=
                                    "specification_exceptions";
    Specification_Suffix        : constant Name_Type := "specification_suffix";
+   Target                      : constant Name_Type := "target";
 
 private
 

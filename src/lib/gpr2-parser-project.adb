@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
+with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
@@ -1022,6 +1023,19 @@ package body GPR2.Parser.Project is
             if Pack = "" then
                if Attrs.Contains (Name, Index) then
                   Attr := Attrs.Element (Name, Index);
+
+               --  Special cases for some built-in references
+
+               elsif Index = ""
+                 and then Name = GPR2.Project.Registry.Attribute.Target
+               then
+                  --  Project'Target
+
+                  return R : Item_Values do
+                     R.Single := True;
+                     R.Values.Append
+                       (Characters.Handling.To_Lower (String (Tree.Target)));
+                  end return;
                else
                   Att_Defined := False;
                end if;
