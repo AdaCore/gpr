@@ -27,6 +27,8 @@
 with GPR2.Log;
 with GPR2.Project.View;
 
+private with Ada.Containers.Vectors;
+
 package GPR2.Project.Configuration is
 
    use type Containers.Count_Type;
@@ -82,10 +84,13 @@ private
       Name     : Unbounded_String;
    end record;
 
+   package Descriptions is new Ada.Containers.Vectors (Positive, Description);
+
    type Object is tagged record
       Messages     : Log.Object;
       Target       : Unbounded_String;
       Conf         : Project.View.Object;
+      Descriptions : Configuration.Descriptions.Vector;
    end record;
 
 end GPR2.Project.Configuration;

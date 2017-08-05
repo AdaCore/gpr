@@ -175,6 +175,10 @@ package body GPR2.Project.Configuration is
       if Success then
          Result := Create (Create (Name_Type (Conf_Filename)), Target);
 
+         for S of Settings loop
+            Result.Descriptions.Append (S);
+         end loop;
+
       else
          Result.Messages.Append
            (Message.Create
