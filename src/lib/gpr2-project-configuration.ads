@@ -35,6 +35,8 @@ package GPR2.Project.Configuration is
 
    type Object is tagged private;
 
+   Undefined : constant Object;
+
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this configuration
 
@@ -100,5 +102,7 @@ private
       Conf         : Project.View.Object;
       Descriptions : Configuration.Descriptions.Vector;
    end record;
+
+   Undefined : constant Object := (others => <>);
 
 end GPR2.Project.Configuration;
