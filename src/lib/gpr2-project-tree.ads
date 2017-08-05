@@ -27,6 +27,9 @@ with Ada.Iterator_Interfaces;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Project.Configuration;
+pragma Elaborate (GPR2.Project.Configuration);
+--  Elaborate to avoid a circular dependency due to default Elaborate_Body
 with GPR2.Project.View;
 
 limited with GPR2.Unit;
@@ -56,7 +59,7 @@ package GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name_Type;
       Context  : GPR2.Context.Object;
-      Config   : View.Object := View.Undefined);
+      Config   : Configuration.Object := Configuration.Undefined);
    --  Load a root-project
 
    procedure Load_Configuration
@@ -221,7 +224,7 @@ private
    type Object is tagged limited record
       Self     : not null access Object := Object'Unchecked_Access;
       Root     : View.Object;
-      Conf     : View.Object;
+      Conf     : Configuration.Object;
       Runtime  : View.Object;
       Units    : Name_View.Map;
       Sources  : Name_View.Map;
@@ -243,7 +246,7 @@ private
    Undefined  : constant Object :=
                   (Self     => <>,
                    Root     => View.Undefined,
-                   Conf     => View.Undefined,
+                   Conf     => Configuration.Undefined,
                    Runtime  => View.Undefined,
                    Units    => <>,
                    Sources  => <>,

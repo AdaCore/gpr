@@ -135,8 +135,7 @@ begin
 
    Ctx.Include ("OS", "Linux");
    Project.Tree.Load
-     (Prj, Create ("demo.gpr"), Ctx,
-      Config => Cnf.Corresponding_View);
+     (Prj, Create ("demo.gpr"), Ctx, Config => Cnf);
 
    Display (Prj.Root_Project);
 

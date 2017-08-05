@@ -104,7 +104,7 @@ package body GPR2.Project.Tree is
 
    function Configuration_Project (Self : Object) return View.Object is
    begin
-      return Self.Conf;
+      return Self.Conf.Corresponding_View;
    end Configuration_Project;
 
    ------------------------
@@ -139,18 +139,19 @@ package body GPR2.Project.Tree is
    -------------------------
 
    function Create_Runtime_View (Self : Object) return View.Object is
+      CV   : constant View.Object := Self.Conf.Corresponding_View;
       DS   : Character renames GNAT.OS_Lib.Directory_Separator;
       Data : Project.Definition.Data (Has_Context => False);
    begin
       --  Check runtime path
 
-      if Self.Conf.Has_Attributes ("runtime_dir", "ada") then
+      if CV.Has_Attributes ("runtime_dir", "ada") then
          --  Runtime_Dir (Ada) exists, this is the Source_Dirs for the Runtime
          --  project view.
 
          declare
             Runtime_Dir : constant String :=
-                            Self.Conf.Attribute ("runtime_dir", "ada").Value;
+                            CV.Attribute ("runtime_dir", "ada").Value;
          begin
             Data.Attrs.Insert
               (Project.Attribute.Create
@@ -382,7 +383,7 @@ package body GPR2.Project.Tree is
 
    function Has_Configuration_Project (Self : Object) return Boolean is
    begin
-      return Self.Conf /= View.Undefined;
+      return Self.Conf.Corresponding_View /= View.Undefined;
    end Has_Configuration_Project;
 
    -----------------
@@ -451,7 +452,7 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name_Type;
       Context  : GPR2.Context.Object;
-      Config   : View.Object := View.Undefined)
+      Config   : Configuration.Object := Configuration.Undefined)
    is
       Root_Context : GPR2.Context.Object := Context;
 
@@ -1178,8 +1179,8 @@ package body GPR2.Project.Tree is
       --  Now the first step is to set the configuration project view if any
       --  and to create the runtime project if possible.
 
-      if Self.Conf /= View.Undefined then
-         Set_View (Self.Conf);
+      if Self.Conf.Corresponding_View /= View.Undefined then
+         Set_View (Self.Conf.Corresponding_View);
 
          Self.Runtime := Create_Runtime_View (Self);
       end if;
@@ -1228,6 +1229,8 @@ package body GPR2.Project.Tree is
       Ctx  : GPR2.Context.Object) return View.Object
    is
       use type GPR2.Context.Binary_Signature;
+
+      CV : constant View.Object := Self.Conf.Corresponding_View;
    begin
       --  First check for the view in the current tree
 
@@ -1249,8 +1252,8 @@ package body GPR2.Project.Tree is
       --  project. Note that this means that any Runtime or Config user's
       --  project name will have precedence.
 
-      if Self.Conf /= View.Undefined and then Self.Conf.Name = Name then
-         return Self.Conf;
+      if CV /= View.Undefined and then CV.Name = Name then
+         return CV;
 
       elsif Self.Runtime /= View.Undefined
         and then Self.Runtime.Name = Name
