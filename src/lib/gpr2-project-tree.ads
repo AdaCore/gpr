@@ -28,7 +28,8 @@ with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Project.View;
-with GPR2.Unit;
+
+limited with GPR2.Unit;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with GPR2.Project.Definition;
