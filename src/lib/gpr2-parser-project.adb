@@ -1036,6 +1036,20 @@ package body GPR2.Parser.Project is
                      R.Values.Append
                        (Characters.Handling.To_Lower (String (Tree.Target)));
                   end return;
+
+               elsif Index /= ""
+                 and then Name = GPR2.Project.Registry.Attribute.Runtime
+               then
+                  --  Project'Runtime ("<lang>")
+
+                  return R : Item_Values do
+                     R.Single := True;
+                     R.Values.Append
+                       (Characters.Handling.To_Lower
+                          (String (Tree.Runtime
+                            (Optional_Name_Type (Index)))));
+                  end return;
+
                else
                   Att_Defined := False;
                end if;
