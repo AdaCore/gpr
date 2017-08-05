@@ -797,6 +797,26 @@ package body GPR2.Project.Tree is
       return Self.Root;
    end Root_Project;
 
+   -------------
+   -- Runtime --
+   -------------
+
+   function Runtime
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+   is
+      use type Configuration.Object;
+      use type Attribute.Object;
+   begin
+      if Self.Conf /= Configuration.Undefined
+        and then Self.Conf.Runtime (Language) /= ""
+      then
+         return Self.Conf.Runtime (Language);
+
+      else
+         return "";
+      end if;
+   end Runtime;
+
    ---------------------
    -- Runtime_Project --
    ---------------------

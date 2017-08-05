@@ -89,6 +89,11 @@ package GPR2.Project.Tree is
    function Target (Self : Object) return Name_Type;
    --  Return the target for the project tree
 
+   function Runtime
+     (Self : Object; Language : Name_Type) return Optional_Name_Type;
+   --  Returns the runtime selected for the given language or the empty string
+   --  if no specific runtime has been configured for this project tree.
+
    function View_For
      (Self : Object;
       Name : Name_Type;
