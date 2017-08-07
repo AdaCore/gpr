@@ -29,9 +29,18 @@ package body GPR2.Project.Definition is
    package Project_Views is
      new Ada.Containers.Indefinite_Ordered_Maps (View.Object, Data);
 
-   Views : Project_Views.Map;
+   protected Shared is
 
-   N : View.Id := 0;
+      function Get (View : Project.View.Object) return Data;
+
+      procedure Register (Def : Data; View : out Project.View.Object);
+
+      procedure Set (View : Project.View.Object; Def : Data);
+
+   private
+      Views : Project_Views.Map;
+      N : View.Id := 0;
+   end Shared;
 
    ---------
    -- Get --
@@ -39,7 +48,7 @@ package body GPR2.Project.Definition is
 
    function Get (View : Project.View.Object) return Data is
    begin
-      return Views (View);
+      return Shared.Get (View);
    end Get;
 
    --------------
@@ -47,11 +56,10 @@ package body GPR2.Project.Definition is
    --------------
 
    function Register (Def : Data) return View.Object is
-      View : constant Project.View.Object := Project.View.From_Id (N + 1);
+      Result : View.Object;
    begin
-      N := N + 1;
-      Views.Insert (View, Def);
-      return View;
+      Shared.Register (Def, Result);
+      return Result;
    end Register;
 
    ---------
@@ -60,7 +68,45 @@ package body GPR2.Project.Definition is
 
    procedure Set (View : Project.View.Object; Def : Data) is
    begin
-      Views (View) := Def;
+      Shared.Set (View, Def);
    end Set;
+
+   ------------
+   -- Shared --
+   ------------
+
+   protected body Shared is
+
+      ---------
+      -- Get --
+      ---------
+
+      function Get (View : Project.View.Object) return Data is
+      begin
+         return Views (View);
+      end Get;
+
+      --------------
+      -- Register --
+      --------------
+
+      procedure Register (Def : Data; View : out Project.View.Object) is
+         Result : constant Project.View.Object := Project.View.From_Id (N + 1);
+      begin
+         N := N + 1;
+         Views.Insert (Result, Def);
+         View := Result;
+      end Register;
+
+      ---------
+      -- Set --
+      ---------
+
+      procedure Set (View : Project.View.Object; Def : Data) is
+      begin
+         Views (View) := Def;
+      end Set;
+
+   end Shared;
 
 end GPR2.Project.Definition;
