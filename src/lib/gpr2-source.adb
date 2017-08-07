@@ -70,18 +70,17 @@ package body GPR2.Source is
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object is
    begin
-      Registry.Store.Append
-        (Registry.Data'
-           (Path_Name  => Filename,
-            Language   => To_Unbounded_String (String (Language)),
-            Unit_Name  => To_Unbounded_String (String (Unit_Name)),
-            Kind       => Kind,
-            Other_Part => 0,
-            Units      => <>,
-            Parsed     => False));
-
       return Result : Object do
-         Result.Id := Registry.Store.Last_Index;
+         Registry.Shared.Register
+           (Registry.Data'
+              (Path_Name  => Filename,
+               Language   => To_Unbounded_String (String (Language)),
+               Unit_Name  => To_Unbounded_String (String (Unit_Name)),
+               Kind       => Kind,
+               Other_Part => 0,
+               Units      => <>,
+               Parsed     => False),
+            Result.Id);
       end return;
    end Create;
 
@@ -91,7 +90,7 @@ package body GPR2.Source is
 
    function Filename (Self : Object) return Full_Path_Name is
    begin
-      return Value (Registry.Store (Self.Id).Path_Name);
+      return Value (Registry.Shared.Get (Self).Path_Name);
    end Filename;
 
    ---------
@@ -100,7 +99,7 @@ package body GPR2.Source is
 
    function Key (Self : Object) return Value_Type is
       use Ada.Characters;
-      Data : constant Registry.Data := Registry.Store (Self.Id);
+      Data : constant Registry.Data := Registry.Shared.Get (Self);
    begin
       if Data.Unit_Name = Null_Unbounded_String then
          --  Not unit based
@@ -119,7 +118,7 @@ package body GPR2.Source is
    function Kind (Self : Object) return Kind_Type is
    begin
       Parse (Self);
-      return Registry.Store (Self.Id).Kind;
+      return Registry.Shared.Get (Self).Kind;
    end Kind;
 
    --------------
@@ -128,7 +127,7 @@ package body GPR2.Source is
 
    function Language (Self : Object) return Name_Type is
    begin
-      return Name_Type (To_String (Registry.Store (Self.Id).Language));
+      return Name_Type (To_String (Registry.Shared.Get (Self).Language));
    end Language;
 
    ----------------
@@ -136,7 +135,7 @@ package body GPR2.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      Other_Id : constant Natural := Registry.Store (Self.Id).Other_Part;
+      Other_Id : constant Natural := Registry.Shared.Get (Self).Other_Part;
    begin
       if Other_Id = 0 then
          return Undefined;
@@ -150,7 +149,7 @@ package body GPR2.Source is
    -----------
 
    procedure Parse (Self : Object) is
-      S : Registry.Data := Registry.Store (Self.Id);
+      S : Registry.Data := Registry.Shared.Get (Self);
    begin
       if not S.Parsed then
          declare
@@ -179,7 +178,7 @@ package body GPR2.Source is
 
             --  Update registry
 
-            Registry.Store (Self.Id) := S;
+            Registry.Shared.Set (Self, S);
          end;
       end if;
    end Parse;
@@ -192,8 +191,7 @@ package body GPR2.Source is
      (Self       : Object;
       Other_Part : Object) is
    begin
-      Registry.Store (Self.Id).Other_Part := Other_Part.Id;
-      Registry.Store (Other_Part.Id).Other_Part := Self.Id;
+      Registry.Shared.Set_Other_Part (Self, Other_Part);
    end Set_Other_Part;
 
    ---------------
@@ -204,7 +202,7 @@ package body GPR2.Source is
    begin
       Parse (Self);
       return Optional_Name_Type
-        (To_String (Registry.Store (Self.Id).Unit_Name));
+        (To_String (Registry.Shared.Get (Self).Unit_Name));
    end Unit_Name;
 
    ------------------
@@ -214,7 +212,7 @@ package body GPR2.Source is
    function Withed_Units (Self : Object) return Source_Reference.Set.Object is
    begin
       Parse (Self);
-      return Registry.Store (Self.Id).Units;
+      return Registry.Shared.Get (Self).Units;
    end Withed_Units;
 
 end GPR2.Source;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,39 +22,52 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
+package body GPR2.Source.Registry is
 
-private package GPR2.Source.Registry is
+   ------------
+   -- Shared --
+   ------------
 
-   type Data is record
-      Path_Name  : Path_Name_Type;
-      Language   : Unbounded_String;
-      Unit_Name  : Unbounded_String;
-      Kind       : Kind_Type;
-      Other_Part : Natural;
-      Units      : Source_Reference.Set.Object;
-      Parsed     : Boolean := False;
-   end record;
+   protected body Shared is
 
-   package Source_Store is new Ada.Containers.Vectors (Positive, Data);
+      ---------
+      -- Get --
+      ---------
 
-   protected Shared is
+      function Get (Object : Source.Object) return Data is
+      begin
+         return Store (Object.Id);
+      end Get;
 
-      procedure Register (Def : Data; Id : out Positive);
-      --  Register element in Store and return it's Id
+      --------------
+      -- Register --
+      --------------
 
-      function Get (Object : Source.Object) return Data;
-      --  Get the source data for the given source object
+      procedure Register (Def : Data; Id : out Positive) is
+      begin
+         Store.Append (Def);
+         Id := Store.Last_Index;
+      end Register;
 
-      procedure Set (Object : Source.Object; Def : Data);
-      --  Set the source data for the given source object
+      ---------
+      -- Set --
+      ---------
 
-      procedure Set_Other_Part (Object1, Object2 : Object);
-      --  Register that Def1 is the other part for Def2 and the other way
-      --  around too.
+      procedure Set (Object : Source.Object; Def : Data) is
+      begin
+         Store (Object.Id) := Def;
+      end Set;
 
-   private
-      Store : Source_Store.Vector;
+      --------------------
+      -- Set_Other_Part --
+      --------------------
+
+      procedure Set_Other_Part (Object1, Object2 : Object) is
+      begin
+         Store (Object1.Id).Other_Part := Object2.Id;
+         Store (Object2.Id).Other_Part := Object1.Id;
+      end Set_Other_Part;
+
    end Shared;
 
 end GPR2.Source.Registry;
