@@ -37,7 +37,18 @@ package body GPR2.Parser.Registry is
    package Project_Store is new Ada.Containers.Ordered_Maps
      (Path_Name_Type, Parser.Project.Object, "<", Parser.Project."=");
 
-   Store : Project_Store.Map;
+   protected Shared is
+
+      function Exist (Pathname : Path_Name_Type) return Boolean;
+
+      function Get (Pathname : Path_Name_Type) return Project.Object;
+
+      procedure Register
+        (Pathname : Path_Name_Type; Project : Parser.Project.Object);
+
+   private
+      Store : Project_Store.Map;
+   end Shared;
 
    ------------
    -- Exists --
@@ -45,7 +56,7 @@ package body GPR2.Parser.Registry is
 
    function Exists (Pathname : Path_Name_Type) return Boolean is
    begin
-      return Store.Contains (Pathname);
+      return Shared.Exist (Pathname);
    end Exists;
 
    ---------
@@ -54,7 +65,7 @@ package body GPR2.Parser.Registry is
 
    function Get (Pathname : Path_Name_Type) return Project.Object is
    begin
-      return Store (Pathname);
+      return Shared.Get (Pathname);
    end Get;
 
    --------------
@@ -64,7 +75,43 @@ package body GPR2.Parser.Registry is
    procedure Register
      (Pathname : Path_Name_Type; Project : Parser.Project.Object) is
    begin
-      Store.Insert (Pathname, Project);
+      Shared.Register (Pathname, Project);
    end Register;
+
+   ------------
+   -- Shared --
+   ------------
+
+   protected body Shared is
+
+      -----------
+      -- Exist --
+      -----------
+
+      function Exist (Pathname : Path_Name_Type) return Boolean is
+      begin
+         return Store.Contains (Pathname);
+      end Exist;
+
+      ---------
+      -- Get --
+      ---------
+
+      function Get (Pathname : Path_Name_Type) return Project.Object is
+      begin
+         return Store (Pathname);
+      end Get;
+
+      --------------
+      -- Register --
+      --------------
+
+      procedure Register
+        (Pathname : Path_Name_Type; Project : Parser.Project.Object) is
+      begin
+         Store.Insert (Pathname, Project);
+      end Register;
+
+   end Shared;
 
 end GPR2.Parser.Registry;
