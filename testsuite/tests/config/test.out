@@ -38,6 +38,7 @@ V:   Target_Name -> x86_64-linux
  Binder
    Driver (Ada) -> /home/obry/dev/builds/install/libexec/gprbuild/gprbind
    Objects_Path_File (Ada) -> ADA_PRJ_OBJECTS_FILE
+   Required_Switches (Ada) -> gnatbind_prefix=
  Clean
    Artifacts_In_Object_Dir -> toto gnatinspect.*
    Object_Artifact_Extensions (Ada) -> .s .ci .gcno
@@ -55,6 +56,7 @@ V:   Target_Name -> x86_64-linux
    Driver (Ada) -> /home/obry/dev/builds/install/bin/gcc
    Include_Path_File (Ada) -> ADA_PRJ_INCLUDE_FILE
    Language_Kind (Ada) -> unit_based
+   Leading_Required_Switches (Ada) -> -c -x ada -gnatA
    Mapping_Body_Suffix (Ada) -> %b
    Mapping_File_Switches (Ada) -> -gnatem=
    Mapping_Spec_Suffix (Ada) -> %s

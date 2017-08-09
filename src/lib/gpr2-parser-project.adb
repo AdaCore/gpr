@@ -946,9 +946,16 @@ package body GPR2.Parser.Project is
       --  Package orientated state, when parsing is in a package In_Pack is
       --  set and Pack_Name contains the name of the package and all parsed
       --  attributes are recorded into Pack_Attrs set.
+      --
+      --  Att_Name and Idx_Name are the name for the currently parsed attribute
+      --  declaration. This is used to check for recursive definition.
+      --     for Att (Idx) use Att (Idx) & ("some", "other", "value");
+      --
 
       In_Pack              : Boolean := False;
       Pack_Name            : Unbounded_String;
+      Att_Name             : Unbounded_String;
+      Idx_Name             : Unbounded_String;
       Pack_Attrs           : GPR2.Project.Attribute.Set.Object;
       Att_Defined          : Boolean := True;
       Is_Project_Reference : Boolean := False;
@@ -980,6 +987,13 @@ package body GPR2.Parser.Project is
                      else "");
          View   : constant GPR2.Project.View.Object :=
                     GPR2.Project.Tree.View_For (Tree, Project, Context);
+
+         function Is_Self return Boolean is
+           (Optional_Name_Type (To_String (Pack_Name)) = Pack
+            and then Name_Type (To_String (Att_Name)) = Name
+            and then Value_Type (To_String (Idx_Name)) = Index);
+         --  Returns True if the current reference corresponds to the currently
+         --  defined attribute (self/recursive reference).
 
          Attr   : GPR2.Project.Attribute.Object;
          Result : Item_Values;
@@ -1050,6 +1064,9 @@ package body GPR2.Parser.Project is
                             (Optional_Name_Type (Index)))));
                   end return;
 
+               elsif Is_Self then
+                  null;
+
                else
                   Att_Defined := False;
                end if;
@@ -1061,6 +1078,14 @@ package body GPR2.Parser.Project is
 
                if Pack_Attrs.Contains (Name, Index) then
                   Attr := Pack_Attrs.Element (Name, Index);
+
+               elsif Is_Self then
+                  --  A self reference, if the attribute if not found (check
+                  --  above) it means that there is no previous definition
+                  --  for this attribute. The current value is then the empty
+                  --  string but the attribute is defined.
+                  null;
+
                else
                   Att_Defined := False;
                end if;
@@ -1612,6 +1637,9 @@ package body GPR2.Parser.Project is
             N_Str : constant Name_Type :=
                       Get_Name_Type (Single_Tok_Node (Name));
          begin
+            Att_Name := To_Unbounded_String (String (N_Str));
+            Idx_Name := To_Unbounded_String (String (I_Str));
+
             declare
                Values : constant Item_Values := Get_Term_List (Expr);
                A      : GPR2.Project.Attribute.Object;
@@ -1673,6 +1701,9 @@ package body GPR2.Parser.Project is
                   end if;
                end;
             end;
+
+            Att_Name := Null_Unbounded_String;
+            Idx_Name := Null_Unbounded_String;
          end Parse_Attribute_Decl;
 
          -----------------------------
