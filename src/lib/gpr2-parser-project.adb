@@ -1507,6 +1507,11 @@ package body GPR2.Parser.Project is
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
+         Sloc    : constant Source_Reference.Object :=
+                     Get_Source_Reference
+                       (Self.File,
+                        Sloc_Range (GPR_Node (Node)));
+
          Name_1  : constant not null Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
@@ -1553,8 +1558,14 @@ package body GPR2.Parser.Project is
                Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);
 
          else
-            raise Constraint_Error
-              with "variable " & String (Name) & " does not exist";
+            Tree.Log_Messages.Append
+              (Message.Create
+                 (Level   => Message.Error,
+                  Sloc    => Sloc,
+                  Message =>
+                    "variable '" & String (Name) & "' is undefined"));
+
+            return Item_Values'(Values => <>, Single => True);
          end if;
       end Get_Variable_Values;
 
