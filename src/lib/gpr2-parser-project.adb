@@ -1718,6 +1718,7 @@ package body GPR2.Parser.Project is
                        Get_Variable_Values (Var).Values.First_Element;
          begin
             Case_Values.Prepend (Value);
+
             --  Set status to close for now, this will be open when a
             --  when_clause will match the value pushed just above on
             --  the vector.
