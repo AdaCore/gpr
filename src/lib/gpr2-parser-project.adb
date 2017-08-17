@@ -1025,6 +1025,13 @@ package body GPR2.Parser.Project is
            (GPR2.Project.Registry.Attribute.Create (Name, Pack)).Value
              = GPR2.Project.Registry.Attribute.Single;
 
+         --  If the attribute is not found or not yet resolved we need
+         --  to ensure that the Values list respect the post
+         --  condition. That is, a Single result must contain a single
+         --  element.
+
+         Result.Values.Append ("");
+
          if Project = Name_Type (To_String (Self.Name))
            or else Is_Project_Reference
          then
