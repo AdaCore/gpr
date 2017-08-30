@@ -1054,9 +1054,8 @@ package body GPR2.Parser.Project is
 
                   return R : Item_Values do
                      R.Single := True;
-                     R.Values.Replace_Element
-                       (1,
-                        Characters.Handling.To_Lower (String (Tree.Target)));
+                     R.Values.Append
+                       (Characters.Handling.To_Lower (String (Tree.Target)));
                   end return;
 
                elsif Index /= ""
@@ -1066,9 +1065,8 @@ package body GPR2.Parser.Project is
 
                   return R : Item_Values do
                      R.Single := True;
-                     R.Values.Replace_Element
-                       (1,
-                        Characters.Handling.To_Lower
+                     R.Values.Append
+                       (Characters.Handling.To_Lower
                           (String (Tree.Runtime
                             (Optional_Name_Type (Index)))));
                   end return;
