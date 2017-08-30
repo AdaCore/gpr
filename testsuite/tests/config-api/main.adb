@@ -145,7 +145,7 @@ begin
 
 exception
    when E : GPR2.Project_Error =>
-      Text_Io.Put_Line (Exception_Information (E));
+      Text_IO.Put_Line (Exception_Information (E));
 
       if Prj.Has_Messages then
          Text_IO.Put_Line ("Messages found:");
