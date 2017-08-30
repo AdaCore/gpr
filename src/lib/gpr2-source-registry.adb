@@ -36,17 +36,18 @@ package body GPR2.Source.Registry is
 
       function Get (Object : Source.Object) return Data is
       begin
-         return Store (Object.Id);
+         return Store (Object.Pathname);
       end Get;
 
       --------------
       -- Register --
       --------------
 
-      procedure Register (Def : Data; Id : out Positive) is
+      procedure Register (Def : Data) is
       begin
-         Store.Append (Def);
-         Id := Store.Last_Index;
+         if not Store.Contains (Def.Path_Name) then
+            Store.Insert (Def.Path_Name, Def);
+         end if;
       end Register;
 
       ---------
@@ -55,7 +56,7 @@ package body GPR2.Source.Registry is
 
       procedure Set (Object : Source.Object; Def : Data) is
       begin
-         Store (Object.Id) := Def;
+         Store (Object.Pathname) := Def;
       end Set;
 
       --------------------
@@ -64,8 +65,8 @@ package body GPR2.Source.Registry is
 
       procedure Set_Other_Part (Object1, Object2 : Object) is
       begin
-         Store (Object1.Id).Other_Part := Object2.Id;
-         Store (Object2.Id).Other_Part := Object1.Id;
+         Store (Object1.Pathname).Other_Part := Object2.Pathname;
+         Store (Object2.Pathname).Other_Part := Object1.Pathname;
       end Set_Other_Part;
 
    end Shared;

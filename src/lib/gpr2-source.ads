@@ -77,9 +77,9 @@ package GPR2.Source is
 private
 
    type Object is tagged record
-      Id : Natural := 0;
+      Pathname : Path_Name_Type := No_Path_Name;
    end record;
 
-   Undefined : constant Object := Object'(Id => 0);
+   Undefined : constant Object := Object'(Pathname => No_Path_Name);
 
 end GPR2.Source;

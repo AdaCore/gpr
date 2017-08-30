@@ -52,10 +52,13 @@ package body GPR2.Source is
 
    overriding function "=" (Left, Right : Object) return Boolean is
    begin
-      if Left.Id = 0 and then Right.Id = 0 then
+      if Left.Pathname = No_Path_Name
+        and then Right.Pathname = No_Path_Name
+      then
          return True;
       else
-         return not (Left.Id = 0 xor Right.Id = 0)
+         return not (Left.Pathname = No_Path_Name
+                     xor Right.Pathname = No_Path_Name)
            and then Key (Left) = Key (Right);
       end if;
    end "=";
@@ -77,10 +80,11 @@ package body GPR2.Source is
                Language   => To_Unbounded_String (String (Language)),
                Unit_Name  => To_Unbounded_String (String (Unit_Name)),
                Kind       => Kind,
-               Other_Part => 0,
+               Other_Part => No_Path_Name,
                Units      => <>,
-               Parsed     => False),
-            Result.Id);
+               Parsed     => False));
+
+            Result.Pathname := Filename;
       end return;
    end Create;
 
@@ -135,12 +139,13 @@ package body GPR2.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      Other_Id : constant Natural := Registry.Shared.Get (Self).Other_Part;
+      Other_Part : constant Path_Name_Type :=
+                     Registry.Shared.Get (Self).Other_Part;
    begin
-      if Other_Id = 0 then
+      if Other_Part = No_Path_Name then
          return Undefined;
       else
-         return Object'(Id => Other_Id);
+         return Object'(Pathname => Other_Part);
       end if;
    end Other_Part;
 

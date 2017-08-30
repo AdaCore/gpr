@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
+with Ada.Containers.Ordered_Maps;
 
 private package GPR2.Source.Registry is
 
@@ -31,17 +31,18 @@ private package GPR2.Source.Registry is
       Language   : Unbounded_String;
       Unit_Name  : Unbounded_String;
       Kind       : Kind_Type;
-      Other_Part : Natural;
+      Other_Part : Path_Name_Type;
       Units      : Source_Reference.Set.Object;
       Parsed     : Boolean := False;
    end record;
 
-   package Source_Store is new Ada.Containers.Vectors (Positive, Data);
+   package Source_Store is
+     new Ada.Containers.Ordered_Maps (Path_Name_Type, Data);
 
    protected Shared is
 
-      procedure Register (Def : Data; Id : out Positive);
-      --  Register element in Store and return it's Id
+      procedure Register (Def : Data);
+      --  Register element in Store
 
       function Get (Object : Source.Object) return Data;
       --  Get the source data for the given source object
@@ -54,7 +55,7 @@ private package GPR2.Source.Registry is
       --  around too.
 
    private
-      Store : Source_Store.Vector;
+      Store : Source_Store.Map;
    end Shared;
 
 end GPR2.Source.Registry;
