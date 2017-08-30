@@ -39,7 +39,7 @@ package body GPR2.Project.Definition is
 
    private
       Views : Project_Views.Map;
-      N : View.Id := 0;
+      N     : View.Id := 0;
    end Shared;
 
    ---------
