@@ -45,7 +45,6 @@ package body GPR2.Project is
       return Path_Name_Type
    is
       use GNAT;
-      use type OS_Lib.String_Access;
 
       DS : constant Character := OS_Lib.Directory_Separator;
 

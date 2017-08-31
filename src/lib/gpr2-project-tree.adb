@@ -201,8 +201,6 @@ package body GPR2.Project.Tree is
 
    overriding function First (Iter : Iterator) return Cursor is
 
-      use type View.Id;
-
       package Seen_Project is new Ada.Containers.Ordered_Sets (View.Object);
 
       Seen : Seen_Project.Set;
@@ -805,7 +803,6 @@ package body GPR2.Project.Tree is
      (Self : Object; Language : Name_Type) return Optional_Name_Type
    is
       use type Configuration.Object;
-      use type Attribute.Object;
    begin
       if Self.Conf /= Configuration.Undefined
         and then Self.Conf.Runtime (Language) /= ""

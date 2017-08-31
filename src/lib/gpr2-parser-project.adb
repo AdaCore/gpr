@@ -2122,9 +2122,7 @@ package body GPR2.Parser.Project is
 
       procedure Record_Attribute
         (Set : in out GPR2.Project.Attribute.Set.Object;
-         A   : GPR2.Project.Attribute.Object)
-      is
-         use type Containers.Value_List;
+         A   : GPR2.Project.Attribute.Object) is
       begin
          if Att_Defined then
             Set.Include (A);

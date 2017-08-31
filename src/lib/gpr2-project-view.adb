@@ -418,7 +418,6 @@ package body GPR2.Project.View is
       use Ada;
       use GNAT;
       use type MD5.Binary_Message_Digest;
-      use type GPR2.Source.Object;
 
       package Unit_Naming is
         new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
@@ -663,9 +662,7 @@ package body GPR2.Project.View is
       ------------
 
       procedure Insert
-        (Sources : Project.Source.Set.Object; Mode : Insert_Mode)
-      is
-         use type Project.Source.Set.Cursor;
+        (Sources : Project.Source.Set.Object; Mode : Insert_Mode) is
       begin
          for Source of Sources loop
             if Data.Sources.Contains (Source) then

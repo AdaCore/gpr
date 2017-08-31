@@ -225,7 +225,6 @@ procedure GPRremote is
    --------------
 
    procedure Cmd_Info is
-      use all type Compilation.Protocol.Command_Kind;
 
       Host    : constant String := To_String (Args (Arg_Host));
       Channel : Compilation.Protocol.Communication_Channel;

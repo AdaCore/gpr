@@ -54,7 +54,6 @@ package body GPR2.Compilation.Slave is
       use Ada.Command_Line;
       use GNAT;
       use GNAT.MD5;
-      use GPR2;
 
       use type GNAT.OS_Lib.String_Access;
       use all type GPR2.Project.Registry.Attribute.Value_Kind;
@@ -176,8 +175,6 @@ package body GPR2.Compilation.Slave is
 
       if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
          declare
-            use GPR2.Project.Registry;
-
             Pck : constant GPR2.Project.Pack.Object :=
                     Project.Packages.Element
                       (GPR2.Project.Registry.Pack.Remote);
@@ -271,8 +268,6 @@ package body GPR2.Compilation.Slave is
    begin
       if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
          declare
-            use GPR2.Project.Registry;
-
             Pck : constant GPR2.Project.Pack.Object :=
                     Project.Packages.Element
                       (GPR2.Project.Registry.Pack.Remote);

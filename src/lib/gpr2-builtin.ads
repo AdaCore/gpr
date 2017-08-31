@@ -32,8 +32,6 @@ with GPR2.Context;
 
 package GPR2.Builtin is
 
-   use type Containers.Value_List;
-
    No_Value : constant Value_Type;
    --  No value specified, different than the empty string
 
