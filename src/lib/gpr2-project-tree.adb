@@ -1233,7 +1233,6 @@ package body GPR2.Project.Tree is
 
    function Target (Self : Object) return Name_Type is
       use type Configuration.Object;
-      use type Attribute.Object;
    begin
       if Self.Conf /= Configuration.Undefined
         and then Self.Conf.Target /= ""
@@ -1241,9 +1240,8 @@ package body GPR2.Project.Tree is
          return Self.Conf.Target;
 
       elsif Self.Conf /= Configuration.Undefined
-        and then
-          Self.Conf.Corresponding_View.Attribute (Registry.Attribute.Target)
-            /= Attribute.Undefined
+        and then Self.Conf.Corresponding_View.Has_Attributes
+                   (Registry.Attribute.Target)
       then
          return Name_Type
            (Self.Conf.Corresponding_View.Attribute
