@@ -1005,7 +1005,8 @@ package body GPR2.Parser.Project is
          --  Returns True if the current reference corresponds to the currently
          --  defined attribute (self/recursive reference).
 
-         Attr   : GPR2.Project.Attribute.Object;
+         Attr   : GPR2.Project.Attribute.Object :=
+                    GPR2.Project.Attribute.Undefined;
          Result : Item_Values;
 
       begin
@@ -1025,6 +1026,8 @@ package body GPR2.Parser.Project is
                   Get_Source_Reference
                     (Self.File,
                      Sloc_Range (Node))));
+
+            Result.Single := False;
             return Result;
          end if;
 
@@ -1039,8 +1042,6 @@ package body GPR2.Parser.Project is
          --  to ensure that the Values list respect the post
          --  condition. That is, a Single result must contain a single
          --  element.
-
-         Result.Values.Append ("");
 
          if Project = Name_Type (To_String (Self.Name))
            or else Is_Project_Reference
@@ -1144,7 +1145,10 @@ package body GPR2.Parser.Project is
             end if;
          end if;
 
-         if Attr /= GPR2.Project.Attribute.Undefined then
+         if Attr = GPR2.Project.Attribute.Undefined then
+            Result.Single := False;
+
+         else
             Result :=
               (Attr.Values,
                Attr.Kind = GPR2.Project.Registry.Attribute.Single);
