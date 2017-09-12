@@ -1250,6 +1250,34 @@ package body GPR2.Project.Tree is
       end if;
    end Target;
 
+   ------------
+   -- Unload --
+   ------------
+
+   procedure Unload (Self : in out Object) is
+   begin
+      for C in Self.Iterate loop
+         declare
+            V : Project.View.Object := Element (C);
+         begin
+            V.Release;
+         end;
+      end loop;
+
+      if Self.Has_Configuration_Project then
+         Self.Conf.Release;
+      end if;
+
+      if Self.Has_Runtime_Project then
+         Self.Runtime.Release;
+      end if;
+
+      Self.Self    := Undefined.Self;
+      Self.Root    := Undefined.Root;
+      Self.Conf    := Undefined.Conf;
+      Self.Runtime := Undefined.Runtime;
+   end Unload;
+
    --------------------
    -- Update_Sources --
    --------------------

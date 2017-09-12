@@ -119,6 +119,10 @@ private package GPR2.Project.Definition is
           Post => Get (Register'Result) = Def;
    --  Register a new project definition, returns the corresponding view
 
+   procedure Unregister (View : Project.View.Object)
+     with Pre  => Get (View).Trees.Project /= Parser.Project.Undefined,
+          Post => Get (View).Tree = null;
+
    function Get (View : Project.View.Object) return Data
      with Post => Get'Result.Trees.Project /= Parser.Project.Undefined;
    --  Returns the project data definition for the given view

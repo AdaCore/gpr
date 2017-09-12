@@ -182,6 +182,9 @@ package GPR2.Project.View is
    function From_Id (Id : View.Id) return Object;
    --  Returns a View.Object given its internal Id unique reference
 
+   procedure Release (Self : in out Object);
+   --  Release the project view and release all associated memory
+
 private
 
    type Object is tagged record

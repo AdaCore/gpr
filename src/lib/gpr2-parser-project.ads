@@ -32,8 +32,8 @@ with GPR2.Project.Import.Set;
 
 limited with GPR2.Project.Tree;
 
-private with GPR_Parser.Analysis;
 private with Ada.Containers.Indefinite_Ordered_Maps;
+private with GPR_Parser.Analysis;
 
 package GPR2.Parser.Project is
 
@@ -48,6 +48,10 @@ package GPR2.Parser.Project is
       Messages : out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
+
+   procedure Unload (Self : in out Object)
+     with Pre => Self /= Undefined;
+   --  Unload the object and release all associated memory
 
    procedure Parse
      (Self    : in out Object;
@@ -122,11 +126,13 @@ private
       Imports   : GPR2.Project.Import.Set.Object;
       Extended  : Path_Name_Type;
       Types     : Type_Set.Map;
-      Unit      : Analysis_Unit;
-      Context   : Analysis_Context;
-      --  ??? Must be freed : Destroy (Context)
+      Unit      : Analysis_Unit := No_Analysis_Unit;
+      Context   : Analysis_Context := No_Analysis_Context;
    end record;
 
-   Undefined : constant Object := (others => <>);
+   Undefined : constant Object :=
+                 (Unit    => No_Analysis_Unit,
+                  Context => No_Analysis_Context,
+                  others  => <>);
 
 end GPR2.Parser.Project;

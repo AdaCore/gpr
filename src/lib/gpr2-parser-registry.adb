@@ -31,11 +31,13 @@ package body GPR2.Parser.Registry is
 
    --  Project Tree
 
-   function "<" (Left, Right : Path_Name_Type) return Boolean is
-      (Value (Left) < Value (Right));
+   type Data is record
+      Project : Parser.Project.Object;
+      Ref     : Natural;
+   end record;
 
    package Project_Store is new Ada.Containers.Ordered_Maps
-     (Path_Name_Type, Parser.Project.Object, "<", Parser.Project."=");
+     (Path_Name_Type, Data, "<");
 
    protected Shared is
 
@@ -45,6 +47,8 @@ package body GPR2.Parser.Registry is
 
       procedure Register
         (Pathname : Path_Name_Type; Project : Parser.Project.Object);
+
+      procedure Unregister (Pathname : Path_Name_Type);
 
    private
       Store : Project_Store.Map;
@@ -99,7 +103,7 @@ package body GPR2.Parser.Registry is
 
       function Get (Pathname : Path_Name_Type) return Project.Object is
       begin
-         return Store (Pathname);
+         return Store (Pathname).Project;
       end Get;
 
       --------------
@@ -107,11 +111,49 @@ package body GPR2.Parser.Registry is
       --------------
 
       procedure Register
-        (Pathname : Path_Name_Type; Project : Parser.Project.Object) is
+        (Pathname : Path_Name_Type; Project : Parser.Project.Object)
+      is
+         use type Project_Store.Cursor;
+         Pos : constant Project_Store.Cursor := Store.Find (Pathname);
       begin
-         Store.Insert (Pathname, Project);
+         if Pos = Project_Store.No_Element then
+            Store.Insert (Pathname, Data'(Project, 1));
+
+         else
+            Store (Pos).Ref := Store (Pos).Ref + 1;
+         end if;
       end Register;
 
+      ----------------
+      -- Unregister --
+      ----------------
+
+      procedure Unregister (Pathname : Path_Name_Type) is
+         Pos : constant Project_Store.Cursor := Store.Find (Pathname);
+         D   : Data := Store (Pos);
+      begin
+         D.Ref := D.Ref - 1;
+
+         if D.Ref = 0 then
+            --  No more reference to this tree, clean it
+
+            D.Project.Unload;
+            Store.Delete (Pathname);
+
+         else
+            Store (Pos).Ref := D.Ref;
+         end if;
+      end Unregister;
+
    end Shared;
+
+   ----------------
+   -- Unregister --
+   ----------------
+
+   procedure Unregister (Pathname : Path_Name_Type) is
+   begin
+      Shared.Unregister (Pathname);
+   end Unregister;
 
 end GPR2.Parser.Registry;

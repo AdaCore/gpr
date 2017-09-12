@@ -1,0 +1,15 @@
+
+library project Lib is
+   type Me is ("one", "two");
+   Ver : Me := external("LSRC");
+
+   case Ver is
+      when "one" =>
+         for Source_Dirs use ("lsrc1");
+      when "two" =>
+         for Source_Dirs use ("lsrc2");
+   end case;
+
+   for Object_Dir use "lobj";
+   for Library_Name use "l";
+end Lib;

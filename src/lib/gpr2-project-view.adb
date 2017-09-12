@@ -372,6 +372,26 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Trees.Project.Qualifier;
    end Qualifier;
 
+   -------------
+   -- Release --
+   -------------
+
+   procedure Release (Self : in out Object) is
+      Data : Definition.Data := Definition.Get (Self);
+   begin
+      for C in Data.Sources.Iterate loop
+         declare
+            S : Project.Source.Object := Project.Source.Set.Element (C);
+         begin
+            S.Release;
+         end;
+      end loop;
+
+      Data.Trees.Project.Unload;
+
+      Self := Undefined;
+   end Release;
+
    ---------------
    -- Signature --
    ---------------

@@ -34,6 +34,7 @@ private package GPR2.Source.Registry is
       Other_Part : Path_Name_Type;
       Units      : Source_Reference.Set.Object;
       Parsed     : Boolean := False;
+      Ref_Count  : Natural := 0;
    end record;
 
    package Source_Store is
@@ -44,6 +45,10 @@ private package GPR2.Source.Registry is
       procedure Register (Def : Data)
         with Pre => Def.Path_Name /= No_Path_Name;
       --  Register element in Store
+
+      procedure Unregister (Object : in out Source.Object)
+        with Pre => Object /= Undefined;
+      --  Unregister the given source, release memory if not used anymore
 
       function Get (Object : Source.Object) return Data
         with Pre => Object /= Undefined;

@@ -61,6 +61,9 @@ package GPR2.Project.Source is
       Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object;
    --  Returns the dependencies for this given source
 
+   procedure Release (Self : in out Object);
+   --  Release the project source
+
 private
 
    use type GPR2.Source.Object;

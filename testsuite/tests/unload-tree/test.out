@@ -1,0 +1,24 @@
+**************** Iterator Prj1
+Lib      K_LIBRARY
+A:   Library_Name -> l
+A:   Object_Dir -> lobj
+A:   Source_Dirs -> lsrc1
+ > lsrc1/lpck1.ads
+                  language: ada    Kind: S_SPEC   unit: Lpck1
+First    K_STANDARD
+A:   Source_Dirs -> fsrc
+ > fsrc/first.ads
+                  language: ada    Kind: S_SPEC   unit: First
+   is root
+**************** Iterator Prj2
+Lib      K_LIBRARY
+A:   Library_Name -> l
+A:   Object_Dir -> lobj
+A:   Source_Dirs -> lsrc2
+ > lsrc2/lpck2.ads
+                  language: ada    Kind: S_SPEC   unit: Lpck2
+Second   K_STANDARD
+A:   Source_Dirs -> ssrc
+ > ssrc/second.ads
+                  language: ada    Kind: S_SPEC   unit: Second
+   is root

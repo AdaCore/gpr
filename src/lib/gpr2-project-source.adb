@@ -201,6 +201,15 @@ package body GPR2.Project.Source is
       return Deps;
    end Dependencies;
 
+   -------------
+   -- Release --
+   -------------
+
+   procedure Release (Self : in out Object) is
+   begin
+      Self.Source.Release;
+   end Release;
+
    ------------
    -- Source --
    ------------

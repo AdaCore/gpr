@@ -74,6 +74,10 @@ package GPR2.Project.Configuration is
       Target   : Name_Type := "all") return Object;
    --  Create a configuration object for the given configuration file
 
+   procedure Release (Self : in out Object)
+     with Pre => Self /= Undefined;
+   --  Release memory associated with the configuration object
+
    function Corresponding_View (Self : Object) return Project.View.Object
      with Pre  => Self /= Undefined,
           Post => Corresponding_View'Result /= Project.View.Undefined;

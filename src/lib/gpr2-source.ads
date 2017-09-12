@@ -74,6 +74,9 @@ package GPR2.Source is
    --  Set the other-part for Self. The other-part is the body for a spec or
    --  the spec for a body or separate unit.
 
+   procedure Release (Self : in out Object);
+   --  Release source object if not referenced anymore
+
 private
 
    type Object is tagged record

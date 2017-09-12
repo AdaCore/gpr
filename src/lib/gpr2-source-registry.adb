@@ -45,7 +45,16 @@ package body GPR2.Source.Registry is
 
       procedure Register (Def : Data) is
       begin
-         if not Store.Contains (Def.Path_Name) then
+         if Store.Contains (Def.Path_Name) then
+            --  Increase the ref-counter
+            declare
+               D : Data := Store (Def.Path_Name);
+            begin
+               D.Ref_Count := D.Ref_Count + 1;
+               Store (Def.Path_Name) := D;
+            end;
+
+         else
             Store.Insert (Def.Path_Name, Def);
          end if;
       end Register;
@@ -68,6 +77,26 @@ package body GPR2.Source.Registry is
          Store (Object1.Pathname).Other_Part := Object2.Pathname;
          Store (Object2.Pathname).Other_Part := Object1.Pathname;
       end Set_Other_Part;
+
+      ----------------
+      -- Unregister --
+      ----------------
+
+      procedure Unregister (Object : in out Source.Object) is
+         D : Data := Get (Object);
+      begin
+         D.Ref_Count := D.Ref_Count - 1;
+
+         if D.Ref_Count = 0 then
+            D.Units.Clear;
+            Store.Delete (Object.Pathname);
+
+            Object := Undefined;
+
+         else
+            Store (Object.Pathname) := D;
+         end if;
+      end Unregister;
 
    end Shared;
 

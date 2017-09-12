@@ -82,7 +82,8 @@ package body GPR2.Source is
                Kind       => Kind,
                Other_Part => No_Path_Name,
                Units      => <>,
-               Parsed     => False));
+               Parsed     => False,
+               Ref_Count  => 1));
 
             Result.Pathname := Filename;
       end return;
@@ -187,6 +188,15 @@ package body GPR2.Source is
          end;
       end if;
    end Parse;
+
+   -------------
+   -- Release --
+   -------------
+
+   procedure Release (Self : in out Object) is
+   begin
+      Registry.Shared.Unregister (Self);
+   end Release;
 
    --------------------
    -- Set_Other_Part --

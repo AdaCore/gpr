@@ -1,0 +1,6 @@
+
+with "lib";
+
+project First is
+   for Source_Dirs use ("fsrc");
+end First;

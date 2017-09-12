@@ -1,0 +1,6 @@
+
+with "lib";
+
+project Second is
+   for Source_Dirs use ("ssrc");
+end Second;

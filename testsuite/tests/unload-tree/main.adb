@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -31,6 +31,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Context;
+with GPR2.Source;
 
 procedure Main is
 
@@ -38,9 +39,12 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Display (Prj : Project.View.Object; Full : Boolean := True);
+   procedure Display (Prj : Project.View.Object);
 
    procedure Changed_Callback (Prj : Project.View.Object);
+
+   procedure Output_Filename (Filename : Full_Path_Name);
+   --  Remove the leading tmp directory
 
    ----------------------
    -- Changed_Callback --
@@ -57,7 +61,7 @@ procedure Main is
    -- Display --
    -------------
 
-   procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
+   procedure Display (Prj : Project.View.Object) is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
    begin
@@ -65,61 +69,64 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      if Full then
-         if Prj.Has_Attributes then
-            for A in Prj.Attributes.Iterate loop
-               Text_IO.Put ("A:   " & String (Attribute.Set.Element (A).Name));
-               Text_IO.Put (" ->");
+      if Prj.Has_Attributes then
+         for A in Prj.Attributes.Iterate loop
+            Text_IO.Put ("A:   " & String (Attribute.Set.Element (A).Name));
+            Text_IO.Put (" ->");
 
-               for V of Element (A).Values loop
-                  Text_IO.Put (" " & V);
-               end loop;
-               Text_IO.New_Line;
+            for V of Element (A).Values loop
+               Text_IO.Put (" " & V);
             end loop;
-         end if;
-
-         if Prj.Has_Variables then
-            for V in Prj.Variables.Iterate loop
-               Text_IO.Put ("V:   " & String (Key (V)));
-               Text_IO.Put (" -> ");
-               Text_IO.Put (String (Element (V).Value));
-               Text_IO.New_Line;
-            end loop;
-         end if;
-         Text_IO.New_Line;
+            Text_IO.New_Line;
+         end loop;
       end if;
+
+      for Source of Prj.Sources loop
+         declare
+            S : constant GPR2.Source.Object := Source.Source;
+            U : constant Optional_Name_Type := S.Unit_Name;
+         begin
+            Output_Filename (S.Filename);
+
+            Text_IO.Set_Col (16);
+            Text_IO.Put ("   language: " & String (S.Language));
+
+            Text_IO.Set_Col (33);
+            Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
+
+            if U /= "" then
+               Text_IO.Put ("   unit: " & String (U));
+            end if;
+
+            Text_IO.New_Line;
+         end;
+      end loop;
    end Display;
 
+   ---------------------
+   -- Output_Filename --
+   ---------------------
+
+   procedure Output_Filename (Filename : Full_Path_Name) is
+      I : constant Positive := Strings.Fixed.Index (Filename, "unload-tree");
+   begin
+      Text_IO.Put (" > " & Filename (I + 12 .. Filename'Last));
+   end Output_Filename;
+
    Prj1, Prj2 : Project.Tree.Object;
-   Ctx        : Context.Object;
+   Ctx1, Ctx2 : Context.Object;
 
 begin
-   Ctx.Include ("OS", "Linux");
+   Ctx1.Include ("LSRC", "one");
+   Ctx2.Include ("LSRC", "two");
 
-   Project.Tree.Load (Prj1, Create ("demo.gpr"), Ctx);
-   Project.Tree.Load (Prj2, Create ("demo.gpr"), Ctx);
-
-   Ctx := Prj1.Context;
-   Prj1.Set_Context (Ctx, Changed_Callback'Access);
-
-   Ctx := Prj2.Context;
-   Ctx.Include ("OS", "Windows");
-   Prj2.Set_Context (Ctx, Changed_Callback'Access);
-
-   Display (Prj1.Root_Project);
-   Display (Prj2.Root_Project);
-
-   Ctx.Clear;
-   Ctx.Include ("OS", "Linux-2");
-   Prj2.Set_Context (Ctx, Changed_Callback'Access);
-   Display (Prj2.Root_Project);
-
-   --  Iterator
+   Project.Tree.Load (Prj1, Create ("first.gpr"), Ctx1);
+   Project.Tree.Load (Prj2, Create ("second.gpr"), Ctx2);
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 
-   for C in Project.Tree.Iterate (Prj1, Kind => I_Project + I_Imported) loop
-      Display (Project.Tree.Element (C), Full => False);
+   for C in Project.Tree.Iterate (Prj1) loop
+      Display (Project.Tree.Element (C));
       if Project.Tree.Is_Root (C) then
          Text_IO.Put_Line ("   is root");
       end if;
@@ -130,19 +137,10 @@ begin
    Text_IO.Put_Line ("**************** Iterator Prj2");
 
    for C in Project.Tree.Iterate (Prj2) loop
-      Display (Project.Tree.Element (C), Full => False);
-   end loop;
-
-   Text_IO.Put_Line ("**************** Iterator Prj3");
-
-   for C in Project.Tree.Iterate (Prj2, Filter => F_Library) loop
-      Display (Project.Tree.Element (C), Full => False);
-   end loop;
-
-   Text_IO.Put_Line ("**************** Iterator Prj4");
-
-   for P of Prj2 loop
-      Display (P, Full => False);
+      Display (Project.Tree.Element (C));
+      if Project.Tree.Is_Root (C) then
+         Text_IO.Put_Line ("   is root");
+      end if;
    end loop;
 
 exception
@@ -154,7 +152,7 @@ exception
             declare
                Mes : constant String := M.Format;
                L   : constant Natural :=
-                 Strings.Fixed.Index (Mes, "/simple");
+                 Strings.Fixed.Index (Mes, "/unload-tree");
             begin
                if L /= 0 then
                   Text_IO.Put_Line (Mes (L .. Mes'Last));

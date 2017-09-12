@@ -37,6 +37,8 @@ package body GPR2.Project.Definition is
 
       procedure Set (View : Project.View.Object; Def : Data);
 
+      procedure Unregister (View : Project.View.Object);
+
    private
       Views : Project_Views.Map;
       N     : View.Id := 0;
@@ -107,6 +109,27 @@ package body GPR2.Project.Definition is
          Views (View) := Def;
       end Set;
 
+      ----------------
+      -- Unregister --
+      ----------------
+
+      procedure Unregister (View : Project.View.Object) is
+         Def : Data := Views (View);
+      begin
+         Def.Context_View.Release;
+         Def.Tree := null;
+         Views.Delete (View);
+      end Unregister;
+
    end Shared;
+
+   ----------------
+   -- Unregister --
+   ----------------
+
+   procedure Unregister (View : Project.View.Object) is
+   begin
+      Shared.Unregister (View);
+   end Unregister;
 
 end GPR2.Project.Definition;

@@ -780,7 +780,14 @@ package body GPR2.Parser.Project is
 
    begin
       if Registry.Exists (Filename) then
-         return Registry.Get (Filename);
+         declare
+            P : constant Parser.Project.Object := Registry.Get (Filename);
+         begin
+            Registry.Register (Filename, P);
+            Inc_Ref (P.Unit);
+            Inc_Ref (P.Context);
+            return P;
+         end;
 
       else
          if not Directories.Exists (Value (Filename)) then
@@ -832,6 +839,9 @@ package body GPR2.Parser.Project is
          Project.File    := Filename;
          Project.Unit    := Unit;
          Project.Context := Context;
+
+         Inc_Ref (Project.Unit);
+         Inc_Ref (Project.Context);
 
          --  If this is a configuration project, then we register it under the
          --  "config" name as this is what is expected on this implementation.
@@ -2174,5 +2184,15 @@ package body GPR2.Parser.Project is
    begin
       return Self.Qualifier;
    end Qualifier;
+
+   ------------
+   -- Unload --
+   ------------
+
+   procedure Unload (Self : in out Object) is
+   begin
+      Dec_Ref (Self.Unit);
+      Dec_Ref (Self.Context);
+   end Unload;
 
 end GPR2.Parser.Project;

@@ -67,6 +67,10 @@ package GPR2.Project.Tree is
       Filename : Path_Name_Type);
    --  Load a configuration project for this tree
 
+   procedure Unload (Self : in out Object);
+   --  Unload the tree and free all associated objects (projects, sources,
+   --  etc...).
+
    function Root_Project (Self : Object) return View.Object
      with Pre  => Self /= Undefined,
           Post => Root_Project'Result /= View.Undefined;
