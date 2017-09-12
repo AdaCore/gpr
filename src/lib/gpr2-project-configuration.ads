@@ -32,6 +32,7 @@ private with Ada.Containers.Vectors;
 package GPR2.Project.Configuration is
 
    use type Containers.Count_Type;
+   use type Project.View.Object;
 
    type Object is tagged private;
 
@@ -73,14 +74,18 @@ package GPR2.Project.Configuration is
       Target   : Name_Type := "all") return Object;
    --  Create a configuration object for the given configuration file
 
-   function Corresponding_View (Self : Object) return Project.View.Object;
+   function Corresponding_View (Self : Object) return Project.View.Object
+     with Pre  => Self /= Undefined,
+          Post => Corresponding_View'Result /= Project.View.Undefined;
    --  Get project for the given configuration object
 
-   function Target (Self : Object) return Optional_Name_Type;
+   function Target (Self : Object) return Optional_Name_Type
+     with Pre => Self /= Undefined;
    --  Return the target used for the configuration
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type;
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     with Pre => Self /= Undefined;
    --  Returns the runtime specificed for Language or the empty string if no
    --  specific runtime has been specified for this language.
 

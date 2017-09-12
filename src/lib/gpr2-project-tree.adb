@@ -382,8 +382,10 @@ package body GPR2.Project.Tree is
    -------------------------------
 
    function Has_Configuration_Project (Self : Object) return Boolean is
+      use type Project.Configuration.Object;
    begin
-      return Self.Conf.Corresponding_View /= View.Undefined;
+      return Self.Conf /= Project.Configuration.Undefined
+        and then Self.Conf.Corresponding_View /= View.Undefined;
    end Has_Configuration_Project;
 
    -----------------
@@ -1274,7 +1276,10 @@ package body GPR2.Project.Tree is
    is
       use type GPR2.Context.Binary_Signature;
 
-      CV : constant View.Object := Self.Conf.Corresponding_View;
+      CV : constant View.Object :=
+             (if Self.Has_Configuration_Project
+              then Self.Conf.Corresponding_View
+              else View.Undefined);
    begin
       --  First check for the view in the current tree
 
