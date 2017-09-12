@@ -802,11 +802,9 @@ package body GPR2.Project.Tree is
    -------------
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
-   is
-      use type Configuration.Object;
+     (Self : Object; Language : Name_Type) return Optional_Name_Type is
    begin
-      if Self.Conf /= Configuration.Undefined
+      if Self.Has_Configuration_Project
         and then Self.Conf.Runtime (Language) /= ""
       then
          return Self.Conf.Runtime (Language);
@@ -1200,7 +1198,7 @@ package body GPR2.Project.Tree is
       --  Now the first step is to set the configuration project view if any
       --  and to create the runtime project if possible.
 
-      if Self.Conf.Corresponding_View /= View.Undefined then
+      if Self.Has_Configuration_Project then
          Set_View (Self.Conf.Corresponding_View);
 
          Self.Runtime := Create_Runtime_View (Self);
@@ -1234,14 +1232,13 @@ package body GPR2.Project.Tree is
    ------------
 
    function Target (Self : Object) return Name_Type is
-      use type Configuration.Object;
    begin
-      if Self.Conf /= Configuration.Undefined
+      if Self.Has_Configuration_Project
         and then Self.Conf.Target /= ""
       then
          return Self.Conf.Target;
 
-      elsif Self.Conf /= Configuration.Undefined
+      elsif Self.Has_Configuration_Project
         and then Self.Conf.Corresponding_View.Has_Attributes
                    (Registry.Attribute.Target)
       then
@@ -1304,7 +1301,7 @@ package body GPR2.Project.Tree is
       if CV /= View.Undefined and then CV.Name = Name then
          return CV;
 
-      elsif Self.Runtime /= View.Undefined
+      elsif Self.Has_Runtime_Project
         and then Self.Runtime.Name = Name
       then
          return Self.Runtime;
