@@ -832,7 +832,6 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-
       procedure Set_View (View : Project.View.Object);
       --  Set the context for the given view
 

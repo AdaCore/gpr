@@ -59,7 +59,7 @@ package GPR2.Project.Source is
    function Dependencies
      (Self : Object;
       Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object;
-   --  Returns the dependencies for this given source.
+   --  Returns the dependencies for this given source
 
 private
 
