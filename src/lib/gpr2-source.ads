@@ -25,9 +25,13 @@
 --  This package defines a source Object. This source object is shared with all
 --  loaded project tree.
 
+with Ada.Calendar;
+
 with GPR2.Source_Reference.Set;
 
 package GPR2.Source is
+
+   use Ada;
 
    type Object is tagged private;
 
@@ -60,6 +64,9 @@ package GPR2.Source is
 
    function Withed_Units (Self : Object) return Source_Reference.Set.Object;
    --  Returns the list of withed units on this source
+
+   function Time_Stamp (Self : Object) return Calendar.Time;
+   --  Retruns the time-stamp for this source
 
    function Create
      (Filename  : Path_Name_Type;

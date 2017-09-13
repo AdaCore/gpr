@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
+with Ada.Directories;
 
 with GPR2.Source.Registry;
 with GPR2.Source.Parser;
@@ -77,6 +78,7 @@ package body GPR2.Source is
          Registry.Shared.Register
            (Registry.Data'
               (Path_Name  => Filename,
+               Timestamp  => Directories.Modification_Time (Value (Filename)),
                Language   => To_Unbounded_String (String (Language)),
                Unit_Name  => To_Unbounded_String (String (Unit_Name)),
                Kind       => Kind,
@@ -85,7 +87,7 @@ package body GPR2.Source is
                Parsed     => False,
                Ref_Count  => 1));
 
-            Result.Pathname := Filename;
+         Result.Pathname := Filename;
       end return;
    end Create;
 
@@ -155,9 +157,18 @@ package body GPR2.Source is
    -----------
 
    procedure Parse (Self : Object) is
-      S : Registry.Data := Registry.Shared.Get (Self);
+      use type Calendar.Time;
+
+      S        : Registry.Data := Registry.Shared.Get (Self);
+      Filename : constant String := Value (Self.Pathname);
    begin
-      if not S.Parsed then
+      --  Parse if not yet parsed or if the file has changed on disk
+
+      if not S.Parsed
+        or else
+          (Directories.Exists (Filename)
+           and then S.Timestamp < Directories.Modification_Time (Filename))
+      then
          declare
             Data : constant Source.Parser.Data :=
                      Source.Parser.Check (S.Path_Name);
@@ -166,6 +177,12 @@ package body GPR2.Source is
 
             if Data.Is_Separate then
                S.Kind := S_Separate;
+
+            elsif S.Kind = S_Separate then
+               --  It was a separate but not anymore, the source may have been
+               --  changed to be a child unit.
+
+               S.Kind := S_Body;
             end if;
 
             --  Record the withed units
@@ -208,6 +225,15 @@ package body GPR2.Source is
    begin
       Registry.Shared.Set_Other_Part (Self, Other_Part);
    end Set_Other_Part;
+
+   ----------------
+   -- Time_Stamp --
+   ----------------
+
+   function Time_Stamp (Self : Object) return Calendar.Time is
+   begin
+      return Registry.Shared.Get (Self).Timestamp;
+   end Time_Stamp;
 
    ---------------
    -- Unit_Name --

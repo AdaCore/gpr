@@ -30,8 +30,6 @@ with GPR2.Source_Reference.Identifier;
 
 package body GPR2.Source.Parser is
 
-   use Ada;
-
    --  The following IO package is a temporary solution before the full and
    --  real implementation is based on LibAdaLang. Note that we do not want to
    --  parse the whole Ada syntax here at the moment. The elements that are

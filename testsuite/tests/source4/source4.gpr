@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,51 +22,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Calendar;
-with Ada.Containers.Ordered_Maps;
+with "gpr2";
 
-private package GPR2.Source.Registry is
-
-   type Data is record
-      Path_Name  : Path_Name_Type;
-      Timestamp  : Calendar.Time;
-      Language   : Unbounded_String;
-      Unit_Name  : Unbounded_String;
-      Kind       : Kind_Type;
-      Other_Part : Path_Name_Type;
-      Units      : Source_Reference.Set.Object;
-      Parsed     : Boolean := False;
-      Ref_Count  : Natural := 0;
-   end record;
-
-   package Source_Store is
-     new Ada.Containers.Ordered_Maps (Path_Name_Type, Data);
-
-   protected Shared is
-
-      procedure Register (Def : Data)
-        with Pre => Def.Path_Name /= No_Path_Name;
-      --  Register element in Store
-
-      procedure Unregister (Object : in out Source.Object)
-        with Pre => Object /= Undefined;
-      --  Unregister the given source, release memory if not used anymore
-
-      function Get (Object : Source.Object) return Data
-        with Pre => Object /= Undefined;
-      --  Get the source data for the given source object
-
-      procedure Set (Object : Source.Object; Def : Data)
-        with Pre => Object /= Undefined and then Def.Path_Name /= No_Path_Name;
-      --  Set the source data for the given source object
-
-      procedure Set_Other_Part (Object1, Object2 : Object)
-        with Pre => Object1 /= Undefined and then Object2 /= Undefined;
-      --  Register that Def1 is the other part for Def2 and the other way
-      --  around too.
-
-   private
-      Store : Source_Store.Map;
-   end Shared;
-
-end GPR2.Source.Registry;
+project Source4 is
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+   for Main use ("main.adb");
+end Source4;
