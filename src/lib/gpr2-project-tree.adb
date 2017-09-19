@@ -33,6 +33,7 @@ with GPR2.Project.Import;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
+with GPR2.Project.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
 
@@ -85,15 +86,25 @@ package body GPR2.Project.Tree is
 
    procedure Clear_View
      (Self : in out Object;
-      Unit : GPR2.Unit.Object) is
+      Unit : GPR2.Unit.Object)
+   is
+      use type Project.Source.Object;
+
+      --  If the spec is not present, then the actual source object used is the
+      --  first body which must exist. We can't have no spec and no body.
+
+      Src : constant Project.Source.Object :=
+              (if Unit.Spec = Project.Source.Undefined
+               then Unit.Bodies.First_Element
+               else Unit.Spec);
    begin
       --  Clear the unit
 
-      Self.Units.Exclude (Unit.Spec.Source.Unit_Name);
+      Self.Units.Exclude (Src.Source.Unit_Name);
 
       --  Clear the corresponding sources
 
-      Self.Sources.Exclude (Name_Type (Unit.Spec.Source.Filename));
+      Self.Sources.Exclude (Name_Type (Src.Source.Filename));
 
       for B of Unit.Bodies loop
          Self.Sources.Exclude (Name_Type (B.Source.Filename));
