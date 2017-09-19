@@ -287,6 +287,19 @@ package body GPR2.Project.View is
       end if;
    end Has_Variables;
 
+   ------------------------
+   -- Invalidate_Sources --
+   ------------------------
+
+   procedure Invalidate_Sources (Self : Object) is
+      Data : Definition.Data := Definition.Get (Self);
+      --  View definition data, will be updated and recorded back into the
+      --  definition set.
+   begin
+      Data.Sources_Signature := GPR2.Context.Default_Signature;
+      Definition.Set (Self, Data);
+   end Invalidate_Sources;
+
    ----------
    -- Kind --
    ----------

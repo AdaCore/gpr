@@ -166,6 +166,12 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Get project source object corresponding to the give File
 
+   procedure Invalidate_Sources (Self : Object)
+     with Pre => Self /= Undefined;
+   --  Invalidate the sources for the view. This means that the Sources routine
+   --  above will have to recompute the proper sources list for the view. This
+   --  is needed when some sources are added or removed from the view.
+
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
    --  Ensure that the view sources are up-to-date. This is needed before

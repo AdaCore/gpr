@@ -435,6 +435,21 @@ package body GPR2.Project.Tree is
       return Self.Runtime /= View.Undefined;
    end Has_Runtime_Project;
 
+   ------------------------
+   -- Invalidate_Sources --
+   ------------------------
+
+   procedure Invalidate_Sources
+     (Self : Object;
+      View : Project.View.Object := Project.View.Undefined) is
+   begin
+      for V of Self loop
+         if View in Project.View.Undefined | V then
+            V.Invalidate_Sources;
+         end if;
+      end loop;
+   end Invalidate_Sources;
+
    -------------
    -- Is_Root --
    -------------

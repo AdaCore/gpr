@@ -221,6 +221,16 @@ package GPR2.Project.Tree is
    --  Get the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
+   procedure Invalidate_Sources
+     (Self : Object;
+      View : Project.View.Object := Project.View.Undefined)
+     with Pre => Self /= Undefined;
+   --  Invalidate the sources for all views in the tree if View is set or the
+   --  source in the given view otherwise. This is needed when some sources
+   --  are added or removed from the view. It is not required to call
+   --  Update_Sources below, when the routine Sources on one of the views
+   --  of the tree will be called, the set of sources will be recomputed.
+
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
    --  Ensure that all views' sources are up-to-date. This is needed before
