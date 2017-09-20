@@ -1,0 +1,5 @@
+description:
+    Variable as default value for external
+driver: build_and_run
+project_file: case_variable2
+main: main

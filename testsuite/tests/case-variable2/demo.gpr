@@ -1,0 +1,20 @@
+
+project Demo is
+   type Target_Type is ("x86_64-linux-gnu", "i686-linux-gnu");
+   Target : Target_Type := external ("target", "x86_64-linux-gnu");
+
+   Default_Arch := "";
+   case Target is
+     when "x86_64-linux-gnu" =>
+       Default_Arch := "x86-64";
+     when "i686-linux-gnu" =>
+       Default_Arch := "i686-64";
+   end case;
+
+   Arch1 := external ("arch", Default_Arch);
+   Arch2 := external ("arch", external("DEF"));
+
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+   for Main use ("main.adb");
+end Demo;

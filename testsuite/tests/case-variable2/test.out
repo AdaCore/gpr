@@ -1,0 +1,18 @@
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> .
+V:   Arch1 -> x86-64
+V:   Arch2 -> MyDefault
+V:   Default_Arch -> x86-64
+V:   Target -> x86_64-linux-gnu
+
+Demo     K_STANDARD
+A:   Main -> main.adb
+A:   Object_Dir -> obj
+A:   Source_Dirs -> .
+V:   Arch1 -> Linux
+V:   Arch2 -> Linux
+V:   Default_Arch -> x86-64
+V:   Target -> x86_64-linux-gnu
+

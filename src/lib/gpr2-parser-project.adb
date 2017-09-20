@@ -1292,10 +1292,16 @@ package body GPR2.Parser.Project is
                   if Present (Value_Node) then
                      --  External not in the context but has a default value
                      declare
-                        Value : constant Value_Type :=
-                                  Get_String_Literal (Value_Node, Error);
+                        Values : constant Item_Values :=
+                                   Get_Term_List (Value_Node);
                      begin
-                        if Error then
+                        if Values.Single then
+                           Record_Value
+                             (True,
+                              Builtin.External
+                                (Context, Var, Values.Values.First_Element));
+
+                        else
                            Tree.Log_Messages.Append
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
@@ -1305,9 +1311,6 @@ package body GPR2.Parser.Project is
                                  Message =>
                                    "external default parameter must be a "
                                  & "simple string"));
-                        else
-                           Record_Value
-                             (True, Builtin.External (Context, Var, Value));
                         end if;
                      end;
 
