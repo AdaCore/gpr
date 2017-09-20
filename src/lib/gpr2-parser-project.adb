@@ -889,6 +889,9 @@ package body GPR2.Parser.Project is
         with Dynamic_Predicate =>
           (if Item_Values.Single then Item_Values.Values.Length = 1);
 
+      Empty_Item_Values : constant Item_Values :=
+                            (Single => False, Values => <>);
+
       function Parser
         (Node : access GPR_Node_Type'Class) return Visit_Status;
       --  Actual parser callabck for the project
@@ -1478,7 +1481,11 @@ package body GPR2.Parser.Project is
 
          Is_Project_Reference := False;
 
-         return Result;
+         if Result.Values.Is_Empty then
+            return Empty_Item_Values;
+         else
+            return Result;
+         end if;
       end Get_Term_List;
 
       ----------------------
@@ -1579,7 +1586,7 @@ package body GPR2.Parser.Project is
                   Message =>
                     "variable '" & String (Name) & "' is undefined"));
 
-            return Item_Values'(Values => <>, Single => True);
+            return Empty_Item_Values;
          end if;
       end Get_Variable_Values;
 
