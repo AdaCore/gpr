@@ -42,7 +42,7 @@ package body GPR2.Context is
          Position := Self.Find (E);
 
          if Context.Key_Value.Has_Element (Position) then
-            P_Ctx.Insert
+            P_Ctx.Include
               (Context.Key_Value.Key (Position),
                Context.Key_Value.Element (Position));
          end if;
