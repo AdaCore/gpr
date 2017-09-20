@@ -1,0 +1,5 @@
+description:
+    Check for multi-valued variables as case statement variable
+driver: build_and_run
+project_file: case_variable1
+main: main

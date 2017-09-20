@@ -1753,34 +1753,58 @@ package body GPR2.Parser.Project is
            (Node : not null Case_Construction)
          is
             Var    : constant not null Variable_Reference := F_Var_Ref (Node);
-            Value  : constant Value_Type :=
-                       Get_Variable_Values (Var).Values.First_Element;
+            Value  : constant Containers.Value_List :=
+                       Get_Variable_Values (Var).Values;
          begin
-            Case_Values.Prepend (Value);
+            if Value.Length = 1 then
+               Case_Values.Prepend (Value.First_Element);
 
-            --  Set status to close for now, this will be open when a
-            --  when_clause will match the value pushed just above on
-            --  the vector.
+               --  Set status to close for now, this will be open when a
+               --  when_clause will match the value pushed just above on
+               --  the vector.
 
-            Is_Open := False;
+               Is_Open := False;
 
-            declare
-               Childs : constant Case_Item_List := F_Items (Node);
-            begin
-               for C in 1 .. Child_Count (Childs) loop
-                  Visit_Child (Child (GPR_Node (Childs), C));
-               end loop;
-            end;
+               declare
+                  Childs : constant Case_Item_List := F_Items (Node);
+               begin
+                  for C in 1 .. Child_Count (Childs) loop
+                     Visit_Child (Child (GPR_Node (Childs), C));
+                  end loop;
+               end;
 
-            --  Then remove the case value
+               --  Then remove the case value
 
-            Case_Values.Delete_First;
+               Case_Values.Delete_First;
 
-            --  Skip all nodes for this construct
+               --  Skip all nodes for this construct
 
-            Status := Over;
+               Status := Over;
 
-            Is_Open := True;
+               Is_Open := True;
+
+            elsif not Tree.Log_Messages.Is_Empty  then
+               null;
+
+            else
+               declare
+                  Sloc  : constant Source_Reference.Object :=
+                            Get_Source_Reference
+                              (Self.File,
+                               Sloc_Range (GPR_Node (Node)));
+                  Name  : constant not null Identifier :=
+                            F_Variable_Name1 (Var);
+               begin
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message =>
+                          "variable '"
+                          & String (Get_Name_Type (Single_Tok_Node (Name)))
+                          & "' must be a simple value"));
+               end;
+            end if;
          end Parse_Case_Construction;
 
          ---------------------
@@ -2130,6 +2154,10 @@ package body GPR2.Parser.Project is
                when others =>
                   null;
             end case;
+         end if;
+
+         if not Tree.Log_Messages.Is_Empty then
+            Status := Stop;
          end if;
 
          return Status;

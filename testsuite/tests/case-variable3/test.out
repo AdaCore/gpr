@@ -1,0 +1,2 @@
+Messages found:
+demo.gpr:3:9: variable 'DoesNOTexists' is undefined
