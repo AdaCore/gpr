@@ -1030,8 +1030,7 @@ package body GPR2.Parser.Project is
                     (Self.File,
                      Sloc_Range (Node))));
 
-            Result.Single := False;
-            return Result;
+            return Empty_Item_Values;
          end if;
 
          --  For a project/attribute reference we need to check the attribute
