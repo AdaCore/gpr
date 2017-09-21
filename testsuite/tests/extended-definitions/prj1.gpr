@@ -1,0 +1,4 @@
+abstract project Prj1 is
+   for Object_Dir use "obj";
+   V := "prj1";
+end Prj1;

@@ -1,0 +1,10 @@
+**************** Iterator Prj1
+Prj1     K_ABSTRACT
+A:   Object_Dir -> obj
+V:   V -> prj1
+**************** Iterator Prj2
+Prj2     K_STANDARD
+A:   Object_Dir -> obj2
+A:   Source_Dirs -> p2
+V:   V -> prj1-prj2
+ > p2/pck2.ads    language: ada    Kind: S_SPEC   unit: Pck2

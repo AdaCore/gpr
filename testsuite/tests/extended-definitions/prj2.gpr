@@ -1,0 +1,5 @@
+project Prj2 extends "prj1" is
+   for Source_Dirs use ("p2");
+   for Object_Dir use Prj1'Object_Dir & "2";
+   V := prj1.v & "-prj2";
+end Prj2;

@@ -1556,6 +1556,10 @@ package body GPR2.Parser.Project is
                --  If a single name it can be either a project or a package
 
                if GPR2.Project.Import.Set.Contains (Self.Imports, Name)
+                 or else (Self.Extended /= No_Path_Name
+                            and then
+                          Optional_Name_Type
+                            (GPR2.Base_Name (Self.Extended)) = Name)
                  or else Name = "config"
                  or else Name = "runtime"
                then
