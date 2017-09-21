@@ -1518,6 +1518,7 @@ package body GPR2.Parser.Project is
          Node    : not null Identifier) return Item_Values
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
+         use type GPR2.Project.View.Object;
 
          Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
@@ -1526,7 +1527,9 @@ package body GPR2.Parser.Project is
          Result : Item_Values;
 
       begin
-         if View.Has_Variables (Name) then
+         if View /= GPR2.Project.View.Undefined
+           and then View.Has_Variables (Name)
+         then
             declare
                V : constant GPR2.Project.Variable.Object :=
                      View.Variables (Name).First_Element;
