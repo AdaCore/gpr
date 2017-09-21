@@ -1790,7 +1790,7 @@ package body GPR2.Parser.Project is
 
                Is_Open := True;
 
-            elsif not Tree.Log_Messages.Is_Empty  then
+            elsif not Tree.Log_Messages.Is_Empty then
                null;
 
             else
