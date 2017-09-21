@@ -39,7 +39,8 @@ package GPR2.Source_Reference is
      (Filename     : Full_Path_Name;
       Line, Column : Natural) return Object'Class;
 
-   function Filename (Self : Object) return Full_Path_Name;
+   function Filename (Self : Object) return Full_Path_Name
+     with Pre => Self /= Undefined;
    --  Returns the full pathname where the entity is defined
 
    function Has_Source_Reference (Self : Object) return Boolean;
