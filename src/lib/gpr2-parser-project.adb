@@ -1036,9 +1036,28 @@ package body GPR2.Parser.Project is
          --  For a project/attribute reference we need to check the attribute
          --  definition to know wether the result is multi-valued or not.
 
-         Result.Single := GPR2.Project.Registry.Attribute.Get
-           (GPR2.Project.Registry.Attribute.Create (Name, Pack)).Value
-             = GPR2.Project.Registry.Attribute.Single;
+         declare
+            use GPR2.Project.Registry;
+
+            Attrib : constant Attribute.Qualified_Name :=
+                       Attribute.Create (Name, Pack);
+         begin
+            if Attribute.Exists (Attrib) then
+               Result.Single :=
+                 Attribute.Get (Attrib).Value = Attribute.Single;
+
+            else
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute '" & String (Name) & "' is not defined",
+                     Get_Source_Reference
+                       (Self.File,
+                        Sloc_Range (Node))));
+
+               return Empty_Item_Values;
+            end if;
+         end;
 
          --  If the attribute is not found or not yet resolved we need
          --  to ensure that the Values list respect the post
