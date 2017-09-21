@@ -517,11 +517,11 @@ package body GPR2.Project.Tree is
          Set_Context (Self, Root_Context);
 
          if not Self.Messages.Is_Empty then
-            raise Project_Error with "semantic error";
+            raise Project_Error with Value (Filename) & " semantic error";
          end if;
 
       else
-         raise Project_Error with "syntax error";
+         raise Project_Error with Value (Filename) & " syntax error";
       end if;
    end Load;
 
