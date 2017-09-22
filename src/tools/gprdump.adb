@@ -209,11 +209,15 @@ begin
       end if;
    exception
       when E : others =>
-         Text_IO.Put_Line
-           ("error while parsing..." & Exception_Information (E));
-         for M of Project.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
+         if Project.Log_Messages.Has_Element then
+            for M of Project.Log_Messages.all loop
+               Text_IO.Put_Line (M.Format);
+            end loop;
+
+         else
+            Text_IO.Put_Line
+              ("error while parsing..." & Exception_Information (E));
+         end if;
    end;
 
 exception
