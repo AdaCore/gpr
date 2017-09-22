@@ -334,7 +334,12 @@ package body GPR2.Project.Tree is
 
    begin
       For_Project (Iter.Root.Root);
-      return Cursor'(Projects, 1, Iter.Root.Root);
+
+      if Projects.Length = 0 then
+         return No_Element;
+      else
+         return Cursor'(Projects, 1, Iter.Root.Root);
+      end if;
    end First;
 
    --------------
