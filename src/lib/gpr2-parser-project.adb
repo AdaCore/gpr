@@ -1183,18 +1183,17 @@ package body GPR2.Parser.Project is
       -------------------
 
       function Get_Term_List (Node : not null Term_List) return Item_Values is
+
          Result : Item_Values;
          --  The list of values returned by Get_Term_List
+
+         New_Item : Boolean := True;
 
          function Parser
            (Node : access GPR_Node_Type'Class) return Visit_Status;
 
-         procedure Record_Value (Single : Boolean; Value : Value_Type)
-           with Post =>
-             Result.Values.Length'Old =
-               (if Result.Values.Length'Old > 0 and then Result.Single
-                then Result.Values.Length
-                else Result.Values.Length - 1);
+         procedure Record_Value (Value : Value_Type)
+           with Post => Result.Values.Length'Old <= Result.Values.Length;
          --  Record Value into Result, either add it as a new value in the list
          --  (Single = False) or append the value to the current one.
 
@@ -1279,7 +1278,8 @@ package body GPR2.Parser.Project is
                                       (Item (Parameters, 2), Error));
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
-                     Record_Value (False, V);
+                     New_Item := True;
+                     Record_Value (V);
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1315,8 +1315,7 @@ package body GPR2.Parser.Project is
                      begin
                         if Values.Single then
                            Record_Value
-                             (True,
-                              Builtin.External
+                             (Builtin.External
                                 (Context, Var, Values.Values.First_Element));
 
                         else
@@ -1333,7 +1332,7 @@ package body GPR2.Parser.Project is
                      end;
 
                   else
-                     Record_Value (True, Builtin.External (Context, Var));
+                     Record_Value (Builtin.External (Context, Var));
                   end if;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1350,7 +1349,7 @@ package body GPR2.Parser.Project is
                               Get_Source_Reference
                                 (Self.File, Sloc_Range (Parameters)),
                            Message => Exception_Message (E)));
-                     Record_Value (True, "");
+                     Record_Value ("");
                      Status := Over;
                end Handle_External_Variable;
 
@@ -1374,7 +1373,8 @@ package body GPR2.Parser.Project is
                                       (Item (Parameters, 2), Error));
                begin
                   for V of Builtin.Split (Str, Sep) loop
-                     Record_Value (False, V);
+                     New_Item := True;
+                     Record_Value (V);
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1406,8 +1406,7 @@ package body GPR2.Parser.Project is
             procedure Handle_String (Node : not null String_Literal) is
             begin
                Record_Value
-                 (Result.Single,
-                  Unquote (Value_Type (String'(Text (F_Tok (Node))))));
+                 (Unquote (Value_Type (String'(Text (F_Tok (Node))))));
             end Handle_String;
 
             ---------------------
@@ -1427,6 +1426,10 @@ package body GPR2.Parser.Project is
                   --  We are opening not a single element but an expression
                   --  list.
                   Result.Single := False;
+
+               when GPR_GPR_Node_List =>
+                  --  A new value is found
+                  New_Item := True;
 
                when GPR_String_Literal =>
                   Handle_String (String_Literal (Node));
@@ -1454,9 +1457,13 @@ package body GPR2.Parser.Project is
          -- Record_Value --
          ------------------
 
-         procedure Record_Value (Single : Boolean; Value : Value_Type) is
+         procedure Record_Value (Value : Value_Type) is
          begin
-            if Result.Single and then Result.Values.Length > 0 then
+            if New_Item then
+               Result.Values.Append (Value);
+               New_Item := False;
+
+            else
                declare
                   Last      : constant Containers.Extended_Index :=
                                 Result.Values.Last_Index;
@@ -1465,15 +1472,6 @@ package body GPR2.Parser.Project is
                begin
                   Result.Values.Replace_Element (Last, New_Value);
                end;
-
-            else
-               Result.Values.Append (Value);
-            end if;
-
-            if (Result.Single and then not Single)
-              or else Result.Values.Length > 1
-            then
-               Result.Single := False;
             end if;
          end Record_Value;
 
@@ -1484,7 +1482,8 @@ package body GPR2.Parser.Project is
          procedure Record_Values (Values : Item_Values) is
          begin
             for V of Values.Values loop
-               Record_Value (Values.Single, V);
+               New_Item := New_Item or else Values.Single = False;
+               Record_Value (V);
             end loop;
 
             --  If we add a list, then the final value must be a list
