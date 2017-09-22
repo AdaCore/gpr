@@ -235,6 +235,15 @@ package body GPR2.Project.View is
       return Recursive_Has_Context (Self, Definition.Get (Self).Status);
    end Has_Context;
 
+   ------------------
+   -- Has_Extended --
+   ------------------
+
+   function Has_Extended (Self : Object) return Boolean is
+   begin
+      return Definition.Get (Self).Extended /= Undefined;
+   end Has_Extended;
+
    -----------------
    -- Has_Imports --
    -----------------

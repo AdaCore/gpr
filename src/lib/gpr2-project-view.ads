@@ -78,6 +78,10 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns True if the project has some imports
 
+   function Has_Extended (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if the project is extending another project
+
    --  Context
 
    function Has_Context (Self : Object) return Boolean
