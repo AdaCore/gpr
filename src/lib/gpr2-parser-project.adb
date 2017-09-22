@@ -1606,14 +1606,39 @@ package body GPR2.Parser.Project is
                Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);
 
          else
-            Tree.Log_Messages.Append
-              (Message.Create
-                 (Level   => Message.Error,
-                  Sloc    => Sloc,
-                  Message =>
-                    "variable '" & String (Name) & "' is undefined"));
+            declare
+               Result : Item_Values := Empty_Item_Values;
+            begin
+               if Self.Extended /= No_Path_Name then
+                  declare
+                     View : constant GPR2.Project.View.Object :=
+                              GPR2.Project.Tree.View_For
+                                (Tree, Base_Name (Self.Extended), Context);
+                  begin
+                     if View.Has_Variables (Name) then
+                        declare
+                           V : constant GPR2.Project.Variable.Object :=
+                                 View.Variables (Name).First_Element;
+                        begin
+                           Result :=
+                             (Values => V.Values,
+                              Single => V.Count_Values = 1);
+                        end;
+                     end if;
+                  end;
+               end if;
 
-            return Empty_Item_Values;
+               if Result = Empty_Item_Values then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message =>
+                          "variable '" & String (Name) & "' is undefined"));
+               end if;
+
+               return Result;
+            end;
          end if;
       end Get_Variable_Values;
 
