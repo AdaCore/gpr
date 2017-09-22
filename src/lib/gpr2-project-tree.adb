@@ -487,6 +487,14 @@ package body GPR2.Project.Tree is
       Context  : GPR2.Context.Object;
       Config   : Configuration.Object := Configuration.Undefined)
    is
+      function Has_Error return Boolean is
+        (Self.Messages.Has_Element
+           (Error       => True,
+            Information => False,
+            Warning     => False,
+            Read        => False,
+            Unread      => True));
+
       Root_Context : GPR2.Context.Object := Context;
 
    begin
@@ -496,7 +504,7 @@ package body GPR2.Project.Tree is
 
       --  Do nothing more if there are errors during the parsing
 
-      if Self.Messages.Is_Empty then
+      if not Has_Error then
          --  Set configuration project if any
 
          Self.Conf := Config;
@@ -521,7 +529,7 @@ package body GPR2.Project.Tree is
 
          Set_Context (Self, Root_Context);
 
-         if not Self.Messages.Is_Empty then
+         if Has_Error then
             raise Project_Error with Value (Filename) & " semantic error";
          end if;
 
