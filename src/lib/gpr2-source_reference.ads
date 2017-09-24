@@ -61,7 +61,8 @@ private
       Line     : Natural;
       Column   : Natural;
       Filename : Unbounded_String;
-   end record;
+   end record
+     with Dynamic_Predicate => Filename /= Null_Unbounded_String;
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Filename < Right.Filename
@@ -72,6 +73,6 @@ private
      is (Self.Column > 0 and then Self.Line > 0);
 
    Undefined : constant Object :=
-                 (0, 0, Null_Unbounded_String);
+                 (0, 0, To_Unbounded_String ("@"));
 
 end GPR2.Source_Reference;
