@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--            Copyright (C) 2017, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,30 +22,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
+package body GPR2.Project.Import.Set is
 
-package GPR2.Project.Import.Set is
+   ---------
+   -- Get --
+   ---------
 
-   package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Path_Name_Type, Object);
+   function Get (Self : Object; Base_Name : Name_Type) return Import.Object is
+   begin
+      for C in Self.Iterate loop
+         if GPR2.Base_Name (Set.Key (C)) = Base_Name then
+            return Set.Element (C);
+         end if;
+      end loop;
 
-   subtype Object is Set.Map;
-
-   --  ?? both routines below are not efficient at all as we need to parse the
-   --  imported list to check for the base name. This will need to be reworked.
-
-   function Contains (Self : Object; Base_Name : Name_Type) return Boolean;
-   --  Returns True if the Base_Name of a project is part of the imported
-   --  projects.
-
-   function Get (Self : Object; Base_Name : Name_Type) return Import.Object
-     with Pre => Contains (Self, Base_Name);
-   --  Returns the imported project object given the base name
-
-private
-
-   function Contains
-     (Self : Object; Base_Name : Name_Type) return Boolean
-   is (for some C in Self.Iterate => GPR2.Base_Name (Set.Key (C)) = Base_Name);
+      return Undefined;
+   end Get;
 
 end GPR2.Project.Import.Set;
