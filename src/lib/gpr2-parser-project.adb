@@ -2073,29 +2073,61 @@ package body GPR2.Parser.Project is
          -------------------------
 
          procedure Parse_Variable_Decl (Node : not null Variable_Decl) is
-            Sloc   : constant Source_Reference.Object :=
-                       Get_Source_Reference
-                         (Self.File, Sloc_Range (GPR_Node (Node)));
-            Name   : constant not null Identifier := F_Var_Name (Node);
-            Expr   : constant not null Term_List := F_Expr (Node);
-            Values : constant Item_Values := Get_Term_List (Expr);
-            V_Type : constant GPR_Parser.Analysis.Expr := F_Var_Type (Node);
-            V      : GPR2.Project.Variable.Object;
+            Sloc    : constant Source_Reference.Object :=
+                        Get_Source_Reference
+                          (Self.File, Sloc_Range (GPR_Node (Node)));
+            Name    : constant not null Identifier := F_Var_Name (Node);
+            Expr    : constant not null Term_List := F_Expr (Node);
+            Values  : constant Item_Values := Get_Term_List (Expr);
+            V_Type  : constant Type_Reference := F_Var_Type (Node);
+            V       : GPR2.Project.Variable.Object;
          begin
             if V_Type /= null then
                declare
-                  T_Name : constant Name_Type :=
-                             Get_Name_Type (Single_Tok_Node (V_Type));
+                  Type_N1  : constant Identifier :=
+                               F_Var_Type_Name1 (V_Type);
+                  Type_N2  : constant Identifier :=
+                               F_Var_Type_Name2 (V_Type);
+                  T_Name   : constant Name_Type :=
+                               Get_Name_Type
+                                 (if Type_N2 = null
+                                  then Single_Tok_Node (Type_N1)
+                                  else Single_Tok_Node (Type_N2));
+                  Type_Def : Containers.Value_Set;
                begin
+                  if Type_N2 /= null then
+                     --  We have a project prefix for the type name
+                     declare
+                        Project : constant Name_Type :=
+                                    Get_Name_Type (Single_Tok_Node (Type_N1));
+                     begin
+                        if GPR2.Project.Import.Set.Contains
+                          (Self.Imports, Project)
+                        then
+                           declare
+                              Import : constant GPR2.Project.Import.Object :=
+                                         GPR2.Project.Import.Set.Get
+                                           (Self.Imports, Project);
+                              Prj    : constant GPR2.Parser.Project.Object :=
+                                         Registry.Get (Import.Path_Name);
+                           begin
+                              if Prj.Types.Contains (T_Name) then
+                                 Type_Def := Prj.Types (T_Name);
+                              end if;
+                           end;
+                        end if;
+                     end;
+                  end if;
+
                   --  Check that the type has been defined
 
-                  if Self.Types.Contains (T_Name) then
+                  if not Type_Def.Is_Empty then
                      --  Check that we have a single value
 
                      if Values.Single then
                         --  Check that the value is part of the type
 
-                        if not Self.Types (T_Name).Contains
+                        if not Type_Def.Contains
                           (Values.Values.First_Element)
                         then
                            Tree.Log_Messages.Append
