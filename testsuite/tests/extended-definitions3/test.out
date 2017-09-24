@@ -1,0 +1,8 @@
+**************** Iterator Prj1
+Prj1     K_ABSTRACT
+**************** Iterator Prj2
+common   K_ABSTRACT
+Prj2     K_STANDARD
+V:   V0 -> debug
+V:   V1 -> yes
+V:   V2 -> no

@@ -1,0 +1,5 @@
+description:
+    Test for extended projects definitions
+driver: build_and_run
+project_file: extended_definition3
+main: main

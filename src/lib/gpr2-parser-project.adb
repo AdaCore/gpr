@@ -2119,6 +2119,22 @@ package body GPR2.Parser.Project is
                      end;
                   end if;
 
+                  if Type_Def.Is_Empty then
+                     if Self.Types.Contains (T_Name) then
+                        Type_Def := Self.Types (T_Name);
+
+                     elsif Self.Has_Extended then
+                        declare
+                           Extended : constant GPR2.Parser.Project.Object :=
+                                        Registry.Get (Self.Extended);
+                        begin
+                           if Extended.Types.Contains (T_Name) then
+                              Type_Def := Extended.Types (T_Name);
+                           end if;
+                        end;
+                     end if;
+                  end if;
+
                   --  Check that the type has been defined
 
                   if not Type_Def.Is_Empty then

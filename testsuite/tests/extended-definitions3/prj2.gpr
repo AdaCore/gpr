@@ -1,0 +1,6 @@
+with "common";
+project Prj2 extends "prj1" is
+   V0 : common.build_kind := "debug";
+   V1 : prj1.Activated := "yes";
+   V2 : Activated := "no";
+end Prj2;
