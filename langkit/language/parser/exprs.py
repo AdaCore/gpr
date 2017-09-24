@@ -86,7 +86,7 @@ A.add_rules(
 
     variable_reference=Row(
         A.identifier,
-        Opt(Row(".", A.identifier)[1]),  # JM added???
+        Opt(Row(".", A.identifier)[1]),
         Opt(Row("'", A.attribute_reference)[1])
     ) ^ VariableReference,
 
