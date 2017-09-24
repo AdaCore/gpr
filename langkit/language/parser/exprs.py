@@ -61,6 +61,11 @@ class VariableReference(GPRNode):
     attribute_ref = Field()
 
 
+class TypeReference(GPRNode):
+    var_type_name1 = Field()
+    var_type_name2 = Field()
+
+
 class ProjectReference(GPRNode):
     attr_ref = Field()
 
@@ -84,6 +89,11 @@ A.add_rules(
         Opt(Row(".", A.identifier)[1]),  # JM added???
         Opt(Row("'", A.attribute_reference)[1])
     ) ^ VariableReference,
+
+    type_reference=Row(
+        A.identifier,
+        Opt(Row(".", A.identifier)[1]),
+    ) ^ TypeReference,
 
     builtin_function_call=Row(
         A.identifier,

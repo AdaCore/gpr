@@ -155,7 +155,7 @@ A.add_rules(
 
     variable_decl=Row(
         A.identifier,
-        Opt(Row(":", A.static_name)[1]),
+        Opt(Row(":", A.type_reference)[1]),
         ":=",
         A.expression
     ) ^ VariableDecl,
