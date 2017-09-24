@@ -794,8 +794,10 @@ package body GPR2.Parser.Project is
             Messages.Append
               (GPR2.Message.Create
                  (Level   => Message.Error,
-                  Message =>
-                    "project file " & Value (Filename) & " not found"));
+                  Message => "project file not found",
+                  Sloc    => Source_Reference.Object
+                               (Source_Reference.Create
+                                 (Value (Filename), 1, 1))));
             return Undefined;
          end if;
 
