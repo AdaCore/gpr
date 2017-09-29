@@ -125,7 +125,7 @@ install-%:
 install-tools:
 	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static --build-name=static \
-		--mode=usage $(GPR2TOOLS)
+		--mode=usage --install-name=gpr2 $(GPR2TOOLS)
 
 #########
 # setup #
