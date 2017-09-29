@@ -80,8 +80,8 @@ library project GPR2 is
             for Default_Switches ("C") use Common_C_Options & ("-O2");
 
             --  Langkit/Quex
-            for Switches ("gpr_parser*") use ("-g", "-Ofast", "-gnatp");
-            for Switches ("adalog*") use  ("-g", "-Ofast", "-gnatp");
+            for Switches ("gpr_parser*") use ("-g", "-Ofast");
+            for Switches ("adalog*") use  ("-g", "-Ofast");
             for Switches ("quex_*")
               use Common_C_Options & ("-Ofast",
                    -- Deactivate because of memory usage, see OA26-005
