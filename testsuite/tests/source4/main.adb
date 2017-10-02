@@ -111,7 +111,7 @@ procedure Main is
       --  delay to ensure that the timestamp is updated. To be safe we
       --  wait for a full second.
 
-      delay 1.5;
+      delay 2.0;
 
       declare
          File : Text_IO.File_Type;
