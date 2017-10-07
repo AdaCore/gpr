@@ -1121,7 +1121,7 @@ package body GPR2.Parser.Project is
                   Attr := Pack_Attrs.Element (Name, Index);
 
                elsif Is_Self then
-                  --  A self reference, if the attribute if not found (check
+                  --  A self reference, if the attribute is not found (check
                   --  above) it means that there is no previous definition
                   --  for this attribute. The current value is then the empty
                   --  string but the attribute is defined.
