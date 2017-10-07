@@ -56,7 +56,8 @@ package body GPR2.Project.Tree is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Recursive_Load
-     (Filename     : Path_Name_Type;
+     (Self         : Object;
+      Filename     : Path_Name_Type;
       Context_View : View.Object;
       Status       : Definition.Relation_Status;
       Root_Context : out GPR2.Context.Object;
@@ -499,7 +500,7 @@ package body GPR2.Project.Tree is
 
    begin
       Self.Root := Recursive_Load
-        (Filename, View.Undefined, Definition.Root,
+        (Self, Filename, View.Undefined, Definition.Root,
          Root_Context, Self.Messages);
 
       --  Do nothing more if there are errors during the parsing
@@ -604,7 +605,8 @@ package body GPR2.Project.Tree is
    --------------------
 
    function Recursive_Load
-     (Filename     : Path_Name_Type;
+     (Self         : Object;
+      Filename     : Path_Name_Type;
       Context_View : View.Object;
       Status       : Definition.Relation_Status;
       Root_Context : out GPR2.Context.Object;
@@ -696,6 +698,10 @@ package body GPR2.Project.Tree is
       begin
          Data.Trees.Project := Project;
 
+         --  Record the project tree for this view
+
+         Data.Tree := Self.Self;
+
          --  Do the following only if there are no error messages
 
          if Messages.Is_Empty then
@@ -764,7 +770,8 @@ package body GPR2.Project.Tree is
       if Data.Trees.Project.Has_Extended then
          Data.Extended :=
            Recursive_Load
-             (Create
+             (Self,
+              Create
                 (Name_Type (Value (Data.Trees.Project.Extended)),
                  GPR2.Project.Paths (Filename)),
               Context_View =>
@@ -808,7 +815,8 @@ package body GPR2.Project.Tree is
             then
                Data.Imports.Append
                  (Recursive_Load
-                    (Project.Path_Name,
+                    (Self,
+                     Project.Path_Name,
                      Context_View =>
                        (if Context_View = GPR2.Project.View.Undefined
                         then View
@@ -990,7 +998,8 @@ package body GPR2.Project.Tree is
                         Ctx      : GPR2.Context.Object;
                         A_View   : constant GPR2.Project.View.Object :=
                                      Recursive_Load
-                                       (Pathname, View,
+                                       (Self,
+                                        Pathname, View,
                                         Definition.Aggregated, Ctx,
                                         Self.Messages);
                         Messages : Log.Object;
@@ -1073,10 +1082,6 @@ package body GPR2.Project.Tree is
                P_Data.Kind := K_Library;
             end if;
          end if;
-
-         --  Record the project tree
-
-         P_Data.Tree := Self.Self;
 
          Definition.Set (View, P_Data);
 

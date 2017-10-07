@@ -82,6 +82,7 @@ package body GPR2.Project.Configuration is
       Data.Trees.Project := Project;
       Data.Context_View  := View.Undefined;
       Data.Status        := Definition.Root;
+      Data.Kind          := K_Configuration;
 
       Result.Conf         := Definition.Register (Data);
       Result.Target       :=

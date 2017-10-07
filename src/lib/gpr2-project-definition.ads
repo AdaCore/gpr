@@ -115,7 +115,9 @@ private package GPR2.Project.Definition is
             or else Data.A_Context.Is_Empty;
 
    function Register (Def : Data) return View.Object
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
+     with Pre  => Def.Trees.Project /= Parser.Project.Undefined
+                    and then
+                  (Def.Kind = K_Configuration or else Def.Tree /= null),
           Post => Get (Register'Result) = Def;
    --  Register a new project definition, returns the corresponding view
 
