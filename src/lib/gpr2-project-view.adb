@@ -39,6 +39,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
+with GPR2.Project.View.Set;
 with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
@@ -196,6 +197,8 @@ package body GPR2.Project.View is
       --  Recursively check that the view has a context or not. This handles
       --  aggregated project context.
 
+      Seen : View.Set.Object;
+
       -----------------------
       -- Recursive_Context --
       -----------------------
@@ -222,7 +225,11 @@ package body GPR2.Project.View is
          end Has_Context;
 
       begin
-         if Data.Context_View = Undefined then
+         Seen.Insert (Self);
+
+         if Data.Context_View = Undefined
+           or else Seen.Contains (Data.Context_View)
+         then
             return Data.Has_Context and then Has_Context;
 
          else

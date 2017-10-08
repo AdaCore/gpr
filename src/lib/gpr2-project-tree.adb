@@ -242,6 +242,8 @@ package body GPR2.Project.Tree is
          Qualifier : constant Project_Kind := View.Kind;
       begin
          if not Seen.Contains (View) then
+            Seen.Insert (View);
+
             --  Check if it corresponds to the current filter
             if (Qualifier = K_Library
                 and then Is_Set (Iter.Filter, F_Library))
@@ -256,8 +258,6 @@ package body GPR2.Project.Tree is
             then
                Projects.Append (View);
             end if;
-
-            Seen.Insert (View);
          end if;
       end Append;
 
@@ -295,39 +295,41 @@ package body GPR2.Project.Tree is
 
       procedure For_Project (View : Project.View.Object) is
       begin
-         --  Handle imports
+         if not Seen.Contains (View) then
+            --  Handle imports
 
-         if Is_Set (Iter.Kind, I_Imported)
-           or else Is_Set (Iter.Kind, I_Recursive)
-         then
-            For_Imports (View);
-         end if;
+            if Is_Set (Iter.Kind, I_Imported)
+              or else Is_Set (Iter.Kind, I_Recursive)
+            then
+               For_Imports (View);
+            end if;
 
-         --  Handle extended if any
+            --  Handle extended if any
 
-         if Is_Set (Iter.Kind, I_Extended) then
-            declare
-               Data : constant Definition.Data := Definition.Get (View);
-            begin
-               if Data.Extended /= Project.View.Undefined then
-                  if Is_Set (Iter.Kind, I_Recursive) then
-                     For_Project (Data.Extended);
-                  else
-                     Append (Data.Extended);
+            if Is_Set (Iter.Kind, I_Extended) then
+               declare
+                  Data : constant Definition.Data := Definition.Get (View);
+               begin
+                  if Data.Extended /= Project.View.Undefined then
+                     if Is_Set (Iter.Kind, I_Recursive) then
+                        For_Project (Data.Extended);
+                     else
+                        Append (Data.Extended);
+                     end if;
                   end if;
-               end if;
-            end;
-         end if;
+               end;
+            end if;
 
-         --  The project itself
+            --  The project itself
 
-         Append (View);
+            Append (View);
 
-         --  Now if View is an aggregate or aggregate library project we need
-         --  to run through all aggregated projects.
+            --  Now if View is an aggregate or aggregate library project we
+            --  need to run through all aggregated projects.
 
-         if Is_Set (Iter.Kind, I_Aggregated) then
-            For_Aggregated (View);
+            if Is_Set (Iter.Kind, I_Aggregated) then
+               For_Aggregated (View);
+            end if;
          end if;
       end For_Project;
 
