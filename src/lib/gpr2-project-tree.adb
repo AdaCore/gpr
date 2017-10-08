@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Sets;
 with Ada.Environment_Variables;
 
 with GPR.Sdefault;
@@ -34,6 +33,7 @@ with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source;
+with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 with GPR2.Unit;
 
@@ -213,9 +213,7 @@ package body GPR2.Project.Tree is
 
    overriding function First (Iter : Iterator) return Cursor is
 
-      package Seen_Project is new Ada.Containers.Ordered_Sets (View.Object);
-
-      Seen : Seen_Project.Set;
+      Seen : GPR2.Project.View.Set.Object;
       --  Keep track of already seen projects. Better than using the P vector
       --  which is not efficient when checking if an element exists.
 
