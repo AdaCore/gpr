@@ -1158,6 +1158,9 @@ package body GPR2.Parser.Project is
                      begin
                         if P.Has_Attributes (Name, Index) then
                            Attr := P.Attributes.Element (Name, Index);
+
+                        else
+                           Att_Defined := False;
                         end if;
                      end;
 
