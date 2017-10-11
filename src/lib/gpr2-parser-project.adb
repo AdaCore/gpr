@@ -115,8 +115,7 @@ package body GPR2.Parser.Project is
      (N     : GPR_Node'Class;
       Error : out Boolean) return Value_Type
    is
-      function Parser
-        (Node : GPR_Node'Class) return Visit_Status;
+      function Parser (Node : GPR_Node'Class) return Visit_Status;
       --  Parser for the string-literal tree
 
       Result : Unbounded_String;
@@ -125,9 +124,7 @@ package body GPR2.Parser.Project is
       -- Parser --
       ------------
 
-      function Parser
-        (Node : GPR_Node'Class) return Visit_Status
-      is
+      function Parser (Node : GPR_Node'Class) return Visit_Status is
 
          Status : Visit_Status := Into;
 
@@ -228,41 +225,34 @@ package body GPR2.Parser.Project is
          Project : Object;
          --  The project being constructed
 
-         function Parser
-           (Node : GPR_Node'Class) return Visit_Status;
+         function Parser (Node : GPR_Node'Class) return Visit_Status;
          --  Actual parser callabck for the project
 
          ------------
          -- Parser --
          ------------
 
-         function Parser
-           (Node : GPR_Node'Class) return Visit_Status
-         is
+         function Parser (Node : GPR_Node'Class) return Visit_Status is
+
             Status : constant Visit_Status := Into;
 
-            procedure Parse_Project_Declaration
-              (N : Project_Declaration);
+            procedure Parse_Project_Declaration (N : Project_Declaration);
             --  Parse a project declaration and set the qualifier if present
 
-            procedure Parse_Builtin
-              (N : Builtin_Function_Call);
+            procedure Parse_Builtin (N : Builtin_Function_Call);
             --  Put the name of the external into the Externals list
 
             procedure Parse_With_Decl (N : With_Decl);
             --  Add the name of the withed project into the Imports list
 
-            procedure Parse_Typed_String_Decl
-              (N : Typed_String_Decl);
+            procedure Parse_Typed_String_Decl (N : Typed_String_Decl);
             --  A typed string declaration
 
             -------------------
             -- Parse_Builtin --
             -------------------
 
-            procedure Parse_Builtin
-              (N : Builtin_Function_Call)
-            is
+            procedure Parse_Builtin (N : Builtin_Function_Call) is
 
                procedure Parse_External_Reference
                  (N : Builtin_Function_Call);
@@ -272,8 +262,7 @@ package body GPR2.Parser.Project is
                  (N : Builtin_Function_Call);
                --  Put the name of the external into the Externals list
 
-               procedure Parse_Split_Reference
-                 (N : Builtin_Function_Call);
+               procedure Parse_Split_Reference (N : Builtin_Function_Call);
                --  Check that split parameters has the proper type
 
                --------------------------------------
@@ -450,9 +439,7 @@ package body GPR2.Parser.Project is
                -- Parse_Split_Reference --
                ---------------------------
 
-               procedure Parse_Split_Reference
-                 (N : Builtin_Function_Call)
-               is
+               procedure Parse_Split_Reference (N : Builtin_Function_Call) is
                   Parameters : constant Expr_List := F_Parameters (N);
                   Exprs      : constant Term_List_List := F_Exprs (Parameters);
                begin
@@ -568,9 +555,7 @@ package body GPR2.Parser.Project is
             -- Parse_Project_Declaration --
             -------------------------------
 
-            procedure Parse_Project_Declaration
-              (N : Project_Declaration)
-            is
+            procedure Parse_Project_Declaration (N : Project_Declaration) is
                Name : constant Expr := F_Project_Name (N);
                Qual : constant Project_Qualifier := F_Qualifier (N);
                Ext  : constant Project_Extension := F_Extension (N);
@@ -659,9 +644,7 @@ package body GPR2.Parser.Project is
             -- Parse_Typed_String_Decl --
             -----------------------------
 
-            procedure Parse_Typed_String_Decl
-              (N : Typed_String_Decl)
-            is
+            procedure Parse_Typed_String_Decl (N : Typed_String_Decl) is
                Name       : constant Name_Type :=
                               Get_Name_Type (F_Type_Id (N));
                Values     : constant String_Literal_List :=
@@ -894,8 +877,7 @@ package body GPR2.Parser.Project is
       Empty_Item_Values : constant Item_Values :=
                             (Single => False, Values => <>);
 
-      function Parser
-        (Node : GPR_Node'Class) return Visit_Status;
+      function Parser (Node : GPR_Node'Class) return Visit_Status;
       --  Actual parser callabck for the project
 
       function Get_Variable_Values
@@ -965,7 +947,6 @@ package body GPR2.Parser.Project is
       --  Att_Name and Idx_Name are the name for the currently parsed attribute
       --  declaration. This is used to check for recursive definition.
       --     for Att (Idx) use Att (Idx) & ("some", "other", "value");
-      --
 
       In_Pack              : Boolean := False;
       Pack_Name            : Unbounded_String;
@@ -1195,8 +1176,7 @@ package body GPR2.Parser.Project is
 
          New_Item : Boolean := True;
 
-         function Parser
-           (Node : GPR_Node'Class) return Visit_Status;
+         function Parser (Node : GPR_Node'Class) return Visit_Status;
 
          procedure Record_Value (Value : Value_Type)
            with Post => Result.Values.Length'Old <= Result.Values.Length;
@@ -1210,9 +1190,7 @@ package body GPR2.Parser.Project is
          -- Parser --
          ------------
 
-         function Parser
-           (Node : GPR_Node'Class) return Visit_Status
-         is
+         function Parser (Node : GPR_Node'Class) return Visit_Status is
             Status : Visit_Status := Into;
 
             procedure Handle_String (Node : String_Literal)
@@ -1227,8 +1205,7 @@ package body GPR2.Parser.Project is
               with Pre => Present (Node);
             --  A built-in
 
-            procedure Handle_Attribute_Reference
-              (Node : Attribute_Reference)
+            procedure Handle_Attribute_Reference (Node : Attribute_Reference)
               with Pre  => Present (Node);
             --  An attribute reference for ProjectReference node only. The
             --  other cases are handled in other parts.
@@ -1363,9 +1340,7 @@ package body GPR2.Parser.Project is
                -- Handle_Split --
                ------------------
 
-               procedure Handle_Split
-                 (Node : Builtin_Function_Call)
-               is
+               procedure Handle_Split (Node : Builtin_Function_Call) is
                   Parameters : constant Term_List_List :=
                                  F_Exprs (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
@@ -1553,7 +1528,7 @@ package body GPR2.Parser.Project is
       -------------------------
 
       function Get_Variable_Values
-        (Node   : Variable_Reference) return Item_Values
+        (Node : Variable_Reference) return Item_Values
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
@@ -1668,9 +1643,7 @@ package body GPR2.Parser.Project is
       -- Parser --
       ------------
 
-      function Parser
-        (Node : GPR_Node'Class) return Visit_Status
-      is
+      function Parser (Node : GPR_Node'Class) return Visit_Status is
          Status : Visit_Status := Into;
 
          procedure Parse_Attribute_Decl (Node : Attribute_Decl)
@@ -1685,13 +1658,11 @@ package body GPR2.Parser.Project is
            with Pre => Is_Open;
          --  Parse variable declaration and append it into the Vars set
 
-         procedure Parse_Package_Renaming
-           (Node : Package_Renaming)
+         procedure Parse_Package_Renaming (Node : Package_Renaming)
            with Pre => Is_Open;
          --  Parse a package renaming
 
-         procedure Parse_Package_Extension
-           (Node : Package_Extension)
+         procedure Parse_Package_Extension (Node : Package_Extension)
            with Pre => Is_Open;
          --  Parse a package extension
 
@@ -1712,9 +1683,7 @@ package body GPR2.Parser.Project is
          -- Parse_Attribute_Decl --
          --------------------------
 
-         procedure Parse_Attribute_Decl
-           (Node : Attribute_Decl)
-         is
+         procedure Parse_Attribute_Decl (Node : Attribute_Decl) is
             Sloc  : constant Source_Reference.Object :=
                       Get_Source_Reference
                         (Self.File,
@@ -1806,12 +1775,10 @@ package body GPR2.Parser.Project is
          -- Parse_Case_Construction --
          -----------------------------
 
-         procedure Parse_Case_Construction
-           (Node : Case_Construction)
-         is
-            Var    : constant Variable_Reference := F_Var_Ref (Node);
-            Value  : constant Containers.Value_List :=
-                       Get_Variable_Values (Var).Values;
+         procedure Parse_Case_Construction (Node : Case_Construction) is
+            Var   : constant Variable_Reference := F_Var_Ref (Node);
+            Value : constant Containers.Value_List :=
+                      Get_Variable_Values (Var).Values;
          begin
             if Value.Length = 1 then
                Case_Values.Prepend (Value.First_Element);
@@ -1870,8 +1837,7 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Case_Item (Node : Case_Item) is
 
-            function Parser
-              (Node : GPR_Node'Class) return Visit_Status;
+            function Parser (Node : GPR_Node'Class) return Visit_Status;
 
             Is_Case_Item_Matches : Boolean := False;
 
@@ -1879,9 +1845,7 @@ package body GPR2.Parser.Project is
             -- Parser --
             ------------
 
-            function Parser
-              (Node : GPR_Node'Class) return Visit_Status
-            is
+            function Parser (Node : GPR_Node'Class) return Visit_Status is
                Status : constant Visit_Status := Into;
 
                procedure Handle_String   (Node : String_Literal);
@@ -1967,9 +1931,7 @@ package body GPR2.Parser.Project is
          -- Parse_Package_Extension --
          -----------------------------
 
-         procedure Parse_Package_Extension
-           (Node : Package_Extension)
-         is
+         procedure Parse_Package_Extension (Node : Package_Extension) is
             use type GPR2.Project.View.Object;
 
             Sloc    : constant Source_Reference.Object :=
