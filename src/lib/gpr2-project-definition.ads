@@ -43,7 +43,6 @@ private package GPR2.Project.Definition is
    use type View.Id;
    use type View.Object;
    use type Parser.Project.Object;
-   use type Ada.Containers.Count_Type;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded tree. That is there is always a single instance of
