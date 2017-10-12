@@ -29,7 +29,7 @@ with GPR2.Project.View;
 
 package body GPR2.Parser.Registry is
 
-   --  Project Tree
+   --  Project with reference counter
 
    type Data is record
       Project : Parser.Project.Object;
