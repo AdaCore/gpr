@@ -28,7 +28,7 @@ with GPR.Sdefault;
 
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Import;
+with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -528,7 +528,7 @@ package body GPR2.Project.Tree is
             end;
          end loop;
 
-         Set_Context (Self, Root_Context);
+         Set_Context (Self, Context);
 
          if Has_Error then
             raise Project_Error with Value (Filename) & " semantic error";
@@ -616,73 +616,151 @@ package body GPR2.Project.Tree is
       function Load (Filename : Path_Name_Type) return Definition.Data;
       --  Returns the Data definition for the given project
 
-      function Is_In_Closure
-        (Project_Name : Path_Name_Type;
-         Data         : Definition.Data;
-         Messages     : out Log.Object) return Boolean;
-      --  Returns True if Project_Name is in the closure of the project whose
-      --  Data definition is given. That is, the project data is containing a
-      --  reference to the Project_Name.
+      function Internal
+        (Self         : Object;
+         Filename     : Path_Name_Type;
+         Context_View : View.Object;
+         Status       : Definition.Relation_Status;
+         Root_Context : out GPR2.Context.Object;
+         Messages     : out Log.Object) return View.Object;
 
-      -------------------
-      -- Is_In_Closure --
-      -------------------
+      Sets  : Project.Import.Set.Object;
+      Paths : Containers.Path_Name_List;
 
-      function Is_In_Closure
-        (Project_Name : Path_Name_Type;
-         Data         : Definition.Data;
-         Messages     : out Log.Object) return Boolean
+      --------------
+      -- Internal --
+      --------------
+
+      function Internal
+        (Self         : Object;
+         Filename     : Path_Name_Type;
+         Context_View : View.Object;
+         Status       : Definition.Relation_Status;
+         Root_Context : out GPR2.Context.Object;
+         Messages     : out Log.Object) return View.Object
       is
-
-         function Is_In_Closure (Data : Definition.Data) return Boolean;
-         --  True if Project_Name is in closure of Data
-
-         function Is_In_Imports (Data : Definition.Data) return Boolean;
-         --  True if Project_Name is in imports of Data
-
-         -------------------
-         -- Is_In_Closure --
-         -------------------
-
-         function Is_In_Closure (Data : Definition.Data) return Boolean is
-         begin
-            return Data.Trees.Imports.Contains (Project_Name)
-              or else Is_In_Imports (Data);
-         end Is_In_Closure;
-
-         -------------------
-         -- Is_In_Imports --
-         -------------------
-
-         function Is_In_Imports (Data : Definition.Data) return Boolean is
-         begin
-            for Import of Data.Trees.Imports loop
-               --  Skip limited imports
-               if not Data.Trees.Project.Imports.Element
-                 (Import.Path_Name).Is_Limited
-               then
-                  if Is_In_Closure (Load (Import.Path_Name)) then
-                     Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "imports " & Value (Import.Path_Name),
-                           Source_Reference.Object
-                             (Data.Trees.Project.Imports.Element
-                                  (Import.Path_Name))));
-                     return True;
-                  end if;
-               end if;
-            end loop;
-
-            return False;
-         end Is_In_Imports;
-
+         View : Project.View.Object :=
+                  Definition.Get (Filename, Context_View, Status, Self);
       begin
-         return Is_In_Imports (Data);
-      end Is_In_Closure;
+
+         if View = Project.View.Undefined then
+            declare
+               use type Definition.Relation_Status;
+               Data : Definition.Data := Load (Filename);
+            begin
+               --  If there are parsing errors, do not go further
+
+               if Messages.Has_Element
+                 (Information => False, Warning => False)
+               then
+                  return View;
+               end if;
+
+               --  Let's setup the full external environment for project
+
+               for E of Data.Externals loop
+                  --  Fill all known external in the environment variables
+                  if not Root_Context.Contains (E)
+                    and then Environment_Variables.Exists (String (E))
+                  then
+                     Root_Context.Include
+                       (E, Environment_Variables.Value (String (E)));
+                  end if;
+               end loop;
+
+               --  If we have the root project, record the global context
+
+               if Data.Has_Context and then Status = Definition.Root
+               --                and then Context_View = Project.View.Undefined
+               then
+                  --  This is the root-view, assign the corresponding context
+                  Data.Context := Root_Context;
+               end if;
+
+               --  Create the view, needed to be able to reference it if it is
+               --  an aggregate project as it becomes the new View_Context.
+
+               Data.Context_View := Context_View;
+               Data.Status       := Status;
+
+               View := Definition.Register (Data);
+
+               --  Load the extended project if any
+
+               if Data.Trees.Project.Has_Extended then
+                  Data.Extended :=
+                    Internal
+                      (Self,
+                       Create
+                         (Name_Type (Value (Data.Trees.Project.Extended)),
+                          GPR2.Project.Paths (Filename)),
+                       Context_View => View,
+                       Status       => Definition.Imported,
+                       Root_Context => Root_Context,
+                       Messages     => Messages);
+               end if;
+
+               --  Now load all imported projects. If we are parsing the root
+               --  project or an aggregate project then the context view become
+               --  this project.
+
+               for Project of Data.Trees.Imports loop
+                  if not Data.Trees.Project.Imports.Element
+                    (Project.Path_Name).Is_Limited
+                  then
+                     if Sets.Contains (Project.Path_Name) then
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "circular dependency detected",
+                              Source_Reference.Object
+                                (Data.Trees.Project.Imports.Element
+                                     (Project.Path_Name))));
+
+                        for Import of Paths loop
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "imports " & Value (Import),
+                                 Source_Reference.Object
+                                   (Sets.Element (Import))));
+                        end loop;
+
+                     else
+                        Sets.Insert
+                          (Project.Path_Name,
+                           Data.Trees.Project.Imports.Element
+                             (Project.Path_Name));
+                        Paths.Append (Project.Path_Name);
+
+                        Data.Imports.Append
+                          (Internal
+                             (Self,
+                              Project.Path_Name,
+                              Context_View =>
+                                (if Status = Definition.Root
+                                 then View
+                                 else Context_View),
+                              Status       => Definition.Imported,
+                              Root_Context => Root_Context,
+                              Messages     => Messages));
+
+                        Sets.Delete (Project.Path_Name);
+                        Paths.Delete_Last;
+                     end if;
+                  end if;
+               end loop;
+
+            --  And record back new data for this view
+
+               Definition.Set (View, Data);
+            end;
+         end if;
+
+         return View;
+      end Internal;
 
       ----------
-
       -- Load --
       ----------
 
@@ -727,112 +805,9 @@ package body GPR2.Project.Tree is
          return Data;
       end Load;
 
-      Data : Definition.Data := Load (Filename);
-      View : Project.View.Object;
-
    begin
-      --  If there are parsing errors, do not go further
-
-      if Messages.Has_Element (Information => False, Warning => False) then
-         return View;
-      end if;
-
-      --  Let's setup the full external environment for project
-
-      for E of Data.Externals loop
-         --  Fill all known external in the environment variables
-         if not Root_Context.Contains (E)
-           and then Environment_Variables.Exists (String (E))
-         then
-            Root_Context.Include (E, Environment_Variables.Value (String (E)));
-         end if;
-      end loop;
-
-      --  If we have the root project, record the global context
-
-      if Data.Has_Context
-        and then Context_View = Project.View.Undefined
-      then
-         --  This is the root-view, assign the corresponding context
-         Data.Context := Root_Context;
-      end if;
-
-      --  Create the view, needed to be able to reference it if it is an
-      --  aggregate project as it becomes the new View_Context.
-
-      Data.Context_View := Context_View;
-      Data.Status       := Status;
-
-      View := Definition.Register (Data);
-
-      --  Load the extended project if any
-
-      if Data.Trees.Project.Has_Extended then
-         Data.Extended :=
-           Recursive_Load
-             (Self,
-              Create
-                (Name_Type (Value (Data.Trees.Project.Extended)),
-                 GPR2.Project.Paths (Filename)),
-              Context_View =>
-                (if Context_View = GPR2.Project.View.Undefined
-                 then View
-                 else Context_View),
-              Status       => Definition.Imported,
-              Root_Context => Root_Context,
-              Messages     => Messages);
-      end if;
-
-      --  Now load all imported projects. If we have parsing the root
-      --  project or an aggregate project then the context view become
-      --  this project.
-
-      for Project of Data.Trees.Imports loop
-         declare
-            Closure_Message : Log.Object;
-         begin
-            if Is_In_Closure
-              (Data.Trees.Project.Path_Name,
-               Load (Project.Path_Name),
-               Closure_Message)
-            then
-               Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "circular dependency detected",
-                     Source_Reference.Object
-                       (Data.Trees.Project.Imports.Element
-                            (Project.Path_Name))));
-
-               --  And then add closure circuitry information
-
-               for M of Closure_Message loop
-                  Messages.Append (M);
-               end loop;
-
-            elsif not Data.Trees.Project.Imports.Element
-                        (Project.Path_Name).Is_Limited
-            then
-               Data.Imports.Append
-                 (Recursive_Load
-                    (Self,
-                     Project.Path_Name,
-                     Context_View =>
-                       (if Context_View = GPR2.Project.View.Undefined
-                        then View
-                        else Context_View),
-                     Status       => Definition.Imported,
-                     Root_Context => Root_Context,
-                     Messages     => Messages));
-            end if;
-         end;
-      end loop;
-
-      --  And record back new data for this view
-
-      Definition.Set (View, Data);
-
-      return View;
+      return Internal
+        (Self, Filename, Context_View, Status, Root_Context, Messages);
    end Recursive_Load;
 
    ------------------
