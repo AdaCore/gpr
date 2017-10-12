@@ -36,8 +36,8 @@ package body GPR2.Parser.Registry is
       Ref     : Natural;
    end record;
 
-   package Project_Store is new Ada.Containers.Ordered_Maps
-     (Path_Name_Type, Data, "<");
+   package Project_Store is
+     new Ada.Containers.Ordered_Maps (Path_Name_Type, Data);
 
    protected Shared is
 
