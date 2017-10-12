@@ -22,12 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Ordered_Maps;
 
 package GPR2.Parser.Project.Set is
 
-   package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Path_Name_Type, Object);
+   package Set is new Ada.Containers.Ordered_Maps (Path_Name_Type, Object);
 
    subtype Object is Set.Map;
 
