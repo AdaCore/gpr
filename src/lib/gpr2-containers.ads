@@ -24,6 +24,7 @@
 
 --  Some common containers for Name, Value and Path_Name
 
+with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Indefinite_Ordered_Sets;
 
@@ -46,5 +47,10 @@ package GPR2.Containers is
      new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);
 
    subtype Value_Set is Value_Type_Set.Set;
+
+   package Path_Name_Type_List is
+     new Ada.Containers.Doubly_Linked_Lists (Path_Name_Type);
+
+   subtype Path_Name_List is Path_Name_Type_List.List;
 
 end GPR2.Containers;
