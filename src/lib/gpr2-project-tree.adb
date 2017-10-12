@@ -1000,7 +1000,8 @@ package body GPR2.Project.Tree is
                                      Recursive_Load
                                        (Self,
                                         Pathname, View,
-                                        Definition.Aggregated, Ctx,
+                                        Definition.Aggregated,
+                                        Ctx,
                                         Self.Messages);
                         Messages : Log.Object;
                      begin
@@ -1348,6 +1349,7 @@ package body GPR2.Project.Tree is
              (if Self.Has_Configuration_Project
               then Self.Conf.Corresponding_View
               else View.Undefined);
+
    begin
       --  First check for the view in the current tree
 
