@@ -1555,7 +1555,7 @@ package body GPR2.Parser.Project is
             else
                --  If a single name it can be either a project or a package
 
-               if GPR2.Project.Import.Set.Contains (Self.Imports, Name)
+               if Self.Imports.Contains (Name)
                  or else (Self.Extended /= No_Path_Name
                             and then
                           Optional_Name_Type
@@ -2065,9 +2065,7 @@ package body GPR2.Parser.Project is
                         Project : constant Name_Type :=
                                     Get_Name_Type (Single_Tok_Node (Type_N1));
                      begin
-                        if GPR2.Project.Import.Set.Contains
-                          (Self.Imports, Project)
-                        then
+                        if Self.Imports.Contains (Project) then
                            declare
                               Import : constant GPR2.Project.Import.Object :=
                                          Self.Imports.Element (Project);
