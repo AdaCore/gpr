@@ -38,7 +38,7 @@ package body GPR2.Project.Source.Set is
 
    function Match_Filter
      (Iter : Iterator'Class; Source : Project.Source.Object) return Boolean;
-   --  ??
+   --  Returns True if Source matches the iterator Filter (see Source_Filter)
 
    -----------
    -- Clear --
