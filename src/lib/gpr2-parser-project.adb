@@ -1629,13 +1629,8 @@ package body GPR2.Parser.Project is
       function Is_Limited_Import
         (Self : Object; Project : Name_Type) return Boolean is
       begin
-         for Import of Self.Imports loop
-            if Base_Name (Import.Path_Name) = Project then
-               return Import.Is_Limited;
-            end if;
-         end loop;
-
-         return False;
+         return Self.Imports.Contains (Project)
+           and then Self.Imports.Element (Project).Is_Limited;
       end Is_Limited_Import;
 
       ------------
