@@ -662,7 +662,7 @@ package body GPR2.Project.Tree is
                   if not Root_Context.Contains (E)
                     and then Environment_Variables.Exists (String (E))
                   then
-                     Root_Context.Include
+                     Root_Context.Insert
                        (E, Environment_Variables.Value (String (E)));
                   end if;
                end loop;
