@@ -46,8 +46,6 @@ package body GPR2.Project is
    is
       use GNAT;
 
-      DS : constant Character := OS_Lib.Directory_Separator;
-
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
@@ -57,6 +55,8 @@ package body GPR2.Project is
                Value     => +Path_Name,
                Base_Name => +Directories.Base_Name (Path_Name),
                Dir_Name  => +Directories.Containing_Directory (Path_Name)));
+
+      DS       : constant Character := OS_Lib.Directory_Separator;
 
       GPR_Name : constant String :=
                    (if Directories.Extension (String (Name)) in "gpr" | "cgpr"
