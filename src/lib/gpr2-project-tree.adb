@@ -728,8 +728,7 @@ package body GPR2.Project.Tree is
 
                      else
                         Sets.Insert
-                          (Project.Path_Name,
-                           Data.Trees.Project.Imports.Element
+                          (Data.Trees.Project.Imports.Element
                              (Project.Path_Name));
                         Paths.Append (Project.Path_Name);
 

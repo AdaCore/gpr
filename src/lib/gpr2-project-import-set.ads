@@ -22,29 +22,89 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Maps;
+with Ada.Iterator_Interfaces;
+
+private with Ada.Containers.Ordered_Maps;
+private with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Project.Import.Set is
 
-   package Set is new Ada.Containers.Ordered_Maps (Path_Name_Type, Object);
+   type Object is tagged private
+     with Constant_Indexing => Constant_Reference,
+          Default_Iterator  => Iterate,
+          Iterator_Element  => Project.Import.Object;
 
-   subtype Object is Set.Map;
+   function Is_Empty (Self : Object) return Boolean;
 
-   --  ?? both routines below are not efficient at all as we need to parse the
-   --  imported list to check for the base name. This will need to be reworked.
+   procedure Clear (Self : in out Object);
 
-   function Contains (Self : Object; Base_Name : Name_Type) return Boolean;
-   --  Returns True if the Base_Name of a project is part of the imported
-   --  projects.
+   function Length (Self : Object) return Containers.Count_Type;
 
-   function Get (Self : Object; Base_Name : Name_Type) return Import.Object
-     with Pre => Contains (Self, Base_Name);
-   --  Returns the imported project object given the base name
+   procedure Insert (Self : in out Object; Import : Project.Import.Object);
+
+   procedure Delete (Self : in out Object; Path_Name : Path_Name_Type)
+     with Pre => Self.Contains (Path_Name);
+
+   function Contains
+     (Self : Object; Path_Name : Path_Name_Type) return Boolean;
+
+   function Contains
+     (Self : Object; Base_Name : Name_Type) return Boolean;
+
+   function Element (Self : Object; Base_Name : Name_Type) return Import.Object
+     with Pre => Self.Contains (Base_Name);
+
+   function Element
+     (Self : Object; Path_Name : Path_Name_Type) return Import.Object
+     with Pre => Self.Contains (Path_Name);
+
+   type Cursor is private;
+
+   No_Element : constant Cursor;
+
+   function Element (Position : Cursor) return Project.Import.Object
+     with Post =>
+       (if Has_Element (Position)
+        then Element'Result /= Project.Import.Undefined
+        else Element'Result = Project.Import.Undefined);
+
+   function Has_Element (Position : Cursor) return Boolean;
+
+   package Import_Iterator is
+     new Ada.Iterator_Interfaces (Cursor, Has_Element);
+
+   type Constant_Reference_Type
+     (Import : not null access constant Project.Import.Object) is private
+     with Implicit_Dereference => Import;
+
+   function Constant_Reference
+     (Self     : aliased Object;
+      Position : Cursor) return Constant_Reference_Type;
+
+   function Iterate
+     (Self : Object) return Import_Iterator.Forward_Iterator'Class;
 
 private
 
-   function Contains
-     (Self : Object; Base_Name : Name_Type) return Boolean
-   is (for some C in Self.Iterate => GPR2.Base_Name (Set.Key (C)) = Base_Name);
+   package Path_Name_Set is new Ada.Containers.Ordered_Maps
+     (Path_Name_Type, Project.Import.Object);
+
+   package Base_Name_Set is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Project.Import.Object);
+
+   type Object is tagged record
+      P_S : Path_Name_Set.Map;
+      B_S : Base_Name_Set.Map;
+   end record;
+
+   type Cursor is record
+      Current : Path_Name_Set.Cursor;
+   end record;
+
+   No_Element : constant Cursor :=
+                  Cursor'(Current => Path_Name_Set.No_Element);
+
+   type Constant_Reference_Type
+     (Import : not null access constant Project.Import.Object) is null record;
 
 end GPR2.Project.Import.Set;

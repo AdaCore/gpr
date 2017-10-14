@@ -719,8 +719,7 @@ package body GPR2.Parser.Project is
                                       (Cur_Child.As_String_Literal), Paths);
                      begin
                         Project.Imports.Insert
-                          (Path,
-                           GPR2.Project.Import.Create
+                          (GPR2.Project.Import.Create
                              (Path,
                               Get_Source_Reference
                                 (Filename, Sloc_Range (Cur_Child)),
@@ -2071,8 +2070,7 @@ package body GPR2.Parser.Project is
                         then
                            declare
                               Import : constant GPR2.Project.Import.Object :=
-                                         GPR2.Project.Import.Set.Get
-                                           (Self.Imports, Project);
+                                         Self.Imports.Element (Project);
                               Prj    : constant GPR2.Parser.Project.Object :=
                                          Registry.Get (Import.Path_Name);
                            begin
