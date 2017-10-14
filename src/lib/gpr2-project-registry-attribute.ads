@@ -31,6 +31,9 @@ package GPR2.Project.Registry.Attribute is
    type Value_Kind is (Single, List);
 
    type Qualified_Name (<>) is private;
+   --  A qualified name is an attribute name possibly prefixed with a package
+   --  name. It is the only way to create a non-ambiguous reference to an
+   --  attribute.
 
    function Create
      (Name : Name_Type;
