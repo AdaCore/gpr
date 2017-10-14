@@ -94,14 +94,16 @@ package GPR2.Project.Tree is
    --  Return the target for the project tree
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type;
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     with Pre => Self /= Undefined;
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
    function View_For
      (Self : Object;
       Name : Name_Type;
-      Ctx  : Context.Object) return View.Object;
+      Ctx  : Context.Object) return View.Object
+     with Pre => Self /= Undefined;
    --  Returns the project's view in the tree which corresponds to project name
    --  and that is matching the context. The context is needed as in the tree
    --  the same project can have different views with different context (e.g.
@@ -121,7 +123,9 @@ package GPR2.Project.Tree is
 
    procedure Append_Message
      (Self    : in out Object;
-      Message : GPR2.Message.Object);
+      Message : GPR2.Message.Object)
+     with Pre  => Self /= Undefined,
+          Post => Self.Log_Messages.Count = Self.Log_Messages.Count'Old + 1;
    --  Add new message into the Log of Self
 
    --  Context
@@ -178,14 +182,15 @@ package GPR2.Project.Tree is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type;
+      Position : Cursor) return Constant_Reference_Type
+     with Pre => Self /= Undefined and then Position /= No_Element;
 
    function Iterate
      (Self   : Object;
       Kind   : Iterator_Kind := I_Default;
       Filter : Project_Filter := F_Default)
       return Project_Iterator.Forward_Iterator'Class
-     with Pre => Kind /= I_Invalid;
+     with Pre => Self /= Undefined and then Kind /= I_Invalid;
    --  Iterate over all project views in the tree given the iterator kind (only
    --  the project with or without imports) and the filter which can be used to
    --  iterate over only some specific projects (only the library projects for
