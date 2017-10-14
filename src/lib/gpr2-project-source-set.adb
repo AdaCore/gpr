@@ -55,14 +55,11 @@ package body GPR2.Project.Source.Set is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type
-   is
-      pragma Unreferenced (Self);
+      Position : Cursor) return Constant_Reference_Type is
    begin
       return Constant_Reference_Type'
         (Source => Set.Constant_Reference
-           (Position.Sources.S,
-            Position.Current).Element);
+           (Self.S, Position.Current).Element);
    end Constant_Reference;
 
    --------------
@@ -90,7 +87,7 @@ package body GPR2.Project.Source.Set is
 
    overriding function First (Iter : Iterator) return Cursor is
       Position : constant Cursor :=
-                   Cursor'(Iter.Root, Set.First (Iter.Root.S));
+                   Cursor'(Current => Set.First (Iter.Root.S));
    begin
       if not Has_Element (Position)
         or else Match_Filter (Iter, Set.Element (Position.Current))
@@ -144,8 +141,7 @@ package body GPR2.Project.Source.Set is
    function Iterate
      (Self   : Object;
       Filter : Source_Filter := S_All)
-      return Source_Iterator.Forward_Iterator'Class
-   is
+      return Source_Iterator.Forward_Iterator'Class is
    begin
       return Iterator'(Filter => Filter, Root => Self'Unrestricted_Access);
    end Iterate;
@@ -209,13 +205,12 @@ package body GPR2.Project.Source.Set is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      Next : Cursor :=
-               Cursor'(Position.Sources, Set.Next (Position.Current));
+      Next : Cursor := Cursor'(Current => Set.Next (Position.Current));
    begin
       while Has_Element (Next)
         and then not Match_Filter (Iter, Set.Element (Next.Current))
       loop
-         Next := Cursor'(Next.Sources, Set.Next (Next.Current));
+         Next := Cursor'(Current => Set.Next (Next.Current));
       end loop;
 
       return Next;

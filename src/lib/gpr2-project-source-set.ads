@@ -95,11 +95,10 @@ private
    end record;
 
    type Cursor is record
-      Sources : access constant Object;
       Current : Set.Cursor;
    end record;
 
-   No_Element : constant Cursor := (null, Set.No_Element);
+   No_Element : constant Cursor := (Current => Set.No_Element);
 
    type Constant_Reference_Type
      (Source : not null access constant Project.Source.Object) is null record;
