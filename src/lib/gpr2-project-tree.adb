@@ -642,7 +642,6 @@ package body GPR2.Project.Tree is
          View : Project.View.Object :=
                   Definition.Get (Filename, Context_View, Status, Self);
       begin
-
          if View = Project.View.Undefined then
             declare
                use type Definition.Relation_Status;
@@ -670,9 +669,7 @@ package body GPR2.Project.Tree is
 
                --  If we have the root project, record the global context
 
-               if Data.Has_Context and then Status = Definition.Root
-               --                and then Context_View = Project.View.Undefined
-               then
+               if Data.Has_Context and then Status = Definition.Root then
                   --  This is the root-view, assign the corresponding context
                   Data.Context := Root_Context;
                end if;
@@ -750,7 +747,7 @@ package body GPR2.Project.Tree is
                   end if;
                end loop;
 
-            --  And record back new data for this view
+               --  And record back new data for this view
 
                Definition.Set (View, Data);
             end;
