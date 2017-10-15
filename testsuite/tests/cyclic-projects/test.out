@@ -6,4 +6,5 @@ Messages found for agg.gpr
 agg.gpr:2:4: project cannot aggregate itself agg
 Messages found for agg2.gpr
 agg2.gpr:2:4: circular dependency detected
+agg2.gpr:2:4: aggregate d.gpr
 d.gpr:1:6: imports /cyclic-projects/agg2.gpr

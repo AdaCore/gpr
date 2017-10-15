@@ -56,14 +56,19 @@ package body GPR2.Project.Tree is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Recursive_Load
-     (Self         : Object;
-      Filename     : Path_Name_Type;
-      Context_View : View.Object;
-      Status       : Definition.Relation_Status;
-      Root_Context : out GPR2.Context.Object;
-      Messages     : out Log.Object) return View.Object;
-   --  Load a project filename recurivelly and returns the corresponding root
-   --  view.
+     (Self          : Object;
+      Filename      : Path_Name_Type;
+      Context_View  : View.Object;
+      Status        : Definition.Relation_Status;
+      Root_Context  : out GPR2.Context.Object;
+      Messages      : out Log.Object;
+      Starting_From  : View.Object := View.Undefined) return View.Object
+     with Pre =>
+       (if Starting_From /= View.Undefined
+        then Starting_From.Qualifier in K_Aggregate | K_Aggregate_Library);
+   --  Load a project filename recursively and returns the corresponding root
+   --  view. Starting_From if set is the aggregate library starting point for
+   --  the parsing. It is passed here for detecting circular dependencies.
 
    function Create_Runtime_View (Self : Object) return View.Object
      with Pre => Self /= Undefined
@@ -610,7 +615,8 @@ package body GPR2.Project.Tree is
       Context_View : View.Object;
       Status       : Definition.Relation_Status;
       Root_Context : out GPR2.Context.Object;
-      Messages     : out Log.Object) return View.Object
+      Messages     : out Log.Object;
+      Starting_From : View.Object := View.Undefined) return View.Object
 
    is
       function Load (Filename : Path_Name_Type) return Definition.Data;
@@ -710,6 +716,31 @@ package body GPR2.Project.Tree is
                           (Message.Create
                              (Message.Error,
                               "circular dependency detected",
+                              Source_Reference.Object
+                                (Data.Trees.Project.Imports.Element
+                                     (Project.Path_Name))));
+
+                        for Import of Paths loop
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "imports " & Value (Import),
+                                 Source_Reference.Object
+                                   (Sets.Element (Import))));
+                        end loop;
+
+                     elsif Starting_From /= GPR2.Project.View.Undefined
+                       and then Starting_From.Path_Name = Project.Path_Name
+                     then
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "circular dependency detected"));
+
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "imports " & Value (Project.Path_Name),
                               Source_Reference.Object
                                 (Data.Trees.Project.Imports.Element
                                      (Project.Path_Name))));
@@ -863,60 +894,6 @@ package body GPR2.Project.Tree is
       procedure Set_View (View : Project.View.Object) is
          use type GPR2.Context.Binary_Signature;
 
-         function Is_In_Closure
-           (Project_Name : Path_Name_Type;
-            Data         : Definition.Data;
-            Messages     : out Log.Object) return Boolean;
-         --  Returns True if Project_Name is in the closure of the project
-         --  whose Data definition is given. That is, the project data is
-         --  containing a reference to the Project_Name.
-
-         -------------------
-         -- Is_In_Closure --
-         -------------------
-
-         function Is_In_Closure
-           (Project_Name : Path_Name_Type;
-            Data         : Definition.Data;
-            Messages     : out Log.Object) return Boolean
-         is
-
-            function Is_In_Imports (Data : Definition.Data) return Boolean;
-            --  True if Project_Name is in imports of Data
-
-            -------------------
-            -- Is_In_Imports --
-            -------------------
-
-            function Is_In_Imports (Data : Definition.Data) return Boolean is
-            begin
-               for Import of Data.Imports loop
-                  --  Skip limited imports
-                  if not Data.Trees.Project.Imports.Element
-                    (Import.Path_Name).Is_Limited
-                  then
-                     if Is_In_Imports (Definition.Get (Import))
-                       or else Project_Name = Import.Path_Name
-                     then
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "imports " & Value (Import.Path_Name),
-                              Source_Reference.Object
-                                (Data.Trees.Project.Imports.Element
-                                     (Import.Path_Name))));
-                        return True;
-                     end if;
-                  end if;
-               end loop;
-
-               return False;
-            end Is_In_Imports;
-
-         begin
-            return Is_In_Imports (Data);
-         end Is_In_Closure;
-
          P_Data        : Definition.Data := Definition.Get (View);
          Old_Signature : constant GPR2.Context.Binary_Signature :=
                            P_Data.Signature;
@@ -967,32 +944,22 @@ package body GPR2.Project.Tree is
                   else
                      declare
                         Ctx      : GPR2.Context.Object;
+                        Messages : Log.Object;
                         A_View   : constant GPR2.Project.View.Object :=
                                      Recursive_Load
                                        (Self,
                                         Pathname, View,
                                         Definition.Aggregated,
                                         Ctx,
-                                        Self.Messages);
-                        Messages : Log.Object;
+                                        Messages,
+                                        View);
                      begin
                         --  If there was error messages during the parsing of
                         --  the aggregated project, just return now.
 
-                        if Self.Messages.Has_Element
+                        if Messages.Has_Element
                           (Information => False,
                            Warning     => False)
-                        then
-                           return;
-                        end if;
-
-                        --  Now check that the aggregated project has no cyclic
-                        --  dependencies.
-
-                        if Is_In_Closure
-                          (P_Data.Trees.Project.Path_Name,
-                           Definition.Get (A_View),
-                           Messages)
                         then
                            Self.Messages.Append
                              (Message.Create
@@ -1002,9 +969,24 @@ package body GPR2.Project.Tree is
                                    (P_Data.Attrs.Element
                                         (Registry.Attribute.Project_Files))));
 
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "aggregate " & Project,
+                                 Source_Reference.Object
+                                   (P_Data.Attrs.Element
+                                        (Registry.Attribute.Project_Files))));
+
+                           --  And copy back all messages from the recursive
+                           --  load routine above.
+
                            for M of Messages loop
-                              Self.Messages.Append (M);
+                              if M.Sloc.Has_Source_Reference then
+                                 Self.Messages.Append (M);
+                              end if;
                            end loop;
+
+                           return;
                         end if;
 
                         --  Record aggregated view into the aggregate's view
