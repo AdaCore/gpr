@@ -40,19 +40,14 @@ package GPR2.Project is
 
    Default_Iterator : constant Iterator_Kind;
 
-   type Project_Filter is mod 2 ** 8;
+   type Filter_Control is
+     (F_Invalid, F_Standard, F_Library, F_Abstract,
+      F_Aggregate, F_Aggregate_Library);
 
-   F_Invalid           : constant Project_Filter;
-   F_Standard          : constant Project_Filter;
-   F_Library           : constant Project_Filter;
-   F_Abstract          : constant Project_Filter;
-   F_Aggregate         : constant Project_Filter;
-   F_Aggregate_Library : constant Project_Filter;
+   type Project_Filter is array (Filter_Control) of Boolean with Pack;
 
-   F_Default : constant Project_Filter;
-
-   function Is_Set (Set, Kind : Project_Filter) return Boolean
-     is ((Set and Kind) = Kind);
+   Default_Filter : constant Project_Filter;
+   Library_Filter : constant Project_Filter;
 
    function Paths (Parent : Path_Name_Type) return Containers.Name_List;
    --  Returns the list of search paths for imported projects in Parent. Parent
@@ -72,15 +67,12 @@ private
                          | I_Aggregated | I_Recursive => True,
                          others                       => False);
 
-   F_Invalid           : constant Project_Filter := 2#00000000#;
-   F_Standard          : constant Project_Filter := 2#00000001#;
-   F_Library           : constant Project_Filter := 2#00000010#;
-   F_Abstract          : constant Project_Filter := 2#00000100#;
-   F_Aggregate         : constant Project_Filter := 2#00001000#;
-   F_Aggregate_Library : constant Project_Filter := 2#00010000#;
+   Default_Filter   : constant Project_Filter :=
+                        (F_Standard | F_Library | F_Abstract
+                         | F_Aggregate | F_Aggregate_Library => True,
+                         others                              => False);
 
-   F_Default : constant Project_Filter :=
-                 F_Standard or F_Library or F_Abstract
-                 or F_Aggregate or F_Aggregate_Library;
-
+   Library_Filter   : constant Project_Filter :=
+                        (F_Library | F_Aggregate_Library => True,
+                         others                          => False);
 end GPR2.Project;

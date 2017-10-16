@@ -43,11 +43,10 @@ package body GPR2.Project.Tree is
 
    use Ada;
 
-   type Iterator (Filter : Project_Filter) is
-     new Project_Iterator.Forward_Iterator with
-   record
-      Kind : Iterator_Kind;
-      Root : not null access constant Object;
+   type Iterator is new Project_Iterator.Forward_Iterator with record
+      Kind   : Iterator_Kind;
+      Filter : Project_Filter;
+      Root   : not null access constant Object;
    end record;
 
    overriding function First
@@ -256,16 +255,17 @@ package body GPR2.Project.Tree is
             Seen.Insert (View);
 
             --  Check if it corresponds to the current filter
-            if (Qualifier = K_Library
-                and then Is_Set (Iter.Filter, F_Library))
-              or else (Qualifier = K_Standard
-                       and then Is_Set (Iter.Filter, F_Standard))
-              or else (Qualifier = K_Abstract
-                       and then Is_Set (Iter.Filter, F_Abstract))
-              or else (Qualifier = K_Aggregate
-                       and then Is_Set (Iter.Filter, F_Aggregate))
-              or else (Qualifier = K_Aggregate_Library
-                       and then Is_Set (Iter.Filter, F_Aggregate_Library))
+
+            if (Qualifier = K_Library and then Iter.Filter (F_Library))
+              or else
+               (Qualifier = K_Standard and then Iter.Filter (F_Standard))
+              or else
+               (Qualifier = K_Abstract and then Iter.Filter (F_Abstract))
+              or else
+               (Qualifier = K_Aggregate and then Iter.Filter (F_Aggregate))
+              or else
+               (Qualifier = K_Aggregate_Library
+                and then Iter.Filter (F_Aggregate_Library))
             then
                Projects.Append (View);
             end if;
@@ -481,10 +481,10 @@ package body GPR2.Project.Tree is
    function Iterate
      (Self   : Object;
       Kind   : Iterator_Kind := Default_Iterator;
-      Filter : Project_Filter := F_Default)
+      Filter : Project_Filter := Default_Filter)
       return Project_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Filter, Kind, Self.Self);
+      return Iterator'(Kind, Filter, Self.Self);
    end Iterate;
 
    ----------

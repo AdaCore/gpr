@@ -188,7 +188,7 @@ package GPR2.Project.Tree is
    function Iterate
      (Self   : Object;
       Kind   : Iterator_Kind := Default_Iterator;
-      Filter : Project_Filter := F_Default)
+      Filter : Project_Filter := Default_Filter)
       return Project_Iterator.Forward_Iterator'Class
      with Pre => Self /= Undefined
           and then Kind /= Iterator_Kind'(I_Invalid => True, others => False);

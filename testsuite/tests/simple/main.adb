@@ -137,7 +137,7 @@ begin
 
    Text_IO.Put_Line ("**************** Iterator Prj3");
 
-   for C in Project.Tree.Iterate (Prj2, Filter => F_Library) loop
+   for C in Project.Tree.Iterate (Prj2, Filter => Library_Filter) loop
       Display (Project.Tree.Element (C), Full => False);
    end loop;
 
