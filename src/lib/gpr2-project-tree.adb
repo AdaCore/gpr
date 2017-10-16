@@ -43,10 +43,11 @@ package body GPR2.Project.Tree is
 
    use Ada;
 
-   type Iterator (Kind : Iterator_Kind; Filter : Project_Filter) is
+   type Iterator (Filter : Project_Filter) is
      new Project_Iterator.Forward_Iterator with
    record
-     Root : not null access constant Object;
+      Kind : Iterator_Kind;
+      Root : not null access constant Object;
    end record;
 
    overriding function First
@@ -291,7 +292,7 @@ package body GPR2.Project.Tree is
       procedure For_Imports (View : Project.View.Object) is
       begin
          for I of Definition.Get (View).Imports loop
-            if Is_Set (Iter.Kind, I_Recursive) then
+            if Iter.Kind (I_Recursive) then
                For_Project (I);
             else
                Append (I);
@@ -308,20 +309,18 @@ package body GPR2.Project.Tree is
          if not Seen.Contains (View) then
             --  Handle imports
 
-            if Is_Set (Iter.Kind, I_Imported)
-              or else Is_Set (Iter.Kind, I_Recursive)
-            then
+            if Iter.Kind (I_Imported) or else Iter.Kind (I_Recursive) then
                For_Imports (View);
             end if;
 
             --  Handle extended if any
 
-            if Is_Set (Iter.Kind, I_Extended) then
+            if Iter.Kind (I_Extended) then
                declare
                   Data : constant Definition.Data := Definition.Get (View);
                begin
                   if Data.Extended /= Project.View.Undefined then
-                     if Is_Set (Iter.Kind, I_Recursive) then
+                     if Iter.Kind (I_Recursive) then
                         For_Project (Data.Extended);
                      else
                         Append (Data.Extended);
@@ -337,7 +336,7 @@ package body GPR2.Project.Tree is
             --  Now if View is an aggregate or aggregate library project we
             --  need to run through all aggregated projects.
 
-            if Is_Set (Iter.Kind, I_Aggregated) then
+            if Iter.Kind (I_Aggregated) then
                For_Aggregated (View);
             end if;
          end if;
@@ -481,11 +480,11 @@ package body GPR2.Project.Tree is
 
    function Iterate
      (Self   : Object;
-      Kind   : Iterator_Kind := I_Default;
+      Kind   : Iterator_Kind := Default_Iterator;
       Filter : Project_Filter := F_Default)
       return Project_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Kind, Filter, Self.Self);
+      return Iterator'(Filter, Kind, Self.Self);
    end Iterate;
 
    ----------
@@ -1224,7 +1223,8 @@ package body GPR2.Project.Tree is
       --  project. So we cannot use the current aggregated project list.
 
       for View in Self.Iterate
-        (Kind => I_Project or I_Extended or I_Imported or I_Recursive)
+        (Kind => (I_Project | I_Extended | I_Imported | I_Recursive => True,
+                  others => False))
       loop
          Set_View (Element (View));
       end loop;

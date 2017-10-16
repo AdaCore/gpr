@@ -98,7 +98,7 @@ begin
    Text_IO.Put_Line ("**************** Iterator Prj2");
 
    for C in Prj2.Iterate
-     (Kind => I_Project + I_Imported + I_Recursive)
+     (Kind => (I_Project | I_Imported | I_Recursive => True, others => False))
    loop
       Display (Project.Tree.Element (C), Full => False);
    end loop;

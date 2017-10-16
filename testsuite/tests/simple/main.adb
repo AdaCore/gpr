@@ -118,7 +118,9 @@ begin
 
    Text_IO.Put_Line ("**************** Iterator Prj1");
 
-   for C in Project.Tree.Iterate (Prj1, Kind => I_Project + I_Imported) loop
+   for C in Project.Tree.Iterate
+     (Prj1, Kind => (I_Project | I_Imported => True, others => False))
+   loop
       Display (Project.Tree.Element (C), Full => False);
       if Project.Tree.Is_Root (C) then
          Text_IO.Put_Line ("   is root");

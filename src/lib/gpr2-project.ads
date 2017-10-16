@@ -33,19 +33,12 @@ package GPR2.Project is
    --  Iterators
    --
 
-   type Iterator_Kind is mod 2 ** 5;
+   type Iterator_Control is
+     (I_Invalid, I_Project, I_Extended, I_Imported, I_Aggregated, I_Recursive);
 
-   I_Invalid    : constant Iterator_Kind;
-   I_Project    : constant Iterator_Kind;
-   I_Extended   : constant Iterator_Kind;
-   I_Imported   : constant Iterator_Kind;
-   I_Aggregated : constant Iterator_Kind;
-   I_Recursive  : constant Iterator_Kind;
+   type Iterator_Kind is array (Iterator_Control) of Boolean  with Pack;
 
-   I_Default   : constant Iterator_Kind;
-
-   function Is_Set (Set, Kind : Iterator_Kind) return Boolean
-     is ((Set and Kind) = Kind);
+   Default_Iterator : constant Iterator_Kind;
 
    type Project_Filter is mod 2 ** 8;
 
@@ -74,16 +67,10 @@ package GPR2.Project is
 
 private
 
-   I_Invalid    : constant Iterator_Kind := 2#00000#;
-   I_Project    : constant Iterator_Kind := 2#00001#;
-   I_Extended   : constant Iterator_Kind := 2#00010#;
-   I_Imported   : constant Iterator_Kind := 2#00100#;
-   I_Aggregated : constant Iterator_Kind := 2#01000#;
-   I_Recursive  : constant Iterator_Kind := 2#10000#;
-
-   I_Default   : constant Iterator_Kind :=
-                   I_Project or I_Imported or I_Extended
-                     or I_Aggregated or I_Recursive;
+   Default_Iterator : constant Iterator_Kind :=
+                        (I_Project | I_Imported | I_Extended
+                         | I_Aggregated | I_Recursive => True,
+                         others                       => False);
 
    F_Invalid           : constant Project_Filter := 2#00000000#;
    F_Standard          : constant Project_Filter := 2#00000001#;
