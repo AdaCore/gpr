@@ -31,8 +31,6 @@ package GPR2.Unit.Set is
 
    subtype Object is Set.Map;
 
-   type O is new Set.Map with null record;
-
    subtype Cursor is Set.Cursor;
 
 end GPR2.Unit.Set;
