@@ -165,8 +165,7 @@ package body GPR2.Project.Definition is
                   P_Sig : constant GPR2.Context.Binary_Signature :=
                             Context.Signature (Defs.Externals);
                begin
-                  if ((Defs.Tree /= null and then Defs.Tree.all = Tree)
-                      or else Tree = Project.Tree.Undefined)
+                  if Defs.Tree.all = Tree
                     and then Defs.Signature = P_Sig
                   then
                      return V;

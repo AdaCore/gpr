@@ -75,6 +75,11 @@ package body GPR2.Project.Tree is
                  and then Self.Configuration_Project /= View.Undefined;
    --  Create the runtime view given the configuration project
 
+   procedure Set_Tree (Self : in out Object; View : Project.View.Object)
+     with Pre => Self /= Undefined and then View /= Project.View.Undefined,
+          Inline;
+   --  Set project tree Self to View
+
    --------------------
    -- Append_Message --
    --------------------
@@ -493,6 +498,8 @@ package body GPR2.Project.Tree is
       Context  : GPR2.Context.Object;
       Config   : Configuration.Object := Configuration.Undefined)
    is
+      use type Configuration.Object;
+
       function Has_Error return Boolean is
         (Self.Messages.Has_Element
            (Error       => True,
@@ -514,6 +521,12 @@ package body GPR2.Project.Tree is
          --  Set configuration project if any
 
          Self.Conf := Config;
+
+         if Self.Conf /= Configuration.Undefined then
+            --  Set Tree for this config project
+
+            Set_Tree (Self, Self.Conf.Corresponding_View);
+         end if;
 
          for View of Self loop
             declare
@@ -553,6 +566,8 @@ package body GPR2.Project.Tree is
       Filename : Path_Name_Type) is
    begin
       Self.Conf := Configuration.Create (Filename);
+
+      Set_Tree (Self, Self.Conf.Corresponding_View);
 
       if Self.Conf.Has_Messages then
          for M of Self.Conf.Log_Messages loop
@@ -1223,6 +1238,17 @@ package body GPR2.Project.Tree is
          end loop;
       end if;
    end Set_Context;
+
+   --------------
+   -- Set_Tree --
+   --------------
+
+   procedure Set_Tree (Self : in out Object; View : Project.View.Object) is
+      Defs : Definition.Data := Definition.Get (View);
+   begin
+      Defs.Tree := Self.Self;
+      Definition.Set (View, Defs);
+   end Set_Tree;
 
    ------------
    -- Target --
