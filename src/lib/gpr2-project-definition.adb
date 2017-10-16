@@ -32,15 +32,20 @@ package body GPR2.Project.Definition is
      new Ada.Containers.Indefinite_Ordered_Maps (View.Object, Data);
 
    package Project_View is new Ada.Containers.Indefinite_Ordered_Maps
-     (Path_Name_Type, View.Set.Object, "=" => View.Set.Set."=");
+     (Name_Type, View.Set.Object, "=" => View.Set.Set."=");
 
    protected Shared is
 
       function Get
-        (Pathname     : Path_Name_Type;
+        (Path_Name    : Path_Name_Type;
          Context_View : GPR2.Project.View.Object;
          Status       : Relation_Status;
          Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
+
+      function Get
+        (Name    : Name_Type;
+         Context : GPR2.Context.Object;
+         Tree    : GPR2.Project.Tree.Object) return Project.View.Object;
 
       function Get (View : Project.View.Object) return Data;
 
@@ -66,12 +71,20 @@ package body GPR2.Project.Definition is
    end Get;
 
    function Get
-     (Pathname     : Path_Name_Type;
+     (Path_Name    : Path_Name_Type;
       Context_View : GPR2.Project.View.Object;
       Status       : Relation_Status;
       Tree         : GPR2.Project.Tree.Object) return Project.View.Object is
    begin
-      return Shared.Get (Pathname, Context_View, Status, Tree);
+      return Shared.Get (Path_Name, Context_View, Status, Tree);
+   end Get;
+
+   function Get
+     (Name    : Name_Type;
+      Context : GPR2.Context.Object;
+      Tree    : GPR2.Project.Tree.Object) return Project.View.Object is
+   begin
+      return Shared.Get (Name, Context, Tree);
    end Get;
 
    --------------
@@ -110,23 +123,55 @@ package body GPR2.Project.Definition is
       end Get;
 
       function Get
-        (Pathname     : Path_Name_Type;
+        (Path_Name    : Path_Name_Type;
          Context_View : GPR2.Project.View.Object;
          Status       : Relation_Status;
          Tree         : GPR2.Project.Tree.Object) return Project.View.Object
       is
          use type GPR2.Project.Tree.Object;
+         Key : constant Name_Type := Name_Type (Value (Path_Name));
       begin
-         if Views.Contains (Pathname) then
-            for V of Views (Pathname) loop
-               if Views_Data (V).Trees.Project.Path_Name = Pathname
-                 and then Views_Data (V).Tree.all = Tree
-                 and then Views_Data (V).Context_View = Context_View
-                 and then (Views_Data (V).Status = Status
-                           or else Status /= Aggregated)
-               then
-                  return V;
-               end if;
+         if Views.Contains (Key) then
+            for V of Views (Key) loop
+               declare
+                  Defs : constant Data := Views_Data (V);
+               begin
+                  if Defs.Tree.all = Tree
+                    and then Defs.Context_View = Context_View
+                    and then (Defs.Status = Status
+                              or else Status /= Aggregated)
+                  then
+                     return V;
+                  end if;
+               end;
+            end loop;
+         end if;
+
+         return Project.View.Undefined;
+      end Get;
+
+      function Get
+        (Name    : Name_Type;
+         Context : GPR2.Context.Object;
+         Tree    : GPR2.Project.Tree.Object) return Project.View.Object
+      is
+         use type GPR2.Context.Binary_Signature;
+         use type GPR2.Project.Tree.Object;
+      begin
+         if Views.Contains (Name) then
+            for V of Views (Name) loop
+               declare
+                  Defs  : constant Data := Views_Data (V);
+                  P_Sig : constant GPR2.Context.Binary_Signature :=
+                            Context.Signature (Defs.Externals);
+               begin
+                  if ((Defs.Tree /= null and then Defs.Tree.all = Tree)
+                      or else Tree = Project.Tree.Undefined)
+                    and then Defs.Signature = P_Sig
+                  then
+                     return V;
+                  end if;
+               end;
             end loop;
          end if;
 
@@ -147,14 +192,21 @@ package body GPR2.Project.Definition is
          --  Now update the map from pathname to views
 
          declare
-            Pathname : constant Path_Name_Type :=
-                         Def.Trees.Project.Path_Name;
+            Path_Name : constant Name_Type :=
+                          Name_Type (Value (Def.Trees.Project.Path_Name));
+            Name      : constant Name_Type :=
+                          Def.Trees.Project.Name;
          begin
-            if not Views.Contains (Pathname) then
-               Views.Insert (Pathname, Project.View.Set.Set.Empty_Set);
+            if not Views.Contains (Path_Name) then
+               Views.Insert (Path_Name, Project.View.Set.Set.Empty_Set);
             end if;
 
-            Views (Pathname).Insert (Result);
+            if not Views.Contains (Name) then
+               Views.Insert (Name, Project.View.Set.Set.Empty_Set);
+            end if;
+
+            Views (Path_Name).Insert (Result);
+            Views (Name).Insert (Result);
          end;
       end Register;
 
@@ -177,7 +229,8 @@ package body GPR2.Project.Definition is
          Def.Context_View.Release;
          Def.Tree := null;
          Views_Data.Delete (View);
-         Views (View.Path_Name).Delete (View);
+         Views (Name_Type (Value (View.Path_Name))).Delete (View);
+         Views (View.Name).Delete (View);
       end Unregister;
 
    end Shared;

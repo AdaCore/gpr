@@ -1296,45 +1296,31 @@ package body GPR2.Project.Tree is
       Name : Name_Type;
       Ctx  : GPR2.Context.Object) return View.Object
    is
-      use type GPR2.Context.Binary_Signature;
-
-      CV : constant View.Object :=
-             (if Self.Has_Configuration_Project
-              then Self.Conf.Corresponding_View
-              else View.Undefined);
-
+      View : Project.View.Object := Definition.Get (Name, Ctx, Self);
    begin
-      --  First check for the view in the current tree
+      if View = Project.View.Undefined then
+         declare
+            CV : constant Project.View.Object :=
+                   (if Self.Has_Configuration_Project
+                    then Self.Conf.Corresponding_View
+                    else Project.View.Undefined);
+         begin
+            --  If not found let's check if it is the configuration or runtime
+            --  project. Note that this means that any Runtime or Config user's
+            --  project name will have precedence.
 
-      for View of Self.Self.all loop
-         if View.Name = Name then
-            declare
-               P_Data : constant Definition.Data := Definition.Get (View);
-               P_Sig  : constant GPR2.Context.Binary_Signature :=
-                          Ctx.Signature (P_Data.Externals);
-            begin
-               if View.Signature = P_Sig then
-                  return View;
-               end if;
-            end;
-         end if;
-      end loop;
+            if CV /= Project.View.Undefined and then CV.Name = Name then
+               View := CV;
 
-      --  If not found let's check if it is the configuration or runtime
-      --  project. Note that this means that any Runtime or Config user's
-      --  project name will have precedence.
-
-      if CV /= View.Undefined and then CV.Name = Name then
-         return CV;
-
-      elsif Self.Has_Runtime_Project
-        and then Self.Runtime.Name = Name
-      then
-         return Self.Runtime;
-
-      else
-         return View.Undefined;
+            elsif Self.Has_Runtime_Project
+              and then Self.Runtime.Name = Name
+            then
+               View := Self.Runtime;
+            end if;
+         end;
       end if;
+
+      return View;
    end View_For;
 
 end GPR2.Project.Tree;
