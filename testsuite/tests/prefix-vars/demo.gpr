@@ -1,0 +1,6 @@
+with "conf";
+project Demo is
+   package Compiler is
+      for Local_Configuration_Pragmas use Conf.Compiler.Var;
+   end Compiler;
+end Demo;

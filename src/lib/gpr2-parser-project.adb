@@ -892,7 +892,8 @@ package body GPR2.Parser.Project is
 
       function Get_Variable_Ref
         (Project : Name_Type;
-         Node    : Identifier) return Item_Values;
+         Node    : Identifier;
+         Pack    : Identifier := No_Identifier) return Item_Values;
       --  Return the value for a variable reference in the given project
 
       function Is_Limited_Import
@@ -1495,7 +1496,8 @@ package body GPR2.Parser.Project is
 
       function Get_Variable_Ref
         (Project : Name_Type;
-         Node    : Identifier) return Item_Values
+         Node    : Identifier;
+         Pack    : Identifier := No_Identifier) return Item_Values
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
          use type GPR2.Project.View.Object;
@@ -1507,17 +1509,43 @@ package body GPR2.Parser.Project is
          Result : Item_Values;
 
       begin
-         if View /= GPR2.Project.View.Undefined
-           and then View.Has_Variables (Name)
-         then
-            declare
-               V : constant GPR2.Project.Variable.Object :=
-                     View.Variables (Name).First_Element;
-            begin
-               Result :=
-                 (V.Values,
-                  V.Kind = GPR2.Project.Registry.Attribute.Single);
-            end;
+         if View /= GPR2.Project.View.Undefined then
+            if Present (Pack) then
+               --  reference is : Project.Pack.Var_Name
+               Check_Pack : declare
+                  P_Name : constant Name_Type := Get_Name_Type (Pack);
+               begin
+                  if View.Has_Packages (P_Name) then
+                     Check_Var : declare
+                        P : constant GPR2.Project.Pack.Object :=
+                              View.Packages.Element (P_Name);
+                     begin
+                        if P.Has_Variables (Name) then
+                           declare
+                              V : constant GPR2.Project.Variable.Object :=
+                                    P.Variables (Name).First_Element;
+                           begin
+                              Result :=
+                                (V.Values,
+                                 V.Kind =
+                                   GPR2.Project.Registry.Attribute.Single);
+                           end;
+                        end if;
+                     end Check_Var;
+                  end if;
+               end Check_Pack;
+
+            elsif View.Has_Variables (Name) then
+               --  reference is : Project.Var_Name
+               declare
+                  V : constant GPR2.Project.Variable.Object :=
+                        View.Variables (Name).First_Element;
+               begin
+                  Result :=
+                    (V.Values,
+                     V.Kind = GPR2.Project.Registry.Attribute.Single);
+               end;
+            end if;
          end if;
 
          return Result;
@@ -1539,6 +1567,7 @@ package body GPR2.Parser.Project is
 
          Name_1  : constant Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
+         Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
          Name    : constant Name_Type :=
                      Name_Type (String'(Text (F_Tok (Name_1))));
@@ -1578,10 +1607,22 @@ package body GPR2.Parser.Project is
                end if;
             end if;
 
+         elsif Present (Name_3) then
+            --  Project.Pack.Name
+            return Get_Variable_Ref (Name, Name_3, Name_2);
+
          elsif Present (Name_2) then
+            --  Project.Name
             return Get_Variable_Ref (Name, Name_2);
 
+         elsif In_Pack and then Pack_Vars.Contains (Name) then
+            --  Name (being defined into the current package)
+            return
+              (Pack_Vars (Name).Values,
+               Pack_Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);
+
          elsif Vars.Contains (Name) then
+            --  Name (being defined in current project)
             return
               (Vars (Name).Values,
                Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);

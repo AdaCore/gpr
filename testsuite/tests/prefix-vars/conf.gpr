@@ -1,0 +1,5 @@
+project Conf is
+   package Compiler is
+      Var := "toto";
+   end Compiler;
+end Conf;

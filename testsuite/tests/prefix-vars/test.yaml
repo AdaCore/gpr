@@ -1,0 +1,5 @@
+description:
+    test variable reference with project.package.name
+driver: build_and_run
+project_file: prefix_vars
+main: main

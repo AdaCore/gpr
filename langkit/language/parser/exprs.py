@@ -58,6 +58,7 @@ class BuiltinFunctionCall(GPRNode):
 class VariableReference(GPRNode):
     variable_name1 = Field()
     variable_name2 = Field()
+    variable_name3 = Field()
     attribute_ref = Field()
 
 
@@ -86,6 +87,7 @@ A.add_rules(
 
     variable_reference=Row(
         A.identifier,
+        Opt(Row(".", A.identifier)[1]),
         Opt(Row(".", A.identifier)[1]),
         Opt(Row("'", A.attribute_reference)[1])
     ) ^ VariableReference,
