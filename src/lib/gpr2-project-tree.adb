@@ -62,6 +62,7 @@ package body GPR2.Project.Tree is
       Status        : Definition.Relation_Status;
       Root_Context  : out GPR2.Context.Object;
       Messages      : out Log.Object;
+      Circularities : out Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From /= View.Undefined
@@ -507,12 +508,13 @@ package body GPR2.Project.Tree is
             Read        => False,
             Unread      => True));
 
-      Root_Context : GPR2.Context.Object := Context;
+      Root_Context  : GPR2.Context.Object := Context;
+      Circularities : Boolean;
 
    begin
       Self.Root := Recursive_Load
         (Self, Filename, View.Undefined, Definition.Root,
-         Root_Context, Self.Messages);
+         Root_Context, Self.Messages, Circularities);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -624,12 +626,13 @@ package body GPR2.Project.Tree is
    --------------------
 
    function Recursive_Load
-     (Self         : Object;
-      Filename     : Path_Name_Type;
-      Context_View : View.Object;
-      Status       : Definition.Relation_Status;
-      Root_Context : out GPR2.Context.Object;
-      Messages     : out Log.Object;
+     (Self          : Object;
+      Filename      : Path_Name_Type;
+      Context_View  : View.Object;
+      Status        : Definition.Relation_Status;
+      Root_Context  : out GPR2.Context.Object;
+      Messages      : out Log.Object;
+      Circularities : out Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
 
    is
@@ -743,14 +746,11 @@ package body GPR2.Project.Tree is
                                    (Sets.Element (Import))));
                         end loop;
 
+                        Circularities := True;
+
                      elsif Starting_From /= GPR2.Project.View.Undefined
                        and then Starting_From.Path_Name = Project.Path_Name
                      then
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "circular dependency detected"));
-
                         Messages.Append
                           (Message.Create
                              (Message.Error,
@@ -767,6 +767,8 @@ package body GPR2.Project.Tree is
                                  Source_Reference.Object
                                    (Sets.Element (Import))));
                         end loop;
+
+                        Circularities := True;
 
                      else
                         Sets.Insert
@@ -820,6 +822,7 @@ package body GPR2.Project.Tree is
          --  Record the project tree for this view
 
          Data.Tree := Self.Self;
+         Data.Kind := K_Standard;
 
          --  Do the following only if there are no error messages
 
@@ -847,6 +850,8 @@ package body GPR2.Project.Tree is
       end Load;
 
    begin
+      Circularities := False;
+
       return Internal
         (Self, Filename, Context_View, Status, Root_Context, Messages);
    end Recursive_Load;
@@ -957,16 +962,18 @@ package body GPR2.Project.Tree is
 
                   else
                      declare
-                        Ctx      : GPR2.Context.Object;
-                        Messages : Log.Object;
-                        A_View   : constant GPR2.Project.View.Object :=
-                                     Recursive_Load
-                                       (Self,
-                                        Pathname, View,
-                                        Definition.Aggregated,
-                                        Ctx,
-                                        Messages,
-                                        View);
+                        Ctx           : GPR2.Context.Object;
+                        Messages      : Log.Object;
+                        Circularities : Boolean;
+                        A_View        : constant GPR2.Project.View.Object :=
+                                          Recursive_Load
+                                            (Self,
+                                             Pathname, View,
+                                             Definition.Aggregated,
+                                             Ctx,
+                                             Messages,
+                                             Circularities,
+                                             View);
                      begin
                         --  If there was error messages during the parsing of
                         --  the aggregated project, just return now.
@@ -974,14 +981,17 @@ package body GPR2.Project.Tree is
                         if Messages.Has_Element
                           (Information => False,
                            Warning     => False)
+                          or else Circularities
                         then
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "circular dependency detected",
-                                 Source_Reference.Object
-                                   (P_Data.Attrs.Element
-                                        (Registry.Attribute.Project_Files))));
+                           if Circularities then
+                              Self.Messages.Append
+                                (Message.Create
+                                   (Message.Error,
+                                    "circular dependency detected",
+                                    Source_Reference.Object
+                                      (P_Data.Attrs.Element
+                                         (Registry.Attribute.Project_Files))));
+                           end if;
 
                            Self.Messages.Append
                              (Message.Create
