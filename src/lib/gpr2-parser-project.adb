@@ -718,12 +718,23 @@ package body GPR2.Parser.Project is
                                    (Get_Name_Type
                                       (Cur_Child.As_String_Literal), Paths);
                      begin
-                        Project.Imports.Insert
-                          (GPR2.Project.Import.Create
-                             (Path,
-                              Get_Source_Reference
-                                (Filename, Sloc_Range (Cur_Child)),
-                              F_Is_Limited (N)));
+                        if Project.Imports.Contains (Path) then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Warning,
+                                 Message => "duplicate with clause '"
+                                            & String (Base_Name (Path)) & ''',
+                                 Sloc    => Get_Source_Reference
+                                   (Filename,
+                                    Sloc_Range (Cur_Child))));
+                        else
+                           Project.Imports.Insert
+                             (GPR2.Project.Import.Create
+                                (Path,
+                                 Get_Source_Reference
+                                   (Filename, Sloc_Range (Cur_Child)),
+                                 F_Is_Limited (N)));
+                        end if;
                      end;
                   end if;
                end loop;
