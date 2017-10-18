@@ -28,6 +28,7 @@ with GPR2.Containers;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
+with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference;
 
 package GPR2.Project.Pack is
@@ -44,6 +45,7 @@ package GPR2.Project.Pack is
    function Create
      (Name       : Name_Type;
       Attributes : Attribute.Set.Object;
+      Variables  : Project.Variable.Set.Object;
       Sloc       : Source_Reference.Object) return Object;
    --  Create a package object with the given Name and the list of attributes.
    --  Note that the list of attribute can be empty as a package can contain no
@@ -80,6 +82,21 @@ package GPR2.Project.Pack is
        and then Self.Has_Attributes (Name, Index)
        and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
+
+   function Has_Variables
+     (Self : Object;
+      Name : Optional_Name_Type := "") return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns true if the package has some variables defined. If Name is set
+   --  it returns True if a variable with the given Name is defined.
+
+   function Variables
+     (Self : Object;
+      Name : Optional_Name_Type := "") return Variable.Set.Object
+     with Pre => Self /= Undefined;
+   --  Returns all variables defined for the package. Possibly an empty list
+   --  if it does not contain variables or if Name does not match
+   --  any variable.
 
    --  To ease the use of some attributes (some have synonyms for example)
    --  below are direct access to them.
@@ -161,10 +178,11 @@ private
    type Object is new Source_Reference.Object with record
       Name  : Unbounded_String;
       Attrs : Project.Attribute.Set.Object;
+      Vars  : Project.Variable.Set.Object;
    end record;
 
    Undefined : constant Object :=
                  Object'(Source_Reference.Object
-                         with Null_Unbounded_String, Attrs => <>);
+                         with Null_Unbounded_String, Attrs => <>, Vars => <>);
 
 end GPR2.Project.Pack;

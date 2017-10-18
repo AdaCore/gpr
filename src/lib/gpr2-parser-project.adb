@@ -952,6 +952,7 @@ package body GPR2.Parser.Project is
       Att_Name             : Unbounded_String;
       Idx_Name             : Unbounded_String;
       Pack_Attrs           : GPR2.Project.Attribute.Set.Object;
+      Pack_Vars            : GPR2.Project.Variable.Set.Object;
       Att_Defined          : Boolean := True;
       Is_Project_Reference : Boolean := False;
       --  Is_Project_Reference is True when using: Project'<attribute>
@@ -1895,8 +1896,10 @@ package body GPR2.Parser.Project is
 
             if Packs.Contains (P_Name) then
                Pack_Attrs := Packs.Element (P_Name).Attributes;
+               Pack_Vars := Packs.Element (P_Name).Variables;
             else
                Pack_Attrs.Clear;
+               Pack_Vars.Clear;
             end if;
 
             --  Entering a package, set the state and parse the corresponding
@@ -1914,7 +1917,7 @@ package body GPR2.Parser.Project is
 
             Packs.Include
               (Name_Type (P_Name),
-               GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Sloc));
+               GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Pack_Vars, Sloc));
 
             --  Skip all nodes for this construct
 
@@ -1945,6 +1948,7 @@ package body GPR2.Parser.Project is
             --  process of Parse_Package_Decl routine above.
 
             Pack_Attrs.Clear;
+            Pack_Vars.Clear;
 
             --  Check if the Project.Package reference exists
 
@@ -1969,6 +1973,7 @@ package body GPR2.Parser.Project is
                --  Then just copy the attributes into the current package
 
                Pack_Attrs := View.Packages.Element (P_Name).Attributes;
+               Pack_Vars := View.Packages.Element (P_Name).Variables;
             end if;
 
             Status := Over;
@@ -1998,6 +2003,7 @@ package body GPR2.Parser.Project is
             --  process of Parse_Package_Decl routine above.
 
             Pack_Attrs.Clear;
+            Pack_Vars.Clear;
 
             --  Check if the Project.Package reference exists
 
@@ -2022,6 +2028,7 @@ package body GPR2.Parser.Project is
                --  Then just copy the attributes into the current package
 
                Pack_Attrs := View.Packages.Element (P_Name).Attributes;
+               Pack_Vars := View.Packages.Element (P_Name).Variables;
             end if;
 
             Status := Over;
@@ -2153,7 +2160,11 @@ package body GPR2.Parser.Project is
                   Sloc   => Sloc);
             end if;
 
-            Vars.Include (V.Name, V);
+            if In_Pack then
+               Pack_Vars.Include (V.Name, V);
+            else
+               Vars.Include (V.Name, V);
+            end if;
          end Parse_Variable_Decl;
 
          -----------------

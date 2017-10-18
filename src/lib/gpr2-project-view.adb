@@ -358,6 +358,7 @@ package body GPR2.Project.View is
             return Project.Pack.Create
               (Name       => Registry.Pack.Naming,
                Attributes => Result,
+               Variables  => Project.Variable.Set.Set.Empty_Map,
                Sloc       => Source_Reference.Object (Naming));
          end;
 
@@ -1406,7 +1407,10 @@ begin
       Attrs.Insert (C_Body);
       Attrs.Insert (Dot_Repl);
       Builtin_Naming_Package :=
-        Pack.Create (Registry.Pack.Naming, Attrs, Undef_Sloc);
+        Pack.Create
+          (Registry.Pack.Naming,
+           Attrs, Project.Variable.Set.Set.Empty_Map,
+           Undef_Sloc);
 
       --  Default languages attribute
 

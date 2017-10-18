@@ -79,10 +79,11 @@ package body GPR2.Project.Pack is
    function Create
      (Name       : Name_Type;
       Attributes : Project.Attribute.Set.Object;
+      Variables  : Project.Variable.Set.Object;
       Sloc       : Source_Reference.Object) return Object is
    begin
       return Object'
-        (Sloc with To_Unbounded_String (String (Name)), Attributes);
+        (Sloc with To_Unbounded_String (String (Name)), Attributes, Variables);
    end Create;
 
    --------------------
@@ -100,6 +101,21 @@ package body GPR2.Project.Pack is
          return Self.Attrs.Contains (Name, Index);
       end if;
    end Has_Attributes;
+
+   -------------------
+   -- Has_Variables --
+   -------------------
+
+   function Has_Variables
+     (Self : Object;
+      Name : Optional_Name_Type := "") return Boolean is
+   begin
+      if Name = No_Name then
+         return not Self.Vars.Is_Empty;
+      else
+         return Self.Vars.Contains (Name);
+      end if;
+   end Has_Variables;
 
    --------------------
    -- Implementation --
@@ -191,5 +207,23 @@ package body GPR2.Project.Pack is
          return Project.Attribute.Undefined;
       end if;
    end Specification;
+
+   ---------------
+   -- Variables --
+   ---------------
+
+   function Variables
+     (Self : Object;
+      Name : Optional_Name_Type := "") return Project.Variable.Set.Object is
+   begin
+      if Name = No_Name then
+         return Self.Vars;
+
+      else
+         return Result : Project.Variable.Set.Object do
+            Result.Insert (Name_Type (Name), Self.Vars (Name_Type (Name)));
+         end return;
+      end if;
+   end Variables;
 
 end GPR2.Project.Pack;
