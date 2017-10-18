@@ -808,6 +808,15 @@ package body GPR2.Project.Tree is
       ----------
 
       function Load (Filename : Path_Name_Type) return Definition.Data is
+
+         function Has_Error return Boolean is
+           (Self.Messages.Has_Element
+              (Error       => True,
+               Information => False,
+               Warning     => False,
+               Read        => False,
+               Unread      => True));
+
          Paths   : constant Containers.Name_List :=
                      GPR2.Project.Paths (Filename);
          Project : constant Parser.Project.Object :=
@@ -826,7 +835,7 @@ package body GPR2.Project.Tree is
 
          --  Do the following only if there are no error messages
 
-         if Messages.Is_Empty then
+         if not Has_Error then
             Data.Kind := Project.Qualifier;
             Data.Externals := Data.Trees.Project.Externals;
 
