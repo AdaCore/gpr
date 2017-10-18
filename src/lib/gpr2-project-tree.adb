@@ -809,6 +809,8 @@ package body GPR2.Project.Tree is
 
       function Load (Filename : Path_Name_Type) return Definition.Data is
 
+         use type Parser.Project.Object;
+
          function Has_Error return Boolean is
            (Self.Messages.Has_Element
               (Error       => True,
@@ -822,9 +824,11 @@ package body GPR2.Project.Tree is
          Project : constant Parser.Project.Object :=
                      Parser.Project.Load (Filename, Messages);
          Data    : Definition.Data
-                     (Has_Context =>
-                        (Context_View = GPR2.Project.View.Undefined)
-                      or else Project.Qualifier = K_Aggregate);
+                       (Has_Context =>
+                          Project /= Parser.Project.Undefined
+                            and then
+                          (Context_View = GPR2.Project.View.Undefined
+                           or else Project.Qualifier = K_Aggregate));
       begin
          Data.Trees.Project := Project;
 
