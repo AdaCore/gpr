@@ -234,7 +234,7 @@ package body GPR2.Parser.Project is
 
          function Parser (Node : GPR_Node'Class) return Visit_Status is
 
-            Status : constant Visit_Status := Into;
+            Status : Visit_Status := Into;
 
             procedure Parse_Project_Declaration (N : Project_Declaration);
             --  Parse a project declaration and set the qualifier if present
@@ -736,12 +736,15 @@ package body GPR2.Parser.Project is
 
                when GPR_Builtin_Function_Call =>
                   Parse_Builtin (Node.As_Builtin_Function_Call);
+                  Status := Over;
 
                when GPR_With_Decl =>
                   Parse_With_Decl (Node.As_With_Decl);
+                  Status := Over;
 
                when GPR_Typed_String_Decl =>
                   Parse_Typed_String_Decl (Node.As_Typed_String_Decl);
+                  Status := Over;
 
                when others =>
                   null;
