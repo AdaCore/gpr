@@ -62,7 +62,7 @@ package body GPR2.Project.Tree is
       Status        : Definition.Relation_Status;
       Root_Context  : out GPR2.Context.Object;
       Messages      : out Log.Object;
-      Starting_From  : View.Object := View.Undefined) return View.Object
+      Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From /= View.Undefined
         then Starting_From.Qualifier in K_Aggregate | K_Aggregate_Library);
@@ -989,7 +989,7 @@ package body GPR2.Project.Tree is
                                  "aggregate " & Project,
                                  Source_Reference.Object
                                    (P_Data.Attrs.Element
-                                        (Registry.Attribute.Project_Files))));
+                                      (Registry.Attribute.Project_Files))));
 
                            --  And copy back all messages from the recursive
                            --  load routine above.
