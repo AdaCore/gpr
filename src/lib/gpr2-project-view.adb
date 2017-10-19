@@ -1334,24 +1334,23 @@ package body GPR2.Project.View is
       end if;
    end Update_Sources;
 
+   --------------
+   -- Variable --
+   --------------
+
+   function Variable
+     (Self : Object; Name : Name_Type) return Project.Variable.Object is
+   begin
+      return Definition.Get (Self).Vars (Name);
+   end Variable;
+
    ---------------
    -- Variables --
    ---------------
 
-   function Variables
-     (Self : Object;
-      Name : Optional_Name_Type := "") return Variable.Set.Object is
+   function Variables (Self : Object) return Project.Variable.Set.Object is
    begin
-      if Name = No_Name then
-         return Definition.Get (Self).Vars;
-
-      else
-         return Result : Variable.Set.Object do
-            Result.Insert
-              (Name_Type (Name),
-               Definition.Get (Self).Vars (Name_Type (Name)));
-         end return;
-      end if;
+      return Definition.Get (Self).Vars;
    end Variables;
 
 begin

@@ -1537,7 +1537,7 @@ package body GPR2.Parser.Project is
                         if P.Has_Variables (Name) then
                            declare
                               V : constant GPR2.Project.Variable.Object :=
-                                    P.Variables (Name).First_Element;
+                                    P.Variable (Name);
                            begin
                               Result :=
                                 (V.Values,
@@ -1553,7 +1553,7 @@ package body GPR2.Parser.Project is
                --  reference is : Project.Var_Name
                declare
                   V : constant GPR2.Project.Variable.Object :=
-                        View.Variables (Name).First_Element;
+                        View.Variable (Name);
                begin
                   Result :=
                     (V.Values,
@@ -1654,7 +1654,7 @@ package body GPR2.Parser.Project is
                      if View.Has_Variables (Name) then
                         declare
                            V : constant GPR2.Project.Variable.Object :=
-                                 View.Variables (Name).First_Element;
+                                 View.Variable (Name);
                         begin
                            Result :=
                              (Values => V.Values,

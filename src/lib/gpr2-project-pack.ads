@@ -35,6 +35,7 @@ package GPR2.Project.Pack is
 
    use type Containers.Count_Type;
    use type Project.Attribute.Object;
+   use type Project.Variable.Object;
 
    type Object is new Source_Reference.Object with private;
 
@@ -90,13 +91,17 @@ package GPR2.Project.Pack is
    --  Returns true if the package has some variables defined. If Name is set
    --  it returns True if a variable with the given Name is defined.
 
-   function Variables
+   function Variables (Self : Object) return Variable.Set.Object
+     with Pre  => Self /= Undefined,
+          Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
+   --  Returns all defined variables
+
+   function Variable
      (Self : Object;
-      Name : Optional_Name_Type := "") return Variable.Set.Object
-     with Pre => Self /= Undefined;
-   --  Returns all variables defined for the package. Possibly an empty list
-   --  if it does not contain variables or if Name does not match
-   --  any variable.
+      Name : Name_Type) return Variable.Object
+     with Pre  => Self /= Undefined and then Self.Has_Variables (Name),
+          Post => Variable'Result /= Project.Variable.Undefined;
+   --  Returns variable named Name
 
    --  To ease the use of some attributes (some have synonyms for example)
    --  below are direct access to them.

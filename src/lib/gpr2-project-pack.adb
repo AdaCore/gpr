@@ -208,22 +208,23 @@ package body GPR2.Project.Pack is
       end if;
    end Specification;
 
+   --------------
+   -- Variable --
+   --------------
+
+   function Variable
+     (Self : Object; Name : Name_Type) return Project.Variable.Object is
+   begin
+      return Self.Vars (Name);
+   end Variable;
+
    ---------------
    -- Variables --
    ---------------
 
-   function Variables
-     (Self : Object;
-      Name : Optional_Name_Type := "") return Project.Variable.Set.Object is
+   function Variables (Self : Object) return Project.Variable.Set.Object is
    begin
-      if Name = No_Name then
-         return Self.Vars;
-
-      else
-         return Result : Project.Variable.Set.Object do
-            Result.Insert (Name_Type (Name), Self.Vars (Name_Type (Name)));
-         end return;
-      end if;
+      return Self.Vars;
    end Variables;
 
 end GPR2.Project.Pack;

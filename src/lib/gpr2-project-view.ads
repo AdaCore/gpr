@@ -42,6 +42,7 @@ package GPR2.Project.View is
    use type Containers.Count_Type;
    use type Context.Object;
    use type Attribute.Object;
+   use type Variable.Object;
 
    type Object is tagged private;
 
@@ -133,12 +134,15 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some variables defined
 
-   function Variables
-     (Self : Object;
-      Name : Optional_Name_Type := "") return Variable.Set.Object
-     with Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
+   function Variables (Self : Object) return Variable.Set.Object
+     with Pre  => Self /= Undefined,
+          Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
    --  Get the list of variables, possibly an empty list if it does not
    --  contain variables.
+
+   function Variable (Self : Object; Name : Name_Type) return Variable.Object
+     with Pre  => Self /= Undefined and then Self.Has_Variables (Name),
+          Post => Variable'Result /= Project.Variable.Undefined;
 
    --  Packages
 
