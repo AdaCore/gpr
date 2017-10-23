@@ -80,6 +80,7 @@ package GPR2 is
 
    subtype Name_Type is Optional_Name_Type
      with Dynamic_Predicate => Name_Type'Length > 0;
+   --  A non case sensitive name
 
    subtype Value_Type is String;
 
@@ -99,7 +100,7 @@ package GPR2 is
 
    type Case_Sensitive_Name_Type is new String
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
-   --  A non case sensitive name
+   --  A case sensitive name
 
    --
    --  Path name
