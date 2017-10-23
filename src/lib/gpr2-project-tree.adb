@@ -981,7 +981,8 @@ package body GPR2.Project.Tree is
                         A_View        : constant GPR2.Project.View.Object :=
                                           Recursive_Load
                                             (Self,
-                                             Pathname, View,
+                                             Pathname,
+                                             View,
                                              Definition.Aggregated,
                                              Ctx,
                                              Messages,
@@ -1031,6 +1032,7 @@ package body GPR2.Project.Tree is
                         P_Data.Aggregated.Append (A_View);
 
                         --  And set the aggregated view recursivelly
+
                         Set_View (A_View);
                      end;
                   end if;

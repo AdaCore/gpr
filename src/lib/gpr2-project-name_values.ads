@@ -69,8 +69,7 @@ package GPR2.Project.Name_Values is
 
    function Count_Values (Self : Object) return Containers.Count_Type
      with Pre  => Self /= Undefined,
-          Post =>
-            (if Self.Kind = Single then Count_Values'Result = 1);
+          Post => (if Self.Kind = Single then Count_Values'Result = 1);
    --  Returns the number of values for the Name/Values pair object
 
    function Values (Self : Object) return Containers.Value_List
