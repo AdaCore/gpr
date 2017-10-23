@@ -43,9 +43,9 @@ package body GPR2.Project.Definition is
          Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
 
       function Get
-        (Name    : Name_Type;
-         Context : GPR2.Context.Object;
-         Tree    : GPR2.Project.Tree.Object) return Project.View.Object;
+        (Name         : Name_Type;
+         Context_View : Project.View.Object;
+         Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
 
       function Get (View : Project.View.Object) return Data;
 
@@ -80,11 +80,11 @@ package body GPR2.Project.Definition is
    end Get;
 
    function Get
-     (Name    : Name_Type;
-      Context : GPR2.Context.Object;
-      Tree    : GPR2.Project.Tree.Object) return Project.View.Object is
+     (Name         : Name_Type;
+      Context_View : Project.View.Object;
+      Tree         : GPR2.Project.Tree.Object) return Project.View.Object is
    begin
-      return Shared.Get (Name, Context, Tree);
+      return Shared.Get (Name, Context_View, Tree);
    end Get;
 
    --------------
@@ -151,22 +151,19 @@ package body GPR2.Project.Definition is
       end Get;
 
       function Get
-        (Name    : Name_Type;
-         Context : GPR2.Context.Object;
-         Tree    : GPR2.Project.Tree.Object) return Project.View.Object
+        (Name         : Name_Type;
+         Context_View : Project.View.Object;
+         Tree         : GPR2.Project.Tree.Object) return Project.View.Object
       is
-         use type GPR2.Context.Binary_Signature;
          use type GPR2.Project.Tree.Object;
       begin
          if Views.Contains (Name) then
             for V of Views (Name) loop
                declare
-                  Defs  : constant Data := Views_Data (V);
-                  P_Sig : constant GPR2.Context.Binary_Signature :=
-                            Context.Signature (Defs.Externals);
+                  Defs : constant Data := Views_Data (V);
                begin
                   if Defs.Tree.all = Tree
-                    and then Defs.Signature = P_Sig
+                    and then Defs.Context_View = Context_View
                   then
                      return V;
                   end if;

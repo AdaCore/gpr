@@ -1,0 +1,20 @@
+[Conf]   K_STANDARD
+V:   K -> one
+
+[B]      K_STANDARD
+V:   Var -> var is one
+
+[Agg]    K_AGGREGATE
+A:   External -> two
+A:   Project_Files -> a.gpr
+V:   Var -> var is one
+
+[Conf]   K_STANDARD
+V:   K -> two
+
+[B]      K_STANDARD
+V:   Var -> var is two
+
+[A]      K_STANDARD
+V:   Var -> var is two
+

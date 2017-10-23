@@ -29,6 +29,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.Import.Set;
+with GPR2.Project.View;
 
 limited with GPR2.Project.Tree;
 
@@ -54,12 +55,13 @@ package GPR2.Parser.Project is
    --  Unload the object and release all associated memory
 
    procedure Parse
-     (Self    : in out Object;
-      Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object)
+     (Self         : in out Object;
+      Tree         : GPR2.Project.Tree.Object;
+      Context      : GPR2.Context.Object;
+      Context_View : GPR2.Project.View.Object;
+      Attrs        : in out GPR2.Project.Attribute.Set.Object;
+      Vars         : in out GPR2.Project.Variable.Set.Object;
+      Packs        : in out GPR2.Project.Pack.Set.Object)
      with Pre => Self /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback

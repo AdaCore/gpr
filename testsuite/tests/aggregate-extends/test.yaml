@@ -1,0 +1,5 @@
+description:
+    check aggregate library context
+driver: build_and_run
+project_file: aggext
+main: main

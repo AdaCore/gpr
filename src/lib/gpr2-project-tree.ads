@@ -100,9 +100,9 @@ package GPR2.Project.Tree is
    --  if no specific runtime has been configured for this project tree.
 
    function View_For
-     (Self : Object;
-      Name : Name_Type;
-      Ctx  : Context.Object) return View.Object
+     (Self         : Object;
+      Name         : Name_Type;
+      Context_View : View.Object) return View.Object
      with Pre => Self /= Undefined;
    --  Returns the project's view in the tree which corresponds to project name
    --  and that is matching the context. The context is needed as in the tree
@@ -150,7 +150,9 @@ package GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
      with Pre  => Self /= Undefined,
-          Post => Self.Context = Context;
+          Post => Self.Context = Context
+                  or else Self.Root_Project.Qualifier
+                            in K_Aggregate | K_Aggregate_Library;
    --  Set the context for the project tree. The callback Changed is called for
    --  any project view which is impacted by this change of context. That is,
    --  if the project view does reference directly or indirectly an external

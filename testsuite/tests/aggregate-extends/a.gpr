@@ -1,0 +1,6 @@
+
+with "b.gpr";
+
+project A is
+   Var := B.Var;
+end A;

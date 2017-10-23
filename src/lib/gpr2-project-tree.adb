@@ -228,13 +228,15 @@ package body GPR2.Project.Tree is
       --  Keep track of already seen projects. Better than using the P vector
       --  which is not efficient when checking if an element exists.
 
+      P_Set    : GPR2.Project.View.Set.Object;
       Projects : Definition.Project_View_Store.Vector;
       --  Set of projects for the iterator which is returned in the Cursor and
-      --  fill by the recursive procedure For_Project and For_Imports.
+      --  fill by the recursive procedure For_Project and For_Imports. P_Set is
+      --  used to have a fast check on views already in Projects.
 
       procedure Append (View : Project.View.Object)
-        with Post => Seen.Contains (View);
-      --  Append into P if not already seen
+        with Post => P_Set.Contains (View);
+      --  Append into P if not already seen and View matches the filter
 
       procedure For_Project (View : Project.View.Object);
       --  Handle project node
@@ -250,26 +252,28 @@ package body GPR2.Project.Tree is
       ------------
 
       procedure Append (View : Project.View.Object) is
-         Qualifier : constant Project_Kind := View.Kind;
       begin
-         if not Seen.Contains (View) then
-            Seen.Insert (View);
+         if not P_Set.Contains (View) then
+            declare
+               Qualifier : constant Project_Kind := View.Kind;
+            begin
+               --  Check if it corresponds to the current filter
+               if (Qualifier = K_Library and then Iter.Filter (F_Library))
+                 or else
+                   (Qualifier = K_Standard and then Iter.Filter (F_Standard))
+                 or else
+                   (Qualifier = K_Abstract and then Iter.Filter (F_Abstract))
+                 or else
+                   (Qualifier = K_Aggregate and then Iter.Filter (F_Aggregate))
+                 or else
+                   (Qualifier = K_Aggregate_Library
+                    and then Iter.Filter (F_Aggregate_Library))
+               then
+                  Projects.Append (View);
+               end if;
+            end;
 
-            --  Check if it corresponds to the current filter
-
-            if (Qualifier = K_Library and then Iter.Filter (F_Library))
-              or else
-               (Qualifier = K_Standard and then Iter.Filter (F_Standard))
-              or else
-               (Qualifier = K_Abstract and then Iter.Filter (F_Abstract))
-              or else
-               (Qualifier = K_Aggregate and then Iter.Filter (F_Aggregate))
-              or else
-               (Qualifier = K_Aggregate_Library
-                and then Iter.Filter (F_Aggregate_Library))
-            then
-               Projects.Append (View);
-            end if;
+            P_Set.Insert (View);
          end if;
       end Append;
 
@@ -281,7 +285,11 @@ package body GPR2.Project.Tree is
       begin
          if View.Kind in K_Aggregate | K_Aggregate_Library then
             for A of Definition.Get (View).Aggregated loop
-               Append (A);
+               if Iter.Kind (I_Recursive) then
+                  For_Project (A);
+               else
+                  Append (A);
+               end if;
             end loop;
          end if;
       end For_Aggregated;
@@ -308,6 +316,8 @@ package body GPR2.Project.Tree is
       procedure For_Project (View : Project.View.Object) is
       begin
          if not Seen.Contains (View) then
+            Seen.Insert (View);
+
             --  Handle imports
 
             if Iter.Kind (I_Imported) or else Iter.Kind (I_Recursive) then
@@ -668,6 +678,26 @@ package body GPR2.Project.Tree is
          if View = Project.View.Undefined then
             declare
                use type Definition.Relation_Status;
+
+               procedure Add_Paths_Messages;
+               --  Add into Messages the path of the detected circularity
+
+               ------------------------
+               -- Add_Paths_Messages --
+               ------------------------
+
+               procedure Add_Paths_Messages is
+               begin
+                  for Import of Paths loop
+                     Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "imports " & Value (Import),
+                           Source_Reference.Object
+                             (Sets.Element (Import))));
+                  end loop;
+               end Add_Paths_Messages;
+
                Data : Definition.Data := Load (Filename);
             begin
                --  If there are parsing errors, do not go further
@@ -714,7 +744,7 @@ package body GPR2.Project.Tree is
                        Create
                          (Name_Type (Value (Data.Trees.Project.Extended)),
                           GPR2.Project.Paths (Filename)),
-                       Context_View => View,
+                       Context_View => Context_View,
                        Status       => Definition.Imported,
                        Root_Context => Root_Context,
                        Messages     => Messages);
@@ -728,7 +758,34 @@ package body GPR2.Project.Tree is
                   if not Data.Trees.Project.Imports.Element
                     (Project.Path_Name).Is_Limited
                   then
-                     if Sets.Contains (Project.Path_Name) then
+                     if Recursive_Load.Filename = Project.Path_Name then
+                        --  We are importing the root-project
+
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "circular dependency detected",
+                              Source_Reference.Object
+                                (Sets.Element (Paths.First_Element))));
+
+                        Add_Paths_Messages;
+
+                        --  Then finally add current project which is the root
+                        --  of the circularity.
+
+                        Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "imports " & Value (Project.Path_Name),
+                              Source_Reference.Object
+                                (Data.Trees.Project.Imports.Element
+                                   (Project.Path_Name))));
+
+                        Circularities := True;
+
+                     elsif Sets.Contains (Project.Path_Name) then
+                        --  We are importing a project already imported
+
                         Messages.Append
                           (Message.Create
                              (Message.Error,
@@ -737,20 +794,16 @@ package body GPR2.Project.Tree is
                                 (Data.Trees.Project.Imports.Element
                                      (Project.Path_Name))));
 
-                        for Import of Paths loop
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "imports " & Value (Import),
-                                 Source_Reference.Object
-                                   (Sets.Element (Import))));
-                        end loop;
+                        Add_Paths_Messages;
 
                         Circularities := True;
 
                      elsif Starting_From /= GPR2.Project.View.Undefined
                        and then Starting_From.Path_Name = Project.Path_Name
                      then
+                        --  We are importing Starting_From which is an
+                        --  aggregate project taken as root project.
+
                         Messages.Append
                           (Message.Create
                              (Message.Error,
@@ -759,14 +812,7 @@ package body GPR2.Project.Tree is
                                 (Data.Trees.Project.Imports.Element
                                      (Project.Path_Name))));
 
-                        for Import of Paths loop
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "imports " & Value (Import),
-                                 Source_Reference.Object
-                                   (Sets.Element (Import))));
-                        end loop;
+                        Add_Paths_Messages;
 
                         Circularities := True;
 
@@ -780,16 +826,13 @@ package body GPR2.Project.Tree is
                           (Internal
                              (Self,
                               Project.Path_Name,
-                              Context_View =>
-                                (if Status = Definition.Root
-                                 then View
-                                 else Context_View),
+                              Context_View => Context_View,
                               Status       => Definition.Imported,
                               Root_Context => Root_Context,
                               Messages     => Messages));
 
-                        Sets.Delete (Project.Path_Name);
                         Paths.Delete_Last;
+                        Sets.Delete (Project.Path_Name);
                      end if;
                   end if;
                end loop;
@@ -939,6 +982,7 @@ package body GPR2.Project.Tree is
            (P_Data.Trees.Project,
             Self,
             Context,
+            P_Data.Context_View,
             P_Data.Attrs,
             P_Data.Vars,
             P_Data.Packs);
@@ -1059,34 +1103,38 @@ package body GPR2.Project.Tree is
             end loop;
          end if;
 
-         P_Data.Signature := New_Signature;
+         if Self.Messages.Is_Empty then
+            P_Data.Signature := New_Signature;
 
-         --  Let's compute the project kind if needed. A project without
-         --  an explicit qualifier may actually be a library project if
-         --  Library_Name, Library_Kind is declared.
+            --  Let's compute the project kind if needed. A project without
+            --  an explicit qualifier may actually be a library project if
+            --  Library_Name, Library_Kind is declared.
 
-         P_Data.Kind := P_Data.Trees.Project.Qualifier;
+            P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
-         if P_Data.Kind = K_Standard then
-            if P_Data.Attrs.Contains (Registry.Attribute.Library_Kind)
-              or else P_Data.Attrs.Contains (Registry.Attribute.Library_Name)
-              or else P_Data.Attrs.Contains (Registry.Attribute.Library_Dir)
-            then
-               P_Data.Kind := K_Library;
+            if P_Data.Kind = K_Standard then
+               if P_Data.Attrs.Contains (Registry.Attribute.Library_Kind)
+                 or else
+                   P_Data.Attrs.Contains (Registry.Attribute.Library_Name)
+                 or else
+                   P_Data.Attrs.Contains (Registry.Attribute.Library_Dir)
+               then
+                  P_Data.Kind := K_Library;
+               end if;
             end if;
-         end if;
 
-         Definition.Set (View, P_Data);
+            Definition.Set (View, P_Data);
 
-         --  Signal project change only if we have different and non default
-         --  signature. That is if there is at least some external used
-         --  otherwise the project is stable and won't change.
+            --  Signal project change only if we have different and non default
+            --  signature. That is if there is at least some external used
+            --  otherwise the project is stable and won't change.
 
-         if Old_Signature /= New_Signature
-           and then P_Data.Signature /= GPR2.Context.Default_Signature
-           and then Changed /= null
-         then
-            Changed (View);
+            if Old_Signature /= New_Signature
+              and then P_Data.Signature /= GPR2.Context.Default_Signature
+              and then Changed /= null
+            then
+               Changed (View);
+            end if;
          end if;
       end Set_View;
 
@@ -1240,6 +1288,15 @@ package body GPR2.Project.Tree is
          Self.Runtime := Create_Runtime_View (Self);
       end if;
 
+      --  First ensure that we now load all projects inside aggregate library
+
+      for View in Self.Iterate
+        (Filter => (F_Aggregate | F_Aggregate_Library => True,
+                    others                            => False))
+      loop
+         Set_View (Element (View));
+      end loop;
+
       --  Propagate the change in the project Tree. That is for each project in
       --  the tree we need to update the corresponding view. We do not handle
       --  the aggregated projects here. Those projects are handled specifically
@@ -1247,17 +1304,14 @@ package body GPR2.Project.Tree is
       --  change the Project_Files attribute and so the actual aggregated
       --  project. So we cannot use the current aggregated project list.
 
-      for View in Self.Iterate
-        (Kind => (I_Project | I_Extended | I_Imported | I_Recursive => True,
-                  others => False))
-      loop
-         Set_View (Element (View));
-      end loop;
-
-      --  We now have an up-to-date tree, do some validity checks if there is
-      --  no issue detected yet.
-
       if Self.Messages.Is_Empty then
+         for View of Self loop
+            Set_View (View);
+         end loop;
+
+         --  We now have an up-to-date tree, do some validity checks if there
+         --  is no issue detected yet.
+
          for View of Self loop
             Validity_Check (View);
          end loop;
@@ -1343,11 +1397,12 @@ package body GPR2.Project.Tree is
    --------------
 
    function View_For
-     (Self : Object;
-      Name : Name_Type;
-      Ctx  : GPR2.Context.Object) return View.Object
+     (Self         : Object;
+      Name         : Name_Type;
+      Context_View : View.Object) return View.Object
    is
-      View : Project.View.Object := Definition.Get (Name, Ctx, Self);
+      View : Project.View.Object :=
+               Definition.Get (Name, Context_View, Self);
    begin
       if View = Project.View.Undefined then
          declare

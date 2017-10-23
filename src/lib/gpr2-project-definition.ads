@@ -92,6 +92,14 @@ private package GPR2.Project.Definition is
 
       --  Some general information
       Context_View      : View.Object;
+      --  The context view is the view that has context for this project. That
+      --  is, Context_View will always point to a view with a context, either
+      --  the Undefined view (means root project) which contains the context
+      --  from the running environment or an aggregate project which has
+      --  a context from the External attribute. Undefined is used for the
+      --  root view to differenciate a root context from a root and aggregate
+      --  project.
+
       Status            : Relation_Status;
       Kind              : Project_Kind;
 
@@ -100,8 +108,8 @@ private package GPR2.Project.Definition is
 
       case Has_Context is
          when True =>
-            Context   : GPR2.Context.Object;
-            A_Context : GPR2.Context.Object; -- Aggregate context
+            Context   : GPR2.Context.Object; -- root context
+            A_Context : GPR2.Context.Object; -- aggregate context
          when False =>
             null;
       end case;
@@ -110,7 +118,8 @@ private package GPR2.Project.Definition is
             --  Only a root-aggregate project can have a context defined via
             --  the External attribute.
             not Data.Has_Context
-            or else Data.Context_View = View.Undefined
+            or else (Data.Context_View = View.Undefined
+                     and then Data.Status = Root)
             or else Data.A_Context.Is_Empty;
 
    function Register (Def : Data) return View.Object
@@ -138,9 +147,9 @@ private package GPR2.Project.Definition is
    --  yet registered.
 
    function Get
-     (Name    : Name_Type;
-      Context : GPR2.Context.Object;
-      Tree    : GPR2.Project.Tree.Object) return Project.View.Object;
+     (Name         : Name_Type;
+      Context_View : Project.View.Object;
+      Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
    --  Returns the project view corresponding to Name and Context in the given
    --  Tree or Undefined if this project is not yet registered.
 
