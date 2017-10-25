@@ -153,6 +153,12 @@ private package GPR2.Project.Definition is
    --  Returns the project view corresponding to Name and Context in the given
    --  Tree or Undefined if this project is not yet registered.
 
+   function Get
+     (View : Project.View.Object;
+      Name : Name_Type) return Project.View.Object;
+   --  Returns the project view corresponding to Name and found in the context
+   --  of View (e.g. imported or extended).
+
    procedure Set (View : Project.View.Object; Def : Data)
      with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
           Post => Get (View) = Def;

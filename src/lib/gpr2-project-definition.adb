@@ -46,6 +46,10 @@ package body GPR2.Project.Definition is
          Context_View : Project.View.Object;
          Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
 
+      function Get
+        (View : Project.View.Object;
+         Name : Name_Type) return Project.View.Object;
+
       function Get (View : Project.View.Object) return Data;
 
       procedure Register (Def : Data; View : out Project.View.Object);
@@ -84,6 +88,13 @@ package body GPR2.Project.Definition is
       Tree         : GPR2.Project.Tree.Object) return Project.View.Object is
    begin
       return Shared.Get (Name, Context_View, Tree);
+   end Get;
+
+   function Get
+     (View : Project.View.Object;
+      Name : Name_Type) return Project.View.Object is
+   begin
+      return Shared.Get (View, Name);
    end Get;
 
    --------------
@@ -168,6 +179,24 @@ package body GPR2.Project.Definition is
                   end if;
                end;
             end loop;
+         end if;
+
+         return Project.View.Undefined;
+      end Get;
+
+      function Get
+        (View : Project.View.Object;
+         Name : Name_Type) return Project.View.Object
+      is
+         V_Data : constant Data := Views_Data (View);
+      begin
+         if V_Data.Extended /= Project.View.Undefined
+           and then Views_Data (V_Data.Extended).Trees.Project.Name = Name
+         then
+            return V_Data.Extended;
+
+         elsif V_Data.Imports.Contains (Name) then
+            return V_Data.Imports.Element (Name);
          end if;
 
          return Project.View.Undefined;
