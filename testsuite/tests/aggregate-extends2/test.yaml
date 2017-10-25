@@ -1,0 +1,5 @@
+description:
+    check aggregate library context with extends (project+package)
+driver: build_and_run
+project_file: aggext2
+main: main

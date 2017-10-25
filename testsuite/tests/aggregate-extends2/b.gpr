@@ -1,0 +1,10 @@
+project B extends "conf" is
+   Var := "";
+
+   case Conf.K is
+      when "one" =>
+         Var := "var is one";
+      when "two" =>
+         Var := "var is two";
+   end case;
+end B;

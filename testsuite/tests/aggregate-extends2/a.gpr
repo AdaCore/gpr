@@ -1,0 +1,11 @@
+
+with "b.gpr";
+
+project A extends "conf" is
+   Var := B.Var;
+
+   package Compiler extends Conf.Compiler is
+      VC := "12";
+   end Compiler;
+
+end A;

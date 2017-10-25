@@ -1,0 +1,28 @@
+[Conf]   K_ABSTRACT
+   K = one
+   Pck:   Compiler
+      Default_Switches (Ada) -> -g
+
+[B]      K_STANDARD
+   Var = var is one
+
+[Agg]    K_AGGREGATE
+   External (KVAL) -> two
+   Project_Files -> a.gpr
+   Var1 = var is one
+   Var2 = one
+
+[Conf]   K_ABSTRACT
+   K = two
+   Pck:   Compiler
+      Default_Switches (Ada) -> -g
+
+[B]      K_STANDARD
+   Var = var is two
+
+[A]      K_STANDARD
+   Var = var is two
+   Pck:   Compiler
+      Default_Switches (Ada) -> -g
+      Var = var is two
+

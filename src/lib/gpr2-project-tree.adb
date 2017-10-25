@@ -1087,10 +1087,6 @@ package body GPR2.Project.Tree is
 
                         P_Data.Aggregated.Insert
                           (Name_Type (Value (Pathname)), A_View);
-
-                        --  And set the aggregated view recursivelly
-
-                        Set_View (A_View);
                      end;
                   end if;
                end;

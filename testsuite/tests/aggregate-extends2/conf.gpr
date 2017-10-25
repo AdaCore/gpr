@@ -1,0 +1,8 @@
+abstract project Conf is
+   type Value is ("one", "two");
+   K : Value := external("KVAL", "one");
+
+   package Compiler is
+      for Default_Switches("Ada") use ("-g");
+   end Compiler;
+end Conf;
