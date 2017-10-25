@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers;
 with Ada.Iterator_Interfaces;
 
 with GPR2.Context;
@@ -35,7 +36,7 @@ with GPR2.Project.View;
 limited with GPR2.Unit;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
-private with GPR2.Project.Definition;
+private with Ada.Containers.Vectors;
 
 package GPR2.Project.Tree is
 
@@ -264,8 +265,11 @@ private
    function "=" (Left, Right : Object) return Boolean
      is  (Left.Self = Right.Self);
 
+   package Project_View_Store is
+     new Ada.Containers.Vectors (Positive, View.Object);
+
    type Cursor is record
-      Views   : Definition.Project_View_Store.Vector;
+      Views   : Project_View_Store.Vector;
       Current : Positive;
       Root    : View.Object;
    end record;
@@ -283,7 +287,7 @@ private
                    Messages => <>);
 
    No_Element : constant Cursor :=
-                  (Definition.Project_View_Store.Empty_Vector,
+                  (Project_View_Store.Empty_Vector,
                    1, View.Undefined);
 
 end GPR2.Project.Tree;

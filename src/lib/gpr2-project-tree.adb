@@ -28,6 +28,7 @@ with GPR.Sdefault;
 
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
@@ -146,7 +147,7 @@ package body GPR2.Project.Tree is
       --  element contained in the Views set at the current location.
       return Constant_Reference_Type'
         (View =>
-           Definition.Project_View_Store.Constant_Reference
+           Project_View_Store.Constant_Reference
              (Position.Views, Position.Current).Element);
    end Constant_Reference;
 
@@ -229,7 +230,7 @@ package body GPR2.Project.Tree is
       --  which is not efficient when checking if an element exists.
 
       P_Set    : GPR2.Project.View.Set.Object;
-      Projects : Definition.Project_View_Store.Vector;
+      Projects : Project_View_Store.Vector;
       --  Set of projects for the iterator which is returned in the Cursor and
       --  fill by the recursive procedure For_Project and For_Imports. P_Set is
       --  used to have a fast check on views already in Projects.
