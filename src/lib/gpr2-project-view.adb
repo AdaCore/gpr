@@ -1338,6 +1338,42 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Vars;
    end Variables;
 
+   --------------
+   -- View_For --
+   --------------
+
+   function View_For
+     (Self : Object;
+      Name : Name_Type) return View.Object
+   is
+      Data : constant Definition.Data := Definition.Get (Self);
+      View : Project.View.Object := Definition.Get (Self, Name);
+   begin
+      if View = Project.View.Undefined then
+         declare
+            CV : constant Project.View.Object :=
+                   (if Data.Tree.Has_Configuration_Project
+                    then Data.Tree.Configuration_Project
+                    else Project.View.Undefined);
+         begin
+            --  If not found let's check if it is the configuration or runtime
+            --  project. Note that this means that any Runtime or Config user's
+            --  project name will have precedence.
+
+            if CV /= Project.View.Undefined and then CV.Name = Name then
+               View := CV;
+
+            elsif Data.Tree.Has_Runtime_Project
+              and then Data.Tree.Runtime_Project.Name = Name
+            then
+               View := Data.Tree.Runtime_Project;
+            end if;
+         end;
+      end if;
+
+      return View;
+   end View_For;
+
 begin
    --  Setup the default/build-in naming package
 

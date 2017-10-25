@@ -83,6 +83,14 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns True if the project is extending another project
 
+   function View_For
+     (Self : Object;
+      Name : Name_Type) return View.Object
+     with Pre => Self /= Undefined;
+   --  Returns the view for the given name accessible from Self context. This
+   --  can be either an import project, an extends project or the special
+   --  projects Runtime or Config if defined in the corresponding project tree.
+
    --  Context
 
    function Has_Context (Self : Object) return Boolean
