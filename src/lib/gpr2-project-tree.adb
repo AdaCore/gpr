@@ -855,7 +855,7 @@ package body GPR2.Project.Tree is
          use type Parser.Project.Object;
 
          function Has_Error return Boolean is
-           (Self.Messages.Has_Element
+           (Messages.Has_Element
               (Error       => True,
                Information => False,
                Warning     => False,
@@ -962,6 +962,14 @@ package body GPR2.Project.Tree is
       procedure Validity_Check (View : Project.View.Object);
       --  Do validity check on the given view
 
+      function Has_Error return Boolean is
+        (Self.Messages.Has_Element
+           (Error       => True,
+            Information => False,
+            Warning     => False,
+            Read        => False,
+            Unread      => True));
+
       --------------
       -- Set_View --
       --------------
@@ -1038,7 +1046,8 @@ package body GPR2.Project.Tree is
 
                         if Messages.Has_Element
                           (Information => False,
-                           Warning     => False)
+                           Warning     => False,
+                           Read        => False)
                           or else Circularities
                         then
                            if Circularities then
@@ -1103,7 +1112,7 @@ package body GPR2.Project.Tree is
             end loop;
          end if;
 
-         if Self.Messages.Is_Empty then
+         if not Has_Error then
             P_Data.Signature := New_Signature;
 
             --  Let's compute the project kind if needed. A project without
@@ -1304,7 +1313,7 @@ package body GPR2.Project.Tree is
       --  change the Project_Files attribute and so the actual aggregated
       --  project. So we cannot use the current aggregated project list.
 
-      if Self.Messages.Is_Empty then
+      if not Has_Error then
          for View of Self loop
             Set_View (View);
          end loop;

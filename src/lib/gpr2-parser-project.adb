@@ -934,6 +934,14 @@ package body GPR2.Parser.Project is
       --  an attribute can have a forward reference to another attribute into
       --  the same package.
 
+      function Has_Error return Boolean is
+        (Tree.Log_Messages.Has_Element
+           (Error       => True,
+            Information => False,
+            Warning     => False,
+            Read        => False,
+            Unread      => True));
+
       --  Global variables used to keep state during the parsing. While
       --  visiting child nodes we may need to record status (when in a package
       --  or a case construct for example). This parsing state is then used
@@ -1859,7 +1867,7 @@ package body GPR2.Parser.Project is
 
                Is_Open := True;
 
-            elsif not Tree.Log_Messages.Is_Empty then
+            elsif Has_Error then
                null;
 
             else
@@ -2284,7 +2292,7 @@ package body GPR2.Parser.Project is
             end case;
          end if;
 
-         if not Tree.Log_Messages.Is_Empty then
+         if Has_Error then
             Status := Stop;
          end if;
 
