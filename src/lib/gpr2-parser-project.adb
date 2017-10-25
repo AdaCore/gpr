@@ -1529,7 +1529,16 @@ package body GPR2.Parser.Project is
          Result : Item_Values := Empty_Item_Values;
 
       begin
-         if View /= GPR2.Project.View.Undefined then
+         if View = GPR2.Project.View.Undefined then
+            if Project /= "config" and then Project /= "runtime" then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "project " & String (Project) & " is undefined",
+                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
+            end if;
+
+         else
             if Present (Pack) then
                --  reference is : Project.Pack.Var_Name
                Check_Pack : declare

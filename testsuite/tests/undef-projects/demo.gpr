@@ -1,0 +1,5 @@
+
+project Demo is
+   Dir1 := MyProj.Dir1;
+   for Object_Dir use WhatEver.Object_Dir;
+end Demo;

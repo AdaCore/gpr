@@ -1,0 +1,5 @@
+description:
+    tests for undefined projects
+driver: build_and_run
+project_file: undef_projects
+main: main
