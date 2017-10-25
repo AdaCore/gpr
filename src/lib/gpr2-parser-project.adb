@@ -1659,7 +1659,9 @@ package body GPR2.Parser.Project is
                                  Base_Name (Self.Extended),
                                  Context_View);
                   begin
-                     if View.Has_Variables (Name) then
+                     if View /= GPR2.Project.View.Undefined
+                       and then View.Has_Variables (Name)
+                     then
                         declare
                            V : constant GPR2.Project.Variable.Object :=
                                  View.Variable (Name);
