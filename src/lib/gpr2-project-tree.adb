@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers.Ordered_Maps;
 with Ada.Environment_Variables;
 
 with GPR.Sdefault;
@@ -658,8 +659,48 @@ package body GPR2.Project.Tree is
          Root_Context : out GPR2.Context.Object;
          Messages     : out Log.Object) return View.Object;
 
-      Sets  : Project.Import.Set.Object;
+      procedure Push
+        (Path_Name   : Path_Name_Type;
+         Project     : GPR2.Project.Import.Object;
+         Is_Extended : Boolean := False);
+      --  Record a new project as seen and record path
+
+      procedure Pop;
+      --  Remove last record pushed
+
+      procedure Add_Paths_Messages;
+      --  Add into Messages the path of the detected circularity
+
+      type Data is record
+         Project  : GPR2.Project.Import.Object;
+         Extended : Boolean;
+      end record;
+
+      package Data_Set is new Ada.Containers.Ordered_Maps
+        (Path_Name_Type, Data);
+
+      Sets  : Data_Set.Map;
       Paths : Containers.Path_Name_List;
+
+      ------------------------
+      -- Add_Paths_Messages --
+      ------------------------
+
+      procedure Add_Paths_Messages is
+      begin
+         for Import of Paths loop
+            declare
+               Def : constant Data := Sets.Element (Import);
+            begin
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     (if Def.Extended then "extends" else "imports")
+                      & " " & Value (Import),
+                     Source_Reference.Object (Def.Project)));
+            end;
+         end loop;
+      end Add_Paths_Messages;
 
       --------------
       -- Internal --
@@ -679,25 +720,6 @@ package body GPR2.Project.Tree is
          if View = Project.View.Undefined then
             declare
                use type Definition.Relation_Status;
-
-               procedure Add_Paths_Messages;
-               --  Add into Messages the path of the detected circularity
-
-               ------------------------
-               -- Add_Paths_Messages --
-               ------------------------
-
-               procedure Add_Paths_Messages is
-               begin
-                  for Import of Paths loop
-                     Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "imports " & Value (Import),
-                           Source_Reference.Object
-                             (Sets.Element (Import))));
-                  end loop;
-               end Add_Paths_Messages;
 
                Data : Definition.Data := Load (Filename);
             begin
@@ -767,7 +789,7 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "circular dependency detected",
                               Source_Reference.Object
-                                (Sets.Element (Paths.First_Element))));
+                                (Sets.Element (Paths.First_Element).Project)));
 
                         Add_Paths_Messages;
 
@@ -818,10 +840,10 @@ package body GPR2.Project.Tree is
                         Circularities := True;
 
                      else
-                        Sets.Insert
-                          (Data.Trees.Project.Imports.Element
+                        Push
+                          (Project.Path_Name,
+                           Data.Trees.Project.Imports.Element
                              (Project.Path_Name));
-                        Paths.Append (Project.Path_Name);
 
                         Data.Imports.Insert
                           (Project.Name,
@@ -833,8 +855,7 @@ package body GPR2.Project.Tree is
                               Root_Context => Root_Context,
                               Messages     => Messages));
 
-                        Paths.Delete_Last;
-                        Sets.Delete (Project.Path_Name);
+                        Pop;
                      end if;
                   end if;
                end loop;
@@ -906,6 +927,30 @@ package body GPR2.Project.Tree is
 
          return Data;
       end Load;
+
+      ---------
+      -- Pop --
+      ---------
+
+      procedure Pop is
+         Last : constant Path_Name_Type := Paths.Last_Element;
+      begin
+         Paths.Delete_Last;
+         Sets.Delete (Last);
+      end Pop;
+
+      ----------
+      -- Push --
+      ----------
+
+      procedure Push
+        (Path_Name   : Path_Name_Type;
+         Project     : GPR2.Project.Import.Object;
+         Is_Extended : Boolean := False) is
+      begin
+         Sets.Insert (Path_Name, Data'(Project, Is_Extended));
+         Paths.Append (Path_Name);
+      end Push;
 
    begin
       Circularities := False;
