@@ -871,13 +871,13 @@ package body GPR2.Parser.Project is
    -----------
 
    procedure Parse
-     (Self         : in out Object;
-      Tree         : GPR2.Project.Tree.Object;
-      Context      : GPR2.Context.Object;
-      Context_View : GPR2.Project.View.Object;
-      Attrs        : in out GPR2.Project.Attribute.Set.Object;
-      Vars         : in out GPR2.Project.Variable.Set.Object;
-      Packs        : in out GPR2.Project.Pack.Set.Object)
+     (Self    : in out Object;
+      Tree    : GPR2.Project.Tree.Object;
+      Context : GPR2.Context.Object;
+      View    : GPR2.Project.View.Object;
+      Attrs   : in out GPR2.Project.Attribute.Set.Object;
+      Vars    : in out GPR2.Project.Variable.Set.Object;
+      Packs   : in out GPR2.Project.Pack.Set.Object)
    is
 
       type Item_Values is record
@@ -1006,7 +1006,7 @@ package body GPR2.Parser.Project is
                        (Get_Name_Type (I_Node.As_Single_Tok_Node))
                      else "");
          View   : constant GPR2.Project.View.Object :=
-                    GPR2.Project.Tree.View_For (Tree, Project, Context_View);
+                    Parse.View.View_For (Project);
 
          function Is_Self return Boolean is
            (Optional_Name_Type (To_String (Pack_Name)) = Pack
@@ -1524,7 +1524,7 @@ package body GPR2.Parser.Project is
 
          Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
-                  GPR2.Project.Tree.View_For (Tree, Project, Context_View);
+                  Parse.View.View_For (Project);
 
          Result : Item_Values;
 
@@ -1653,11 +1653,10 @@ package body GPR2.Parser.Project is
             begin
                if Self.Extended /= No_Path_Name then
                   declare
+                     use type GPR2.Project.View.Object;
+
                      View : constant GPR2.Project.View.Object :=
-                              GPR2.Project.Tree.View_For
-                                (Tree,
-                                 Base_Name (Self.Extended),
-                                 Context_View);
+                              Parse.View.View_For (Base_Name (Self.Extended));
                   begin
                      if View /= GPR2.Project.View.Undefined
                        and then View.Has_Variables (Name)
@@ -2007,8 +2006,7 @@ package body GPR2.Parser.Project is
                         Get_Name_Type (Single_Tok_Node (Name));
 
             View    : constant GPR2.Project.View.Object :=
-                        GPR2.Project.Tree.View_For
-                          (Tree, Project, Context_View);
+                        Parse.View.View_For (Project);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -2063,8 +2061,7 @@ package body GPR2.Parser.Project is
                         Get_Name_Type (Single_Tok_Node (Name));
 
             View    : constant GPR2.Project.View.Object :=
-                        GPR2.Project.Tree.View_For
-                          (Tree, Project, Context_View);
+                        Parse.View.View_For (Project);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.

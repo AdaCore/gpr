@@ -992,7 +992,7 @@ package body GPR2.Project.Tree is
            (P_Data.Trees.Project,
             Self,
             Context,
-            P_Data.Context_View,
+            View,
             P_Data.Attrs,
             P_Data.Vars,
             P_Data.Packs);
