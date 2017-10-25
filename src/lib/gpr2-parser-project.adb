@@ -1033,9 +1033,7 @@ package body GPR2.Parser.Project is
               (Message.Create
                  (Message.Error,
                   "cannot have a reference to a limited project",
-                  Get_Source_Reference
-                    (Self.File,
-                     Sloc_Range (Node))));
+                  Get_Source_Reference (Self.File, Sloc_Range (Node))));
 
             return Empty_Item_Values;
          end if;
