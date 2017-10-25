@@ -1526,7 +1526,7 @@ package body GPR2.Parser.Project is
          View : constant GPR2.Project.View.Object :=
                   Parse.View.View_For (Project);
 
-         Result : Item_Values;
+         Result : Item_Values := Empty_Item_Values;
 
       begin
          if View /= GPR2.Project.View.Undefined then
