@@ -24,6 +24,7 @@
 
 with Ada.Containers.Ordered_Maps;
 with Ada.Environment_Variables;
+with Ada.Directories;
 
 with GPR.Sdefault;
 
@@ -761,16 +762,37 @@ package body GPR2.Project.Tree is
                --  Load the extended project if any
 
                if Data.Trees.Project.Has_Extended then
-                  Data.Extended :=
-                    Internal
-                      (Self,
-                       Create
-                         (Name_Type (Value (Data.Trees.Project.Extended)),
-                          GPR2.Project.Paths (Filename)),
-                       Context_View => Context_View,
-                       Status       => Definition.Imported,
-                       Root_Context => Root_Context,
-                       Messages     => Messages);
+                  declare
+                     Path_Name : constant Path_Name_Type :=
+                                   Data.Trees.Project.Extended.Path_Name;
+                  begin
+                     if Directories.Exists (Value (Path_Name)) then
+                        Push (Path_Name, Data.Trees.Project.Extended, True);
+
+                        Data.Extended :=
+                          Internal
+                            (Self,
+                             Data.Trees.Project.Extended.Path_Name,
+                             Context_View => Context_View,
+                             Status       => Definition.Imported,
+                             Root_Context => Root_Context,
+                             Messages     => Messages);
+
+                        Pop;
+
+                     else
+                        Add_Paths_Messages;
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Message => "extended project file "
+                              & Value (Path_Name)
+                              & " not found",
+                              Sloc    =>
+                                Source_Reference.Object
+                                  (Data.Trees.Project.Extended)));
+                     end if;
+                  end;
                end if;
 
                --  Now load all imported projects. If we are parsing the root
@@ -918,9 +940,23 @@ package body GPR2.Project.Tree is
                                         (Name_Type (Value (Import.Path_Name)),
                                          Paths);
                begin
-                  Data.Trees.Imports.Insert
-                    (Import_Filename,
-                     Parser.Project.Load (Import_Filename, Messages));
+                  if Directories.Exists (Value (Import_Filename)) then
+                     Data.Trees.Imports.Insert
+                       (Import_Filename,
+                        Parser.Project.Load (Import_Filename, Messages));
+
+                  else
+                     Add_Paths_Messages;
+
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Message => "imported project file "
+                                        & Value (Import.Path_Name)
+                                        & " not found",
+                           Sloc    => Source_Reference.Object (Import)));
+                     exit;
+                  end if;
                end;
             end loop;
          end if;

@@ -1,0 +1,5 @@
+
+with "int";
+
+project Demo5 is
+end Demo5;

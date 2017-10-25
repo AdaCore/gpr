@@ -75,7 +75,7 @@ package body GPR2.Parser.Project is
    -- Extended --
    --------------
 
-   function Extended (Self : Object) return Path_Name_Type is
+   function Extended (Self : Object) return GPR2.Project.Import.Object is
    begin
       return Self.Extended;
    end Extended;
@@ -170,8 +170,9 @@ package body GPR2.Parser.Project is
    ------------------
 
    function Has_Extended (Self : Object) return Boolean is
+      use type GPR2.Project.Import.Object;
    begin
-      return Self.Extended /= No_Path_Name;
+      return Self.Extended /= GPR2.Project.Import.Undefined;
    end Has_Extended;
 
    -------------------
@@ -627,10 +628,17 @@ package body GPR2.Parser.Project is
                   declare
                      Paths : constant Containers.Name_List :=
                                GPR2.Project.Paths (Filename);
+                     Path_Name : constant Path_Name_Type :=
+                                   GPR2.Project.Create
+                                     (Get_Name_Type
+                                        (F_Path_Name (Ext)), Paths);
                   begin
                      Project.Extended :=
-                       GPR2.Project.Create
-                         (Get_Name_Type (F_Path_Name (Ext)), Paths);
+                       GPR2.Project.Import.Create
+                         (Path_Name,
+                          Get_Source_Reference
+                            (Filename, Sloc_Range (Ext)),
+                         Is_Limited => False);
                   end;
                end if;
 
@@ -1587,6 +1595,7 @@ package body GPR2.Parser.Project is
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values
       is
+         use type GPR2.Project.Import.Object;
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
          Sloc    : constant Source_Reference.Object :=
@@ -1615,10 +1624,10 @@ package body GPR2.Parser.Project is
                --  If a single name it can be either a project or a package
 
                if Self.Imports.Contains (Name)
-                 or else (Self.Extended /= No_Path_Name
+                 or else (Self.Extended /= GPR2.Project.Import.Undefined
                             and then
                           Optional_Name_Type
-                            (GPR2.Base_Name (Self.Extended)) = Name)
+                            (GPR2.Base_Name (Self.Extended.Path_Name)) = Name)
                  or else Name = "config"
                  or else Name = "runtime"
                then
@@ -1660,12 +1669,13 @@ package body GPR2.Parser.Project is
             declare
                Result : Item_Values := Empty_Item_Values;
             begin
-               if Self.Extended /= No_Path_Name then
+               if Self.Extended /= GPR2.Project.Import.Undefined then
                   declare
                      use type GPR2.Project.View.Object;
 
                      View : constant GPR2.Project.View.Object :=
-                              Parse.View.View_For (Base_Name (Self.Extended));
+                              Parse.View.View_For
+                                (Base_Name (Self.Extended.Path_Name));
                   begin
                      if View /= GPR2.Project.View.Undefined
                        and then View.Has_Variables (Name)
@@ -2162,7 +2172,7 @@ package body GPR2.Parser.Project is
                      elsif Self.Has_Extended then
                         declare
                            Extended : constant GPR2.Parser.Project.Object :=
-                                        Registry.Get (Self.Extended);
+                                        Registry.Get (Self.Extended.Path_Name);
                         begin
                            if Extended.Types.Contains (T_Name) then
                               Type_Def := Extended.Types (T_Name);

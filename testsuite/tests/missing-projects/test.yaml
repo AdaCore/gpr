@@ -1,0 +1,5 @@
+description:
+    tests error message when some project files are missing
+driver: build_and_run
+project_file: missing_projects
+main: main

@@ -78,7 +78,7 @@ package GPR2.Parser.Project is
    function Has_Extended (Self : Object) return Boolean;
    --  Returns True if an extended project is defined
 
-   function Extended (Self : Object) return Path_Name_Type
+   function Extended (Self : Object) return GPR2.Project.Import.Object
      with Pre => Self.Has_Extended;
    --  Returns the extended project
 
@@ -126,7 +126,7 @@ private
       Qualifier : Project_Kind := K_Standard;
       Externals : Containers.Name_List;
       Imports   : GPR2.Project.Import.Set.Object;
-      Extended  : Path_Name_Type;
+      Extended  : GPR2.Project.Import.Object := GPR2.Project.Import.Undefined;
       Types     : Type_Set.Map;
       Unit      : Analysis_Unit := No_Analysis_Unit;
       Context   : Analysis_Context := No_Analysis_Context;

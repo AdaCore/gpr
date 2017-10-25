@@ -1,0 +1,4 @@
+with "demo";
+
+project Demo2 is
+end Demo2;

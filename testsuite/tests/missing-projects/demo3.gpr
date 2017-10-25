@@ -1,0 +1,3 @@
+
+project Demo3 extends "demo" is
+end Demo3;

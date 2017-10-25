@@ -1,0 +1,3 @@
+
+project Demo4 extends "ext_undef" is
+end Demo4;
