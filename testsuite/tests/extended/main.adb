@@ -26,6 +26,7 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Context;
+with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Source;

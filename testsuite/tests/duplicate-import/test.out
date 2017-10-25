@@ -1,2 +1,3 @@
 Messages found:
 demo.gpr:3:6: duplicate with clause 'first'
+demo.gpr:8:22: undefined external reference "OS"

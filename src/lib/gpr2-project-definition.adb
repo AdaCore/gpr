@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 

@@ -25,11 +25,12 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
-with GPR2.Project.View;
-with GPR2.Project.Tree;
-with GPR2.Project.Attribute.Set;
-with GPR2.Project.Variable.Set;
 with GPR2.Context;
+with GPR2.Project.Attribute.Set;
+with GPR2.Project.Source.Set;
+with GPR2.Project.Tree;
+with GPR2.Project.Variable.Set;
+with GPR2.Project.View;
 
 procedure Main is
 

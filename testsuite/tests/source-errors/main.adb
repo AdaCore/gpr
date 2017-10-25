@@ -27,8 +27,9 @@ with Ada.Text_IO;
 
 with GPR2.Context;
 with GPR2.Log;
-with GPR2.Project.View;
+with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
+with GPR2.Project.View;
 with GPR2.Source;
 
 procedure Main is

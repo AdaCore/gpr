@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Vectors;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GNAT.MD5;
 
@@ -54,8 +54,8 @@ private package GPR2.Project.Definition is
       Imports : Parser.Project.Set.Object;
    end record;
 
-   package Project_View_Store is
-     new Ada.Containers.Vectors (Positive, View.Object);
+   package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, View.Object);
 
    type Relation_Status is (Root, Imported, Aggregated);
 
@@ -79,8 +79,8 @@ private package GPR2.Project.Definition is
 
       --  Actual values for the view
       Extended          : View.Object;
-      Imports           : Project_View_Store.Vector;
-      Aggregated        : Project_View_Store.Vector;
+      Imports           : Project_View_Store.Map;
+      Aggregated        : Project_View_Store.Map;
       Attrs             : Project.Attribute.Set.Object;
       Vars              : Project.Variable.Set.Object;
       Packs             : Project.Pack.Set.Object;

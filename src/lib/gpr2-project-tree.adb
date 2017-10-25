@@ -823,8 +823,9 @@ package body GPR2.Project.Tree is
                              (Project.Path_Name));
                         Paths.Append (Project.Path_Name);
 
-                        Data.Imports.Append
-                          (Internal
+                        Data.Imports.Insert
+                          (Project.Name,
+                           Internal
                              (Self,
                               Project.Path_Name,
                               Context_View => Context_View,
@@ -1083,7 +1084,8 @@ package body GPR2.Project.Tree is
 
                         --  Record aggregated view into the aggregate's view
 
-                        P_Data.Aggregated.Append (A_View);
+                        P_Data.Aggregated.Insert
+                          (Name_Type (Value (Pathname)), A_View);
 
                         --  And set the aggregated view recursivelly
 
