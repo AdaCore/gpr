@@ -118,7 +118,8 @@ package GPR2.Project.Tree is
    --  Returns whether some messages are present for this project tree
 
    function Log_Messages (Self : Object) return not null access Log.Object
-     with Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
+     with Post => not Self.Has_Messages
+                  or else not Log_Messages'Result.Is_Empty;
    --  Returns the Logs, this contains information, warning and error messages
    --  found while handling the project.
 
