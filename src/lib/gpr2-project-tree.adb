@@ -998,7 +998,8 @@ package body GPR2.Project.Tree is
             P_Data.Packs);
 
          --  Now we can record the aggregated projects based on the possibly
-         --  new Project_Files attribute value.
+         --  new Project_Files attribute value. This attribute may be set
+         --  depending on the parsing of the imported projects.
 
          if View.Qualifier in K_Aggregate | K_Aggregate_Library then
             P_Data.Aggregated.Clear;
