@@ -84,7 +84,7 @@ GPRBUILD_OPTIONS=
 
 BUILDER=gprbuild -p -m $(GTARGET) $(RBD) -j${PROCESSORS} -XBUILD=${BUILD} \
 	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} ${GPRBUILD_OPTIONS}
-INSTALLER=gprinstall -p -f --target=$(TARGET) \
+INSTALLER=gprinstall -p -f --target=$(TARGET) -XBUILD=${BUILD} \
 	  -XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} $(RBD) \
 	  --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)

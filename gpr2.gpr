@@ -41,8 +41,8 @@ library project GPR2 is
                         Langkit_Generated_Src & "/include/gpr_parser");
    for Library_Name use "gpr2";
 
-   for Object_Dir use ".build/obj-" & Library_Type;
-   for Library_Dir use ".build/lib-" & Library_Type;
+   for Object_Dir use ".build/" & Build & "/obj-" & Library_Type;
+   for Library_Dir use ".build/" & Build & "/lib-" & Library_Type;
    for Library_Kind use Library_Type;
 
    --------------
