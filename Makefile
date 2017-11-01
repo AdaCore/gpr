@@ -37,6 +37,20 @@
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   TARGET        : target triplet for cross-compilation
 
+HOST    = $(shell gcc -dumpmachine)
+TARGET := $(shell gcc -dumpmachine)
+
+prefix	      := $(dir $(shell which gnatls))..
+BUILD         = release
+PROCESSORS    = 0
+BUILD_DIR     =
+SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
+ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
+	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
+
+# Load current setup if any
+-include makefile.setup
+
 # check for out-of-tree build
 ifeq ($(SOURCE_DIR),.)
 RBD=
@@ -51,20 +65,6 @@ GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 MAKEPREFIX=$(SOURCE_DIR)/
 LANGKIT_GENERATED_SRC=$(shell pwd)/langkit/build
 endif
-
-HOST    = $(shell gcc -dumpmachine)
-TARGET := $(shell gcc -dumpmachine)
-
-prefix	      := $(dir $(shell which gnatls))..
-BUILD         = release
-PROCESSORS    = 0
-BUILD_DIR     =
-SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
-ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
-	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
-
-# Load current setup if any
--include makefile.setup
 
 # target options for cross-build
 ifeq ($(HOST),$(TARGET))
