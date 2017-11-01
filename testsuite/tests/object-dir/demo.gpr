@@ -1,0 +1,8 @@
+
+aggregate project Demo is
+
+   for Object_Dir use "obj";
+
+   for Project_Files use ("a.gpr");
+
+end Demo;

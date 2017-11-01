@@ -1,0 +1,5 @@
+description:
+    Check Object_Dir in aggregate project
+driver: build_and_run
+project_file: objdir
+main: main

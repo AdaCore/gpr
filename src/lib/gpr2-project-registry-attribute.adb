@@ -164,7 +164,7 @@ begin
            Value                => Single,
            Value_Case_Sensitive => True,
            Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+           Is_Allowed_In        => Everywhere));
 
    --  exec_dir
    Store.Insert
