@@ -1039,7 +1039,9 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      procedure Set_View (View : Project.View.Object);
+      procedure Set_View
+        (View           : Project.View.Object;
+         Aggregate_Only : Boolean := False);
       --  Set the context for the given view
 
       procedure Validity_Check (View : Project.View.Object);
@@ -1057,7 +1059,10 @@ package body GPR2.Project.Tree is
       -- Set_View --
       --------------
 
-      procedure Set_View (View : Project.View.Object) is
+      procedure Set_View
+        (View           : Project.View.Object;
+         Aggregate_Only : Boolean := False)
+      is
          use type GPR2.Context.Binary_Signature;
 
          P_Data        : Definition.Data := Definition.Get (View);
@@ -1107,7 +1112,23 @@ package body GPR2.Project.Tree is
                            & String (Base_Name (Pathname)),
                            Source_Reference.Object
                              (P_Data.Attrs.Element
-                                  (Registry.Attribute.Project_Files))));
+                                (Registry.Attribute.Project_Files))));
+
+                  elsif P_Data.Aggregated.Contains
+                    (Name_Type (Value (Pathname)))
+                  then
+                     --  Duplicate in the project_files attribute
+
+                     if Aggregate_Only then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Warning,
+                              "duplicate aggregated project "
+                              & String (Base_Name (Pathname)),
+                              Source_Reference.Object
+                                (P_Data.Attrs.Element
+                                   (Registry.Attribute.Project_Files))));
+                     end if;
 
                   else
                      declare
@@ -1384,7 +1405,7 @@ package body GPR2.Project.Tree is
         (Filter => (F_Aggregate | F_Aggregate_Library => True,
                     others                            => False))
       loop
-         Set_View (Element (View));
+         Set_View (Element (View), Aggregate_Only => True);
       end loop;
 
       --  Propagate the change in the project Tree. That is for each project in
