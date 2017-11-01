@@ -1,0 +1,5 @@
+description:
+    Check for variable ref with a single prefix
+driver: build_and_run
+project_file: varref
+main: main

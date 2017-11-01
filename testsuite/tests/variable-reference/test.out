@@ -1,0 +1,10 @@
+Demo     K_STANDARD
+ Compiler
+ Linker
+   Default_Switches (Ada) -> -a -g
+
+Demo1    K_STANDARD
+ Compiler
+ Linker
+   Default_Switches (Ada) -> -a -compiler
+

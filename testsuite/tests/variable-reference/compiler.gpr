@@ -1,0 +1,3 @@
+project Compiler is
+   Var := "-compiler";
+end Compiler;

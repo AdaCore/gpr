@@ -1530,6 +1530,33 @@ package body GPR2.Parser.Project is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
          use type GPR2.Project.View.Object;
 
+         function Get_Pack_Var
+           (Pack : GPR2.Project.Pack.Object;
+            Name : Name_Type) return Item_Values with Inline;
+         --  Returns the variable value Pack.Name
+
+         ------------------
+         -- Get_Pack_Var --
+         ------------------
+
+         function Get_Pack_Var
+           (Pack : GPR2.Project.Pack.Object;
+            Name : Name_Type) return Item_Values is
+         begin
+            if Pack.Has_Variables (Name) then
+               declare
+                  V : constant GPR2.Project.Variable.Object :=
+                        Pack.Variable (Name);
+               begin
+                  return (V.Values,
+                          V.Kind = GPR2.Project.Registry.Attribute.Single);
+               end;
+
+            else
+               return Empty_Item_Values;
+            end if;
+         end Get_Pack_Var;
+
          Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
                   Parse.View.View_For (Project);
@@ -1538,13 +1565,22 @@ package body GPR2.Parser.Project is
 
       begin
          if View = GPR2.Project.View.Undefined then
-            if Project /= "config" and then Project /= "runtime" then
-               Tree.Log_Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "project " & String (Project) & " is undefined",
-                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
-            end if;
+            --  Some maybe Project is actually a local package
+
+            declare
+               P_Name : Name_Type renames Project;
+            begin
+               if Packs.Contains (P_Name) then
+                  Result := Get_Pack_Var (Packs.Element (P_Name), Name);
+
+               elsif Project /= "config" and then Project /= "runtime" then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "project " & String (Project) & " is undefined",
+                        Get_Source_Reference (Self.File, Sloc_Range (Node))));
+               end if;
+            end;
 
          else
             if Present (Pack) then
@@ -1553,22 +1589,8 @@ package body GPR2.Parser.Project is
                   P_Name : constant Name_Type := Get_Name_Type (Pack);
                begin
                   if View.Has_Packages (P_Name) then
-                     Check_Var : declare
-                        P : constant GPR2.Project.Pack.Object :=
-                              View.Packages.Element (P_Name);
-                     begin
-                        if P.Has_Variables (Name) then
-                           declare
-                              V : constant GPR2.Project.Variable.Object :=
-                                    P.Variable (Name);
-                           begin
-                              Result :=
-                                (V.Values,
-                                 V.Kind =
-                                   GPR2.Project.Registry.Attribute.Single);
-                           end;
-                        end if;
-                     end Check_Var;
+                     Result := Get_Pack_Var
+                       (View.Packages.Element (P_Name), Name);
                   end if;
                end Check_Pack;
 
@@ -1650,7 +1672,7 @@ package body GPR2.Parser.Project is
             return Get_Variable_Ref (Name, Name_3, Name_2);
 
          elsif Present (Name_2) then
-            --  Project.Name
+            --  Project.Name or Package.Name
             return Get_Variable_Ref (Name, Name_2);
 
          elsif In_Pack and then Pack_Vars.Contains (Name) then
