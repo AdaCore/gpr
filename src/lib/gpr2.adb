@@ -50,6 +50,36 @@ package body GPR2 is
       return Equal_Case_Insensitive (String (Left), String (Right));
    end "=";
 
+   ----------------------
+   -- Create_Directory --
+   ----------------------
+
+   function Create_Directory (Name : Name_Type) return Path_Name_Type is
+      use Ada;
+      use GNAT;
+
+      function Ensure_Directory
+        (Value : String) return String is
+        (if Value (Value'Last) in '\' | '/'
+         then Value & '.'
+         else Value & OS_Lib.Directory_Separator & '.')
+        with Post =>
+          Ensure_Directory'Result (Ensure_Directory'Result'Last) = '.';
+
+      function "+"
+        (Str : String) return Unbounded_String renames To_Unbounded_String;
+
+      N  : constant String := String (Name);
+      NN : constant String := Ensure_Directory (OS_Lib.Normalize_Pathname (N));
+
+   begin
+      return Path_Name_Type'
+        (As_Is     => +N,
+         Value     => +NN,
+         Base_Name => +Directories.Base_Name (N),
+         Dir_Name  => +Directories.Containing_Directory (NN));
+   end Create_Directory;
+
    -----------------
    -- Create_File --
    -----------------

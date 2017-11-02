@@ -119,6 +119,9 @@ package GPR2 is
    function Create_File (Name : Name_Type) return Path_Name_Type;
    --  Create a Path_Name_Type for a file
 
+   function Create_Directory (Name : Name_Type) return Path_Name_Type;
+   --  Create a Path_Name_Type for a directory
+
    function "<" (Left, Right : Path_Name_Type) return Boolean;
    --  Returns True based on the normalized names
 
