@@ -27,6 +27,7 @@ with Ada.Environment_Variables;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
+with GNAT.String_Split;
 
 package body GPR2.Project is
 
@@ -41,7 +42,8 @@ package body GPR2.Project is
 
    function Create
      (Name  : Name_Type;
-      Paths : Containers.Name_List := Containers.Name_Type_List.Empty_Vector)
+      Paths : Containers.Path_Name_List :=
+                Containers.Path_Name_Type_List.Empty_List)
       return Path_Name_Type
    is
       use GNAT;
@@ -87,10 +89,13 @@ package body GPR2.Project is
 
          else
             for P of Paths loop
-               if Directories.Exists (String (P) & DS & GPR_Name) then
+               if Directories.Exists
+                 (String (Dir_Name (P)) & DS & GPR_Name)
+               then
                   return Create
                     (GPR_Name,
-                     OS_Lib.Normalize_Pathname (String (P) & DS & GPR_Name));
+                     OS_Lib.Normalize_Pathname
+                       (String (Dir_Name (P)) & DS & GPR_Name));
                end if;
             end loop;
          end if;
@@ -103,15 +108,62 @@ package body GPR2.Project is
    -- Paths --
    -----------
 
-   function Paths (Parent : Path_Name_Type) return Containers.Name_List is
+   function Paths (Parent : Path_Name_Type) return Containers.Path_Name_List is
+
+      use type Containers.Count_Type;
       use type GNAT.OS_Lib.String_Access;
 
-      Result : Containers.Name_List;
+      procedure Append
+        (Result : in out Containers.Path_Name_List; Value : String)
+        with Post => (if Value'Length = 0
+                      then Result'Old.Length = Result.Length
+                      else Result'Old.Length + 1 = Result.Length);
+
+      procedure Add_List
+        (Result : in out Containers.Path_Name_List;
+         Values : String)
+        with Post => Result'Old.Length <= Result.Length;
+      --  Add list Values (which has OS dependant path separator) into Result
+
+      --------------
+      -- Add_List --
+      --------------
+
+      procedure Add_List
+        (Result : in out Containers.Path_Name_List;
+         Values : String)
+      is
+         use GNAT;
+
+         V  : String_Split.Slice_Set;
+      begin
+         String_Split.Create (V, Values, String'(1 => OS_Lib.Path_Separator));
+
+         for K in 1 .. String_Split.Slice_Count (V) loop
+            Append (Result, String_Split.Slice (V, K));
+         end loop;
+      end Add_List;
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append
+        (Result : in out Containers.Path_Name_List;
+         Value  : String) is
+      begin
+         if Value /= "" then
+            Result.Append (Create_Directory (Name_Type (Value)));
+         end if;
+      end Append;
+
+      Result : Containers.Path_Name_List;
+
    begin
       --  First check in parent project directory
 
       if Parent /= No_Path_Name then
-         Result.Append (Name_Type (Dir_Name (Parent)));
+         Result.Append (Parent);
       end if;
 
       --  Then -aP switches if any
@@ -132,7 +184,7 @@ package body GPR2.Project is
 
                while not Text_IO.End_Of_File (File) loop
                   Text_IO.Get_Line (File, Buffer, Last);
-                  Result.Append (Name_Type (Buffer (1 .. Last)));
+                  Append (Result, Buffer (1 .. Last));
                end loop;
 
                Text_IO.Close (File);
@@ -143,13 +195,11 @@ package body GPR2.Project is
       --  Then in GPR_PROJECT_PATH and ADA_PROJECT_PATH
 
       if Environment_Variables.Exists ("GPR_PROJECT_PATH") then
-         Result.Append
-           (Name_Type (Environment_Variables.Value ("GPR_PROJECT_PATH")));
+         Add_List (Result, Environment_Variables.Value ("GPR_PROJECT_PATH"));
       end if;
 
       if Environment_Variables.Exists ("ADA_PROJECT_PATH") then
-         Result.Append
-           (Name_Type (Environment_Variables.Value ("ADA_PROJECT_PATH")));
+         Add_List (Result, Environment_Variables.Value ("ADA_PROJECT_PATH"));
       end if;
 
       --  Then target specific directory if specified
@@ -163,17 +213,17 @@ package body GPR2.Project is
          begin
             --  <prefix>/share/gpr
 
-            Result.Append
-              (Name_Type
-                 (Directories.Compose
-                    (Directories.Compose (Prefix, "share"), "gpr")));
+            Append
+              (Result,
+               Directories.Compose
+                (Directories.Compose (Prefix, "share"), "gpr"));
 
             --  <prefix>/lib/gnat
 
-            Result.Append
-              (Name_Type
-                 (Directories.Compose
-                   (Directories.Compose (Prefix, "lib"), "gnat")));
+            Append
+              (Result,
+               Directories.Compose
+                (Directories.Compose (Prefix, "lib"), "gnat"));
          end;
       end if;
 

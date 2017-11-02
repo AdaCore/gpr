@@ -907,7 +907,7 @@ package body GPR2.Project.Tree is
                Read        => False,
                Unread      => True));
 
-         Paths   : constant Containers.Name_List :=
+         Paths   : constant Containers.Path_Name_List :=
                      GPR2.Project.Paths (Filename);
          Project : constant Parser.Project.Object :=
                      Parser.Project.Load (Filename, Messages);
@@ -1072,7 +1072,7 @@ package body GPR2.Project.Tree is
                            Context.Signature (P_Data.Externals);
          Context       : constant GPR2.Context.Object :=
                            View.Context;
-         Paths         : Containers.Name_List;
+         Paths         : Containers.Path_Name_List;
       begin
          Parser.Project.Parse
            (P_Data.Trees.Project,
@@ -1093,7 +1093,7 @@ package body GPR2.Project.Tree is
             --  Pathname for Project_Files projects are relative to the
             --  aggregate project only.
 
-            Paths.Append (Name_Type (Dir_Name (View.Path_Name)));
+            Paths.Append (View.Path_Name);
 
             for Project of
               P_Data.Attrs.Element (Registry.Attribute.Project_Files).Values

@@ -626,7 +626,7 @@ package body GPR2.Parser.Project is
 
                if Present (Ext) then
                   declare
-                     Paths : constant Containers.Name_List :=
+                     Paths : constant Containers.Path_Name_List :=
                                GPR2.Project.Paths (Filename);
                      Path_Name : constant Path_Name_Type :=
                                    GPR2.Project.Create
@@ -712,7 +712,7 @@ package body GPR2.Parser.Project is
                               F_Path_Names (N);
                Num_Childs : constant Natural := Child_Count (N);
                Cur_Child  : GPR_Node;
-               Paths      : constant Containers.Name_List :=
+               Paths      : constant Containers.Path_Name_List :=
                               GPR2.Project.Paths (Filename);
             begin
                for J in 1 .. Num_Childs loop

@@ -49,13 +49,14 @@ package GPR2.Project is
    Default_Filter : constant Project_Filter;
    Library_Filter : constant Project_Filter;
 
-   function Paths (Parent : Path_Name_Type) return Containers.Name_List;
+   function Paths (Parent : Path_Name_Type) return Containers.Path_Name_List;
    --  Returns the list of search paths for imported projects in Parent. Parent
    --  is No_Path_Name for the root project.
 
    function Create
      (Name  : Name_Type;
-      Paths : Containers.Name_List := Containers.Name_Type_List.Empty_Vector)
+      Paths : Containers.Path_Name_List :=
+                Containers.Path_Name_Type_List.Empty_List)
       return Path_Name_Type;
    --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
    --  Name is not an absolute path name it is looked into Paths.
