@@ -120,7 +120,7 @@ install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* \
-		--build-name=$* --build-var=LIBRARY_TYPE $(GPR2)
+		--build-name=$* --build-var=GPR2_BUILD,LIBRARY_TYPE $(GPR2)
 
 install-tools:
 	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
