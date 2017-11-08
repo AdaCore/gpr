@@ -1,4 +1,4 @@
-from langkit.parsers import Opt, List, Or, Row, Tok
+from langkit.parsers import Opt, List, Or, Pick, Tok
 from langkit.dsl import Annotations, Field, abstract
 
 from language.parser import A, GPRNode
@@ -72,50 +72,50 @@ class ProjectReference(GPRNode):
 
 
 A.add_rules(
-    identifier=Tok(Token.Identifier, keep=True) ^ Identifier,
-    string_literal=Tok(Token.String, keep=True) ^ StringLiteral,
-    num_literal=Tok(Token.Number, keep=True) ^ NumLiteral,
+    identifier=Identifier(Tok(Token.Identifier, keep=True)),
+    string_literal=StringLiteral(Tok(Token.String, keep=True)),
+    num_literal=NumLiteral(Tok(Token.Number, keep=True)),
 
     static_name=Or(A.identifier,
                    Prefix(A.static_name, '.', A.identifier)),
     # ----------------------------------------------------------------
 
-    attribute_reference=Row(
+    attribute_reference=AttributeReference(
         A.identifier,
-        Opt(Row("(", Or(A.others_designator, A.string_literal), ")")[1])
-    ) ^ AttributeReference,
+        Opt(Pick("(", Or(A.others_designator, A.string_literal), ")"))
+    ),
 
-    variable_reference=Row(
+    variable_reference=VariableReference(
         A.identifier,
-        Opt(Row(".", A.identifier)[1]),
-        Opt(Row(".", A.identifier)[1]),
-        Opt(Row("'", A.attribute_reference)[1])
-    ) ^ VariableReference,
+        Opt(Pick(".", A.identifier)),
+        Opt(Pick(".", A.identifier)),
+        Opt(Pick("'", A.attribute_reference))
+    ),
 
-    type_reference=Row(
+    type_reference=TypeReference(
         A.identifier,
-        Opt(Row(".", A.identifier)[1]),
-    ) ^ TypeReference,
+        Opt(Pick(".", A.identifier)),
+    ),
 
-    builtin_function_call=Row(
+    builtin_function_call=BuiltinFunctionCall(
         A.identifier,
         A.expression_list
-    ) ^ BuiltinFunctionCall,
+    ),
     # ----------------------------------------------------------------
 
-    expression=List(A.term, sep="&") ^ TermList,
+    expression=TermList(List(A.term, sep="&")),
 
-    expression_list=Row(
-        "(", List(A.expression, sep=",", empty_valid=True), ")") ^ ExprList,
+    expression_list=ExprList(
+        "(", List(A.expression, sep=",", empty_valid=True), ")"),
 
-    string_literal_at=Row(
+    string_literal_at=StringLiteralAt(
         A.string_literal,
-        Opt(Row("at", A.num_literal)[1])
-    ) ^ StringLiteralAt,
+        Opt(Pick("at", A.num_literal))
+    ),
 
-    project_reference=Row(
+    project_reference=ProjectReference(
         Tok("project"), "'", A.attribute_reference
-    ) ^ ProjectReference,
+    ),
 
     term=Or(
         A.expression_list,

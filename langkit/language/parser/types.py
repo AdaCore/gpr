@@ -1,4 +1,4 @@
-from langkit.parsers import List, Row
+from langkit.parsers import List
 from langkit.dsl import Field
 
 from language.parser import A, GPRNode
@@ -10,9 +10,9 @@ class TypedStringDecl(GPRNode):
 
 
 A.add_rules(
-    typed_string_decl=Row(
+    typed_string_decl=TypedStringDecl(
         "type", A.identifier, "is",
         "(", List(A.string_literal, sep=","), ")"
-    ) ^ TypedStringDecl,
+    ),
 
 )

@@ -1,5 +1,5 @@
 from language.parser import A
-from langkit.parsers import Opt, List, Or, Row, Tok
+from langkit.parsers import Opt, List, Or, Pick, Tok
 from langkit.dsl import Field
 
 from language.parser import GPRNode
@@ -93,31 +93,31 @@ class OthersDesignator(GPRNode):
 
 
 A.add_rules(
-    context_clauses=List(Row(A.with_decl, ";")[0], empty_valid=True),
+    context_clauses=List(Pick(A.with_decl, ";"), empty_valid=True),
 
-    with_decl=Row(
+    with_decl=WithDecl(
         Opt("limited").as_bool(),
         "with", List(A.string_literal, sep=",")
-    ) ^ WithDecl,
+    ),
 
-    abstract_present=Row(
+    abstract_present=AbstractPresent(
         "abstract"
-    ) ^ AbstractPresent,
+    ),
 
-    qualifier_names=Row(
+    qualifier_names=QualifierNames(
         A.identifier, Opt(A.identifier)
-    ) ^ QualifierNames,
+    ),
 
-    project_qualifier=Or(
+    project_qualifier=ProjectQualifier(Or(
         A.abstract_present,
         A.qualifier_names
-    ) ^ ProjectQualifier,
+    )),
 
-    project_extension=Row(
+    project_extension=ProjectExtension(
         "extends", Opt("all").as_bool(), A.string_literal
-    ) ^ ProjectExtension,
+    ),
 
-    project_declaration=Row(
+    project_declaration=ProjectDeclaration(
         Opt(A.project_qualifier),
         "project",
         A.static_name,
@@ -125,17 +125,17 @@ A.add_rules(
         "is",
         A.declarative_items,
         "end", A.static_name, ";"
-    ) ^ ProjectDeclaration,
+    ),
 
-    project=Row(
+    project=Project(
         A.context_clauses,
         A.project_declaration,
-    ) ^ Project,
+    ),
 
     # ----------------------------------------------- declarative items
 
     declarative_items=List(
-        Row(A.declarative_item, ";")[0], empty_valid=True),
+        Pick(A.declarative_item, ";"), empty_valid=True),
 
     declarative_item=Or(
         A.simple_declarative_item,
@@ -144,7 +144,7 @@ A.add_rules(
     ),
 
     simple_declarative_items=List(
-        Row(A.simple_declarative_item, ";")[0], empty_valid=True),
+        Pick(A.simple_declarative_item, ";"), empty_valid=True),
 
     simple_declarative_item=Or(
         A.variable_decl,
@@ -153,64 +153,64 @@ A.add_rules(
         A.empty_declaration
     ),
 
-    variable_decl=Row(
+    variable_decl=VariableDecl(
         A.identifier,
-        Opt(Row(":", A.type_reference)[1]),
+        Opt(Pick(":", A.type_reference)),
         ":=",
         A.expression
-    ) ^ VariableDecl,
+    ),
 
-    attribute_decl=Row(
+    attribute_decl=AttributeDecl(
         "for", A.identifier,
-        Opt(Row("(", A.associative_array_index, ")")[1]),
+        Opt(Pick("(", A.associative_array_index, ")")),
         "use",
         A.expression
-    ) ^ AttributeDecl,
+    ),
 
     associative_array_index=Or(
         A.others_designator,
         A.string_literal_at
     ),
 
-    package_decl=Row(
+    package_decl=PackageDecl(
         "package", A.identifier,
         Or(A.package_renaming, A.package_spec)
-    ) ^ PackageDecl,
+    ),
 
-    package_renaming=Row(
+    package_renaming=PackageRenaming(
         "renames", A.identifier, ".", A.identifier
-    ) ^ PackageRenaming,
+    ),
 
-    package_extension=Row(
+    package_extension=PackageExtension(
         "extends", A.identifier, ".", A.identifier,
-    ) ^ PackageExtension,
+    ),
 
-    package_spec=Row(
+    package_spec=PackageSpec(
         Opt(A.package_extension),
         "is",
         A.simple_declarative_items,
         "end", A.identifier
-    ) ^ PackageSpec,
+    ),
 
-    empty_declaration=Row(
+    empty_declaration=EmptyDecl(
         "null"
-    ) ^ EmptyDecl,
+    ),
 
-    case_construction=Row(
+    case_construction=CaseConstruction(
         "case", A.variable_reference, "is",
         List(A.case_item, empty_valid=True),
         "end", "case"
-    ) ^ CaseConstruction,
+    ),
 
-    case_item=Row(
+    case_item=CaseItem(
         "when",
         A.discrete_choice_list,
         "=>",
         # ??? A.declarative_items
         A.simple_declarative_items
-    ) ^ CaseItem,
+    ),
 
-    others_designator=Tok("others") ^ OthersDesignator,
+    others_designator=OthersDesignator(Tok("others")),
     choice=Or(A.string_literal, A.others_designator),
 
     discrete_choice_list=List(A.choice, sep="|"),
