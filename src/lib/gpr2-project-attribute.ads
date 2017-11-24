@@ -46,7 +46,7 @@ package GPR2.Project.Attribute is
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
-   --  Create a single-valued object
+   --  Creates a single-valued object
 
    function Create
      (Name   : Name_Type;
@@ -56,7 +56,7 @@ package GPR2.Project.Attribute is
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
-   --  Create a multi-valued object
+   --  Creates a multi-valued object
 
    overriding function Create
      (Name  : Name_Type;
@@ -65,7 +65,7 @@ package GPR2.Project.Attribute is
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = 1;
-   --  Create a single-valued object
+   --  Creates a single-valued object
 
    overriding function Create
      (Name   : Name_Type;
@@ -74,7 +74,7 @@ package GPR2.Project.Attribute is
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name
                   and then Create'Result.Count_Values = Values.Length;
-   --  Create a multi-valued object
+   --  Creates a multi-valued object
 
    function Has_Index (Self : Object) return Boolean
      with Pre => Self /= Undefined;
@@ -93,14 +93,12 @@ package GPR2.Project.Attribute is
    --  Returns True if the attribute's value is equal to Value taking into
    --  account the case-sensitivity of the value.
 
-   --  Casing modificator
-
    procedure Set_Case
      (Self                    : in out Object;
       Index_Is_Case_Sensitive : Boolean;
       Value_Is_Case_Sensitive : Boolean);
-   --  Set attribute casing for the index and the value. By default the casing
-   --  for both are sensitive.
+   --  Sets attribute case sensitivity for the index and the value.
+   --  By default both are case-sensitive.
 
 private
 
