@@ -301,6 +301,15 @@ package body GPR2.Project.View is
       Definition.Set (Self, Data);
    end Invalidate_Sources;
 
+   ---------------------
+   -- Is_Extended_All --
+   ---------------------
+
+   function Is_Extended_All (Self : Object) return Boolean is
+   begin
+      return Definition.Get (Self).Trees.Project.Is_Extended_All;
+   end Is_Extended_All;
+
    ----------
    -- Kind --
    ----------

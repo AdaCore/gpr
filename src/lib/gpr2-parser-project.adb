@@ -202,6 +202,15 @@ package body GPR2.Parser.Project is
       return Self.Imports;
    end Imports;
 
+   ---------------------
+   -- Is_Extended_All --
+   ---------------------
+
+   function Is_Extended_All (Self : Object) return Boolean is
+   begin
+      return Self.Is_All;
+   end Is_Extended_All;
+
    ----------
    -- Load --
    ----------
@@ -638,7 +647,8 @@ package body GPR2.Parser.Project is
                          (Path_Name,
                           Get_Source_Reference
                             (Filename, Sloc_Range (Ext)),
-                         Is_Limited => False);
+                          Is_Limited => False);
+                     Project.Is_All := F_Is_All (Ext);
                   end;
                end if;
 
