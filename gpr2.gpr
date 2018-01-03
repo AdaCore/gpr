@@ -37,7 +37,7 @@ library project GPR2 is
    Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
 
    for Languages use ("Ada", "C");
-   for Source_Dirs use ("src/lib", "langkit/quex",
+   for Source_Dirs use ("src/lib",
                         Langkit_Generated_Src & "/include/gpr_parser");
    for Library_Name use "gpr2";
 
@@ -60,7 +60,8 @@ library project GPR2 is
      ("-O2", "-gnatn");
 
    Common_C_Options :=
-     ("-DQUEX_OPTION_ASSERTS_DISABLED",
+     ("-I" & Project'Project_Dir & "/langkit/quex",
+      "-DQUEX_OPTION_ASSERTS_DISABLED",
       "-DQUEX_OPTION_ASSERTS_WARNING_MESSAGE_DISABLED");
 
    package Compiler is
