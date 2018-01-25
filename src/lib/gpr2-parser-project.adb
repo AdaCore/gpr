@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -666,7 +666,7 @@ package body GPR2.Parser.Project is
                               Get_Name_Type (F_Type_Id (N));
                Values     : constant String_Literal_List :=
                               F_String_Literals (N);
-               Num_Childs : constant Natural := Child_Count (Values);
+               Num_Childs : constant Natural := Children_Count (Values);
                Cur_Child  : GPR_Node;
                Set        : Containers.Value_Set;
             begin
@@ -720,7 +720,7 @@ package body GPR2.Parser.Project is
             procedure Parse_With_Decl (N : With_Decl) is
                Path_Names : constant String_Literal_List :=
                               F_Path_Names (N);
-               Num_Childs : constant Natural := Child_Count (N);
+               Num_Childs : constant Natural := Children_Count (N);
                Cur_Child  : GPR_Node;
                Paths      : constant Containers.Path_Name_List :=
                               GPR2.Project.Paths (Filename);
@@ -1902,7 +1902,7 @@ package body GPR2.Parser.Project is
                declare
                   Childs : constant Case_Item_List := F_Items (Node);
                begin
-                  for C in 1 .. Child_Count (Childs) loop
+                  for C in 1 .. Children_Count (Childs) loop
                      Visit_Child (Child (GPR_Node (Childs), C));
                   end loop;
                end;
