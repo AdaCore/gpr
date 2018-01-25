@@ -1,8 +1,16 @@
 from language.parser import A
 from langkit.parsers import Opt, List, Or, Pick, Tok
-from langkit.dsl import Field
+from langkit.dsl import EnumNode, Field
 
 from language.parser import GPRNode
+
+
+class AllQualifier(EnumNode):
+    qualifier = True
+
+
+class Limited(EnumNode):
+    qualifier = True
 
 
 class WithDecl(GPRNode):
@@ -96,7 +104,7 @@ A.add_rules(
     context_clauses=List(Pick(A.with_decl, ";"), empty_valid=True),
 
     with_decl=WithDecl(
-        Opt("limited").as_bool(),
+        Opt("limited").as_bool(Limited),
         "with", List(A.string_literal, sep=",")
     ),
 
@@ -114,7 +122,7 @@ A.add_rules(
     )),
 
     project_extension=ProjectExtension(
-        "extends", Opt("all").as_bool(), A.string_literal
+        "extends", Opt("all").as_bool(AllQualifier), A.string_literal
     ),
 
     project_declaration=ProjectDeclaration(
