@@ -97,7 +97,7 @@ package body GPR2.Parser.Project is
      (Node : Single_Tok_Node'Class) return Name_Type
    is
       use Ada.Characters.Conversions;
-      V      : constant Wide_Wide_String := Text (F_Tok (Node));
+      V      : constant Wide_Wide_String := Text (Node);
       Offset : Natural := 0;
    begin
       if V (V'First) = '"' and then V (V'Last) = '"' then
@@ -138,7 +138,7 @@ package body GPR2.Parser.Project is
          procedure Handle_String (Node : String_Literal) is
          begin
             Result := To_Unbounded_String
-              (Unquote (Value_Type (String'(Text (F_Tok (Node))))));
+              (Unquote (Value_Type (String'(Text (Node)))));
          end Handle_String;
 
       begin
@@ -1426,7 +1426,7 @@ package body GPR2.Parser.Project is
             procedure Handle_String (Node : String_Literal) is
             begin
                Record_Value
-                 (Unquote (Value_Type (String'(Text (F_Tok (Node))))));
+                 (Unquote (Value_Type (String'(Text (Node)))));
             end Handle_String;
 
             ---------------------
@@ -1640,7 +1640,7 @@ package body GPR2.Parser.Project is
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
          Name    : constant Name_Type :=
-                     Name_Type (String'(Text (F_Tok (Name_1))));
+                     Name_Type (String'(Text (Name_1)));
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -1649,7 +1649,7 @@ package body GPR2.Parser.Project is
                return Get_Attribute_Ref
                  (Project => Name,
                   Pack    => Optional_Name_Type
-                               (String'(Text (F_Tok (Name_2)))),
+                               (String'(Text (Name_2))),
                   Node    => Att_Ref);
 
             else
@@ -1965,7 +1965,7 @@ package body GPR2.Parser.Project is
                -------------------
 
                procedure Handle_String (Node : String_Literal) is
-                  Value : constant Value_Type := Unquote (Text (F_Tok (Node)));
+                  Value : constant Value_Type := Unquote (Text (Node));
                begin
                   Is_Case_Item_Matches :=
                     Is_Case_Item_Matches

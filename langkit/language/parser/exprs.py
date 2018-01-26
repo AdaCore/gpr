@@ -1,4 +1,4 @@
-from langkit.parsers import Opt, List, Or, Pick, Tok
+from langkit.parsers import Opt, List, Or, Pick
 from langkit.dsl import Annotations, Field, abstract
 
 from language.parser import A, GPRNode
@@ -12,7 +12,7 @@ class Expr(GPRNode):
 
 @abstract
 class SingleTokNode(Expr):
-    tok = Field()
+    token_node = True
 
 
 class Identifier(SingleTokNode):
@@ -72,9 +72,9 @@ class ProjectReference(GPRNode):
 
 
 A.add_rules(
-    identifier=Identifier(Tok(Token.Identifier, keep=True)),
-    string_literal=StringLiteral(Tok(Token.String, keep=True)),
-    num_literal=NumLiteral(Tok(Token.Number, keep=True)),
+    identifier=Identifier(Token.Identifier),
+    string_literal=StringLiteral(Token.String),
+    num_literal=NumLiteral(Token.Number),
 
     static_name=Or(A.identifier,
                    Prefix(A.static_name, '.', A.identifier)),
@@ -114,7 +114,7 @@ A.add_rules(
     ),
 
     project_reference=ProjectReference(
-        Tok("project"), "'", A.attribute_reference
+        "project", "'", A.attribute_reference
     ),
 
     term=Or(

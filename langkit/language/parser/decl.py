@@ -1,5 +1,5 @@
 from language.parser import A
-from langkit.parsers import Opt, List, Or, Pick, Tok
+from langkit.parsers import Opt, List, Or, Pick
 from langkit.dsl import EnumNode, Field
 
 from language.parser import GPRNode
@@ -218,7 +218,7 @@ A.add_rules(
         A.simple_declarative_items
     ),
 
-    others_designator=OthersDesignator(Tok("others")),
+    others_designator=OthersDesignator("others"),
     choice=Or(A.string_literal, A.others_designator),
 
     discrete_choice_list=List(A.choice, sep="|"),
