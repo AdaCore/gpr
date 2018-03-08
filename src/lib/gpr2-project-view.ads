@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -170,6 +170,13 @@ package GPR2.Project.View is
    --  contain packages.
 
    --  Sources
+
+   function Source_Dirs (Self : Object) return Project.Attribute.Object
+     with Pre => Self /= Undefined
+                 and then Self.Qualifier not in K_Aggregate | K_Abstract;
+   --  Returns the sources dirs for the project view. This is only defined for
+   --  project having sources. If not defined in the project itself, the view
+   --  does have the project directory has source dir.
 
    function Has_Sources (Self : Object) return Boolean
      with Pre  => Self /= Undefined,

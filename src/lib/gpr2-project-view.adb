@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -442,6 +442,22 @@ package body GPR2.Project.View is
 
       return Project.Source.Undefined;
    end Source;
+
+   -----------------
+   -- Source_Dirs --
+   -----------------
+
+   function Source_Dirs (Self : Object) return Project.Attribute.Object is
+      Data : constant Definition.Data := Definition.Get (Self);
+      --  View definition data, will be updated and recorded back into the
+      --  definition set.
+   begin
+      if Data.Attrs.Has_Source_Dirs then
+         return Data.Attrs.Source_Dirs;
+      else
+         return Project.Attribute.Default_Source_Dirs;
+      end if;
+   end Source_Dirs;
 
    -------------
    -- Sources --
