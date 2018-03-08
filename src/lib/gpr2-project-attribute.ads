@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -100,6 +100,8 @@ package GPR2.Project.Attribute is
    --  Sets attribute case sensitivity for the index and the value.
    --  By default both are case-sensitive.
 
+   Default_Source_Dirs : constant Object;
+
 private
 
    type Object is new Name_Values.Object with record
@@ -111,5 +113,12 @@ private
    Undefined : constant Object :=
                  (Name_Values.Undefined
                   with Null_Unbounded_String, True, True);
+
+   Default_Source_Dirs : constant Object :=
+                           (Name_Values.Create
+                              (Project.Registry.Attribute.Source_Dirs,
+                               Containers.Value_Type_List.To_Vector (".", 1),
+                               Source_Reference.Undefined)
+                              with Null_Unbounded_String, True, True);
 
 end GPR2.Project.Attribute;
