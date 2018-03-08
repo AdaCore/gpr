@@ -105,7 +105,7 @@ procedure Main is
 
    procedure Output_Filename (Filename : Full_Path_Name) is
       I : constant Positive :=
-            Strings.Fixed.Index (Filename, "extended-definitions2");
+            Strings.Fixed.Index (Filename, "extended-definitions3");
    begin
       Text_IO.Put (" > " & Filename (I + 22 .. Filename'Last));
    end Output_Filename;
