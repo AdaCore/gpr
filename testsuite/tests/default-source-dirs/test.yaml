@@ -1,0 +1,5 @@
+description:
+    Check default source_dirs.
+driver: build_and_run
+project_file: default_source_dirs
+main: main

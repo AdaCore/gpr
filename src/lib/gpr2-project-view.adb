@@ -1302,16 +1302,14 @@ package body GPR2.Project.View is
             Populate_Sources : begin
                --  Handle Source_Dirs
 
-               if Data.Attrs.Has_Source_Dirs then
-                  for Dir of Data.Attrs.Source_Dirs.Values loop
-                     if OS_Lib.Is_Absolute_Path (Dir) then
-                        Handle_Directory (Dir);
-                     else
-                        Handle_Directory
-                          (Root & OS_Lib.Directory_Separator & Dir);
-                     end if;
-                  end loop;
-               end if;
+               for Dir of Self.Source_Dirs.Values loop
+                  if OS_Lib.Is_Absolute_Path (Dir) then
+                     Handle_Directory (Dir);
+                  else
+                     Handle_Directory
+                       (Root & OS_Lib.Directory_Separator & Dir);
+                  end if;
+               end loop;
             end Populate_Sources;
          end if;
 

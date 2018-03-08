@@ -1,0 +1,4 @@
+Project: Simple
+ > main.adb       language: ada    Kind: S_BODY   unit: Main
+ > simple.adb     language: ada    Kind: S_BODY   unit: Simple
+ > simple.ads     language: ada    Kind: S_SPEC   unit: Simple

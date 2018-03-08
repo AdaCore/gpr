@@ -1,0 +1,7 @@
+
+with "gpr2";
+
+project default_source_dirs is
+   for Main use ("main.adb");
+   for Source_Dirs use (".");
+end default_source_dirs;
