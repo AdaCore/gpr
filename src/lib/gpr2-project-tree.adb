@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1364,18 +1364,27 @@ package body GPR2.Project.Tree is
                Q_Name : constant Registry.Attribute.Qualified_Name :=
                           Registry.Attribute.Create (A.Name);
             begin
-               if not Registry.Attribute.Get
-                 (Q_Name).Is_Allowed_In (P_Kind)
-               then
+               if not Registry.Attribute.Exists (Q_Name) then
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "attribute " & String (A.Name)
-                        & " cannot be used in " & Image (P_Kind),
+                        "unknown attribute " & String (A.Name),
                         Source_Reference.Object (A)));
-               end if;
 
-               Check_Def (Registry.Attribute.Get (Q_Name), A);
+               else
+                  if not Registry.Attribute.Get
+                    (Q_Name).Is_Allowed_In (P_Kind)
+                  then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "attribute " & String (A.Name)
+                           & " cannot be used in " & Image (P_Kind),
+                           Source_Reference.Object (A)));
+                  end if;
+
+                  Check_Def (Registry.Attribute.Get (Q_Name), A);
+               end if;
             end;
          end loop;
       end Validity_Check;
