@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -2277,6 +2277,17 @@ begin
            Others_Allowed       => False,
            Index_Case_Sensitive => False,
            Value                => List,
+           Value_Case_Sensitive => True,
+           Read_Only            => False,
+           Is_Allowed_In        => Everywhere));
+
+   --  origin_project
+   Store.Insert
+     ("origin_project",
+      Def'(Index                => No,
+           Others_Allowed       => False,
+           Index_Case_Sensitive => False,
+           Value                => Single,
            Value_Case_Sensitive => True,
            Read_Only            => False,
            Is_Allowed_In        => Everywhere));
