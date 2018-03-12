@@ -62,7 +62,7 @@ procedure Main is
                declare
                   F : constant String := M.Sloc.Filename;
                   I : constant Natural :=
-                        Strings.Fixed.Index (F, "/unknown-attribute");
+                        Strings.Fixed.Index (F, "unknown-attribute");
                begin
                   Text_IO.Put_Line ("> " & F (I .. F'Last));
                   Text_IO.Put_Line (M.Level'Img);
