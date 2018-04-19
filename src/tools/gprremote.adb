@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                       Copyright (C) 2017, AdaCore                        --
+--                       Copyright (C) 2018, AdaCore                        --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -46,6 +46,8 @@ procedure GPRremote is
    use Ada.Text_IO;
 
    use GPR2;
+
+   use GPR.Util;
 
    use type GNAT.OS_Lib.String_Access;
 
@@ -140,7 +142,7 @@ procedure GPRremote is
          end if;
       end Filter_Path;
 
-      Options : GNAT.OS_Lib.Argument_List (1 .. Last - Arg_First_Option + 1);
+      Options : String_Vectors.Vector;
 
    begin
       Root_Dir := To_Unbounded_String
@@ -153,8 +155,7 @@ procedure GPRremote is
       --  Set options
 
       for K in Arg_First_Option .. Last loop
-         Options (K - Arg_First_Option + 1) :=
-           new String'(To_String (Args (K)));
+         Options.Append (To_String (Args (K)));
       end loop;
 
       --  Send sync command to slave
@@ -169,12 +170,6 @@ procedure GPRremote is
          Dep_Name => "",
          Env      => "",
          Filter   => Filter_Path'Access);
-
-      --  Clear options
-
-      for K in Options'Range loop
-         GNAT.OS_Lib.Free (Options (K));
-      end loop;
 
       Wait_Ack : declare
          Cmd : constant Compilation.Protocol.Command :=
@@ -326,7 +321,6 @@ procedure GPRremote is
    procedure Parse_Command_Line is
       use GNAT.Command_Line;
       use GNAT.OS_Lib;
-      use GPR.Util;
 
       procedure Usage;
 
