@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,9 +22,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded;
+
 with GPR2.Source_Reference.Set;
 
 private package GPR2.Source.Parser is
+
+   use Ada.Strings.Unbounded;
 
    --  This is to get some information from the Ada sources. We need for
    --  example to know if the unit is a separate unit (not possible to detect
@@ -39,7 +43,7 @@ private package GPR2.Source.Parser is
       Unit_Name   : Unbounded_String;
    end record;
 
-   function Check (Filename : Path_Name_Type) return Data;
+   function Check (Filename : Path_Name.Object) return Data;
    --  Check the sources and returns the corresponding information
 
 end GPR2.Source.Parser;

@@ -26,6 +26,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -40,7 +41,7 @@ procedure Main is
    procedure Check (Project_Name : Name_Type);
    --  Do check the given project's sources
 
-   procedure Output_Filename (Filename : Full_Path_Name);
+   procedure Output_Filename (Filename : Path_Name.Full_Name);
    --  Remove the leading tmp directory
 
    -----------
@@ -76,7 +77,7 @@ procedure Main is
    -- Output_Filename --
    ---------------------
 
-   procedure Output_Filename (Filename : Full_Path_Name) is
+   procedure Output_Filename (Filename : Path_Name.Full_Name) is
       I : constant Positive :=
             Strings.Fixed.Index (Filename, "unknown-attribute");
    begin

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,11 +24,14 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories;
+with Ada.Strings.Unbounded;
 
 with GPR2.Source.Registry;
 with GPR2.Source.Parser;
 
 package body GPR2.Source is
+
+   use Ada.Strings.Unbounded;
 
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self /= Undefined;
@@ -52,14 +55,15 @@ package body GPR2.Source is
    ---------
 
    overriding function "=" (Left, Right : Object) return Boolean is
+      use type GPR2.Path_Name.Object;
    begin
-      if Left.Pathname = No_Path_Name
-        and then Right.Pathname = No_Path_Name
+      if Left.Pathname = Path_Name.Undefined
+        and then Right.Pathname = Path_Name.Undefined
       then
          return True;
       else
-         return not (Left.Pathname = No_Path_Name
-                     xor Right.Pathname = No_Path_Name)
+         return not (Left.Pathname = Path_Name.Undefined
+                     xor Right.Pathname = Path_Name.Undefined)
            and then Key (Left) = Key (Right);
       end if;
    end "=";
@@ -69,7 +73,7 @@ package body GPR2.Source is
    ------------
 
    function Create
-     (Filename  : Path_Name_Type;
+     (Filename  : Path_Name.Object;
       Kind      : Kind_Type;
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object is
@@ -78,11 +82,11 @@ package body GPR2.Source is
          Registry.Shared.Register
            (Registry.Data'
               (Path_Name  => Filename,
-               Timestamp  => Directories.Modification_Time (Value (Filename)),
+               Timestamp  => Directories.Modification_Time (Filename.Value),
                Language   => To_Unbounded_String (String (Language)),
                Unit_Name  => To_Unbounded_String (String (Unit_Name)),
                Kind       => Kind,
-               Other_Part => No_Path_Name,
+               Other_Part => Path_Name.Undefined,
                Units      => <>,
                Parsed     => False,
                Ref_Count  => 1));
@@ -95,9 +99,9 @@ package body GPR2.Source is
    -- Filename --
    --------------
 
-   function Filename (Self : Object) return Full_Path_Name is
+   function Filename (Self : Object) return Path_Name.Full_Name is
    begin
-      return Value (Registry.Shared.Get (Self).Path_Name);
+      return Registry.Shared.Get (Self).Path_Name.Value;
    end Filename;
 
    ---------
@@ -110,7 +114,7 @@ package body GPR2.Source is
    begin
       if Data.Unit_Name = Null_Unbounded_String then
          --  Not unit based
-         return Value (Data.Path_Name);
+         return Data.Path_Name.Value;
 
       else
          return Kind_Type'Image (Data.Kind)
@@ -142,10 +146,12 @@ package body GPR2.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      Other_Part : constant Path_Name_Type :=
+      use type Path_Name.Object;
+
+      Other_Part : constant Path_Name.Object :=
                      Registry.Shared.Get (Self).Other_Part;
    begin
-      if Other_Part = No_Path_Name then
+      if Other_Part = Path_Name.Undefined then
          return Undefined;
       else
          return Object'(Pathname => Other_Part);
@@ -160,7 +166,7 @@ package body GPR2.Source is
       use type Calendar.Time;
 
       S        : Registry.Data := Registry.Shared.Get (Self);
-      Filename : constant String := Value (Self.Pathname);
+      Filename : constant String := Self.Pathname.Value;
    begin
       --  Parse if not yet parsed or if the file has changed on disk
 

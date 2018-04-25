@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -26,6 +26,8 @@ with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Text_IO;
 
+with GPR2.Containers;
+
 with GNAT.OS_Lib;
 with GNAT.String_Split;
 
@@ -42,36 +44,27 @@ package body GPR2.Project is
 
    function Create
      (Name  : Name_Type;
-      Paths : Containers.Path_Name_List :=
-                Containers.Path_Name_Type_List.Empty_List)
-      return Path_Name_Type
+      Paths : Path_Name.Set.Object := Path_Name.Set.Set.Empty_List)
+      return GPR2.Path_Name.Object
    is
       use GNAT;
 
-      function "+"
-        (Str : String) return Unbounded_String renames To_Unbounded_String;
-
-      function Create (Name, Path_Name : String) return Path_Name_Type
-        is (Path_Name_Type'
-              (As_Is     => +Name,
-               Value     => +Path_Name,
-               Base_Name => +Directories.Base_Name (Path_Name),
-               Dir_Name  => +Directories.Containing_Directory (Path_Name)));
-
       DS       : constant Character := OS_Lib.Directory_Separator;
 
-      GPR_Name : constant String :=
+      GPR_Name : constant Name_Type :=
                    (if Directories.Extension (String (Name)) in "gpr" | "cgpr"
-                    then String (Name)
-                    else String (Name) & ".gpr");
+                    then Name
+                    else Name & ".gpr");
 
    begin
       --  If the file exists or an absolute path has been specificed or there
       --  is no ADA_PROJECT_PATH, just create the Path_Name_Type using the
       --  given Name.
 
-      if OS_Lib.Is_Absolute_Path (GPR_Name) then
-         return Create (GPR_Name, OS_Lib.Normalize_Pathname (GPR_Name));
+      if OS_Lib.Is_Absolute_Path (String (GPR_Name)) then
+         return Path_Name.Create
+           (GPR_Name,
+            Name_Type (OS_Lib.Normalize_Pathname (String (GPR_Name))));
 
       else
          --  If we have an empty Paths set, this is the root project and it is
@@ -81,46 +74,50 @@ package body GPR2.Project is
             if Directories.Exists
                 (Directories.Current_Directory & DS & String (Name))
             then
-               return Create
+               return Path_Name.Create
                  (GPR_Name,
-                  OS_Lib.Normalize_Pathname
-                    (Directories.Current_Directory & DS & String (Name)));
+                  Name_Type (OS_Lib.Normalize_Pathname
+                    (Directories.Current_Directory & DS & String (Name))));
             end if;
 
          else
             for P of Paths loop
                if Directories.Exists
-                 (String (Dir_Name (P)) & DS & GPR_Name)
+                 (String (Path_Name.Dir_Name (P)) & DS & String (GPR_Name))
                then
-                  return Create
+                  return Path_Name.Create
                     (GPR_Name,
-                     OS_Lib.Normalize_Pathname
-                       (String (Dir_Name (P)) & DS & GPR_Name));
+                     Name_Type (OS_Lib.Normalize_Pathname
+                       (String (Path_Name.Dir_Name (P))
+                        & DS & String (GPR_Name))));
                end if;
             end loop;
          end if;
       end if;
 
-      return Create (GPR_Name, GPR_Name);
+      return Path_Name.Create (GPR_Name, GPR_Name);
    end Create;
 
    -----------
    -- Paths --
    -----------
 
-   function Paths (Parent : Path_Name_Type) return Containers.Path_Name_List is
+   function Paths
+     (Parent : Path_Name.Object) return Path_Name.Set.Object
+   is
 
       use type Containers.Count_Type;
       use type GNAT.OS_Lib.String_Access;
+      use type Path_Name.Object;
 
       procedure Append
-        (Result : in out Containers.Path_Name_List; Value : String)
+        (Result : in out Path_Name.Set.Object; Value : String)
         with Post => (if Value'Length = 0
                       then Result'Old.Length = Result.Length
                       else Result'Old.Length + 1 = Result.Length);
 
       procedure Add_List
-        (Result : in out Containers.Path_Name_List;
+        (Result : in out Path_Name.Set.Object;
          Values : String)
         with Post => Result'Old.Length <= Result.Length;
       --  Add list Values (which has OS dependant path separator) into Result
@@ -130,7 +127,7 @@ package body GPR2.Project is
       --------------
 
       procedure Add_List
-        (Result : in out Containers.Path_Name_List;
+        (Result : in out Path_Name.Set.Object;
          Values : String)
       is
          use GNAT;
@@ -149,20 +146,20 @@ package body GPR2.Project is
       ------------
 
       procedure Append
-        (Result : in out Containers.Path_Name_List;
+        (Result : in out Path_Name.Set.Object;
          Value  : String) is
       begin
          if Value /= "" then
-            Result.Append (Create_Directory (Name_Type (Value)));
+            Result.Append (Path_Name.Create_Directory (Name_Type (Value)));
          end if;
       end Append;
 
-      Result : Containers.Path_Name_List;
+      Result : Path_Name.Set.Object;
 
    begin
       --  First check in parent project directory
 
-      if Parent /= No_Path_Name then
+      if Parent /= Path_Name.Undefined then
          Result.Append (Parent);
       end if;
 

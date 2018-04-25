@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-2017, Free Software Foundation, Inc.         --
+--          Copyright (C) 2016-2018, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -28,6 +28,7 @@ with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -55,7 +56,7 @@ procedure Main is
    begin
       Text_IO.Put_Line
         (">>> Changed_Callback for "
-         & Directories.Simple_Name (Value (Prj.Path_Name)));
+         & Directories.Simple_Name (Prj.Path_Name.Value));
    end Changed_Callback;
 
    -------------

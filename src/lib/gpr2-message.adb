@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,6 +24,8 @@
 
 with Ada.Directories;
 with GNAT.Formatted_String;
+
+with GPR2.Path_Name;
 
 package body GPR2.Message is
 
@@ -50,7 +52,7 @@ package body GPR2.Message is
       use Ada;
       use GNAT.Formatted_String;
 
-      Filename : constant Full_Path_Name := Self.Sloc.Filename;
+      Filename : constant Path_Name.Full_Name := Self.Sloc.Filename;
    begin
       if Self.Sloc.Has_Source_Reference then
          declare

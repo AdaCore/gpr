@@ -60,7 +60,7 @@ package body GPR2.Project.Tree is
 
    function Recursive_Load
      (Self          : Object;
-      Filename      : Path_Name_Type;
+      Filename      : Path_Name.Object;
       Context_View  : View.Object;
       Status        : Definition.Relation_Status;
       Root_Context  : out GPR2.Context.Object;
@@ -202,7 +202,7 @@ package body GPR2.Project.Tree is
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => "Runtime",
-            File      => Create_File ("runtime.gpr"),
+            File      => Path_Name.Create_File ("runtime.gpr"),
             Qualifier => K_Standard);
 
          return Project.Definition.Register (Data);
@@ -372,10 +372,10 @@ package body GPR2.Project.Tree is
 
    function Get_View
      (Self   : Object;
-      Source : Path_Name_Type) return Project.View.Object
+      Source : Path_Name.Object) return Project.View.Object
    is
       Pos : Name_View.Cursor :=
-              Self.Sources.Find (Name_Type (Value (Source)));
+              Self.Sources.Find (Name_Type (Source.Value));
    begin
       if Name_View.Has_Element (Pos) then
          return Name_View.Element (Pos);
@@ -384,7 +384,7 @@ package body GPR2.Project.Tree is
          --  Try to update sources and check again
 
          Update_Sources (Self);
-         Pos := Self.Sources.Find (Name_Type (Value (Source)));
+         Pos := Self.Sources.Find (Name_Type (Source.Value));
 
          if Name_View.Has_Element (Pos) then
             return Name_View.Element (Pos);
@@ -507,7 +507,7 @@ package body GPR2.Project.Tree is
 
    procedure Load
      (Self     : in out Object;
-      Filename : Path_Name_Type;
+      Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
       Config   : Configuration.Object := Configuration.Undefined)
    is
@@ -563,11 +563,11 @@ package body GPR2.Project.Tree is
          Set_Context (Self, Context);
 
          if Has_Error then
-            raise Project_Error with Value (Filename) & " semantic error";
+            raise Project_Error with Filename.Value & " semantic error";
          end if;
 
       else
-         raise Project_Error with Value (Filename) & " syntax error";
+         raise Project_Error with Filename.Value & " syntax error";
       end if;
    end Load;
 
@@ -577,7 +577,7 @@ package body GPR2.Project.Tree is
 
    procedure Load_Configuration
      (Self     : in out Object;
-      Filename : Path_Name_Type) is
+      Filename : Path_Name.Object) is
    begin
       Self.Conf := Configuration.Create (Filename);
 
@@ -627,7 +627,7 @@ package body GPR2.Project.Tree is
    procedure Record_View
      (Self   : in out Object;
       View   : GPR2.Project.View.Object;
-      Source : Full_Path_Name;
+      Source : Path_Name.Full_Name;
       Unit   : Name_Type) is
    begin
       Self.Units.Include (Unit, View);
@@ -640,7 +640,7 @@ package body GPR2.Project.Tree is
 
    function Recursive_Load
      (Self          : Object;
-      Filename      : Path_Name_Type;
+      Filename      : Path_Name.Object;
       Context_View  : View.Object;
       Status        : Definition.Relation_Status;
       Root_Context  : out GPR2.Context.Object;
@@ -649,19 +649,21 @@ package body GPR2.Project.Tree is
       Starting_From : View.Object := View.Undefined) return View.Object
 
    is
-      function Load (Filename : Path_Name_Type) return Definition.Data;
+      use type Path_Name.Object;
+
+      function Load (Filename : Path_Name.Object) return Definition.Data;
       --  Returns the Data definition for the given project
 
       function Internal
         (Self         : Object;
-         Filename     : Path_Name_Type;
+         Filename     : Path_Name.Object;
          Context_View : View.Object;
          Status       : Definition.Relation_Status;
          Root_Context : out GPR2.Context.Object;
          Messages     : out Log.Object) return View.Object;
 
       procedure Push
-        (Path_Name   : Path_Name_Type;
+        (Path_Name   : GPR2.Path_Name.Object;
          Project     : GPR2.Project.Import.Object;
          Is_Extended : Boolean := False);
       --  Record a new project as seen and record path
@@ -678,10 +680,10 @@ package body GPR2.Project.Tree is
       end record;
 
       package Data_Set is new Ada.Containers.Ordered_Maps
-        (Path_Name_Type, Data);
+        (GPR2.Path_Name.Object, Data);
 
       Sets  : Data_Set.Map;
-      Paths : Containers.Path_Name_List;
+      Paths : Path_Name.Set.Object;
 
       ------------------------
       -- Add_Paths_Messages --
@@ -697,7 +699,7 @@ package body GPR2.Project.Tree is
                  (Message.Create
                     (Message.Error,
                      (if Def.Extended then "extends" else "imports")
-                      & " " & Value (Import),
+                      & " " & Import.Value,
                      Source_Reference.Object (Def.Project)));
             end;
          end loop;
@@ -709,7 +711,7 @@ package body GPR2.Project.Tree is
 
       function Internal
         (Self         : Object;
-         Filename     : Path_Name_Type;
+         Filename     : Path_Name.Object;
          Context_View : View.Object;
          Status       : Definition.Relation_Status;
          Root_Context : out GPR2.Context.Object;
@@ -763,10 +765,10 @@ package body GPR2.Project.Tree is
 
                if Data.Trees.Project.Has_Extended then
                   declare
-                     Path_Name : constant Path_Name_Type :=
+                     Path_Name : constant GPR2.Path_Name.Object :=
                                    Data.Trees.Project.Extended.Path_Name;
                   begin
-                     if Directories.Exists (Value (Path_Name)) then
+                     if Directories.Exists (Path_Name.Value) then
                         Push (Path_Name, Data.Trees.Project.Extended, True);
 
                         Data.Extended :=
@@ -786,7 +788,7 @@ package body GPR2.Project.Tree is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Message => "extended project file "
-                              & Value (Path_Name)
+                              & Path_Name.Value
                               & " not found",
                               Sloc    =>
                                 Source_Reference.Object
@@ -821,7 +823,7 @@ package body GPR2.Project.Tree is
                         Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "imports " & Value (Project.Path_Name),
+                              "imports " & Project.Path_Name.Value,
                               Source_Reference.Object
                                 (Data.Trees.Project.Imports.Element
                                    (Project.Path_Name))));
@@ -852,7 +854,7 @@ package body GPR2.Project.Tree is
                         Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "imports " & Value (Project.Path_Name),
+                              "imports " & Project.Path_Name.Value,
                               Source_Reference.Object
                                 (Data.Trees.Project.Imports.Element
                                      (Project.Path_Name))));
@@ -895,7 +897,7 @@ package body GPR2.Project.Tree is
       -- Load --
       ----------
 
-      function Load (Filename : Path_Name_Type) return Definition.Data is
+      function Load (Filename : Path_Name.Object) return Definition.Data is
 
          use type Parser.Project.Object;
 
@@ -907,7 +909,7 @@ package body GPR2.Project.Tree is
                Read        => False,
                Unread      => True));
 
-         Paths   : constant Containers.Path_Name_List :=
+         Paths   : constant Path_Name.Set.Object :=
                      GPR2.Project.Paths (Filename);
          Project : constant Parser.Project.Object :=
                      Parser.Project.Load (Filename, Messages);
@@ -935,12 +937,12 @@ package body GPR2.Project.Tree is
 
             for Import of Data.Trees.Project.Imports loop
                declare
-                  Import_Filename : constant Path_Name_Type :=
+                  Import_Filename : constant Path_Name.Object :=
                                       Create
-                                        (Name_Type (Value (Import.Path_Name)),
+                                        (Name_Type (Import.Path_Name.Value),
                                          Paths);
                begin
-                  if Directories.Exists (Value (Import_Filename)) then
+                  if Directories.Exists (Import_Filename.Value) then
                      Data.Trees.Imports.Insert
                        (Import_Filename,
                         Parser.Project.Load (Import_Filename, Messages));
@@ -952,7 +954,7 @@ package body GPR2.Project.Tree is
                        (GPR2.Message.Create
                           (Level   => Message.Error,
                            Message => "imported project file "
-                                        & Value (Import.Path_Name)
+                                        & Import.Path_Name.Value
                                         & " not found",
                            Sloc    => Source_Reference.Object (Import)));
                      exit;
@@ -969,7 +971,7 @@ package body GPR2.Project.Tree is
       ---------
 
       procedure Pop is
-         Last : constant Path_Name_Type := Paths.Last_Element;
+         Last : constant Path_Name.Object := Paths.Last_Element;
       begin
          Paths.Delete_Last;
          Sets.Delete (Last);
@@ -980,7 +982,7 @@ package body GPR2.Project.Tree is
       ----------
 
       procedure Push
-        (Path_Name   : Path_Name_Type;
+        (Path_Name   : GPR2.Path_Name.Object;
          Project     : GPR2.Project.Import.Object;
          Is_Extended : Boolean := False) is
       begin
@@ -1072,7 +1074,7 @@ package body GPR2.Project.Tree is
                            Context.Signature (P_Data.Externals);
          Context       : constant GPR2.Context.Object :=
                            View.Context;
-         Paths         : Containers.Path_Name_List;
+         Paths         : Path_Name.Set.Object;
       begin
          Parser.Project.Parse
            (P_Data.Trees.Project,
@@ -1099,7 +1101,9 @@ package body GPR2.Project.Tree is
               P_Data.Attrs.Element (Registry.Attribute.Project_Files).Values
             loop
                declare
-                  Pathname : constant Path_Name_Type :=
+                  use type Path_Name.Object;
+
+                  Pathname : constant Path_Name.Object :=
                                Create (Name_Type (Project), Paths);
                begin
                   if Pathname = View.Path_Name then
@@ -1109,13 +1113,13 @@ package body GPR2.Project.Tree is
                        (Message.Create
                           (Message.Error,
                            "project cannot aggregate itself "
-                           & String (Base_Name (Pathname)),
+                           & String (Pathname.Base_Name),
                            Source_Reference.Object
                              (P_Data.Attrs.Element
                                 (Registry.Attribute.Project_Files))));
 
                   elsif P_Data.Aggregated.Contains
-                    (Name_Type (Value (Pathname)))
+                    (Name_Type (Pathname.Value))
                   then
                      --  Duplicate in the project_files attribute
 
@@ -1124,7 +1128,7 @@ package body GPR2.Project.Tree is
                           (Message.Create
                              (Message.Warning,
                               "duplicate aggregated project "
-                              & String (Base_Name (Pathname)),
+                              & String (Pathname.Base_Name),
                               Source_Reference.Object
                                 (P_Data.Attrs.Element
                                    (Registry.Attribute.Project_Files))));
@@ -1188,7 +1192,7 @@ package body GPR2.Project.Tree is
                         --  Record aggregated view into the aggregate's view
 
                         P_Data.Aggregated.Insert
-                          (Name_Type (Value (Pathname)), A_View);
+                          (Name_Type (Pathname.Value), A_View);
                      end;
                   end if;
                end;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -27,6 +27,7 @@
 
 with Ada.Calendar;
 
+with GPR2.Path_Name;
 with GPR2.Source_Reference.Set;
 
 package GPR2.Source is
@@ -45,7 +46,7 @@ package GPR2.Source is
    --  A source object is equal if it is the same unit for unit based language,
    --  and if it is the same filename otherwise.
 
-   function Filename (Self : Object) return Full_Path_Name;
+   function Filename (Self : Object) return Path_Name.Full_Name;
    --  Retruns the filename for the given source
 
    function Kind (Self : Object) return Kind_Type;
@@ -69,7 +70,7 @@ package GPR2.Source is
    --  Retruns the time-stamp for this source
 
    function Create
-     (Filename  : Path_Name_Type;
+     (Filename  : Path_Name.Object;
       Kind      : Kind_Type;
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object;
@@ -87,9 +88,9 @@ package GPR2.Source is
 private
 
    type Object is tagged record
-      Pathname : Path_Name_Type := No_Path_Name;
+      Pathname : Path_Name.Object := Path_Name.Undefined;
    end record;
 
-   Undefined : constant Object := Object'(Pathname => No_Path_Name);
+   Undefined : constant Object := Object'(Pathname => Path_Name.Undefined);
 
 end GPR2.Source;

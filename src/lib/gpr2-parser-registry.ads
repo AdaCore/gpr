@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,27 +22,29 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Path_Name;
+
 limited with GPR2.Parser.Project;
 
 private package GPR2.Parser.Registry is
 
-   function Exists (Pathname : Path_Name_Type) return Boolean;
+   function Exists (Pathname : Path_Name.Object) return Boolean;
    --  Returns True if the project file given by its full path-name is known in
    --  the registry.
 
    procedure Register
-     (Pathname : Path_Name_Type; Project : Parser.Project.Object)
+     (Pathname : Path_Name.Object; Project : Parser.Project.Object)
      with Post => Exists (Pathname);
    --  Register a new project syntactic tree for Pathname or increment the
    --  reference count for the given project as this object can be shared
    --  by multiple project tree.
 
-   procedure Unregister (Pathname : Path_Name_Type)
+   procedure Unregister (Pathname : Path_Name.Object)
      with Pre => Exists (Pathname);
    --  Unregister the given project, remove it from the store if no more
    --  referenced (reference count is 0).
 
-   function Get (Pathname : Path_Name_Type) return Project.Object
+   function Get (Pathname : Path_Name.Object) return Project.Object
      with Pre => Exists (Pathname);
    --  Returns the syntactic tree for project Pathname
 

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -54,8 +54,6 @@
 --     Unit
 --        A unit with its spec and possible bodies
 
-private with Ada.Strings.Unbounded;
-
 package GPR2 is
 
    Project_Error : exception;
@@ -102,72 +100,10 @@ package GPR2 is
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
    --  A case sensitive name
 
-   --
-   --  Path name
-   --
-
-   type Path_Name_Type is private;
-   --  A project path-name, will always be normalized according to the running
-   --  target.
-
-   No_Path_Name : constant Path_Name_Type;
-
-   overriding function "=" (Left, Right : Path_Name_Type) return Boolean;
-   --  Returns True if Left and Right are referencing the same project. That
-   --  is, based on the normalized names.
-
-   function Create_File (Name : Name_Type) return Path_Name_Type;
-   --  Create a Path_Name_Type for a file
-
-   function Create_Directory (Name : Name_Type) return Path_Name_Type;
-   --  Create a Path_Name_Type for a directory
-
-   function "<" (Left, Right : Path_Name_Type) return Boolean;
-   --  Returns True based on the normalized names
-
-   subtype Full_Path_Name is String
-     with Dynamic_Predicate =>
-       (for some C of Full_Path_Name => C in '/' | '\');
-
-   function Value (File : Path_Name_Type) return Full_Path_Name;
-   --  Returns the full pathname for the given Path_Name_Type
-
-   function Base_Name (File : Path_Name_Type) return Name_Type;
-   --  Returns the base name for File
-
-   function Dir_Name (File : Path_Name_Type) return Full_Path_Name;
-   --  Return the directory part if File full path name
-
 private
 
-   use Ada.Strings.Unbounded;
-
-   type Path_Name_Type is record
-      As_Is     : Unbounded_String;
-      Value     : Unbounded_String;
-      Base_Name : Unbounded_String;
-      Dir_Name  : Unbounded_String;
-   end record;
-
-   overriding function "=" (Left, Right : Path_Name_Type) return Boolean is
-     (Left.Value = Right.Value);
-
-   function "<" (Left, Right : Path_Name_Type) return Boolean
-     is (Left.Value < Right.Value);
-
-   function Base_Name (File : Path_Name_Type) return Name_Type
-     is (Name_Type (To_String (File.Base_Name)));
-
-   function Dir_Name (File : Path_Name_Type) return Full_Path_Name
-     is (Full_Path_Name (To_String (File.Dir_Name)));
-
-   No_Name      : constant Optional_Name_Type := "";
-   No_Value     : constant Value_Type := "";
-   No_Path_Name : constant Path_Name_Type :=
-                    (Null_Unbounded_String,
-                     Null_Unbounded_String,
-                     Null_Unbounded_String,
-                     Null_Unbounded_String);
+   No_Name  : constant Optional_Name_Type := "";
+   No_Value : constant Value_Type := "";
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is

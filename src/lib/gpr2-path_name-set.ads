@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--            Copyright (C) 2018, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,42 +22,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Source_Reference;
+with Ada.Containers.Doubly_Linked_Lists;
 
-package GPR2.Project.Import is
+package GPR2.Path_Name.Set is
 
-   use type GPR2.Source_Reference.Object;
+   package Set is new Ada.Containers.Doubly_Linked_Lists (Object);
 
-   type Object is new Source_Reference.Object with private;
+   subtype Object is Set.List;
 
-   subtype Import_Type is Object;
-
-   Undefined : constant Object;
-
-   function Create
-     (Path_Name  : GPR2.Path_Name.Object;
-      Sloc       : Source_Reference.Object;
-      Is_Limited : Boolean) return Object
-     with Pre => Sloc /= Source_Reference.Undefined;
-
-   function Path_Name (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
-   --  Full pathname of the corresponding project file
-
-   function Is_Limited (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
-   --  Returns True if this is a limited import
-
-private
-
-   type Object is new Source_Reference.Object with record
-      Path_Name  : GPR2.Path_Name.Object;
-      Is_Limited : Boolean;
-   end record;
-
-   Undefined : constant Object :=
-                 (Source_Reference.Undefined
-                  with Path_Name  => GPR2.Path_Name.Undefined,
-                       Is_Limited => False);
-
-end GPR2.Project.Import;
+end GPR2.Path_Name.Set;

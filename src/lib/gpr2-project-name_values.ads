@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,6 +29,8 @@
 with GPR2.Containers;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Source_Reference;
+
+private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Name_Values is
 
@@ -82,6 +84,8 @@ package GPR2.Project.Name_Values is
    --  Returns the value for the Name/Values pair object
 
 private
+
+   use Ada.Strings.Unbounded;
 
    type Object is new Source_Reference.Object with record
       Kind   : Registry.Attribute.Value_Kind := List;

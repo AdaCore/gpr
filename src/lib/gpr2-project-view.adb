@@ -28,6 +28,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.MD5;
@@ -44,6 +45,8 @@ with GPR2.Source_Reference;
 with GPR2.Unit;
 
 package body GPR2.Project.View is
+
+   use Ada.Strings.Unbounded;
 
    function Naming_Package (Self : Object) return Pack.Object;
    --  Returns the Naming package for the current view. This is either
@@ -382,7 +385,7 @@ package body GPR2.Project.View is
    -- Path_Name --
    ---------------
 
-   function Path_Name (Self : Object) return Path_Name_Type is
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Definition.Get (Self).Trees.Project.Path_Name;
    end Path_Name;
@@ -430,12 +433,13 @@ package body GPR2.Project.View is
    ------------
 
    function Source
-     (Self : Object; File : Path_Name_Type) return Project.Source.Object is
+     (Self : Object;
+      File : GPR2.Path_Name.Object) return Project.Source.Object is
    begin
       Self.Update_Sources;
 
       for S of Definition.Get (Self).Sources loop
-         if S.Source.Filename = Value (File) then
+         if S.Source.Filename = File.Value then
             return S;
          end if;
       end loop;
@@ -492,23 +496,23 @@ package body GPR2.Project.View is
       package Source_Set is
         new Ada.Containers.Indefinite_Ordered_Sets (Name_Type);
 
-      procedure Handle_Directory (Dir : Full_Path_Name);
+      procedure Handle_Directory (Dir : GPR2.Path_Name.Full_Name);
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
       --  is specified.
 
-      procedure Handle_File (Filename : Full_Path_Name);
+      procedure Handle_File (Filename : GPR2.Path_Name.Full_Name);
       --  Handle Filename which can eventually be part of the current view
       --  depending on the language handled by the current view.
 
       function Language_For
-        (Filename : Full_Path_Name;
+        (Filename : GPR2.Path_Name.Full_Name;
          Kind     : out GPR2.Source.Kind_Type) return Value_Type;
       --  The language for Filename based on the Naming package. It also
       --  returns in Kind if Filename is a spec, a body or a separate.
 
       function Unit_For
-        (Filename : Full_Path_Name;
+        (Filename : GPR2.Path_Name.Full_Name;
          Kind     : GPR2.Source.Kind_Type;
          Ok       : out Boolean) return Name_Type;
       --  Given Filename, returns the unit name. This is meaningful for unit
@@ -521,7 +525,7 @@ package body GPR2.Project.View is
       --  need to be recomputed.
 
       procedure Read_File
-        (Filename : Full_Path_Name;
+        (Filename : GPR2.Path_Name.Full_Name;
          Set      : in out Source_Set.Set);
       --  Read Filename and insert each line in Set
 
@@ -587,7 +591,7 @@ package body GPR2.Project.View is
       -- Handle_Directory --
       ----------------------
 
-      procedure Handle_Directory (Dir : Full_Path_Name) is
+      procedure Handle_Directory (Dir : GPR2.Path_Name.Full_Name) is
          use all type Directories.File_Kind;
 
          Is_Recursive : constant Boolean :=
@@ -597,7 +601,7 @@ package body GPR2.Project.View is
          --  Recursivityy is controlled by a double * at the end of the
          --  directory.
 
-         Dir_Name     : constant Full_Path_Name :=
+         Dir_Name     : constant GPR2.Path_Name.Full_Name :=
                           (if Is_Recursive
                            then Dir (Dir'First .. Dir'Last - 1)
                            else Dir);
@@ -633,7 +637,7 @@ package body GPR2.Project.View is
       -- Handle_File --
       -----------------
 
-      procedure Handle_File (Filename : Full_Path_Name) is
+      procedure Handle_File (Filename : GPR2.Path_Name.Full_Name) is
          Kind     : GPR2.Source.Kind_Type;
          Language : constant Value_Type :=
                       Language_For (Filename, Kind);
@@ -665,8 +669,8 @@ package body GPR2.Project.View is
                         (if Lang = "ada"
                          then Unit_For (Filename, Kind, Ok)
                          else No_Name);
-               File : constant Path_Name_Type :=
-                        Create_File (Name_Type (Filename));
+               File : constant GPR2.Path_Name.Object :=
+                        GPR2.Path_Name.Create_File (Name_Type (Filename));
                Src  : constant GPR2.Source.Object :=
                         GPR2.Source.Create
                           (Filename  => File,
@@ -695,7 +699,7 @@ package body GPR2.Project.View is
                if Ok then
                   if Unit /= No_Name then
                      Data.Tree.Record_View
-                       (Self, Source => Value (File), Unit => Unit);
+                       (Self, Source => File.Value, Unit => Unit);
 
                      if Data.Units.Contains (Unit) then
                         U_Def := Data.Units (Unit);
@@ -748,7 +752,7 @@ package body GPR2.Project.View is
       ------------------
 
       function Language_For
-        (Filename : Full_Path_Name;
+        (Filename : GPR2.Path_Name.Full_Name;
          Kind     : out GPR2.Source.Kind_Type)
          return Value_Type
       is
@@ -830,7 +834,7 @@ package body GPR2.Project.View is
       ---------------
 
       procedure Read_File
-        (Filename : Full_Path_Name;
+        (Filename : GPR2.Path_Name.Full_Name;
          Set      : in out Source_Set.Set)
       is
          F      : Text_IO.File_Type;
@@ -974,7 +978,7 @@ package body GPR2.Project.View is
       --------------
 
       function Unit_For
-        (Filename : Full_Path_Name;
+        (Filename : GPR2.Path_Name.Full_Name;
          Kind     : GPR2.Source.Kind_Type;
          Ok       : out Boolean) return Name_Type
       is
@@ -1209,9 +1213,9 @@ package body GPR2.Project.View is
       Current_Signature : constant MD5.Binary_Message_Digest :=
                             Signature;
 
-      Root              : constant Full_Path_Name :=
+      Root              : constant GPR2.Path_Name.Full_Name :=
                             Directories.Containing_Directory
-                              (Value (Data.Trees.Project.Path_Name));
+                              (Data.Trees.Project.Path_Name.Value);
    begin
       --  Check if up-to-date using signature for source_dirs, source_files...
       --  An abstract or aggregate project has no sources.
@@ -1249,7 +1253,7 @@ package body GPR2.Project.View is
 
          if Data.Attrs.Has_Excluded_Source_List_File then
             declare
-               File : constant Full_Path_Name :=
+               File : constant GPR2.Path_Name.Full_Name :=
                         Directories.Compose
                           (Root,
                            Data.Attrs.Element
@@ -1272,7 +1276,7 @@ package body GPR2.Project.View is
 
          if Data.Attrs.Has_Source_List_File then
             declare
-               File : constant Full_Path_Name :=
+               File : constant GPR2.Path_Name.Full_Name :=
                         Directories.Compose
                           (Root,
                            Data.Attrs.Element

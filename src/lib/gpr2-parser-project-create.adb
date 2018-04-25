@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,7 +24,7 @@
 
 function GPR2.Parser.Project.Create
   (Name      : Name_Type;
-   File      : Path_Name_Type;
+   File      : GPR2.Path_Name.Object;
    Qualifier : Project_Kind) return Object is
 begin
    return Object'(Name      => To_Unbounded_String (String (Name)),

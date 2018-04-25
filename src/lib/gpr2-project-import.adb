@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,7 +29,7 @@ package body GPR2.Project.Import is
    ------------
 
    function Create
-     (Path_Name  : Path_Name_Type;
+     (Path_Name  : GPR2.Path_Name.Object;
       Sloc       : Source_Reference.Object;
       Is_Limited : Boolean) return Object is
    begin
@@ -49,7 +49,7 @@ package body GPR2.Project.Import is
    -- Path_Name --
    ---------------
 
-   function Path_Name (Self : Object) return Path_Name_Type is
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Path_Name;
    end Path_Name;

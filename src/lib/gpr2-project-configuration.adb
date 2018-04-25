@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -68,7 +68,7 @@ package body GPR2.Project.Configuration is
    end Create;
 
    function Create
-     (Filename : Path_Name_Type;
+     (Filename : Path_Name.Object;
       Target   : Name_Type := "all") return Object
    is
       Result  : Object;

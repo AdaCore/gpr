@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -25,6 +25,7 @@
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
@@ -34,6 +35,7 @@ with GPR2.Project.View;
 limited with GPR2.Project.Tree;
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
+private with Ada.Strings.Unbounded;
 private with GPR_Parser.Analysis;
 
 package GPR2.Parser.Project is
@@ -45,7 +47,7 @@ package GPR2.Parser.Project is
    Undefined : constant Object;
 
    function Load
-     (Filename : Path_Name_Type;
+     (Filename : GPR2.Path_Name.Object;
       Messages : out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
@@ -90,7 +92,7 @@ package GPR2.Parser.Project is
      with Pre => Self /= Undefined;
    --  The name of the project file
 
-   function Path_Name (Self : Object) return Path_Name_Type
+   function Path_Name (Self : Object) return Path_Name.Object
      with Pre => Self /= Undefined;
    --  The full path name of the project file
 
@@ -118,6 +120,7 @@ package GPR2.Parser.Project is
 
 private
 
+   use Ada.Strings.Unbounded;
    use GPR_Parser.Analysis;
 
    package Type_Set is new Ada.Containers.Indefinite_Ordered_Maps
@@ -126,7 +129,7 @@ private
 
    type Object is tagged record
       Name      : Unbounded_String;
-      File      : Path_Name_Type;
+      File      : GPR2.Path_Name.Object;
       Qualifier : Project_Kind := K_Standard;
       Externals : Containers.Name_List;
       Imports   : GPR2.Project.Import.Set.Object;

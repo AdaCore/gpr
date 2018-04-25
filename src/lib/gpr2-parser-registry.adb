@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -31,24 +31,26 @@ package body GPR2.Parser.Registry is
 
    --  Project with reference counter
 
+   use type GPR2.Path_Name.Object;
+
    type Data is record
       Project : Parser.Project.Object;
       Ref     : Natural;
    end record;
 
    package Project_Store is
-     new Ada.Containers.Ordered_Maps (Path_Name_Type, Data);
+     new Ada.Containers.Ordered_Maps (Path_Name.Object, Data);
 
    protected Shared is
 
-      function Exist (Pathname : Path_Name_Type) return Boolean;
+      function Exist (Pathname : Path_Name.Object) return Boolean;
 
-      function Get (Pathname : Path_Name_Type) return Project.Object;
+      function Get (Pathname : Path_Name.Object) return Project.Object;
 
       procedure Register
-        (Pathname : Path_Name_Type; Project : Parser.Project.Object);
+        (Pathname : Path_Name.Object; Project : Parser.Project.Object);
 
-      procedure Unregister (Pathname : Path_Name_Type);
+      procedure Unregister (Pathname : Path_Name.Object);
 
    private
       Store : Project_Store.Map;
@@ -58,7 +60,7 @@ package body GPR2.Parser.Registry is
    -- Exists --
    ------------
 
-   function Exists (Pathname : Path_Name_Type) return Boolean is
+   function Exists (Pathname : Path_Name.Object) return Boolean is
    begin
       return Shared.Exist (Pathname);
    end Exists;
@@ -67,7 +69,7 @@ package body GPR2.Parser.Registry is
    -- Get --
    ---------
 
-   function Get (Pathname : Path_Name_Type) return Project.Object is
+   function Get (Pathname : Path_Name.Object) return Project.Object is
    begin
       return Shared.Get (Pathname);
    end Get;
@@ -77,7 +79,7 @@ package body GPR2.Parser.Registry is
    --------------
 
    procedure Register
-     (Pathname : Path_Name_Type; Project : Parser.Project.Object) is
+     (Pathname : Path_Name.Object; Project : Parser.Project.Object) is
    begin
       Shared.Register (Pathname, Project);
    end Register;
@@ -92,7 +94,7 @@ package body GPR2.Parser.Registry is
       -- Exist --
       -----------
 
-      function Exist (Pathname : Path_Name_Type) return Boolean is
+      function Exist (Pathname : Path_Name.Object) return Boolean is
       begin
          return Store.Contains (Pathname);
       end Exist;
@@ -101,7 +103,7 @@ package body GPR2.Parser.Registry is
       -- Get --
       ---------
 
-      function Get (Pathname : Path_Name_Type) return Project.Object is
+      function Get (Pathname : Path_Name.Object) return Project.Object is
       begin
          return Store (Pathname).Project;
       end Get;
@@ -111,7 +113,7 @@ package body GPR2.Parser.Registry is
       --------------
 
       procedure Register
-        (Pathname : Path_Name_Type; Project : Parser.Project.Object)
+        (Pathname : Path_Name.Object; Project : Parser.Project.Object)
       is
          use type Project_Store.Cursor;
          Pos : constant Project_Store.Cursor := Store.Find (Pathname);
@@ -128,7 +130,7 @@ package body GPR2.Parser.Registry is
       -- Unregister --
       ----------------
 
-      procedure Unregister (Pathname : Path_Name_Type) is
+      procedure Unregister (Pathname : Path_Name.Object) is
          Pos : constant Project_Store.Cursor := Store.Find (Pathname);
          D   : Data := Store (Pos);
       begin
@@ -151,7 +153,7 @@ package body GPR2.Parser.Registry is
    -- Unregister --
    ----------------
 
-   procedure Unregister (Pathname : Path_Name_Type) is
+   procedure Unregister (Pathname : Path_Name.Object) is
    begin
       Shared.Unregister (Pathname);
    end Unregister;

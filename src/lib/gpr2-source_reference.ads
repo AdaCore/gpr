@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -25,6 +25,10 @@
 --  This package represents an entity source reference. It is used for
 --  variables, attributes and packages declared in projects.
 
+with GPR2.Path_Name;
+
+private with Ada.Strings.Unbounded;
+
 package GPR2.Source_Reference is
 
    type Object is tagged private;
@@ -36,10 +40,10 @@ package GPR2.Source_Reference is
    Undefined : constant Object;
 
    function Create
-     (Filename     : Full_Path_Name;
+     (Filename     : Path_Name.Full_Name;
       Line, Column : Natural) return Object'Class;
 
-   function Filename (Self : Object) return Full_Path_Name
+   function Filename (Self : Object) return Path_Name.Full_Name
      with Pre => Self /= Undefined;
    --  Returns the full pathname where the entity is defined
 
@@ -56,6 +60,8 @@ package GPR2.Source_Reference is
    --  Returns the starting column of the entity declaration
 
 private
+
+   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Line     : Natural;

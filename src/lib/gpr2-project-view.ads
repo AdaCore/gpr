@@ -31,6 +31,7 @@
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
@@ -53,7 +54,7 @@ package GPR2.Project.View is
    function "<" (Left, Right : View.Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
 
-   function Path_Name (Self : Object) return Path_Name_Type
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined;
    --  Full pathname of the corresponding project file
 
@@ -189,7 +190,7 @@ package GPR2.Project.View is
    --  the current sources are up-to-date by calling Update_Sources below.
 
    function Source
-     (Self : Object; File : Path_Name_Type) return Project.Source.Object
+     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
      with Pre => Self /= Undefined;
    --  Get project source object corresponding to the give File
 

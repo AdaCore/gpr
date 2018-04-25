@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -73,9 +73,16 @@ package body GPR2.Source.Registry is
       --------------------
 
       procedure Set_Other_Part (Object1, Object2 : Object) is
+         P1   : constant Source_Store.Cursor := Store.Find (Object1.Pathname);
+         P2   : constant Source_Store.Cursor := Store.Find (Object2.Pathname);
+         Def1 : Data := Store (P1);
+         Def2 : Data := Store (P2);
       begin
-         Store (Object1.Pathname).Other_Part := Object2.Pathname;
-         Store (Object2.Pathname).Other_Part := Object1.Pathname;
+         Def1.Other_Part := Object2.Pathname;
+         Def2.Other_Part := Object1.Pathname;
+
+         Store.Replace_Element (P1, Def1);
+         Store.Replace_Element (P2, Def2);
       end Set_Other_Part;
 
       ----------------

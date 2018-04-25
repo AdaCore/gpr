@@ -36,6 +36,7 @@ with GPR2.Compilation.Protocol;
 with GPR2.Compilation.Slave;
 with GPR2.Compilation.Sync;
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
 procedure GPRremote is
@@ -398,12 +399,12 @@ procedure GPRremote is
       ------------------
 
       procedure Load_Project (Filename : String) is
-         Pathname : constant GPR2.Path_Name_Type :=
+         Pathname : constant GPR2.Path_Name.Object :=
                       GPR2.Project.Create (GPR2.Optional_Name_Type (Filename));
          Context  : GPR2.Context.Object;
       begin
          if Verbose then
-            Put_Line ("loading project: " & GPR2.Value (Pathname));
+            Put_Line ("loading project: " & Pathname.Value);
          end if;
 
          Project.Load (Pathname, Context);

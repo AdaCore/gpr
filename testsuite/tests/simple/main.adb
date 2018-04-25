@@ -50,7 +50,7 @@ procedure Main is
    begin
       Text_IO.Put_Line
         (">>> Changed_Callback for "
-         & Directories.Simple_Name (Value (Prj.Path_Name)));
+         & Directories.Simple_Name (Prj.Path_Name.Value));
    end Changed_Callback;
 
    -------------

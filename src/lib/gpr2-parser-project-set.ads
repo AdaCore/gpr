@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,9 +24,14 @@
 
 with Ada.Containers.Ordered_Maps;
 
+with GPR2.Path_Name;
+
 package GPR2.Parser.Project.Set is
 
-   package Set is new Ada.Containers.Ordered_Maps (Path_Name_Type, Object);
+   use type GPR2.Path_Name.Object;
+
+   package Set is new Ada.Containers.Ordered_Maps
+     (GPR2.Path_Name.Object, Object);
 
    subtype Object is Set.Map;
 

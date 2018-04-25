@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -26,6 +26,7 @@ with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -41,7 +42,7 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object; Full : Boolean := True);
 
-   procedure Output_Filename (Filename : Full_Path_Name);
+   procedure Output_Filename (Filename : Path_Name.Full_Name);
    --  Remove the leading tmp directory
 
    -------------
@@ -103,7 +104,7 @@ procedure Main is
    -- Output_Filename --
    ---------------------
 
-   procedure Output_Filename (Filename : Full_Path_Name) is
+   procedure Output_Filename (Filename : Path_Name.Full_Name) is
       I : constant Positive :=
             Strings.Fixed.Index (Filename, "extended-definitions2");
    begin

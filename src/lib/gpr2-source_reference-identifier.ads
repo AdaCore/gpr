@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -32,7 +32,7 @@ package GPR2.Source_Reference.Identifier is
    Undefined : constant Object;
 
    function Create
-     (Filename     : Full_Path_Name;
+     (Filename     : Path_Name.Full_Name;
       Line, Column : Natural;
       Identifier   : Name_Type) return Object'Class;
 

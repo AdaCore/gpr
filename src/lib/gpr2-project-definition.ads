@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -138,7 +138,7 @@ private package GPR2.Project.Definition is
    --  Returns the project data definition for the given view
 
    function Get
-     (Path_Name    : Path_Name_Type;
+     (Path_Name    : GPR2.Path_Name.Object;
       Context_View : GPR2.Project.View.Object;
       Status       : Relation_Status;
       Tree         : GPR2.Project.Tree.Object) return Project.View.Object;

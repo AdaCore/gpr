@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                       Copyright (C) 2017, AdaCore                        --
+--                     Copyright (C) 2017-2018, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -29,6 +29,7 @@ with GPR.Version;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -63,10 +64,10 @@ procedure GPRdump is
    procedure Full_Closure (Tree : Project.Tree.Object; Filename : String) is
       use type Project.View.Object;
 
-      File   : constant GPR2.Path_Name_Type :=
-                 GPR2.Create_File (Name_Type (Filename));
-      View   : constant GPR2.Project.View.Object :=
-                 Tree.Get_View (File);
+      File : constant GPR2.Path_Name.Object :=
+               GPR2.Path_Name.Create_File (Name_Type (Filename));
+      View : constant GPR2.Project.View.Object :=
+               Tree.Get_View (File);
    begin
       if View = Project.View.Undefined then
          Text_IO.Put_Line ("view for " & Filename & " not found.");
@@ -192,7 +193,7 @@ begin
    declare
       use type GNAT.Strings.String_Access;
 
-      Pathname : constant GPR2.Path_Name_Type :=
+      Pathname : constant GPR2.Path_Name.Object :=
                    GPR2.Project.Create
                      (GPR2.Optional_Name_Type (To_String (Project_Path)));
       Project  : GPR2.Project.Tree.Object;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -62,7 +62,7 @@ package body GPR2.Project.Import.Set is
    --------------
 
    function Contains
-     (Self : Object; Path_Name : Path_Name_Type) return Boolean is
+     (Self : Object; Path_Name : GPR2.Path_Name.Object) return Boolean is
    begin
       return Self.P_S.Contains (Path_Name);
    end Contains;
@@ -77,10 +77,12 @@ package body GPR2.Project.Import.Set is
    -- Delete --
    ------------
 
-   procedure Delete (Self : in out Object; Path_Name : Path_Name_Type) is
+   procedure Delete
+     (Self      : in out Object;
+      Path_Name : GPR2.Path_Name.Object) is
    begin
       Self.P_S.Delete (Path_Name);
-      Self.B_S.Delete (Base_Name (Path_Name));
+      Self.B_S.Delete (Path_Name.Base_Name);
    end Delete;
 
    -------------
@@ -93,7 +95,8 @@ package body GPR2.Project.Import.Set is
    end Element;
 
    function Element
-     (Self : Object; Path_Name : Path_Name_Type) return Import.Object is
+     (Self      : Object;
+      Path_Name : GPR2.Path_Name.Object) return Import.Object is
    begin
       return Self.P_S (Path_Name);
    end Element;
@@ -129,7 +132,7 @@ package body GPR2.Project.Import.Set is
    procedure Insert (Self : in out Object; Import : Project.Import.Object) is
    begin
       Self.P_S.Insert (Import.Path_Name, Import);
-      Self.B_S.Insert (Base_Name (Import.Path_Name), Import);
+      Self.B_S.Insert (Import.Path_Name.Base_Name, Import);
    end Insert;
 
    --------------

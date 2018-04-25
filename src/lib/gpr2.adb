@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,11 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Directories;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Less_Case_Insensitive;
-
-with GNAT.OS_Lib;
 
 package body GPR2 is
 
@@ -50,56 +47,6 @@ package body GPR2 is
       return Equal_Case_Insensitive (String (Left), String (Right));
    end "=";
 
-   ----------------------
-   -- Create_Directory --
-   ----------------------
-
-   function Create_Directory (Name : Name_Type) return Path_Name_Type is
-      use Ada;
-      use GNAT;
-
-      function Ensure_Directory
-        (Value : String) return String is
-        (if Value (Value'Last) in '\' | '/'
-         then Value & '.'
-         else Value & OS_Lib.Directory_Separator & '.')
-        with Post =>
-          Ensure_Directory'Result (Ensure_Directory'Result'Last) = '.';
-
-      function "+"
-        (Str : String) return Unbounded_String renames To_Unbounded_String;
-
-      N  : constant String := String (Name);
-      NN : constant String := Ensure_Directory (OS_Lib.Normalize_Pathname (N));
-
-   begin
-      return Path_Name_Type'
-        (As_Is     => +N,
-         Value     => +NN,
-         Base_Name => +Directories.Base_Name (N),
-         Dir_Name  => +Directories.Containing_Directory (NN));
-   end Create_Directory;
-
-   -----------------
-   -- Create_File --
-   -----------------
-
-   function Create_File (Name : Name_Type) return Path_Name_Type is
-      use Ada;
-      use GNAT;
-
-      function "+"
-        (Str : String) return Unbounded_String renames To_Unbounded_String;
-
-      N : constant String := String (Name);
-   begin
-      return Path_Name_Type'
-        (As_Is     => +N,
-         Value     => +OS_Lib.Normalize_Pathname (N),
-         Base_Name => +Directories.Base_Name (N),
-         Dir_Name  => +Directories.Containing_Directory (N));
-   end Create_File;
-
    -------------
    -- Unquote --
    -------------
@@ -116,14 +63,5 @@ package body GPR2 is
          return Str;
       end if;
    end Unquote;
-
-   -----------
-   -- Value --
-   -----------
-
-   function Value (File : Path_Name_Type) return Full_Path_Name is
-   begin
-      return To_String (File.Value);
-   end Value;
 
 end GPR2;

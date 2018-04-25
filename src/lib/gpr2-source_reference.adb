@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -38,7 +38,7 @@ package body GPR2.Source_Reference is
    ------------
 
    function Create
-     (Filename     : Full_Path_Name;
+     (Filename     : Path_Name.Full_Name;
       Line, Column : Natural) return Object'Class is
    begin
       return Object'(Line, Column, To_Unbounded_String (Filename));
@@ -48,7 +48,7 @@ package body GPR2.Source_Reference is
    -- Filename --
    --------------
 
-   function Filename (Self : Object) return Full_Path_Name is
+   function Filename (Self : Object) return Path_Name.Full_Name is
    begin
       return To_String (Self.Filename);
    end Filename;

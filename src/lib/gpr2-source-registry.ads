@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,28 +24,35 @@
 
 with Ada.Calendar;
 with Ada.Containers.Ordered_Maps;
+with Ada.Strings.Unbounded;
+
+with GPR2.Path_Name;
 
 private package GPR2.Source.Registry is
 
+   use Ada.Strings.Unbounded;
+
+   use type GPR2.Path_Name.Object;
+
    type Data is record
-      Path_Name  : Path_Name_Type;
+      Path_Name  : GPR2.Path_Name.Object;
       Timestamp  : Calendar.Time;
       Language   : Unbounded_String;
       Unit_Name  : Unbounded_String;
       Kind       : Kind_Type;
-      Other_Part : Path_Name_Type;
+      Other_Part : GPR2.Path_Name.Object;
       Units      : Source_Reference.Set.Object;
       Parsed     : Boolean := False;
       Ref_Count  : Natural := 0;
    end record;
 
    package Source_Store is
-     new Ada.Containers.Ordered_Maps (Path_Name_Type, Data);
+     new Ada.Containers.Ordered_Maps (Path_Name.Object, Data);
 
    protected Shared is
 
       procedure Register (Def : Data)
-        with Pre => Def.Path_Name /= No_Path_Name;
+        with Pre => Def.Path_Name /= Path_Name.Undefined;
       --  Register element in Store
 
       procedure Unregister (Object : in out Source.Object)
@@ -57,7 +64,8 @@ private package GPR2.Source.Registry is
       --  Get the source data for the given source object
 
       procedure Set (Object : Source.Object; Def : Data)
-        with Pre => Object /= Undefined and then Def.Path_Name /= No_Path_Name;
+        with Pre => Object /= Undefined
+             and then Def.Path_Name /= GPR2.Path_Name.Undefined;
       --  Set the source data for the given source object
 
       procedure Set_Other_Part (Object1, Object2 : Object)

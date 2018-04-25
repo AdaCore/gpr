@@ -33,6 +33,7 @@ with Langkit_Support.Slocs;
 with GPR2.Builtin;
 with GPR2.Message;
 with GPR2.Parser.Registry;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
@@ -55,12 +56,12 @@ package body GPR2.Parser.Project is
    --  Returns True if the Node is present (not null)
 
    function Get_Source_Reference
-     (Path_Name : Path_Name_Type;
+     (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range)
       return Source_Reference.Object is
      (Source_Reference.Object
         (Source_Reference.Create
-           (Value (Path_Name),
+           (Path_Name.Value,
             Positive (Slr.Start_Line),
             Positive (Slr.Start_Column))));
 
@@ -216,7 +217,7 @@ package body GPR2.Parser.Project is
    ----------
 
    function Load
-     (Filename : Path_Name_Type;
+     (Filename : GPR2.Path_Name.Object;
       Messages : out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
@@ -635,9 +636,9 @@ package body GPR2.Parser.Project is
 
                if Present (Ext) then
                   declare
-                     Paths : constant Containers.Path_Name_List :=
+                     Paths : constant GPR2.Path_Name.Set.Object :=
                                GPR2.Project.Paths (Filename);
-                     Path_Name : constant Path_Name_Type :=
+                     Path_Name : constant GPR2.Path_Name.Object :=
                                    GPR2.Project.Create
                                      (Get_Name_Type
                                         (F_Path_Name (Ext)), Paths);
@@ -722,7 +723,7 @@ package body GPR2.Parser.Project is
                               F_Path_Names (N);
                Num_Childs : constant Natural := Children_Count (N);
                Cur_Child  : GPR_Node;
-               Paths      : constant Containers.Path_Name_List :=
+               Paths      : constant GPR2.Path_Name.Set.Object :=
                               GPR2.Project.Paths (Filename);
             begin
                for J in 1 .. Num_Childs loop
@@ -730,7 +731,7 @@ package body GPR2.Parser.Project is
 
                   if not Cur_Child.Is_Null then
                      declare
-                        Path : constant Path_Name_Type :=
+                        Path : constant GPR2.Path_Name.Object :=
                                  GPR2.Project.Create
                                    (Get_Name_Type
                                       (Cur_Child.As_String_Literal), Paths);
@@ -740,7 +741,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Warning,
                                  Message => "duplicate with clause '"
-                                            & String (Base_Name (Path)) & ''',
+                                            & String (Path.Base_Name) & ''',
                                  Sloc    => Get_Source_Reference
                                    (Filename,
                                     Sloc_Range (Cur_Child))));
@@ -803,18 +804,18 @@ package body GPR2.Parser.Project is
          end;
 
       else
-         if not Directories.Exists (Value (Filename)) then
+         if not Directories.Exists (Filename.Value) then
             Messages.Append
               (GPR2.Message.Create
                  (Level   => Message.Error,
                   Message => "project file not found",
                   Sloc    => Source_Reference.Object
                                (Source_Reference.Create
-                                 (Value (Filename), 1, 1))));
+                                 (Filename.Value, 1, 1))));
             return Undefined;
          end if;
 
-         Unit := Get_From_File (Context, Value (Filename));
+         Unit := Get_From_File (Context, Filename.Value);
 
          if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
             if Has_Diagnostics (Unit) then
@@ -822,7 +823,7 @@ package body GPR2.Parser.Project is
                   declare
                      Sloc : constant Source_Reference.Object'Class :=
                               Source_Reference.Create
-                                (Filename => Value (Filename),
+                                (Filename => Filename.Value,
                                  Line     =>
                                    Natural (D.Sloc_Range.Start_Line),
                                  Column   =>
@@ -1659,7 +1660,7 @@ package body GPR2.Parser.Project is
                  or else (Self.Extended /= GPR2.Project.Import.Undefined
                             and then
                           Optional_Name_Type
-                            (GPR2.Base_Name (Self.Extended.Path_Name)) = Name)
+                            (Self.Extended.Path_Name.Base_Name) = Name)
                  or else Name = "config"
                  or else Name = "runtime"
                then
@@ -1707,7 +1708,7 @@ package body GPR2.Parser.Project is
 
                      View : constant GPR2.Project.View.Object :=
                               Parse.View.View_For
-                                (Base_Name (Self.Extended.Path_Name));
+                                (Self.Extended.Path_Name.Base_Name);
                   begin
                      if View /= GPR2.Project.View.Undefined
                        and then View.Has_Variables (Name)
@@ -2394,7 +2395,7 @@ package body GPR2.Parser.Project is
    -- Path_Name --
    ---------------
 
-   function Path_Name (Self : Object) return Path_Name_Type is
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.File;
    end Path_Name;

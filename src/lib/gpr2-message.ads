@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -25,6 +25,8 @@
 --  Handles log messages
 
 with GPR2.Source_Reference;
+
+private with Ada.Strings.Unbounded;
 
 package GPR2.Message is
 
@@ -67,6 +69,8 @@ package GPR2.Message is
    --  Set message as Read or Unread as specified by Status
 
 private
+
+   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Level   : Level_Value;

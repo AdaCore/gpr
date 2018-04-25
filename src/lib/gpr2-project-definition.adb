@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -36,7 +36,7 @@ package body GPR2.Project.Definition is
    protected Shared is
 
       function Get
-        (Path_Name    : Path_Name_Type;
+        (Path_Name    : GPR2.Path_Name.Object;
          Context_View : GPR2.Project.View.Object;
          Status       : Relation_Status;
          Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
@@ -74,7 +74,7 @@ package body GPR2.Project.Definition is
    end Get;
 
    function Get
-     (Path_Name    : Path_Name_Type;
+     (Path_Name    : GPR2.Path_Name.Object;
       Context_View : GPR2.Project.View.Object;
       Status       : Relation_Status;
       Tree         : GPR2.Project.Tree.Object) return Project.View.Object is
@@ -133,13 +133,13 @@ package body GPR2.Project.Definition is
       end Get;
 
       function Get
-        (Path_Name    : Path_Name_Type;
+        (Path_Name    : GPR2.Path_Name.Object;
          Context_View : GPR2.Project.View.Object;
          Status       : Relation_Status;
          Tree         : GPR2.Project.Tree.Object) return Project.View.Object
       is
          use type GPR2.Project.Tree.Object;
-         Key : constant Name_Type := Name_Type (Value (Path_Name));
+         Key : constant Name_Type := Name_Type (Path_Name.Value);
       begin
          if Views.Contains (Key) then
             for V of Views (Key) loop
@@ -217,7 +217,7 @@ package body GPR2.Project.Definition is
 
          declare
             Path_Name : constant Name_Type :=
-                          Name_Type (Value (Def.Trees.Project.Path_Name));
+                          Name_Type (Def.Trees.Project.Path_Name.Value);
             Name      : constant Name_Type :=
                           Def.Trees.Project.Name;
          begin
@@ -253,7 +253,7 @@ package body GPR2.Project.Definition is
          Def.Context_View.Release;
          Def.Tree := null;
          Views_Data.Delete (View);
-         Views (Name_Type (Value (View.Path_Name))).Delete (View);
+         Views (Name_Type (View.Path_Name.Value)).Delete (View);
          Views (View.Name).Delete (View);
       end Unregister;
 

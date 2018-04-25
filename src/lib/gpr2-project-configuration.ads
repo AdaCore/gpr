@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,10 +24,12 @@
 
 --  Handle the configuration object for a project tree
 
+with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Project.View;
 
 private with Ada.Containers.Vectors;
+private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Configuration is
 
@@ -70,7 +72,7 @@ package GPR2.Project.Configuration is
    --  Create a configuration based on the settings requested
 
    function Create
-     (Filename : Path_Name_Type;
+     (Filename : Path_Name.Object;
       Target   : Name_Type := "all") return Object;
    --  Create a configuration object for the given configuration file
 
@@ -94,6 +96,8 @@ package GPR2.Project.Configuration is
    --  specific runtime has been specified for this language.
 
 private
+
+   use Ada.Strings.Unbounded;
 
    type Description is record
       Language : Unbounded_String;

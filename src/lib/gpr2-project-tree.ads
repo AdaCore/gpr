@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -58,14 +58,14 @@ package GPR2.Project.Tree is
 
    procedure Load
      (Self     : in out Object;
-      Filename : Path_Name_Type;
+      Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
       Config   : Configuration.Object := Configuration.Undefined);
    --  Load a root-project
 
    procedure Load_Configuration
      (Self     : in out Object;
-      Filename : Path_Name_Type);
+      Filename : Path_Name.Object);
    --  Load a configuration project for this tree
 
    procedure Unload (Self : in out Object);
@@ -206,7 +206,7 @@ package GPR2.Project.Tree is
    procedure Record_View
      (Self   : in out Object;
       View   : GPR2.Project.View.Object;
-      Source : Full_Path_Name;
+      Source : Path_Name.Full_Name;
       Unit   : Name_Type)
      with Pre => Self /= Undefined;
    --  Record the view in which unit is defined
@@ -226,7 +226,7 @@ package GPR2.Project.Tree is
 
    function Get_View
      (Self   : Object;
-      Source : Path_Name_Type) return Project.View.Object
+      Source : Path_Name.Object) return Project.View.Object
      with Pre => Self /= Undefined;
    --  Get the view in which unit is defined, returns Undefined if the unit
    --  has not been found.

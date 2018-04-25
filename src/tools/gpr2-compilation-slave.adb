@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -26,6 +26,7 @@ with Ada.Calendar;
 with Ada.Command_Line;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.MD5;
@@ -43,6 +44,7 @@ with GPR2.Project.Registry.Pack;
 package body GPR2.Compilation.Slave is
 
    use Ada;
+   use Ada.Strings.Unbounded;
 
    -----------------
    -- Compute_Env --
@@ -264,7 +266,7 @@ package body GPR2.Compilation.Slave is
       package Attrs renames GPR2.Project.Registry.Attribute;
 
       Root_Dir : constant String :=
-                   (Containing_Directory (GPR2.Value (Project.Path_Name)));
+                   (Containing_Directory (Project.Path_Name.Value));
    begin
       if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
          declare

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Containers;
+with GPR2.Path_Name.Set;
 
 package GPR2.Project is
 
@@ -49,15 +49,15 @@ package GPR2.Project is
    Default_Filter : constant Project_Filter;
    Library_Filter : constant Project_Filter;
 
-   function Paths (Parent : Path_Name_Type) return Containers.Path_Name_List;
+   function Paths (Parent : Path_Name.Object) return Path_Name.Set.Object;
    --  Returns the list of search paths for imported projects in Parent. Parent
    --  is No_Path_Name for the root project.
 
    function Create
      (Name  : Name_Type;
-      Paths : Containers.Path_Name_List :=
-                Containers.Path_Name_Type_List.Empty_List)
-      return Path_Name_Type;
+      Paths : Path_Name.Set.Object :=
+                Path_Name.Set.Set.Empty_List)
+      return Path_Name.Object;
    --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
    --  Name is not an absolute path name it is looked into Paths.
 

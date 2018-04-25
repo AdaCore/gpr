@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Iterator_Interfaces;
+with GPR2.Containers;
 
 private with Ada.Containers.Ordered_Sets;
 

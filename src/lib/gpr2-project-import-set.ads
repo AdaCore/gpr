@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Iterator_Interfaces;
+with GPR2.Containers;
 
 private with Ada.Containers.Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
@@ -42,11 +43,11 @@ package GPR2.Project.Import.Set is
 
    procedure Insert (Self : in out Object; Import : Project.Import.Object);
 
-   procedure Delete (Self : in out Object; Path_Name : Path_Name_Type)
+   procedure Delete (Self : in out Object; Path_Name : GPR2.Path_Name.Object)
      with Pre => Self.Contains (Path_Name);
 
    function Contains
-     (Self : Object; Path_Name : Path_Name_Type) return Boolean;
+     (Self : Object; Path_Name : GPR2.Path_Name.Object) return Boolean;
 
    function Contains
      (Self : Object; Base_Name : Name_Type) return Boolean;
@@ -55,7 +56,7 @@ package GPR2.Project.Import.Set is
      with Pre => Self.Contains (Base_Name);
 
    function Element
-     (Self : Object; Path_Name : Path_Name_Type) return Import.Object
+     (Self : Object; Path_Name : GPR2.Path_Name.Object) return Import.Object
      with Pre => Self.Contains (Path_Name);
 
    type Cursor is private;
@@ -86,8 +87,10 @@ package GPR2.Project.Import.Set is
 
 private
 
+   use type GPR2.Path_Name.Object;
+
    package Path_Name_Set is new Ada.Containers.Ordered_Maps
-     (Path_Name_Type, Project.Import.Object);
+     (GPR2.Path_Name.Object, Project.Import.Object);
 
    package Base_Name_Set is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Project.Import.Object);

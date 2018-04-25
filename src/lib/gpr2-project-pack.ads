@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -30,6 +30,8 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference;
+
+private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Pack is
 
@@ -179,6 +181,8 @@ package GPR2.Project.Pack is
    --  Handles Body, Implementation, this is only defined for the Ada language
 
 private
+
+   use Ada.Strings.Unbounded;
 
    type Object is new Source_Reference.Object with record
       Name  : Unbounded_String;

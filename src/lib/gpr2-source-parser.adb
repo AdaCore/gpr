@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -66,7 +66,7 @@ package body GPR2.Source.Parser is
 
       procedure Open
         (File     : in out Handle;
-         Filename : Path_Name_Type)
+         Filename : Path_Name.Object)
         with Post => Stream_IO.Is_Open (File.FD)
                      and then File.Current = 0
                      and then File.Last >= 0;
@@ -85,7 +85,7 @@ package body GPR2.Source.Parser is
    -- Check --
    -----------
 
-   function Check (Filename : Path_Name_Type) return Data is
+   function Check (Filename : Path_Name.Object) return Data is
 
       H : IO.Handle;
 
@@ -150,7 +150,7 @@ package body GPR2.Source.Parser is
                   if Unit /= Null_Unbounded_String then
                      R.W_Units.Insert
                        (Source_Reference.Identifier.Create
-                          (Value (Filename), H.Line, 1,
+                          (Filename.Value, H.Line, 1,
                            Name_Type (To_String (Unit))));
                   end if;
                end;
@@ -337,9 +337,9 @@ package body GPR2.Source.Parser is
 
       procedure Open
         (File     : in out Handle;
-         Filename : Path_Name_Type) is
+         Filename : Path_Name.Object) is
       begin
-         Stream_IO.Open (File.FD, Stream_IO.In_File, Value (Filename));
+         Stream_IO.Open (File.FD, Stream_IO.In_File, Filename.Value);
          Fill_Buffer (File);
          File.Line := 1;
       end Open;
