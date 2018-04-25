@@ -1,0 +1,57 @@
+
+                            LibGPR to LibGPR2
+
+The goal of this document is to present the migration plan from LibGPR
+to LibGPR2. This includes the migration of all GPR tools.
+
+
+- For routines without project as parameter
+
+  Avoid using them directly in LibGPR2, that is:
+
+     with GPR.Utils; use GPR.Utils;
+     procedure Whatever is
+       ...
+       Call (Param);
+
+  Should be replaced by:
+
+     with GPR.Util;
+     package GPR2.Meaningful_Name is
+        function Call (Param : String) renames GPR.Utils.Call;
+
+     with GPR2.Meaningful_Name;
+     procedure Whatever is
+        ...
+        Meaningful_Name.Call (Param);
+
+  The goal is that when LibGPR will be discontinued (migration fully
+  complete) then the code in GPR.Util can just be copied into LibGPR2
+  as-is. This temporary solution is to avoid maintenance of the same
+  routine in multiple places.
+
+
+- For routines with project as parameter
+
+  There is no other solution than implementing the new routine based
+  on the LibGPR2 API.
+
+  See for example GPR2.Compilation.Slave which has both routines with
+  and without project as parameter.
+
+  Note also one different solution like GPR2.Compilation.Sync which is
+  a full package renaming.
+
+     package GPR2.Compilation.Sync renames GPR.Compilation.Sync;
+
+
+- Command Line parsing
+
+  This is a part that we want to fully rewrite using GNAT.Command_Line
+  and most specifically the Getopt routine support. We want to move
+  away the manual parsing done in all GPR tools.
+
+  This package supports sections, options without argument, options
+  with optional argument and default, options with required
+  arguments. It also supports short and long version (starting with
+  double --) of options.
