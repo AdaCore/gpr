@@ -27,9 +27,6 @@ with Ada.Strings.Fixed;
 with Ada.Directories;
 with GNAT.OS_Lib;
 
-with GPR.Tempdir;
-with GPR.Util;
-
 with GPR2.Message;
 with GPR2.Parser.Project;
 with GPR2.Project.Definition;
@@ -117,6 +114,7 @@ package body GPR2.Project.Configuration is
 
       use Ada;
       use GNAT;
+      use type Path_Name.Object;
 
       function Process_Id return String is
         (Strings.Fixed.Trim
@@ -128,11 +126,12 @@ package body GPR2.Project.Configuration is
       --  directory.
 
       Conf_Filename : constant String :=
-                        (if GPR.Tempdir.Temporary_Directory_Path = ""
+                        (if Path_Name.Temporary_Directory = Path_Name.Undefined
                          then ""
-                         else GPR.Util.Ensure_Directory
-                                (GPR.Tempdir.Temporary_Directory_Path))
-                        & Process_Id & "-gpr2_tmp_conf.cgpr";
+                         else Path_Name.Compose
+                           (Path_Name.Temporary_Directory,
+                            Name_Type
+                              (Process_Id & "-gpr2_tmp_conf.cgpr")).Value);
 
       GPRconfig : constant OS_Lib.String_Access :=
                     OS_Lib.Locate_Exec_On_Path ("gprconfig");
