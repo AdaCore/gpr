@@ -26,7 +26,14 @@ with Ada.Directories;
 
 with GNAT.OS_Lib;
 
+with GPR.Tempdir;
+
 package body GPR2.Path_Name is
+
+   --  From old GPR
+
+   function Temporary_Directory
+     return String renames GPR.Tempdir.Temporary_Directory_Path;
 
    ------------
    -- Create --
@@ -94,6 +101,15 @@ package body GPR2.Path_Name is
          Base_Name => +Directories.Base_Name (N),
          Dir_Name  => +Directories.Containing_Directory (N));
    end Create_File;
+
+   -------------------------
+   -- Temporary_Directory --
+   -------------------------
+
+   function Temporary_Directory return Object is
+   begin
+      return Create_Directory (Name_Type (String'(Temporary_Directory)));
+   end Temporary_Directory;
 
    -----------
    -- Value --

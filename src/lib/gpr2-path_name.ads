@@ -69,6 +69,9 @@ package GPR2.Path_Name is
    function Dir_Name (Self : Object) return Full_Name;
    --  Returns the directory part of the full path name
 
+   function Temporary_Directory return Object;
+   --  Returns the current temporary directory
+
 private
 
    use Ada.Strings.Unbounded;
