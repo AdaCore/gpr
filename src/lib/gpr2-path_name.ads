@@ -72,6 +72,10 @@ package GPR2.Path_Name is
    function Temporary_Directory return Object;
    --  Returns the current temporary directory
 
+   function Compose (Self : Object; Name : Name_Type) return Object
+     with Post => Compose'Result /= Undefined;
+   --  Returns Name as sub-directory of Self : Self & '/' & Name
+
 private
 
    use Ada.Strings.Unbounded;

@@ -27,6 +27,7 @@ with Ada.Directories;
 with GNAT.OS_Lib;
 
 with GPR.Tempdir;
+with GPR.Util;
 
 package body GPR2.Path_Name is
 
@@ -34,6 +35,21 @@ package body GPR2.Path_Name is
 
    function Temporary_Directory
      return String renames GPR.Tempdir.Temporary_Directory_Path;
+
+   function Ensure_Directory
+     (Path : String) return String renames GPR.Util.Ensure_Directory;
+
+   -------------
+   -- Compose --
+   -------------
+
+   function Compose
+     (Self : Object; Name : Name_Type) return Object is
+   begin
+      return Create_File
+        (Name_Type
+           (Ensure_Directory (To_String (Self.As_Is)) & String (Name)));
+   end Compose;
 
    ------------
    -- Create --
