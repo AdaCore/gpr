@@ -76,14 +76,6 @@ package body GPR2.Path_Name is
       use Ada;
       use GNAT;
 
-      function Ensure_Directory
-        (Value : String) return String is
-        (if Value (Value'Last) in '\' | '/'
-         then Value & '.'
-         else Value & OS_Lib.Directory_Separator & '.')
-        with Post =>
-          Ensure_Directory'Result (Ensure_Directory'Result'Last) = '.';
-
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
