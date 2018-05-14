@@ -63,6 +63,9 @@ package GPR2.Path_Name is
    subtype Full_Name is String
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
 
+   function Name (Self : Object) return Name_Type;
+   --  Returns the original, untouched name used to create the object
+
    function Value (Self : Object) return Full_Name;
    --  Returns the full pathname for the given Path_Name_Type
 
@@ -100,6 +103,9 @@ private
 
    function Base_Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.Base_Name)));
+
+   function Name (Self : Object) return Name_Type is
+     (Name_Type (To_String (Self.As_Is)));
 
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name
