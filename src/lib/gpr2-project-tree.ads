@@ -60,12 +60,14 @@ package GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
-      Config   : Configuration.Object := Configuration.Undefined);
+      Config   : Configuration.Object := Configuration.Undefined)
+     with Pre => Filename /= Path_Name.Undefined;
    --  Load a root-project
 
    procedure Load_Configuration
      (Self     : in out Object;
-      Filename : Path_Name.Object);
+      Filename : Path_Name.Object)
+     with Pre => Filename /= Path_Name.Undefined;
    --  Load a configuration project for this tree
 
    procedure Unload (Self : in out Object);
