@@ -69,7 +69,8 @@ package GPR2.Path_Name is
    function Base_Name (Self : Object) return Name_Type;
    --  Returns the base name for File
 
-   function Dir_Name (Self : Object) return Full_Name;
+   function Dir_Name (Self : Object) return Full_Name
+     with Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
    --  Returns the directory part of the full path name
 
    function Temporary_Directory return Object;
@@ -84,6 +85,7 @@ private
    use Ada.Strings.Unbounded;
 
    type Object is tagged record
+      Is_Dir    : Boolean;
       As_Is     : Unbounded_String;
       Value     : Unbounded_String; -- the normalized path-name
       Base_Name : Unbounded_String;
@@ -99,11 +101,13 @@ private
    function Base_Name (Self : Object) return Name_Type
      is (Name_Type (To_String (Self.Base_Name)));
 
-   function Dir_Name (Self : Object) return Full_Name
-     is (Full_Name (To_String (Self.Dir_Name)));
+   function Dir_Name (Self : Object) return Full_Name is
+     (Full_Name
+        (To_String (if Self.Is_Dir then Self.Value else Self.Dir_Name)));
 
    Undefined : constant Object :=
-                 (Null_Unbounded_String,
+                 (False,
+                  Null_Unbounded_String,
                   Null_Unbounded_String,
                   Null_Unbounded_String,
                   Null_Unbounded_String);

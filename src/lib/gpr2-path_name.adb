@@ -62,10 +62,13 @@ package body GPR2.Path_Name is
         (Str : String) return Unbounded_String renames To_Unbounded_String;
    begin
       return Object'
-        (As_Is     => +String (Name),
+        (Is_Dir    => False,
+         As_Is     => +String (Name),
          Value     => +String (Path_Name),
          Base_Name => +Directories.Base_Name (String (Path_Name)),
-         Dir_Name  => +Directories.Containing_Directory (String (Path_Name)));
+         Dir_Name  =>
+           +Ensure_Directory
+           (Directories.Containing_Directory (String (Path_Name))));
    end Create;
 
    ----------------------
@@ -84,10 +87,12 @@ package body GPR2.Path_Name is
 
    begin
       return Object'
-        (As_Is     => +N,
+        (Is_Dir    => True,
+         As_Is     => +String (Name),
          Value     => +NN,
          Base_Name => +Directories.Base_Name (N),
-         Dir_Name  => +Directories.Containing_Directory (NN));
+         Dir_Name  =>
+           +Ensure_Directory (Directories.Containing_Directory (NN)));
    end Create_Directory;
 
    -----------------
@@ -104,10 +109,12 @@ package body GPR2.Path_Name is
       N : constant String := String (Name);
    begin
       return Object'
-        (As_Is     => +N,
+        (Is_Dir    => False,
+         As_Is     => +N,
          Value     => +OS_Lib.Normalize_Pathname (N),
          Base_Name => +Directories.Base_Name (N),
-         Dir_Name  => +Directories.Containing_Directory (N));
+         Dir_Name  =>
+           +Ensure_Directory (Directories.Containing_Directory (N)));
    end Create_File;
 
    -------------------------
