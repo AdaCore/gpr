@@ -249,6 +249,15 @@ package GPR2.Project.Tree is
    --  computing the dependecies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
+   procedure Register_Project_Search_Path
+     (Self : in out Object;
+      Dir  : Path_Name.Object)
+     with Pre => Self /= Undefined and then Dir /= Path_Name.Undefined;
+   --  Add a project search path for this tree
+
+   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
+   --  Returns the Tree project search paths
+
 private
 
    package Name_View is
@@ -256,13 +265,14 @@ private
    --  Map to find in which view a unit/source is defined
 
    type Object is tagged limited record
-      Self     : not null access Object := Object'Unchecked_Access;
-      Root     : View.Object;
-      Conf     : Configuration.Object;
-      Runtime  : View.Object;
-      Units    : Name_View.Map;
-      Sources  : Name_View.Map;
-      Messages : aliased Log.Object;
+      Self         : not null access Object := Object'Unchecked_Access;
+      Root         : View.Object;
+      Conf         : Configuration.Object;
+      Runtime      : View.Object;
+      Units        : Name_View.Map;
+      Sources      : Name_View.Map;
+      Messages     : aliased Log.Object;
+      Search_Paths : Path_Name.Set.Object;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
@@ -281,13 +291,14 @@ private
      (View : not null access constant Project.View.Object) is null record;
 
    Undefined  : constant Object :=
-                  (Self     => <>,
-                   Root     => View.Undefined,
-                   Conf     => Configuration.Undefined,
-                   Runtime  => View.Undefined,
-                   Units    => <>,
-                   Sources  => <>,
-                   Messages => <>);
+                  (Self         => <>,
+                   Root         => View.Undefined,
+                   Conf         => Configuration.Undefined,
+                   Runtime      => View.Undefined,
+                   Units        => <>,
+                   Sources      => <>,
+                   Messages     => <>,
+                   Search_Paths => <>);
 
    No_Element : constant Cursor :=
                   (Project_View_Store.Empty_Vector,

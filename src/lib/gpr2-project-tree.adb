@@ -25,6 +25,7 @@
 with Ada.Containers.Ordered_Maps;
 with Ada.Environment_Variables;
 with Ada.Directories;
+with Ada.Text_IO;
 
 with GPR.Sdefault;
 
@@ -41,10 +42,15 @@ with GPR2.Source_Reference;
 with GPR2.Unit;
 
 with GNAT.OS_Lib;
+with GNAT.String_Split;
 
 package body GPR2.Project.Tree is
 
    use Ada;
+
+   GPRls : constant GNAT.OS_Lib.String_Access :=
+             GNAT.OS_Lib.Locate_Exec_On_Path ("gprls");
+   --  Check for GPRls executable
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Kind   : Iterator_Kind;
@@ -521,10 +527,137 @@ package body GPR2.Project.Tree is
             Read        => False,
             Unread      => True));
 
+      procedure Set_Project_Search_Paths;
+      --  Set project search path for the tree
+
+      ------------------------------
+      -- Set_Project_Search_Paths --
+      ------------------------------
+
+      procedure Set_Project_Search_Paths is
+
+         use type GNAT.OS_Lib.String_Access;
+
+         procedure Append
+           (Result : in out Path_Name.Set.Object; Value : String)
+           with Post => (if Value'Length = 0
+                           then Result'Old.Length = Result.Length
+                             else Result'Old.Length + 1 = Result.Length);
+
+         procedure Add_List
+           (Result : in out Path_Name.Set.Object;
+            Values : String)
+           with Post => Result'Old.Length <= Result.Length;
+         --  Add list Values (which has OS dependant path separator) into
+         --  Result
+
+         --------------
+         -- Add_List --
+         --------------
+
+         procedure Add_List
+           (Result : in out Path_Name.Set.Object;
+            Values : String)
+         is
+            use GNAT;
+
+            V  : String_Split.Slice_Set;
+         begin
+            String_Split.Create
+              (V, Values, String'(1 => OS_Lib.Path_Separator));
+
+            for K in 1 .. String_Split.Slice_Count (V) loop
+               Append (Result, String_Split.Slice (V, K));
+            end loop;
+         end Add_List;
+
+         ------------
+         -- Append --
+         ------------
+
+         procedure Append
+           (Result : in out Path_Name.Set.Object;
+            Value  : String) is
+         begin
+            if Value /= "" then
+               Result.Append
+                 (Path_Name.Create_Directory (Name_Type (Value)));
+            end if;
+         end Append;
+
+      begin
+         --  Then in GPR_PROJECT_PATH_FILE, one path per line
+
+         if Environment_Variables.Exists ("GPR_PROJECT_PATH_FILE") then
+            declare
+               Filename : constant String :=
+                            Environment_Variables.Value
+                              ("GPR_PROJECT_PATH_FILE");
+               Buffer   : String (1 .. 1024);
+               Last     : Natural;
+               File     : Text_IO.File_Type;
+            begin
+               if Directories.Exists (Filename) then
+                  Text_IO.Open (File, Text_IO.In_File, Filename);
+
+                  while not Text_IO.End_Of_File (File) loop
+                     Text_IO.Get_Line (File, Buffer, Last);
+                     Append (Self.Search_Paths, Buffer (1 .. Last));
+                  end loop;
+
+                  Text_IO.Close (File);
+               end if;
+            end;
+         end if;
+
+         --  Then in GPR_PROJECT_PATH and ADA_PROJECT_PATH
+
+         if Environment_Variables.Exists ("GPR_PROJECT_PATH") then
+            Add_List
+              (Self.Search_Paths,
+               Environment_Variables.Value ("GPR_PROJECT_PATH"));
+         end if;
+
+         if Environment_Variables.Exists ("ADA_PROJECT_PATH") then
+            Add_List
+              (Self.Search_Paths,
+               Environment_Variables.Value ("ADA_PROJECT_PATH"));
+         end if;
+
+         --  Then target specific directory if specified
+         --  ??? not yet supported
+
+         if GPRls /= null then
+            declare
+               Prefix : constant String :=
+                          Directories.Containing_Directory
+                            (Directories.Containing_Directory (GPRls.all));
+            begin
+               --  <prefix>/share/gpr
+
+               Append
+                 (Self.Search_Paths,
+                  Directories.Compose
+                    (Directories.Compose (Prefix, "share"), "gpr"));
+
+               --  <prefix>/lib/gnat
+
+               Append
+                 (Self.Search_Paths,
+                  Directories.Compose
+                    (Directories.Compose (Prefix, "lib"), "gnat"));
+            end;
+         end if;
+      end Set_Project_Search_Paths;
+
       Root_Context  : GPR2.Context.Object := Context;
       Circularities : Boolean;
 
    begin
+      --  First initialize the project search path
+
+      Set_Project_Search_Paths;
+
       Self.Root := Recursive_Load
         (Self, Filename, View.Undefined, Definition.Root,
          Root_Context, Self.Messages, Circularities);
@@ -620,6 +753,15 @@ package body GPR2.Project.Tree is
       end if;
    end Next;
 
+   --------------------------
+   -- Project_Search_Paths --
+   --------------------------
+
+   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object is
+   begin
+      return Self.Search_Paths;
+   end Project_Search_Paths;
+
    -----------------
    -- Record_View --
    -----------------
@@ -649,7 +791,6 @@ package body GPR2.Project.Tree is
       Starting_From : View.Object := View.Undefined) return View.Object
 
    is
-      use type Path_Name.Object;
 
       function Load (Filename : Path_Name.Object) return Definition.Data;
       --  Returns the Data definition for the given project
@@ -765,8 +906,17 @@ package body GPR2.Project.Tree is
 
                if Data.Trees.Project.Has_Extended then
                   declare
+                     Paths     : constant Path_Name.Set.Object :=
+                                   GPR2.Project.Search_Paths
+                                     (Filename, Self.Search_Paths);
+
                      Path_Name : constant GPR2.Path_Name.Object :=
-                                   Data.Trees.Project.Extended.Path_Name;
+                                   Create
+                                     (Name_Type
+                                        (Data.Trees.Project.Extended.
+                                           Path_Name.Value),
+                                      Paths);
+
                   begin
                      if Directories.Exists (Path_Name.Value) then
                         Push (Path_Name, Data.Trees.Project.Extended, True);
@@ -774,7 +924,7 @@ package body GPR2.Project.Tree is
                         Data.Extended :=
                           Internal
                             (Self,
-                             Data.Trees.Project.Extended.Path_Name,
+                             Path_Name,
                              Context_View => Context_View,
                              Status       => Definition.Imported,
                              Root_Context => Root_Context,
@@ -910,7 +1060,7 @@ package body GPR2.Project.Tree is
                Unread      => True));
 
          Paths   : constant Path_Name.Set.Object :=
-                     GPR2.Project.Paths (Filename);
+                     GPR2.Project.Search_Paths (Filename, Self.Search_Paths);
          Project : constant Parser.Project.Object :=
                      Parser.Project.Load (Filename, Messages);
          Data    : Definition.Data
@@ -996,6 +1146,17 @@ package body GPR2.Project.Tree is
       return Internal
         (Self, Filename, Context_View, Status, Root_Context, Messages);
    end Recursive_Load;
+
+   ----------------------------------
+   -- Register_Project_Search_Path --
+   ----------------------------------
+
+   procedure Register_Project_Search_Path
+     (Self : in out Object;
+      Dir  : Path_Name.Object) is
+   begin
+      Self.Search_Paths.Prepend (Dir);
+   end Register_Project_Search_Path;
 
    ------------------
    -- Root_Project --
@@ -1101,8 +1262,6 @@ package body GPR2.Project.Tree is
               P_Data.Attrs.Element (Registry.Attribute.Project_Files).Values
             loop
                declare
-                  use type Path_Name.Object;
-
                   Pathname : constant Path_Name.Object :=
                                Create (Name_Type (Project), Paths);
                begin

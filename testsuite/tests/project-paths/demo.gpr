@@ -1,0 +1,8 @@
+
+with "first.gpr";
+
+project Demo is
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+   for Main use ("main.adb");
+end Demo;

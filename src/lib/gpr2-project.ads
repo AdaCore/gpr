@@ -26,6 +26,8 @@ with GPR2.Path_Name.Set;
 
 package GPR2.Project is
 
+   use type GPR2.Path_Name.Object;
+
    --  This package is the root of the high level abstraction of a hierarchy of
    --  projects given by a root project.
 
@@ -49,16 +51,20 @@ package GPR2.Project is
    Default_Filter : constant Project_Filter;
    Library_Filter : constant Project_Filter;
 
-   function Paths (Parent : Path_Name.Object) return Path_Name.Set.Object;
-   --  Returns the list of search paths for imported projects in Parent. Parent
-   --  is No_Path_Name for the root project.
-
    function Create
      (Name  : Name_Type;
       Paths : Path_Name.Set.Object := Path_Name.Set.Set.Empty_List)
       return Path_Name.Object;
    --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
    --  Name is not an absolute path name it is looked into Paths.
+
+   function Search_Paths
+     (Root_Project      : Path_Name.Object;
+      Tree_Search_Paths : Path_Name.Set.Object) return Path_Name.Set.Object
+     with Pre  => Root_Project /= Path_Name.Undefined
+                  and then not Tree_Search_Paths.Is_Empty,
+          Post => not Search_Paths'Result.Is_Empty;
+   --  Retrurn the project search path for the given project and the give tree
 
 private
 

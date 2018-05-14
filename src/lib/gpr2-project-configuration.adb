@@ -114,7 +114,6 @@ package body GPR2.Project.Configuration is
 
       use Ada;
       use GNAT;
-      use type Path_Name.Object;
 
       function Process_Id return String is
         (Strings.Fixed.Trim

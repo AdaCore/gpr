@@ -636,12 +636,10 @@ package body GPR2.Parser.Project is
 
                if Present (Ext) then
                   declare
-                     Paths : constant GPR2.Path_Name.Set.Object :=
-                               GPR2.Project.Paths (Filename);
                      Path_Name : constant GPR2.Path_Name.Object :=
                                    GPR2.Project.Create
                                      (Get_Name_Type
-                                        (F_Path_Name (Ext)), Paths);
+                                        (F_Path_Name (Ext)));
                   begin
                      Project.Extended :=
                        GPR2.Project.Import.Create
@@ -723,8 +721,6 @@ package body GPR2.Parser.Project is
                               F_Path_Names (N);
                Num_Childs : constant Natural := Children_Count (N);
                Cur_Child  : GPR_Node;
-               Paths      : constant GPR2.Path_Name.Set.Object :=
-                              GPR2.Project.Paths (Filename);
             begin
                for J in 1 .. Num_Childs loop
                   Cur_Child := Child (GPR_Node (Path_Names), J);
@@ -734,7 +730,7 @@ package body GPR2.Parser.Project is
                         Path : constant GPR2.Path_Name.Object :=
                                  GPR2.Project.Create
                                    (Get_Name_Type
-                                      (Cur_Child.As_String_Literal), Paths);
+                                      (Cur_Child.As_String_Literal));
                      begin
                         if Project.Imports.Contains (Path) then
                            Messages.Append
@@ -2155,6 +2151,11 @@ package body GPR2.Parser.Project is
          -------------------------
 
          procedure Parse_Variable_Decl (Node : Variable_Decl) is
+
+            function Search_Paths return GPR2.Path_Name.Set.Object is
+              (GPR2.Project.Search_Paths
+                 (Self.File, Tree.Project_Search_Paths));
+
             Sloc    : constant Source_Reference.Object :=
                         Get_Source_Reference
                           (Self.File, Sloc_Range (GPR_Node (Node)));
@@ -2187,8 +2188,12 @@ package body GPR2.Parser.Project is
                            declare
                               Import : constant GPR2.Project.Import.Object :=
                                          Self.Imports.Element (Project);
+                              Path   : constant GPR2.Path_Name.Object :=
+                                         GPR2.Project.Create
+                                           (Name_Type (Import.Path_Name.Value),
+                                            Search_Paths);
                               Prj    : constant GPR2.Parser.Project.Object :=
-                                         Registry.Get (Import.Path_Name);
+                                         Registry.Get (Path);
                            begin
                               if Prj.Types.Contains (T_Name) then
                                  Type_Def := Prj.Types (T_Name);
@@ -2204,8 +2209,13 @@ package body GPR2.Parser.Project is
 
                      elsif Self.Has_Extended then
                         declare
+                           Path     : constant GPR2.Path_Name.Object :=
+                                        GPR2.Project.Create
+                                          (Name_Type
+                                             (Self.Extended.Path_Name.Value),
+                                           Search_Paths);
                            Extended : constant GPR2.Parser.Project.Object :=
-                                        Registry.Get (Self.Extended.Path_Name);
+                                        Registry.Get (Path);
                         begin
                            if Extended.Types.Contains (T_Name) then
                               Type_Def := Extended.Types (T_Name);

@@ -1,0 +1,4 @@
+
+aggregate project second is
+   for Project_Files use ("last.gpr");
+end second;
