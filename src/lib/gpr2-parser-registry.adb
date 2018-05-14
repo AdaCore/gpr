@@ -31,8 +31,6 @@ package body GPR2.Parser.Registry is
 
    --  Project with reference counter
 
-   use type GPR2.Path_Name.Object;
-
    type Data is record
       Project : Parser.Project.Object;
       Ref     : Natural;
