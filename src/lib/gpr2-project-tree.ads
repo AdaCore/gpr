@@ -264,7 +264,7 @@ private
    end record;
 
    function "=" (Left, Right : Object) return Boolean
-     is  (Left.Self = Right.Self);
+     is (Left.Self = Right.Self);
 
    package Project_View_Store is
      new Ada.Containers.Vectors (Positive, View.Object);

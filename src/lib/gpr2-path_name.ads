@@ -98,8 +98,8 @@ private
    function "<" (Left, Right : Object) return Boolean
      is (Left.Value < Right.Value);
 
-   function Base_Name (Self : Object) return Name_Type
-     is (Name_Type (To_String (Self.Base_Name)));
+   function Base_Name (Self : Object) return Name_Type is
+     (Name_Type (To_String (Self.Base_Name)));
 
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name

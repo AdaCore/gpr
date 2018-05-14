@@ -803,7 +803,7 @@ package body GPR2.Project.Tree is
 
                for Project of Data.Trees.Imports loop
                   if not Data.Trees.Project.Imports.Element
-                    (Project.Path_Name).Is_Limited
+                      (Project.Path_Name).Is_Limited
                   then
                      if Recursive_Load.Filename = Project.Path_Name then
                         --  We are importing the root-project
