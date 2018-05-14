@@ -79,10 +79,21 @@ package body GPR2.Path_Name is
       use Ada;
       use GNAT;
 
+      -------------------
+      -- Make_Absolute --
+      -------------------
+
+      function Make_Absolute (Name : Name_Type) return Full_Name is
+        (Full_Name
+           ((if GNAT.OS_Lib.Is_Absolute_Path (String (Name))
+             then ""
+             else Ensure_Directory (Ada.Directories.Current_Directory))
+                  & String (Name)));
+
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-      N  : constant String := String (Name);
+      N  : constant String := String (Make_Absolute (Name));
       NN : constant String := Ensure_Directory (OS_Lib.Normalize_Pathname (N));
 
    begin
