@@ -727,20 +727,49 @@ package body GPR2.Parser.Project is
 
                   if not Cur_Child.Is_Null then
                      declare
+                        use type GPR2.Path_Name.Object;
+
                         Path : constant GPR2.Path_Name.Object :=
                                  GPR2.Project.Create
                                    (Get_Name_Type
                                       (Cur_Child.As_String_Literal));
                      begin
                         if Project.Imports.Contains (Path) then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Warning,
-                                 Message => "duplicate with clause '"
-                                            & String (Path.Base_Name) & ''',
-                                 Sloc    => Get_Source_Reference
-                                   (Filename,
-                                    Sloc_Range (Cur_Child))));
+                           declare
+                              Prev : constant GPR2.Project.Import.Object :=
+                                       Project.Imports.Element (Path);
+                           begin
+                              if Prev.Path_Name = Path then
+                                 Messages.Append
+                                   (GPR2.Message.Create
+                                      (Level   => Message.Warning,
+                                       Message => "duplicate with clause '"
+                                       & String (Path.Base_Name) & ''',
+                                       Sloc    => Get_Source_Reference
+                                         (Filename,
+                                          Sloc_Range (Cur_Child))));
+
+                              else
+                                 Messages.Append
+                                   (GPR2.Message.Create
+                                      (Level   => Message.Warning,
+                                       Message => "duplicate project name '"
+                                       & String (Path.Base_Name) & ''',
+                                       Sloc    => Get_Source_Reference
+                                         (Filename,
+                                          Sloc_Range (Cur_Child))));
+                                 Messages.Append
+                                   (GPR2.Message.Create
+                                      (Level   => Message.Warning,
+                                       Message => "already in '"
+                                       & String (Prev.Path_Name.Name)
+                                       & ''',
+                                       Sloc    => Get_Source_Reference
+                                         (Filename,
+                                          Sloc_Range (Cur_Child))));
+                              end if;
+                           end;
+
                         else
                            Project.Imports.Insert
                              (GPR2.Project.Import.Create

@@ -1,0 +1,3 @@
+Messages found:
+demo.gpr:3:6: duplicate project name 'first'
+demo.gpr:3:6: already in 'prj1/first.gpr'

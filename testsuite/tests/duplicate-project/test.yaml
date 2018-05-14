@@ -1,0 +1,5 @@
+description:
+    Check that we don't have different projects with the same name
+driver: build_and_run
+project_file: duplicate_project
+main: main
