@@ -40,8 +40,7 @@ package body GPR2.Project.Import.Set is
 
    procedure Clear (Self : in out Object) is
    begin
-      Self.P_S.Clear;
-      Self.B_S.Clear;
+      Self.Set.Clear;
    end Clear;
 
    ------------------------
@@ -53,8 +52,8 @@ package body GPR2.Project.Import.Set is
       Position : Cursor) return Constant_Reference_Type is
    begin
       return Constant_Reference_Type'
-        (Import => Path_Name_Set.Constant_Reference
-           (Self.P_S, Position.Current).Element);
+        (Import => Base_Name_Set.Constant_Reference
+           (Self.Set, Position.Current).Element);
    end Constant_Reference;
 
    --------------
@@ -64,13 +63,13 @@ package body GPR2.Project.Import.Set is
    function Contains
      (Self : Object; Path_Name : GPR2.Path_Name.Object) return Boolean is
    begin
-      return Self.P_S.Contains (Path_Name);
+      return Self.Contains (Path_Name.Base_Name);
    end Contains;
 
    function Contains
      (Self : Object; Base_Name : Name_Type) return Boolean is
    begin
-      return Self.B_S.Contains (Base_Name);
+      return Self.Set.Contains (Base_Name);
    end Contains;
 
    ------------
@@ -81,8 +80,7 @@ package body GPR2.Project.Import.Set is
      (Self      : in out Object;
       Path_Name : GPR2.Path_Name.Object) is
    begin
-      Self.P_S.Delete (Path_Name);
-      Self.B_S.Delete (Path_Name.Base_Name);
+      Self.Set.Delete (Path_Name.Base_Name);
    end Delete;
 
    -------------
@@ -91,20 +89,20 @@ package body GPR2.Project.Import.Set is
 
    function Element (Position : Cursor) return Project.Import.Object is
    begin
-      return Path_Name_Set.Element (Position.Current);
+      return Base_Name_Set.Element (Position.Current);
    end Element;
 
    function Element
      (Self      : Object;
       Path_Name : GPR2.Path_Name.Object) return Import.Object is
    begin
-      return Self.P_S (Path_Name);
+      return Self.Element (Path_Name.Base_Name);
    end Element;
 
    function Element
      (Self : Object; Base_Name : Name_Type) return Import.Object is
    begin
-      return Self.B_S (Base_Name);
+      return Self.Set (Base_Name);
    end Element;
 
    -----------
@@ -113,7 +111,7 @@ package body GPR2.Project.Import.Set is
 
    overriding function First (Iter : Iterator) return Cursor is
    begin
-      return Cursor'(Current => Path_Name_Set.First (Iter.Root.P_S));
+      return Cursor'(Current => Base_Name_Set.First (Iter.Root.Set));
    end First;
 
    -----------------
@@ -122,7 +120,7 @@ package body GPR2.Project.Import.Set is
 
    function Has_Element (Position : Cursor) return Boolean is
    begin
-      return Path_Name_Set.Has_Element (Position.Current);
+      return Base_Name_Set.Has_Element (Position.Current);
    end Has_Element;
 
    ------------
@@ -131,8 +129,7 @@ package body GPR2.Project.Import.Set is
 
    procedure Insert (Self : in out Object; Import : Project.Import.Object) is
    begin
-      Self.P_S.Insert (Import.Path_Name, Import);
-      Self.B_S.Insert (Import.Path_Name.Base_Name, Import);
+      Self.Set.Insert (Import.Path_Name.Base_Name, Import);
    end Insert;
 
    --------------
@@ -141,7 +138,7 @@ package body GPR2.Project.Import.Set is
 
    function Is_Empty (Self : Object) return Boolean is
    begin
-      return Self.P_S.Is_Empty;
+      return Self.Set.Is_Empty;
    end Is_Empty;
 
    -------------
@@ -160,7 +157,7 @@ package body GPR2.Project.Import.Set is
 
    function Length (Self : Object) return Containers.Count_Type is
    begin
-      return Self.P_S.Length;
+      return Self.Set.Length;
    end Length;
 
    ----------
@@ -172,7 +169,7 @@ package body GPR2.Project.Import.Set is
    is
       pragma Unreferenced (Iter);
    begin
-      return Cursor'(Current => Path_Name_Set.Next (Position.Current));
+      return Cursor'(Current => Base_Name_Set.Next (Position.Current));
    end Next;
 
 end GPR2.Project.Import.Set;

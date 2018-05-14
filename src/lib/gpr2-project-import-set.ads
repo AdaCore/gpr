@@ -22,10 +22,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+--  This container is design to contain the set of import for a specific
+--  project. It is used to detect duplicate import project in with clause
+--  for example. We also have fast check/access to any import project name.
+
 with Ada.Iterator_Interfaces;
 with GPR2.Containers;
 
-private with Ada.Containers.Ordered_Maps;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Project.Import.Set is
@@ -87,25 +90,19 @@ package GPR2.Project.Import.Set is
 
 private
 
-   use type GPR2.Path_Name.Object;
-
-   package Path_Name_Set is new Ada.Containers.Ordered_Maps
-     (GPR2.Path_Name.Object, Project.Import.Object);
-
    package Base_Name_Set is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Project.Import.Object);
 
    type Object is tagged record
-      P_S : Path_Name_Set.Map;
-      B_S : Base_Name_Set.Map;
+      Set : Base_Name_Set.Map;
    end record;
 
    type Cursor is record
-      Current : Path_Name_Set.Cursor;
+      Current : Base_Name_Set.Cursor;
    end record;
 
    No_Element : constant Cursor :=
-                  Cursor'(Current => Path_Name_Set.No_Element);
+                  Cursor'(Current => Base_Name_Set.No_Element);
 
    type Constant_Reference_Type
      (Import : not null access constant Project.Import.Object) is null record;
