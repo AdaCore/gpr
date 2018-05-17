@@ -48,11 +48,15 @@ package GPR2.Path_Name is
    function "<" (Left, Right : Object) return Boolean;
    --  Returns True based on the normalized names
 
-   function Create_File (Name : Name_Type) return Object
+   function Create_File
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Object
      with Post => Create_File'Result /= Undefined;
    --  Creates a Path_Name_Type for a file
 
-   function Create_Directory (Name : Name_Type) return Object
+   function Create_Directory
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Object
      with Post => Create_Directory'Result /= Undefined;
    --  Creates a Path_Name_Type for a directory
 

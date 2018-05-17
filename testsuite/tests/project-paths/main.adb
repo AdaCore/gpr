@@ -67,7 +67,9 @@ procedure Main is
          end if;
    end Load;
 
-   Prj1, Prj2, Prj3 : Project.Tree.Object;
+   Current_Directory : Optional_Name_Type :=
+                         Optional_Name_Type (Directories.Current_Directory);
+   Prj1, Prj2, Prj3  : Project.Tree.Object;
 
 begin
    --  Prj1
@@ -79,18 +81,15 @@ begin
 
    Text_IO.Put_Line ("=== Prj2");
    Prj2.Register_Project_Search_Path
-     (Path_Name.Create_Directory
-        (Name_Type (Directories.Current_Directory & "/one")));
+     (Path_Name.Create_Directory ("one", Current_Directory));
    Load (Prj2);
 
    --  Prj3
 
    Text_IO.Put_Line ("=== Prj3");
    Prj3.Register_Project_Search_Path
-     (Path_Name.Create_Directory
-        (Name_Type (Directories.Current_Directory & "/one")));
+     (Path_Name.Create_Directory ("one", Current_Directory));
    Prj3.Register_Project_Search_Path
-     (Path_Name.Create_Directory
-        (Name_Type (Directories.Current_Directory & "/two")));
+     (Path_Name.Create_Directory ("two", Current_Directory));
    Load (Prj3);
 end Main;

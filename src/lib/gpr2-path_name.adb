@@ -31,6 +31,8 @@ with GPR.Util;
 
 package body GPR2.Path_Name is
 
+   use GNAT;
+
    --  From old GPR
 
    function Temporary_Directory
@@ -38,6 +40,20 @@ package body GPR2.Path_Name is
 
    function Ensure_Directory
      (Path : String) return String renames GPR.Util.Ensure_Directory;
+
+   -------------------
+   -- Make_Absolute --
+   -------------------
+
+   function Make_Absolute
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Name_Type
+   is
+     (Name_Type
+        ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
+          then ""
+          else Ensure_Directory (String (Directory)))
+         & String (Name)));
 
    -------------
    -- Compose --
@@ -75,25 +91,16 @@ package body GPR2.Path_Name is
    -- Create_Directory --
    ----------------------
 
-   function Create_Directory (Name : Name_Type) return Object is
+   function Create_Directory
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Object
+   is
       use Ada;
-      use GNAT;
-
-      -------------------
-      -- Make_Absolute --
-      -------------------
-
-      function Make_Absolute (Name : Name_Type) return Full_Name is
-        (Full_Name
-           ((if GNAT.OS_Lib.Is_Absolute_Path (String (Name))
-             then ""
-             else Ensure_Directory (Ada.Directories.Current_Directory))
-                  & String (Name)));
 
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-      N  : constant String := String (Make_Absolute (Name));
+      N  : constant String := String (Make_Absolute (Name, Directory));
       NN : constant String := Ensure_Directory (OS_Lib.Normalize_Pathname (N));
 
    begin
@@ -110,14 +117,17 @@ package body GPR2.Path_Name is
    -- Create_File --
    -----------------
 
-   function Create_File (Name : Name_Type) return Object is
+   function Create_File
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Object
+   is
       use Ada;
-      use GNAT;
 
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-      N : constant String := String (Name);
+      N : constant String := String (Make_Absolute (Name, Directory));
+
    begin
       return Object'
         (Is_Dir    => False,
