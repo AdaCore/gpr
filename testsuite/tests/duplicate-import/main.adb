@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--          Copyright (C) 2017-2018, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -67,7 +67,7 @@ exception
             declare
                Mes : constant String := M.Format;
                L   : constant Natural :=
-                 Strings.Fixed.Index (Mes, "/simple");
+                        Strings.Fixed.Index (Mes, "/duplicate-import");
             begin
                if L /= 0 then
                   Text_IO.Put_Line (Mes (L .. Mes'Last));

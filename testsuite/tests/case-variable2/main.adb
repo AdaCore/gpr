@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--          Copyright (C) 2016-0218, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -99,7 +99,7 @@ exception
             declare
                Mes : constant String := M.Format;
                L   : constant Natural :=
-                 Strings.Fixed.Index (Mes, "/simple");
+                       Strings.Fixed.Index (Mes, "/case-variable2");
             begin
                if L /= 0 then
                   Text_IO.Put_Line (Mes (L .. Mes'Last));
