@@ -87,6 +87,9 @@ package GPR2.Path_Name is
      with Post => Compose'Result /= Undefined;
    --  Returns Name as sub-directory of Self : Self & '/' & Name
 
+   function Is_Regular_File
+     (Self : Object) return Boolean;
+
 private
 
    use Ada.Strings.Unbounded;
