@@ -1128,16 +1128,36 @@ package body GPR2.Parser.Project is
 
                --  Special cases for some built-in references
 
-               elsif Index = ""
-                 and then Name = GPR2.Project.Registry.Attribute.Target
-               then
-                  --  Project'Target
+               elsif Index = "" then
+                  if Name = GPR2.Project.Registry.Attribute.Target then
+                     --  Project'Target
 
-                  return R : Item_Values do
-                     R.Single := True;
-                     R.Values.Append
-                       (Characters.Handling.To_Lower (String (Tree.Target)));
-                  end return;
+                     return R : Item_Values do
+                        R.Single := True;
+                        R.Values.Append
+                          (Characters.Handling.To_Lower
+                             (String (Tree.Target)));
+                     end return;
+                  elsif Name = GPR2.Project.Registry.Attribute.Project_Dir then
+                     --  Project'Project_Dir
+
+                     return R : Item_Values do
+                        R.Single := True;
+                        R.Values.Append
+                          (Characters.Handling.To_Lower
+                             (String (Self.File.Name)));
+                     end return;
+
+                  elsif Name = GPR2.Project.Registry.Attribute.Name then
+                     --  Project'Name
+
+                     return R : Item_Values do
+                        R.Single := True;
+                        R.Values.Append
+                          (Characters.Handling.To_Lower
+                             (To_String (Self.Name)));
+                     end return;
+                  end if;
 
                elsif Index /= ""
                  and then Name = GPR2.Project.Registry.Attribute.Runtime

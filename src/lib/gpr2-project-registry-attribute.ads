@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -104,6 +104,8 @@ package GPR2.Project.Registry.Attribute is
                                    "specification_exceptions";
    Specification_Suffix        : constant Name_Type := "specification_suffix";
    Target                      : constant Name_Type := "target";
+   Project_Dir                 : constant Name_Type := "project_dir";
+   Name                        : constant Name_Type := "name";
 
 private
 
