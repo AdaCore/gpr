@@ -1138,6 +1138,7 @@ package body GPR2.Parser.Project is
                           (Characters.Handling.To_Lower
                              (String (Tree.Target)));
                      end return;
+
                   elsif Name = GPR2.Project.Registry.Attribute.Project_Dir then
                      --  Project'Project_Dir
 
