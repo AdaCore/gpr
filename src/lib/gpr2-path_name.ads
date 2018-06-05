@@ -67,27 +67,33 @@ package GPR2.Path_Name is
    subtype Full_Name is String
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
 
-   function Name (Self : Object) return Name_Type;
+   function Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined;
    --  Returns the original, untouched name used to create the object
 
-   function Value (Self : Object) return Full_Name;
+   function Value (Self : Object) return Full_Name
+     with Pre => Self /= Undefined;
    --  Returns the full pathname for the given Path_Name_Type
 
-   function Base_Name (Self : Object) return Name_Type;
+   function Base_Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined;
    --  Returns the base name for File
 
    function Dir_Name (Self : Object) return Full_Name
-     with Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
+     with Pre  => Self /= Undefined,
+          Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
    --  Returns the directory part of the full path name
 
    function Temporary_Directory return Object;
    --  Returns the current temporary directory
 
    function Compose (Self : Object; Name : Name_Type) return Object
-     with Post => Compose'Result /= Undefined;
+     with Pre  => Self /= Undefined,
+          Post => Compose'Result /= Undefined;
    --  Returns Name as sub-directory of Self : Self & '/' & Name
 
-   function Is_Regular_File (Self : Object) return Boolean;
+   function Is_Regular_File (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
    --  Returns True if Self is an existing and readable file on disk
 
 private
@@ -101,6 +107,13 @@ private
       Base_Name : Unbounded_String;
       Dir_Name  : Unbounded_String;
    end record;
+
+   Undefined : constant Object :=
+                 (False,
+                  Null_Unbounded_String,
+                  Null_Unbounded_String,
+                  Null_Unbounded_String,
+                  Null_Unbounded_String);
 
    overriding function "=" (Left, Right : Object) return Boolean is
      (Left.Value = Right.Value);
@@ -117,12 +130,5 @@ private
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name
         (To_String (if Self.Is_Dir then Self.Value else Self.Dir_Name)));
-
-   Undefined : constant Object :=
-                 (False,
-                  Null_Unbounded_String,
-                  Null_Unbounded_String,
-                  Null_Unbounded_String,
-                  Null_Unbounded_String);
 
 end GPR2.Path_Name;
