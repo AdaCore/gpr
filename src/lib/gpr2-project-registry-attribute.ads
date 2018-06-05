@@ -90,6 +90,8 @@ package GPR2.Project.Registry.Attribute is
    Library_Kind                : constant Name_Type := "library_kind";
    Library_Name                : constant Name_Type := "library_name";
    Library_Dir                 : constant Name_Type := "library_dir";
+   Name                        : constant Name_Type := "name";
+   Project_Dir                 : constant Name_Type := "project_dir";
    Project_Files               : constant Name_Type := "project_files";
    Root_Dir                    : constant Name_Type := "root_dir";
    Runtime                     : constant Name_Type := "runtime";
@@ -104,8 +106,6 @@ package GPR2.Project.Registry.Attribute is
                                    "specification_exceptions";
    Specification_Suffix        : constant Name_Type := "specification_suffix";
    Target                      : constant Name_Type := "target";
-   Project_Dir                 : constant Name_Type := "project_dir";
-   Name                        : constant Name_Type := "name";
 
 private
 
