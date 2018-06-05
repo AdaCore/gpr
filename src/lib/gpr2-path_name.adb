@@ -24,8 +24,6 @@
 
 with Ada.Directories;
 
-with System;
-
 with GPR.Tempdir;
 with GPR.Util;
 with GPR;
@@ -146,17 +144,8 @@ package body GPR2.Path_Name is
    ---------------------
 
    function Is_Regular_File (Self : Object) return Boolean is
-      use GNAT.OS_Lib;
-
-      function Internal (N : C_File_Name; A : System.Address) return
-        Integer;
-      pragma Import (C, Internal, "__gnat_is_regular_file_attr");
-
-      File_String : constant Full_Name := Value (Self);
-      File_String_C : aliased String := File_String & ASCII.NUL;
-      Attr : aliased GPR.File_Attributes := GPR.Unknown_Attributes;
    begin
-      return Internal (File_String_C (1)'Address, Attr'Address) /= 0;
+      return OS_Lib.Is_Regular_File (Value (Self));
    end Is_Regular_File;
 
    -------------------------
