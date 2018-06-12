@@ -70,7 +70,7 @@ package body GPR2.Project.Configuration is
    is
       Result  : Object;
       Project : constant Parser.Project.Object :=
-                  Parser.Project.Load (Filename, Result.Messages);
+                  Parser.Project.Parse (Filename, Result.Messages);
       Data    : GPR2.Project.Definition.Data (Has_Context => False);
    begin
       --  Continue only if there is no parsing error on the configuration

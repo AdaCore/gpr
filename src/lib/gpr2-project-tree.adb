@@ -1062,7 +1062,7 @@ package body GPR2.Project.Tree is
          Paths   : constant Path_Name.Set.Object :=
                      GPR2.Project.Search_Paths (Filename, Self.Search_Paths);
          Project : constant Parser.Project.Object :=
-                     Parser.Project.Load (Filename, Messages);
+                     Parser.Project.Parse (Filename, Messages);
          Data    : Definition.Data
                        (Has_Context =>
                           Project /= Parser.Project.Undefined
@@ -1095,7 +1095,7 @@ package body GPR2.Project.Tree is
                   if Directories.Exists (Import_Filename.Value) then
                      Data.Trees.Imports.Insert
                        (Import_Filename,
-                        Parser.Project.Load (Import_Filename, Messages));
+                        Parser.Project.Parse (Import_Filename, Messages));
 
                   else
                      Add_Paths_Messages;
@@ -1237,7 +1237,7 @@ package body GPR2.Project.Tree is
                            View.Context;
          Paths         : Path_Name.Set.Object;
       begin
-         Parser.Project.Parse
+         Parser.Project.Process
            (P_Data.Trees.Project,
             Self,
             Context,

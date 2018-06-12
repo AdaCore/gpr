@@ -46,7 +46,7 @@ package GPR2.Parser.Project is
 
    Undefined : constant Object;
 
-   function Load
+   function Parse
      (Filename : GPR2.Path_Name.Object;
       Messages : out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
@@ -56,7 +56,7 @@ package GPR2.Parser.Project is
      with Pre => Self /= Undefined;
    --  Unload the object and release all associated memory
 
-   procedure Parse
+   procedure Process
      (Self    : in out Object;
       Tree    : GPR2.Project.Tree.Object;
       Context : GPR2.Context.Object;

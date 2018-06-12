@@ -213,10 +213,19 @@ package body GPR2.Parser.Project is
    end Is_Extended_All;
 
    ----------
-   -- Load --
+   -- Name --
    ----------
 
-   function Load
+   function Name (Self : Object) return Name_Type is
+   begin
+      return Name_Type (To_String (Self.Name));
+   end Name;
+
+   -----------
+   -- Parse --
+   -----------
+
+   function Parse
      (Filename : GPR2.Path_Name.Object;
       Messages : out Log.Object) return Object
    is
@@ -899,22 +908,22 @@ package body GPR2.Parser.Project is
 
          return Project;
       end if;
-   end Load;
+   end Parse;
 
-   ----------
-   -- Name --
-   ----------
+   ---------------
+   -- Path_Name --
+   ---------------
 
-   function Name (Self : Object) return Name_Type is
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Name_Type (To_String (Self.Name));
-   end Name;
+      return Self.File;
+   end Path_Name;
 
-   -----------
-   -- Parse --
-   -----------
+   -------------
+   -- Process --
+   -------------
 
-   procedure Parse
+   procedure Process
      (Self    : in out Object;
       Tree    : GPR2.Project.Tree.Object;
       Context : GPR2.Context.Object;
@@ -1050,7 +1059,7 @@ package body GPR2.Parser.Project is
                        (Get_Name_Type (I_Node.As_Single_Tok_Node))
                      else "");
          View   : constant GPR2.Project.View.Object :=
-                    Parse.View.View_For (Project);
+           Process.View.View_For (Project);
 
          function Is_Self return Boolean is
            (Optional_Name_Type (To_String (Pack_Name)) = Pack
@@ -1616,7 +1625,7 @@ package body GPR2.Parser.Project is
 
          Name : constant Name_Type := Get_Name_Type (Node);
          View : constant GPR2.Project.View.Object :=
-                  Parse.View.View_For (Project);
+                  Process.View.View_For (Project);
 
          Result : Item_Values := Empty_Item_Values;
 
@@ -1753,7 +1762,7 @@ package body GPR2.Parser.Project is
                      use type GPR2.Project.View.Object;
 
                      View : constant GPR2.Project.View.Object :=
-                              Parse.View.View_For
+                              Process.View.View_For
                                 (Self.Extended.Path_Name.Base_Name);
                   begin
                      if View /= GPR2.Project.View.Undefined
@@ -2104,7 +2113,7 @@ package body GPR2.Parser.Project is
                         Get_Name_Type (Single_Tok_Node (Name));
 
             View    : constant GPR2.Project.View.Object :=
-                        Parse.View.View_For (Project);
+                        Process.View.View_For (Project);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -2159,7 +2168,7 @@ package body GPR2.Parser.Project is
                         Get_Name_Type (Single_Tok_Node (Name));
 
             View    : constant GPR2.Project.View.Object :=
-                        Parse.View.View_For (Project);
+                        Process.View.View_For (Project);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -2449,16 +2458,7 @@ package body GPR2.Parser.Project is
          Traverse (Root (Self.Unit), Parser'Access);
          exit when Stop_Iteration;
       end loop;
-   end Parse;
-
-   ---------------
-   -- Path_Name --
-   ---------------
-
-   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
-   begin
-      return Self.File;
-   end Path_Name;
+   end Process;
 
    ---------------
    -- Qualifier --
