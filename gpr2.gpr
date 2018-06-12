@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 with "gnatcoll_iconv";
+with "gnatcoll_gmp";
 with "langkit_support";
 
 library project GPR2 is
