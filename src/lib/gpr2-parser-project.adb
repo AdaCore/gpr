@@ -1059,7 +1059,7 @@ package body GPR2.Parser.Project is
                        (Get_Name_Type (I_Node.As_Single_Tok_Node))
                      else "");
          View   : constant GPR2.Project.View.Object :=
-           Process.View.View_For (Project);
+                    Process.View.View_For (Project);
 
          function Is_Self return Boolean is
            (Optional_Name_Type (To_String (Pack_Name)) = Pack
