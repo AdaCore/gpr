@@ -70,7 +70,7 @@ package GPR2.Project.View is
      with Pre  => Self /= Undefined,
           Post => Kind'Result = Self.Qualifier
                   or else Self.Qualifier = K_Standard;
-   --  The actual kind of the project file. This may be different of the
+   --  The actual kind of the project file. This may be different if the
    --  Qualifier is not specified.
 
    function Signature (Self : Object) return Context.Binary_Signature;
