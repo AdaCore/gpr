@@ -1,0 +1,5 @@
+description:
+    Test for source update
+driver: build_and_run
+project_file: source_missing_interface
+main: main

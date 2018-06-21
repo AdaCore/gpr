@@ -184,7 +184,11 @@ package GPR2.Project.View is
           Post => (if Self.Kind = K_Abstract then not Has_Sources'Result);
    --  Returns true if the project view has some sources
 
-   function Sources (Self : Object) return Project.Source.Set.Object
+   type Source_Kind is (K_All, K_Interface_Only, K_Not_Interface);
+
+   function Sources
+     (Self   : Object;
+      Filter : Source_Kind := K_All) return Project.Source.Set.Object
      with Pre => Self /= Undefined;
    --  Returns all the sources for the view, note that this routine ensure that
    --  the current sources are up-to-date by calling Update_Sources below.

@@ -467,10 +467,39 @@ package body GPR2.Project.View is
    -- Sources --
    -------------
 
-   function Sources (Self : Object) return Project.Source.Set.Object is
+   function Sources
+     (Self   : Object;
+      Filter : Source_Kind := K_All) return Project.Source.Set.Object is
    begin
       Self.Update_Sources;
-      return Definition.Get (Self).Sources;
+
+      if Filter = K_All then
+         return Definition.Get (Self).Sources;
+
+      else
+         return S_Set : Project.Source.Set.Object do
+            declare
+               Data : constant Project.Definition.Data :=
+                        Definition.Get (Self);
+            begin
+               for S of Data.Sources loop
+                  declare
+                     Unit_Is_Interface : constant Boolean :=
+                                           Data.Units
+                                             (S.Source.Unit_Name).Is_Interface;
+                  begin
+                     if (Filter = K_Interface_Only and then Unit_Is_Interface)
+                       or else
+                        (Filter = K_Not_Interface
+                         and then not Unit_Is_Interface)
+                     then
+                        S_Set.Insert (S);
+                     end if;
+                  end;
+               end loop;
+            end;
+         end return;
+      end if;
    end Sources;
 
    --------------------
@@ -485,6 +514,9 @@ package body GPR2.Project.View is
 
       package Unit_Naming is
         new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
+
+      package Interfaces_Unit is new Ada.Containers.Indefinite_Ordered_Maps
+        (Name_Type, Project.Attribute.Object);
 
       type Insert_Mode is (Replace, Skip, Error);
       --  Controls behavior when a duplicated unit/filename is found
@@ -512,12 +544,14 @@ package body GPR2.Project.View is
       --  returns in Kind if Filename is a spec, a body or a separate.
 
       function Unit_For
-        (Filename : GPR2.Path_Name.Full_Name;
+        (Filename : Simple_Name;
          Kind     : GPR2.Source.Kind_Type;
-         Ok       : out Boolean) return Name_Type;
-      --  Given Filename, returns the unit name. This is meaningful for unit
-      --  based language like Ada. For other languages the unit name is the
-      --  same as the Filename.
+         Ok       : out Boolean) return Name_Type
+        with Pre => (for some C of Filename => C = '.');
+      --  Given Filename (with extension, needed to compute the language),
+      --  returns the unit name. This is meaningful for unit based language
+      --  like Ada. For other languages the unit name is the same as the
+      --  Filename.
 
       function Signature return MD5.Binary_Message_Digest;
       --  Compute the signature corresponding to the source context. If the
@@ -566,6 +600,7 @@ package body GPR2.Project.View is
 
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
+      Interfaces        : Interfaces_Unit.Map;
 
       Tree              : constant not null access Project.Tree.Object :=
                             Definition.Get (Self).Tree;
@@ -663,20 +698,22 @@ package body GPR2.Project.View is
                procedure Register_Src;
                --  Register Src below into U_Def. Updating the necessary fields
 
-               Ok   : Boolean := True;
-               Lang : constant Name_Type := Name_Type (Language);
-               Unit : constant Optional_Name_Type :=
-                        (if Lang = "ada"
-                         then Unit_For (Filename, Kind, Ok)
-                         else No_Name);
-               File : constant GPR2.Path_Name.Object :=
-                        GPR2.Path_Name.Create_File (Name_Type (Filename));
-               Src  : constant GPR2.Source.Object :=
-                        GPR2.Source.Create
-                          (Filename  => File,
-                           Kind      => Kind,
-                           Language  => Lang,
-                           Unit_Name => Unit);
+               B_Name : constant Simple_Name :=
+                          Simple_Name (Directories.Simple_Name (Filename));
+               Ok     : Boolean := True;
+               Lang   : constant Name_Type := Name_Type (Language);
+               Unit   : constant Optional_Name_Type :=
+                          (if Lang = "ada"
+                           then Unit_For (B_Name, Kind, Ok)
+                           else No_Name);
+               File   : constant GPR2.Path_Name.Object :=
+                          GPR2.Path_Name.Create_File (Name_Type (Filename));
+               Src    : constant GPR2.Source.Object :=
+                          GPR2.Source.Create
+                            (Filename  => File,
+                             Kind      => Kind,
+                             Language  => Lang,
+                             Unit_Name => Unit);
 
                U_Def : GPR2.Unit.Object;
 
@@ -690,6 +727,16 @@ package body GPR2.Project.View is
                begin
                   if Kind = S_Spec then
                      U_Def.Update_Spec (P_Src);
+
+                     if Interfaces.Contains (Name_Type (Unit)) then
+                        U_Def.Set_Interface;
+
+                        --  We remove this interface as now found, and we check
+                        --  at the end that Interfaces is empty.
+
+                        Interfaces.Delete (Unit);
+                     end if;
+
                   else
                      U_Def.Update_Bodies (P_Src);
                   end if;
@@ -978,7 +1025,7 @@ package body GPR2.Project.View is
       --------------
 
       function Unit_For
-        (Filename : GPR2.Path_Name.Full_Name;
+        (Filename : Simple_Name;
          Kind     : GPR2.Source.Kind_Type;
          Ok       : out Boolean) return Name_Type
       is
@@ -993,8 +1040,7 @@ package body GPR2.Project.View is
 
          function Compute_Unit_From_Filename return Unbounded_String is
             Result : Unbounded_String :=
-                       To_Unbounded_String
-                         (Directories.Simple_Name (Filename));
+                       To_Unbounded_String (String (Filename));
          begin
             --  First remove the suffix for the given language
 
@@ -1085,8 +1131,7 @@ package body GPR2.Project.View is
             return Result;
          end Compute_Unit_From_Filename;
 
-         Result : Unbounded_String :=
-                    To_Unbounded_String (Directories.Simple_Name (Filename));
+         Result : Unbounded_String := To_Unbounded_String (String (Filename));
 
       begin
          --  Let's pretend the filename/unit is part of the sources
@@ -1132,7 +1177,7 @@ package body GPR2.Project.View is
                                   Project.Attribute.Undefined);
                begin
                   if Attr /= Project.Attribute.Undefined
-                    and then Attr.Value /= Filename
+                    and then Attr.Value /= String (Filename)
                   then
                      --  We have a naming exception for this unit and the body
                      --  does not corresponds to the current filename. We skip
@@ -1234,6 +1279,51 @@ package body GPR2.Project.View is
          Fill_Naming_Exceptions
            (Naming.Attributes (Registry.Attribute.Implementation));
 
+         --  Record units being set as interfaces, first for Library_Interface
+         --  which containes unit names.
+
+         if Data.Attrs.Has_Library_Interface then
+            for Unit of Data.Attrs.Library_Interface.Values loop
+               if Interfaces.Contains (Name_Type (Unit)) then
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Warning,
+                        "duplicate unit '" & Unit
+                        & "' in library_interface attribute",
+                        GPR2.Source_Reference.Object
+                          (Data.Attrs.Library_Interface)));
+               else
+                  Interfaces.Insert
+                    (Name_Type (Unit), Data.Attrs.Library_Interface);
+               end if;
+            end loop;
+         end if;
+
+         --  And then Interfaces which contains filenames
+
+         if Data.Attrs.Has_Interfaces then
+            for Source of Data.Attrs.Interfaces.Values loop
+               declare
+                  Ok   : Boolean;
+                  Unit : constant Name_Type :=
+                           Unit_For
+                             (Simple_Name (Source), GPR2.Source.S_Spec, Ok);
+               begin
+                  if Interfaces.Contains (Unit) then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Warning,
+                           "duplicate unit '" & String (Unit)
+                           & "' in interfaces attribute",
+                           GPR2.Source_Reference.Object
+                             (Data.Attrs.Interfaces)));
+                  else
+                     Interfaces.Insert (Unit, Data.Attrs.Interfaces);
+                  end if;
+               end;
+            end loop;
+         end if;
+
          --  Read sources and set-up the corresponding definition
 
          --  First reset the current set
@@ -1322,6 +1412,28 @@ package body GPR2.Project.View is
 
          if Data.Extended /= View.Undefined then
             Insert (Data.Extended.Sources, Skip);
+         end if;
+
+         --  Check that all interfaces have been found in the project view
+
+         if not Interfaces.Is_Empty then
+            for Unit in Interfaces.Iterate loop
+               declare
+                  Attr : constant Project.Attribute.Object :=
+                           Interfaces_Unit.Element (Unit);
+               begin
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        "source for interface "
+                        & (if Attr.Name = "library_interface"
+                          then "unit" else "")
+                        & " '"
+                        & String (Interfaces_Unit.Key (Unit))
+                        & "' not found",
+                        GPR2.Source_Reference.Object (Attr)));
+               end;
+            end loop;
          end if;
 
          --  Record back new definition for the view with updated sources
