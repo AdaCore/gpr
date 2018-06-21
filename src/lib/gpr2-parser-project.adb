@@ -1695,8 +1695,8 @@ package body GPR2.Parser.Project is
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
-         Name    : constant Name_Type :=
-                     Name_Type (String'(Text (Name_1)));
+         Name    : constant Simple_Name :=
+                     Simple_Name (String'(Text (Name_1)));
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -1763,7 +1763,8 @@ package body GPR2.Parser.Project is
 
                      View : constant GPR2.Project.View.Object :=
                               Process.View.View_For
-                                (Self.Extended.Path_Name.Base_Name);
+                                (Name_Type
+                                   (Self.Extended.Path_Name.Base_Name));
                   begin
                      if View /= GPR2.Project.View.Undefined
                        and then View.Has_Variables (Name)

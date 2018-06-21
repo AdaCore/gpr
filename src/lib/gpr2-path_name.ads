@@ -75,7 +75,7 @@ package GPR2.Path_Name is
      with Pre => Self /= Undefined;
    --  Returns the full pathname for the given Path_Name_Type
 
-   function Base_Name (Self : Object) return Name_Type
+   function Base_Name (Self : Object) return Simple_Name
      with Pre => Self /= Undefined;
    --  Returns the base name for File
 
@@ -121,8 +121,8 @@ private
    function "<" (Left, Right : Object) return Boolean
      is (Left.Value < Right.Value);
 
-   function Base_Name (Self : Object) return Name_Type is
-     (Name_Type (To_String (Self.Base_Name)));
+   function Base_Name (Self : Object) return Simple_Name is
+     (Simple_Name (To_String (Self.Base_Name)));
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.As_Is)));
