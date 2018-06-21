@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,9 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Source;
-
 with GPR2.Project.View;
+with GPR2.Source;
 
 limited with GPR2.Project.Source.Set;
 
