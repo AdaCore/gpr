@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -148,6 +148,12 @@ package GPR2.Project.Attribute.Set is
    function Has_Source_List_File (Self : Object) return Boolean;
    function Source_List_File     (Self : Object) return Attribute.Object;
 
+   function Has_Library_Interface (Self : Object) return Boolean;
+   function Library_Interface     (Self : Object) return Attribute.Object;
+
+   function Has_Interfaces (Self : Object) return Boolean;
+   function Interfaces     (Self : Object) return Attribute.Object;
+
 private
 
    --  An attribute set object is:
@@ -224,5 +230,17 @@ private
 
    function Source_List_File (Self : Object) return Attribute.Object is
      (Self.Element (Registry.Attribute.Source_List_File));
+
+   function Has_Library_Interface (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Library_Interface));
+
+   function Library_Interface (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Library_Interface));
+
+   function Has_Interfaces (Self : Object) return Boolean is
+     (Self.Contains (Registry.Attribute.Interfaces));
+
+   function Interfaces (Self : Object) return Attribute.Object is
+     (Self.Element (Registry.Attribute.Interfaces));
 
 end GPR2.Project.Attribute.Set;

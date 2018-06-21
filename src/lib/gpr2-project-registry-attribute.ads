@@ -86,7 +86,9 @@ package GPR2.Project.Registry.Attribute is
    Included_Artifacts_Patterns : constant Name_Type :=
                                    "included_artifacts_patterns";
    Included_Patterns           : constant Name_Type := "included_patterns";
+   Interfaces                  : constant Name_Type := "interfaces";
    Languages                   : constant Name_Type := "languages";
+   Library_Interface           : constant Name_Type := "library_interface";
    Library_Kind                : constant Name_Type := "library_kind";
    Library_Name                : constant Name_Type := "library_name";
    Library_Dir                 : constant Name_Type := "library_dir";
