@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -34,8 +34,17 @@ package body GPR2.Unit is
      (Spec   : Project.Source.Object;
       Bodies : Project.Source.Set.Object) return Object is
    begin
-      return Object'(Spec, Bodies);
+      return Object'(Spec, Bodies, False);
    end Create;
+
+   -------------------
+   -- Set_Interface --
+   -------------------
+
+   procedure Set_Interface (Self : in out Object) is
+   begin
+      Self.Is_Interface := True;
+   end Set_Interface;
 
    -------------------
    -- Update_Bodies --

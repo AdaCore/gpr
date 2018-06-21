@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -34,6 +34,8 @@ package GPR2.Unit is
 
    type Object is tagged private;
 
+   Undefined : constant Object;
+
    function Create
      (Spec   : Project.Source.Object;
       Bodies : Project.Source.Set.Object) return Object;
@@ -54,17 +56,31 @@ package GPR2.Unit is
      (Self : in out Object; Source : Project.Source.Object);
    --  Set or append unit's body
 
+   procedure Set_Interface (Self : in out Object);
+   --  Record that the unit is an interface
+
+   function Is_Interface (Self : Object) return Boolean;
+   --  Returns True if the unit is an interface
+
 private
 
    type Object is tagged record
-      Spec   : Project.Source.Object;
-      Bodies : Project.Source.Set.Object;
+      Spec         : Project.Source.Object;
+      Bodies       : Project.Source.Set.Object;
+      Is_Interface : Boolean := False;
    end record;
+
+   Undefined : constant Object :=
+                 (Spec         => <>,
+                  Bodies       => <>,
+                  Is_Interface => False);
 
    function Spec
      (Self : Object) return Project.Source.Object is (Self.Spec);
 
    function Bodies
      (Self : Object) return Project.Source.Set.Object is (Self.Bodies);
+
+   function Is_Interface (Self : Object) return Boolean is (Self.Is_Interface);
 
 end GPR2.Unit;
