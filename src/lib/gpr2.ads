@@ -80,6 +80,12 @@ package GPR2 is
      with Dynamic_Predicate => Name_Type'Length > 0;
    --  A non case sensitive name
 
+   subtype Simple_Name is Name_Type
+     with Dynamic_Predicate =>
+       (for all C of Simple_Name => C not in '/' | '\');
+   --  A simple name, non empty and without some characters not allowed in
+   --  identifier for example.
+
    subtype Value_Type is String;
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
