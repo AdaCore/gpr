@@ -84,7 +84,7 @@ package GPR2 is
      with Dynamic_Predicate =>
        (for all C of Simple_Name => C not in '/' | '\');
    --  A simple name, non empty and without some characters not allowed in
-   --  identifier for example.
+   --  filenames for example.
 
    subtype Value_Type is String;
 
