@@ -34,17 +34,8 @@ package body GPR2.Unit is
      (Spec   : Project.Source.Object;
       Bodies : Project.Source.Set.Object) return Object is
    begin
-      return Object'(Spec, Bodies, False);
+      return Object'(Spec, Bodies);
    end Create;
-
-   -------------------
-   -- Set_Interface --
-   -------------------
-
-   procedure Set_Interface (Self : in out Object) is
-   begin
-      Self.Is_Interface := True;
-   end Set_Interface;
 
    -------------------
    -- Update_Bodies --

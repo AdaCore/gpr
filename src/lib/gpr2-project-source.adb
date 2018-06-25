@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -37,10 +37,11 @@ package body GPR2.Project.Source is
    ------------
 
    function Create
-     (Source : GPR2.Source.Object;
-      View   : Project.View.Object) return Object is
+     (Source       : GPR2.Source.Object;
+      View         : Project.View.Object;
+      Is_Interface : Boolean) return Object is
    begin
-      return Object'(Source, View);
+      return Object'(Source, View, Is_Interface);
    end Create;
 
    ------------------
@@ -130,7 +131,7 @@ package body GPR2.Project.Source is
       --  For Unit or Closure add dependencies from the other part
 
       if Mode in Unit | Closure then
-         To_Analyse (Object'(Self.Source.Other_Part, Self.View));
+         To_Analyse (Object'(Self.Source.Other_Part, Self.View, False));
       end if;
 
       For_Every_Unit : loop

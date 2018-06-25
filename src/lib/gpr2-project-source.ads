@@ -39,8 +39,9 @@ package GPR2.Project.Source is
    overriding function "=" (Left, Right : Object) return Boolean;
 
    function Create
-     (Source : GPR2.Source.Object;
-      View   : Project.View.Object) return Object;
+     (Source       : GPR2.Source.Object;
+      View         : Project.View.Object;
+      Is_Interface : Boolean) return Object;
    --  Constructor for Object
 
    function View (Self : Object) return Project.View.Object;
@@ -48,6 +49,9 @@ package GPR2.Project.Source is
 
    function Source (Self : Object) return GPR2.Source.Object;
    --  The source object
+
+   function Is_Interface (Self : Object) return Boolean;
+   --  Returns True if Self is part of the project view interface
 
    type Dependency is (Direct, Unit, Closure);
    --  Direct  : the dependencies from the source withed units.
@@ -68,18 +72,23 @@ private
    use type GPR2.Source.Object;
 
    type Object is tagged record
-      Source : GPR2.Source.Object;
-      View   : Project.View.Object;
+      Source       : GPR2.Source.Object;
+      View         : Project.View.Object;
+      Is_Interface : Boolean;
    end record;
 
    Undefined : constant Object :=
-                 (Source => GPR2.Source.Undefined,
-                  View   => Project.View.Undefined);
+                 (Source       => GPR2.Source.Undefined,
+                  View         => Project.View.Undefined,
+                  Is_Interface => False);
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Source < Right.Source);
 
    overriding function "=" (Left, Right : Object) return Boolean is
      (Left.Source = Right.Source);
+
+   function Is_Interface (Self : Object) return Boolean is
+     (Self.Is_Interface);
 
 end GPR2.Project.Source;

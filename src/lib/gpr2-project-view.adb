@@ -715,6 +715,15 @@ package body GPR2.Project.View is
                              Language  => Lang,
                              Unit_Name => Unit);
 
+               Is_Interface : constant Boolean :=
+                                Kind = S_Spec
+                                    and then
+                                      (Interfaces.Contains (B_Name)
+                                       or else
+                                         (Unit /= No_Name
+                                          and then Interfaces.Contains
+                                                     (Name_Type (Unit))));
+
                U_Def : GPR2.Unit.Object;
 
                ------------------
@@ -723,20 +732,10 @@ package body GPR2.Project.View is
 
                procedure Register_Src is
                   P_Src : constant Project.Source.Object :=
-                            Project.Source.Create (Src, Self);
+                            Project.Source.Create (Src, Self, Is_Interface);
                begin
                   if Kind = S_Spec then
                      U_Def.Update_Spec (P_Src);
-
-                     if Interfaces.Contains (Name_Type (Unit)) then
-                        U_Def.Set_Interface;
-
-                        --  We remove this interface as now found, and we check
-                        --  at the end that Interfaces is empty.
-
-                        Interfaces.Delete (Unit);
-                     end if;
-
                   else
                      U_Def.Update_Bodies (P_Src);
                   end if;
@@ -762,7 +761,16 @@ package body GPR2.Project.View is
                      end if;
                   end if;
 
-                  Data.Sources.Insert (GPR2.Project.Source.Create (Src, Self));
+                  Data.Sources.Insert
+                    (GPR2.Project.Source.Create (Src, Self, Is_Interface));
+
+                  --  And make sure that if it is an interface it is removed
+                  --  from the set.
+
+                  if Is_Interface then
+                     Interfaces.Exclude (Unit);
+                     Interfaces.Exclude (B_Name);
+                  end if;
                end if;
             end;
          end if;
@@ -1303,24 +1311,18 @@ package body GPR2.Project.View is
 
          if Data.Attrs.Has_Interfaces then
             for Source of Data.Attrs.Interfaces.Values loop
-               declare
-                  Ok   : Boolean;
-                  Unit : constant Name_Type :=
-                           Unit_For
-                             (Simple_Name (Source), GPR2.Source.S_Spec, Ok);
-               begin
-                  if Interfaces.Contains (Unit) then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Warning,
-                           "duplicate unit '" & String (Unit)
-                           & "' in interfaces attribute",
-                           GPR2.Source_Reference.Object
-                             (Data.Attrs.Interfaces)));
-                  else
-                     Interfaces.Insert (Unit, Data.Attrs.Interfaces);
-                  end if;
-               end;
+               if Interfaces.Contains (Simple_Name (Source)) then
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Warning,
+                        "duplicate unit '" & String (Source)
+                        & "' in interfaces attribute",
+                        GPR2.Source_Reference.Object
+                          (Data.Attrs.Interfaces)));
+               else
+                  Interfaces.Insert
+                    (Simple_Name (Source), Data.Attrs.Interfaces);
+               end if;
             end loop;
          end if;
 
