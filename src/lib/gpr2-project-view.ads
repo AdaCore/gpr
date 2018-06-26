@@ -37,6 +37,7 @@ with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
 limited with GPR2.Project.Source.Set;
+limited with GPR2.Project.View.Set;
 
 package GPR2.Project.View is
 
@@ -79,6 +80,10 @@ package GPR2.Project.View is
    function Has_Imports (Self : Object) return Boolean
      with Pre => Self /= Undefined;
    --  Returns True if the project has some imports
+
+   function Imports (Self : Object) return GPR2.Project.View.Set.Object
+     with Pre => Self /= Undefined and then Self.Has_Imports;
+   --  Returns all imported project views
 
    function Has_Extended (Self : Object) return Boolean
      with Pre => Self /= Undefined;

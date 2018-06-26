@@ -40,6 +40,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
+with GPR2.Project.View.Set;
 with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
@@ -290,6 +291,19 @@ package body GPR2.Project.View is
          return Definition.Get (Self).Vars.Contains (Name);
       end if;
    end Has_Variables;
+
+   -------------
+   -- Imports --
+   -------------
+
+   function Imports (Self : Object) return GPR2.Project.View.Set.Object is
+   begin
+      return Set : GPR2.Project.View.Set.Object do
+         for Import of Definition.Get (Self).Imports loop
+            Set.Insert (Import);
+         end loop;
+      end return;
+   end Imports;
 
    ------------------------
    -- Invalidate_Sources --
