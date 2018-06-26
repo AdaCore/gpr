@@ -71,6 +71,10 @@ package GPR2.Project.Registry.Attribute is
 
    --  Some common attribute names
 
+   ALI_Subdir                  : constant Name_Type := "ali_subdir";
+   Active                      : constant Name_Type := "active";
+   Archive_Suffix              : constant Name_Type := "archive_suffix";
+   Artifacts                   : constant Name_Type := "artifacts";
    Body_N                      : constant Name_Type := "body";
    Body_Suffix                 : constant Name_Type := "body_suffix";
    Dot_Replacement             : constant Name_Type := "dot_replacement";
@@ -78,6 +82,9 @@ package GPR2.Project.Registry.Attribute is
    Excluded_Source_Files       : constant Name_Type := "excluded_source_files";
    Excluded_Source_List_File   : constant Name_Type :=
                                    "excluded_source_list_file";
+   Exec_Subdir                 : constant Name_Type := "exec_subdir";
+   Executable                  : constant Name_Type := "executable";
+   Executable_Suffix           : constant Name_Type := "executable_suffix";
    External                    : constant Name_Type := "external";
    Implementation              : constant Name_Type := "implementation";
    Implementation_Exceptions   : constant Name_Type :=
@@ -86,27 +93,42 @@ package GPR2.Project.Registry.Attribute is
    Included_Artifacts_Patterns : constant Name_Type :=
                                    "included_artifacts_patterns";
    Included_Patterns           : constant Name_Type := "included_patterns";
+   Install_Name                : constant Name_Type := "install_name";
+   Install_Project             : constant Name_Type := "install_project";
    Interfaces                  : constant Name_Type := "interfaces";
    Languages                   : constant Name_Type := "languages";
+   Lib_Subdir                  : constant Name_Type := "lib_subdir";
+   Library_Dir                 : constant Name_Type := "library_dir";
    Library_Interface           : constant Name_Type := "library_interface";
    Library_Kind                : constant Name_Type := "library_kind";
    Library_Name                : constant Name_Type := "library_name";
-   Library_Dir                 : constant Name_Type := "library_dir";
+   Library_Options             : constant Name_Type := "library_options";
+   Link_Lib_Subdir             : constant Name_Type := "link_lib_subdir";
+   Linker_Options              : constant Name_Type := "linker_options";
+   Mode                        : constant Name_Type := "mode";
    Name                        : constant Name_Type := "name";
+   Prefix                      : constant Name_Type := "prefix";
    Project_Dir                 : constant Name_Type := "project_dir";
    Project_Files               : constant Name_Type := "project_files";
+   Project_Subdir              : constant Name_Type := "project_subdir";
+   Required_Artifacts          : constant Name_Type := "required_artifacts";
    Root_Dir                    : constant Name_Type := "root_dir";
    Runtime                     : constant Name_Type := "runtime";
    Separate_Suffix             : constant Name_Type := "separate_suffix";
+   Shared_Lib_Prefix           : constant Name_Type := "shared_lib_prefix";
+   Shared_Lib_Suffix           : constant Name_Type := "shared_lib_suffix";
+   Side_Debug                  : constant Name_Type := "side_debug";
    Source_Dirs                 : constant Name_Type := "source_dirs";
    Source_Files                : constant Name_Type := "source_files";
    Source_List_File            : constant Name_Type := "source_list_file";
+   Sources_Subdir              : constant Name_Type := "sources_subdir";
    Spec                        : constant Name_Type := "spec";
    Spec_Suffix                 : constant Name_Type := "spec_suffix";
    Specification               : constant Name_Type := "specification";
    Specification_Exceptions    : constant Name_Type :=
                                    "specification_exceptions";
    Specification_Suffix        : constant Name_Type := "specification_suffix";
+   Standalone_Library          : constant Name_Type := "standalone_library";
    Target                      : constant Name_Type := "target";
 
 private
