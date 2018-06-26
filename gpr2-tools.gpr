@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,12 +29,15 @@ project GPR2.Tools is
    type Build_Type is ("debug", "release");
    Build : Build_Type := external ("BUILD", "debug");
 
+   type Target_type is ("Windows_NT", "UNIX");
+   Target : Target_Type := external ("OS", "UNIX");
+
    Processors := External ("PROCESSORS", "0");
 
    for Source_Dirs use ("src/tools");
    for Object_Dir use ".build/" & Build & "/obj-tools";
 
-   for Main use ("gprremote.adb", "gprdump.adb");
+   for Main use ("gprremote.adb", "gprdump.adb", "gprinstall-main.adb");
 
    --------------
    -- Compiler --
@@ -75,7 +78,22 @@ project GPR2.Tools is
    -------------
 
    package Builder is
+      for Executable ("gprinstall-main.adb") use "gpr2install";
+
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
+
+   -------------
+   -- Install --
+   -------------
+
+   package Install is
+      case Target is
+         when "Windows_NT" =>
+            for Artifacts ("bin") use ("src/tools/gpr2install.exe.manifest");
+         when "UNIX" =>
+            null;
+      end case;
+   end Install;
 
 end GPR2.Tools;
