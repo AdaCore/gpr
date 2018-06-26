@@ -64,6 +64,19 @@ package body GPR2.Project.View is
    --  The default languages to use if no languages attribute specified in the
    --  project. The default value is just "ada".
 
+   ----------------
+   -- Aggregated --
+   ----------------
+
+   function Aggregated (Self : Object) return GPR2.Project.View.Set.Object is
+   begin
+      return Set : GPR2.Project.View.Set.Object do
+         for Agg of Definition.Get (Self).Aggregated loop
+            Set.Insert (Agg);
+         end loop;
+      end return;
+   end Aggregated;
+
    ---------------
    -- Attribute --
    ---------------

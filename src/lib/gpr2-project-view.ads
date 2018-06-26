@@ -97,6 +97,9 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns True if the project is extending all another project
 
+   function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
+     with Pre => Self /= Undefined and then Self.Kind in Aggregate_Kind;
+
    function View_For
      (Self : Object;
       Name : Name_Type) return View.Object
