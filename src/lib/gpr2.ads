@@ -65,6 +65,9 @@ package GPR2 is
      (K_Configuration, K_Abstract,
       K_Standard, K_Library, K_Aggregate, K_Aggregate_Library);
 
+   subtype Aggregate_Kind
+     is Project_Kind range K_Aggregate .. K_Aggregate_Library;
+
    function Image (Kind : Project_Kind) return String;
    --  Returns a human representation of kind value
 
