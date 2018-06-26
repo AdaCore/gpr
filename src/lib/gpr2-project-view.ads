@@ -89,6 +89,10 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns True if the project is extending another project
 
+   function Extended (Self : Object) return Object
+     with Pre => Self /= Undefined and then Self.Has_Extended;
+   --  Returns the extended project
+
    function Is_Extended_All (Self : Object) return Boolean
      with Pre => Self /= Undefined;
    --  Returns True if the project is extending all another project

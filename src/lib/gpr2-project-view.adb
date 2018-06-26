@@ -147,6 +147,15 @@ package body GPR2.Project.View is
       return Recursive_Context (Self);
    end Context;
 
+   --------------
+   -- Extended --
+   --------------
+
+   function Extended (Self : Object) return Object is
+   begin
+      return Definition.Get (Self).Extended;
+   end Extended;
+
    -------------
    -- From_Id --
    -------------
