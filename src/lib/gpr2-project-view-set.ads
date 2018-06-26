@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -28,6 +28,14 @@ package GPR2.Project.View.Set is
 
    package Set is new Ada.Containers.Ordered_Sets (Object);
 
-   subtype Object is Set.Set;
+   type Object is new Set.Set with private;
+
+   Empty_Set : constant Object;
+
+private
+
+   type Object is new Set.Set with null record;
+
+   Empty_Set : constant Object := (Set.Empty_Set with null record);
 
 end GPR2.Project.View.Set;

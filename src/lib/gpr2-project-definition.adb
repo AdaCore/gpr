@@ -31,7 +31,7 @@ package body GPR2.Project.Definition is
      new Ada.Containers.Indefinite_Ordered_Maps (View.Object, Data);
 
    package Project_View is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, View.Set.Object, "=" => View.Set.Set."=");
+     (Name_Type, View.Set.Object, "=" => View.Set."=");
 
    protected Shared is
 
@@ -222,11 +222,11 @@ package body GPR2.Project.Definition is
                           Def.Trees.Project.Name;
          begin
             if not Views.Contains (Path_Name) then
-               Views.Insert (Path_Name, Project.View.Set.Set.Empty_Set);
+               Views.Insert (Path_Name, Project.View.Set.Empty_Set);
             end if;
 
             if not Views.Contains (Name) then
-               Views.Insert (Name, Project.View.Set.Set.Empty_Set);
+               Views.Insert (Name, Project.View.Set.Empty_Set);
             end if;
 
             Views (Path_Name).Insert (Result);
