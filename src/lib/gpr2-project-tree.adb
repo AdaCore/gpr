@@ -125,10 +125,10 @@ package body GPR2.Project.Tree is
 
       --  Clear the corresponding sources
 
-      Self.Sources.Exclude (Name_Type (Src.Source.Filename));
+      Self.Sources.Exclude (Name_Type (Src.Source.Path_Name.Value));
 
       for B of Unit.Bodies loop
-         Self.Sources.Exclude (Name_Type (B.Source.Filename));
+         Self.Sources.Exclude (Name_Type (B.Source.Path_Name.Value));
       end loop;
    end Clear_View;
 

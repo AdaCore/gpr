@@ -64,7 +64,7 @@ procedure Main is
             U : constant Optional_Name_Type := S.Unit_Name;
          begin
             Text_IO.New_Line;
-            Output_Filename (S.Filename);
+            Output_Filename (S.Path_Name.Value);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
@@ -76,7 +76,7 @@ procedure Main is
 
                for D of Source.Dependencies loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Source.Filename);
+                  Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
 
@@ -92,7 +92,7 @@ procedure Main is
                  Source.Dependencies (Mode => GPR2.Project.Source.Unit)
                loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Source.Filename);
+                  Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
 
@@ -102,7 +102,7 @@ procedure Main is
                  Source.Dependencies (Mode => GPR2.Project.Source.Closure)
                loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Source.Filename);
+                  Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
             end if;

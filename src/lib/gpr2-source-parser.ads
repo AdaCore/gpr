@@ -43,7 +43,7 @@ private package GPR2.Source.Parser is
       Unit_Name   : Unbounded_String;
    end record;
 
-   function Check (Filename : Path_Name.Object) return Data;
+   function Check (Filename : GPR2.Path_Name.Object) return Data;
    --  Check the sources and returns the corresponding information
 
 end GPR2.Source.Parser;

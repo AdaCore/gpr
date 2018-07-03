@@ -67,7 +67,7 @@ procedure Main is
             U : constant Optional_Name_Type := S.Unit_Name;
          begin
             Text_IO.New_Line;
-            Output_Filename (S.Filename);
+            Output_Filename (S.Path_Name.Value);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));

@@ -58,7 +58,7 @@ procedure Main is
             S : constant GPR2.Source.Object := Source.Source;
             U : constant Optional_Name_Type := S.Unit_Name;
          begin
-            Output_Filename (S.Filename);
+            Output_Filename (S.Path_Name.Value);
 
             Text_IO.Set_Col (16);
             Text_IO.Put ("   language: " & String (S.Language));

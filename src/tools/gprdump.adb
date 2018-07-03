@@ -80,7 +80,7 @@ procedure GPRdump is
             for S of Source.Dependencies
               (Mode => GPR2.Project.Source.Closure)
             loop
-               Text_IO.Put_Line (S.Source.Filename);
+               Text_IO.Put_Line (S.Source.Path_Name.Value);
             end loop;
          end;
       end if;
@@ -181,7 +181,7 @@ procedure GPRdump is
                S : constant GPR2.Source.Object :=
                      Project.Source.Set.Element (C).Source;
             begin
-               Text_IO.Put_Line (S.Filename);
+               Text_IO.Put_Line (S.Path_Name.Value);
             end;
          end loop;
       end if;

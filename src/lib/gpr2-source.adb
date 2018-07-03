@@ -57,13 +57,13 @@ package body GPR2.Source is
    overriding function "=" (Left, Right : Object) return Boolean is
       use type GPR2.Path_Name.Object;
    begin
-      if Left.Pathname = Path_Name.Undefined
-        and then Right.Pathname = Path_Name.Undefined
+      if Left.Pathname = GPR2.Path_Name.Undefined
+        and then Right.Pathname = GPR2.Path_Name.Undefined
       then
          return True;
       else
-         return not (Left.Pathname = Path_Name.Undefined
-                     xor Right.Pathname = Path_Name.Undefined)
+         return not (Left.Pathname = GPR2.Path_Name.Undefined
+                     xor Right.Pathname = GPR2.Path_Name.Undefined)
            and then Key (Left) = Key (Right);
       end if;
    end "=";
@@ -73,7 +73,7 @@ package body GPR2.Source is
    ------------
 
    function Create
-     (Filename  : Path_Name.Object;
+     (Filename  : GPR2.Path_Name.Object;
       Kind      : Kind_Type;
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object is
@@ -86,7 +86,7 @@ package body GPR2.Source is
                Language   => To_Unbounded_String (String (Language)),
                Unit_Name  => To_Unbounded_String (String (Unit_Name)),
                Kind       => Kind,
-               Other_Part => Path_Name.Undefined,
+               Other_Part => GPR2.Path_Name.Undefined,
                Units      => <>,
                Parsed     => False,
                Ref_Count  => 1));
@@ -94,15 +94,6 @@ package body GPR2.Source is
          Result.Pathname := Filename;
       end return;
    end Create;
-
-   --------------
-   -- Filename --
-   --------------
-
-   function Filename (Self : Object) return Path_Name.Full_Name is
-   begin
-      return Registry.Shared.Get (Self).Path_Name.Value;
-   end Filename;
 
    ---------
    -- Key --
@@ -146,12 +137,12 @@ package body GPR2.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      use type Path_Name.Object;
+      use type GPR2.Path_Name.Object;
 
-      Other_Part : constant Path_Name.Object :=
+      Other_Part : constant GPR2.Path_Name.Object :=
                      Registry.Shared.Get (Self).Other_Part;
    begin
-      if Other_Part = Path_Name.Undefined then
+      if Other_Part = GPR2.Path_Name.Undefined then
          return Undefined;
       else
          return Object'(Pathname => Other_Part);
@@ -211,6 +202,15 @@ package body GPR2.Source is
          end;
       end if;
    end Parse;
+
+   ---------------
+   -- Path_Name --
+   ---------------
+
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
+   begin
+      return Registry.Shared.Get (Self).Path_Name;
+   end Path_Name;
 
    -------------
    -- Release --

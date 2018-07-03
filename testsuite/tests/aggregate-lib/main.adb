@@ -104,7 +104,7 @@ begin
 
    Text_IO.Put_Line ("sources:");
    for S of Prj.Root_Project.Sources loop
-      Output_Filename (S.Source.Filename);
+      Output_Filename (S.Source.Path_Name.Value);
    end loop;
 
    Text_IO.New_Line;
@@ -119,6 +119,6 @@ begin
 
    Text_IO.Put_Line ("sources:");
    for S of Prj.Root_Project.Sources loop
-      Output_Filename (S.Source.Filename);
+      Output_Filename (S.Source.Path_Name.Value);
    end loop;
 end Main;

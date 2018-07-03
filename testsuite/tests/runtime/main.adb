@@ -190,7 +190,7 @@ begin
                  | "Ada.Tags" | "Ada.Strings.Unbounded"
                  | "Ada.Calendar" | "Ada.Unchecked_Deallocation"
             then
-               Output_Filename (S.Filename);
+               Output_Filename (S.Path_Name.Value);
 
                Text_IO.Set_Col (27);
                Text_IO.Put

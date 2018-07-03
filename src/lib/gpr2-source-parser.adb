@@ -66,7 +66,7 @@ package body GPR2.Source.Parser is
 
       procedure Open
         (File     : in out Handle;
-         Filename : Path_Name.Object)
+         Filename : GPR2.Path_Name.Object)
         with Post => Stream_IO.Is_Open (File.FD)
                      and then File.Current = 0
                      and then File.Last >= 0;
@@ -85,7 +85,7 @@ package body GPR2.Source.Parser is
    -- Check --
    -----------
 
-   function Check (Filename : Path_Name.Object) return Data is
+   function Check (Filename : GPR2.Path_Name.Object) return Data is
 
       H : IO.Handle;
 
@@ -337,7 +337,7 @@ package body GPR2.Source.Parser is
 
       procedure Open
         (File     : in out Handle;
-         Filename : Path_Name.Object) is
+         Filename : GPR2.Path_Name.Object) is
       begin
          Stream_IO.Open (File.FD, Stream_IO.In_File, Filename.Value);
          Fill_Buffer (File);

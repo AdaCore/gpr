@@ -46,7 +46,7 @@ package GPR2.Source is
    --  A source object is equal if it is the same unit for unit based language,
    --  and if it is the same filename otherwise.
 
-   function Filename (Self : Object) return Path_Name.Full_Name;
+   function Path_Name (Self : Object) return Path_Name.Object;
    --  Retruns the filename for the given source
 
    function Kind (Self : Object) return Kind_Type;
@@ -70,7 +70,7 @@ package GPR2.Source is
    --  Retruns the time-stamp for this source
 
    function Create
-     (Filename  : Path_Name.Object;
+     (Filename  : GPR2.Path_Name.Object;
       Kind      : Kind_Type;
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object;
@@ -88,9 +88,10 @@ package GPR2.Source is
 private
 
    type Object is tagged record
-      Pathname : Path_Name.Object := Path_Name.Undefined;
+      Pathname : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
    end record;
 
-   Undefined : constant Object := Object'(Pathname => Path_Name.Undefined);
+   Undefined : constant Object :=
+                 Object'(Pathname => GPR2.Path_Name.Undefined);
 
 end GPR2.Source;

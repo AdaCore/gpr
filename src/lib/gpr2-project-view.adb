@@ -475,7 +475,7 @@ package body GPR2.Project.View is
       Self.Update_Sources;
 
       for S of Definition.Get (Self).Sources loop
-         if S.Source.Filename = File.Value then
+         if S.Source.Path_Name.Value = File.Value then
             return S;
          end if;
       end loop;

@@ -47,12 +47,12 @@ private package GPR2.Source.Registry is
    end record;
 
    package Source_Store is
-     new Ada.Containers.Ordered_Maps (Path_Name.Object, Data);
+     new Ada.Containers.Ordered_Maps (GPR2.Path_Name.Object, Data);
 
    protected Shared is
 
       procedure Register (Def : Data)
-        with Pre => Def.Path_Name /= Path_Name.Undefined;
+        with Pre => Def.Path_Name /= GPR2.Path_Name.Undefined;
       --  Register element in Store
 
       procedure Unregister (Object : in out Source.Object)
