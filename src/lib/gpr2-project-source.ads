@@ -25,9 +25,13 @@
 with GPR2.Project.View;
 with GPR2.Source;
 
+limited with GPR2.Project.Source.Artifact;
 limited with GPR2.Project.Source.Set;
 
 package GPR2.Project.Source is
+
+   use type GPR2.Source.Object;
+   use type GPR2.Project.View.Object;
 
    type Object is tagged private;
 
@@ -41,16 +45,20 @@ package GPR2.Project.Source is
    function Create
      (Source       : GPR2.Source.Object;
       View         : Project.View.Object;
-      Is_Interface : Boolean) return Object;
+      Is_Interface : Boolean) return Object
+     with Pre => Source /= GPR2.Source.Undefined
+                 and then View /= GPR2.Project.View.Undefined;
    --  Constructor for Object
 
-   function View (Self : Object) return Project.View.Object;
+   function View (Self : Object) return Project.View.Object
+     with Pre => Self /= Undefined;
    --  The view the source is in
 
    function Source (Self : Object) return GPR2.Source.Object;
    --  The source object
 
-   function Is_Interface (Self : Object) return Boolean;
+   function Is_Interface (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
    --  Returns True if Self is part of the project view interface
 
    type Dependency is (Direct, Unit, Closure);
@@ -61,15 +69,15 @@ package GPR2.Project.Source is
 
    function Dependencies
      (Self : Object;
-      Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object;
+      Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object
+     with Pre => Self /= Undefined;
    --  Returns the dependencies for this given source
 
-   procedure Release (Self : in out Object);
+   procedure Release (Self : in out Object)
+     with Pre => Self /= Undefined;
    --  Release the project source
 
 private
-
-   use type GPR2.Source.Object;
 
    type Object is tagged record
       Source       : GPR2.Source.Object;
