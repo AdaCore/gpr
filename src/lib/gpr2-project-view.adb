@@ -1351,7 +1351,7 @@ package body GPR2.Project.View is
                   Tree.Append_Message
                     (Message.Create
                        (Message.Warning,
-                        "duplicate unit '" & String (Source)
+                        "duplicate unit '" & Source
                         & "' in interfaces attribute",
                         GPR2.Source_Reference.Object
                           (Data.Attrs.Interfaces)));
