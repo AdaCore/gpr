@@ -107,6 +107,7 @@ package GPR2.Project.Registry.Attribute is
    Linker_Options              : constant Name_Type := "linker_options";
    Mode                        : constant Name_Type := "mode";
    Name                        : constant Name_Type := "name";
+   Object_Dir                  : constant Name_Type := "object_dir";
    Prefix                      : constant Name_Type := "prefix";
    Project_Dir                 : constant Name_Type := "project_dir";
    Project_Files               : constant Name_Type := "project_files";

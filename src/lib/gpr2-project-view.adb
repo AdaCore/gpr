@@ -358,6 +358,18 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Kind;
    end Kind;
 
+   -----------------------
+   -- Library_Directory --
+   -----------------------
+
+   function Library_Directory (Self : Object) return GPR2.Path_Name.Object is
+      Dir : constant Value_Type :=
+              Self.Attribute (Project.Registry.Attribute.Library_Dir).Value;
+   begin
+      return GPR2.Path_Name.Create_File
+        (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
+   end Library_Directory;
+
    ----------
    -- Name --
    ----------
@@ -407,6 +419,18 @@ package body GPR2.Project.View is
          return Builtin_Naming_Package;
       end if;
    end Naming_Package;
+
+   ----------------------
+   -- Object_Directory --
+   ----------------------
+
+   function Object_Directory (Self : Object) return GPR2.Path_Name.Object is
+      Dir : constant Value_Type :=
+              Self.Attribute (Project.Registry.Attribute.Object_Dir).Value;
+   begin
+      return GPR2.Path_Name.Create_File
+        (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
+   end Object_Directory;
 
    --------------
    -- Packages --

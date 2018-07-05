@@ -227,8 +227,22 @@ package GPR2.Project.View is
    --  computing the dependecies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
-   --  Following routines are for internal use only and convert from a View
-   --  unique Id.
+   --  Some common attributes redefined here and when some pathname are
+   --  relative to the view, the proper value is returned. Following
+   --  routines are for internal use only and convert from a View unique Id.
+
+   function Library_Directory (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns the library directory, note that this may be difference than
+   --  getting the Library_Dir attribute value as the result here is always
+   --  a path-name with proper resoluion for relative directory specification.
+
+   function Object_Directory (Self : Object) return GPR2.Path_Name.Object
+     with Pre =>
+       Self /= Undefined
+       and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
+   --  As above but for the Object_Dir attribute
 
    type Id is new Natural;
    --  A single unique Id which represent a reference to the view in the
