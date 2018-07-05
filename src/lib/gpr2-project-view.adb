@@ -538,6 +538,15 @@ package body GPR2.Project.View is
       end if;
    end Sources;
 
+   ----------
+   -- Tree --
+   ----------
+
+   function Tree (Self : Object) return not null access Project.Tree.Object is
+   begin
+      return Definition.Get (Self).Tree;
+   end Tree;
+
    --------------------
    -- Update_Sources --
    --------------------

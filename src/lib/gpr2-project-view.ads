@@ -37,6 +37,7 @@ with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
 
 limited with GPR2.Project.Source.Set;
+limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
 
 package GPR2.Project.View is
@@ -73,6 +74,10 @@ package GPR2.Project.View is
                   or else Self.Qualifier = K_Standard;
    --  The actual kind of the project file. This may be different if the
    --  Qualifier is not specified.
+
+   function Tree (Self : Object) return not null access Project.Tree.Object
+     with Pre => Self /= Undefined;
+   --  Returns the corresponding project tree
 
    function Signature (Self : Object) return Context.Binary_Signature;
    --  Returns the signature for the view
