@@ -79,12 +79,12 @@ package GPR2.Project.Tree is
           Post => Root_Project'Result /= View.Undefined;
    --  Returns the root project for the given tree
 
-   function Has_Configuration_Project (Self : Object) return Boolean;
+   function Has_Configuration (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
    --  Returns True if a configuration project is loaded on this tree
 
-   function Configuration_Project (Self : Object) return View.Object
-     with Pre => Self /= Undefined and then Self.Has_Configuration_Project;
-   --  Returns the configuration project for the given tree
+   function Configuration (Self : Object) return Configuration.Object
+     with Pre => Self /= Undefined and then Self.Has_Configuration;
 
    function Has_Runtime_Project (Self : Object) return Boolean;
    --  Returns True if a configuration project is loaded on this tree
@@ -267,7 +267,7 @@ private
    type Object is tagged limited record
       Self         : not null access Object := Object'Unchecked_Access;
       Root         : View.Object;
-      Conf         : Configuration.Object;
+      Conf         : Project.Configuration.Object;
       Runtime      : View.Object;
       Units        : Name_View.Map;
       Sources      : Name_View.Map;
@@ -293,7 +293,7 @@ private
    Undefined  : constant Object :=
                   (Self         => <>,
                    Root         => View.Undefined,
-                   Conf         => Configuration.Undefined,
+                   Conf         => Project.Configuration.Undefined,
                    Runtime      => View.Undefined,
                    Units        => <>,
                    Sources      => <>,

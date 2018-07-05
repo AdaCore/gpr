@@ -395,12 +395,12 @@ package body GPR2.Project.View is
                Sloc       => Source_Reference.Object (Naming));
          end;
 
-      elsif Data.Tree.Has_Configuration_Project
+      elsif Data.Tree.Has_Configuration
         and then
-          Data.Tree.Configuration_Project.Has_Packages
+          Data.Tree.Configuration.Corresponding_View.Has_Packages
             (Project.Registry.Pack.Naming)
       then
-         return Data.Tree.Configuration_Project.Packages.Element
+         return Data.Tree.Configuration.Corresponding_View.Packages.Element
            (Project.Registry.Pack.Naming);
 
       else
@@ -1538,8 +1538,8 @@ package body GPR2.Project.View is
       if View = Project.View.Undefined then
          declare
             CV : constant Project.View.Object :=
-                   (if Data.Tree.Has_Configuration_Project
-                    then Data.Tree.Configuration_Project
+                   (if Data.Tree.Has_Configuration
+                    then Data.Tree.Configuration.Corresponding_View
                     else Project.View.Undefined);
          begin
             --  If not found let's check if it is the configuration or runtime

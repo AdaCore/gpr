@@ -174,8 +174,8 @@ begin
 
    Display (Prj.Root_Project);
 
-   if Prj.Has_Configuration_Project then
-      Display (Prj.Configuration_Project, Full => False);
+   if Prj.Has_Configuration then
+      Display (Prj.Configuration.Corresponding_View, Full => False);
    end if;
 
    if Prj.Has_Runtime_Project then

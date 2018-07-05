@@ -82,7 +82,7 @@ package body GPR2.Project.Tree is
 
    function Create_Runtime_View (Self : Object) return View.Object
      with Pre => Self /= Undefined
-                 and then Self.Configuration_Project /= View.Undefined;
+                 and then Self.Has_Configuration;
    --  Create the runtime view given the configuration project
 
    procedure Set_Tree (Self : in out Object; View : Project.View.Object)
@@ -132,14 +132,15 @@ package body GPR2.Project.Tree is
       end loop;
    end Clear_View;
 
-   ---------------------------
-   -- Configuration_Project --
-   ---------------------------
+   -------------------
+   -- Configuration --
+   -------------------
 
-   function Configuration_Project (Self : Object) return View.Object is
+   function Configuration
+     (Self : Object) return Project.Configuration.Object is
    begin
-      return Self.Conf.Corresponding_View;
-   end Configuration_Project;
+      return Self.Conf;
+   end Configuration;
 
    ------------------------
    -- Constant_Reference --
@@ -423,16 +424,15 @@ package body GPR2.Project.Tree is
       end if;
    end Get_View;
 
-   -------------------------------
-   -- Has_Configuration_Project --
-   -------------------------------
+   -----------------------
+   -- Has_Configuration --
+   -----------------------
 
-   function Has_Configuration_Project (Self : Object) return Boolean is
+   function Has_Configuration (Self : Object) return Boolean is
       use type Project.Configuration.Object;
    begin
-      return Self.Conf /= Project.Configuration.Undefined
-        and then Self.Conf.Corresponding_View /= View.Undefined;
-   end Has_Configuration_Project;
+      return Self.Conf /= Project.Configuration.Undefined;
+   end Has_Configuration;
 
    -----------------
    -- Has_Context --
@@ -515,9 +515,10 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
-      Config   : Configuration.Object := Configuration.Undefined)
+      Config   : Project.Configuration.Object :=
+                   Project.Configuration.Undefined)
    is
-      use type Configuration.Object;
+      use type Project.Configuration.Object;
 
       function Has_Error return Boolean is
         (Self.Messages.Has_Element
@@ -669,7 +670,7 @@ package body GPR2.Project.Tree is
 
          Self.Conf := Config;
 
-         if Self.Conf /= Configuration.Undefined then
+         if Self.Conf /= Project.Configuration.Undefined then
             --  Set Tree for this config project
 
             Set_Tree (Self, Self.Conf.Corresponding_View);
@@ -712,7 +713,7 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object) is
    begin
-      Self.Conf := Configuration.Create (Filename);
+      Self.Conf := Project.Configuration.Create (Filename);
 
       Set_Tree (Self, Self.Conf.Corresponding_View);
 
@@ -1174,7 +1175,7 @@ package body GPR2.Project.Tree is
    function Runtime
      (Self : Object; Language : Name_Type) return Optional_Name_Type is
    begin
-      if Self.Has_Configuration_Project
+      if Self.Has_Configuration
         and then Self.Conf.Runtime (Language) /= ""
       then
          return Self.Conf.Runtime (Language);
@@ -1565,7 +1566,7 @@ package body GPR2.Project.Tree is
       --  Now the first step is to set the configuration project view if any
       --  and to create the runtime project if possible.
 
-      if Self.Has_Configuration_Project then
+      if Self.Has_Configuration then
          Set_View (Self.Conf.Corresponding_View);
 
          Self.Runtime := Create_Runtime_View (Self);
@@ -1618,12 +1619,12 @@ package body GPR2.Project.Tree is
 
    function Target (Self : Object) return Name_Type is
    begin
-      if Self.Has_Configuration_Project
+      if Self.Has_Configuration
         and then Self.Conf.Target /= ""
       then
          return Self.Conf.Target;
 
-      elsif Self.Has_Configuration_Project
+      elsif Self.Has_Configuration
         and then Self.Conf.Corresponding_View.Has_Attributes
                    (Registry.Attribute.Target)
       then
@@ -1650,7 +1651,7 @@ package body GPR2.Project.Tree is
          end;
       end loop;
 
-      if Self.Has_Configuration_Project then
+      if Self.Has_Configuration then
          Self.Conf.Release;
       end if;
 
@@ -1690,7 +1691,7 @@ package body GPR2.Project.Tree is
       if View = Project.View.Undefined then
          declare
             CV : constant Project.View.Object :=
-                   (if Self.Has_Configuration_Project
+                   (if Self.Has_Configuration
                     then Self.Conf.Corresponding_View
                     else Project.View.Undefined);
          begin
