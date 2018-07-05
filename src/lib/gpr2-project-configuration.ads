@@ -95,6 +95,22 @@ package GPR2.Project.Configuration is
    --  Returns the runtime specificed for Language or the empty string if no
    --  specific runtime has been specified for this language.
 
+   function Object_File_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Name_Type
+     with Pre  => Self /= Undefined,
+          Post => Object_File_Suffix'Result
+                    (Object_File_Suffix'Result'First) = '.';
+   --  Returns the object file suffix (with the leading dot)
+
+   function Dependency_File_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Name_Type
+     with Pre  => Self /= Undefined,
+          Post => Dependency_File_Suffix'Result
+                    (Dependency_File_Suffix'Result'First) = '.';
+   --  Returns the dependency file suffix (with the leading dot)
+
 private
 
    use Ada.Strings.Unbounded;

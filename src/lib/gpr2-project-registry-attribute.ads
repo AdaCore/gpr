@@ -108,6 +108,7 @@ package GPR2.Project.Registry.Attribute is
    Mode                        : constant Name_Type := "mode";
    Name                        : constant Name_Type := "name";
    Object_Dir                  : constant Name_Type := "object_dir";
+   Object_File_Suffix          : constant Name_Type := "object_file_suffix";
    Prefix                      : constant Name_Type := "prefix";
    Project_Dir                 : constant Name_Type := "project_dir";
    Project_Files               : constant Name_Type := "project_files";

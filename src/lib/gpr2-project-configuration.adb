@@ -30,6 +30,7 @@ with GNAT.OS_Lib;
 with GPR2.Message;
 with GPR2.Parser.Project;
 with GPR2.Project.Definition;
+with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Configuration is
 
@@ -89,6 +90,23 @@ package body GPR2.Project.Configuration is
 
       return Result;
    end Create;
+
+   ----------------------------
+   -- Dependency_File_Suffix --
+   ----------------------------
+
+   function Dependency_File_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Name_Type is
+   begin
+      --  ??? there is no attribute in the configuration file for this, so we
+      --  end up having hard coded value for Ada and all other languages.
+      if Language = "ada" then
+         return ".ali";
+      else
+         return ".d";
+      end if;
+   end Dependency_File_Suffix;
 
    ------------------
    -- Has_Messages --
@@ -200,6 +218,26 @@ package body GPR2.Project.Configuration is
    begin
       return Self.Messages;
    end Log_Messages;
+
+   ------------------------
+   -- Object_File_Suffix --
+   ------------------------
+
+   function Object_File_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Name_Type is
+   begin
+      if Self.Conf.Has_Attributes
+        (Project.Registry.Attribute.Object_File_Suffix)
+      then
+         return Name_Type
+           (Self.Conf.Attribute
+              (Project.Registry.Attribute.Object_File_Suffix,
+               String (Language)).Value);
+      else
+         return ".o";
+      end if;
+   end Object_File_Suffix;
 
    -------------
    -- Release --
