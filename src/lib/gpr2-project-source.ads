@@ -61,6 +61,12 @@ package GPR2.Project.Source is
      with Pre => Self /= Undefined;
    --  Returns True if Self is part of the project view interface
 
+   function Artifacts (Self : Object) return Artifact.Object
+     with Pre => Self /= Undefined;
+   --  Returns the source artifacts for this source. Note that the returned
+   --  Source artifacts may not exist if the compilation has not yet been
+   --  done/finished.
+
    type Dependency is (Direct, Unit, Closure);
    --  Direct  : the dependencies from the source withed units.
    --  Unit    : the dependencies from the spec/body for this source.

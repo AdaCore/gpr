@@ -24,6 +24,7 @@
 
 with GPR2.Message;
 with GPR2.Project.Definition;
+with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference.Set;
@@ -31,6 +32,46 @@ with GPR2.Source_Reference.Identifier;
 with GPR2.Unit;
 
 package body GPR2.Project.Source is
+
+   ---------------
+   -- Artifacts --
+   ---------------
+
+   function Artifacts (Self : Object) return Artifact.Object is
+
+      Src  : constant Name_Type := Self.Source.Path_Name.Base_Name;
+      Lang : constant Name_Type := Self.Source.Language;
+      View : constant GPR2.Project.View.Object := Self.View;
+
+      function Artifact_Dir return GPR2.Path_Name.Object is
+        (if View.Kind = K_Library
+         then View.Library_Directory
+         else View.Object_Directory);
+      --  The directory where artifacts are written for this source
+
+      O_Suffix   : constant Optional_Name_Type :=
+                     (if View.Tree.Has_Configuration
+                      then View.Tree.Configuration.Object_File_Suffix (Lang)
+                      else ".o");
+
+      D_Suffix   : constant Optional_Name_Type :=
+                     (if View.Tree.Has_Configuration
+                      then View.Tree.
+                             Configuration.Dependency_File_Suffix (Lang)
+                      elsif Lang = "ada" then ".ali" else ".d");
+
+      Object     : Path_Name.Object;
+      Dependency : Path_Name.Object;
+
+   begin
+      Object := Path_Name.Create_File
+        (Src & O_Suffix, Optional_Name_Type (Artifact_Dir.Value));
+
+      Dependency := Path_Name.Create_File
+        (Src & D_Suffix, Optional_Name_Type (Artifact_Dir.Value));
+
+      return Artifact.Create (Self, Object, Dependency);
+   end Artifacts;
 
    ------------
    -- Create --
@@ -138,8 +179,6 @@ package body GPR2.Project.Source is
          exit For_Every_Unit when Buf.Is_Empty;
 
          declare
-            use type Project.View.Object;
-
             W    : constant Source_Reference.Identifier.Object :=
                      Source_Reference.Identifier.Object (Buf.First_Element);
             View : Project.View.Object;

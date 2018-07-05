@@ -1,0 +1,5 @@
+description:
+    Simple check for source artifacts
+driver: build_and_run
+project_file: source_artifacts1
+main: main
