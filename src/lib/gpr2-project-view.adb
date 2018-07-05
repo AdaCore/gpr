@@ -507,11 +507,13 @@ package body GPR2.Project.View is
       return Project.Source.Undefined;
    end Source;
 
-   -----------------
-   -- Source_Dirs --
-   -----------------
+   ------------------------
+   -- Source_Directories --
+   ------------------------
 
-   function Source_Dirs (Self : Object) return Project.Attribute.Object is
+   function Source_Directories
+     (Self : Object) return Project.Attribute.Object
+   is
       Data : constant Definition.Data := Definition.Get (Self);
       --  View definition data, will be updated and recorded back into the
       --  definition set.
@@ -521,7 +523,7 @@ package body GPR2.Project.View is
       else
          return Project.Attribute.Default_Source_Dirs;
       end if;
-   end Source_Dirs;
+   end Source_Directories;
 
    -------------
    -- Sources --
@@ -1467,7 +1469,7 @@ package body GPR2.Project.View is
             Populate_Sources : begin
                --  Handle Source_Dirs
 
-               for Dir of Self.Source_Dirs.Values loop
+               for Dir of Self.Source_Directories.Values loop
                   if OS_Lib.Is_Absolute_Path (Dir) then
                      Handle_Directory (Dir);
                   else

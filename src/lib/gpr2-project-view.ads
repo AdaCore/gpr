@@ -189,7 +189,7 @@ package GPR2.Project.View is
 
    --  Sources
 
-   function Source_Dirs (Self : Object) return Project.Attribute.Object
+   function Source_Directories (Self : Object) return Project.Attribute.Object
      with Pre => Self /= Undefined
                  and then Self.Qualifier not in K_Aggregate | K_Abstract;
    --  Returns the sources dirs for the project view. This is only defined for
