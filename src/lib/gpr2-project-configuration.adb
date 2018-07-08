@@ -97,7 +97,9 @@ package body GPR2.Project.Configuration is
 
    function Dependency_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Name_Type is
+      Language : Name_Type) return Name_Type
+   is
+      pragma Unreferenced (Self);
    begin
       --  ??? there is no attribute in the configuration file for this, so we
       --  end up having hard coded value for Ada and all other languages.
