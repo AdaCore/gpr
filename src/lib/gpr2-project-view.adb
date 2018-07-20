@@ -403,6 +403,66 @@ package body GPR2.Project.View is
         (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
    end Library_Directory;
 
+   ----------------------
+   -- Library_Filename --
+   ----------------------
+
+   function Library_Filename (Self : Object) return GPR2.Path_Name.Object is
+
+      package A renames GPR2.Project.Registry.Attribute;
+
+      Is_Static : constant Boolean :=
+                    (Self.Kind = K_Library
+                     and then Self.Has_Attributes (A.Library_Kind)
+                     and then Self.Attribute
+                       (A.Library_Kind).Value = "static");
+
+      function Config_Has_Attribute (Name : Name_Type) return Boolean is
+        (Self.Tree.Has_Configuration
+         and then
+         Self.Tree.Configuration.Corresponding_View.Has_Attributes (Name));
+
+      function Config return GPR2.Project.View.Object is
+        (Self.Tree.Configuration.Corresponding_View);
+
+      File_Name : Unbounded_String;
+
+   begin
+      --  Library prefix
+
+      if not Is_Static
+        and then Config_Has_Attribute (A.Shared_Lib_Prefix)
+      then
+         Append (File_Name, Config.Attribute (A.Shared_Lib_Prefix).Value);
+      else
+         Append (File_Name, "lib");
+      end if;
+
+      --  Library name
+
+      Append (File_Name, Self.Attribute (A.Library_Name).Value);
+
+      --  Library suffix
+
+      if Is_Static
+        and then Config_Has_Attribute (A.Archive_Suffix)
+      then
+         Append (File_Name, Config.Attribute (A.Archive_Suffix).Value);
+
+      elsif not Is_Static
+        and then Config_Has_Attribute (A.Shared_Lib_Suffix)
+      then
+         Append (File_Name, Config.Attribute (A.Shared_Lib_Suffix).Value);
+
+      else
+         Append (File_Name, ".so");
+      end if;
+
+      return GPR2.Path_Name.Create_File
+        (Name_Type (To_String (File_Name)),
+         Directory =>  Optional_Name_Type (Self.Library_Directory.Dir_Name));
+   end Library_Filename;
+
    ------------------------
    -- Library_Standalone --
    ------------------------

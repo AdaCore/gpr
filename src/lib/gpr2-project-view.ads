@@ -248,6 +248,11 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Retruns whether the optional library version name is defined
 
+   function Library_Filename (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns the actual file name for the library
+
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined
