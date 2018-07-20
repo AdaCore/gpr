@@ -415,6 +415,20 @@ package body GPR2.Project.View is
       end if;
    end Library_Standalone;
 
+   ------------------------------
+   -- Library_Version_Filename --
+   ------------------------------
+
+   function Library_Version_Filename
+     (Self : Object) return GPR2.Path_Name.Object is
+   begin
+      return GPR2.Path_Name.Create_File
+        (Name_Type
+           (Self.Attribute
+              (Project.Registry.Attribute.Library_Version).Value),
+         Directory => Optional_Name_Type (Self.Library_Directory.Dir_Name));
+   end Library_Version_Filename;
+
    ----------
    -- Name --
    ----------

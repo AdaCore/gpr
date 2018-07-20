@@ -242,6 +242,17 @@ package GPR2.Project.View is
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library name
 
+   function Has_Library_Version (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Retruns whether the optional library version name is defined
+
+   function Library_Version_Filename
+     (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self /= Undefined
+                 and then Self.Has_Library_Version
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns the library version filename
+
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
@@ -284,5 +295,9 @@ private
    function Library_Name (Self : Object) return Name_Type is
      (Name_Type
         (Self.Attribute (GPR2.Project.Registry.Attribute.Library_Name).Value));
+
+   function Has_Library_Version (Self : Object) return Boolean is
+     (Self.Has_Attributes
+        (GPR2.Project.Registry.Attribute.Library_Version));
 
 end GPR2.Project.View;
