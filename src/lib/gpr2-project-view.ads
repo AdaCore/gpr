@@ -248,6 +248,15 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Retruns whether the optional library version name is defined
 
+   function Library_Major_Version_Filename
+     (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns the library major name if it exists. That is, if the project
+   --  Library_Version exists and is set to libxyz.so.1.2 for example then the
+   --  returned value is libxyz.so.1. If no major version is computable an
+   --  undefined path-naeme is returned.
+
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;

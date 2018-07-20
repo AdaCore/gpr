@@ -463,6 +463,106 @@ package body GPR2.Project.View is
          Directory =>  Optional_Name_Type (Self.Library_Directory.Dir_Name));
    end Library_Filename;
 
+   --------------------------------
+   -- Library_Major_Version_Name --
+   --------------------------------
+
+   function Library_Major_Version_Filename
+     (Self : Object) return GPR2.Path_Name.Object
+   is
+
+      function Major_Version_Name
+        (Lib_Filename : Name_Type;
+         Lib_Version  : Name_Type) return String;
+      --  Returns the major version name
+
+      ------------------------
+      -- Major_Version_Name --
+      ------------------------
+
+      function Major_Version_Name
+        (Lib_Filename : Name_Type;
+         Lib_Version  : Name_Type) return String
+      is
+         subtype Digit is Character range '0' .. '9';
+
+         Maj_Version : constant Name_Type := Lib_Version;
+         Last_Maj    : Positive;
+         Last        : Positive;
+         Ok_Maj      : Boolean := False;
+
+      begin
+         Last_Maj := Maj_Version'Last;
+
+         --  Check for major version, removes minor version (last number)
+
+         while Last_Maj > Maj_Version'First loop
+            if Maj_Version (Last_Maj) in Digit then
+               Last_Maj := Last_Maj - 1;
+
+            else
+               Ok_Maj := Last_Maj /= Maj_Version'Last
+                 and then Maj_Version (Last_Maj) = '.';
+
+               if Ok_Maj then
+                  Last_Maj := Last_Maj - 1;
+               end if;
+
+               exit;
+            end if;
+         end loop;
+
+         --  Check if a major version exists
+
+         if Ok_Maj then
+            Last := Last_Maj;
+
+            while Last > Maj_Version'First loop
+               if Maj_Version (Last) in Digit then
+                  Last := Last - 1;
+
+               else
+                  Ok_Maj := Last /= Last_Maj
+                    and then Maj_Version (Last) = '.';
+
+                  if Ok_Maj then
+                     Last := Last - 1;
+                     Ok_Maj :=
+                       Maj_Version (Maj_Version'First .. Last) = Lib_Filename;
+                  end if;
+
+                  exit;
+               end if;
+            end loop;
+         end if;
+
+         if Ok_Maj then
+            return String (Maj_Version (Maj_Version'First .. Last_Maj));
+         else
+            return "";
+         end if;
+      end Major_Version_Name;
+
+      package A renames GPR2.Project.Registry.Attribute;
+
+   begin
+      if Self.Has_Attributes (A.Library_Version) then
+         declare
+            L_File : constant GPR2.Path_Name.Object := Self.Library_Filename;
+         begin
+            return GPR2.Path_Name.Create_File
+              (Optional_Name_Type
+                 (Major_Version_Name
+                      (Self.Library_Filename.Name,
+                       Name_Type (Self.Attribute (A.Library_Version).Value))),
+              Directory => Optional_Name_Type (L_File.Dir_Name));
+         end;
+
+      else
+         return GPR2.Path_Name.Undefined;
+      end if;
+   end Library_Major_Version_Filename;
+
    ------------------------
    -- Library_Standalone --
    ------------------------

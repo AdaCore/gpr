@@ -105,6 +105,7 @@ package GPR2.Project.Registry.Attribute is
    Library_Name                : constant Name_Type := "library_name";
    Library_Options             : constant Name_Type := "library_options";
    Library_Standalone          : constant Name_Type := "library_standalone";
+   Library_Version             : constant Name_Type := "library_version";
    Link_Lib_Subdir             : constant Name_Type := "link_lib_subdir";
    Linker_Options              : constant Name_Type := "linker_options";
    Mode                        : constant Name_Type := "mode";

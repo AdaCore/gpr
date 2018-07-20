@@ -1,0 +1,11 @@
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : lib
+                  : /lib/
+Library Filename : libabc.so
+                 : /lib/libabc.so
+Library Version Filename : libabc.so.1.2
+                         : /lib/libabc.so.1.2
+Library Major Version Filename : libabc.so.1
+                               : /lib/libabc.so.1
+Library_Standalone : NO

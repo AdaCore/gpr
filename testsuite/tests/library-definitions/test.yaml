@@ -1,0 +1,5 @@
+description:
+    check for library definitions
+driver: build_and_run
+project_file: lib_def.gpr
+main: main
