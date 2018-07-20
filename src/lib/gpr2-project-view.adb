@@ -370,6 +370,40 @@ package body GPR2.Project.View is
         (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
    end Library_Directory;
 
+   ------------------------
+   -- Library_Standalone --
+   ------------------------
+
+   function Library_Standalone
+     (Self : Object) return Standalone_Library_Kind
+   is
+      Has_Interface : constant Boolean :=
+                        Self.Has_Attributes
+                          (Project.Registry.Attribute.Interfaces)
+                            or else
+                        Self.Has_Attributes
+                          (Project.Registry.Attribute.Library_Interface);
+   begin
+      if Has_Interface then
+         if Self.Has_Attributes
+           (Project.Registry.Attribute.Library_Standalone)
+         then
+            return Standalone_Library_Kind'Value
+              (Self.Attribute
+                 (Project.Registry.Attribute.Library_Standalone).Value);
+
+         else
+            --  By default, if there is no attribute Library_Standalone we are
+            --  building a standard standalone library.
+            return Standard;
+         end if;
+
+      else
+         --  No interface, that is not a standalole library
+         return No;
+      end if;
+   end Library_Standalone;
+
    ----------
    -- Name --
    ----------

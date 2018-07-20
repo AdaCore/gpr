@@ -238,6 +238,11 @@ package GPR2.Project.View is
    --  getting the Library_Dir attribute value as the result here is always
    --  a path-name with proper resoluion for relative directory specification.
 
+   function Library_Standalone (Self : Object) return Standalone_Library_Kind
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Retruns the kind for the standalone library
+
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self /= Undefined
