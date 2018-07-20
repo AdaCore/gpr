@@ -43,9 +43,10 @@ package GPR2.Project.Source is
    overriding function "=" (Left, Right : Object) return Boolean;
 
    function Create
-     (Source       : GPR2.Source.Object;
-      View         : Project.View.Object;
-      Is_Interface : Boolean) return Object
+     (Source               : GPR2.Source.Object;
+      View                 : Project.View.Object;
+      Is_Interface         : Boolean;
+      Has_Naming_Exception : Boolean) return Object
      with Pre => Source /= GPR2.Source.Undefined
                  and then View /= GPR2.Project.View.Undefined;
    --  Constructor for Object
@@ -69,6 +70,10 @@ package GPR2.Project.Source is
    function Is_Interface (Self : Object) return Boolean
      with Pre => Self /= Undefined;
    --  Returns True if Self is part of the project view interface
+
+   function Has_Naming_Exception (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns whether the source comes from a naming exception
 
    function Artifacts (Self : Object) return Artifact.Object
      with Pre => Self /= Undefined;
@@ -95,15 +100,17 @@ package GPR2.Project.Source is
 private
 
    type Object is tagged record
-      Source       : GPR2.Source.Object;
-      View         : Project.View.Object;
-      Is_Interface : Boolean;
+      Source               : GPR2.Source.Object;
+      View                 : Project.View.Object;
+      Is_Interface         : Boolean;
+      Has_Naming_Exception : Boolean;
    end record;
 
    Undefined : constant Object :=
-                 (Source       => GPR2.Source.Undefined,
-                  View         => Project.View.Undefined,
-                  Is_Interface => False);
+                 (Source               => GPR2.Source.Undefined,
+                  View                 => Project.View.Undefined,
+                  Is_Interface         => False,
+                  Has_Naming_Exception => False);
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Source < Right.Source);
@@ -113,5 +120,8 @@ private
 
    function Is_Interface (Self : Object) return Boolean is
      (Self.Is_Interface);
+
+   function Has_Naming_Exception (Self : Object) return Boolean is
+     (Self.Has_Naming_Exception);
 
 end GPR2.Project.Source;

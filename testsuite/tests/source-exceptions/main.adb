@@ -75,6 +75,8 @@ procedure Main is
                Text_IO.Put ("   unit: " & String (U));
             end if;
 
+            Text_IO.Put (" excep: " & Source.Has_Naming_Exception'Img);
+
             Text_IO.New_Line;
          end;
       end loop;

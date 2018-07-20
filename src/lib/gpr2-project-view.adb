@@ -696,9 +696,10 @@ package body GPR2.Project.View is
       --  returns in Kind if Filename is a spec, a body or a separate.
 
       function Unit_For
-        (Filename : Simple_Name;
-         Kind     : GPR2.Source.Kind_Type;
-         Ok       : out Boolean) return Name_Type
+        (Filename             : Simple_Name;
+         Kind                 : GPR2.Source.Kind_Type;
+         Ok                   : out Boolean;
+         Has_Naming_Exception : out Boolean) return Name_Type
         with Pre => (for some C of Filename => C = '.');
       --  Given Filename (with extension, needed to compute the language),
       --  returns the unit name. This is meaningful for unit based language
@@ -850,22 +851,23 @@ package body GPR2.Project.View is
                procedure Register_Src;
                --  Register Src below into U_Def. Updating the necessary fields
 
-               B_Name : constant Simple_Name :=
-                          Simple_Name (Directories.Simple_Name (Filename));
-               Ok     : Boolean := True;
-               Lang   : constant Name_Type := Name_Type (Language);
-               Unit   : constant Optional_Name_Type :=
-                          (if Lang = "ada"
-                           then Unit_For (B_Name, Kind, Ok)
-                           else No_Name);
-               File   : constant GPR2.Path_Name.Object :=
-                          GPR2.Path_Name.Create_File (Name_Type (Filename));
-               Src    : constant GPR2.Source.Object :=
-                          GPR2.Source.Create
-                            (Filename  => File,
-                             Kind      => Kind,
-                             Language  => Lang,
-                             Unit_Name => Unit);
+               B_Name   : constant Simple_Name :=
+                            Simple_Name (Directories.Simple_Name (Filename));
+               Ok       : Boolean := True;
+               N_Except : Boolean := False;
+               Lang     : constant Name_Type := Name_Type (Language);
+               Unit     : constant Optional_Name_Type :=
+                            (if Lang = "ada"
+                             then Unit_For (B_Name, Kind, Ok, N_Except)
+                             else No_Name);
+               File     : constant GPR2.Path_Name.Object :=
+                            GPR2.Path_Name.Create_File (Name_Type (Filename));
+               Src      : constant GPR2.Source.Object :=
+                            GPR2.Source.Create
+                              (Filename  => File,
+                               Kind      => Kind,
+                               Language  => Lang,
+                               Unit_Name => Unit);
 
                Is_Interface : constant Boolean :=
                                 Kind = S_Spec
@@ -876,6 +878,10 @@ package body GPR2.Project.View is
                                           and then Interfaces.Contains
                                                      (Name_Type (Unit))));
 
+               P_Src : constant GPR2.Project.Source.Object :=
+                         Project.Source.Create
+                           (Src, Self, Is_Interface, N_Except);
+
                U_Def : GPR2.Unit.Object;
 
                ------------------
@@ -883,8 +889,6 @@ package body GPR2.Project.View is
                ------------------
 
                procedure Register_Src is
-                  P_Src : constant Project.Source.Object :=
-                            Project.Source.Create (Src, Self, Is_Interface);
                begin
                   if Kind = S_Spec then
                      U_Def.Update_Spec (P_Src);
@@ -913,8 +917,7 @@ package body GPR2.Project.View is
                      end if;
                   end if;
 
-                  Data.Sources.Insert
-                    (GPR2.Project.Source.Create (Src, Self, Is_Interface));
+                  Data.Sources.Insert (P_Src);
 
                   --  And make sure that if it is an interface it is removed
                   --  from the set.
@@ -1185,9 +1188,10 @@ package body GPR2.Project.View is
       --------------
 
       function Unit_For
-        (Filename : Simple_Name;
-         Kind     : GPR2.Source.Kind_Type;
-         Ok       : out Boolean) return Name_Type
+        (Filename             : Simple_Name;
+         Kind                 : GPR2.Source.Kind_Type;
+         Ok                   : out Boolean;
+         Has_Naming_Exception : out Boolean) return Name_Type
       is
          use Ada.Strings;
 
@@ -1297,11 +1301,14 @@ package body GPR2.Project.View is
          --  Let's pretend the filename/unit is part of the sources
 
          Ok := True;
+         Has_Naming_Exception := False;
 
          --  First check for a naming exception for this filename
 
          if Naming_Exceptions.Contains (To_String (Result)) then
             --  In this case we have the unit specified explicitly
+
+            Has_Naming_Exception := True;
 
             Result := To_Unbounded_String
               (String (Naming_Exceptions.Element (To_String (Result))));

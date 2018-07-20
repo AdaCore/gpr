@@ -85,11 +85,12 @@ package body GPR2.Project.Source is
    ------------
 
    function Create
-     (Source       : GPR2.Source.Object;
-      View         : Project.View.Object;
-      Is_Interface : Boolean) return Object is
+     (Source               : GPR2.Source.Object;
+      View                 : Project.View.Object;
+      Is_Interface         : Boolean;
+      Has_Naming_Exception : Boolean) return Object is
    begin
-      return Object'(Source, View, Is_Interface);
+      return Object'(Source, View, Is_Interface, Has_Naming_Exception);
    end Create;
 
    ------------------
@@ -179,7 +180,10 @@ package body GPR2.Project.Source is
       --  For Unit or Closure add dependencies from the other part
 
       if Mode in Unit | Closure then
-         To_Analyse (Object'(Self.Source.Other_Part, Self.View, False));
+         To_Analyse
+           (Object'
+              (Self.Source.Other_Part, Self.View,
+               False, Self.Has_Naming_Exception));
       end if;
 
       For_Every_Unit : loop
