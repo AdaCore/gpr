@@ -40,6 +40,8 @@ limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
 
+private with GPR2.Project.Registry.Attribute;
+
 package GPR2.Project.View is
 
    use type Containers.Count_Type;
@@ -235,6 +237,11 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns true if the project is externally built
 
+   function Library_Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns the library name
+
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
@@ -273,5 +280,9 @@ private
      (Left.Id < Right.Id);
 
    Undefined  : constant Object := (Id => 0);
+
+   function Library_Name (Self : Object) return Name_Type is
+     (Name_Type
+        (Self.Attribute (GPR2.Project.Registry.Attribute.Library_Name).Value));
 
 end GPR2.Project.View;

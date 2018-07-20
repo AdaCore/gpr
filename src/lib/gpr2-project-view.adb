@@ -36,7 +36,6 @@ with GNAT.OS_Lib;
 
 with GPR2.Message;
 with GPR2.Project.Definition;
-with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
