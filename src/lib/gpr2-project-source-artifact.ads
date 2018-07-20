@@ -49,6 +49,7 @@ package GPR2.Project.Source.Artifact is
 
    function Has_Object_Code (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns True if an object-code path is defined
 
    function Object_Code (Self : Object) return Path_Name.Object
      with Pre => Self /= Undefined;
@@ -56,6 +57,7 @@ package GPR2.Project.Source.Artifact is
 
    function Has_Dependency (Self : Object) return Boolean
      with Pre => Self /= Undefined;
+   --  Returns True if a dependency path is defined
 
    function Dependency (Self : Object) return Path_Name.Object
      with Pre => Self /= Undefined;
