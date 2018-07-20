@@ -213,7 +213,7 @@ package GPR2.Project.View is
    function Source
      (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
      with Pre => Self /= Undefined;
-   --  Get project source object corresponding to the give File
+   --  Get project source object corresponding to the given File
 
    procedure Invalidate_Sources (Self : Object)
      with Pre => Self /= Undefined;
