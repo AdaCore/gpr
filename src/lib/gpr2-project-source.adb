@@ -241,6 +241,24 @@ package body GPR2.Project.Source is
       return Deps;
    end Dependencies;
 
+   --------------------
+   -- Has_Other_Part --
+   --------------------
+
+   function Has_Other_Part (Self : Object) return Boolean is
+   begin
+      return Self.Source.Other_Part /= GPR2.Source.Undefined;
+   end Has_Other_Part;
+
+   ----------------
+   -- Other_Part --
+   ----------------
+
+   function Other_Part (Self : Object) return Object is
+   begin
+      return Self.View.Source (Self.Source.Other_Part.Path_Name);
+   end Other_Part;
+
    -------------
    -- Release --
    -------------

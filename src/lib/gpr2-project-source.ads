@@ -57,6 +57,15 @@ package GPR2.Project.Source is
    function Source (Self : Object) return GPR2.Source.Object;
    --  The source object
 
+   function Has_Other_Part (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if an other part exists for this project source
+
+   function Other_Part (Self : Object) return Object
+     with Pre  => Self /= Undefined and then Self.Has_Other_Part,
+          Post => Other_Part'Result /= Undefined;
+   --  Returns the other part for this project source
+
    function Is_Interface (Self : Object) return Boolean
      with Pre => Self /= Undefined;
    --  Returns True if Self is part of the project view interface

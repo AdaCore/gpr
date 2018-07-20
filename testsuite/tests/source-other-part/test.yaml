@@ -1,0 +1,5 @@
+description:
+    Check project source other part
+driver: build_and_run
+project_file: source_other_part
+main: main
