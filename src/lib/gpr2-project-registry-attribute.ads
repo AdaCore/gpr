@@ -86,6 +86,7 @@ package GPR2.Project.Registry.Attribute is
    Executable                  : constant Name_Type := "executable";
    Executable_Suffix           : constant Name_Type := "executable_suffix";
    External                    : constant Name_Type := "external";
+   Externally_Built            : constant Name_Type := "externally_built";
    Implementation              : constant Name_Type := "implementation";
    Implementation_Exceptions   : constant Name_Type :=
                                    "implementation_exceptions";

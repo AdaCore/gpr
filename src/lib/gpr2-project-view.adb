@@ -349,6 +349,18 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Trees.Project.Is_Extended_All;
    end Is_Extended_All;
 
+   -------------------------
+   -- Is_Externally_Built --
+   -------------------------
+
+   function Is_Externally_Built (Self : Object) return Boolean is
+   begin
+      return Self.Has_Attributes (Project.Registry.Attribute.Externally_Built)
+        and then
+          Self.Attribute
+            (Project.Registry.Attribute.Externally_Built).Value = "yes";
+   end Is_Externally_Built;
+
    ----------
    -- Kind --
    ----------

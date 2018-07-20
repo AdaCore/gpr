@@ -231,6 +231,10 @@ package GPR2.Project.View is
    --  relative to the view, the proper value is returned. Following
    --  routines are for internal use only and convert from a View unique Id.
 
+   function Is_Externally_Built (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns true if the project is externally built
+
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
