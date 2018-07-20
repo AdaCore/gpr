@@ -317,13 +317,35 @@ package body GPR2.Project.View is
    -- Imports --
    -------------
 
-   function Imports (Self : Object) return GPR2.Project.View.Set.Object is
-   begin
-      return Set : GPR2.Project.View.Set.Object do
+   function Imports
+     (Self      : Object;
+      Recursive : Boolean := False) return GPR2.Project.View.Set.Object
+   is
+      Result : GPR2.Project.View.Set.Object;
+
+      procedure Add (Self : Object);
+      --  Add Self imported projects
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add (Self : Object) is
+      begin
          for Import of Definition.Get (Self).Imports loop
-            Set.Insert (Import);
+            if not Result.Contains (Import) then
+               Result.Insert (Import);
+
+               if Recursive then
+                  Add (Import);
+               end if;
+            end if;
          end loop;
-      end return;
+      end Add;
+
+   begin
+      Add (Self);
+      return Result;
    end Imports;
 
    ------------------------

@@ -1,0 +1,8 @@
+
+with "demo2";
+
+project Demo1 is
+   for Languages use ("ada");
+   for Source_Dirs use (".");
+   for Object_Dir use "obj";
+end Demo1;

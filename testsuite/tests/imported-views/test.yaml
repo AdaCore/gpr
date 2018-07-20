@@ -1,0 +1,5 @@
+description:
+    Tests imported views (standard and recursively)
+driver: build_and_run
+project_file: imported_views
+main: main

@@ -1,0 +1,11 @@
+Project: Demo1
+   imports:
+     > /demo2.gpr
+   imports recursively:
+     > /demo2.gpr
+     > /demo3.gpr
+Project: Demo2
+   imports:
+     > /demo3.gpr
+   imports recursively:
+     > /demo3.gpr

@@ -88,7 +88,9 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns True if the project has some imports
 
-   function Imports (Self : Object) return GPR2.Project.View.Set.Object
+   function Imports
+     (Self      : Object;
+      Recursive : Boolean := False) return GPR2.Project.View.Set.Object
      with Pre => Self /= Undefined and then Self.Has_Imports;
    --  Returns all imported project views
 
