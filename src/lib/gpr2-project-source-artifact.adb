@@ -29,15 +29,17 @@ package body GPR2.Project.Source.Artifact is
    ------------
 
    function Create
-     (Source     : GPR2.Project.Source.Object;
-      Object     : Path_Name.Object;
-      Dependency : Path_Name.Object := Path_Name.Undefined)
+     (Source              : GPR2.Project.Source.Object;
+      Object              : Path_Name.Object;
+      Dependency          : Path_Name.Object := Path_Name.Undefined;
+      Preprocessed_Source : Path_Name.Object := Path_Name.Undefined)
       return Artifact.Object is
    begin
       return Artifact.Object'
-        (Source     => Source,
-         Object     => Object,
-         Dependency => Dependency);
+        (Source           => Source,
+         Object           => Object,
+         Dependency       => Dependency,
+         Preprocessed_Src => Preprocessed_Source);
    end Create;
 
    ----------------
@@ -59,6 +61,15 @@ package body GPR2.Project.Source.Artifact is
    begin
       return Self.Object;
    end Object_Code;
+
+   -------------------------
+   -- Preprocessed_Source --
+   -------------------------
+
+   function Preprocessed_Source (Self : Object) return Path_Name.Object is
+   begin
+      return Self.Preprocessed_Src;
+   end Preprocessed_Source;
 
    ------------
    -- Source --

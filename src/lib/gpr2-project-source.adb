@@ -60,17 +60,24 @@ package body GPR2.Project.Source is
                              Configuration.Dependency_File_Suffix (Lang)
                       elsif Lang = "ada" then ".ali" else ".d");
 
-      Object     : Path_Name.Object;
-      Dependency : Path_Name.Object;
+      P_Suffix   : constant Optional_Name_Type := ".prep";
 
+      Object       : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & O_Suffix,
+                          Optional_Name_Type (Artifact_Dir.Value));
+
+      Dependency   : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & D_Suffix,
+                          Optional_Name_Type (Artifact_Dir.Value));
+
+      Preprocessed : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & P_Suffix,
+                          Optional_Name_Type (View.Object_Directory.Value));
    begin
-      Object := Path_Name.Create_File
-        (Src & O_Suffix, Optional_Name_Type (Artifact_Dir.Value));
-
-      Dependency := Path_Name.Create_File
-        (Src & D_Suffix, Optional_Name_Type (Artifact_Dir.Value));
-
-      return Artifact.Create (Self, Object, Dependency);
+      return Artifact.Create (Self, Object, Dependency, Preprocessed);
    end Artifacts;
 
    ------------

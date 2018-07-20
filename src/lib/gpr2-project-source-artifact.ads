@@ -36,9 +36,10 @@ package GPR2.Project.Source.Artifact is
    Undefined : constant Object;
 
    function Create
-     (Source      : GPR2.Project.Source.Object;
-      Object      : Path_Name.Object;
-      Dependency  : Path_Name.Object := Path_Name.Undefined)
+     (Source              : GPR2.Project.Source.Object;
+      Object              : Path_Name.Object;
+      Dependency          : Path_Name.Object := Path_Name.Undefined;
+      Preprocessed_Source : Path_Name.Object := Path_Name.Undefined)
       return Artifact.Object
      with Pre => Source /= GPR2.Project.Source.Undefined;
    --  Constructor for Object defining the artifacts for the given Source
@@ -64,23 +65,36 @@ package GPR2.Project.Source.Artifact is
    --  A file containing information (.ali for GNAT, .d for GCC) like
    --  cross-reference, units used by the source, etc.
 
+   function Has_Preprocessed_Source (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Retruns True if a preprocessed-source is defined
+
+   function Preprocessed_Source (Self : Object) return Path_Name.Object
+     with Pre => Self /= Undefined;
+   --  Returns the file containing the pre-processed source
+
 private
 
    type Object is tagged record
-      Source     : Project.Source.Object;
-      Object     : Path_Name.Object := Path_Name.Undefined;
-      Dependency : Path_Name.Object := Path_Name.Undefined;
+      Source           : Project.Source.Object;
+      Object           : Path_Name.Object := Path_Name.Undefined;
+      Dependency       : Path_Name.Object := Path_Name.Undefined;
+      Preprocessed_Src : Path_Name.Object := Path_Name.Undefined;
    end record;
 
    Undefined : constant Object :=
-                 (Source     => <>,
-                  Object     => Path_Name.Undefined,
-                  Dependency => Path_Name.Undefined);
+                 (Source           => <>,
+                  Object           => Path_Name.Undefined,
+                  Dependency       => Path_Name.Undefined,
+                  Preprocessed_Src => Path_Name.Undefined);
 
    function Has_Object_Code (Self : Object) return Boolean is
      (Self.Object /= Path_Name.Undefined);
 
    function Has_Dependency (Self : Object) return Boolean is
      (Self.Dependency /= Path_Name.Undefined);
+
+   function Has_Preprocessed_Source (Self : Object) return Boolean is
+     (Self.Preprocessed_Src /= Path_Name.Undefined);
 
 end GPR2.Project.Source.Artifact;
