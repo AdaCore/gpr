@@ -366,7 +366,7 @@ package body GPR2.Project.View is
       Dir : constant Value_Type :=
               Self.Attribute (Project.Registry.Attribute.Library_Dir).Value;
    begin
-      return GPR2.Path_Name.Create_File
+      return GPR2.Path_Name.Create_Directory
         (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
    end Library_Directory;
 
