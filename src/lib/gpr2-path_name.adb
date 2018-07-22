@@ -132,7 +132,7 @@ package body GPR2.Path_Name is
    begin
       return Object'
         (Is_Dir    => False,
-         As_Is     => +N,
+         As_Is     => +String (Name),
          Value     => +OS_Lib.Normalize_Pathname (N),
          Base_Name => +Directories.Base_Name (N),
          Dir_Name  =>
