@@ -37,6 +37,7 @@ limited with GPR2.Project.Tree;
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Strings.Unbounded;
 private with GPR_Parser.Analysis;
+private with GPR_Parser.Common;
 
 package GPR2.Parser.Project is
 
@@ -122,6 +123,7 @@ private
 
    use Ada.Strings.Unbounded;
    use GPR_Parser.Analysis;
+   use GPR_Parser.Common;
 
    package Type_Set is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, GPR2.Containers.Value_Set,
