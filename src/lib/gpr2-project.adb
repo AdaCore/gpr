@@ -64,12 +64,12 @@ package body GPR2.Project is
 
          if Paths.Is_Empty then
             if Directories.Exists
-                (Directories.Current_Directory & DS & String (Name))
+                (Directories.Current_Directory & DS & String (GPR_Name))
             then
                return Path_Name.Create
                  (GPR_Name,
                   Name_Type (OS_Lib.Normalize_Pathname
-                    (Directories.Current_Directory & DS & String (Name))));
+                    (Directories.Current_Directory & DS & String (GPR_Name))));
             end if;
 
          else
