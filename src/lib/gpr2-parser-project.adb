@@ -40,11 +40,12 @@ with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 with GPR2.Source_Reference;
 
-with GPR_Parser.Common; use GPR_Parser.Common;
+with GPR_Parser.Common;
 
 package body GPR2.Parser.Project is
 
    use Ada;
+   use GPR_Parser.Common;
    use type Ada.Containers.Count_Type;
 
    --  Some helpers routines for the parser
