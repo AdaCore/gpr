@@ -40,6 +40,8 @@ with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 with GPR2.Source_Reference;
 
+with GPR_Parser.Common; use GPR_Parser.Common;
+
 package body GPR2.Parser.Project is
 
    use Ada;
