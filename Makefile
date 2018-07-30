@@ -2,7 +2,7 @@
 ##                                                                          ##
 ##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
-##          Copyright (C) 2016-2017, Free Software Foundation, Inc.         ##
+##          Copyright (C) 2016-2018, Free Software Foundation, Inc.         ##
 ##                                                                          ##
 ## This library is free software;  you can redistribute it and/or modify it ##
 ## under terms of the  GNU General Public License  as published by the Free ##
@@ -82,11 +82,12 @@ endif
 # Used to pass extra options to GPRBUILD, like -d for instance
 GPRBUILD_OPTIONS=
 
-BUILDER=gprbuild -p -m $(GTARGET) $(RBD) -j${PROCESSORS} -XBUILD=${BUILD} \
-	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} ${GPRBUILD_OPTIONS}
-INSTALLER=gprinstall -p -f --target=$(TARGET) -XBUILD=${BUILD} \
-	  -XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} $(RBD) \
-	  --prefix=${prefix}
+GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
+	-aP ${LANGKIT_GENERATED_SRC}/lib/gnat \
+	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC}
+
+BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS}
+INSTALLER=gprinstall -p -f ${GPR_OPTIONS} --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --install-name=gpr2 --uninstall
 

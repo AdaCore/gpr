@@ -2,7 +2,7 @@
 ##                                                                          ##
 ##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
-##             Copyright (C) 2017, Free Software Foundation, Inc.           ##
+##          Copyright (C) 2017-2018, Free Software Foundation, Inc.         ##
 ##                                                                          ##
 ## This library is free software;  you can redistribute it and/or modify it ##
 ## under terms of the  GNU General Public License  as published by the Free ##
@@ -27,15 +27,8 @@ CURRENT_DIR := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
 DEST := "build"
 
-#  langkit build directory (for now we use the build directory directly
-#  until the langkit project has stabilized and there is a library installed
-#  into the environment.
-export LANGKIT=$(HOME)/dev/builds/langkit/build/build
-
 #  QUEX installation
 export QUEX_PATH=$(CURRENT_DIR)/quex
-
-export PYTHONPATH=$(LANGKIT)
 
 setup:
 	mkdir -p ${DEST}
