@@ -1,6 +1,6 @@
 from langkit.lexer import (
     Eof, Ignore, Lexer, LexerToken, Literal, NoCaseLit, Pattern, WithSymbol,
-    WithText
+    WithText, TokenFamily
 )
 
 
@@ -50,6 +50,32 @@ class Token(LexerToken):
     # Hidden framework dependencies???
     Label = WithText()
     Char = WithSymbol()
+
+    Alphanumericals = TokenFamily(
+        Identifier,
+        All,
+        Abstract,
+        At,
+        Case,
+        End,
+        For,
+        Is,
+        Limited,
+        Null,
+        Others,
+        Package,
+        Renames,
+        Type,
+        Use,
+        When,
+        With,
+        Project,
+        Extends,
+        String,
+        Number,
+        Label,
+        Char
+    )
 
 
 gpr_lexer = Lexer(Token)
@@ -103,3 +129,5 @@ gpr_lexer.add_rules(
 
     (gpr_lexer.patterns.p_string,               Token.String),
 )
+
+gpr_lexer.add_spacing((Token.Alphanumericals, Token.Alphanumericals))

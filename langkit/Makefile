@@ -39,7 +39,7 @@ export PYTHONPATH=$(LANGKIT)
 
 setup:
 	mkdir -p ${DEST}
-	python manage.py --build-dir=${DEST} generate
+	python manage.py --build-dir=${DEST} generate --generate-unparser
 
 clean:
 	rm -fr build
