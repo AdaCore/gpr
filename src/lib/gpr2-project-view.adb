@@ -33,6 +33,7 @@ with Ada.Text_IO;
 
 with GNAT.MD5;
 with GNAT.OS_Lib;
+with GNAT.Regexp;
 
 with GPR2.Message;
 with GPR2.Project.Definition;
@@ -484,60 +485,20 @@ package body GPR2.Project.View is
         (Lib_Filename : Name_Type;
          Lib_Version  : Name_Type) return String
       is
-         subtype Digit is Character range '0' .. '9';
+         use GNAT.Regexp;
 
-         Maj_Version : constant Name_Type := Lib_Version;
-         Last_Maj    : Positive;
-         Last        : Positive;
-         Ok_Maj      : Boolean := False;
+         Reg      : constant Regexp := Compile (String (Lib_Filename)
+                                                & ".[0-9]+.[0-9]+");
+         Matched  : constant Boolean := Match (String (Lib_Version), Reg);
+         Last_Maj : Positive := Lib_Version'Last;
 
       begin
-         Last_Maj := Maj_Version'Last;
-
-         --  Check for major version, removes minor version (last number)
-
-         while Last_Maj > Maj_Version'First loop
-            if Maj_Version (Last_Maj) in Digit then
+         if Matched then
+            while Lib_Version (Last_Maj) /= '.' loop
                Last_Maj := Last_Maj - 1;
-
-            else
-               Ok_Maj := Last_Maj /= Maj_Version'Last
-                 and then Maj_Version (Last_Maj) = '.';
-
-               if Ok_Maj then
-                  Last_Maj := Last_Maj - 1;
-               end if;
-
-               exit;
-            end if;
-         end loop;
-
-         --  Check if a major version exists
-
-         if Ok_Maj then
-            Last := Last_Maj;
-
-            while Last > Maj_Version'First loop
-               if Maj_Version (Last) in Digit then
-                  Last := Last - 1;
-
-               else
-                  Ok_Maj := Last /= Last_Maj
-                    and then Maj_Version (Last) = '.';
-
-                  if Ok_Maj then
-                     Last := Last - 1;
-                     Ok_Maj :=
-                       Maj_Version (Maj_Version'First .. Last) = Lib_Filename;
-                  end if;
-
-                  exit;
-               end if;
             end loop;
-         end if;
-
-         if Ok_Maj then
-            return String (Maj_Version (Maj_Version'First .. Last_Maj));
+            Last_Maj := Last_Maj - 1;
+            return String (Lib_Version (Lib_Version'First .. Last_Maj));
          else
             return "";
          end if;
