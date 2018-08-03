@@ -150,7 +150,7 @@ package body GPR2.Parser.Project is
             when GPR_String_Literal =>
                Handle_String (Node.As_String_Literal);
 
-            when GPR_Term_List | GPR_String_Literal_At | GPR_Base_List =>
+            when GPR_String_Literal_At | GPR_Base_List =>
                null;
 
             when others =>
@@ -2042,10 +2042,10 @@ package body GPR2.Parser.Project is
                return Status;
             end Parser;
 
-            Choices : constant GPR_Node_List := F_Choice (Node);
+            Choices_Node : constant Choices := F_Choice (Node);
 
          begin
-            Traverse (GPR_Node (Choices), Parser'Access);
+            Traverse (Choices_Node, Parser'Access);
             Is_Open := Is_Case_Item_Matches;
          end Parse_Case_Item;
 

@@ -32,8 +32,8 @@ class Prefix(Expr):
     suffix = Field()
 
 
-class TermList(GPRNode):
-    terms = Field()
+class TermList(GPRNode.list):
+    pass
 
 
 class ExprList(GPRNode):
@@ -104,7 +104,7 @@ A.add_rules(
     ),
     # ----------------------------------------------------------------
 
-    expression=TermList(List(A.term, sep="&")),
+    expression=List(A.term, sep="&", list_cls=TermList),
 
     expression_list=ExprList(
         "(", List(A.expression, sep=",", empty_valid=True), ")"),

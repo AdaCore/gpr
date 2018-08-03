@@ -100,6 +100,10 @@ class OthersDesignator(GPRNode):
     pass
 
 
+class Choices(GPRNode.list):
+    pass
+
+
 A.add_rules(
     context_clauses=List(A.with_decl, empty_valid=True),
 
@@ -217,6 +221,6 @@ A.add_rules(
     others_designator=OthersDesignator("others"),
     choice=Or(A.string_literal, A.others_designator),
 
-    discrete_choice_list=List(A.choice, sep="|"),
+    discrete_choice_list=List(A.choice, sep="|", list_cls=Choices),
 
 )
