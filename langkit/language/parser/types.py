@@ -12,7 +12,7 @@ class TypedStringDecl(GPRNode):
 A.add_rules(
     typed_string_decl=TypedStringDecl(
         "type", A.identifier, "is",
-        "(", List(A.string_literal, sep=","), ")"
+        "(", List(A.string_literal, sep=","), ")", ";"
     ),
 
 )

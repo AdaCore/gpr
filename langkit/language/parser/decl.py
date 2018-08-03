@@ -101,11 +101,11 @@ class OthersDesignator(GPRNode):
 
 
 A.add_rules(
-    context_clauses=List(Pick(A.with_decl, ";"), empty_valid=True),
+    context_clauses=List(A.with_decl, empty_valid=True),
 
     with_decl=WithDecl(
         Opt("limited").as_bool(Limited),
-        "with", List(A.string_literal, sep=",")
+        "with", List(A.string_literal, sep=","), ";"
     ),
 
     abstract_present=AbstractPresent(
@@ -142,8 +142,7 @@ A.add_rules(
 
     # ----------------------------------------------- declarative items
 
-    declarative_items=List(
-        Pick(A.declarative_item, ";"), empty_valid=True),
+    declarative_items=List(A.declarative_item, empty_valid=True),
 
     declarative_item=Or(
         A.simple_declarative_item,
@@ -151,8 +150,7 @@ A.add_rules(
         A.package_decl
     ),
 
-    simple_declarative_items=List(
-        Pick(A.simple_declarative_item, ";"), empty_valid=True),
+    simple_declarative_items=List(A.simple_declarative_item, empty_valid=True),
 
     simple_declarative_item=Or(
         A.variable_decl,
@@ -165,14 +163,14 @@ A.add_rules(
         A.identifier,
         Opt(Pick(":", A.type_reference)),
         ":=",
-        A.expression
+        A.expression, ";"
     ),
 
     attribute_decl=AttributeDecl(
         "for", A.identifier,
         Opt(Pick("(", A.associative_array_index, ")")),
         "use",
-        A.expression
+        A.expression, ";"
     ),
 
     associative_array_index=Or(
@@ -182,7 +180,7 @@ A.add_rules(
 
     package_decl=PackageDecl(
         "package", A.identifier,
-        Or(A.package_renaming, A.package_spec)
+        Or(A.package_renaming, A.package_spec), ";"
     ),
 
     package_renaming=PackageRenaming(
@@ -200,14 +198,12 @@ A.add_rules(
         "end", A.identifier
     ),
 
-    empty_declaration=EmptyDecl(
-        "null"
-    ),
+    empty_declaration=EmptyDecl("null", ";"),
 
     case_construction=CaseConstruction(
         "case", A.variable_reference, "is",
         List(A.case_item, empty_valid=True),
-        "end", "case"
+        "end", "case", ";"
     ),
 
     case_item=CaseItem(
