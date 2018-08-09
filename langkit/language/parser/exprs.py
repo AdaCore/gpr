@@ -76,8 +76,9 @@ A.add_rules(
     string_literal=StringLiteral(Token.String),
     num_literal=NumLiteral(Token.Number),
 
-    static_name=Or(A.identifier,
-                   Prefix(A.static_name, '.', A.identifier)),
+
+    static_name=Prefix(
+       A.identifier, Opt(Pick('.', A.identifier))),
     # ----------------------------------------------------------------
 
     attribute_reference=AttributeReference(

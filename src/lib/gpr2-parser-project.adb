@@ -578,10 +578,11 @@ package body GPR2.Parser.Project is
             -------------------------------
 
             procedure Parse_Project_Declaration (N : Project_Declaration) is
-               Name : constant Expr := F_Project_Name (N);
                Qual : constant Project_Qualifier := F_Qualifier (N);
                Ext  : constant Project_Extension := F_Extension (N);
             begin
+               Project.Name := To_Unbounded_String (F_Project_Name (N).Text);
+
                --  If we have an explicit qualifier parse it now. If not the
                --  kind of project will be determined later during a second
                --  pass.
@@ -662,10 +663,6 @@ package body GPR2.Parser.Project is
                      Project.Is_All := F_Is_All (Ext);
                   end;
                end if;
-
-               Project.Name :=
-                 To_Unbounded_String
-                   (String (Get_Name_Type (Name.As_Single_Tok_Node)));
             end Parse_Project_Declaration;
 
             -----------------------------
