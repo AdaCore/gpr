@@ -1501,7 +1501,7 @@ package body GPR2.Parser.Project is
                   --  list.
                   Result.Single := False;
 
-               when GPR_GPR_Node_List =>
+               when GPR_Term_List =>
                   --  A new value is found
                   New_Item := True;
 
