@@ -822,7 +822,7 @@ package body GPR2.Parser.Project is
          return Project;
       end Parse_Stage_1;
 
-      Context : constant Analysis_Context := Create ("UTF-8");
+      Context : constant Analysis_Context := Create_Context ("UTF-8");
       Unit    : Analysis_Unit;
       Project : Object;
 
