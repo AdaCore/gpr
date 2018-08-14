@@ -82,6 +82,7 @@ package GPR2.Project.Registry.Attribute is
    Excluded_Source_Files       : constant Name_Type := "excluded_source_files";
    Excluded_Source_List_File   : constant Name_Type :=
                                    "excluded_source_list_file";
+   Exec_Dir                    : constant Name_Type := "exec_dir";
    Exec_Subdir                 : constant Name_Type := "exec_subdir";
    Executable                  : constant Name_Type := "executable";
    Executable_Suffix           : constant Name_Type := "executable_suffix";

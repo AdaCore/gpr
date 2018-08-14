@@ -1,0 +1,3 @@
+project Demo3 is
+  for Exec_Dir use "exec";
+end Demo3;

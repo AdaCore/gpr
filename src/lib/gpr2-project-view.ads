@@ -287,6 +287,12 @@ package GPR2.Project.View is
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Object_Dir attribute
 
+   function Executable_Directory (Self : Object) return GPR2.Path_Name.Object
+     with Pre =>
+       Self /= Undefined
+       and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
+   --  As above but for the Exec_Dir attribute
+
    type Id is new Natural;
    --  A single unique Id which represent a reference to the view in the
    --  registry.

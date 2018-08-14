@@ -1,0 +1,5 @@
+description:
+    test for project's view executable_directory
+driver: build_and_run
+project_file: exedir
+main: main

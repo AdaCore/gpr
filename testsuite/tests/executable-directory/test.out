@@ -1,0 +1,8 @@
+Demo1    K_STANDARD
+executable-directory/
+Demo2    K_STANDARD
+executable-directory/obj/
+Demo3    K_STANDARD
+executable-directory/exec/
+Demo4    K_STANDARD
+executable-directory/exec4/
