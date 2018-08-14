@@ -55,7 +55,6 @@ package body GPR2.Source is
    ---------
 
    overriding function "=" (Left, Right : Object) return Boolean is
-      use type GPR2.Path_Name.Object;
    begin
       if Left.Pathname = GPR2.Path_Name.Undefined
         and then Right.Pathname = GPR2.Path_Name.Undefined
@@ -137,8 +136,6 @@ package body GPR2.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      use type GPR2.Path_Name.Object;
-
       Other_Part : constant GPR2.Path_Name.Object :=
                      Registry.Shared.Get (Self).Other_Part;
    begin

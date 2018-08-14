@@ -32,8 +32,6 @@ private package GPR2.Source.Registry is
 
    use Ada.Strings.Unbounded;
 
-   use type GPR2.Path_Name.Object;
-
    type Data is record
       Path_Name  : GPR2.Path_Name.Object;
       Timestamp  : Calendar.Time;
