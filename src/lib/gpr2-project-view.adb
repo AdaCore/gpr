@@ -627,10 +627,15 @@ package body GPR2.Project.View is
    ----------------------
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object is
+
+      package A renames GPR2.Project.Registry.Attribute;
+
       Dir : constant Value_Type :=
-              Self.Attribute (Project.Registry.Attribute.Object_Dir).Value;
+              (if Self.Has_Attributes (A.Object_Dir)
+               then Self.Attribute (A.Object_Dir).Value
+               else ".");
    begin
-      return GPR2.Path_Name.Create_File
+      return GPR2.Path_Name.Create_Directory
         (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
    end Object_Directory;
 

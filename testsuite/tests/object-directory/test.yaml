@@ -1,0 +1,5 @@
+description:
+    test for project's view object_directory
+driver: build_and_run
+project_file: objdir
+main: main
