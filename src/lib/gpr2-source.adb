@@ -94,6 +94,16 @@ package body GPR2.Source is
       end return;
    end Create;
 
+   --------------
+   -- Has_Unit --
+   --------------
+
+   function Has_Unit (Self : Object) return Boolean is
+   begin
+      Parse (Self);
+      return Registry.Shared.Get (Self).Unit_Name /= Null_Unbounded_String;
+   end Has_Unit;
+
    ---------
    -- Key --
    ---------
@@ -242,11 +252,10 @@ package body GPR2.Source is
    -- Unit_Name --
    ---------------
 
-   function Unit_Name (Self : Object) return Optional_Name_Type is
+   function Unit_Name (Self : Object) return Name_Type is
    begin
       Parse (Self);
-      return Optional_Name_Type
-        (To_String (Registry.Shared.Get (Self).Unit_Name));
+      return Name_Type (To_String (Registry.Shared.Get (Self).Unit_Name));
    end Unit_Name;
 
    ------------------

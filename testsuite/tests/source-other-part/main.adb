@@ -64,7 +64,6 @@ procedure Main is
          declare
             S : constant GPR2.Source.Object := Source.Source;
             O : constant GPR2.Source.Object := S.Other_Part;
-            U : constant Optional_Name_Type := S.Unit_Name;
          begin
             Text_IO.Put_Line
               (Filter_Filename (S.Path_Name.Value)
@@ -79,8 +78,8 @@ procedure Main is
             Text_IO.Set_Col (22);
             Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
 
-            if U /= "" then
-               Text_IO.Put ("   unit: " & String (U));
+            if S.Has_Unit then
+               Text_IO.Put ("   unit: " & String (S.Unit_Name));
             end if;
 
             Text_IO.Put_Line

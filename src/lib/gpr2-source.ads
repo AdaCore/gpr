@@ -60,7 +60,12 @@ package GPR2.Source is
    --  Returns the other-part of the source. This is either the spec for a body
    --  or the body for a spec.
 
-   function Unit_Name (Self : Object) return Optional_Name_Type;
+   function Has_Unit (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if source has unit information
+
+   function Unit_Name (Self : Object) return Name_Type
+     with Pre => Self /= Undefined and then Self.Has_Unit;
    --  Returns the unit name for the given source or the empty string if the
    --  language does not have support for unit.
 
