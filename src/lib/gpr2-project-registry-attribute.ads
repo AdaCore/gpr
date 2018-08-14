@@ -109,6 +109,7 @@ package GPR2.Project.Registry.Attribute is
    Library_Version             : constant Name_Type := "library_version";
    Link_Lib_Subdir             : constant Name_Type := "link_lib_subdir";
    Linker_Options              : constant Name_Type := "linker_options";
+   Main                        : constant Name_Type := "main";
    Mode                        : constant Name_Type := "mode";
    Name                        : constant Name_Type := "name";
    Object_Dir                  : constant Name_Type := "object_dir";

@@ -1,0 +1,4 @@
+
+project Demo1 is
+   for Main use ("call1.adb");
+end Demo1;

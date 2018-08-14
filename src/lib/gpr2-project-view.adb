@@ -291,6 +291,16 @@ package body GPR2.Project.View is
       return not Definition.Get (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
+   ---------------
+   -- Has_Mains --
+   ---------------
+
+   function Has_Mains (Self : Object) return Boolean is
+   begin
+      return Self.Has_Attributes (Project.Registry.Attribute.Main)
+        and then Self.Attributes (Project.Registry.Attribute.Main).Length > 0;
+   end Has_Mains;
+
    ------------------
    -- Has_Packages --
    ------------------
@@ -591,6 +601,37 @@ package body GPR2.Project.View is
               (Project.Registry.Attribute.Library_Version).Value),
          Directory => Optional_Name_Type (Self.Library_Directory.Dir_Name));
    end Library_Version_Filename;
+
+   -----------
+   -- Mains --
+   -----------
+
+   function Mains (Self : Object) return GPR2.Path_Name.Set.Object is
+
+      function Create (Name : Name_Type) return GPR2.Path_Name.Object;
+      --  Returns the full pathname for the givem main
+
+      ------------
+      -- Create --
+      ------------
+
+      function Create (Name : Name_Type) return GPR2.Path_Name.Object is
+      begin
+         return GPR2.Path_Name.Create_File
+           (Name,
+            Directory =>
+              Optional_Name_Type (Self.Executable_Directory.Dir_Name));
+      end Create;
+
+   begin
+      return Set : GPR2.Path_Name.Set.Object do
+         for Main
+           of Self.Attribute (Project.Registry.Attribute.Main).Values
+         loop
+            Set.Append (Mains.Create (Name_Type (Main)));
+         end loop;
+      end return;
+   end Mains;
 
    ----------
    -- Name --

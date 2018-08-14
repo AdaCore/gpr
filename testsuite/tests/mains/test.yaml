@@ -1,0 +1,5 @@
+description:
+    test for project's view mains handling
+driver: build_and_run
+project_file: mains
+main: main

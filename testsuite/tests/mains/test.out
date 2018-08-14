@@ -1,0 +1,9 @@
+Demo1    K_STANDARD
+mains/call1.adb
+Demo2    K_STANDARD
+mains/obj/call2.adb
+Demo3    K_STANDARD
+mains/exec/call3_1.adb
+mains/exec/call3_2.adb
+Demo4    K_STANDARD
+mains/exec4/call4.adb

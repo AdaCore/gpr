@@ -1,0 +1,4 @@
+project Demo3 is
+  for Exec_Dir use "exec";
+  for Main use ("call3_1.adb", "call3_2.adb");
+end Demo3;

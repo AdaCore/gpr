@@ -239,6 +239,15 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Returns true if the project is externally built
 
+   function Has_Mains (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns true if the project has some mains defined
+
+   function Mains (Self : Object) return GPR2.Path_Name.Set.Object
+     with Pre  => Self /= Undefined and then Self.Has_Mains,
+          Post => Mains'Result.Length > 0;
+   --  Returns the mains's full pathname
+
    function Library_Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
