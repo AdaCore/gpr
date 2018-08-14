@@ -1,6 +1,6 @@
 from langkit.lexer import (
-    Eof, Ignore, Lexer, LexerToken, Literal, NoCaseLit, Pattern, WithSymbol,
-    WithText, TokenFamily
+    Eof, Lexer, LexerToken, Literal, NoCaseLit, Pattern, WithSymbol, WithText,
+    WithTrivia, TokenFamily
 )
 
 
@@ -51,6 +51,9 @@ class Token(LexerToken):
     Label = WithText()
     Char = WithSymbol()
 
+    Comment = WithTrivia()
+    Whitespace = WithTrivia()
+
     Alphanumericals = TokenFamily(
         Identifier,
         All,
@@ -88,8 +91,8 @@ gpr_lexer.add_patterns(
 
 gpr_lexer.add_rules(
     (Eof(),                                     Token.Termination),
-    (Pattern(r"[ \t\r\n]+"),                    Ignore()),
-    (Pattern(r"--(.?)+"),                       Ignore()),
+    (Pattern(r"[ \t\r\n]+"),                    Token.Whitespace),
+    (Pattern(r"--(.?)+"),                       Token.Comment),
     (NoCaseLit("all"),                             Token.All),
     (NoCaseLit("abstract"),                        Token.Abstract),
     (NoCaseLit("at"),                              Token.At),
@@ -131,3 +134,4 @@ gpr_lexer.add_rules(
 )
 
 gpr_lexer.add_spacing((Token.Alphanumericals, Token.Alphanumericals))
+gpr_lexer.add_newline_after(Token.Comment)
