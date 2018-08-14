@@ -298,7 +298,8 @@ package body GPR2.Project.View is
    function Has_Mains (Self : Object) return Boolean is
    begin
       return Self.Has_Attributes (Project.Registry.Attribute.Main)
-        and then Self.Attributes (Project.Registry.Attribute.Main).Length > 0;
+        and then
+          Self.Attribute (Project.Registry.Attribute.Main).Values.Length > 0;
    end Has_Mains;
 
    ------------------
