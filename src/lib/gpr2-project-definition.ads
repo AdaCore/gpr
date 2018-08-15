@@ -24,8 +24,6 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-with GNAT.MD5;
-
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Parser.Project.Set;
@@ -75,7 +73,8 @@ private package GPR2.Project.Definition is
       Trees             : Tree;
       Externals         : Containers.Name_List;
       --  List of externals directly or indirectly visible
-      Signature         : Context.Binary_Signature;
+      Signature         : Context.Binary_Signature :=
+                            Context.Default_Signature;
 
       --  Actual values for the view
       Extended          : View.Object;
@@ -86,7 +85,8 @@ private package GPR2.Project.Definition is
       Packs             : Project.Pack.Set.Object;
 
       Sources           : Project.Source.Set.Object;
-      Sources_Signature : GNAT.MD5.Binary_Message_Digest;
+      Sources_Signature : Context.Binary_Signature :=
+                            Context.Default_Signature;
 
       Units             : Unit.Set.Object;
 
@@ -100,7 +100,7 @@ private package GPR2.Project.Definition is
       --  root view to differenciate a root context from a root and aggregate
       --  project.
 
-      Status            : Relation_Status;
+      Status            : Relation_Status := Root;
       Kind              : Project_Kind;
 
       --  The project tree for this view
