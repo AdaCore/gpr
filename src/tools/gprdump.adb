@@ -56,6 +56,7 @@ procedure GPRdump is
    Display_All_Sources : aliased Boolean := False;
    Source              : aliased GNAT.Strings.String_Access;
    Project_Path        : Unbounded_String;
+   Project_Tree        : GPR2.Project.Tree.Object;
 
    ------------------
    -- Full_Closure --
@@ -196,30 +197,27 @@ begin
       Pathname : constant GPR2.Path_Name.Object :=
                    GPR2.Project.Create
                      (GPR2.Optional_Name_Type (To_String (Project_Path)));
-      Project  : GPR2.Project.Tree.Object;
       Context  : GPR2.Context.Object;
    begin
-      Project.Load (Pathname, Context);
+      Project_Tree.Load (Pathname, Context);
 
       if Display_Sources or Display_All_Sources then
-         Sources (Project.Root_Project);
+         Sources (Project_Tree.Root_Project);
       end if;
 
       if Source /= null and then Source.all /= "" then
-         Full_Closure (Project, Source.all);
+         Full_Closure (Project_Tree, Source.all);
       end if;
+
    exception
       when E : others =>
-         if Project.Log_Messages.Has_Element then
-            for M of Project.Log_Messages.all loop
-               Text_IO.Put_Line (M.Format);
-            end loop;
-
-         else
-            Text_IO.Put_Line
-              ("error while parsing..." & Exception_Information (E));
-         end if;
+         Text_IO.Put_Line
+           ("error while parsing..." & Exception_Information (E));
    end;
+
+   for M of Project_Tree.Log_Messages.all loop
+      Text_IO.Put_Line (M.Format);
+   end loop;
 
 exception
    when GNAT.Command_Line.Invalid_Switch
