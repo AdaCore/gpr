@@ -25,6 +25,7 @@ Project: Demo
 ..... CLOSURE
    > src/abc.adb
    > src/api.adb
+   > src/call.adb
    > src/tst.adb
    > src/abc.ads
    > src/abc-plop.ads
@@ -34,20 +35,25 @@ Project: Demo
  > src/tst.adb   unit: Tst
 ..... DIRECT
    > src/api.adb
+   > src/call.adb
    > src/abc-plop.ads
    > src/api.ads
 ..... UNIT
    > src/abc.adb
    > src/api.adb
+   > src/call.adb
    > src/abc.ads
    > src/abc-plop.ads
    > src/api.ads
 ..... CLOSURE
    > src/abc.adb
    > src/api.adb
+   > src/call.adb
+   > src/tst.adb
    > src/abc.ads
    > src/abc-plop.ads
    > src/api.ads
+   > src/tst.ads
 
  > src/abc.ads   unit: ABC
 ..... DIRECT
@@ -81,12 +87,16 @@ api.ads:3:1: withed unit titi not found
 ..... UNIT
    > src/abc.adb
    > src/api.adb
+   > src/call.adb
    > src/abc.ads
    > src/abc-plop.ads
    > src/api.ads
 ..... CLOSURE
    > src/abc.adb
    > src/api.adb
+   > src/call.adb
+   > src/tst.adb
    > src/abc.ads
    > src/abc-plop.ads
    > src/api.ads
+   > src/tst.ads

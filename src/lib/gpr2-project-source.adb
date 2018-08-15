@@ -136,7 +136,11 @@ package body GPR2.Project.Source is
          end Insert;
 
       begin
-         Insert (Deps, Unit.Spec);
+         if Unit.Spec /= Undefined then
+            --  function and procedure compilation units allowed to do not have
+            --  a spec.
+            Insert (Deps, Unit.Spec);
+         end if;
 
          for B of Unit.Bodies loop
             Insert (Deps, B);
