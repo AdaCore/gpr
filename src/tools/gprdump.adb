@@ -24,6 +24,8 @@ with Ada.Text_IO;
 with GNAT.Command_Line;
 with GNAT.Strings;
 
+with GNATCOLL.Traces;
+
 with GPR.Util;
 with GPR.Version;
 
@@ -215,6 +217,7 @@ procedure GPRdump is
    end Sources;
 
 begin
+   GNATCOLL.Traces.Parse_Config_File;
    Parse_Command_Line;
 
    declare
