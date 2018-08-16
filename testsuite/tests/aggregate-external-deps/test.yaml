@@ -1,0 +1,5 @@
+description:
+    Check aggregate external dependencies
+driver: build_and_run
+project_file: agged
+main: main

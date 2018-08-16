@@ -29,6 +29,7 @@ with Ada.Text_IO;
 
 with GPR.Sdefault;
 
+with GPR2.Containers;
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
@@ -678,17 +679,29 @@ package body GPR2.Project.Tree is
 
          for View of Self loop
             declare
-               V_Data : Definition.Data := Definition.Get (View);
+               V_Data    : Definition.Data := Definition.Get (View);
+               Externals : GPR2.Containers.Name_List := V_Data.Externals;
             begin
                --  Compute the external dependencies for the views. This
                --  is the set of external used in the project and in all
                --  imported project.
 
-               for E of V_Data.Externals loop
-                  if not V_Data.Externals.Contains (E) then
-                     V_Data.Externals.Append (E);
-                  end if;
+               for V of V_Data.Imports loop
+                  for E of Definition.Get (V).Externals loop
+                     if not Externals.Contains (E) then
+                        --  Note that if we have an aggregate project, then
+                        --  we are not dependent of the external if it is
+                        --  statically redefined in the aggregate project. Yet
+                        --  at this point we have not yet parsed the project.
+                        --
+                        --  The externals will be removed in Set_Context when
+                        --  the parsing is done.
+                        Externals.Append (E);
+                     end if;
+                  end loop;
                end loop;
+
+               V_Data.Externals := Externals;
 
                Definition.Set (View, V_Data);
             end;
@@ -1246,6 +1259,26 @@ package body GPR2.Project.Tree is
             P_Data.Attrs,
             P_Data.Vars,
             P_Data.Packs);
+
+         --  If an aggregate project and an attribute external is defined then
+         --  remove the dependency on the corresponding externalq.
+
+         if View.Qualifier = K_Aggregate then
+            for C in P_Data.Attrs.Iterate
+              (Name => Project.Registry.Attribute.External)
+            loop
+               declare
+                  E : constant Name_Type :=
+                        Name_Type (P_Data.Attrs (C).Index);
+                  P : Containers.Name_Type_List.Cursor :=
+                        P_Data.Externals.Find (E);
+               begin
+                  if Containers.Name_Type_List.Has_Element (P) then
+                     P_Data.Externals.Delete (P);
+                  end if;
+               end;
+            end loop;
+         end if;
 
          --  Now we can record the aggregated projects based on the possibly
          --  new Project_Files attribute value. This attribute may be set
