@@ -1,0 +1,5 @@
+description:
+    Check that unknown built-in functions are rejected
+driver: build_and_run
+project_file: unknown_built_in
+main: main

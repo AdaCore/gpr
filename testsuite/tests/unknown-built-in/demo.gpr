@@ -1,0 +1,3 @@
+project Demo is
+   Foo := Unknown ("bar");
+end Demo;

@@ -570,6 +570,17 @@ package body GPR2.Parser.Project is
 
                elsif Function_Name = "split" then
                   Parse_Split_Reference (N);
+
+               else
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference
+                            (Filename, Sloc_Range (N)),
+                        Message =>
+                          "unknown built-in '"
+                        & String (Function_Name) & "'"));
                end if;
             end Parse_Builtin;
 
