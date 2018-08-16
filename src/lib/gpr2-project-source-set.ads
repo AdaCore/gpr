@@ -46,7 +46,8 @@ package GPR2.Project.Source.Set is
      with Pre => Source /= Undefined;
 
    function Contains
-     (Self : Object; Source : Project.Source.Object) return Boolean;
+     (Self : Object; Source : Project.Source.Object) return Boolean
+     with Pre => Source /= Undefined;
 
    procedure Replace (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source /= Undefined;

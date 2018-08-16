@@ -101,9 +101,12 @@ package body GPR2.Project.Source is
      (Self : Object;
       Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object
    is
+      use type GPR2.Unit.Object;
+
       procedure Insert
         (Deps : in out GPR2.Project.Source.Set.Object;
-         Unit : GPR2.Unit.Object) with Inline;
+         Unit : GPR2.Unit.Object)
+        with Inline, Pre => Unit /= GPR2.Unit.Undefined;
       --  Insert Unit into Deps (result of this routine)
 
       procedure To_Analyse (Src : GPR2.Project.Source.Object);

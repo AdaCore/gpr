@@ -41,22 +41,26 @@ package GPR2.Unit is
       Bodies : Project.Source.Set.Object) return Object;
    --  Constructor for a Unit object
 
-   function Spec (Self : Object) return Project.Source.Object;
+   function Spec (Self : Object) return Project.Source.Object
+     with Pre => Self /= Undefined;
    --  Returns the Spec
 
-   function Bodies (Self : Object) return Project.Source.Set.Object;
+   function Bodies (Self : Object) return Project.Source.Set.Object
+     with Pre => Self /= Undefined;
    --  Returns all bodies
 
    procedure Update_Spec
      (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Self.Spec = Project.Source.Undefined;
+     with Pre => Source /= Project.Source.Undefined;
    --  Set unit spec
 
    procedure Update_Bodies
-     (Self : in out Object; Source : Project.Source.Object);
+     (Self : in out Object; Source : Project.Source.Object)
+     with Pre => Source /= Project.Source.Undefined;
    --  Set or append unit's body
 
-   function Is_Interface (Self : Object) return Boolean;
+   function Is_Interface (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
    --  Returns True if the unit is an interface
 
 private
