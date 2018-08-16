@@ -139,7 +139,7 @@ package body GPR2.Project.Source is
          end Insert;
 
       begin
-         if Unit.Spec /= Undefined then
+         if Unit.Has_Spec then
             --  function and procedure compilation units allowed to do not have
             --  a spec.
             Insert (Deps, Unit.Spec);
