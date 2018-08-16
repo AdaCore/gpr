@@ -41,6 +41,10 @@ package GPR2.Unit is
       Bodies : Project.Source.Set.Object) return Object;
    --  Constructor for a Unit object
 
+   function Has_Spec (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if a spec is defined for this unit
+
    function Spec (Self : Object) return Project.Source.Object
      with Pre => Self /= Undefined;
    --  Returns the Spec
@@ -73,6 +77,9 @@ private
    Undefined : constant Object :=
                  (Spec   => <>,
                   Bodies => <>);
+
+   function Has_Spec (Self : Object) return Boolean is
+     (Self.Spec /= Project.Source.Undefined);
 
    function Spec
      (Self : Object) return Project.Source.Object is (Self.Spec);
