@@ -30,6 +30,7 @@ with GPR.Version;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
+with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -54,6 +55,7 @@ procedure GPRdump is
    Help                : aliased Boolean := False;
    Display_Sources     : aliased Boolean := False;
    Display_All_Sources : aliased Boolean := False;
+   Display_Artifacts   : aliased Boolean := False;
    Source              : aliased GNAT.Strings.String_Access;
    Project_Path        : Unbounded_String;
    Project_Tree        : GPR2.Project.Tree.Object;
@@ -127,6 +129,11 @@ procedure GPRdump is
          Help => "display sources");
 
       Define_Switch
+        (Config, Display_Artifacts'Access,
+         "-r", Long_Switch => "--artifacts",
+         Help => "display artifacts");
+
+      Define_Switch
         (Config, Source'Access,
          "-d:", Long_Switch => "--deps:",
          Help => "display full closure");
@@ -168,21 +175,40 @@ procedure GPRdump is
 
    procedure Sources (View : Project.View.Object) is
       use type GPR2.Containers.Count_Type;
+      Sources_Set : constant Project.Source.Set.Object := View.Sources;
    begin
-      if View.Sources.Length = 0 then
+      if Sources_Set.Length = 0 then
          Text_IO.Put_Line ("no sources");
 
       else
-         for C in View.Sources.Iterate
+         for C in Sources_Set.Iterate
            (Filter => (if Display_All_Sources
                        then GPR2.Project.Source.Set.S_All
                        else GPR2.Project.Source.Set.S_Compilable))
          loop
             declare
-               S : constant GPR2.Source.Object :=
-                     Project.Source.Set.Element (C).Source;
+               S : constant Project.Source.Object := Sources_Set (C);
+               R : GPR2.Project.Source.Artifact.Object;
             begin
-               Text_IO.Put_Line (S.Path_Name.Value);
+               if Display_Sources or Display_All_Sources then
+                  Text_IO.Put_Line (S.Source.Path_Name.Value);
+               end if;
+
+               if Display_Artifacts then
+                  R := S.Artifacts;
+
+                  if R.Has_Object_Code then
+                     Text_IO.Put_Line (R.Object_Code.Value);
+                  end if;
+
+                  if R.Has_Dependency then
+                     Text_IO.Put_Line (R.Dependency.Value);
+                  end if;
+
+                  if R.Has_Preprocessed_Source then
+                     Text_IO.Put_Line (R.Preprocessed_Source.Value);
+                  end if;
+               end if;
             end;
          end loop;
       end if;
@@ -201,7 +227,7 @@ begin
    begin
       Project_Tree.Load (Pathname, Context);
 
-      if Display_Sources or Display_All_Sources then
+      if Display_Sources or Display_All_Sources or Display_Artifacts then
          Sources (Project_Tree.Root_Project);
       end if;
 
