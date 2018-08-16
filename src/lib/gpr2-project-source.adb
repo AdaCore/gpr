@@ -197,7 +197,6 @@ package body GPR2.Project.Source is
             W    : constant Source_Reference.Identifier.Object :=
                      Source_Reference.Identifier.Object (Buf.First_Element);
             View : Project.View.Object;
-            SU   : GPR2.Unit.Object;
          begin
             --  Remove the unit just taken from the list
 
@@ -219,6 +218,7 @@ package body GPR2.Project.Source is
                   declare
                      Data : constant Definition.Data := Definition.Get (View);
                      --  The view information for the unit Identifier
+                     SU   : GPR2.Unit.Object;
                   begin
                      if Data.Units.Contains (W.Identifier) then
                         SU := Data.Units (W.Identifier);
