@@ -32,6 +32,8 @@
 --  From a path-name object it is always possible to get the full pathname
 --  of the file and its containing directory.
 
+with GNAT.MD5;
+
 private with Ada.Strings.Unbounded;
 
 package GPR2.Path_Name is
@@ -95,6 +97,10 @@ package GPR2.Path_Name is
    function Is_Regular_File (Self : Object) return Boolean
      with Pre => Self /= Undefined;
    --  Returns True if Self is an existing and readable file on disk
+
+   function Content_MD5 (Self : Object) return GNAT.MD5.Message_Digest
+     with Pre => Self /= Undefined and then Self.Is_Regular_File;
+   --  Returns the MD5 signature for the given file
 
 private
 
