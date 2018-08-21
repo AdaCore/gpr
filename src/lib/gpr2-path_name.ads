@@ -102,6 +102,10 @@ package GPR2.Path_Name is
      with Pre => Self /= Undefined and then Self.Is_Regular_File;
    --  Returns the MD5 signature for the given file
 
+   procedure Create_Sym_Link (Self, To : Object)
+     with Pre => Self /= Undefined and then To /= Undefined;
+   --  Create a sym-link for Self as To
+
    function Relative_Path (Self, To : Object) return Object
      with Pre  => Self /= Undefined and then To /= Undefined,
           Post => Relative_Path'Result /= Undefined;

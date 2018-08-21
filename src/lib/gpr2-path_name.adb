@@ -26,6 +26,7 @@ with Ada.Directories;
 with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
+with System;
 
 with GPR.Tempdir;
 with GPR.Util;
@@ -167,6 +168,31 @@ package body GPR2.Path_Name is
          Dir_Name  =>
            +Ensure_Directory (Directories.Containing_Directory (N)));
    end Create_File;
+
+   ---------------------
+   -- Create_Sym_Link --
+   ---------------------
+
+   procedure Create_Sym_Link (Self, To : Object) is
+
+      function Symlink
+        (Oldpath : System.Address;
+         Newpath : System.Address) return Integer;
+      pragma Import (C, Symlink, "__gnat_symlink");
+
+      C_From  : constant String := To_String (Self.Value) & ASCII.NUL;
+      pragma Warnings (Off, "*actuals for this call may be in wrong order*");
+      C_To    : constant String :=
+                  String (Relative_Path (To, Self).Name)
+                  & To_String (To.Base_Name) & ASCII.NUL;
+      Result  : Integer;
+      Success : Boolean;
+      pragma Unreferenced (Success, Result);
+
+   begin
+      OS_Lib.Delete_File (To_String (Self.Value), Success);
+      Result := Symlink (C_To'Address, C_From'Address);
+   end Create_Sym_Link;
 
    ---------------------
    -- Is_Regular_File --
