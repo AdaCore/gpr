@@ -75,16 +75,16 @@ package GPR2.Path_Name is
 
    function Value (Self : Object) return Full_Name
      with Pre => Self /= Undefined;
-   --  Returns the full pathname for the given Path_Name_Type
+   --  Returns the full pathname for Self
 
    function Base_Name (Self : Object) return Simple_Name
      with Pre => Self /= Undefined;
-   --  Returns the base name for File
+   --  Returns the base name for Self
 
    function Dir_Name (Self : Object) return Full_Name
      with Pre  => Self /= Undefined,
           Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
-   --  Returns the directory part of the full path name
+   --  Returns the directory part for Self
 
    function Temporary_Directory return Object;
    --  Returns the current temporary directory
