@@ -24,6 +24,8 @@
 
 with Ada.Directories;
 with Ada.Streams.Stream_IO;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps;
 
 with GPR.Tempdir;
 with GPR.Util;
@@ -174,6 +176,63 @@ package body GPR2.Path_Name is
    begin
       return OS_Lib.Is_Regular_File (Value (Self));
    end Is_Regular_File;
+
+   -------------------
+   -- Relative_Path --
+   -------------------
+
+   function Relative_Path (Self, To : Object) return Object is
+
+      use Ada;
+      use Ada.Strings.Maps;
+      use Ada.Strings.Fixed;
+
+      Pathname : constant String := To_String (Self.Dir_Name);
+      To_Path  : constant String := To_String (To.Dir_Name);
+
+      --  Local variables
+
+      Dir_Sep_Map : constant Character_Mapping := To_Mapping ("\", "/");
+
+      P  : String (1 .. Pathname'Length) := Pathname;
+      T  : String (1 .. To_Path'Length) := To_Path;
+
+      Pi : Natural; -- common prefix ending
+      N  : Natural := 0;
+
+   begin
+      --  Use canonical directory separator
+
+      Strings.Fixed.Translate (Source => P, Mapping => Dir_Sep_Map);
+      Strings.Fixed.Translate (Source => T, Mapping => Dir_Sep_Map);
+
+      --  First check for common prefix
+
+      Pi := 1;
+
+      while Pi < P'Last and then Pi < T'Last and then P (Pi) = T (Pi) loop
+         Pi := Pi + 1;
+      end loop;
+
+      --  Cut common prefix at a directory separator
+
+      while Pi > P'First and then P (Pi) /= '/' loop
+         Pi := Pi - 1;
+      end loop;
+
+      --  Count directory under prefix in P, these will be replaced by the
+      --  corresponding number of "..".
+
+      N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), "/");
+
+      if T (T'Last) /= '/' then
+         N := N + 1;
+      end if;
+
+      return Create_File
+        (Name_Type
+           (String'(N * "../") & Ensure_Directory (P (Pi + 1 .. P'Last))));
+   end Relative_Path;
 
    -------------------------
    -- Temporary_Directory --

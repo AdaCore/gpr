@@ -1,0 +1,5 @@
+description:
+    Test the relative path routine
+driver: build_and_run
+project_file: relative_path
+main: main

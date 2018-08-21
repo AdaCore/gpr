@@ -102,6 +102,13 @@ package GPR2.Path_Name is
      with Pre => Self /= Undefined and then Self.Is_Regular_File;
    --  Returns the MD5 signature for the given file
 
+   function Relative_Path (Self, To : Object) return Object
+     with Pre  => Self /= Undefined and then To /= Undefined,
+          Post => Relative_Path'Result /= Undefined;
+   --  Returns the relative pathname which corresponds to Self when
+   --  starting from directory To. Note that the relative pathname is actually
+   --  given by Relative_Path'Result.Name.
+
 private
 
    use Ada.Strings.Unbounded;
