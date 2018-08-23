@@ -843,7 +843,6 @@ package body GPR2.Parser.Project is
             P : constant Parser.Project.Object := Registry.Get (Filename);
          begin
             Registry.Register (Filename, P);
-            Inc_Ref (P.Unit);
             return P;
          end;
 
@@ -899,8 +898,6 @@ package body GPR2.Parser.Project is
          Project.File    := Filename;
          Project.Unit    := Unit;
          Project.Context := Context;
-
-         Inc_Ref (Project.Unit);
 
          --  If this is a configuration project, then we register it under the
          --  "config" name as this is what is expected on this implementation.
@@ -2484,8 +2481,11 @@ package body GPR2.Parser.Project is
    ------------
 
    procedure Unload (Self : in out Object) is
+      pragma Unreferenced (Self);
    begin
-      Dec_Ref (Self.Unit);
+      --  ??? Is this procedure still needed now that analysis units benefit
+      --  from automatic memory management?
+      null;
    end Unload;
 
 end GPR2.Parser.Project;
