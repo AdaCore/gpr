@@ -969,48 +969,56 @@ package body GPR2.Project.Tree is
                --  this project.
 
                for Project of Data.Trees.Imports loop
-                  if not Data.Trees.Project.Imports.Element
-                      (Project.Path_Name).Is_Limited
-                  then
+                  declare
+                     Is_Limited : constant Boolean :=
+                                    Data.Trees.Project.Imports.Element
+                                      (Project.Path_Name).Is_Limited;
+                  begin
+
                      if Recursive_Load.Filename = Project.Path_Name then
                         --  We are importing the root-project
 
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "circular dependency detected",
-                              Source_Reference.Object
-                                (Sets.Element (Paths.First_Element).Project)));
+                        if not Is_Limited then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "circular dependency detected",
+                                 Source_Reference.Object
+                                   (Sets.Element
+                                        (Paths.First_Element).Project)));
 
-                        Add_Paths_Messages;
+                           Add_Paths_Messages;
 
-                        --  Then finally add current project which is the root
-                        --  of the circularity.
+                           --  Then finally add current project which is
+                           --  the root of the circularity.
 
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "imports " & Project.Path_Name.Value,
-                              Source_Reference.Object
-                                (Data.Trees.Project.Imports.Element
-                                   (Project.Path_Name))));
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "imports " & Project.Path_Name.Value,
+                                 Source_Reference.Object
+                                   (Data.Trees.Project.Imports.Element
+                                        (Project.Path_Name))));
 
-                        Circularities := True;
+                           Circularities := True;
+                        end if;
 
                      elsif Sets.Contains (Project.Path_Name) then
                         --  We are importing a project already imported
 
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "circular dependency detected",
-                              Source_Reference.Object
-                                (Data.Trees.Project.Imports.Element
-                                     (Project.Path_Name))));
+                        if not Is_Limited then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "circular dependency detected",
+                                 Source_Reference.Object
+                                   (Data.Trees.Project.Imports.Element
+                                        (Project.Path_Name))));
 
-                        Add_Paths_Messages;
+                           Add_Paths_Messages;
 
-                        Circularities := True;
+                           Circularities := True;
+                        end if;
 
                      elsif Starting_From /= GPR2.Project.View.Undefined
                        and then Starting_From.Path_Name = Project.Path_Name
@@ -1018,17 +1026,19 @@ package body GPR2.Project.Tree is
                         --  We are importing Starting_From which is an
                         --  aggregate project taken as root project.
 
-                        Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "imports " & Project.Path_Name.Value,
-                              Source_Reference.Object
-                                (Data.Trees.Project.Imports.Element
-                                     (Project.Path_Name))));
+                        if not Is_Limited then
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "imports " & Project.Path_Name.Value,
+                                 Source_Reference.Object
+                                   (Data.Trees.Project.Imports.Element
+                                        (Project.Path_Name))));
 
-                        Add_Paths_Messages;
+                           Add_Paths_Messages;
 
-                        Circularities := True;
+                           Circularities := True;
+                        end if;
 
                      else
                         Push
@@ -1048,7 +1058,7 @@ package body GPR2.Project.Tree is
 
                         Pop;
                      end if;
-                  end if;
+                  end;
                end loop;
 
                --  And record back new data for this view

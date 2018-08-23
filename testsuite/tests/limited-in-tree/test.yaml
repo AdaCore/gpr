@@ -1,0 +1,5 @@
+description:
+    Check that limited imports are part of the project tree
+driver: build_and_run
+project_file: limited_in_tree
+main: main
