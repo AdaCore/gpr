@@ -1,0 +1,5 @@
+description:
+    Check for consistency in 'end <proj>'
+driver: build_and_run
+project_file: mismatch_end
+main: main

@@ -595,6 +595,18 @@ package body GPR2.Parser.Project is
                Project.Name := To_Unbounded_String
                  (F_Project_Name (N).String_Text);
 
+               if Name (Project) /= Name_Type (F_End_Name (N).String_Text)
+               then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    =>
+                          Get_Source_Reference
+                            (Filename, Sloc_Range (F_End_Name (N))),
+                        Message =>
+                          "'end " & String (Name (Project)) & "' expected"));
+               end if;
+
                --  If we have an explicit qualifier parse it now. If not the
                --  kind of project will be determined later during a second
                --  pass.
