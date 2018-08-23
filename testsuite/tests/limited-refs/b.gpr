@@ -1,5 +1,5 @@
+limited with "p.gpr";
 
-limited with "a.gpr";
 project B is
-   for Object_Dir use A'Object_Dir;
+   package Compiler renames P.Compiler;
 end B;

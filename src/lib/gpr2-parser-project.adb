@@ -2137,7 +2137,15 @@ package body GPR2.Parser.Project is
 
             --  Check if the Project.Package reference exists
 
-            if View = GPR2.Project.View.Undefined then
+            if Is_Limited_Import (Self, Project) then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "cannot have a reference to a limited project"));
+
+            elsif View = GPR2.Project.View.Undefined then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -2192,7 +2200,15 @@ package body GPR2.Parser.Project is
 
             --  Check if the Project.Package reference exists
 
-            if View = GPR2.Project.View.Undefined then
+            if Is_Limited_Import (Self, Project) then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "cannot have a reference to a limited project"));
+
+            elsif View = GPR2.Project.View.Undefined then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,

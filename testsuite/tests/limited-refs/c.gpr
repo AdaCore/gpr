@@ -1,0 +1,6 @@
+limited with "p.gpr";
+
+project C is
+   package Linker extends P.Linker is
+   end Linker;
+end C;

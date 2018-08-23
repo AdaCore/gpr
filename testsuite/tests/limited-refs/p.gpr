@@ -1,0 +1,9 @@
+project P is
+   for Object_Dir use "toto";
+
+   package Compiler is
+   end Compiler;
+
+   package Linker is
+   end Linker;
+end P;
