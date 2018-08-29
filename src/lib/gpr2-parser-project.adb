@@ -312,7 +312,7 @@ package body GPR2.Parser.Project is
                                (Filename, Sloc_Range (N)),
                            Message =>
                              "missing parameters for external_as_list"
-                           & " built-in"));
+                             & " built-in"));
 
                   else
                      --  We have External_As_List ("VAR", "SEP"), check the
@@ -334,7 +334,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Var_Node)),
                                  Message =>
                                    "external_as_list first parameter must be "
-                                 & "a simple string"));
+                                   & "a simple string"));
 
                         elsif Var = "" then
                            Messages.Append
@@ -345,7 +345,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Var_Node)),
                                  Message =>
                                    "external_as_list variable name must not "
-                                 & "be empty"));
+                                   & "be empty"));
                         end if;
                      end;
 
@@ -360,7 +360,7 @@ package body GPR2.Parser.Project is
                                   (Filename, Sloc_Range (Exprs)),
                               Message =>
                                 "external_as_list requires a second "
-                              & "parameter"));
+                                & "parameter"));
                      else
                         declare
                            Sep_Node : constant Term_List :=
@@ -378,7 +378,7 @@ package body GPR2.Parser.Project is
                                         (Filename, Sloc_Range (Sep_Node)),
                                     Message =>
                                       "external_as_list second parameter must "
-                                    & "be a simple string"));
+                                      & "be a simple string"));
 
                            elsif Sep = "" then
                               Messages.Append
@@ -389,7 +389,7 @@ package body GPR2.Parser.Project is
                                         (Filename, Sloc_Range (Sep_Node)),
                                     Message =>
                                       "external_as_list separator must not "
-                                    & "be empty"));
+                                      & "be empty"));
                            end if;
                         end;
                      end if;
@@ -436,7 +436,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Var_Node)),
                                  Message =>
                                    "external first parameter must be a "
-                                 & "simple string"));
+                                   & "simple string"));
 
                         elsif Var = "" then
                            Messages.Append
@@ -447,7 +447,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Var_Node)),
                                  Message =>
                                    "external variable name must not be "
-                                 & "empty"));
+                                   & "empty"));
 
                         else
                            Project.Externals.Append
@@ -498,7 +498,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Str_Node)),
                                  Message =>
                                    "split first parameter must be "
-                                 & "a simple string"));
+                                   & "a simple string"));
 
                         elsif Str = "" then
                            Messages.Append
@@ -509,7 +509,7 @@ package body GPR2.Parser.Project is
                                      (Filename, Sloc_Range (Str_Node)),
                                  Message =>
                                    "split first parameter must not "
-                                 & "be empty"));
+                                   & "be empty"));
                         end if;
                      end;
 
@@ -541,7 +541,7 @@ package body GPR2.Parser.Project is
                                         (Filename, Sloc_Range (Sep_Node)),
                                     Message =>
                                       "split separator parameter must "
-                                    & "be a simple string"));
+                                      & "be a simple string"));
 
                            elsif Sep = "" then
                               Messages.Append
@@ -552,7 +552,7 @@ package body GPR2.Parser.Project is
                                         (Filename, Sloc_Range (Sep_Node)),
                                     Message =>
                                       "split separator parameter must not "
-                                    & "be empty"));
+                                      & "be empty"));
                            end if;
                         end;
                      end if;
@@ -720,8 +720,8 @@ package body GPR2.Parser.Project is
                                         (Filename, Sloc_Range (Cur_Child)),
                                     Message =>
                                       String (Name)
-                                    & " has duplicate value '"
-                                    & String (Value) & '''));
+                                      & " has duplicate value '"
+                                      & String (Value) & '''));
                            else
                               Set.Insert (Value);
                               List.Append (Value);
@@ -1419,7 +1419,7 @@ package body GPR2.Parser.Project is
                                      (Self.File, Sloc_Range (Parameters)),
                                  Message =>
                                    "external default parameter must be a "
-                                 & "simple string"));
+                                   & "simple string"));
                         end if;
                      end;
 
@@ -2153,7 +2153,7 @@ package body GPR2.Parser.Project is
                      Sloc    => Sloc,
                      Message =>
                        "package '" & String (Project) & '.' & String (P_Name)
-                     & "' is undefined"));
+                       & "' is undefined"));
 
             else
                --  Then just copy the attributes into the current package
@@ -2208,7 +2208,7 @@ package body GPR2.Parser.Project is
                      Sloc    => Sloc,
                      Message =>
                        "package '" & String (Project) & '.' & String (P_Name)
-                     & "' is undefined"));
+                       & "' is undefined"));
 
             else
                --  Then just copy the attributes into the current package
