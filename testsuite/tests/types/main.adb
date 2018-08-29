@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--          Copyright (C) 2016-2018, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -27,6 +27,7 @@ with Ada.Strings.Fixed;
 
 with GPR2.Context;
 with GPR2.Project.Tree;
+with GPR2.Project.Typ;
 
 procedure Main is
 
@@ -46,6 +47,14 @@ procedure Main is
    begin
       Project.Tree.Load (Prj, Create (Name_Type (Filename)), Ctx);
       Text_IO.Put_Line ("All good, no message.");
+
+      for T of Prj.Root_Project.Types loop
+         Text_IO.Put ("Type : " & String (T.Name) & " -");
+
+         for V of T.Values loop
+            Text_IO.Put (' ' & V);
+         end loop;
+      end loop;
 
    exception
       when GPR2.Project_Error =>
@@ -71,4 +80,5 @@ procedure Main is
 begin
    Load ("demo.gpr");
    Load ("demo2.gpr");
+   Load ("demo3.gpr");
 end Main;

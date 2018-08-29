@@ -330,6 +330,21 @@ package body GPR2.Project.View is
       return not Definition.Get (Self).Sources.Is_Empty;
    end Has_Sources;
 
+   ---------------
+   -- Has_Types --
+   ---------------
+
+   function Has_Types
+     (Self : Object;
+      Name : Optional_Name_Type := "") return Boolean is
+   begin
+      if Name = No_Name then
+         return not Definition.Get (Self).Types.Is_Empty;
+      else
+         return Definition.Get (Self).Types.Contains (Name);
+      end if;
+   end Has_Types;
+
    -------------------
    -- Has_Variables --
    -------------------
@@ -841,6 +856,24 @@ package body GPR2.Project.View is
    begin
       return Definition.Get (Self).Tree;
    end Tree;
+
+   ---------
+   -- Typ --
+   ---------
+
+   function Typ (Self : Object; Name : Name_Type) return Project.Typ.Object is
+   begin
+      return Definition.Get (Self).Types (Name);
+   end Typ;
+
+   -----------
+   -- Types --
+   -----------
+
+   function Types (Self : Object) return Project.Typ.Set.Object is
+   begin
+      return Definition.Get (Self).Types;
+   end Types;
 
    --------------------
    -- Update_Sources --

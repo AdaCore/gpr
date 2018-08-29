@@ -1,0 +1,3 @@
+project Demo3 is
+   type Whatever is ("one", "two", "ONE");
+end Demo3;

@@ -34,6 +34,7 @@ with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
+with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 
 limited with GPR2.Project.Source.Set;
@@ -47,6 +48,7 @@ package GPR2.Project.View is
    use type Containers.Count_Type;
    use type Context.Object;
    use type Attribute.Object;
+   use type Typ.Object;
    use type Variable.Object;
 
    type Object is tagged private;
@@ -161,6 +163,26 @@ package GPR2.Project.View is
          and then Self.Has_Attributes (Name, Index)
          and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
+
+   --  Types
+
+   function Has_Types
+     (Self : Object;
+      Name : Optional_Name_Type := "") return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns true if the project view has some types defined
+
+   function Types (Self : Object) return Typ.Set.Object
+     with Pre  => Self /= Undefined,
+          Post => (if Self.Has_Types then not Types'Result.Is_Empty);
+   --  Get the list of all types defined
+
+   function Typ (Self : Object; Name : Name_Type) return Typ.Object
+     with Pre  => Self /= Undefined and then Self.Has_Types (Name),
+          Post => Typ'Result /= Project.Typ.Undefined;
+   --  Returns the type with the given name
+
+   --  Variables
 
    function Has_Variables
      (Self : Object;
