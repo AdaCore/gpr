@@ -63,7 +63,8 @@ package GPR2.Parser.Project is
       View    : GPR2.Project.View.Object;
       Attrs   : in out GPR2.Project.Attribute.Set.Object;
       Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object)
+      Packs   : in out GPR2.Project.Pack.Set.Object;
+      Types   : in out GPR2.Project.Typ.Set.Object)
      with Pre => Self /= Undefined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback

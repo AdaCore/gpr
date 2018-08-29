@@ -2466,6 +2466,8 @@ package body GPR2.Parser.Project is
       Vars.Clear;
       Packs.Clear;
 
+      Types := Self.Types;
+
       --  Re-Analyze the project given the new definitions (variables or
       --  attributes).
 

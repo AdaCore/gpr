@@ -30,6 +30,7 @@ with GPR2.Parser.Project.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Source.Set;
+with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Unit.Set;
@@ -83,6 +84,7 @@ private package GPR2.Project.Definition is
       Attrs             : Project.Attribute.Set.Object;
       Vars              : Project.Variable.Set.Object;
       Packs             : Project.Pack.Set.Object;
+      Types             : Project.Typ.Set.Object;
 
       Sources           : Project.Source.Set.Object;
       Sources_Signature : Context.Binary_Signature :=

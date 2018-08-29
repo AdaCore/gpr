@@ -1258,7 +1258,8 @@ package body GPR2.Project.Tree is
             View,
             P_Data.Attrs,
             P_Data.Vars,
-            P_Data.Packs);
+            P_Data.Packs,
+            P_Data.Types);
 
          --  If an aggregate project and an attribute external is defined then
          --  remove the dependency on the corresponding externalq.
