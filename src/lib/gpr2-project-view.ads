@@ -171,12 +171,12 @@ package GPR2.Project.View is
    function Variables (Self : Object) return Variable.Set.Object
      with Pre  => Self /= Undefined,
           Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
-   --  Get the list of variables, possibly an empty list if it does not
-   --  contain variables.
+   --  Get the list of all variables defined
 
    function Variable (Self : Object; Name : Name_Type) return Variable.Object
      with Pre  => Self /= Undefined and then Self.Has_Variables (Name),
           Post => Variable'Result /= Project.Variable.Undefined;
+   --  Returns the variable with the given name
 
    --  Packages
 
