@@ -688,6 +688,7 @@ package body GPR2.Parser.Project is
                Num_Childs : constant Natural := Children_Count (Values);
                Cur_Child  : GPR_Node;
                Set        : Containers.Value_Set;
+               List       : Containers.Value_List;
             begin
                if Project.Types.Contains (Name) then
                   Messages.Append
@@ -723,12 +724,18 @@ package body GPR2.Parser.Project is
                                     & String (Value) & '''));
                            else
                               Set.Insert (Value);
+                              List.Append (Value);
                            end if;
                         end;
                      end if;
                   end loop;
 
-                  Project.Types.Insert (Name, Set);
+                  Project.Types.Insert
+                    (Name,
+                     GPR2.Project.Typ.Create
+                       (Name, List,
+                        Get_Source_Reference
+                          (Filename, Sloc_Range (F_Type_Id (N)))));
                end if;
             end Parse_Typed_String_Decl;
 
@@ -936,7 +943,8 @@ package body GPR2.Parser.Project is
       View    : GPR2.Project.View.Object;
       Attrs   : in out GPR2.Project.Attribute.Set.Object;
       Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object)
+      Packs   : in out GPR2.Project.Pack.Set.Object;
+      Types   : in out GPR2.Project.Typ.Set.Object)
    is
 
       type Item_Values is record
@@ -2242,7 +2250,7 @@ package body GPR2.Parser.Project is
                                  (if Type_N2.Is_Null
                                   then Single_Tok_Node (Type_N1)
                                   else Single_Tok_Node (Type_N2));
-                  Type_Def : Containers.Value_Set;
+                  Type_Def : GPR2.Project.Typ.Object;
                begin
                   if not Type_N2.Is_Null then
                      --  We have a project prefix for the type name
@@ -2269,7 +2277,7 @@ package body GPR2.Parser.Project is
                      end;
                   end if;
 
-                  if Type_Def.Is_Empty then
+                  if Type_Def.Count_Values = 0 then
                      if Self.Types.Contains (T_Name) then
                         Type_Def := Self.Types (T_Name);
 
@@ -2292,13 +2300,13 @@ package body GPR2.Parser.Project is
 
                   --  Check that the type has been defined
 
-                  if not Type_Def.Is_Empty then
+                  if Type_Def.Count_Values /= 0 then
                      --  Check that we have a single value
 
                      if Values.Single then
                         --  Check that the value is part of the type
 
-                        if not Type_Def.Contains
+                        if not Type_Def.Values.Contains
                           (Values.Values.First_Element)
                         then
                            Tree.Log_Messages.Append

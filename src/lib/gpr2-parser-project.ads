@@ -29,12 +29,12 @@ with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Pack.Set;
+with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 
 limited with GPR2.Project.Tree;
 
-private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Strings.Unbounded;
 private with GPR_Parser.Analysis;
 
@@ -123,10 +123,6 @@ private
    use Ada.Strings.Unbounded;
    use GPR_Parser.Analysis;
 
-   package Type_Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, GPR2.Containers.Value_Set,
-      "=" => GPR2.Containers.Value_Type_Set."=");
-
    type Object is tagged record
       Name      : Unbounded_String;
       File      : GPR2.Path_Name.Object;
@@ -135,8 +131,8 @@ private
       Imports   : GPR2.Project.Import.Set.Object;
       Extended  : GPR2.Project.Import.Object := GPR2.Project.Import.Undefined;
       Is_All    : Boolean := False;
-      Types     : Type_Set.Map;
       Unit      : Analysis_Unit := No_Analysis_Unit;
+      Types     : GPR2.Project.Typ.Set.Object;
       Context   : Analysis_Context := No_Analysis_Context;
    end record;
 
