@@ -27,9 +27,9 @@ with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Import.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Project.Import.Set;
 with GPR2.Project.View;
 
 limited with GPR2.Project.Tree;
