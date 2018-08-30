@@ -34,6 +34,7 @@
 
 with GNAT.MD5;
 
+private with Ada.Directories;
 private with Ada.Strings.Unbounded;
 
 package GPR2.Path_Name is
@@ -79,7 +80,11 @@ package GPR2.Path_Name is
 
    function Base_Name (Self : Object) return Simple_Name
      with Pre => Self /= Undefined;
-   --  Returns the base name for Self
+   --  Returns the base name for Self (no extension)
+
+   function Simple_Name (Self : Object) return GPR2.Simple_Name
+     with Pre => Self /= Undefined;
+   --  Returns the base name for Self (with extension)
 
    function Dir_Name (Self : Object) return Full_Name
      with Pre  => Self /= Undefined,
@@ -138,8 +143,11 @@ private
    function "<" (Left, Right : Object) return Boolean
      is (Left.Value < Right.Value);
 
-   function Base_Name (Self : Object) return Simple_Name is
-     (Simple_Name (To_String (Self.Base_Name)));
+   function Base_Name (Self : Object) return GPR2.Simple_Name is
+     (GPR2.Simple_Name (To_String (Self.Base_Name)));
+
+   function Simple_Name (Self : Object) return GPR2.Simple_Name is
+     (GPR2.Simple_Name (Ada.Directories.Simple_Name (To_String (Self.As_Is))));
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.As_Is)));
