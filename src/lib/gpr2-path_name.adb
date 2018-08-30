@@ -30,7 +30,6 @@ with System;
 
 with GPR.Tempdir;
 with GPR.Util;
-with GPR;
 
 with GNAT.OS_Lib;
 
