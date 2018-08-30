@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -57,6 +57,26 @@ package body GPR2.Project.Name_Values is
       return Object'
         (Sloc with List, To_Unbounded_String (String (Name)), Values);
    end Create;
+
+   -----------
+   -- Image --
+   -----------
+
+   function Image (Self : Object; Name_Len : Natural := 0) return String is
+      Result : Unbounded_String := Self.Name;
+   begin
+      if Name_Len > 0 and then Length (Result) < Name_Len then
+         Append (Result, (Name_Len - Integer (Length (Result))) * ' ');
+      end if;
+
+      Append (Result, " :");
+
+      for V of Self.Values loop
+         Append (Result, ' ' & V);
+      end loop;
+
+      return To_String (Result);
+   end Image;
 
    ----------
    -- Kind --

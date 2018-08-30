@@ -80,8 +80,13 @@ package GPR2.Project.Name_Values is
    --  Returns the values for the Name/Values pair object
 
    function Value (Self : Object) return Value_Type
-     with Pre  => Self /= Undefined and then Self.Kind = Single;
+     with Pre => Self /= Undefined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
+
+   function Image (Self : Object; Name_Len : Natural := 0) return String;
+   --  Returns a string representation. Name_Len represents the length in
+   --  character than the Name should take, so possibly some space padding
+   --  are added.
 
 private
 

@@ -102,6 +102,10 @@ package GPR2.Project.Attribute is
    --  Sets attribute case sensitivity for the index and the value.
    --  By default both are case-sensitive.
 
+   overriding function Image
+     (Self : Object; Name_Len : Natural := 0) return String;
+   --  Returns a string representation
+
    Default_Source_Dirs : constant Object;
 
 private

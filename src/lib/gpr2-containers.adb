@@ -22,32 +22,30 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Some common containers for Name, Value
+with Ada.Strings.Unbounded;
 
-with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Indefinite_Ordered_Sets;
+package body GPR2.Containers is
 
-package GPR2.Containers is
+   function Image (Values : Value_List) return String is
+      use Ada.Strings.Unbounded;
 
-   subtype Count_Type is Ada.Containers.Count_Type;
+      Result : Unbounded_String;
+      First  : Boolean := True;
+   begin
+      Append (Result, '(');
 
-   package Name_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Name_Type);
+      for V of Values loop
+         if not First then
+            Append (Result, ", ");
+         end if;
 
-   subtype Name_List is Name_Type_List.Vector;
+         Append (Result, '"' & String (V) & '"');
+         First := False;
+      end loop;
 
-   package Value_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
+      Append (Result, ')');
 
-   subtype Value_List is Value_Type_List.Vector;
-   subtype Extended_Index is Value_Type_List.Extended_Index;
-
-   function Image (Values : Value_List) return String;
-   --  Returns a string representation of the list of values
-
-   package Value_Type_Set is
-     new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);
-
-   subtype Value_Set is Value_Type_Set.Set;
+      return To_String (Result);
+   end Image;
 
 end GPR2.Containers;

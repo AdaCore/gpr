@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--            Copyright (C) 2018, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,32 +22,60 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Some common containers for Name, Value
+with Ada.Strings.Unbounded;
 
-with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Indefinite_Ordered_Sets;
+with GPR2.Project.Registry.Attribute;
 
-package GPR2.Containers is
+package body GPR2.Project.Variable is
 
-   subtype Count_Type is Ada.Containers.Count_Type;
+   -----------
+   -- Image --
+   -----------
 
-   package Name_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Name_Type);
+   overriding function Image
+     (Self     : Object;
+      Name_Len : Natural := 0) return String
+   is
 
-   subtype Name_List is Name_Type_List.Vector;
+      use Ada.Strings.Unbounded;
+      use GPR2.Project.Registry.Attribute;
+      use all type GPR2.Project.Name_Values.Object;
 
-   package Value_Type_List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
+      Name   : constant String := String (Self.Name);
+      Result : Unbounded_String := To_Unbounded_String (Name);
+   begin
+      if Name_Len > 0 and then Name'Length < Name_Len then
+         Append (Result, (Name_Len - Name'Length) * ' ');
+      end if;
 
-   subtype Value_List is Value_Type_List.Vector;
-   subtype Extended_Index is Value_Type_List.Extended_Index;
+      Append (Result, " := ");
 
-   function Image (Values : Value_List) return String;
-   --  Returns a string representation of the list of values
+      case Self.Kind is
+         when Single =>
+            Append (Result, '"' & Self.Value & '"');
 
-   package Value_Type_Set is
-     new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);
+         when List =>
+            declare
+               First : Boolean := True;
+            begin
+               Append (Result, '(');
 
-   subtype Value_Set is Value_Type_Set.Set;
+               for V of Self.Values loop
+                  if not First then
+                     Append (Result, ", ");
+                  end if;
 
-end GPR2.Containers;
+                  Append (Result, '"' & String (V) & '"');
+                  First := False;
+               end loop;
+
+               Append (Result, ')');
+            end;
+      end case;
+
+      Append (Result, ';');
+
+      return To_String (Result);
+   end Image;
+
+end GPR2.Project.Variable;

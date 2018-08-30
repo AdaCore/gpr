@@ -1,0 +1,5 @@
+description:
+    Check images for attributes, variables and types
+driver: build_and_run
+project_file: declimg
+main: main

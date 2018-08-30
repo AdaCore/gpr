@@ -30,6 +30,10 @@ package GPR2.Project.Typ is
 
    Undefined : constant Object;
 
+   overriding function Image
+     (Self : Object; Name_Len : Natural := 0) return String;
+   --  Returns a string representation
+
 private
 
    type Object is new Name_Values.Object with null record;

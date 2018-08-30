@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,9 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Equal_Case_Insensitive; use Ada.Strings;
+with Ada.Strings.Equal_Case_Insensitive;
 
 package body GPR2.Project.Attribute is
+
+   use Ada.Strings;
 
    ------------
    -- Create --
@@ -84,6 +86,45 @@ package body GPR2.Project.Attribute is
    begin
       return Self.Index /= Null_Unbounded_String;
    end Has_Index;
+
+   -----------
+   -- Image --
+   -----------
+
+   overriding function Image
+     (Self     : Object;
+      Name_Len : Natural := 0) return String
+   is
+      use GPR2.Project.Registry.Attribute;
+      use all type GPR2.Project.Name_Values.Object;
+
+      Name   : constant String := String (Self.Name);
+      Result : Unbounded_String := To_Unbounded_String ("for ");
+   begin
+      Append (Result, Name);
+
+      if Name_Len > 0 and then Name'Length < Name_Len then
+         Append (Result, (Name_Len - Name'Length) * ' ');
+      end if;
+
+      if Self.Has_Index then
+         Append (Result, " (""" & To_String (Self.Index) & """)");
+      end if;
+
+      Append (Result, " use ");
+
+      case Self.Kind is
+         when Single =>
+            Append (Result, '"' & Self.Value & '"');
+
+         when List =>
+            Append (Result, Containers.Image (Self.Values));
+      end case;
+
+      Append (Result, ';');
+
+      return To_String (Result);
+   end Image;
 
    -----------
    -- Index --

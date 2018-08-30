@@ -1,0 +1,17 @@
+Demo     K_STANDARD
+
+for Languages use ("Ada", "c");
+for Object_Dir use "obj";
+
+for Languages       use ("Ada", "c");
+for Object_Dir      use "obj";
+
+type Yes_No is ("Yes", "No");
+
+v := "titi";
+var1 := "toto";
+varxx := ("xxxx", "yy");
+
+v     := "titi";
+var1  := "toto";
+varxx := ("xxxx", "yy");
