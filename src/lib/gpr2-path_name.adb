@@ -66,8 +66,7 @@ package body GPR2.Path_Name is
      (Self : Object; Name : Name_Type) return Object is
    begin
       return Create_File
-        (Name_Type
-           (Ensure_Directory (To_String (Self.As_Is)) & String (Name)));
+        (Name_Type (Ensure_Directory (Dir_Name (Self) & String (Name))));
    end Compose;
 
    -----------------
