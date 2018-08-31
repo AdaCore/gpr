@@ -56,6 +56,8 @@ package GPR2.Project.Configuration is
      with Dynamic_Predicate => Description_Set'Length > 0;
    --  A set of description
 
+   Default_Description : constant Description_Set;
+
    function Create
      (Language : Name_Type;
       Version  : Optional_Name_Type := No_Name;
@@ -133,5 +135,9 @@ private
    end record;
 
    Undefined : constant Object := (others => <>);
+
+   Default_Description : constant Description_Set (1 .. 1) :=
+                           (1 => (Language => To_Unbounded_String ("ada"),
+                                  others   => <>));
 
 end GPR2.Project.Configuration;
