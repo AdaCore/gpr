@@ -65,8 +65,7 @@ package body GPR2.Path_Name is
    function Compose
      (Self : Object; Name : Name_Type) return Object is
    begin
-      return Create_File
-        (Name_Type (Ensure_Directory (Dir_Name (Self) & String (Name))));
+      return Create_File (Name_Type (Dir_Name (Self) & String (Name)));
    end Compose;
 
    -----------------
