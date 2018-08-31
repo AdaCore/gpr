@@ -215,6 +215,13 @@ package GPR2.Project.View is
 
    --  Sources
 
+   function Languages (Self : Object) return Containers.Value_List
+     with Pre  => Self /= Undefined,
+          Post => Languages'Result.Length > 0;
+   --  Returns the languages used on this project, this is not necessary the
+   --  content of the Languages attribute as if not defined it returns the
+   --  default language Ada.
+
    function Source_Directories (Self : Object) return Project.Attribute.Object
      with Pre => Self /= Undefined
                  and then Self.Qualifier not in K_Aggregate | K_Abstract;
