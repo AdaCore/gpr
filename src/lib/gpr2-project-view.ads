@@ -45,9 +45,9 @@ private with GPR2.Project.Registry.Attribute;
 
 package GPR2.Project.View is
 
+   use type Attribute.Object;
    use type Containers.Count_Type;
    use type Context.Object;
-   use type Attribute.Object;
    use type Typ.Object;
    use type Variable.Object;
 
