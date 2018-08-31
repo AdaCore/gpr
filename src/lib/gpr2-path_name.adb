@@ -251,9 +251,9 @@ package body GPR2.Path_Name is
          N := N + 1;
       end if;
 
-      return Create_File
-        (Name_Type
-           (String'(N * "../") & Ensure_Directory (P (Pi + 1 .. P'Last))));
+      return Create_Directory
+        (Name_Type (String'(N * "../") & P (Pi + 1 .. P'Last)),
+         Optional_Name_Type (To_Path));
    end Relative_Path;
 
    -------------------------
