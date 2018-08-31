@@ -49,12 +49,6 @@ package body GPR2.Project.View is
 
    use Ada.Strings.Unbounded;
 
-   function Naming_Package (Self : Object) return Pack.Object;
-   --  Returns the Naming package for the current view. This is either
-   --  the view Naming package, the project's tree Naming package from the
-   --  loaded configuration project if any and finally the default Naming
-   --  package.
-
    Builtin_Naming_Package : Pack.Object;
    --  The default naming package to use if no Naming package specified in the
    --  project and no configuration file loaded. We at least want to handle in

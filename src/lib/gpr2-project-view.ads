@@ -48,6 +48,7 @@ package GPR2.Project.View is
    use type Attribute.Object;
    use type Containers.Count_Type;
    use type Context.Object;
+   use type Pack.Object;
    use type Typ.Object;
    use type Variable.Object;
 
@@ -212,6 +213,14 @@ package GPR2.Project.View is
      with Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
    --  Get the list of packages, possibly an empty list if it does not
    --  contain packages.
+
+   function Naming_Package (Self : Object) return Pack.Object
+     with Pre  => Self /= Undefined,
+          Post => Naming_Package'Result /= Pack.Undefined;
+   --  Returns the Naming package for the current view. This is either
+   --  the view Naming package, the project's tree Naming package from the
+   --  loaded configuration project if any and finally the default Naming
+   --  package.
 
    --  Sources
 
