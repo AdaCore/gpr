@@ -210,9 +210,9 @@ package GPR2.Project.View is
    --  Returns true if the project view has some packages defined
 
    function Packages (Self : Object) return Pack.Set.Object
-     with Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
-   --  Get the list of packages, possibly an empty list if it does not
-   --  contain packages.
+     with Pre  => Self /= Undefined and then Self.Has_Packages,
+          Post => Packages'Result.Length > 0;
+   --  Get the list of packages defined in the project
 
    function Naming_Package (Self : Object) return Pack.Object
      with Pre  => Self /= Undefined,
