@@ -49,7 +49,7 @@ package body GPR2.Project.View is
 
    use Ada.Strings.Unbounded;
 
-   Builtin_Naming_Package : Pack.Object;
+   Builtin_Naming_Package : Project.Pack.Object;
    --  The default naming package to use if no Naming package specified in the
    --  project and no configuration file loaded. We at least want to handle in
    --  this case the standard Ada and C namings.
@@ -669,12 +669,12 @@ package body GPR2.Project.View is
    -- Naming_Package --
    --------------------
 
-   function Naming_Package (Self : Object) return Pack.Object is
+   function Naming_Package (Self : Object) return Project.Pack.Object is
       Data : constant Definition.Data := Definition.Get (Self);
    begin
       if Self.Has_Packages (Registry.Pack.Naming) then
          declare
-            Naming : constant Pack.Object :=
+            Naming : constant Project.Pack.Object :=
                        Self.Packages.Element (Registry.Pack.Naming);
             Result : Project.Attribute.Set.Object :=
                        Builtin_Naming_Package.Attributes;
@@ -723,11 +723,22 @@ package body GPR2.Project.View is
         (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
    end Object_Directory;
 
+   ----------
+   -- Pack --
+   ----------
+
+   function Pack
+     (Self : Object;
+      Name : Name_Type) return Project.Pack.Object is
+   begin
+      return Definition.Get (Self).Packs (Name);
+   end Pack;
+
    --------------
    -- Packages --
    --------------
 
-   function Packages (Self : Object) return Pack.Set.Object is
+   function Packages (Self : Object) return Project.Pack.Set.Object is
    begin
       return Definition.Get (Self).Packs;
    end Packages;
@@ -957,7 +968,7 @@ package body GPR2.Project.View is
              or else A.Name = Registry.Attribute.Implementation);
       --  Fill the Naming_Exceptions object with the given attribute set values
 
-      Naming : constant Pack.Object := Naming_Package (Self);
+      Naming : constant Project.Pack.Object := Naming_Package (Self);
       --  Package Naming for the view
 
       Dot_Repl : constant String :=
@@ -1955,7 +1966,7 @@ begin
       Attrs.Insert (C_Body);
       Attrs.Insert (Dot_Repl);
       Builtin_Naming_Package :=
-        Pack.Create
+        Project.Pack.Create
           (Registry.Pack.Naming,
            Attrs, Project.Variable.Set.Set.Empty_Map,
            Undef_Sloc);

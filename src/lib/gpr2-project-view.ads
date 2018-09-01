@@ -214,9 +214,14 @@ package GPR2.Project.View is
           Post => Packages'Result.Length > 0;
    --  Get the list of packages defined in the project
 
-   function Naming_Package (Self : Object) return Pack.Object
+   function Pack (Self : Object; Name : Name_Type) return Pack.Object
+     with Pre  => Self /= Undefined and then Self.Has_Packages (Name),
+          Post => Pack'Result /= Project.Pack.Undefined;
+   --  Get the package with the given Name
+
+   function Naming_Package (Self : Object) return Project.Pack.Object
      with Pre  => Self /= Undefined,
-          Post => Naming_Package'Result /= Pack.Undefined;
+          Post => Naming_Package'Result /= Project.Pack.Undefined;
    --  Returns the Naming package for the current view. This is either
    --  the view Naming package, the project's tree Naming package from the
    --  loaded configuration project if any and finally the default Naming
