@@ -438,8 +438,8 @@ package body GPR2.Project.View is
 
    function Languages (Self : Object) return Containers.Value_List is
    begin
-      if Self.Has_Attributes (Registry.Attribute.Languages) then
-         return Self.Attribute (Registry.Attribute.Languages).Values;
+      if Self.Attributes.Has_Languages then
+         return Self.Attributes.Languages.Values;
       else
          return Builtin_Languages.Values;
       end if;

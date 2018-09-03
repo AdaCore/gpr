@@ -364,14 +364,12 @@ private
    function "<" (Left, Right : Object) return Boolean is
      (Left.Id < Right.Id);
 
-   Undefined  : constant Object := (Id => 0);
+   Undefined : constant Object := (Id => 0);
 
    function Library_Name (Self : Object) return Name_Type is
-     (Name_Type
-        (Self.Attribute (GPR2.Project.Registry.Attribute.Library_Name).Value));
+     (Name_Type (Self.Attribute (Registry.Attribute.Library_Name).Value));
 
    function Has_Library_Version (Self : Object) return Boolean is
-     (Self.Has_Attributes
-        (GPR2.Project.Registry.Attribute.Library_Version));
+     (Self.Has_Attributes (Project.Registry.Attribute.Library_Version));
 
 end GPR2.Project.View;
