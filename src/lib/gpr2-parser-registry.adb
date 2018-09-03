@@ -137,7 +137,6 @@ package body GPR2.Parser.Registry is
          if D.Ref = 0 then
             --  No more reference to this tree, clean it
 
-            D.Project.Unload;
             Store.Delete (Pathname);
 
          else

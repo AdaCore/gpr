@@ -766,7 +766,7 @@ package body GPR2.Project.View is
    -------------
 
    procedure Release (Self : in out Object) is
-      Data : Definition.Data := Definition.Get (Self);
+      Data : constant Definition.Data := Definition.Get (Self);
    begin
       for C in Data.Sources.Iterate loop
          declare
@@ -775,8 +775,6 @@ package body GPR2.Project.View is
             S.Release;
          end;
       end loop;
-
-      Data.Trees.Project.Unload;
 
       Self := Undefined;
    end Release;

@@ -52,10 +52,6 @@ package GPR2.Parser.Project is
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
 
-   procedure Unload (Self : in out Object)
-     with Pre => Self /= Undefined;
-   --  Unload the object and release all associated memory
-
    procedure Process
      (Self    : in out Object;
       Tree    : GPR2.Project.Tree.Object;

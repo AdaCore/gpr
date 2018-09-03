@@ -2493,16 +2493,4 @@ package body GPR2.Parser.Project is
       return Self.Qualifier;
    end Qualifier;
 
-   ------------
-   -- Unload --
-   ------------
-
-   procedure Unload (Self : in out Object) is
-      pragma Unreferenced (Self);
-   begin
-      --  ??? Is this procedure still needed now that analysis units benefit
-      --  from automatic memory management?
-      null;
-   end Unload;
-
 end GPR2.Parser.Project;
