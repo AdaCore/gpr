@@ -2226,6 +2226,8 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Variable_Decl (Node : Variable_Decl) is
 
+            use type GPR2.Project.Typ.Object;
+
             function Search_Paths return GPR2.Path_Name.Set.Object is
               (GPR2.Project.Search_Paths
                  (Self.File, Tree.Project_Search_Paths));
@@ -2250,7 +2252,8 @@ package body GPR2.Parser.Project is
                                  (if Type_N2.Is_Null
                                   then Single_Tok_Node (Type_N1)
                                   else Single_Tok_Node (Type_N2));
-                  Type_Def : GPR2.Project.Typ.Object;
+                  Type_Def : GPR2.Project.Typ.Object :=
+                               GPR2.Project.Typ.Undefined;
                begin
                   if not Type_N2.Is_Null then
                      --  We have a project prefix for the type name
@@ -2277,7 +2280,9 @@ package body GPR2.Parser.Project is
                      end;
                   end if;
 
-                  if Type_Def.Count_Values = 0 then
+                  if Type_Def = GPR2.Project.Typ.Undefined
+                    or else Type_Def.Count_Values = 0
+                  then
                      if Self.Types.Contains (T_Name) then
                         Type_Def := Self.Types (T_Name);
 
@@ -2300,7 +2305,9 @@ package body GPR2.Parser.Project is
 
                   --  Check that the type has been defined
 
-                  if Type_Def.Count_Values /= 0 then
+                  if Type_Def /= GPR2.Project.Typ.Undefined
+                    and then Type_Def.Count_Values /= 0
+                  then
                      --  Check that we have a single value
 
                      if Values.Single then
