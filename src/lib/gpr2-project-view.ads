@@ -297,7 +297,8 @@ package GPR2.Project.View is
    --  Returns the library name
 
    function Has_Library_Version (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Retruns whether the optional library version name is defined
 
    function Library_Major_Version_Filename
