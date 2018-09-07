@@ -34,14 +34,13 @@ with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 
 limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
-
-private with GPR2.Project.Registry.Attribute;
 
 package GPR2.Project.View is
 
@@ -295,6 +294,14 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library name
+
+   function Library_Kind (Self : Object) return Name_Type
+     with Pre  => Self /= Undefined
+                  and then Self.Kind in K_Library | K_Aggregate_Library,
+          Post => Self.Has_Attributes (Project.Registry.Attribute.Library_Kind)
+                  or else Library_Kind'Result = "static";
+   --  Returns the library kind, "static" if the corresponding attribute is not
+   --  defined.
 
    function Has_Library_Version (Self : Object) return Boolean
      with Pre => Self /= Undefined

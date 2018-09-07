@@ -517,6 +517,20 @@ package body GPR2.Project.View is
          Directory =>  Optional_Name_Type (Self.Library_Directory.Dir_Name));
    end Library_Filename;
 
+   ------------------
+   -- Library_Kind --
+   ------------------
+
+   function Library_Kind (Self : Object) return Name_Type is
+      package A renames GPR2.Project.Registry.Attribute;
+   begin
+      if Self.Has_Attributes (A.Library_Kind) then
+         return Name_Type (Self.Attribute (A.Library_Kind).Value);
+      else
+         return "static";
+      end if;
+   end Library_Kind;
+
    --------------------------------
    -- Library_Major_Version_Name --
    --------------------------------
