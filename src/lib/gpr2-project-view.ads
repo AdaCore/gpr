@@ -303,6 +303,12 @@ package GPR2.Project.View is
    --  Returns the library kind, "static" if the corresponding attribute is not
    --  defined.
 
+   function Is_Static_Library (Self : Object) return Boolean
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns True if the library is a static one, so either static or
+   --  static-pic.
+
    function Has_Library_Version (Self : Object) return Boolean
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;

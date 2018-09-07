@@ -423,6 +423,16 @@ package body GPR2.Project.View is
             (Project.Registry.Attribute.Externally_Built).Value = "yes";
    end Is_Externally_Built;
 
+   -----------------------
+   -- Is_Static_Library --
+   -----------------------
+
+   function Is_Static_Library (Self : Object) return Boolean is
+      LK : constant Name_Type := Self.Library_Kind;
+   begin
+      return LK = "static" or else LK = "static-pic";
+   end Is_Static_Library;
+
    ----------
    -- Kind --
    ----------
@@ -465,12 +475,6 @@ package body GPR2.Project.View is
 
       package A renames GPR2.Project.Registry.Attribute;
 
-      Is_Static : constant Boolean :=
-                    (Self.Kind = K_Library
-                     and then Self.Has_Attributes (A.Library_Kind)
-                     and then Self.Attribute
-                       (A.Library_Kind).Value = "static");
-
       function Config_Has_Attribute (Name : Name_Type) return Boolean is
         (Self.Tree.Has_Configuration
          and then
@@ -484,7 +488,7 @@ package body GPR2.Project.View is
    begin
       --  Library prefix
 
-      if not Is_Static
+      if not Self.Is_Static_Library
         and then Config_Has_Attribute (A.Shared_Lib_Prefix)
       then
          Append (File_Name, Config.Attribute (A.Shared_Lib_Prefix).Value);
@@ -498,12 +502,12 @@ package body GPR2.Project.View is
 
       --  Library suffix
 
-      if Is_Static
+      if Self.Is_Static_Library
         and then Config_Has_Attribute (A.Archive_Suffix)
       then
          Append (File_Name, Config.Attribute (A.Archive_Suffix).Value);
 
-      elsif not Is_Static
+      elsif not Self.Is_Static_Library
         and then Config_Has_Attribute (A.Shared_Lib_Suffix)
       then
          Append (File_Name, Config.Attribute (A.Shared_Lib_Suffix).Value);
