@@ -38,7 +38,7 @@ project GPR2.Tools is
    for Object_Dir use ".build/" & Build & "/obj-tools";
 
    for Main use ("gprremote.adb", "gprdump.adb", "gprinstall-main.adb",
-                 "gprclean.adb");
+                 "gprclean.adb", "gprname-main.adb");
 
    --------------
    -- Compiler --
@@ -81,6 +81,7 @@ project GPR2.Tools is
    package Builder is
       for Executable ("gprinstall-main.adb") use "gpr2install";
       for Executable ("gprclean.adb") use "gpr2clean";
+      for Executable ("gprname-main.adb") use "gpr2name";
 
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;
