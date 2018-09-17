@@ -150,7 +150,7 @@ procedure Main is
    Des : constant Configuration.Description :=
            Configuration.Create (Language => "Ada");
    Cnf : constant Configuration.Object :=
-           Configuration.Load (Configuration.Description_Set'(1 => Des));
+           Configuration.Create (Configuration.Description_Set'(1 => Des));
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;

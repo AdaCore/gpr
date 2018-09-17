@@ -118,7 +118,7 @@ procedure Main is
    Des : Configuration.Description :=
            Configuration.Create (Language => "Ada");
    Cnf : Configuration.Object :=
-           Configuration.Load (Configuration.Description_Set'(1 => Des));
+           Configuration.Create (Configuration.Description_Set'(1 => Des));
 begin
    if Cnf.Has_Messages then
       for M of Cnf.Log_Messages loop

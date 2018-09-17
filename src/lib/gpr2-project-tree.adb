@@ -726,7 +726,7 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object) is
    begin
-      Self.Conf := Project.Configuration.Create (Filename);
+      Self.Conf := Project.Configuration.Load (Filename);
 
       Set_Tree (Self, Self.Conf.Corresponding_View);
 

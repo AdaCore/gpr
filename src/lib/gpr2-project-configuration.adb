@@ -66,64 +66,6 @@ package body GPR2.Project.Configuration is
    end Create;
 
    function Create
-     (Filename : Path_Name.Object;
-      Target   : Name_Type := "all") return Object
-   is
-      Result  : Object;
-      Project : constant Parser.Project.Object :=
-                  Parser.Project.Parse (Filename, Result.Messages);
-      Data    : GPR2.Project.Definition.Data (Has_Context => False);
-   begin
-      --  Continue only if there is no parsing error on the configuration
-      --  project.
-
-      Data.Trees.Project := Project;
-      Data.Context_View  := View.Undefined;
-      Data.Status        := Definition.Root;
-      Data.Kind          := K_Configuration;
-
-      Result.Conf         := Definition.Register (Data);
-      Result.Target       :=
-        (if Target = "all"
-         then Null_Unbounded_String
-         else To_Unbounded_String (String (Target)));
-
-      return Result;
-   end Create;
-
-   ----------------------------
-   -- Dependency_File_Suffix --
-   ----------------------------
-
-   function Dependency_File_Suffix
-     (Self     : Object;
-      Language : Name_Type) return Name_Type
-   is
-      pragma Unreferenced (Self);
-   begin
-      --  ??? there is no attribute in the configuration file for this, so we
-      --  end up having hard coded value for Ada and all other languages.
-      if Language = "ada" then
-         return ".ali";
-      else
-         return ".d";
-      end if;
-   end Dependency_File_Suffix;
-
-   ------------------
-   -- Has_Messages --
-   ------------------
-
-   function Has_Messages (Self : Object) return Boolean is
-   begin
-      return not Self.Messages.Is_Empty;
-   end Has_Messages;
-
-   ----------
-   -- Load --
-   ----------
-
-   function Load
      (Settings : Description_Set;
       Target   : Name_Type := "all") return Object
    is
@@ -192,7 +134,7 @@ package body GPR2.Project.Configuration is
       Result.Conf := View.Undefined;
 
       if Success then
-         Result := Create (Create (Name_Type (Conf_Filename)), Target);
+         Result := Load (Create (Name_Type (Conf_Filename)), Target);
 
          for S of Settings loop
             Result.Descriptions.Append (S);
@@ -208,6 +150,64 @@ package body GPR2.Project.Configuration is
       if Directories.Exists (Conf_Filename) then
          Directories.Delete_File (Conf_Filename);
       end if;
+
+      return Result;
+   end Create;
+
+   ----------------------------
+   -- Dependency_File_Suffix --
+   ----------------------------
+
+   function Dependency_File_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Name_Type
+   is
+      pragma Unreferenced (Self);
+   begin
+      --  ??? there is no attribute in the configuration file for this, so we
+      --  end up having hard coded value for Ada and all other languages.
+      if Language = "ada" then
+         return ".ali";
+      else
+         return ".d";
+      end if;
+   end Dependency_File_Suffix;
+
+   ------------------
+   -- Has_Messages --
+   ------------------
+
+   function Has_Messages (Self : Object) return Boolean is
+   begin
+      return not Self.Messages.Is_Empty;
+   end Has_Messages;
+
+   ----------
+   -- Load --
+   ----------
+
+   function Load
+     (Filename : Path_Name.Object;
+      Target   : Name_Type := "all") return Object
+   is
+      Result  : Object;
+      Project : constant Parser.Project.Object :=
+                  Parser.Project.Parse (Filename, Result.Messages);
+      Data    : GPR2.Project.Definition.Data (Has_Context => False);
+   begin
+      --  Continue only if there is no parsing error on the configuration
+      --  project.
+
+      Data.Trees.Project := Project;
+      Data.Context_View  := View.Undefined;
+      Data.Status        := Definition.Root;
+      Data.Kind          := K_Configuration;
+
+      Result.Conf         := Definition.Register (Data);
+      Result.Target       :=
+        (if Target = "all"
+         then Null_Unbounded_String
+         else To_Unbounded_String (String (Target)));
 
       return Result;
    end Load;

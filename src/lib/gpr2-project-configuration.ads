@@ -68,12 +68,12 @@ package GPR2.Project.Configuration is
    --  used to retreive the available and corresponding compilers. That is,
    --  the compilers for the given language, the runtime if specificed, etc.
 
-   function Load
+   function Create
      (Settings : Description_Set;
       Target   : Name_Type := "all") return Object;
    --  Create a configuration based on the settings requested
 
-   function Create
+   function Load
      (Filename : Path_Name.Object;
       Target   : Name_Type := "all") return Object;
    --  Create a configuration object for the given configuration file
