@@ -118,6 +118,17 @@ package GPR2.Path_Name is
    --  starting from directory To. Note that the relative pathname is actually
    --  given by Relative_Path'Result.Name.
 
+   function Common_Prefix (Self, Path : Object) return Object
+     with Pre  => Self /= Undefined and then Path /= Undefined,
+          Post => Common_Prefix'Result = Undefined
+     or else
+       (Self.Value (1 .. Common_Prefix'Result.Value'Length)
+         = Common_Prefix'Result.Value
+        and then
+          Path.Value (1 .. Common_Prefix'Result.Value'Length)
+         = Common_Prefix'Result.Value);
+   --  Returns the longest common prefix for Self and Path
+
 private
 
    use Ada.Strings.Unbounded;

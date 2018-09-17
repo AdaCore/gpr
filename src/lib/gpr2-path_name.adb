@@ -58,6 +58,43 @@ package body GPR2.Path_Name is
           else Ensure_Directory (String (Directory)))
          & String (Name)));
 
+   -------------------
+   -- Common_Prefix --
+   -------------------
+
+   function Common_Prefix (Self, Path : Object) return Object is
+      P1 : constant String := To_String (Self.Value);
+      P2 : constant String := To_String (Path.Value);
+      I1 : Positive := P1'First;
+      I2 : Positive := P2'First;
+   begin
+      while I1 <= P1'Last
+        and then I2 <= P2'Last
+        and then P1 (I1) = P2 (I2)
+      loop
+         I1 := I1 + 1;
+         I2 := I2 + 1;
+      end loop;
+
+      if I1 <= P1'Last or else I2 <= P2'Last then
+         declare
+            CP : constant Name_Type := Name_Type (P1 (P1'First .. I1 - 1));
+         begin
+            if Self.Is_Dir then
+               return Create_Directory (CP);
+            else
+               return Create_File (CP);
+            end if;
+         end;
+
+      elsif I1 > P1'Last then
+         return Path;
+
+      else
+         return Self;
+      end if;
+   end Common_Prefix;
+
    -------------
    -- Compose --
    -------------

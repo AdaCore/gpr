@@ -1,0 +1,5 @@
+description:
+    Test the common prefix routine
+driver: build_and_run
+project_file: common_prefix
+main: main
