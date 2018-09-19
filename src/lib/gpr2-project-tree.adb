@@ -927,8 +927,8 @@ package body GPR2.Project.Tree is
                      Path_Name : constant GPR2.Path_Name.Object :=
                                    Create
                                      ((if Data.Trees.Project.Extended.
-                                        Path_Name.Is_Regular_File then
-                                           Name_Type (Data.Trees.Project.
+                                        Path_Name.Is_Regular_File
+                                      then Name_Type (Data.Trees.Project.
                                           Extended.Path_Name.Value)
                                       else Data.Trees.Project.Extended.
                                         Path_Name.Name),
@@ -1107,8 +1107,8 @@ package body GPR2.Project.Tree is
                   Import_Filename : constant Path_Name.Object :=
                                       Create
                                         ((if Import.Path_Name.Is_Regular_File
-                                         then
-                                            Name_Type (Import.Path_Name.Value)
+                                         then Name_Type
+                                           (Import.Path_Name.Value)
                                          else Import.Path_Name.Name),
                                          Paths);
                begin
