@@ -105,12 +105,13 @@ package GPR2.Path_Name is
           Post => Compose'Result /= Undefined;
    --  Returns Name as sub-directory of Self : Self & '/' & Name
 
-   function Is_Regular_File (Self : Object) return Boolean
+   function Exists (Self : Object) return Boolean
      with Pre => Self /= Undefined;
-   --  Returns True if Self is an existing and readable file on disk
+   --  Returns True if Self is an existing and readable file or directory on
+   --  disk.
 
    function Content_MD5 (Self : Object) return GNAT.MD5.Message_Digest
-     with Pre => Self /= Undefined and then Self.Is_Regular_File;
+     with Pre => Self /= Undefined and then Self.Exists;
    --  Returns the MD5 signature for the given file
 
    procedure Create_Sym_Link (Self, To : Object)

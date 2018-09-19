@@ -227,14 +227,14 @@ package body GPR2.Path_Name is
       Result := Symlink (C_To'Address, C_From'Address);
    end Create_Sym_Link;
 
-   ---------------------
-   -- Is_Regular_File --
-   ---------------------
+   ------------
+   -- Exists --
+   ------------
 
-   function Is_Regular_File (Self : Object) return Boolean is
+   function Exists (Self : Object) return Boolean is
    begin
       return OS_Lib.Is_Regular_File (To_String (Self.Value));
-   end Is_Regular_File;
+   end Exists;
 
    -------------------
    -- Relative_Path --
