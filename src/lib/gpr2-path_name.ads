@@ -51,16 +51,22 @@ package GPR2.Path_Name is
    function "<" (Left, Right : Object) return Boolean;
    --  Returns True based on the normalized names
 
+   function Is_Directory (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if Self represent a directory
+
    function Create_File
      (Name      : Name_Type;
       Directory : Optional_Name_Type := "") return Object
-     with Post => Create_File'Result /= Undefined;
+     with Post => Create_File'Result /= Undefined
+                  and then not Create_File'Result.Is_Directory;
    --  Creates a Path_Name_Type for a file
 
    function Create_Directory
      (Name      : Name_Type;
       Directory : Optional_Name_Type := "") return Object
-     with Post => Create_Directory'Result /= Undefined;
+     with Post => Create_Directory'Result /= Undefined
+                  and then Create_Directory'Result.Is_Directory;
    --  Creates a Path_Name_Type for a directory
 
    function Create (Name, Path_Name : Name_Type) return Object
@@ -166,5 +172,7 @@ private
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name
         (To_String (if Self.Is_Dir then Self.Value else Self.Dir_Name)));
+
+   function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
 
 end GPR2.Path_Name;
