@@ -233,7 +233,7 @@ package body GPR2.Path_Name is
 
    function Is_Regular_File (Self : Object) return Boolean is
    begin
-      return OS_Lib.Is_Regular_File (Value (Self));
+      return OS_Lib.Is_Regular_File (To_String (Self.Value));
    end Is_Regular_File;
 
    -------------------

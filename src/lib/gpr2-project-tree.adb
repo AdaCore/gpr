@@ -926,13 +926,16 @@ package body GPR2.Project.Tree is
 
                      Path_Name : constant GPR2.Path_Name.Object :=
                                    Create
-                                     (Name_Type
-                                        (Data.Trees.Project.Extended.
-                                           Path_Name.Value),
+                                     ((if Data.Trees.Project.Extended.
+                                        Path_Name.Is_Regular_File then
+                                           Name_Type (Data.Trees.Project.
+                                          Extended.Path_Name.Value)
+                                      else Data.Trees.Project.Extended.
+                                        Path_Name.Name),
                                       Paths);
 
                   begin
-                     if Directories.Exists (Path_Name.Value) then
+                     if Path_Name.Is_Regular_File then
                         Push (Path_Name, Data.Trees.Project.Extended, True);
 
                         Data.Extended :=
@@ -952,7 +955,7 @@ package body GPR2.Project.Tree is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Message => "extended project file "
-                              & Path_Name.Value
+                              & String (Path_Name.Name)
                               & " not found",
                               Sloc    =>
                                 Source_Reference.Object
@@ -1103,10 +1106,13 @@ package body GPR2.Project.Tree is
                declare
                   Import_Filename : constant Path_Name.Object :=
                                       Create
-                                        (Name_Type (Import.Path_Name.Value),
+                                        ((if Import.Path_Name.Is_Regular_File
+                                         then
+                                            Name_Type (Import.Path_Name.Value)
+                                         else Import.Path_Name.Name),
                                          Paths);
                begin
-                  if Directories.Exists (Import_Filename.Value) then
+                  if Import_Filename.Is_Regular_File then
                      Data.Trees.Imports.Insert
                        (Import_Filename,
                         Parser.Project.Parse (Import_Filename, Messages));
@@ -1118,7 +1124,7 @@ package body GPR2.Project.Tree is
                        (GPR2.Message.Create
                           (Level   => Message.Error,
                            Message => "imported project file "
-                                        & Import.Path_Name.Value
+                                        & String (Import.Path_Name.Name)
                                         & " not found",
                            Sloc    => Source_Reference.Object (Import)));
                      exit;
