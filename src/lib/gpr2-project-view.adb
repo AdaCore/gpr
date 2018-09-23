@@ -624,7 +624,7 @@ package body GPR2.Project.View is
          end if;
 
       else
-         --  No interface, that is not a standalole library
+         --  No interface, that is not a standalone library
          return No;
       end if;
    end Library_Standalone;
