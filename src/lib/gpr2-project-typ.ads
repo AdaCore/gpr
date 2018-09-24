@@ -24,6 +24,8 @@
 
 with GPR2.Project.Name_Values;
 
+private with GPR2.Project.Registry.Attribute;
+
 package GPR2.Project.Typ is
 
    type Object is new Name_Values.Object with private;
@@ -36,7 +38,13 @@ package GPR2.Project.Typ is
 
 private
 
-   type Object is new Name_Values.Object with null record;
+   use all type GPR2.Project.Registry.Attribute.Value_Kind;
+   use type GPR2.Project.Name_Values.Object;
+
+   type Object is new Name_Values.Object with null record
+     with Dynamic_Predicate =>
+       Name_Values.Object (Object) = Name_Values.Undefined
+       or else Object.Kind = List;
 
    Undefined : constant Object := (Name_Values.Undefined with null record);
 
