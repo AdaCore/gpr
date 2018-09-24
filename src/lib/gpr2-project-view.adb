@@ -1009,6 +1009,7 @@ package body GPR2.Project.View is
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
       Interfaces        : Interfaces_Unit.Map;
+      Interfaces_Found  : Interfaces_Unit.Map;
 
       Tree              : constant not null access Project.Tree.Object :=
                             Definition.Get (Self).Tree;
@@ -1103,6 +1104,10 @@ package body GPR2.Project.View is
             declare
                use all type GPR2.Source.Kind_Type;
 
+               function Is_In_Interfaces (Name : Name_Type) return Boolean is
+                 (Interfaces.Contains (Name)
+                  or else Interfaces_Found.Contains (Name));
+
                procedure Register_Src;
                --  Register Src below into U_Def. Updating the necessary fields
 
@@ -1125,13 +1130,10 @@ package body GPR2.Project.View is
                                Unit_Name => Unit);
 
                Is_Interface : constant Boolean :=
-                                Kind = S_Spec
-                                    and then
-                                      (Interfaces.Contains (B_Name)
-                                       or else
-                                         (Unit /= No_Name
-                                          and then Interfaces.Contains
-                                                     (Name_Type (Unit))));
+                                Is_In_Interfaces (B_Name)
+                                  or else
+                                (Unit /= No_Name
+                                 and then Is_In_Interfaces (Name_Type (Unit)));
 
                P_Src : constant GPR2.Project.Source.Object :=
                          Project.Source.Create
@@ -1178,6 +1180,13 @@ package body GPR2.Project.View is
                   --  from the set.
 
                   if Is_Interface then
+                     --  We still want to keep unit interface around as we need
+                     --  them to be able to check the other part if any.
+
+                     if Interfaces.Contains (Unit) then
+                        Interfaces_Found.Include (Unit, Interfaces (Unit));
+                     end if;
+
                      Interfaces.Exclude (Unit);
                      Interfaces.Exclude (B_Name);
                   end if;
