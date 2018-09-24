@@ -76,23 +76,15 @@ package body GPR2.Path_Name is
          I2 := I2 + 1;
       end loop;
 
-      if I1 <= P1'Last or else I2 <= P2'Last then
-         declare
-            CP : constant Name_Type := Name_Type (P1 (P1'First .. I1 - 1));
-         begin
-            if Self.Is_Dir then
-               return Create_Directory (CP);
-            else
-               return Create_File (CP);
-            end if;
-         end;
-
-      elsif I1 > P1'Last then
-         return Path;
-
-      else
-         return Self;
-      end if;
+      declare
+         CP : constant Name_Type := Name_Type (P1 (P1'First .. I1 - 1));
+      begin
+         if Self.Is_Dir then
+            return Create_Directory (CP);
+         else
+            return Create_File (CP);
+         end if;
+      end;
    end Common_Prefix;
 
    -------------
