@@ -96,7 +96,8 @@ package body GPR2.Project.Configuration is
 
       GPRconfig : constant OS_Lib.String_Access :=
                     OS_Lib.Locate_Exec_On_Path ("gprconfig");
-      Args      : OS_Lib.Argument_List (1 .. Settings'Length + 5);
+      Args      : OS_Lib.Argument_List (1 .. Settings'Length +
+                                        (if Debug then 6 else 5));
       Success   : Boolean := False;
 
       Result    : Object;
@@ -118,6 +119,10 @@ package body GPR2.Project.Configuration is
                        & "," & To_String (Settings (K).Path)
                        & "," & To_String (Settings (K).Name));
       end loop;
+
+      if Debug then
+         Args (Args'Last) := new String'("-v");
+      end if;
 
       --  Execute external GPRconfig tool
 
@@ -147,7 +152,7 @@ package body GPR2.Project.Configuration is
                "cannot create configuration file, fail to execute gprconfig"));
       end if;
 
-      if Directories.Exists (Conf_Filename) then
+      if Directories.Exists (Conf_Filename) and then not Debug then
          Directories.Delete_File (Conf_Filename);
       end if;
 

@@ -109,6 +109,9 @@ package GPR2 is
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
    --  A case sensitive name
 
+   procedure Set_Debug (Value : Boolean);
+   --  Set global debug flag's value
+
 private
 
    No_Name  : constant Optional_Name_Type := "";
@@ -122,5 +125,7 @@ private
          when K_Library           => "a library",
          when K_Aggregate         => "an aggregate",
          when K_Aggregate_Library => "an aggregate library") & " project");
+
+   Debug : Boolean := False;
 
 end GPR2;

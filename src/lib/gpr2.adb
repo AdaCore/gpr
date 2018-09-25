@@ -47,6 +47,15 @@ package body GPR2 is
       return Equal_Case_Insensitive (String (Left), String (Right));
    end "=";
 
+   ---------------
+   -- Set_Debug --
+   ---------------
+
+   procedure Set_Debug (Value : Boolean) is
+   begin
+      Debug := Value;
+   end Set_Debug;
+
    -------------
    -- Unquote --
    -------------
