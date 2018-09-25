@@ -40,8 +40,7 @@ procedure Main is
 
    function Remove_Drive_Letter (Path : String) return String is
    begin
-      if Path'Length > 2 and then
-        not (Path (Path'First) = '/' or else Path (Path'First) = '\')
+      if Path'Length > 2 and then not (Path (Path'First) in '/' | '\')
       then
          return Path (Path'First + 2 .. Path'Last);
       else
@@ -50,10 +49,10 @@ procedure Main is
    end Remove_Drive_Letter;
 
 begin
-   Text_IO.Put_Line ("1: " & Remove_Drive_Letter (String
-                     (P1.Common_Prefix (P2).Value)));
-   Text_IO.Put_Line ("2: " & Remove_Drive_Letter (String
-                     (P2.Common_Prefix (P3).Value)));
-   Text_IO.Put_Line ("3: " & Remove_Drive_Letter (String
-                     (P3.Common_Prefix (P3).Value)));
+   Text_IO.Put_Line
+     ("1: " & Remove_Drive_Letter (P1.Common_Prefix (P2).Value));
+   Text_IO.Put_Line
+     ("2: " & Remove_Drive_Letter (P2.Common_Prefix (P3).Value));
+   Text_IO.Put_Line
+     ("3: " & Remove_Drive_Letter (P3.Common_Prefix (P3).Value));
 end Main;
