@@ -114,7 +114,7 @@ begin
    --  main
    Store.Insert
      ("main",
-      Def'(Index                => Optional,
+      Def'(Index                => No,
            Others_Allowed       => False,
            Index_Case_Sensitive => False,
            Value                => List,
