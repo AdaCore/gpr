@@ -37,11 +37,12 @@ procedure Main is
           Path_Name.Create_File ("/dir1/dir2/dir3/toto");
    P3 : constant Path_Name.Object :=
           Path_Name.Create_File ("/dira/toto");
+   P4 : constant Path_Name.Object :=
+          Path_Name.Create_File ("/xyz");
 
    function Remove_Drive_Letter (Path : String) return String is
    begin
-      if Path'Length > 2 and then not (Path (Path'First) in '/' | '\')
-      then
+      if Path'Length > 2 and then not (Path (Path'First) in '/' | '\') then
          return Path (Path'First + 2 .. Path'Last);
       else
          return Path;
@@ -55,4 +56,6 @@ begin
      ("2: " & Remove_Drive_Letter (P2.Common_Prefix (P3).Value));
    Text_IO.Put_Line
      ("3: " & Remove_Drive_Letter (P3.Common_Prefix (P3).Value));
+   Text_IO.Put_Line
+     ("4: " & Remove_Drive_Letter (P3.Common_Prefix (P4).Value));
 end Main;

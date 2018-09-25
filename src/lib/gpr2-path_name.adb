@@ -34,6 +34,7 @@ with GNAT.OS_Lib;
 
 package body GPR2.Path_Name is
 
+   use Ada;
    use GNAT;
 
    --  From old GPR
@@ -43,6 +44,18 @@ package body GPR2.Path_Name is
 
    function Ensure_Directory
      (Path : String) return String renames GPR.Util.Ensure_Directory;
+
+   function Base_Name (Path : String) return String is
+     (if Path = "/" or else Path = "\"
+      then "."
+      else Directories.Base_Name (Path));
+   --  Base_Name for / is '.'
+
+   function Containing_Directory (Path : String) return String is
+     (if Path = "/" or else Path = "\"
+      then Path
+      else Directories.Containing_Directory (Path));
+   --  Containing directroy for / is '/'
 
    -------------------
    -- Make_Absolute --
@@ -128,8 +141,6 @@ package body GPR2.Path_Name is
    ------------
 
    function Create (Name, Path_Name : Name_Type) return Object is
-      use Ada;
-
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
    begin
@@ -137,10 +148,9 @@ package body GPR2.Path_Name is
         (Is_Dir    => False,
          As_Is     => +String (Name),
          Value     => +String (Path_Name),
-         Base_Name => +Directories.Base_Name (String (Path_Name)),
+         Base_Name => +Base_Name (String (Path_Name)),
          Dir_Name  =>
-           +Ensure_Directory
-           (Directories.Containing_Directory (String (Path_Name))));
+           +Ensure_Directory (Containing_Directory (String (Path_Name))));
    end Create;
 
    ----------------------
@@ -151,8 +161,6 @@ package body GPR2.Path_Name is
      (Name      : Name_Type;
       Directory : Optional_Name_Type := "") return Object
    is
-      use Ada;
-
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
@@ -164,9 +172,8 @@ package body GPR2.Path_Name is
         (Is_Dir    => True,
          As_Is     => +String (Name),
          Value     => +NN,
-         Base_Name => +Directories.Base_Name (N),
-         Dir_Name  =>
-           +Ensure_Directory (Directories.Containing_Directory (NN)));
+         Base_Name => +Base_Name (N),
+         Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create_Directory;
 
    -----------------
@@ -177,8 +184,6 @@ package body GPR2.Path_Name is
      (Name      : Name_Type;
       Directory : Optional_Name_Type := "") return Object
    is
-      use Ada;
-
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
@@ -189,9 +194,8 @@ package body GPR2.Path_Name is
         (Is_Dir    => False,
          As_Is     => +String (Name),
          Value     => +OS_Lib.Normalize_Pathname (N),
-         Base_Name => +Directories.Base_Name (N),
-         Dir_Name  =>
-           +Ensure_Directory (Directories.Containing_Directory (N)));
+         Base_Name => +Base_Name (N),
+         Dir_Name  => +Ensure_Directory (Containing_Directory (N)));
    end Create_File;
 
    ---------------------
@@ -234,7 +238,6 @@ package body GPR2.Path_Name is
 
    function Relative_Path (Self, To : Object) return Object is
 
-      use Ada;
       use Ada.Strings.Maps;
       use Ada.Strings.Fixed;
 
