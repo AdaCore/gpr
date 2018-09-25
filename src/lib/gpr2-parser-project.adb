@@ -2521,4 +2521,13 @@ package body GPR2.Parser.Project is
       return Self.Qualifier;
    end Qualifier;
 
+   ----------
+   -- Unit --
+   ----------
+
+   function Unit (Self : Object) return Analysis_Unit is
+   begin
+      return Self.Unit;
+   end Unit;
+
 end GPR2.Parser.Project;

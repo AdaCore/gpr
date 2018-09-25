@@ -36,9 +36,11 @@ with GPR2.Project.View;
 limited with GPR2.Project.Tree;
 
 private with Ada.Strings.Unbounded;
-private with GPR_Parser.Analysis;
+with GPR_Parser.Analysis;
 
 package GPR2.Parser.Project is
+
+   use GPR_Parser.Analysis;
 
    type Object is tagged private;
 
@@ -115,10 +117,13 @@ package GPR2.Parser.Project is
                    else Externals'Result.Is_Empty);
    --  Returns the list of all external variables
 
+   function Unit (Self : Object) return Analysis_Unit
+     with Pre => Self /= Undefined;
+   --  Returns the GPR_Parser analysis unit
+
 private
 
    use Ada.Strings.Unbounded;
-   use GPR_Parser.Analysis;
 
    type Object is tagged record
       Name      : Unbounded_String;
