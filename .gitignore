@@ -16,3 +16,6 @@ testsuite/out
 makefile.setup
 
 /workspace
+
+# Vim swap files
+*.swp
