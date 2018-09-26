@@ -142,7 +142,7 @@ package body GPR2.Parser.Project is
          procedure Handle_String (Node : String_Literal) is
          begin
             Result := To_Unbounded_String
-              (Unquote (Value_Type (String'(Text (Node)))));
+              (Unquote (Value_Type (Node.String_Text)));
          end Handle_String;
 
       begin
@@ -592,7 +592,8 @@ package body GPR2.Parser.Project is
                Qual : constant Project_Qualifier := F_Qualifier (N);
                Ext  : constant Project_Extension := F_Extension (N);
             begin
-               Project.Name := To_Unbounded_String (F_Project_Name (N).Text);
+               Project.Name := To_Unbounded_String
+                 (F_Project_Name (N).String_Text);
 
                --  If we have an explicit qualifier parse it now. If not the
                --  kind of project will be determined later during a second
@@ -1496,7 +1497,7 @@ package body GPR2.Parser.Project is
             procedure Handle_String (Node : String_Literal) is
             begin
                Record_Value
-                 (Unquote (Value_Type (String'(Text (Node)))));
+                 (Unquote (Value_Type (Node.String_Text)));
             end Handle_String;
 
             ---------------------
@@ -1709,8 +1710,7 @@ package body GPR2.Parser.Project is
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
-         Name    : constant Simple_Name :=
-                     Simple_Name (String'(Text (Name_1)));
+         Name    : constant Simple_Name := Simple_Name (Name_1.String_Text);
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -1718,8 +1718,7 @@ package body GPR2.Parser.Project is
                --    <project>.<package>'<attribute>
                return Get_Attribute_Ref
                  (Project => Name,
-                  Pack    => Optional_Name_Type
-                               (String'(Text (Name_2))),
+                  Pack    => Optional_Name_Type (Name_2.String_Text),
                   Node    => Att_Ref);
 
             else
@@ -2036,7 +2035,7 @@ package body GPR2.Parser.Project is
                -------------------
 
                procedure Handle_String (Node : String_Literal) is
-                  Value : constant Value_Type := Unquote (Text (Node));
+                  Value : constant Value_Type := Unquote (Node.String_Text);
                begin
                   Is_Case_Item_Matches :=
                     Is_Case_Item_Matches
