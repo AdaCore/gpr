@@ -639,6 +639,11 @@ begin
    end if;
 
 exception
+   when GNAT.Command_Line.Exit_From_Command_Line
+      | GNAT.Command_Line.Invalid_Switch
+      | GNAT.Command_Line.Invalid_Parameter
+      =>
+      null;
    when E : others =>
       Text_IO.Put_Line ("error: " & Exception_Message (E));
 end Gprinstall.Main;
