@@ -229,7 +229,7 @@ package body GPR2.Path_Name is
 
    function Exists (Self : Object) return Boolean is
    begin
-      return OS_Lib.Is_Regular_File (To_String (Self.Value));
+      return Ada.Directories.Exists (To_String (Self.Value));
    end Exists;
 
    -------------------
