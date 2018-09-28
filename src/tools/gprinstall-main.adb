@@ -19,6 +19,7 @@
 with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Exceptions;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
@@ -102,10 +103,30 @@ procedure Gprinstall.Main is
       procedure Add_Search_Path (Swicth, Value : String);
       --  Add Value to project search path (-aP option)
 
+      procedure Add_Scenario_Variable (Swicth, Value : String);
+      --  Add a scenario variable (-X option)
+
       procedure Set_Project (Switch, Value : String);
       --  Set the project file
 
       Config : Command_Line_Configuration;
+
+      ---------------------------
+      -- Add_Scenario_Variable --
+      ---------------------------
+
+      procedure Add_Scenario_Variable (Swicth, Value : String) is
+         pragma Unreferenced (Swicth);
+         I : constant Natural := Strings.Fixed.Index (Value, "=");
+      begin
+         if I = 0 then
+            Context.Include (Name_Type (Value), "");
+         else
+            Context.Include
+              (Name_Type (Value (Value'First .. I - 1)),
+               Value (I + 1 .. Value'Last));
+         end if;
+      end Add_Scenario_Variable;
 
       ---------------------
       -- Add_Search_Path --
@@ -209,6 +230,12 @@ procedure Gprinstall.Main is
          "-aP:",
          Help     => "Add directory dir to project search path",
          Argument => "<dir>");
+
+      Define_Switch
+        (Config, Add_Scenario_Variable'Unrestricted_Access,
+         "-X!",
+         Help     => "Add scenario variable",
+         Argument => "<NAME>=<VALUE>");
 
       Define_Switch
         (Config, Options.Verbose'Access,
