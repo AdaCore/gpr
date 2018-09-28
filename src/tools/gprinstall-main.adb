@@ -100,7 +100,7 @@ procedure Gprinstall.Main is
       --  Call for each --build-var options Value being the parameter value
 
       procedure Add_Search_Path (Swicth, Value : String);
-      --  Add Value to project search path
+      --  Add Value to project search path (-aP option)
 
       procedure Set_Project (Switch, Value : String);
       --  Set the project file
