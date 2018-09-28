@@ -25,8 +25,10 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
-with GPR2.Project.Tree;
 with GPR2.Context;
+with GPR2.Log;
+with GPR2.Message;
+with GPR2.Project.Tree;
 
 procedure Main is
 
@@ -43,8 +45,11 @@ begin
    if Prj.Has_Messages then
       Text_IO.Put_Line ("Messages found:");
 
-      for M of Prj.Log_Messages.all loop
+      for C in Prj.Log_Messages.Iterate
+        (False, True, True, True, True)
+      loop
          declare
+            M   : constant Message.Object := Log.Element (C);
             Mes : constant String := M.Format;
             L   : constant Natural :=
                     Strings.Fixed.Index (Mes, "/duplicate-project");
@@ -61,10 +66,13 @@ begin
 exception
    when GPR2.Project_Error =>
       if Prj.Has_Messages then
-         Text_IO.Put_Line ("Messages found:");
+         Text_IO.Put_Line ("Error Messages found:");
 
-         for M of Prj.Log_Messages.all loop
+         for C in Prj.Log_Messages.Iterate
+           (True, False, True, True, True)
+         loop
             declare
+               M   : constant Message.Object := Log.Element (C);
                Mes : constant String := M.Format;
                L   : constant Natural :=
                         Strings.Fixed.Index (Mes, "/duplicate-project");

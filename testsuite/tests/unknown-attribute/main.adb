@@ -26,6 +26,8 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
@@ -59,8 +61,11 @@ procedure Main is
    exception
       when GPR2.Project_Error =>
          if Prj.Has_Messages then
-            for M of Prj.Log_Messages.all loop
+            for C in Prj.Log_Messages.Iterate
+              (False, False, True, True, True)
+            loop
                declare
+                  M : constant Message.Object := Log.Element (C);
                   F : constant String := M.Sloc.Filename;
                   I : constant Natural :=
                         Strings.Fixed.Index (F, "unknown-attribute");

@@ -27,6 +27,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -54,9 +55,11 @@ procedure Main is
          if Prj.Has_Messages then
             Text_IO.Put_Line ("Messages found for " & String (Filename));
 
-            for M of Prj.Log_Messages.all loop
+            for C in Prj.Log_Messages.Iterate
+              (False, False, True, True, True)
+            loop
                declare
-                  Mes : constant String := M.Format;
+                  Mes : constant String := Log.Element (C).Format;
                   F   : constant Natural :=
                           Strings.Fixed.Index (Mes, "imports ");
                   L   : constant Natural :=

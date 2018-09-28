@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--            Copyright (C) 2018, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -27,6 +27,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 
@@ -39,7 +40,6 @@ procedure Main is
    Projects : constant array (1 .. 2) of String (1 .. 1) := ("a", "b");
 
 begin
-
    for P of Projects loop
       declare
          Prj : Project.Tree.Object;
@@ -54,16 +54,19 @@ begin
             if Prj.Has_Messages then
                Text_IO.Put_Line ("Messages found:");
 
-               for M of Prj.Log_Messages.all loop
+               for C in Prj.Log_Messages.Iterate
+                 (False, False, True, True, True)
+               loop
                   declare
-                     Mes : constant String := M.Format;
+                     Mes : constant String := Log.Element (C).Format;
                      F   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "imports ");
+                             Strings.Fixed.Index (Mes, "imports ");
                      L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/mismatch-end");
+                             Strings.Fixed.Index (Mes, "/mismatch-end");
                   begin
                      if F /= 0 and then L /= 0 then
-                        Text_IO.Put_Line (Mes (1 .. F + 7) & Mes (L .. Mes'Last));
+                        Text_IO.Put_Line
+                          (Mes (1 .. F + 7) & Mes (L .. Mes'Last));
                      else
                         Text_IO.Put_Line (Mes);
                      end if;

@@ -27,6 +27,7 @@ with Ada.Text_IO;
 
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -86,8 +87,11 @@ procedure Main is
            ("BEFORE: Has unread Message: "
             & Prj.Log_Messages.Has_Element (Read => False)'Img);
 
-         for M of Prj.Log_Messages.all loop
+         for C in Prj.Log_Messages.Iterate
+           (False, True, True, True, True)
+         loop
             declare
+               M : constant Message.Object := Log.Element (C);
                F : constant String := M.Sloc.Filename;
                I : constant Natural := Strings.Fixed.Index
                      (F, "source-errors");
@@ -98,6 +102,14 @@ procedure Main is
                Text_IO.Put_Line (M.Sloc.Column'Img);
                Text_IO.Put_Line (M.Message);
             end;
+         end loop;
+
+         --  Read also information message
+
+         for C in Prj.Log_Messages.Iterate
+           (True, True, True, True, True)
+         loop
+            null;
          end loop;
 
          Text_IO.Put_Line

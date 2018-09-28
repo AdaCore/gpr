@@ -25,6 +25,8 @@
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
+with GPR2.Message;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 
@@ -42,7 +44,13 @@ begin
 
 exception
    when GPR2.Project_Error =>
-      for M of Prj.Log_Messages.all loop
-         Text_IO.Put_Line (M.Format);
+      for C in Prj.Log_Messages.Iterate
+        (False, False, True, True, True)
+      loop
+         declare
+            M : constant Message.Object := Log.Element (C);
+         begin
+            Text_IO.Put_Line (M.Format);
+         end;
       end loop;
 end Main;

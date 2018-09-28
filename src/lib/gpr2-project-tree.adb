@@ -650,6 +650,16 @@ package body GPR2.Project.Tree is
                     (Directories.Compose (Prefix, "lib"), "gnat"));
             end;
          end if;
+
+         --  Add all search paths into the message log
+
+         for P of Self.Search_Paths loop
+            Self.Messages.Append
+              (Message.Create
+                 (Message.Information,
+                  P.Value,
+                  Source_Reference.Create (Filename.Value, 0, 0)));
+         end loop;
       end Set_Project_Search_Paths;
 
       Root_Context  : GPR2.Context.Object := Context;
