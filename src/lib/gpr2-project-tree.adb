@@ -635,6 +635,26 @@ package body GPR2.Project.Tree is
                           Directories.Containing_Directory
                             (Directories.Containing_Directory (GPRls.all));
             begin
+               if Config /= Project.Configuration.Undefined
+                 and then Config.Target /= ""
+               then
+                  Append
+                    (Self.Search_Paths,
+                     Directories.Compose
+                       (Directories.Compose
+                            (Directories.Compose
+                                 (Prefix, String (Config.Target)),
+                             "share"), "gpr"));
+
+                  Append
+                    (Self.Search_Paths,
+                     Directories.Compose
+                       (Directories.Compose
+                            (Directories.Compose
+                                 (Prefix, String (Config.Target)),
+                             "lib"), "gnat"));
+               end if;
+
                --  <prefix>/share/gpr
 
                Append
