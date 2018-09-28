@@ -662,6 +662,12 @@ begin
    else
       Tree.Load (Options.Project_File, Context, Config);
 
+      if Options.Verbose then
+         for M of Tree.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+      end if;
+
       --  ??? handle configuration after loading project to get languages
 
       Install.Process (Tree, Options);
