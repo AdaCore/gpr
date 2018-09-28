@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
+with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
@@ -28,6 +29,7 @@ with GNAT.OS_Lib;
 with GPR.Util;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
@@ -670,7 +672,26 @@ exception
       | GNAT.Command_Line.Invalid_Switch
       | GNAT.Command_Line.Invalid_Parameter
       =>
-      null;
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+
+   when Project_Error =>
+      if Options.Verbose then
+         --  Display all messagges
+         for M of Tree.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+
+      else
+         --  Display only errors
+         for C in Tree.Log_Messages.Iterate
+           (False, False, True, True, True)
+         loop
+            Text_IO.Put_Line (Log.Element (C).Format);
+         end loop;
+      end if;
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+
    when E : others =>
       Text_IO.Put_Line ("error: " & Exception_Message (E));
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 end Gprinstall.Main;
