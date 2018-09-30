@@ -626,34 +626,29 @@ package body GPR2.Project.Tree is
                Environment_Variables.Value ("ADA_PROJECT_PATH"));
          end if;
 
-         --  Then target specific directory if specified
-         --  ??? not yet supported
-
          if GPRls /= null then
             declare
                Prefix : constant String :=
                           Directories.Containing_Directory
                             (Directories.Containing_Directory (GPRls.all));
             begin
-               if Config /= Project.Configuration.Undefined
-                 and then Config.Target /= ""
-               then
-                  Append
-                    (Self.Search_Paths,
-                     Directories.Compose
-                       (Directories.Compose
-                            (Directories.Compose
-                                 (Prefix, String (Config.Target)),
-                             "share"), "gpr"));
+               --  <prefix>/<target>/share/gpr
 
-                  Append
-                    (Self.Search_Paths,
-                     Directories.Compose
-                       (Directories.Compose
-                            (Directories.Compose
-                                 (Prefix, String (Config.Target)),
-                             "lib"), "gnat"));
-               end if;
+               Append
+                 (Self.Search_Paths,
+                  Directories.Compose
+                    (Directories.Compose
+                      (Directories.Compose
+                        (Prefix, String (Self.Target)), "share"), "gpr"));
+
+               --  <prefix>/<target>/lig/gnat
+
+               Append
+                 (Self.Search_Paths,
+                  Directories.Compose
+                    (Directories.Compose
+                      (Directories.Compose
+                        (Prefix, String (Self.Target)), "lib"), "gnat"));
 
                --  <prefix>/share/gpr
 
@@ -686,7 +681,44 @@ package body GPR2.Project.Tree is
       Circularities : Boolean;
 
    begin
-      --  First initialize the project search path
+      --  First record and parse the configuration object, this is needed as
+      --  used to check the target in Set_Project_Search_Paths above.
+
+      if Config /= Project.Configuration.Undefined then
+         --  Set Tree for this config project
+
+         Self.Conf := Config;
+
+         declare
+            C_View : constant Project.View.Object := Config.Corresponding_View;
+            P_Data : Definition.Data := Definition.Get (C_View);
+         begin
+            --  Set and record the tree now, needed for the parsing
+
+            P_Data.Tree := Self.Self;
+            Definition.Set (C_View, P_Data);
+
+            --  Parse the configuration project, no need for full/complex
+            --  parsing as a configuration project is a simple project no
+            --  with clauses.
+
+            Parser.Project.Process
+              (P_Data.Trees.Project,
+               Self,
+               Context,
+               C_View,
+               P_Data.Attrs,
+               P_Data.Vars,
+               P_Data.Packs,
+               P_Data.Types);
+
+            P_Data.Kind := P_Data.Trees.Project.Qualifier;
+
+            Definition.Set (C_View, P_Data);
+         end;
+      end if;
+
+      --  Now we can initialize the project search paths
 
       Set_Project_Search_Paths;
 
@@ -697,16 +729,6 @@ package body GPR2.Project.Tree is
       --  Do nothing more if there are errors during the parsing
 
       if not Has_Error then
-         --  Set configuration project if any
-
-         Self.Conf := Config;
-
-         if Self.Conf /= Project.Configuration.Undefined then
-            --  Set Tree for this config project
-
-            Set_Tree (Self, Self.Conf.Corresponding_View);
-         end if;
-
          for View of Self loop
             declare
                V_Data    : Definition.Data := Definition.Get (View);
