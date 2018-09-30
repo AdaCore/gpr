@@ -213,7 +213,7 @@ package body GPR2.Path_Name is
       pragma Warnings (Off, "*actuals for this call may be in wrong order*");
       C_To    : constant String :=
                   String (Relative_Path (To, Self).Name)
-                  & To_String (To.Base_Name) & ASCII.NUL;
+                  & String (Simple_Name (To)) & ASCII.NUL;
       Result  : Integer;
       Success : Boolean;
       pragma Unreferenced (Success, Result);
