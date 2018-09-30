@@ -674,15 +674,14 @@ package body Gprinstall.Install is
             --  Do copy
 
             if Sym_Link then
-               From.Create_Sym_Link (To => Path_Name.Compose (To, File));
+               From.Create_Sym_Link (To => Dest_Path);
 
                --  Add file to manifest
 
                Add_To_Manifest (From);
 
                if From_Ver /= Path_Name.Undefined then
-                  From_Ver.Create_Sym_Link
-                    (To => Path_Name.Compose (To, File));
+                  From_Ver.Create_Sym_Link (To => Dest_Path);
                   Add_To_Manifest (From_Ver);
                end if;
 
