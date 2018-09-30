@@ -595,7 +595,8 @@ package body GPR2.Parser.Project is
                Project.Name := To_Unbounded_String
                  (F_Project_Name (N).String_Text);
 
-               if Name (Project) /= Name_Type (F_End_Name (N).String_Text)
+               if Name (Project)
+                 /= Name_Type (F_End_Name (N).String_Text)
                then
                   Messages.Append
                     (GPR2.Message.Create
