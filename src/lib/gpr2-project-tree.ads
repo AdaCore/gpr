@@ -266,9 +266,10 @@ private
 
    type Object is tagged limited record
       Self         : not null access Object := Object'Unchecked_Access;
-      Root         : View.Object;
-      Conf         : Project.Configuration.Object;
-      Runtime      : View.Object;
+      Root         : View.Object := View.Undefined;
+      Conf         : Project.Configuration.Object :=
+                       Project.Configuration.Undefined;
+      Runtime      : View.Object := View.Undefined;
       Units        : Name_View.Map;
       Sources      : Name_View.Map;
       Messages     : aliased Log.Object;
