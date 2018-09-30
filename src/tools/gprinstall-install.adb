@@ -1096,7 +1096,7 @@ package body Gprinstall.Install is
                     (From          => Project.Library_Version_Filename,
                      To            => Lib_Dir,
                      File          =>
-                       Project.Library_Version_Filename.Base_Name,
+                       Project.Library_Version_Filename.Simple_Name,
                      Executable    => True,
                      Extract_Debug => Side_Debug);
 
@@ -1105,7 +1105,7 @@ package body Gprinstall.Install is
                        (Lib_Dir,
                         Project.Library_Filename.Name),
                      To       => Lib_Dir,
-                     File     => Project.Library_Version_Filename.Base_Name,
+                     File     => Project.Library_Version_Filename.Simple_Name,
                      From_Ver => Path_Name.Compose
                        (Lib_Dir,
                         Project.Library_Major_Version_Filename.Name),
