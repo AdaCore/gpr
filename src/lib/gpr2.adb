@@ -51,9 +51,9 @@ package body GPR2 is
    -- Set_Debug --
    ---------------
 
-   procedure Set_Debug (Value : Boolean) is
+   procedure Set_Debug (Enable : Boolean) is
    begin
-      Debug := Value;
+      Debug := Enable;
    end Set_Debug;
 
    -------------

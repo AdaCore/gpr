@@ -109,7 +109,7 @@ package GPR2 is
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
    --  A case sensitive name
 
-   procedure Set_Debug (Value : Boolean);
+   procedure Set_Debug (Enable : Boolean);
    --  Set global debug flag's value
 
 private
