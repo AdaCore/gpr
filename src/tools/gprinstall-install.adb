@@ -233,10 +233,12 @@ package body Gprinstall.Install is
          Sym_Link       : Boolean := False;
          Executable     : Boolean := False;
          Extract_Debug  : Boolean := False);
-      --  Copy file From into To, if Sym_Link is set a symbolic link is
-      --  created. If Executable is set, the destination file exec attribute
-      --  is set. When Extract_Debug is set to True the debug information
-      --  for the executable is written in a side file.
+      --  Copy file From into To. If From is directory then the source full
+      --  filename is composed from From and File parameters.
+      --  If Sym_Link is set a symbolic link is created.
+      --  If Executable is set, the destination file exec attribute is set.
+      --  When Extract_Debug is set to True the debug information for the
+      --  executable is written in a side file.
 
       function Dir_Name (Suffix : Boolean := True) return Name_Type;
       --  Returns the name of directory where project files are to be
@@ -581,7 +583,10 @@ package body Gprinstall.Install is
          Executable     : Boolean := False;
          Extract_Debug  : Boolean := False)
       is
-         F             : constant String := String (From.Value);
+         Src_Path      : constant Path_Name.Object :=
+                           (if From.Is_Directory then From.Compose (File)
+                            else From);
+         F             : constant String := String (Src_Path.Value);
          T             : constant String := String (To.Value);
          Dest_Path     : constant Path_Name.Object :=
                            Path_Name.Compose (To, File);
@@ -599,7 +604,7 @@ package body Gprinstall.Install is
          if not Sym_Link
            and then Directories.Exists (Dest_Filename)
            and then not Options.Force_Installations
-           and then From.Content_MD5 /= Dest_Path.Content_MD5
+           and then Src_Path.Content_MD5 /= Dest_Path.Content_MD5
          then
             raise Constraint_Error
               with "file " & String (File) & " exists, use -f to overwrite";
@@ -638,18 +643,18 @@ package body Gprinstall.Install is
                end;
             end if;
 
-            if not Sym_Link and then not From.Exists then
+            if not Sym_Link and then not Src_Path.Exists then
                raise Constraint_Error with
                  "file " & F & " does not exist, build may not be complete";
             end if;
 
             if (not Sym_Link and then not To.Exists)
-              or else (Sym_Link and then not From.Exists)
+              or else (Sym_Link and then not Src_Path.Exists)
             then
                if Options.Create_Dest_Dir then
                   begin
                      if Sym_Link then
-                        Directories.Create_Path (From.Dir_Name);
+                        Directories.Create_Path (Src_Path.Dir_Name);
                      else
                         Directories.Create_Path (To.Value);
                      end if;
@@ -658,9 +663,7 @@ package body Gprinstall.Install is
                         --  Cannot create path, permission issue
                         raise Constraint_Error with
                           "cannot create destination directory "
-                          & (if Sym_Link
-                             then From.Dir_Name
-                             else T)
+                          & (if Sym_Link then Src_Path.Dir_Name else T)
                           & " check permissions";
                   end;
 
@@ -674,11 +677,11 @@ package body Gprinstall.Install is
             --  Do copy
 
             if Sym_Link then
-               From.Create_Sym_Link (To => Dest_Path);
+               Src_Path.Create_Sym_Link (To => Dest_Path);
 
                --  Add file to manifest
 
-               Add_To_Manifest (From);
+               Add_To_Manifest (Src_Path);
 
                if From_Ver /= Path_Name.Undefined then
                   From_Ver.Create_Sym_Link (To => Dest_Path);
@@ -1082,9 +1085,7 @@ package body Gprinstall.Install is
                   --  No support for version, do a simple copy
 
                   Copy_File
-                    (From          => Path_Name.Compose
-                       (Project.Library_Directory,
-                        Project.Library_Filename.Name),
+                    (From          => Project.Library_Directory,
                      To            => Lib_Dir,
                      File          => Project.Library_Filename.Name,
                      Executable    => True,
@@ -1113,9 +1114,7 @@ package body Gprinstall.Install is
 
             else
                Copy_File
-                 (From          => Path_Name.Compose
-                    (Project.Library_Directory,
-                     Project.Library_Filename.Name),
+                 (From          => Project.Library_Directory,
                   To            => Lib_Dir,
                   File          => Project.Library_Filename.Name,
                   Executable    => not Project.Is_Static_Library,
@@ -1133,8 +1132,7 @@ package body Gprinstall.Install is
                if Windows_Target then
                   if Lib_Dir /= Exec_Dir then
                      Copy_File
-                       (From          => Path_Name.Compose
-                          (Lib_Dir, Project.Library_Filename.Name),
+                       (From          => Lib_Dir,
                         To            => Exec_Dir,
                         File          => Project.Library_Filename.Name,
                         Executable    => True,
@@ -1144,15 +1142,13 @@ package body Gprinstall.Install is
                elsif Link_Lib_Dir /= Lib_Dir then
                   if Is_Windows_Host then
                      Copy_File
-                       (From       => Path_Name.Compose
-                          (Lib_Dir, Project.Library_Filename.Name),
+                       (From       => Lib_Dir,
                         To         => Link_Lib_Dir,
                         File       => Project.Library_Filename.Name,
                         Sym_Link   => False);
                   else
                      Copy_File
-                       (From       => Path_Name.Compose
-                          (Link_Lib_Dir, Project.Library_Filename.Name),
+                       (From       => Link_Lib_Dir,
                         To         => Lib_Dir,
                         File       => Project.Library_Filename.Name,
                         Sym_Link   => True);
@@ -1167,10 +1163,7 @@ package body Gprinstall.Install is
                   then
                      if Is_Windows_Host then
                         Copy_File
-                          (From       =>
-                             Path_Name.Compose
-                               (Lib_Dir,
-                                Project.Library_Version_Filename.Name),
+                          (From       => Lib_Dir,
                            To         => Link_Lib_Dir,
                            File       => Project.Library_Version_Filename.Name,
                            From_Ver   => Path_Name.Compose
@@ -1179,10 +1172,7 @@ package body Gprinstall.Install is
                            Sym_Link   => False);
                      else
                         Copy_File
-                          (From       =>
-                             Path_Name.Compose
-                               (Link_Lib_Dir,
-                                Project.Library_Version_Filename.Name),
+                          (From       => Link_Lib_Dir,
                            To         => Lib_Dir,
                            File       => Project.Library_Version_Filename.Name,
                            From_Ver   => Path_Name.Compose
