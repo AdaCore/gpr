@@ -64,9 +64,9 @@ private
    use Ada.Strings.Unbounded;
 
    type Object is tagged record
-      Line     : Natural;
-      Column   : Natural;
-      Filename : Unbounded_String;
+      Line     : Natural := 0;
+      Column   : Natural := 0;
+      Filename : Unbounded_String := To_Unbounded_String ("@");
    end record
      with Dynamic_Predicate => Filename /= Null_Unbounded_String;
 
@@ -78,7 +78,6 @@ private
    function Has_Source_Reference (Self : Object) return Boolean
      is (Self.Column > 0 and then Self.Line > 0);
 
-   Undefined : constant Object :=
-                 (0, 0, To_Unbounded_String ("@"));
+   Undefined : constant Object := (others => <>);
 
 end GPR2.Source_Reference;
