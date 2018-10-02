@@ -65,7 +65,7 @@ package body GPR2.Project.Source is
       Object       : constant Path_Name.Object :=
                        Path_Name.Create_File
                          (Src & O_Suffix,
-                          Optional_Name_Type (Artifact_Dir.Value));
+                          Optional_Name_Type (View.Object_Directory.Value));
 
       Dependency   : constant Path_Name.Object :=
                        Path_Name.Create_File
