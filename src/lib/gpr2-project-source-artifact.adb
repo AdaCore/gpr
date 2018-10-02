@@ -52,6 +52,39 @@ package body GPR2.Project.Source.Artifact is
       return Self.Dependency;
    end Dependency;
 
+   ----------
+   -- List --
+   ----------
+
+   function List (Self : Object) return Path_Name.Set.Object is
+      Result : Path_Name.Set.Object;
+   begin
+      if Self.Has_Object_Code then
+         Result.Append (Self.Object_Code);
+
+         declare
+            Name : constant Name_Type :=
+                     Self.Source.Source.Path_Name.Simple_Name;
+            Dir  : constant Optional_Name_Type :=
+                     Optional_Name_Type
+                       (Self.Source.View.Object_Directory.Value);
+         begin
+            Result.Append (Path_Name.Create_File (Name & ".stdout", Dir));
+            Result.Append (Path_Name.Create_File (Name & ".stderr", Dir));
+         end;
+      end if;
+
+      if Self.Has_Dependency then
+         Result.Append (Self.Dependency);
+      end if;
+
+      if Self.Has_Preprocessed_Source then
+         Result.Append (Self.Preprocessed_Source);
+      end if;
+
+      return Result;
+   end List;
+
    -----------------
    -- Object_Code --
    -----------------
