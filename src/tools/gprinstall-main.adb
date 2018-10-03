@@ -608,11 +608,6 @@ procedure Gprinstall.Main is
       if Options.Target_Name.all = "" then
          Options.Target_Name := new String'("all");
       end if;
-
-   exception
-      when Usage_Error =>
-         Display_Help (Config);
-         raise;
    end Parse_Command_Line;
 
    Config  : Project.Configuration.Object;
@@ -679,6 +674,10 @@ exception
       | GNAT.Command_Line.Invalid_Parameter
       =>
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+
+   when E : Usage_Error =>
+      Text_IO.Put_Line ("gprinstall: " & Exception_Message (E));
+      GNAT.Command_Line.Try_Help;
 
    when Project_Error =>
       if Options.Verbose then
