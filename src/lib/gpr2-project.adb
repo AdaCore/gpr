@@ -89,7 +89,8 @@ package body GPR2.Project is
          end if;
       end if;
 
-      return Path_Name.Create (GPR_Name, GPR_Name);
+      return Path_Name.Create_File
+        (GPR_Name, Name_Type (Directories.Current_Directory));
    end Create;
 
    ------------------
