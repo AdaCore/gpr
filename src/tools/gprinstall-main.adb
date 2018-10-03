@@ -74,7 +74,7 @@ procedure Gprinstall.Main is
    procedure Copyright is
    begin
       Version.Display
-        ("GPRINSTALL", "2012", Version_String => Version.Long_Value);
+        ("GPRINSTALL", "2018", Version_String => Version.Long_Value);
    end Copyright;
 
    ------------------------
