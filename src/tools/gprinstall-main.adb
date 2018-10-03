@@ -207,14 +207,14 @@ procedure Gprinstall.Main is
       Define_Switch
         (Config, Options.Config_Project'Access,
          Long_Switch => "--config=",
-         Help     => "Specify the main config project file name",
-         Argument =>  "file.cgpr");
+         Help        => "Specify the main config project file name",
+         Argument    =>  "file.cgpr");
 
       Define_Switch
         (Config, Options.Auto_Config_Project'Access,
          Long_Switch => "--autoconf=",
-         Help     => "Specify/create the main config project file name",
-         Argument =>  "file.cgpr");
+         Help        => "Specify/create the main config project file name",
+         Argument    =>  "file.cgpr");
 
       Define_Switch
         (Config, Options.RTS'Access,
@@ -225,7 +225,7 @@ procedure Gprinstall.Main is
       Define_Switch
         (Config, Options.Create_Dest_Dir'Access,
          "-p", "--create-missing-dirs",
-         Help     => "Use runtime <runtime> for language Ada");
+         Help => "Use runtime <runtime> for language Ada");
 
       Define_Switch
         (Config, Add_Search_Path'Unrestricted_Access,
@@ -242,12 +242,12 @@ procedure Gprinstall.Main is
       Define_Switch
         (Config, Options.Verbose'Access,
          "-v", "--verbose",
-         Help     => "Verbose output");
+         Help => "Verbose output");
 
       Define_Switch
         (Config, Options.Quiet'Access,
          "-q", "--quiet",
-         Help     => "Be quiet/terse");
+         Help => "Be quiet/terse");
 
       Define_Switch
         (Config, Dummy'Access,
@@ -267,43 +267,43 @@ procedure Gprinstall.Main is
       Define_Switch
         (Config, Options.Recursive'Access,
          Switch => "-r",
-         Help     => "Recursive");
+         Help   => "Recursive");
 
       Define_Switch
         (Config, Options.Force_Installations'Access,
          "-f", "--force",
-         Help     => "Force installation, overwrite files");
+         Help => "Force installation, overwrite files");
 
       Define_Switch
         (Config, Options.Dry_Run'Access,
          "-d", "--dry-run",
-         Help     => "Execute nothing, display commands");
+         Help => "Execute nothing, display commands");
 
       Define_Switch
         (Config, Options.Output_Stats'Access,
          Long_Switch => "--stat",
-         Help     => "Display stats about installed projects,"
-                     & " must be used with --list");
+         Help        => "Display stats about installed projects,"
+                        & " must be used with --list");
 
       Define_Switch
         (Config, Options.No_Build_Var'Access,
          Long_Switch => "--no-build-var",
-         Help     => "Do not generate external build variable");
+         Help        => "Do not generate external build variable");
 
       Define_Switch
         (Config, Options.No_Lib_Link'Access,
          Long_Switch => "--no-lib-link",
-         Help     => "Do not copy shared lib in exec/lib directory");
+         Help        => "Do not copy shared lib in exec/lib directory");
 
       Define_Switch
         (Config, Options.Side_Debug'Access,
          Long_Switch => "--side-debug",
-         Help     => "Write debug information into a separate file");
+         Help        => "Write debug information into a separate file");
 
       Define_Switch
         (Config, Options.List_Mode'Access,
          Long_Switch => "--list",
-         Help     => "List all installed projects");
+         Help        => "List all installed projects");
 
       Define_Switch
         (Config, Options.Uninstall_Mode'Access,

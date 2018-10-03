@@ -223,9 +223,9 @@ package body GPR2.Project.Pretty_Printer is
 
                if F_Qualifier_Id2 (Node.As_Qualifier_Names) /= No_GPR_Node then
                   Write_Token (" ", Indent);
-                  Write_Token (F_Qualifier_Id2
-                               (Node.As_Qualifier_Names).String_Text,
-                               Indent);
+                  Write_Token
+                    (F_Qualifier_Id2 (Node.As_Qualifier_Names).String_Text,
+                     Indent);
                end if;
 
             when GPR_Prefix =>
@@ -235,9 +235,10 @@ package body GPR2.Project.Pretty_Printer is
 
                if F_Suffix (Node.As_Prefix) /= No_GPR_Node then
                   Write_Token (".", Indent);
-                  Write_Name (Name_Type (String'
-                                (F_Suffix (Node.As_Prefix).String_Text)),
-                              Indent);
+                  Write_Name
+                    (Name_Type
+                       (String'(F_Suffix (Node.As_Prefix).String_Text)),
+                     Indent);
                end if;
 
             when GPR_Project_Extension =>
