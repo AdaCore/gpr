@@ -63,7 +63,6 @@ package body GPR2.Project.Pretty_Printer is
       W_Eol                  : Write_Eol_Ap       := null;
       W_Str                  : Write_Str_Ap       := null)
    is
-
       pragma Unreferenced (With_Trivia);
 
       use GPR_Parser.Common;
@@ -134,9 +133,13 @@ package body GPR2.Project.Pretty_Printer is
 
          case Kind (Node) is
             when GPR_Compilation_Unit =>
+               --  Top level node
+
                Print (F_Project (Node.As_Compilation_Unit), Indent);
 
             when GPR_Project =>
+               --  context & project nodes
+
                Print (F_Context_Clauses (Node.As_Project), Indent);
                Write_Empty_Line (Always => True);
                Print (F_Project_Decl (Node.As_Project), Indent);
@@ -149,6 +152,8 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
             when GPR_With_Decl =>
+               --  [limited] with <name>
+
                case Kind (F_Is_Limited (Node.As_With_Decl)) is
                   when GPR_Limited_Present =>
                      Write_Token ("limited ", Indent);
@@ -169,6 +174,7 @@ package body GPR2.Project.Pretty_Printer is
                   for Item of Node.Children loop
                      Count := Count + 1;
                      Write_Token (Item.String_Text, Indent);
+
                      if Count < Node.Children_Count then
                         Write_Token (", ", Indent);
                      end if;
@@ -176,6 +182,10 @@ package body GPR2.Project.Pretty_Printer is
                end;
 
             when GPR_Project_Declaration =>
+               --  [qualifier] project [extends] <name> is
+               --     ..
+               --  end <name>;
+
                if F_Qualifier (Node.As_Project_Declaration) /= No_GPR_Node then
                   Print (F_Qualifier (Node.As_Project_Declaration), Indent);
                   Write_Token (" ", Indent);
@@ -232,11 +242,13 @@ package body GPR2.Project.Pretty_Printer is
 
             when GPR_Project_Extension =>
                Write_Token ("extends ", Indent);
+
                if Kind (F_Is_All (Node.As_Project_Extension)) =
                  GPR_All_Qualifier_Present
                then
                   Write_Token ("all ", Indent);
                end if;
+
                Write_Project_Filename
                  (F_Path_Name (Node.As_Project_Extension).String_Text, Indent);
 
@@ -601,6 +613,7 @@ package body GPR2.Project.Pretty_Printer is
             end if;
 
             --  If the line would become too long, start a new line if it helps
+
             if Column + Name_Len > Max_Line_Length
               and then Column > Indent + Increment
             then
@@ -609,6 +622,7 @@ package body GPR2.Project.Pretty_Printer is
             end if;
 
             --  Capitalize First letter and letters following a "_"
+
             for J in Name_Buffer'Range loop
                if Capital then
                   Write_Char (To_Upper (Name_Buffer (J)));
@@ -650,6 +664,7 @@ package body GPR2.Project.Pretty_Printer is
          end if;
 
          --  If the line would become too long, start a new line if it helps
+
          if Column + S'Length > Max_Line_Length
            and then Column > Indent + Increment
          then
@@ -697,6 +712,7 @@ package body GPR2.Project.Pretty_Printer is
          end if;
 
          --  If the line would become too long, start a new line if it helps
+
          if Column + S'Length > Max_Line_Length
            and then Column > Indent + Increment
          then
