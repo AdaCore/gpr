@@ -117,7 +117,7 @@ procedure GPRclean is
       if Version then
          GPR2.Version.Display
            ("GPRCLEAN", "2018", Version_String => GPR2.Version.Long_Value);
-         GNAT.OS_Lib.OS_Exit (0);
+         return;
       end if;
 
       --  Now read arguments
@@ -168,20 +168,22 @@ begin
    GNATCOLL.Traces.Parse_Config_File;
    Parse_Command_Line;
 
-   declare
-      Pathname : constant Path_Name.Object :=
-                   Project.Create
-                     (Optional_Name_Type (To_String (Project_Path)));
-      Context  : GPR2.Context.Object;
-   begin
-      Project_Tree.Load (Pathname, Context);
-      Sources (Project_Tree.Root_Project);
-   end;
+   if not Version then
+      declare
+         Pathname : constant Path_Name.Object :=
+                      Project.Create
+                        (Optional_Name_Type (To_String (Project_Path)));
+         Context  : GPR2.Context.Object;
+      begin
+         Project_Tree.Load (Pathname, Context);
+         Sources (Project_Tree.Root_Project);
+      end;
 
-   if Verbose then
-      for M of Project_Tree.Log_Messages.all loop
-         Text_IO.Put_Line (M.Format);
-      end loop;
+      if Verbose then
+         for M of Project_Tree.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+      end if;
    end if;
 
 exception

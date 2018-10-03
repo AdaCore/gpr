@@ -200,6 +200,11 @@ procedure Gprinstall.Main is
          Help => "display this help message and exit");
 
       Define_Switch
+        (Config, Options.Version'Access,
+         Long_Switch => "--version",
+         Help => "Display version and exit");
+
+      Define_Switch
         (Config, Set_Project'Unrestricted_Access,
          "-P:",
          Help => "project file to install");
@@ -537,6 +542,11 @@ procedure Gprinstall.Main is
          Copyright;
       end if;
 
+      if Options.Version then
+         Copyright;
+         return;
+      end if;
+
       if Options.Build_Name.all /= "default"
         and then Options.Uninstall_Mode
       then
@@ -618,54 +628,56 @@ begin
 
    Parse_Command_Line (Options);
 
-   --  And install Ctrl-C handler
+   if not Options.Version then
+      --  And install Ctrl-C handler
 
-   Interrupt_Handler.Install_Sigint (Gprinstall.Sigint_Intercepted'Access);
+      Interrupt_Handler.Install_Sigint (Gprinstall.Sigint_Intercepted'Access);
 
-   --  Check command line arguments. These will be overridden when looking
-   --  for the configuration file.
+      --  Check command line arguments. These will be overridden when looking
+      --  for the configuration file.
 
-   --  ??? we need to handle --autoconf
+      --  ??? we need to handle --autoconf
 
-   if Options.Config_Project.all /= "" then
-      Config := Project.Configuration.Load
-        (Path_Name.Create_File (Name_Type (Options.Config_Project.all)),
-         Target => Name_Type (Options.Target_Name.all));
+      if Options.Config_Project.all /= "" then
+         Config := Project.Configuration.Load
+           (Path_Name.Create_File (Name_Type (Options.Config_Project.all)),
+            Target => Name_Type (Options.Target_Name.all));
 
-   else
-      Config := Project.Configuration.Create
-        (Project.Configuration.Default_Description,
-         Target => Name_Type (Options.Target_Name.all));
-   end if;
-
-   --  Then, parse the user's project and the configuration file. Apply the
-   --  configuration file to the project so that its settings are
-   --  automatically inherited by the project.
-
-   if Options.Uninstall_Mode then
-      if Options.Global_Install_Name.Default then
-         Uninstall.Process
-           (Directories.Base_Name (String (Options.Project_File.Name)),
-            Options);
       else
-         Uninstall.Process (Options.Global_Install_Name.V.all, Options);
+         Config := Project.Configuration.Create
+           (Project.Configuration.Default_Description,
+            Target => Name_Type (Options.Target_Name.all));
       end if;
 
-   elsif Options.List_Mode then
-      DB.List (Options);
+      --  Then, parse the user's project and the configuration file. Apply the
+      --  configuration file to the project so that its settings are
+      --  automatically inherited by the project.
 
-   else
-      Tree.Load (Options.Project_File, Context, Config);
+      if Options.Uninstall_Mode then
+         if Options.Global_Install_Name.Default then
+            Uninstall.Process
+              (Directories.Base_Name (String (Options.Project_File.Name)),
+               Options);
+         else
+            Uninstall.Process (Options.Global_Install_Name.V.all, Options);
+         end if;
 
-      if Options.Verbose then
-         for M of Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
+      elsif Options.List_Mode then
+         DB.List (Options);
+
+      else
+         Tree.Load (Options.Project_File, Context, Config);
+
+         if Options.Verbose then
+            for M of Tree.Log_Messages.all loop
+               Text_IO.Put_Line (M.Format);
+            end loop;
+         end if;
+
+         --  ??? handle configuration after loading project to get languages
+
+         Install.Process (Tree, Options);
       end if;
-
-      --  ??? handle configuration after loading project to get languages
-
-      Install.Process (Tree, Options);
    end if;
 
 exception

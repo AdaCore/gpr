@@ -41,6 +41,7 @@ package Gprinstall.Options is
    type Object is record
       Quiet          : aliased Boolean := False;
       Verbose        : aliased Boolean := False;
+      Version        : aliased Boolean := False;
       List_Mode      : aliased Boolean := False;
       Uninstall_Mode : aliased Boolean := False;
 
