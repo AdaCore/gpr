@@ -27,6 +27,7 @@ with GNAT.OS_Lib;
 with GNATCOLL.Traces;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
@@ -175,12 +176,6 @@ begin
    begin
       Project_Tree.Load (Pathname, Context);
       Sources (Project_Tree.Root_Project);
-
-   exception
-      when E : others =>
-         Text_IO.Put_Line
-           ("error while parsing..." & Exception_Information (E));
-         Command_Line.Set_Exit_Status (Command_Line.Failure);
    end;
 
    if Verbose then
@@ -194,6 +189,23 @@ exception
       | GNAT.Command_Line.Exit_From_Command_Line
       =>
       Command_Line.Set_Exit_Status (Command_Line.Failure);
+
+   when Project_Error =>
+      if Verbose then
+         --  Display all messagges
+         for M of Project_Tree.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+
+      else
+         --  Display only errors
+         for C in Project_Tree.Log_Messages.Iterate
+           (False, False, True, True, True)
+         loop
+            Text_IO.Put_Line (Log.Element (C).Format);
+         end loop;
+      end if;
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 
    when E : others =>
       Text_IO.Put_Line ("cannot parse project: " & Exception_Information (E));
