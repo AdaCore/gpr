@@ -43,24 +43,18 @@ package body GPR2.Project.Source is
       Lang : constant Name_Type := Self.Source.Language;
       View : constant GPR2.Project.View.Object := Self.View;
 
-      function Artifact_Dir return GPR2.Path_Name.Object is
-        (if View.Kind = K_Library
-         then View.Library_Directory
-         else View.Object_Directory);
-      --  The directory where artifacts are written for this source
+      O_Suffix     : constant Optional_Name_Type :=
+                       (if View.Tree.Has_Configuration
+                        then View.Tree.Configuration.Object_File_Suffix (Lang)
+                        else ".o");
 
-      O_Suffix   : constant Optional_Name_Type :=
-                     (if View.Tree.Has_Configuration
-                      then View.Tree.Configuration.Object_File_Suffix (Lang)
-                      else ".o");
+      D_Suffix     : constant Optional_Name_Type :=
+                       (if View.Tree.Has_Configuration
+                        then View.Tree.
+                               Configuration.Dependency_File_Suffix (Lang)
+                        elsif Lang = "ada" then ".ali" else ".d");
 
-      D_Suffix   : constant Optional_Name_Type :=
-                     (if View.Tree.Has_Configuration
-                      then View.Tree.
-                             Configuration.Dependency_File_Suffix (Lang)
-                      elsif Lang = "ada" then ".ali" else ".d");
-
-      P_Suffix   : constant Optional_Name_Type := ".prep";
+      P_Suffix     : constant Optional_Name_Type := ".prep";
 
       Object       : constant Path_Name.Object :=
                        Path_Name.Create_File
@@ -70,7 +64,7 @@ package body GPR2.Project.Source is
       Dependency   : constant Path_Name.Object :=
                        Path_Name.Create_File
                          (Src & D_Suffix,
-                          Optional_Name_Type (Artifact_Dir.Value));
+                          Optional_Name_Type (View.Object_Directory.Value));
 
       Preprocessed : constant Path_Name.Object :=
                        Path_Name.Create_File
