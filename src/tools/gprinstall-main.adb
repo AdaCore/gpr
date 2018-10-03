@@ -197,7 +197,7 @@ procedure Gprinstall.Main is
       Define_Switch
         (Config, Options.Usage_Needed'Access,
          "-h", Long_Switch => "--help",
-         Help => "display this help message and exit");
+         Help => "Display this help message and exit");
 
       Define_Switch
         (Config, Options.Version'Access,
@@ -207,7 +207,7 @@ procedure Gprinstall.Main is
       Define_Switch
         (Config, Set_Project'Unrestricted_Access,
          "-P:",
-         Help => "project file to install");
+         Help => "Project file to install");
 
       Define_Switch
         (Config, Options.Config_Project'Access,
