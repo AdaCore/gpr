@@ -103,9 +103,6 @@ package Gprinstall.Options is
                               new String'("default");
       --  Name of the current build
 
-      Search_Project_Dir_Expected : Boolean := False;
-      --  True when last switch was -aP
-
       Usage_Needed      : aliased Boolean := False;
       --  Set by switch -h: usage will be displayed after all command line
       --  switches have been scanned.
