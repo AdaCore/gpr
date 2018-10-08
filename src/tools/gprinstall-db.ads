@@ -16,10 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Gprinstall.Options;
+with GPRinstall.Options;
 
-package Gprinstall.DB is
+package GPRinstall.DB is
 
-   procedure List (Options : Gprinstall.Options.Object);
+   procedure List (Options : GPRinstall.Options.Object);
 
-end Gprinstall.DB;
+end GPRinstall.DB;

@@ -20,7 +20,7 @@ with GNAT.OS_Lib;
 
 private with GPR2.Path_Name.Set;
 
-package Gprinstall is
+package GPRinstall is
 
    DS : constant Character := GNAT.OS_Lib.Directory_Separator;
 
@@ -35,4 +35,4 @@ private
    --  Delete Dir_Name if empty, if removed try with parent directory but not
    --  above the given prefix.
 
-end Gprinstall;
+end GPRinstall;

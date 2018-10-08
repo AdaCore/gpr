@@ -38,12 +38,12 @@ with GPR2.Version;
 
 with GPRtools.Sigint;
 
-with Gprinstall.DB;
-with Gprinstall.Install;
-with Gprinstall.Options;
-with Gprinstall.Uninstall;
+with GPRinstall.DB;
+with GPRinstall.Install;
+with GPRinstall.Options;
+with GPRinstall.Uninstall;
 
-procedure Gprinstall.Main is
+procedure GPRinstall.Main is
 
    use Ada;
    use Ada.Directories;
@@ -63,7 +63,7 @@ procedure Gprinstall.Main is
    Dummy   : aliased Boolean;
    --  A dummy boolean for supporting default switch like -a
 
-   procedure Parse_Command_Line (Options : in out Gprinstall.Options.Object);
+   procedure Parse_Command_Line (Options : in out GPRinstall.Options.Object);
    --  Process one gprinstall command line arguments
 
    procedure Copyright;
@@ -83,7 +83,7 @@ procedure Gprinstall.Main is
    -- Parse_Command_Line --
    ------------------------
 
-   procedure Parse_Command_Line (Options : in out Gprinstall.Options.Object) is
+   procedure Parse_Command_Line (Options : in out GPRinstall.Options.Object) is
 
       Prefix          : aliased String_Access;
       Exec_Subdir     : aliased String_Access;
@@ -96,7 +96,7 @@ procedure Gprinstall.Main is
       use GNAT.Command_Line;
 
       procedure Set_Param
-        (P      : in out Gprinstall.Options.Param;
+        (P      : in out GPRinstall.Options.Param;
          Value  : String;
          Is_Dir : Boolean := True);
       --  Set P with value for option Name
@@ -166,7 +166,7 @@ procedure Gprinstall.Main is
       ---------------
 
       procedure Set_Param
-        (P      : in out Gprinstall.Options.Param;
+        (P      : in out GPRinstall.Options.Param;
          Value  : String;
          Is_Dir : Boolean := True)
       is
@@ -537,7 +537,7 @@ procedure Gprinstall.Main is
         and then Options.Global_ALI_Subdir.Default
       then
          Options.Global_ALI_Subdir :=
-           Gprinstall.Options.Dup (Options.Global_Lib_Subdir);
+           GPRinstall.Options.Dup (Options.Global_Lib_Subdir);
       end if;
 
       if Options.Verbose then
@@ -623,7 +623,7 @@ procedure Gprinstall.Main is
    end Parse_Command_Line;
 
    Config  : Project.Configuration.Object;
-   Options : Gprinstall.Options.Object;
+   Options : GPRinstall.Options.Object;
 
 begin
    --  First initialize and read the command line arguments
@@ -713,4 +713,4 @@ exception
    when E : others =>
       Text_IO.Put_Line ("error: " & Exception_Information (E));
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
-end Gprinstall.Main;
+end GPRinstall.Main;

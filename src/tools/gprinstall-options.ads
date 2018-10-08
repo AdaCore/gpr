@@ -20,7 +20,7 @@ with GNAT.OS_Lib;
 
 with GPR2.Path_Name;
 
-package Gprinstall.Options is
+package GPRinstall.Options is
 
    use GNAT;
 
@@ -150,4 +150,4 @@ package Gprinstall.Options is
       --  Make obj/lib/exec dirs as subdirs
    end record;
 
-end Gprinstall.Options;
+end GPRinstall.Options;

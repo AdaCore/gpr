@@ -19,7 +19,7 @@
 with Ada.Directories;
 with Ada.Text_IO;
 
-package body Gprinstall is
+package body GPRinstall is
 
    use Ada;
 
@@ -79,4 +79,4 @@ package body Gprinstall is
       end if;
    end Delete_Empty_Directory;
 
-end Gprinstall;
+end GPRinstall;

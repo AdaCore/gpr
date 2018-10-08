@@ -16,7 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body Gprinstall.Options is
+package body GPRinstall.Options is
 
    ---------
    -- Dup --
@@ -36,4 +36,4 @@ package body Gprinstall.Options is
       OS_Lib.Free (P.V);
    end Free;
 
-end Gprinstall.Options;
+end GPRinstall.Options;

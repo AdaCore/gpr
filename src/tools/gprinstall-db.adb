@@ -22,13 +22,13 @@ with Ada.Text_IO;
 
 with GNAT.MD5;
 
-package body Gprinstall.DB is
+package body GPRinstall.DB is
 
    ----------
    -- List --
    ----------
 
-   procedure List (Options : Gprinstall.Options.Object) is
+   procedure List (Options : GPRinstall.Options.Object) is
 
       use Ada;
       use Ada.Directories;
@@ -193,4 +193,4 @@ package body Gprinstall.DB is
       end if;
    end List;
 
-end Gprinstall.DB;
+end GPRinstall.DB;

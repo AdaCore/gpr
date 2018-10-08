@@ -25,7 +25,7 @@ with GNAT.OS_Lib;
 
 with GPR2.Path_Name;
 
-package body Gprinstall.Uninstall is
+package body GPRinstall.Uninstall is
 
    use Ada;
    use Ada.Directories;
@@ -39,7 +39,7 @@ package body Gprinstall.Uninstall is
 
    procedure Process
      (Install_Name : String;
-      Options      : in out Gprinstall.Options.Object)
+      Options      : in out GPRinstall.Options.Object)
    is
       use GNAT;
       use type Path_Name.Object;
@@ -257,4 +257,4 @@ package body Gprinstall.Uninstall is
       end if;
    end Process;
 
-end Gprinstall.Uninstall;
+end GPRinstall.Uninstall;

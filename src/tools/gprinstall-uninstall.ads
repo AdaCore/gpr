@@ -16,13 +16,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Gprinstall.Options;
+with GPRinstall.Options;
 
-package Gprinstall.Uninstall is
+package GPRinstall.Uninstall is
 
    procedure Process
      (Install_Name : String;
-      Options      : in out Gprinstall.Options.Object);
+      Options      : in out GPRinstall.Options.Object);
    --  Uninstall Project
 
-end Gprinstall.Uninstall;
+end GPRinstall.Uninstall;

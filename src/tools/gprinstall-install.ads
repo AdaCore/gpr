@@ -18,14 +18,14 @@
 
 with GPR2.Project.Tree;
 
-with Gprinstall.Options;
+with GPRinstall.Options;
 
-package Gprinstall.Install is
+package GPRinstall.Install is
 
    procedure Process
      (Tree    : GPR2.Project.Tree.Object;
-      Options : Gprinstall.Options.Object);
+      Options : GPRinstall.Options.Object);
    --  Install the root Project and possibly all imported projects depending on
    --  the options.
 
-end Gprinstall.Install;
+end GPRinstall.Install;
