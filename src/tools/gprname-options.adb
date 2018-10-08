@@ -53,8 +53,8 @@ package body GPRname.Options is
    ------------------
 
    function Project_File (Self : Object) return String is
-     (if Self.Project_File /= Null_Unbounded_String then
-         To_String (Self.Project_File)
+     (if Self.Project_File /= Null_Unbounded_String
+      then To_String (Self.Project_File)
       else No_String);
 
    ---------
@@ -62,8 +62,8 @@ package body GPRname.Options is
    ---------
 
    function RTS (Self : Object) return String is
-     (if Self.Project_File /= Null_Unbounded_String then
-         To_String (Self.RTS)
+     (if Self.Project_File /= Null_Unbounded_String
+      then To_String (Self.RTS)
       else No_String);
 
    --------------
@@ -78,8 +78,8 @@ package body GPRname.Options is
    ------------
 
    function Target (Self : Object) return String is
-     (if Self.Target /= Null_Unbounded_String then
-         To_String (Self.Target)
+     (if Self.Target /= Null_Unbounded_String
+      then To_String (Self.Target)
       else No_String);
 
    ---------------

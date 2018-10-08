@@ -33,14 +33,15 @@ package GPRname.Source_Dir is
    --  thus searched recursively.
 
    function Create
-     (Name : Name_Type; Directory : Optional_Name_Type := "") return Object;
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Object;
    --  Creates a source directory, setting the Is_Recursive field according to
    --  whether Name has the "**" suffix or not.
 
    overriding function "=" (Left, Right : Object) return Boolean;
    --  Equality between source dirs, using the Dir field
 
-   function Dir (Self : Object) return Path_Name.Object;
+   function Value (Self : Object) return Path_Name.Object;
    --  Returns the Path_Name holding the full path information for Self
 
    function Is_Recursive (Self : Object) return Boolean;
@@ -60,5 +61,17 @@ private
       Is_Recursive : Boolean;
       Orig         : Unbounded_String;
    end record;
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+     (Path_Name."=" (Left.Dir, Right.Dir));
+
+   function Value (Self : Object) return Path_Name.Object is
+     (Self.Dir);
+
+   function Is_Recursive (Self : Object) return Boolean is
+     (Self.Is_Recursive);
+
+   function Orig (Self : Object) return String is
+     (To_String (Self.Orig));
 
 end GPRname.Source_Dir;

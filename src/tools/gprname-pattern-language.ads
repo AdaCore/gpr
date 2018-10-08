@@ -22,8 +22,9 @@ package GPRname.Pattern.Language is
    --  Extension of Compiled_Pattern_Object in which we associate a language
    --  to the pattern.
 
-   function Create (Pattern  : Pattern_Type;
-                    Language : Language_Type) return Object;
+   function Create
+     (Pattern  : Pattern_Type;
+      Language : Language_Type) return Object'Class;
    --  Constructor for Compiled_Pattern_Language_Object
 
    function Language (Self : Object) return Language_Type;
@@ -34,7 +35,5 @@ private
    type Object is new GPRname.Pattern.Object with record
       Language : Unbounded_String;
    end record;
-
-   overriding function Create (Pattern : Pattern_Type) return Object;
 
 end GPRname.Pattern.Language;

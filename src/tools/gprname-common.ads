@@ -36,7 +36,8 @@ package GPRname.Common is
 
    type Verbosity_Level_Type is (None, Low, High);
 
-   overriding function ">=" (Left, Right : Verbosity_Level_Type) return Boolean
+   overriding function ">="
+     (Left, Right : Verbosity_Level_Type) return Boolean
    is
      (Verbosity_Level_Type'Pos (Left) >= Verbosity_Level_Type'Pos (Right));
 
@@ -59,7 +60,8 @@ package GPRname.Common is
      (Key : Value_Case_Insens) return Ada.Containers.Hash_Type is
      (Ada.Strings.Hash_Case_Insensitive (String (Key)));
 
-   subtype Pattern_Type is String;
+   subtype Pattern_Type is String
+     with Dynamic_Predicate => Pattern_Type'Length > 0;
 
    subtype Language_Type is Value_Case_Insens;
 
@@ -79,13 +81,11 @@ package GPRname.Common is
    package Language_Vector is
      new Ada.Containers.Indefinite_Vectors (Positive, Language_Type);
 
-   package Path_Name_Vector is
-     new Ada.Containers.Indefinite_Vectors
-       (Positive, Path_Name.Object, Path_Name."=");
+   package Path_Name_Vector is new Ada.Containers.Indefinite_Vectors
+     (Positive, Path_Name.Object, Path_Name."=");
 
-   package Path_Name_Set is
-     new Ada.Containers.Indefinite_Ordered_Sets
-       (Path_Name.Object, Path_Name."<", Path_Name."=");
+   package Path_Name_Set is new Ada.Containers.Indefinite_Ordered_Sets
+     (Path_Name.Object, Path_Name."<", Path_Name."=");
 
    --
    --  Constants

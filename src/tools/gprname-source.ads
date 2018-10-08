@@ -40,14 +40,14 @@ package GPRname.Source is
    --  unit(s) defined in this source.
 
    function Create
-     (File : Path_Name.Object; Language : Language_Type) return Object;
+     (File       : Path_Name.Object;
+      Language   : Language_Type;
+      Unit_Based : Boolean := False) return Object;
    --  Creates a non-unit based source
 
-   function Create_Unit_Based
-     (File : Path_Name.Object; Language : Language_Type) return Object;
-   --  Creates a unit-based source
-
-   procedure Append_Unit (Self : in out Object; U : Unit.Object)
+   procedure Append_Unit
+     (Self : in out Object;
+      Unit : GPRname.Unit.Object)
      with Pre => Self.Unit_Based;
    --  Associates a new unit to a source
 
@@ -72,6 +72,7 @@ private
    type Object (Unit_Based : Boolean) is tagged record
       File     : Path_Name.Object := GPR2.Path_Name.Undefined;
       Language : Unbounded_String;
+
       case Unit_Based is
          when True =>
             Units : Unit.Vector.Object := Unit.Vector.Empty_Vector;
@@ -79,7 +80,22 @@ private
             null;
       end case;
    end record with Dynamic_Predicate =>
-     (if Language_Type (To_String (Language)) = Ada_Lang then
-        Unit_Based = True);
+     (if Language_Type (To_String (Language)) = Ada_Lang
+      then Unit_Based = True);
+
+   function "<" (Left, Right : Object) return Boolean is
+     (Path_Name."<" (Left.File, Right.File));
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+     (Path_Name."=" (Left.File, Right.File));
+
+   function File (Self : Object) return Path_Name.Object is
+     (Self.File);
+
+   function Language (Self : Object) return Language_Type is
+     (Language_Type (To_String (Self.Language)));
+
+   function Units (Self : Object) return Unit.Vector.Object is
+     (Self.Units);
 
 end GPRname.Source;

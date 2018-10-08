@@ -23,33 +23,13 @@ package body GPRname.Unit is
    ------------
 
    function Create
-     (F_Name            : GPR2.Name_Type;
-      F_Kind            : Unit_Kind;
-      F_Index_In_Source : Natural) return Object
-   is
-     (Object'(Name            => +String (F_Name),
-              Kind            => F_Kind,
-              Index_In_Source => F_Index_In_Source));
-
-   ----------
-   -- Name --
-   ----------
-
-   function Name (Self : Object) return GPR2.Name_Type is
-     (GPR2.Name_Type (To_String (Self.Name)));
-
-   ----------
-   -- Kind --
-   ----------
-
-   function Kind (Self : Object) return Unit_Kind is
-     (Self.Kind);
-
-   ---------------------
-   -- Index_In_Source --
-   ---------------------
-
-   function Index_In_Source (Self : Object) return Natural is
-     (Self.Index_In_Source);
+     (Name            : GPR2.Name_Type;
+      Kind            : Unit_Kind;
+      Index_In_Source : Natural) return Object is
+   begin
+      return Object'(Name            => +String (Name),
+                     Kind            => Kind,
+                     Index_In_Source => Index_In_Source);
+   end Create;
 
 end GPRname.Unit;

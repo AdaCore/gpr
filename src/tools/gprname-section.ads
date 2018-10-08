@@ -39,28 +39,35 @@ package GPRname.Section is
 
    Empty_Section : constant Object;
 
-   package Language_Patterns_Map is
-     new Ada.Containers.Indefinite_Hashed_Maps
-       (Language_Type,
-        Pattern.Vector.Object,
-        Str_Hash_Case_Insensitive,
-        "=",
-        Pattern.Vector."=");
+   package Language_Patterns_Map is new Ada.Containers.Indefinite_Hashed_Maps
+     (Language_Type,
+      Pattern.Vector.Object,
+      Str_Hash_Case_Insensitive,
+      "=",
+      Pattern.Vector."=");
    --  For excluded patterns: use a map from Languages to Pattern vectors
    --  because we're not interested in the insertion order, just lookup.
 
-   procedure Add_Directory (Self : in out Object; Dir : String);
+   procedure Add_Directory
+     (Self      : in out Object;
+      Directory : String);
    --  Adds a source directory to the section
 
-   procedure Add_Directories_File (Self : in out Object; Fil : String);
+   procedure Add_Directories_File
+     (Self : in out Object;
+      File : String);
    --  Adds a source directories file to the section
 
    procedure Add_Language_Pattern
-     (Self : in out Object; Lang : Language_Type; Patt : Pattern_Type);
+     (Self     : in out Object;
+      Language : Language_Type;
+      Pattern  : Pattern_Type);
    --  Adds a naming pattern to the section
 
    procedure Add_Excluded_Language_Pattern
-     (Self : in out Object; Lang : Language_Type; Patt : Pattern_Type);
+     (Self     : in out Object;
+      Language : Language_Type;
+      Pattern  : Pattern_Type);
    --  Adds an excluded naming pattern to the section
 
    function Is_Valid (Self : Object) return Boolean;
@@ -101,8 +108,18 @@ private
    Empty_Section : constant Object :=
                      (Directories       => Source_Dir.Vector.Empty_Vector,
                       Directories_Files => Path_Name_Vector.Empty_Vector,
-                      Patterns          => Pattern.Language.Vector.
-                        Empty_Vector,
+                      Patterns          =>
+                        Pattern.Language.Vector.Empty_Vector,
                       Excluded_Patterns => Language_Patterns_Map.Empty_Map);
+
+   function Directories (Self : Object) return Source_Dir.Vector.Object is
+     (Self.Directories);
+
+   function Patterns (Self : Object) return Pattern.Language.Vector.Object is
+     (Self.Patterns);
+
+   function Excluded_Patterns
+     (Self : Object) return Language_Patterns_Map.Map
+   is (Self.Excluded_Patterns);
 
 end GPRname.Section;

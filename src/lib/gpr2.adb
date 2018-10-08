@@ -47,6 +47,17 @@ package body GPR2 is
       return Equal_Case_Insensitive (String (Left), String (Right));
    end "=";
 
+   -----------
+   -- Quote --
+   -----------
+
+   function Quote
+     (Str        : Value_Type;
+      Quote_With : Character := '"') return Value_Type is
+   begin
+      return Quote_With & Str & Quote_With;
+   end Quote;
+
    ---------------
    -- Set_Debug --
    ---------------

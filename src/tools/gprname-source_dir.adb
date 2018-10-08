@@ -25,18 +25,20 @@ package body GPRname.Source_Dir is
    ------------
 
    function Create
-     (Name : Name_Type; Directory : Optional_Name_Type := "") return Object
+     (Name      : Name_Type;
+      Directory : Optional_Name_Type := "") return Object
    is
-      Rec : constant Boolean :=
-              (Name'Length >= 2 and then
-               Ada.Strings.Fixed.Tail (String (Name), 2) = "**");
-      PN : Path_Name.Object;
+      use Ada.Strings;
+
+      Is_Recursive : constant Boolean :=
+                       (Name'Length >= 2
+                        and then Fixed.Tail (String (Name), 2) = "**");
+      PN           : Path_Name.Object;
 
    begin
-      if Rec then
+      if Is_Recursive then
          PN := Path_Name.Create_Directory
-           (Name_Type (Ada.Strings.Fixed.Head
-            (String (Name), Name'Length - 2)),
+           (Name_Type (Fixed.Head (String (Name), Name'Length - 2)),
             Directory);
       else
          PN := Path_Name.Create_Directory (Name, Directory);
@@ -46,35 +48,7 @@ package body GPRname.Source_Dir is
          raise GPRname_Exception with "invalid source directory: " & PN.Value;
       end if;
 
-      return (PN, Rec, +String (Name));
+      return (PN, Is_Recursive, +String (Name));
    end Create;
-
-   ---------
-   -- "=" --
-   ---------
-
-   overriding function "=" (Left, Right : Object) return Boolean is
-     (Path_Name."=" (Left.Dir, Right.Dir));
-
-   ---------
-   -- Dir --
-   ---------
-
-   function Dir (Self : Object) return Path_Name.Object is
-     (Self.Dir);
-
-   ------------------
-   -- Is_Recursive --
-   ------------------
-
-   function Is_Recursive (Self : Object) return Boolean is
-     (Self.Is_Recursive);
-
-   ----------
-   -- Orig --
-   ----------
-
-   function Orig (Self : Object) return String is
-     (To_String (Self.Orig));
 
 end GPRname.Source_Dir;

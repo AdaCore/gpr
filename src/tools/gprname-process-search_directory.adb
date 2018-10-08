@@ -43,7 +43,8 @@ is
    use GPRname.Unit;
 
    procedure Update_Lang_Sources_Map
-     (Map : in out Language_Sources_Map.Map; Src : Source.Object);
+     (Map : in out Language_Sources_Map.Map;
+      Src : Source.Object);
    --  Add Src to Map, using Src.Lang as the key
 
    -----------------------------
@@ -51,7 +52,8 @@ is
    -----------------------------
 
    procedure Update_Lang_Sources_Map
-     (Map : in out Language_Sources_Map.Map; Src : Source.Object)
+     (Map : in out Language_Sources_Map.Map;
+      Src : Source.Object)
    is
       Is_New_Key    : Boolean;
       Position      : Language_Sources_Map.Cursor;
@@ -75,14 +77,14 @@ is
                               & "file offset (\d+), file name (\S+)\r?$";
    --  Regexp used to parse the Ada compiler's output
 
-   Matcher : constant GNAT.Regpat.Pattern_Matcher :=
-               GNAT.Regpat.Compile (Compiler_Output_Regexp);
+   Matcher   : constant Regpat.Pattern_Matcher :=
+                 Regpat.Compile (Compiler_Output_Regexp);
 
    Lang_Excl : Language_Set.Set;
    Matched   : Matched_Type := No_Match;
    Str       : String (1 .. 2_000);
    Last      : Natural;
-   Dir       : GNAT.Directory_Operations.Dir_Type;
+   Dir       : Directory_Operations.Dir_Type;
    File      : GPR2.Path_Name.Object;
 
 begin
@@ -90,9 +92,9 @@ begin
    Processed_Dirs.Insert (Dir_Path);
 
    begin
-      GNAT.Directory_Operations.Open (Dir, Dir_Path.Value);
+      Directory_Operations.Open (Dir, Dir_Path.Value);
    exception
-      when GNAT.Directory_Operations.Directory_Error =>
+      when Directory_Operations.Directory_Error =>
          raise GPRname_Exception
            with "cannot open directory " & String (Dir_Path.Value);
    end;
@@ -100,27 +102,25 @@ begin
    --  Loop over the directory's content
 
    loop
-      GNAT.Directory_Operations.Read (Dir, Str, Last);
+      Directory_Operations.Read (Dir, Str, Last);
       exit when Last = 0;
 
       --  Current entry
 
-      File := GPR2.Path_Name.Create_File
+      File := Path_Name.Create_File
         (Name_Type (Str (1 .. Last)), Dir_Path.Name);
 
       Put_Line ("  checking file: " & String (File.Name), Low);
 
-      if GNAT.OS_Lib.Is_Regular_File (File.Value) then
-
+      if OS_Lib.Is_Regular_File (File.Value) then
          --  Regular file: check if it matches any naming schemes for Ada or
          --  other languages. Get additional info for Ada source files.
 
          Lang_Excl.Clear;
 
-         --  Try every pattern of the section, starting from the rightmost one.
+         --  Try every pattern of the section, starting from the rightmost one
 
-         Patt_Loop :
-         for Patt_Lang of reverse Sect.Patterns loop
+         Patt_Loop : for Patt_Lang of reverse Sect.Patterns loop
 
             --  If we have already matched a file with the same basename,
             --  either the "ignore duplicate files" option is set and we skip
@@ -129,13 +129,15 @@ begin
             if Source_Basenames.Contains (String (File.Simple_Name)) then
                if Opt.Ignore_Duplicate_Files then
                   exit Patt_Loop;
+
                else
                   --  ??? We should use a proper logging system.
                   --  This warning is not part of the verbose output and should
                   --  appear after all the directory processing.
 
-                  Put_Line ("warning: duplicate basename "
-                            & String (File.Simple_Name));
+                  Text_IO.Put_Line
+                    ("warning: duplicate basename "
+                     & String (File.Simple_Name));
                end if;
             end if;
 
@@ -144,12 +146,13 @@ begin
             declare
                use GNAT.Regexp;
 
-               Lang  : constant Language_Type := Patt_Lang.Language;
-               Regex : constant Regexp := Patt_Lang.Regex;
+               Lang   : constant Language_Type := Patt_Lang.Language;
+               Regexp : constant GNAT.Regexp.Regexp := Patt_Lang.Regexp;
 
             begin
-               Put_Line ("    trying pattern '" & Patt_Lang.Pattern
-                         & "' for language " & String (Lang), Low);
+               Put_Line
+                 ("    trying pattern '" & Patt_Lang.Pattern
+                  & "' for language " & String (Lang), Low);
 
                --  Check if we match (or have matched in a previous
                --  iteration) with an excluded pattern for language Lang.
@@ -161,9 +164,12 @@ begin
 
                elsif Sect.Excluded_Patterns.Contains (Lang) then
                   for Excl_Patt of Excluded_Patterns (Sect) (Lang) loop
-                     Put_Line ("      trying excluded pattern '"
-                               & Excl_Patt.Pattern & "'", Low);
-                     if Match (String (File.Simple_Name), Excl_Patt.Regex)
+                     Put_Line
+                       ("      trying excluded pattern '"
+                        & Excl_Patt.Pattern & "'", Low);
+
+                     if Match
+                       (String (File.Simple_Name), Excl_Patt.Regexp)
                      then
                         Put_Line ("      -> excluded", Low);
                         Lang_Excl.Insert (Lang);
@@ -177,7 +183,8 @@ begin
 
                if Matched = Match then
                   Matched := No_Match;
-                  if Match (String (File.Simple_Name), Regex) then
+
+                  if Match (String (File.Simple_Name), Regexp) then
                      Matched := Match;
                      Put_Line ("      -> match", Low);
                      Source_Basenames.Include (String (File.Simple_Name));
@@ -189,18 +196,18 @@ begin
                --  just register the source as non-unit-based.
 
                if Matched = Match then
-
                   if Lang = Ada_Lang then
-
                      Put_Line ("      calling gcc for " & File.Value, Low);
 
-                     Compiler_Args (Compiler_Args'Last) := new String'
-                       (File.Value);
+                     Compiler_Args (Compiler_Args'Last) :=
+                       new String'(File.Value);
 
                      Put ("      " & Compiler_Path.Value, Low);
+
                      for A of Compiler_Args.all loop
                         Put (" " & A.all, Low);
                      end loop;
+
                      Put_Line ("", Low);
 
                      declare
@@ -212,7 +219,7 @@ begin
                         --  Call the compiler and store the output
 
                         Compiler_Output : constant String :=
-                                            (GNAT.Expect.Get_Command_Output
+                                            (Expect.Get_Command_Output
                                                (Compiler_Path.Value,
                                                 Compiler_Args.all,
                                                 Input      => "",
@@ -221,11 +228,19 @@ begin
 
                         --  Use GNATCOLL XString for line splitting
 
-                        Lines : constant XString_Array := Split
-                          (To_XString (Compiler_Output), ASCII.LF);
+                        Lines : constant XString_Array :=
+                                  Split
+                                    (To_XString (Compiler_Output), ASCII.LF);
 
-                        function Substr (Input : XString;
-                                         Loc   : Match_Location) return String
+                        Is_Multi_Unit : constant Boolean := Lines'Length > 1;
+
+                        ------------
+                        -- Substr --
+                        ------------
+
+                        function Substr
+                          (Input : XString;
+                           Loc   : Match_Location) return String
                         is
                           (To_String (Input) (Loc.First .. Loc.Last))
                             with Pre => Loc /= GNAT.Regpat.No_Match;
@@ -234,10 +249,11 @@ begin
 
                         Matches : Match_Array (0 .. 5);
 
-                        Src : Source.Object := Create_Unit_Based
-                          (File => File, Language => Ada_Lang);
-
-                        Is_Multi_Unit : constant Boolean := Lines'Length > 1;
+                        Src : Source.Object :=
+                                Source.Create
+                                  (File       => File,
+                                   Language   => Ada_Lang,
+                                   Unit_Based => True);
 
                         Unit_Count : Natural := 0;
 
@@ -255,8 +271,8 @@ begin
                            Match (Matcher, To_String (Line), Matches);
 
                            if Matches (0) = GNAT.Regpat.No_Match then
-                              raise GPRname_Exception with
-                                "unexpected compiler output";
+                              raise GPRname_Exception
+                                with "unexpected compiler output";
                            end if;
 
                            declare
@@ -271,22 +287,24 @@ begin
                                                   (if Is_Multi_Unit
                                                    then Unit_Count else 0);
                            begin
-                              Put_Line ("      found unit: "
-                                        & To_String (Line), Low);
+                              Put_Line
+                                ("      found unit: " & To_String (Line), Low);
 
                               --  Add the unit to the source, unless it is a
                               --  predefined Ada unit and the related "ignore"
                               --  option is set.
 
-                              if not (Opt.Ignore_Predefined_Units and then
+                              if not (Opt.Ignore_Predefined_Units
+                                        and then
                                       Is_Ada_Predefined_Unit (String (Name)))
                               then
                                  Unit_Count := Unit_Count + 1;
                                  Src.Append_Unit
                                    (Create (Name, Kind, Index_In_Source));
                               else
-                                 Put_Line ("        -> predefined unit:"
-                                           & " ignored", Low);
+                                 Put_Line
+                                   ("        -> predefined unit:"
+                                    & " ignored", Low);
                               end if;
                            end;
                         end loop;
@@ -328,21 +346,23 @@ begin
 
          begin
             if not Processed_Dirs.Contains (Subdir_Path) then
-               Search_Directory (Subdir_Path,
-                                 Sect,
-                                 Processed_Dirs,
-                                 True,
-                                 Compiler_Path,
-                                 Compiler_Args,
-                                 Lang_Sources_Map,
-                                 Source_Basenames);
+               Search_Directory
+                 (Subdir_Path,
+                  Sect,
+                  Processed_Dirs,
+                  True,
+                  Compiler_Path,
+                  Compiler_Args,
+                  Lang_Sources_Map,
+                  Source_Basenames);
             else
-               Put_Line ("directory " & Subdir_Path.Value
-                         & " already searched. skipping...", Low);
+               Put_Line
+                 ("directory " & Subdir_Path.Value
+                  & " already searched. skipping...", Low);
             end if;
          end;
       end if;
    end loop;
 
-   GNAT.Directory_Operations.Close (Dir);
+   Directory_Operations.Close (Dir);
 end Search_Directory;

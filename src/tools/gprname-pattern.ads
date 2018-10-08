@@ -24,7 +24,7 @@ with GPRname.Common;
 
 package GPRname.Pattern is
 
-   use GNAT.Regexp;
+   use GNAT;
 
    use GPRname.Common;
 
@@ -32,13 +32,13 @@ package GPRname.Pattern is
    --  We introduce this type to make for the fact that GNAT.Regexp doesn't
    --  give acces to the original string used to compile.
 
-   function Create (Pattern : Pattern_Type) return Object;
+   function Create (Pattern : Pattern_Type) return Object'Class;
    --  Creates a Pattern
 
    function Pattern (Self : Object) return Pattern_Type;
    --  Returns the raw string used to compile Self
 
-   function Regex (Self : Object) return Regexp;
+   function Regexp (Self : Object) return GNAT.Regexp.Regexp;
    --  Returns the compiled regex for Self
 
 private
@@ -47,7 +47,13 @@ private
 
    type Object is tagged record
       Pattern  : Unbounded_String;
-      Regex    : Regexp;
+      Regex    : GNAT.Regexp.Regexp;
    end record;
+
+   function Pattern (Self : Object) return Pattern_Type is
+     (Pattern_Type (To_String (Self.Pattern)));
+
+   function Regexp (Self : Object) return GNAT.Regexp.Regexp is
+     (Self.Regex);
 
 end GPRname.Pattern;

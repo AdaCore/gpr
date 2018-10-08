@@ -59,6 +59,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
       if S.Is_Valid then
          S.Prepare;
          Self.Sections.Append (S);
+
       else
          raise GPRname_Exception with "invalid section";
       end if;
@@ -75,9 +76,11 @@ procedure Build_From_Command_Line (Self : in out Object) is
          Free (Arg);
          Pos := Pos + 1;
          Arg := new String'(Argument (Pos));
+
          if not Dash_Allowed and then Arg (1) = '-' then
             raise GPRname_Exception with Err_Mssg;
          end if;
+
       else
          raise GPRname_Exception with Err_Mssg;
       end if;

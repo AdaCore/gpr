@@ -18,69 +18,30 @@
 
 package body GPRname.Source is
 
-   ---------
-   -- "<" --
-   ---------
+   -----------------
+   -- Append_Unit --
+   -----------------
 
-   function "<" (Left, Right : Object) return Boolean is
-     (Path_Name."<" (Left.File, Right.File));
-
-   ---------
-   -- "=" --
-   ---------
-
-   overriding function "=" (Left, Right : Object) return Boolean is
-     (Path_Name."=" (Left.File, Right.File));
+   procedure Append_Unit
+     (Self : in out Object;
+      Unit : GPRname.Unit.Object) is
+   begin
+      Self.Units.Append (Unit);
+   end Append_Unit;
 
    ------------
    -- Create --
    ------------
 
    function Create
-     (File : Path_Name.Object; Language : Language_Type) return Object is
-     (Object'(Unit_Based => False,
-              File       => File,
-              Language   => +String (Language)));
-
-   -----------------------
-   -- Create_Unit_Based --
-   -----------------------
-
-   function Create_Unit_Based
-     (File : Path_Name.Object; Language : Language_Type) return Object is
-     (Object'(Unit_Based => True,
-              File       => File,
-              Language   => +String (Language),
-              Units      => <>));
-
-   -----------------
-   -- Append_Unit --
-   -----------------
-
-   procedure Append_Unit (Self : in out Object; U : Unit.Object) is
+     (File       : Path_Name.Object;
+      Language   : Language_Type;
+      Unit_Based : Boolean := False) return Object is
    begin
-      Self.Units.Append (U);
-   end Append_Unit;
-
-   ----------
-   -- File --
-   ----------
-
-   function File (Self : Object) return Path_Name.Object is
-     (Self.File);
-
-   --------------
-   -- Language --
-   --------------
-
-   function Language (Self : Object) return Language_Type is
-     (Language_Type (To_String (Self.Language)));
-
-   -----------
-   -- Units --
-   -----------
-
-   function Units (Self : Object) return Unit.Vector.Object is
-     (Self.Units);
+      return Result : Object (Unit_Based) do
+         Result.File := File;
+         Result.Language := +String (Language);
+      end return;
+   end Create;
 
 end GPRname.Source;

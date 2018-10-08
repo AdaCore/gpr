@@ -22,20 +22,13 @@ package body GPRname.Pattern.Language is
    -- Create --
    ------------
 
-   overriding function Create (Pattern : Pattern_Type) return Object is
-     (GPRname.Pattern.Object'(Create (Pattern))
-      with Language => <>);
-
-   ------------
-   -- Create --
-   ------------
-
    function Create
      (Pattern  : Pattern_Type;
-      Language : Language_Type) return Object
-   is
-     (GPRname.Pattern.Object'(Create (Pattern))
-      with Language => +String (Language));
+      Language : Language_Type) return Object'Class is
+   begin
+      return Object'(GPRname.Pattern.Object (Create (Pattern))
+                     with Language => +String (Language));
+   end Create;
 
    --------------
    -- Language --

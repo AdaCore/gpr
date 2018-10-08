@@ -55,8 +55,9 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    use Ada;
    use Ada.Exceptions;
    use Ada.Streams;
-   use Ada.Text_IO;
    use Ada.Strings.Unbounded;
+
+   use GNAT;
 
    use GPR_Parser.Analysis;
    use GPR_Parser.Common;
@@ -65,8 +66,6 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    use GPR2;
    use GPR2.Project;
    use GPR2.Project.Attribute;
-   use GPR2.Project.Pack;
-   use GPR2.Project.Pretty_Printer;
 
    use GPRname.Common;
    use GPRname.Section;
@@ -87,7 +86,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Processed_Dirs   : in out Path_Name_Set.Set;
       Recursively      : Boolean;
       Compiler_Path    : GPR2.Path_Name.Object;
-      Compiler_Args    : GNAT.OS_Lib.Argument_List_Access;
+      Compiler_Args    : OS_Lib.Argument_List_Access;
       Lang_Sources_Map : in out Language_Sources_Map.Map;
       Source_Basenames : in out String_Set.Set);
    --  Process stage that searches a directory (recursively or not) for sources
@@ -109,7 +108,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    procedure Put (Str : String; Lvl : Verbosity_Level_Type) is
    begin
       if Opt.Verbosity >= Lvl then
-         Put (Str);
+         Text_IO.Put (Str);
       end if;
    end Put;
 
@@ -120,7 +119,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    procedure Put_Line (Str : String; Lvl : Verbosity_Level_Type) is
    begin
       if Opt.Verbosity >= Lvl then
-         Put_Line (Str);
+         Text_IO.Put_Line (Str);
       end if;
    end Put_Line;
 
@@ -132,14 +131,14 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    begin
       if Opt.Verbosity > None then
          for M of Tree.Log_Messages.all loop
-            Put_Line (M.Format);
+            Text_IO.Put_Line (M.Format);
          end loop;
 
       else
          for C in Tree.Log_Messages.Iterate
            (False, False, True, True, True)
          loop
-            Put_Line (GPR2.Log.Element (C).Format);
+            Text_IO.Put_Line (GPR2.Log.Element (C).Format);
          end loop;
       end if;
    end Show_Tree_Load_Errors;
@@ -154,7 +153,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Processed_Dirs   : in out Path_Name_Set.Set;
       Recursively      : Boolean;
       Compiler_Path    : GPR2.Path_Name.Object;
-      Compiler_Args    : GNAT.OS_Lib.Argument_List_Access;
+      Compiler_Args    : OS_Lib.Argument_List_Access;
       Lang_Sources_Map : in out Language_Sources_Map.Map;
       Source_Basenames : in out String_Set.Set)
    is separate;
@@ -195,13 +194,10 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       else Integer'Image (X) (2 .. Integer'Image (X)'Length));
    --  Integer image, removing the leading whitespace for positive integers
 
-   function Dble_Quote (S : String) return String is ("""" & S & """");
-   --  Return S enclosed with double quotes
-
 begin
    --  Properly set the naming project's name (use mixed case)
 
-   GNAT.Case_Util.To_Mixed (Naming_Project_Name);
+   Case_Util.To_Mixed (Naming_Project_Name);
 
    --
    --  If the project file doesn't exist, create it with the minimum content,
@@ -210,21 +206,21 @@ begin
 
    if From_Scratch then
       declare
-         File         : File_Type;
+         File         : Text_IO.File_Type;
          Project_Name : String := String (Project_Path.Base_Name);
 
       begin
          --  Properly set the main project's name (use mixed case)
 
-         GNAT.Case_Util.To_Mixed (Project_Name);
+         Case_Util.To_Mixed (Project_Name);
 
-         Create (File, Out_File, String (Project_Path.Name));
+         Text_IO.Create (File, Text_IO.Out_File, String (Project_Path.Name));
 
          --  Write the bare minimum to be able to parse the project
 
-         Put_Line (File, "project " & Project_Name & " is");
-         Put (File, "end " & Project_Name & ";");
-         Close (File);
+         Text_IO.Put_Line (File, "project " & Project_Name & " is");
+         Text_IO.Put (File, "end " & Project_Name & ";");
+         Text_IO.Close (File);
 
          --  Re-create the object, otherwise the Value field will be wrong
 
@@ -335,7 +331,7 @@ begin
    --
 
    declare
-      use type GNAT.OS_Lib.String_Access;
+      use type OS_Lib.String_Access;
 
       Proj : constant View.Object := Tree.Root_Project;
       Conf : constant View.Object := Tree.Configuration.Corresponding_View;
@@ -343,8 +339,8 @@ begin
       Driver_Attr : GPR2.Project.Attribute.Object :=
                       GPR2.Project.Attribute.Undefined;
 
-      Default_Compiler : GNAT.OS_Lib.String_Access :=
-                           GNAT.OS_Lib.Locate_Exec_On_Path ("gcc");
+      Default_Compiler : OS_Lib.String_Access :=
+                           OS_Lib.Locate_Exec_On_Path ("gcc");
 
    begin
       if Proj.Has_Packages ("compiler")
@@ -382,7 +378,7 @@ begin
          end if;
       end if;
 
-      GNAT.OS_Lib.Free (Default_Compiler);
+      OS_Lib.Free (Default_Compiler);
    end;
 
    Put_Line ("compiler path = " & Compiler_Path.Value, Low);
@@ -395,13 +391,14 @@ begin
 
    declare
       Processed_Dirs : Path_Name_Set.Set;
-      Compiler_Args  : GNAT.OS_Lib.Argument_List_Access;
+      Compiler_Args  : OS_Lib.Argument_List_Access;
 
    begin
       --  Fill the compiler arguments used to check ada sources
 
-      Compiler_Args := new GNAT.OS_Lib.Argument_List
-        (1 .. Natural (Opt.Prep_Switches.Length) + 6);
+      Compiler_Args :=
+        new OS_Lib.Argument_List (1 .. Natural (Opt.Prep_Switches.Length) + 6);
+
       Compiler_Args (1) := new String'("-c");
       Compiler_Args (2) := new String'("-gnats");
       Compiler_Args (3) := new String'("-gnatu");
@@ -424,7 +421,7 @@ begin
          --  Process directories in the section
 
          for D of Section.Directories loop
-            Search_Directory (D.Dir,
+            Search_Directory (D.Value,
                               Section,
                               Processed_Dirs,
                               D.Is_Recursive,
@@ -432,7 +429,7 @@ begin
                               Compiler_Args,
                               Lang_Sources_Map,
                               Source_Basenames);
-            Dir_List := Dir_List & Dble_Quote (D.Orig) & ',';
+            Dir_List := Dir_List & Quote (D.Orig) & ',';
          end loop;
       end loop;
 
@@ -456,7 +453,7 @@ begin
             if Sources.Length > 0 then
                Lang_With_Sources.Append (Lang);
                Lang_With_Sources_List := Lang_With_Sources_List
-                 & Dble_Quote (String (Lang)) & ",";
+                 & Quote (String (Lang)) & ",";
             end if;
          end;
       end loop;
@@ -464,11 +461,12 @@ begin
       --  Remove the trailing comma in the Languages template
 
       if Length (Lang_With_Sources_List) > 0 then
-         Lang_With_Sources_List := Head (Lang_With_Sources_List,
-                                         Length (Lang_With_Sources_List) - 1);
+         Lang_With_Sources_List :=
+           Head (Lang_With_Sources_List,
+                 Length (Lang_With_Sources_List) - 1);
       end if;
 
-      GNAT.OS_Lib.Free (Compiler_Args);
+      OS_Lib.Free (Compiler_Args);
    end;
 
    --
@@ -476,7 +474,7 @@ begin
    --
 
    declare
-      use Ada.Characters.Conversions;
+      use Characters.Conversions;
 
       function Get_Name_Type (Node : Single_Tok_Node'Class) return Name_Type is
         (Name_Type (Node.String_Text));
@@ -490,29 +488,36 @@ begin
       --  Note that it may be better to use the Create_* utils if we move
       --  this to a rewriting package (more efficient).
 
-      With_H : constant Node_Rewriting_Handle := Create_From_Template
-        (Hand, "with " & To_Wide_Wide_String (Dble_Quote
-         (Naming_Project_Basename)) & ";", (1 .. 0 => <>), With_Decl_Rule);
+      With_H : constant Node_Rewriting_Handle :=
+                 Create_From_Template
+                   (Hand, "with " & To_Wide_Wide_String (Quote
+                    (Naming_Project_Basename))
+                    & ";", (1 .. 0 => <>), With_Decl_Rule);
 
-      Pkg_H : constant Node_Rewriting_Handle := Create_From_Template
-        (Hand, "package Naming renames " & To_Wide_Wide_String
-           (Naming_Project_Name) & ".Naming;",
-         (1 .. 0 => <>), Package_Decl_Rule);
+      Pkg_H : constant Node_Rewriting_Handle :=
+                Create_From_Template
+                  (Hand, "package Naming renames " & To_Wide_Wide_String
+                     (Naming_Project_Name) & ".Naming;",
+                   (1 .. 0 => <>), Package_Decl_Rule);
 
-      Lang_H : constant Node_Rewriting_Handle := Create_From_Template
-        (Hand, "for Languages use (" & To_Wide_Wide_String
-           (To_String (Lang_With_Sources_List)) & ");",
-         (1 .. 0 => <>), Attribute_Decl_Rule);
+      Lang_H : constant Node_Rewriting_Handle :=
+                 Create_From_Template
+                   (Hand, "for Languages use (" & To_Wide_Wide_String
+                      (To_String (Lang_With_Sources_List)) & ");",
+                    (1 .. 0 => <>), Attribute_Decl_Rule);
 
-      Src_Dirs_H : constant Node_Rewriting_Handle := Create_From_Template
-        (Hand, "for Source_Dirs use (" & To_Wide_Wide_String
-           (To_String (Dir_List)) & ");",
-         (1 .. 0 => <>), Attribute_Decl_Rule);
+      Src_Dirs_H : constant Node_Rewriting_Handle :=
+                     Create_From_Template
+                       (Hand, "for Source_Dirs use (" & To_Wide_Wide_String
+                          (To_String (Dir_List)) & ");",
+                        (1 .. 0 => <>), Attribute_Decl_Rule);
 
-      Src_List_File_H : constant Node_Rewriting_Handle := Create_From_Template
-        (Hand, "for Source_List_File use " & To_Wide_Wide_String
-           (Dble_Quote (Source_List_File_Basename)) & ";",
-         (1 .. 0 => <>), Attribute_Decl_Rule);
+      Src_List_File_H : constant Node_Rewriting_Handle :=
+                          Create_From_Template
+                            (Hand, "for Source_List_File use "
+                             & To_Wide_Wide_String
+                               (Quote (Source_List_File_Basename)) & ";",
+                             (1 .. 0 => <>), Attribute_Decl_Rule);
 
       function Rewrite_Main (N : GPR_Node'Class) return Visit_Status;
       --  Our rewriting callback for the main project:
@@ -521,12 +526,13 @@ begin
       --     - Add the Naming package declaration which renames the one from
       --       our naming project.
 
+      ------------------
+      -- Rewrite_Main --
+      ------------------
+
       function Rewrite_Main (N : GPR_Node'Class) return Visit_Status is
-
          use GPR2.Project.View.Set.Set;
-
       begin
-
          case Kind (N) is
 
             when GPR_With_Decl_List =>
@@ -621,12 +627,11 @@ begin
       --  didn't create the project from scratch)
 
       if not Opt.No_Backup and then not From_Scratch then
-
          --  Find the files with name <orig_proj_filename>.saved_<0..N> and
          --  use <orig_proj_filename>.saved_<N+1> as backup file.
 
          declare
-            use GNAT.Regpat;
+            use Regpat;
 
             Bkp_Reg     : constant String :=
                             "^" & String (Project_Path.Simple_Name)
@@ -636,7 +641,7 @@ begin
 
             Str  : String (1 .. 2_000);
             Last : Natural;
-            Dir  : GNAT.Directory_Operations.Dir_Type;
+            Dir  : Directory_Operations.Dir_Type;
             File : GPR2.Path_Name.Object;
 
             Bkp_Number     : Natural;
@@ -646,15 +651,15 @@ begin
 
          begin
             begin
-               GNAT.Directory_Operations.Open (Dir, Project_Path.Dir_Name);
+               Directory_Operations.Open (Dir, Project_Path.Dir_Name);
             exception
-               when GNAT.Directory_Operations.Directory_Error =>
+               when Directory_Operations.Directory_Error =>
                   raise GPRname_Exception with
                     "cannot open directory " & String (Project_Path.Dir_Name);
             end;
 
             loop
-               GNAT.Directory_Operations.Read (Dir, Str, Last);
+               Directory_Operations.Read (Dir, Str, Last);
                exit when Last = 0;
 
                File := GPR2.Path_Name.Create_File
@@ -663,6 +668,7 @@ begin
 
                if File.Exists then
                   Match (Bkp_Matcher, Str (1 .. Last), Matches);
+
                   if Matches (0) /= No_Match then
                      Bkp_Number := Natural'Value
                        (Str (Matches (1).First .. Matches (1).Last));
@@ -677,17 +683,21 @@ begin
             --  project file to the backup.
 
             declare
-               Bkp_Filename : constant String := String (Project_Path.Value)
+               Bkp_Filename : constant String :=
+                                String (Project_Path.Value)
                                 & ".saved_" & Int_Image (New_Bkp_Number);
             begin
-               Put_Line ("copying file " & String (Project_Path.Value)
-                         & " to file " & Bkp_Filename, Low);
-               GNAT.OS_Lib.Copy_File (String (Project_Path.Value),
-                                      Bkp_Filename,
-                                      Success);
+               Put_Line
+                 ("copying file " & String (Project_Path.Value)
+                  & " to file " & Bkp_Filename, Low);
+
+               OS_Lib.Copy_File
+                 (String (Project_Path.Value),
+                  Bkp_Filename,
+                  Success);
             end;
 
-            GNAT.Directory_Operations.Close (Dir);
+            Directory_Operations.Close (Dir);
 
             if not Success then
                raise GPRname_Exception with
@@ -723,11 +733,11 @@ begin
       use GPRname.Unit;
 
       Naming_Project_Buffer : Unbounded_String;
-
-      File_Src_List : File_Type;
+      File_Src_List         : Text_IO.File_Type;
 
    begin
-      Create (File_Src_List, Out_File, Source_List_File_Basename);
+      Text_IO.Create
+        (File_Src_List, Text_IO.Out_File, Source_List_File_Basename);
 
       Naming_Project_Buffer := To_Unbounded_String
         ("abstract project " & Naming_Project_Name & " is "
@@ -741,8 +751,8 @@ begin
                Naming_Project_Buffer := Naming_Project_Buffer
                  & To_Unbounded_String
                  ("for " & (if U.Kind = K_Spec then "Spec" else "Body")
-                  & " (" & Dble_Quote (String (U.Name)) & ") use "
-                  & Dble_Quote (String (S.File.Simple_Name))
+                  & " (" & Quote (String (U.Name)) & ") use "
+                  & Quote (String (S.File.Simple_Name))
                   & (if U.Index_In_Source > 0 then
                          " at " & Int_Image (U.Index_In_Source) & ";"
                     else ";"));
@@ -750,7 +760,7 @@ begin
 
             --  Write the source to the source list file
 
-            Put_Line (File_Src_List, String (S.File.Simple_Name));
+            Text_IO.Put_Line (File_Src_List, String (S.File.Simple_Name));
          end loop;
       end if;
 
@@ -770,12 +780,13 @@ begin
                Naming_Project_Buffer := Naming_Project_Buffer
                  & To_Unbounded_String
                  ("for Implementation_Exceptions ("
-                  & Dble_Quote (String (Lang)) & ") use (");
+                  & Quote (String (Lang)) & ") use (");
 
                for S_Curs in Sources.Iterate loop
                   Naming_Project_Buffer := Naming_Project_Buffer &
                     To_Unbounded_String
-                    (Dble_Quote (String (Sources (S_Curs).File.Simple_Name)));
+                    (Quote (String (Sources (S_Curs).File.Simple_Name)));
+
                   if S_Curs /= Sources.Last then
                      Naming_Project_Buffer := Naming_Project_Buffer &
                        To_Unbounded_String (", ");
@@ -786,8 +797,9 @@ begin
 
                   --  Write the source to the source list file
 
-                  Put_Line (File_Src_List,
-                            String (Sources (S_Curs).File.Simple_Name));
+                  Text_IO.Put_Line
+                    (File_Src_List,
+                     String (Sources (S_Curs).File.Simple_Name));
                end loop;
             end if;
          end;
@@ -798,7 +810,7 @@ begin
 
       --  We are done with the source list file
 
-      Close (File_Src_List);
+      Text_IO.Close (File_Src_List);
 
       --  Parse the naming project buffer and pretty-print the resulting AST
       --  to the actual naming project file.

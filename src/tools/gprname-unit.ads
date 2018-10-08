@@ -34,9 +34,9 @@ package GPRname.Unit is
    type Unit_Kind is (K_Spec, K_Body);
 
    function Create
-     (F_Name            : GPR2.Name_Type;
-      F_Kind            : Unit_Kind;
-      F_Index_In_Source : Natural) return Object;
+     (Name            : GPR2.Name_Type;
+      Kind            : Unit_Kind;
+      Index_In_Source : Natural) return Object;
    --  Creates a Unit object
 
    function Name (Self : Object) return GPR2.Name_Type;
@@ -56,5 +56,14 @@ private
       Kind            : Unit_Kind;
       Index_In_Source : Natural := 0;
    end record;
+
+   function Name (Self : Object) return GPR2.Name_Type is
+     (GPR2.Name_Type (To_String (Self.Name)));
+
+   function Kind (Self : Object) return Unit_Kind is
+     (Self.Kind);
+
+   function Index_In_Source (Self : Object) return Natural is
+     (Self.Index_In_Source);
 
 end GPRname.Unit;

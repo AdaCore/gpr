@@ -108,6 +108,17 @@ package GPR2 is
               then
                Str (Str'First + 1 .. Str'Last - 1) = Unquote'Result);
 
+   function Quote
+     (Str        : Value_Type;
+      Quote_With : Character := '"') return Value_Type
+     with Post => Quote'Result'Length = Str'Length + 2
+                    and then
+                  ((Quote'Result (Quote'Result'First) = '''
+                    and then Quote'Result (Quote'Result'Last) = ''')
+                   or else
+                     (Quote'Result (Quote'Result'First) = '"'
+                      and then Quote'Result (Quote'Result'Last) = '"'));
+
    type Case_Sensitive_Name_Type is new String
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
    --  A case sensitive name

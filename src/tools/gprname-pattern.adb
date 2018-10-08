@@ -22,7 +22,8 @@ package body GPRname.Pattern is
    -- Create --
    ------------
 
-   function Create (Pattern : Pattern_Type) return Object is
+   function Create (Pattern : Pattern_Type) return Object'Class is
+      use GNAT.Regexp;
    begin
       return (Object'(Pattern => +String (Pattern),
                       Regex   => Compile (String (Pattern), Glob => True)));
@@ -31,19 +32,5 @@ package body GPRname.Pattern is
          raise GPRname_Exception
            with "invalid regular expression """ & String (Pattern) & """";
    end Create;
-
-   -------------
-   -- Pattern --
-   -------------
-
-   function Pattern (Self : Object) return Pattern_Type is
-     (Pattern_Type (To_String (Self.Pattern)));
-
-   -----------
-   -- Regex --
-   -----------
-
-   function Regex (Self : Object) return Regexp is
-     (Self.Regex);
 
 end GPRname.Pattern;

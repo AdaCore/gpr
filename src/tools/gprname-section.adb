@@ -29,18 +29,22 @@ package body GPRname.Section is
    -- Add_Directories_File --
    --------------------------
 
-   procedure Add_Directories_File (Self : in out Object; Fil : String) is
+   procedure Add_Directories_File
+     (Self : in out Object;
+      File : String) is
    begin
-      Self.Directories_Files.Append (Create_File (Name_Type (Fil)));
+      Self.Directories_Files.Append (Create_File (Name_Type (File)));
    end Add_Directories_File;
 
    -------------------
    -- Add_Directory --
    -------------------
 
-   procedure Add_Directory (Self : in out Object; Dir : String) is
+   procedure Add_Directory
+     (Self      : in out Object;
+      Directory : String) is
    begin
-      Self.Directories.Append (Create (Name_Type (Dir)));
+      Self.Directories.Append (Create (Name_Type (Directory)));
    end Add_Directory;
 
    -----------------------------------
@@ -48,19 +52,20 @@ package body GPRname.Section is
    -----------------------------------
 
    procedure Add_Excluded_Language_Pattern
-     (Self : in out Object;
-      Lang : Language_Type;
-      Patt : Pattern_Type)
+     (Self     : in out Object;
+      Language : Language_Type;
+      Pattern  : Pattern_Type)
    is
+      Compiled                : constant GPRname.Pattern.Object :=
+                                  GPRname.Pattern.Object (Create (Pattern));
       Is_New_Key              : Boolean;
       Position                : Language_Patterns_Map.Cursor;
-      Compiled_Pattern_Vector : Pattern.Vector.Object;
-      Compiled                : constant Pattern.Object := Create (Patt);
+      Compiled_Pattern_Vector : GPRname.Pattern.Vector.Object;
 
    begin
       Compiled_Pattern_Vector.Append (Compiled);
       Self.Excluded_Patterns.Insert
-        (Lang, Compiled_Pattern_Vector, Position, Is_New_Key);
+        (Language, Compiled_Pattern_Vector, Position, Is_New_Key);
 
       if not Is_New_Key then
          Self.Excluded_Patterns.Reference (Position).Append (Compiled);
@@ -72,12 +77,12 @@ package body GPRname.Section is
    --------------------------
 
    procedure Add_Language_Pattern
-     (Self : in out Object;
-      Lang : Language_Type;
-      Patt : Pattern_Type)
-   is
+     (Self     : in out Object;
+      Language : Language_Type;
+      Pattern  : Pattern_Type) is
    begin
-      Self.Patterns.Append (Create (Patt, Lang));
+      Self.Patterns.Append
+        (GPRname.Pattern.Language.Object (Create (Pattern, Language)));
    end Add_Language_Pattern;
 
    --------------
@@ -99,6 +104,10 @@ package body GPRname.Section is
         (File : String) return Source_Dir.Vector.Object;
       --  Add source directories from a file
 
+      -------------------------------
+      -- Get_Source_Dirs_From_File --
+      -------------------------------
+
       function Get_Source_Dirs_From_File
         (File : String) return Source_Dir.Vector.Object
       is
@@ -106,6 +115,7 @@ package body GPRname.Section is
          Ret : Source_Dir.Vector.Object;
       begin
          Open (F, In_File, File);
+
          while not End_Of_File (F) loop
             declare
                Line : constant String := Get_Line (F);
@@ -113,12 +123,13 @@ package body GPRname.Section is
                Ret.Append (Create (Name_Type (Line)));
             end;
          end loop;
+
          Close (F);
+
          return Ret;
       exception
          when others =>
             raise GPRname_Exception with "Could not read file '" & File & "'";
-            return Source_Dir.Vector.Empty_Vector;
       end Get_Source_Dirs_From_File;
 
    begin
@@ -137,8 +148,8 @@ package body GPRname.Section is
       --  Third, add the default pattern ("*") is there is none
 
       if Self.Patterns.Is_Empty then
-         Self.Add_Language_Pattern (Language_Type'("Ada"),
-                                    Pattern_Type'("*"));
+         Self.Add_Language_Pattern
+           (Language_Type'("Ada"), Pattern_Type'("*"));
       end if;
    end Prepare;
 
@@ -153,27 +164,5 @@ package body GPRname.Section is
       Self.Patterns.Clear;
       Self.Excluded_Patterns.Clear;
    end Reset;
-
-   -----------------
-   -- Directories --
-   -----------------
-
-   function Directories (Self : Object) return Source_Dir.Vector.Object is
-     (Self.Directories);
-
-   --------------
-   -- Patterns --
-   --------------
-
-   function Patterns (Self : Object) return Pattern.Language.Vector.Object is
-     (Self.Patterns);
-
-   -----------------------
-   -- Excluded_Patterns --
-   -----------------------
-
-   function Excluded_Patterns
-     (Self : Object) return Language_Patterns_Map.Map is
-     (Self.Excluded_Patterns);
 
 end GPRname.Section;
