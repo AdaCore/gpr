@@ -24,9 +24,6 @@
 
 with Ada.Characters.Handling;
 
-with GPR.Output;
-
-with GPR_Parser.Analysis;
 with GPR_Parser.Common;
 
 with GPR2;
@@ -37,42 +34,45 @@ with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pretty_Printer is
 
-   use Ada.Characters.Handling;
-
-   use GPR.Output;
-
-   use GPR_Parser.Analysis;
-
-   procedure Write_Char_Default (C : Character);
-   procedure Write_Str_Default (S : String);
-   procedure Write_Eol_Default;
-
    ------------------
    -- Pretty_Print --
    ------------------
 
    procedure Pretty_Print
-     (Project_View           : GPR2.Project.View.Object;
-      With_Trivia            : Trivia_Level       := Comments;
+     (Project_View           : View.Object        := View.Undefined;
+      Project_Analysis_Unit  : Analysis_Unit      := No_Analysis_Unit;
+      With_Comments          : Boolean            := True;
       Initial_Indent         : Natural            := 0;
       Increment              : Positive           := 3;
       Max_Line_Length        : Max_Length_Of_Line := 80;
       Minimize_Empty_Lines   : Boolean            := False;
       Backward_Compatibility : Boolean            := False;
-      W_Char                 : Write_Char_Ap      := null;
-      W_Eol                  : Write_Eol_Ap       := null;
-      W_Str                  : Write_Str_Ap       := null)
+      Write_Char             : Write_Char_Ap      := Write_Char_Default'Access;
+      Write_Eol              : Write_Eol_Ap       := Write_Eol_Default'Access;
+      Write_Str              : Write_Str_Ap       := Write_Str_Default'Access;
+      Out_File_Descriptor    : File_Descriptor    := Standout)
    is
-      pragma Unreferenced (With_Trivia);
+      pragma Unreferenced (With_Comments);
+
+      use Ada.Characters.Handling;
 
       use GPR_Parser.Common;
+
+      Last_Line_Is_Empty : Boolean := False;
+      --  Used to avoid two consecutive empty lines
+
+      No_Split_String_Lit : Boolean := False;
+      --  Used to indicate that the next String_Literal to be printed may
+      --  or may not be split across several lines.
+
+      Column : Natural := 0;
+      --  Column number of the last character in the line. Used to avoid
+      --  outputting lines longer than Max_Line_Length.
 
       procedure Print (Node : GPR_Node'Class; Indent : Natural);
       --  The recursive printer
 
-      --  Some printing utils  --
-
-      procedure Start_Line (Indent : Natural);
+      procedure Write_Indentation (Indent : Natural);
       --  Output the indentation at the beginning of the line
 
       procedure Write_Attribute_Name (Name : Name_Type; Indent : Natural);
@@ -87,7 +87,7 @@ package body GPR2.Project.Pretty_Printer is
         (Name       : Name_Type;
          Indent     : Natural;
          Capitalize : Boolean := True);
-      --  Outputs a name, with the GNAT casing by default
+      --  Output a name, with the GNAT casing by default
 
       procedure Write_Project_Filename (S : String; Indent : Natural);
       --  Output a project file name in one single string literal
@@ -101,25 +101,14 @@ package body GPR2.Project.Pretty_Printer is
       --  with "&" operators to fit within max line length.
 
       procedure Write_Token
-        (S        : String;
-         Indent   : Natural;
-         End_Line : Boolean := False);
-      --  Use this to write tokens that are not identifiers nor string literals
-
-      Write_Char : Write_Char_Ap := Write_Char_Default'Access;
-      Write_Eol  : Write_Eol_Ap := Write_Eol_Default'Access;
-      Write_Str  : Write_Str_Ap := Write_Str_Default'Access;
-      --  These three access to procedure values are used for the output
-
-      Last_Line_Is_Empty : Boolean := False;
-      --  Used to avoid two consecutive empty lines
-
-      No_Split_String_Lit : Boolean := False;
-      --  Used to indicate that the next String_Literal no
-
-      Column : Natural := 0;
-      --  Column number of the last character in the line. Used to avoid
-      --  outputting lines longer than Max_Line_Length.
+        (S          : String;
+         Indent     : Natural;
+         End_Line   : Boolean := False;
+         Lower_Case : Boolean := True);
+      --  Use this to write tokens that are not identifiers nor string
+      --  literals. Lower case by default, since we expect keywords.
+      --  End_Line is only used for this utility since we will always end
+      --  statements with a token (";" or "is").
 
       -----------
       -- Print --
@@ -138,17 +127,19 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_Project (Node.As_Compilation_Unit), Indent);
 
             when GPR_Project =>
-               --  context & project nodes
+               --  Context & project nodes
 
                Print (F_Context_Clauses (Node.As_Project), Indent);
-               Write_Empty_Line (Always => True);
                Print (F_Project_Decl (Node.As_Project), Indent);
 
             when GPR_With_Decl_List =>
+               --  The list of "with" declarations
+
                if Node.Children_Count > 0 then
                   for C of Node.Children loop
                      Print (C, Indent);
                   end loop;
+                  Write_Empty_Line;
                end if;
 
             when GPR_With_Decl =>
@@ -168,6 +159,8 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token (";", Indent, End_Line => True);
 
             when GPR_String_Literal_List =>
+               --  List of string literals (e.g. from F_Path_Names)
+
                declare
                   Count : Natural := 0;
                begin
@@ -201,11 +194,13 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
                Write_Token ("is", Indent, End_Line => True);
+               Write_Empty_Line;
 
                for C of F_Decls (Node.As_Project_Declaration).Children loop
                   Print (C, Indent + Increment);
                end loop;
 
+               Write_Empty_Line;
                Write_Token ("end ", Indent);
                Print (F_End_Name (Node.As_Project_Declaration), Indent);
                Write_Token (";", Indent, End_Line => True);
@@ -217,6 +212,8 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token ("abstract", Indent);
 
             when GPR_Qualifier_Names =>
+               --  qualifier1 [qualifier2]
+
                Write_Token
                  (F_Qualifier_Id1 (Node.As_Qualifier_Names).String_Text,
                   Indent);
@@ -229,6 +226,8 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
             when GPR_Prefix =>
+               --  prefix[.suffix] (e.g. parent/child projects)
+
                Write_Name
                  (Name_Type (String'(F_Prefix (Node.As_Prefix).String_Text)),
                   Indent);
@@ -241,7 +240,14 @@ package body GPR2.Project.Pretty_Printer is
                      Indent);
                end if;
 
+            when GPR_Identifier =>
+               --  Any identifier in the project
+
+               Write_Name (Name_Type (String'(Node.String_Text)), Indent);
+
             when GPR_Project_Extension =>
+               --  extends [all "<extended_proj>"]
+
                Write_Token ("extends ", Indent);
 
                if Kind (F_Is_All (Node.As_Project_Extension)) =
@@ -254,6 +260,8 @@ package body GPR2.Project.Pretty_Printer is
                  (F_Path_Name (Node.As_Project_Extension).String_Text, Indent);
 
             when GPR_Attribute_Decl =>
+               --  Attribute declaration node
+
                Write_Token ("for ", Indent);
                Write_Attribute_Name
                  (Name_Type (String'(F_Attr_Name
@@ -276,12 +284,21 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token ("others", Indent);
 
             when GPR_String_Literal =>
+               --  GPR string literal "..."
+               --  Depending on the current value of No_Split_String_Lit (set
+               --  by a parent call to Print) we will enable string splitting
+               --  to stick to the max line length. This is especially used
+               --  for project paths which are non-splittable.
+
                Write_Str_Lit
                  (Node.String_Text,
                   Indent,
                   Splittable => not No_Split_String_Lit);
 
             when GPR_String_Literal_At =>
+               --  Same as above, followed by the "at ..." construct used by
+               --  some attributes (Body/Spec in package Naming).
+
                Write_Str_Lit
                  (F_Str_Lit (Node.As_String_Literal_At).String_Text,
                   Indent,
@@ -295,6 +312,8 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
             when GPR_Term_List =>
+               --  List of terms separated by "&", forming an expression
+
                declare
                   Count : Natural := 0;
                begin
@@ -309,6 +328,9 @@ package body GPR2.Project.Pretty_Printer is
                end;
 
             when GPR_Expr_List =>
+               --  List of expressions, enclosed with parenthesis and separated
+               --  by commas.
+
                declare
                   Count : Natural := 0;
                begin
@@ -327,10 +349,12 @@ package body GPR2.Project.Pretty_Printer is
                end;
 
             when GPR_Builtin_Function_Call =>
+               --  Builtin call term, e.g. external ("VAR", "default")
+
                Write_Name
                  (Name_Type
                     (String'(F_Function_Name
-                      (Node.As_Builtin_Function_Call).String_Text)),
+                     (Node.As_Builtin_Function_Call).String_Text)),
                   Indent);
                Write_Token (" ", Indent);
                No_Split_String_Lit := True;
@@ -338,10 +362,16 @@ package body GPR2.Project.Pretty_Printer is
                No_Split_String_Lit := False;
 
             when GPR_Variable_Reference =>
+               --  Variable reference term.
+               --  In the current grammar, this also covers attribute
+               --  reference. The format is A[.B[.C]]['Attr].
+               --  This should be modified in the future to handle unlimited
+               --  parent/child project hierarchies.
+
                Write_Name
                  (Name_Type
                     (String'(F_Variable_Name1
-                      (Node.As_Variable_Reference).String_Text)),
+                     (Node.As_Variable_Reference).String_Text)),
                   Indent);
 
                if F_Variable_Name2
@@ -351,7 +381,7 @@ package body GPR2.Project.Pretty_Printer is
                   Write_Name
                     (Name_Type
                        (String'(F_Variable_Name2
-                         (Node.As_Variable_Reference).String_Text)),
+                        (Node.As_Variable_Reference).String_Text)),
                      Indent);
 
                   if F_Variable_Name3
@@ -361,7 +391,7 @@ package body GPR2.Project.Pretty_Printer is
                      Write_Name
                        (Name_Type
                           (String'(F_Variable_Name3
-                            (Node.As_Variable_Reference).String_Text)),
+                           (Node.As_Variable_Reference).String_Text)),
                         Indent);
                   end if;
                end if;
@@ -374,6 +404,11 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
             when GPR_Attribute_Reference =>
+               --  Attribute reference node, possibly with an index.
+               --  Write_Attribute_Name takes care of compatibility with former
+               --  GPR versions for atttribute names (e.g. replace Spec with
+               --  Specification).
+
                Write_Attribute_Name
                  (Name_Type (F_Attribute_Name
                   (Node.As_Attribute_Reference).String_Text),
@@ -392,14 +427,18 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
             when GPR_Project_Reference =>
+               --  Node for the Project'... construct
+
                Write_Token ("Project'", Indent);
                Write_Name
                  (Name_Type
                     (String'(F_Attr_Ref
-                      (Node.As_Project_Reference).String_Text)),
+                     (Node.As_Project_Reference).String_Text)),
                   Indent);
 
             when GPR_Variable_Decl =>
+               --  <var>[ : <type>] := <value>;
+
                Write_Name
                  (Name_Type
                     (String'(F_Var_Name
@@ -416,10 +455,12 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token (";", Indent, End_Line => True);
 
             when GPR_Type_Reference =>
+               --  CF above
+
                Write_Name
                  (Name_Type
                     (String'(F_Var_Type_Name1
-                      (Node.As_Type_Reference).String_Text)),
+                     (Node.As_Type_Reference).String_Text)),
                   Indent);
 
                if F_Var_Type_Name2 (Node.As_Type_Reference) /= No_GPR_Node then
@@ -430,33 +471,39 @@ package body GPR2.Project.Pretty_Printer is
                end if;
 
             when GPR_Package_Decl =>
-               Write_Empty_Line (Always => True);
+               --  Package declaration node (either renaming, or with a spec)
+
+               Write_Empty_Line;
                Write_Token ("package ", Indent);
                Write_Name
                  (Name_Type
                     (String'(F_Pkg_Name
-                      (Node.As_Package_Decl).String_Text)),
+                     (Node.As_Package_Decl).String_Text)),
                   Indent);
                Write_Token (" ", Indent);
                Print (F_Pkg_Spec (Node.As_Package_Decl), Indent);
-               Write_Empty_Line (Always => True);
+               Write_Empty_Line;
 
             when GPR_Package_Renaming =>
+               --  Case of a package renaming
+
                Write_Token ("renames ", Indent);
                Write_Name
                  (Name_Type
                     (String'(F_Prj_Name
-                      (Node.As_Package_Renaming).String_Text)),
+                     (Node.As_Package_Renaming).String_Text)),
                   Indent);
                Write_Token (".", Indent);
                Write_Name
                  (Name_Type
                     (String'(F_Pkg_Name
-                      (Node.As_Package_Renaming).String_Text)),
+                     (Node.As_Package_Renaming).String_Text)),
                   Indent);
                Write_Token (";", Indent, End_Line => True);
 
             when GPR_Package_Spec =>
+               --  Case of a package spec (may be an extending package)
+
                if F_Extension (Node.As_Package_Spec) /= No_GPR_Node then
                   Print (F_Extension (Node.As_Package_Spec), Indent);
                   Write_Token (" ", Indent);
@@ -471,37 +518,41 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token ("end ", Indent);
                Write_Name
                  (Name_Type (String'(F_End_Name
-                   (Node.As_Package_Spec).String_Text)),
+                  (Node.As_Package_Spec).String_Text)),
                   Indent);
                Write_Token (";", Indent, End_Line => True);
 
             when GPR_Package_Extension =>
+               --  Package extension
+
                Write_Token ("extends ", Indent);
                Write_Name
                  (Name_Type (String'(F_Prj_Name
-                   (Node.As_Package_Extension).String_Text)),
+                  (Node.As_Package_Extension).String_Text)),
                   Indent);
                Write_Token (".", Indent);
                Write_Name
                  (Name_Type (String'(F_Pkg_Name
-                   (Node.As_Package_Extension).String_Text)),
+                  (Node.As_Package_Extension).String_Text)),
                   Indent);
 
             when GPR_Empty_Decl =>
                Write_Token ("null;", Indent, End_Line => True);
 
             when GPR_Typed_String_Decl =>
+               --  Node for a typed string declaration
+
                Write_Token ("type ", Indent);
                Write_Name
                  (Name_Type (String'(F_Type_Id
-                   (Node.As_Typed_String_Decl).String_Text)),
+                  (Node.As_Typed_String_Decl).String_Text)),
                   Indent);
                Write_Token (" is (", Indent);
                Print (F_String_Literals (Node.As_Typed_String_Decl), Indent);
                Write_Token (");", Indent, End_Line => True);
 
             when GPR_Case_Construction =>
-               Write_Empty_Line (Always => True);
+               Write_Empty_Line;
                Write_Token ("case ", Indent);
                Print (F_Var_Ref (Node.As_Case_Construction), Indent);
                Write_Token (" is ", Indent, End_Line => True);
@@ -511,7 +562,7 @@ package body GPR2.Project.Pretty_Printer is
                end loop;
 
                Write_Token ("end case;", Indent, End_Line => True);
-               Write_Empty_Line (Always => True);
+               Write_Empty_Line;
 
             when GPR_Case_Item =>
                Write_Token ("when ", Indent);
@@ -523,6 +574,8 @@ package body GPR2.Project.Pretty_Printer is
                end loop;
 
             when GPR_Choices =>
+               --  Value_1 | ... | Value_N
+
                declare
                   Count : Natural := 0;
                begin
@@ -537,19 +590,11 @@ package body GPR2.Project.Pretty_Printer is
                end;
 
             when others =>
-               null;
+               --  Should not happen
+
+               raise AST_Error with "unexpected construct";
          end case;
       end Print;
-
-      ----------------
-      -- Start_Line --
-      ----------------
-
-      procedure Start_Line (Indent : Natural) is
-      begin
-         Write_Str ((1 .. Indent => ' '));
-         Column := Indent;
-      end Start_Line;
 
       --------------------------
       -- Write_Attribute_Name --
@@ -591,6 +636,17 @@ package body GPR2.Project.Pretty_Printer is
          end if;
       end Write_Empty_Line;
 
+      -----------------------
+      -- Write_Indentation --
+      -----------------------
+
+      procedure Write_Indentation (Indent : Natural) is
+      begin
+         Last_Line_Is_Empty := False;
+         Write_Str ((1 .. Indent => ' '));
+         Column := Indent;
+      end Write_Indentation;
+
       ----------------
       -- Write_Name --
       ----------------
@@ -605,12 +661,14 @@ package body GPR2.Project.Pretty_Printer is
          Name_Len    : constant Natural := Name_Buffer'Length;
 
       begin
+         Last_Line_Is_Empty := False;
+
          if not Capitalize then
             Write_Token (Name_Buffer, Indent);
 
          else
             if Column = 0 then
-               Start_Line (Indent);
+               Write_Indentation (Indent);
             end if;
 
             --  If the line would become too long, start a new line if it helps
@@ -619,7 +677,7 @@ package body GPR2.Project.Pretty_Printer is
               and then Column > Indent + Increment
             then
                Write_Eol.all;
-               Start_Line (Indent + Increment);
+               Write_Indentation (Indent + Increment);
             end if;
 
             --  Capitalize First letter and letters following a "_"
@@ -642,17 +700,18 @@ package body GPR2.Project.Pretty_Printer is
          end if;
       end Write_Name;
 
-      -------------------------
-      -- Output_Project_File --
-      -------------------------
+      ----------------------------
+      -- Write_Project_Filename --
+      ----------------------------
 
       procedure Write_Project_Filename (S : String; Indent : Natural) is
       begin
+         Last_Line_Is_Empty := False;
          Write_Token (S, Indent);
       end Write_Project_Filename;
 
       -------------------
-      -- Output_String --
+      -- Write_Str_Lit --
       -------------------
 
       procedure Write_Str_Lit
@@ -660,8 +719,10 @@ package body GPR2.Project.Pretty_Printer is
          Indent     : Natural;
          Splittable : Boolean := False) is
       begin
+         Last_Line_Is_Empty := False;
+
          if Column = 0 then
-            Start_Line (Indent);
+            Write_Indentation (Indent);
          end if;
 
          --  If the line would become too long, start a new line if it helps
@@ -670,7 +731,7 @@ package body GPR2.Project.Pretty_Printer is
            and then Column > Indent + Increment
          then
             Write_Eol.all;
-            Start_Line (Indent + Increment);
+            Write_Indentation (Indent + Increment);
          end if;
 
          if not Splittable then
@@ -688,7 +749,7 @@ package body GPR2.Project.Pretty_Printer is
                if J + 3 < S'Last and then Column >= Max_Line_Length - 3 then
                   Write_Str (""" &");
                   Write_Eol.all;
-                  Start_Line (Indent + Increment);
+                  Write_Indentation (Indent + Increment);
                   Write_Char ('"');
                   Column := Column + 1;
                end if;
@@ -696,100 +757,72 @@ package body GPR2.Project.Pretty_Printer is
          end if;
       end Write_Str_Lit;
 
-      ------------------
-      -- Write_String --
-      ------------------
+      -----------------
+      -- Write_Token --
+      -----------------
 
       procedure Write_Token
-        (S        : String;
-         Indent   : Natural;
-         End_Line : Boolean := False) is
+        (S          : String;
+         Indent     : Natural;
+         End_Line   : Boolean := False;
+         Lower_Case : Boolean := True)
+      is
+         Formatted : constant String :=
+                       (if Lower_Case then To_Lower (S) else S);
+
       begin
          --  TODO: split according to some characters (dots, spaces... spaces
          --        shouldn't be repeated on the new line)
 
+         Last_Line_Is_Empty := False;
+
          if Column = 0 then
-            Start_Line (Indent);
+            Write_Indentation (Indent);
          end if;
 
          --  If the line would become too long, start a new line if it helps
 
-         if Column + S'Length > Max_Line_Length
+         if Column + Formatted'Length > Max_Line_Length
            and then Column > Indent + Increment
          then
             Write_Eol.all;
-            Start_Line (Indent + Increment);
+            Write_Indentation (Indent + Increment);
          end if;
 
-         Write_Str (S);
-         Column := Column + S'Length;
+         Write_Str (Formatted);
+         Column := Column + Formatted'Length;
 
          if End_Line then
-            Last_Line_Is_Empty := False;
             Write_Eol.all;
             Column := 0;
          end if;
       end Write_Token;
 
-      Unit : constant Analysis_Unit := GPR2.Project.Definition.Get
-        (Project_View).Trees.Project.Unit;
+      Unit : Analysis_Unit := Project_Analysis_Unit;
 
    begin
-      if W_Char = null then
-         Write_Char := Write_Char_Default'Access;
-      else
-         Write_Char := W_Char;
+      if Out_File_Descriptor /= Standout then
+         Out_FD := Out_File_Descriptor;
+         GPR.Output.Set_Special_Output (Special_Output_Proc'Access);
       end if;
 
-      if W_Eol = null then
-         Write_Eol := Write_Eol_Default'Access;
-      else
-         Write_Eol := W_Eol;
-      end if;
-
-      if W_Str = null then
-         Write_Str := Write_Str_Default'Access;
-      else
-         Write_Str := W_Str;
+      if Unit = No_Analysis_Unit then
+         Unit := GPR2.Project.Definition.Get (Project_View).Trees.Project.Unit;
       end if;
 
       Print (Root (Unit), Initial_Indent);
    end Pretty_Print;
 
-   ---------
-   -- wpr --
-   ---------
+   -------------------------
+   -- Special_Output_Proc --
+   -------------------------
 
-   procedure wpr (Tree : GPR2.Project.Tree.Object) is
+   procedure Special_Output_Proc (Buf : String) is
    begin
-      Pretty_Print (Tree.Root_Project);
-   end wpr;
-
-   ------------------------
-   -- Write_Char_Default --
-   ------------------------
-
-   procedure Write_Char_Default (C : Character) is
-   begin
-      Write_Char (C);
-   end Write_Char_Default;
-
-   -----------------------
-   -- Write_Eol_Default --
-   -----------------------
-
-   procedure Write_Eol_Default is
-   begin
-      Write_Eol;
-   end Write_Eol_Default;
-
-   -----------------------
-   -- Write_Str_Default --
-   -----------------------
-
-   procedure Write_Str_Default (S : String) is
-   begin
-      Write_Str (S);
-   end Write_Str_Default;
+      if Write (Out_FD, Buf'Address, Buf'Length) /= Buf'Length
+      then
+         raise Write_Error with "write failed";
+      end if;
+   end Special_Output_Proc;
 
 end GPR2.Project.Pretty_Printer;
