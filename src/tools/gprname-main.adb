@@ -22,6 +22,8 @@ with GPRname.Process;
 
 with GPR2.Interrupt_Handler;
 
+with GPRtools.Sigint;
+
 procedure GPRname.Main is
 
    Opt : GPRname.Options.Object;
@@ -29,7 +31,7 @@ procedure GPRname.Main is
 begin
    --  Install the Ctrl-C handler
 
-   GPR2.Interrupt_Handler.Install_Sigint (Sigint_Intercepted'Access);
+   GPR2.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
 
    --  Parse arguments
 

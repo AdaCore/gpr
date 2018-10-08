@@ -79,15 +79,4 @@ package body Gprinstall is
       end if;
    end Delete_Empty_Directory;
 
-   ------------------------
-   -- Sigint_Intercepted --
-   ------------------------
-
-   procedure Sigint_Intercepted is
-      use GNAT;
-   begin
-      Text_IO.Put_Line ("*** Interrupted ***");
-      OS_Lib.OS_Exit (2);
-   end Sigint_Intercepted;
-
 end Gprinstall;

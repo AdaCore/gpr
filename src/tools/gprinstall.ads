@@ -35,9 +35,4 @@ private
    --  Delete Dir_Name if empty, if removed try with parent directory but not
    --  above the given prefix.
 
-   procedure Sigint_Intercepted;
-   pragma Convention (C, Sigint_Intercepted);
-   --  Called when the program is interrupted by Ctrl-C to delete the
-   --  temporary mapping files and configuration pragmas files.
-
 end Gprinstall;

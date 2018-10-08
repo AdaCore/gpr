@@ -16,9 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package GPRname is
-
-   procedure Sigint_Intercepted with Convention => C;
-   --  Ctrl-C handler
+package GPRname with Pure is
 
 end GPRname;

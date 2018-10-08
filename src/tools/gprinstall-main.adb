@@ -36,6 +36,8 @@ with GPR2.Project.Tree;
 with GPR2.Interrupt_Handler;
 with GPR2.Version;
 
+with GPRtools.Sigint;
+
 with Gprinstall.DB;
 with Gprinstall.Install;
 with Gprinstall.Options;
@@ -631,7 +633,7 @@ begin
    if not Options.Version then
       --  And install Ctrl-C handler
 
-      Interrupt_Handler.Install_Sigint (Gprinstall.Sigint_Intercepted'Access);
+      Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
 
       --  Check command line arguments. These will be overridden when looking
       --  for the configuration file.
