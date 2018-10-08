@@ -20,6 +20,8 @@ with GNAT.OS_Lib;
 
 with GPR2.Path_Name;
 
+with GPRtools.Options;
+
 package GPRinstall.Options is
 
    use GNAT;
@@ -38,10 +40,7 @@ package GPRinstall.Options is
    procedure Free (P : in out Param);
    --  Free P
 
-   type Object is record
-      Quiet          : aliased Boolean := False;
-      Verbose        : aliased Boolean := False;
-      Version        : aliased Boolean := False;
+   type Object is new GPRtools.Options.Object with record
       List_Mode      : aliased Boolean := False;
       Uninstall_Mode : aliased Boolean := False;
 
@@ -102,10 +101,6 @@ package GPRinstall.Options is
       Build_Name        : aliased OS_Lib.String_Access :=
                               new String'("default");
       --  Name of the current build
-
-      Usage_Needed      : aliased Boolean := False;
-      --  Set by switch -h: usage will be displayed after all command line
-      --  switches have been scanned.
 
       Recursive         : aliased Boolean := False;
       --  Installation will recurse into all imported projects

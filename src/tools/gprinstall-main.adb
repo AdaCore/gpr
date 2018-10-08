@@ -36,6 +36,7 @@ with GPR2.Project.Tree;
 with GPR2.Interrupt_Handler;
 with GPR2.Version;
 
+with GPRtools.Options;
 with GPRtools.Sigint;
 
 with GPRinstall.DB;
@@ -112,8 +113,6 @@ procedure GPRinstall.Main is
 
       procedure Set_Project (Switch, Value : String);
       --  Set the project file
-
-      Config : Command_Line_Configuration;
 
       ---------------------------
       -- Add_Scenario_Variable --
@@ -196,68 +195,52 @@ procedure GPRinstall.Main is
       Argument_Count : Natural := 0;
 
    begin
-      Define_Switch
-        (Config, Options.Usage_Needed'Access,
-         "-h", Long_Switch => "--help",
-         Help => "Display this help message and exit");
+      --  Call parent/generic command line setup
+
+      GPRtools.Options.Setup (GPRtools.Options.Object (Options));
 
       Define_Switch
-        (Config, Options.Version'Access,
-         Long_Switch => "--version",
-         Help => "Display version and exit");
-
-      Define_Switch
-        (Config, Set_Project'Unrestricted_Access,
+        (Options.Config, Set_Project'Unrestricted_Access,
          "-P:",
          Help => "Project file to install");
 
       Define_Switch
-        (Config, Options.Config_Project'Access,
+        (Options.Config, Options.Config_Project'Access,
          Long_Switch => "--config=",
          Help        => "Specify the main config project file name",
          Argument    =>  "file.cgpr");
 
       Define_Switch
-        (Config, Options.Auto_Config_Project'Access,
+        (Options.Config, Options.Auto_Config_Project'Access,
          Long_Switch => "--autoconf=",
          Help        => "Specify/create the main config project file name",
          Argument    =>  "file.cgpr");
 
       Define_Switch
-        (Config, Options.RTS'Access,
+        (Options.Config, Options.RTS'Access,
          "--RTS=",
          Help     => "Use runtime <runtime> for language Ada",
          Argument => "<runtime>");
 
       Define_Switch
-        (Config, Options.Create_Dest_Dir'Access,
+        (Options.Config, Options.Create_Dest_Dir'Access,
          "-p", "--create-missing-dirs",
          Help => "Use runtime <runtime> for language Ada");
 
       Define_Switch
-        (Config, Add_Search_Path'Unrestricted_Access,
+        (Options.Config, Add_Search_Path'Unrestricted_Access,
          "-aP:",
          Help     => "Add directory dir to project search path",
          Argument => "<dir>");
 
       Define_Switch
-        (Config, Add_Scenario_Variable'Unrestricted_Access,
+        (Options.Config, Add_Scenario_Variable'Unrestricted_Access,
          "-X!",
          Help     => "Add scenario variable",
          Argument => "<NAME>=<VALUE>");
 
       Define_Switch
-        (Config, Options.Verbose'Access,
-         "-v", "--verbose",
-         Help => "Verbose output");
-
-      Define_Switch
-        (Config, Options.Quiet'Access,
-         "-q", "--quiet",
-         Help => "Be quiet/terse");
-
-      Define_Switch
-        (Config, Dummy'Access,
+        (Options.Config, Dummy'Access,
          Switch => "-a",
          Help   => "Copy all source files (default)");
       --  This option is kept for upward compatibility but does nothing, the
@@ -266,157 +249,157 @@ procedure GPRinstall.Main is
       --  way sources are installed.
 
       Define_Switch
-        (Config, Options.All_Sources'Access,
+        (Options.Config, Options.All_Sources'Access,
          Switch => "-m",
          Help   => "Minimal copy of sources (only those needed)",
          Value  => False);
 
       Define_Switch
-        (Config, Options.Recursive'Access,
+        (Options.Config, Options.Recursive'Access,
          Switch => "-r",
          Help   => "Recursive");
 
       Define_Switch
-        (Config, Options.Force_Installations'Access,
+        (Options.Config, Options.Force_Installations'Access,
          "-f", "--force",
          Help => "Force installation, overwrite files");
 
       Define_Switch
-        (Config, Options.Dry_Run'Access,
+        (Options.Config, Options.Dry_Run'Access,
          "-d", "--dry-run",
          Help => "Execute nothing, display commands");
 
       Define_Switch
-        (Config, Options.Output_Stats'Access,
+        (Options.Config, Options.Output_Stats'Access,
          Long_Switch => "--stat",
          Help        => "Display stats about installed projects,"
                         & " must be used with --list");
 
       Define_Switch
-        (Config, Options.No_Build_Var'Access,
+        (Options.Config, Options.No_Build_Var'Access,
          Long_Switch => "--no-build-var",
          Help        => "Do not generate external build variable");
 
       Define_Switch
-        (Config, Options.No_Lib_Link'Access,
+        (Options.Config, Options.No_Lib_Link'Access,
          Long_Switch => "--no-lib-link",
          Help        => "Do not copy shared lib in exec/lib directory");
 
       Define_Switch
-        (Config, Options.Side_Debug'Access,
+        (Options.Config, Options.Side_Debug'Access,
          Long_Switch => "--side-debug",
          Help        => "Write debug information into a separate file");
 
       Define_Switch
-        (Config, Options.List_Mode'Access,
+        (Options.Config, Options.List_Mode'Access,
          Long_Switch => "--list",
          Help        => "List all installed projects");
 
       Define_Switch
-        (Config, Options.Uninstall_Mode'Access,
+        (Options.Config, Options.Uninstall_Mode'Access,
          Long_Switch => "--uninstall",
          Help        => "Remove all previously installed files");
 
       Define_Switch
-        (Config, Options.Sources_Only'Access,
+        (Options.Config, Options.Sources_Only'Access,
          Long_Switch => "--sources-only",
          Help        => "Copy project sources only");
 
       Define_Switch
-        (Config, Options.No_Project'Access,
+        (Options.Config, Options.No_Project'Access,
          Long_Switch => "--no-project",
          Help        => "Do not install project file");
 
       Define_Switch
-        (Config, Prefix'Access,
+        (Options.Config, Prefix'Access,
          Long_Switch => "--prefix=",
          Help        => "Install destination directory");
 
       Define_Switch
-        (Config, Exec_Subdir'Access,
+        (Options.Config, Exec_Subdir'Access,
          Long_Switch => "--exec-subdir=",
          Help        => "The executable directory/sub-directory",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Lib_Subdir'Access,
+        (Options.Config, Lib_Subdir'Access,
          Long_Switch => "--lib-subdir=",
          Help        => "The library directory/sub-directory",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Link_Lib_Subdir'Access,
+        (Options.Config, Link_Lib_Subdir'Access,
          Long_Switch => "--link-lib-subdir=",
          Help        => "The symlib directory/sub-directory to libraries",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, ALI_Subdir'Access,
+        (Options.Config, ALI_Subdir'Access,
          Long_Switch => "--ali-subdir=",
          Help        => "The ALI directory/sub-directory",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Sources_Subdir'Access,
+        (Options.Config, Sources_Subdir'Access,
          Long_Switch => "--sources-subdir=",
          Help        => "The sources directory/sub-directory",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Project_Subdir'Access,
+        (Options.Config, Project_Subdir'Access,
          Long_Switch => "--project-subdir=",
          Help        => "The project directory/sub-directory",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Options.Build_Name'Access,
+        (Options.Config, Options.Build_Name'Access,
          Long_Switch => "--build-name=",
          Help        => "Build name value (default is ""Default"")",
          Argument    => "<name>");
 
       Define_Switch
-        (Config, Options.Install_Name'Access,
+        (Options.Config, Options.Install_Name'Access,
          Long_Switch => "--install-name=",
          Help        => "The name of the installation (manifest)",
          Argument    => "<name>");
 
       Define_Switch
-        (Config, Options.Target_Name'Access,
+        (Options.Config, Options.Target_Name'Access,
          Long_Switch => "--target=",
          Help        => "Specify a target for cross platforms",
          Argument    => "<name>");
 
       Define_Switch
-        (Config, Options.Root_Dir'Access,
+        (Options.Config, Options.Root_Dir'Access,
          Long_Switch => "--root-dir=",
          Help        => "Root directory of obj/lib/exec to relocate",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Options.Build_Tree_Dir'Access,
+        (Options.Config, Options.Build_Tree_Dir'Access,
          Long_Switch => "--relocate-build-tree:",
          Help        => "Root obj/lib/exec dirs are current-directory or dir",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Options.Subdirs'Access,
+        (Options.Config, Options.Subdirs'Access,
          Long_Switch => "--subdirs=",
          Help        => "Real obj/lib/exec dirs are subdirs",
          Argument    => "<dir>");
 
       Define_Switch
-        (Config, Options.Mode'Access,
+        (Options.Config, Options.Mode'Access,
          Long_Switch => "--mode=",
          Help        => "Kind of installation (default is ""dev"")",
          Argument    => "dev|usage");
 
       Define_Switch
-        (Config, Set_Build_Var'Unrestricted_Access,
+        (Options.Config, Set_Build_Var'Unrestricted_Access,
          Long_Switch => "--build-var=",
          Help        => "Name of the variable which identify a build)",
          Argument    => "<name>");
 
-      Getopt (Config);
+      Getopt (Options.Config);
 
       --  If preceding switch was -P, a project file name need to be
       --  specified, not a switch.
