@@ -22,11 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  Pretty Printer for a GPR2 project, represented by its view object.
+--  Pretty Printer for a GPR2 project
 
-with GNAT.OS_Lib;
-
-with GPR.Output;
+with Ada.Strings.Unbounded;
 
 with GPR_Parser.Analysis;
 
@@ -35,54 +33,28 @@ with GPR2.Project.View;
 
 package GPR2.Project.Pretty_Printer is
 
-   use GNAT.OS_Lib;
+   use Ada;
 
+   use GPR_Parser;
    use GPR_Parser.Analysis;
 
-   use GPR2.Project.View;
-
-   type Write_Char_Ap is access procedure (C : Character);
-   type Write_Str_Ap  is access procedure (S : String);
-   type Write_Eol_Ap  is access procedure;
-
-   --
-   --  Default Write {Char,Eol,Str} procedures.
-   --
-   --  At the moment they are borrowed from GPR, with a non-object
-   --  implementation which may cause problems if we instantiate multiple
-   --  Pretty_Printer objects.
-   --  We need to reimplement this in GPR2 in an OO fashion.
-   --
-
-   procedure Write_Char_Default (C : Character) renames GPR.Output.Write_Char;
-   procedure Write_Str_Default (S : String) renames GPR.Output.Write_Str;
-   procedure Write_Eol_Default renames GPR.Output.Write_Eol;
-
-   subtype Max_Length_Of_Line is Positive range 50 .. 255;
+   use type Project.View.Object;
 
    Write_Error : exception;
    AST_Error   : exception;
 
-   procedure Pretty_Print
-     (Project_View           : View.Object        := View.Undefined;
-      Project_Analysis_Unit  : Analysis_Unit      := No_Analysis_Unit;
-      With_Comments          : Boolean            := True;
+   type Object is tagged private;
+
+   subtype Max_Length_Of_Line is Positive range 50 .. 255;
+
+   function Create
+     (With_Comments          : Boolean            := True;
       Initial_Indent         : Natural            := 0;
       Increment              : Positive           := 3;
       Max_Line_Length        : Max_Length_Of_Line := 80;
       Minimize_Empty_Lines   : Boolean            := False;
-      Backward_Compatibility : Boolean            := False;
-      Write_Char             : Write_Char_Ap      := Write_Char_Default'Access;
-      Write_Eol              : Write_Eol_Ap       := Write_Eol_Default'Access;
-      Write_Str              : Write_Str_Ap       := Write_Str_Default'Access;
-      Out_File_Descriptor    : File_Descriptor    := Standout)
-     with Pre => Project_View /= View.Undefined or else
-                 Project_Analysis_Unit /= No_Analysis_Unit;
-   --  Output a project file, using either the default output routines (stdout)
-   --  or the ones specified by W_Char, W_Eol and W_Str.
-   --
-   --  With_Trivia should be used if we have comments and formatting that we
-   --  would like to keep.
+      Backward_Compatibility : Boolean            := False) return Object;
+   --  Create a pretty-printer object.
    --
    --  Initial_Indent is the initial indentation.
    --
@@ -100,13 +72,41 @@ package GPR2.Project.Pretty_Printer is
    --  (Specification, Specification_Suffix, Implementation,
    --  Implementation_Suffix).
 
+   procedure Pretty_Print
+     (Self            : in out Object;
+      View            : Project.View.Object    := Project.View.Undefined;
+      Analysis_Unit   : Analysis.Analysis_Unit := No_Analysis_Unit;
+      Write_Character : access procedure (C : Character) := null;
+      Write_String    : access procedure (S : String)    := null;
+      Write_EOL       : access procedure                 := null)
+     with Pre => (View /= Project.View.Undefined
+                  or else Analysis_Unit /= No_Analysis_Unit)
+                    and then
+                 ((Write_Character = null
+                   and then  Write_String = null
+                   and then Write_EOL = null)
+                  or else
+                    (Write_Character /= null
+                     and then  Write_String /= null
+                     and then Write_EOL /= null));
+   --  Pretty print the project, either use the specified Write_* procedures,
+   --  or create string representation in memory.
+
+   function Result (Self : Object) return String;
+   --  Returns the result of the pretty printer
+
 private
 
-   procedure Special_Output_Proc (Buf : String);
-   --  When using the default Write_* and a custom Out_File_Descriptor,
-   --  we use this to force the underlying GPR utilities to write to
-   --  Out_File_Descriptor instead of standard files.
+   use Ada.Strings.Unbounded;
 
-   Out_FD : File_Descriptor;
+   type Object is tagged record
+      With_Comments          : Boolean            := True;
+      Initial_Indent         : Natural            := 0;
+      Increment              : Positive           := 3;
+      Max_Line_Length        : Max_Length_Of_Line := 80;
+      Minimize_Empty_Lines   : Boolean            := False;
+      Backward_Compatibility : Boolean            := False;
+      Buffer                 : Unbounded_String;
+   end record;
 
 end GPR2.Project.Pretty_Printer;

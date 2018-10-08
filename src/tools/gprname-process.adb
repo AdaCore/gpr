@@ -20,6 +20,7 @@ with Ada.Characters.Conversions;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
+with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 
 with GNAT.Case_Util;
@@ -53,6 +54,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
 
    use Ada;
    use Ada.Exceptions;
+   use Ada.Streams;
    use Ada.Text_IO;
    use Ada.Strings.Unbounded;
 
@@ -697,17 +699,16 @@ begin
       --  Finally, rewrite the project file
 
       declare
-         use GNAT.OS_Lib;
-
-         Project_Out_FD : constant File_Descriptor := Create_File
-           (String (Project_Path.Value), Text);
-
+         File : Stream_IO.File_Type;
+         PP   : GPR2.Project.Pretty_Printer.Object;
       begin
-         Pretty_Print (Project_View          => Tree.Root_Project,
-                       Project_Analysis_Unit => Unit,
-                       Out_File_Descriptor   => Project_Out_FD);
+         PP.Pretty_Print (Analysis_Unit => Unit);
 
-         Close (Project_Out_FD);
+         Stream_IO.Create
+           (File, Stream_IO.Out_File, String (Project_Path.Value));
+         String'Write (Stream_IO.Stream (File), PP.Result);
+
+         Stream_IO.Close (File);
       end;
 
    end;
@@ -803,24 +804,25 @@ begin
       --  to the actual naming project file.
 
       declare
-         use GNAT.OS_Lib;
-
-         Naming_Project_Out_FD : constant File_Descriptor := Create_File
-           (String (Naming_Project_Path.Name), Text);
+         File : Stream_IO.File_Type;
+         PP   : GPR2.Project.Pretty_Printer.Object;
 
          Ctx  : constant Analysis_Context := Create_Context;
-         Unit : constant Analysis_Unit := Get_From_Buffer
-           (Context  => Ctx,
-            Filename => "<buffer>",
-            Charset  => "ASCII",
-            Buffer   => To_String (Naming_Project_Buffer),
-            Rule     => Compilation_Unit_Rule);
+         Unit : constant Analysis_Unit :=
+                  Get_From_Buffer
+                    (Context  => Ctx,
+                     Filename => "<buffer>",
+                     Charset  => "ASCII",
+                     Buffer   => To_String (Naming_Project_Buffer),
+                     Rule     => Compilation_Unit_Rule);
 
       begin
-         Pretty_Print (Project_Analysis_Unit => Unit,
-                       Out_File_Descriptor   => Naming_Project_Out_FD);
+         PP.Pretty_Print (Analysis_Unit => Unit);
 
-         Close (Naming_Project_Out_FD);
+         Stream_IO.Create
+           (File, Stream_IO.Out_File, String (Naming_Project_Path.Name));
+         String'Write (Stream_IO.Stream (File), PP.Result);
+         Stream_IO.Close (File);
       end;
 
    exception

@@ -34,26 +34,37 @@ with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pretty_Printer is
 
+   ------------
+   -- Create --
+   ------------
+
+   function Create
+     (With_Comments           : Boolean           := True;
+      Initial_Indent         : Natural            := 0;
+      Increment              : Positive           := 3;
+      Max_Line_Length        : Max_Length_Of_Line := 80;
+      Minimize_Empty_Lines   : Boolean            := False;
+      Backward_Compatibility : Boolean            := False)
+      return Object is
+   begin
+      return Object'
+        (With_Comments, Initial_Indent, Increment,
+         Max_Line_Length, Minimize_Empty_Lines,
+         Backward_Compatibility, Null_Unbounded_String);
+   end Create;
+
    ------------------
    -- Pretty_Print --
    ------------------
 
    procedure Pretty_Print
-     (Project_View           : View.Object        := View.Undefined;
-      Project_Analysis_Unit  : Analysis_Unit      := No_Analysis_Unit;
-      With_Comments          : Boolean            := True;
-      Initial_Indent         : Natural            := 0;
-      Increment              : Positive           := 3;
-      Max_Line_Length        : Max_Length_Of_Line := 80;
-      Minimize_Empty_Lines   : Boolean            := False;
-      Backward_Compatibility : Boolean            := False;
-      Write_Char             : Write_Char_Ap      := Write_Char_Default'Access;
-      Write_Eol              : Write_Eol_Ap       := Write_Eol_Default'Access;
-      Write_Str              : Write_Str_Ap       := Write_Str_Default'Access;
-      Out_File_Descriptor    : File_Descriptor    := Standout)
+     (Self            : in out Object;
+      View            : Project.View.Object    := Project.View.Undefined;
+      Analysis_Unit   : Analysis.Analysis_Unit := No_Analysis_Unit;
+      Write_Character : access procedure (C : Character) := null;
+      Write_String    : access procedure (S : String)    := null;
+      Write_EOL       : access procedure                 := null)
    is
-      pragma Unreferenced (With_Comments);
-
       use Ada.Characters.Handling;
 
       use GPR_Parser.Common;
@@ -109,6 +120,12 @@ package body GPR2.Project.Pretty_Printer is
       --  literals. Lower case by default, since we expect keywords.
       --  End_Line is only used for this utility since we will always end
       --  statements with a token (";" or "is").
+
+      procedure W_Character (C : Character);
+
+      procedure W_String (S : String);
+
+      procedure W_EOL;
 
       -----------
       -- Print --
@@ -197,7 +214,7 @@ package body GPR2.Project.Pretty_Printer is
                Write_Empty_Line;
 
                for C of F_Decls (Node.As_Project_Declaration).Children loop
-                  Print (C, Indent + Increment);
+                  Print (C, Indent + Self.Increment);
                end loop;
 
                Write_Empty_Line;
@@ -512,7 +529,7 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token ("is", Indent, End_Line => True);
 
                for C of F_Decls (Node.As_Package_Spec).Children loop
-                  Print (C, Indent + Increment);
+                  Print (C, Indent + Self.Increment);
                end loop;
 
                Write_Token ("end ", Indent);
@@ -558,7 +575,7 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token (" is ", Indent, End_Line => True);
 
                for C of F_Items (Node.As_Case_Construction).Children loop
-                  Print (C, Indent + Increment);
+                  Print (C, Indent + Self.Increment);
                end loop;
 
                Write_Token ("end case;", Indent, End_Line => True);
@@ -570,7 +587,7 @@ package body GPR2.Project.Pretty_Printer is
                Write_Token (" => ", Indent);
 
                for C of F_Decls (Node.As_Case_Item).Children loop
-                  Print (C, Indent + Increment);
+                  Print (C, Indent + Self.Increment);
                end loop;
 
             when GPR_Choices =>
@@ -596,6 +613,50 @@ package body GPR2.Project.Pretty_Printer is
          end case;
       end Print;
 
+      -----------------
+      -- W_Character --
+      -----------------
+
+      procedure W_Character (C : Character) is
+      begin
+         if Write_Character = null then
+            Append (Self.Buffer, String'(1 => C));
+         else
+            Write_Character (C);
+         end if;
+      end W_Character;
+
+      -----------
+      -- W_EOL --
+      -----------
+
+      procedure W_EOL is
+      begin
+         if Write_EOL = null then
+            Trim (Self.Buffer, Side => Strings.Right);
+            Append (Self.Buffer, String'(1 => ASCII.LF));
+
+         else
+            W_EOL;
+         end if;
+      end W_EOL;
+
+      --------------
+      -- W_String --
+      --------------
+
+      procedure W_String (S : String) is
+      begin
+         if Write_String = null then
+            for C of S loop
+               W_Character (C);
+            end loop;
+
+         else
+            Write_String (S);
+         end if;
+      end W_String;
+
       --------------------------
       -- Write_Attribute_Name --
       --------------------------
@@ -603,7 +664,7 @@ package body GPR2.Project.Pretty_Printer is
       procedure Write_Attribute_Name (Name : Name_Type; Indent : Natural) is
          use GPR2.Project.Registry.Attribute;
       begin
-         if Backward_Compatibility then
+         if Self.Backward_Compatibility then
             if Name = Spec then
                Write_Name (Specification, Indent);
             elsif Name = Spec_Suffix then
@@ -627,10 +688,10 @@ package body GPR2.Project.Pretty_Printer is
 
       procedure Write_Empty_Line (Always : Boolean := False) is
       begin
-         if (Always or else not Minimize_Empty_Lines)
+         if (Always or else not Self.Minimize_Empty_Lines)
            and then not Last_Line_Is_Empty
          then
-            Write_Eol.all;
+            W_EOL;
             Column := 0;
             Last_Line_Is_Empty := True;
          end if;
@@ -643,7 +704,7 @@ package body GPR2.Project.Pretty_Printer is
       procedure Write_Indentation (Indent : Natural) is
       begin
          Last_Line_Is_Empty := False;
-         Write_Str ((1 .. Indent => ' '));
+         W_String ((1 .. Indent => ' '));
          Column := Indent;
       end Write_Indentation;
 
@@ -673,20 +734,20 @@ package body GPR2.Project.Pretty_Printer is
 
             --  If the line would become too long, start a new line if it helps
 
-            if Column + Name_Len > Max_Line_Length
-              and then Column > Indent + Increment
+            if Column + Name_Len > Self.Max_Line_Length
+              and then Column > Indent + Self.Increment
             then
-               Write_Eol.all;
-               Write_Indentation (Indent + Increment);
+               W_EOL;
+               Write_Indentation (Indent + Self.Increment);
             end if;
 
             --  Capitalize First letter and letters following a "_"
 
             for J in Name_Buffer'Range loop
                if Capital then
-                  Write_Char (To_Upper (Name_Buffer (J)));
+                  W_Character (To_Upper (Name_Buffer (J)));
                else
-                  Write_Char (Name_Buffer (J));
+                  W_Character (Name_Buffer (J));
                end if;
 
                if Capitalize then
@@ -727,30 +788,32 @@ package body GPR2.Project.Pretty_Printer is
 
          --  If the line would become too long, start a new line if it helps
 
-         if Column + S'Length > Max_Line_Length
-           and then Column > Indent + Increment
+         if Column + S'Length > Self.Max_Line_Length
+           and then Column > Indent + Self.Increment
          then
-            Write_Eol.all;
-            Write_Indentation (Indent + Increment);
+            W_EOL;
+            Write_Indentation (Indent + Self.Increment);
          end if;
 
          if not Splittable then
-            Write_Str (S);
+            W_String (S);
             Column := Column + S'Length;
 
          else
             for J in S'Range loop
-               Write_Char (S (J));
+               W_Character (S (J));
                Column := Column + 1;
 
                --  If the string does not fit on one line, cut it in parts and
                --  concatenate.
 
-               if J + 3 < S'Last and then Column >= Max_Line_Length - 3 then
-                  Write_Str (""" &");
-                  Write_Eol.all;
-                  Write_Indentation (Indent + Increment);
-                  Write_Char ('"');
+               if J + 3 < S'Last
+                 and then Column >= Self.Max_Line_Length - 3
+               then
+                  W_String (""" &");
+                  W_EOL;
+                  Write_Indentation (Indent + Self.Increment);
+                  W_Character ('"');
                   Column := Column + 1;
                end if;
             end loop;
@@ -782,47 +845,43 @@ package body GPR2.Project.Pretty_Printer is
 
          --  If the line would become too long, start a new line if it helps
 
-         if Column + Formatted'Length > Max_Line_Length
-           and then Column > Indent + Increment
+         if Column + Formatted'Length > Self.Max_Line_Length
+           and then Column > Indent + Self.Increment
          then
-            Write_Eol.all;
-            Write_Indentation (Indent + Increment);
+            W_EOL;
+            Write_Indentation (Indent + Self.Increment);
          end if;
 
-         Write_Str (Formatted);
+         W_String (Formatted);
          Column := Column + Formatted'Length;
 
          if End_Line then
-            Write_Eol.all;
+            W_EOL;
             Column := 0;
          end if;
       end Write_Token;
 
-      Unit : Analysis_Unit := Project_Analysis_Unit;
+      Unit : Analysis.Analysis_Unit := Analysis_Unit;
 
    begin
-      if Out_File_Descriptor /= Standout then
-         Out_FD := Out_File_Descriptor;
-         GPR.Output.Set_Special_Output (Special_Output_Proc'Access);
-      end if;
+      --  First clear the buffer
+
+      Self.Buffer := Null_Unbounded_String;
 
       if Unit = No_Analysis_Unit then
-         Unit := GPR2.Project.Definition.Get (Project_View).Trees.Project.Unit;
+         Unit := GPR2.Project.Definition.Get (View).Trees.Project.Unit;
       end if;
 
-      Print (Root (Unit), Initial_Indent);
+      Print (Root (Unit), Self.Initial_Indent);
    end Pretty_Print;
 
-   -------------------------
-   -- Special_Output_Proc --
-   -------------------------
+   ------------
+   -- Result --
+   ------------
 
-   procedure Special_Output_Proc (Buf : String) is
+   function Result (Self : Object) return String is
    begin
-      if Write (Out_FD, Buf'Address, Buf'Length) /= Buf'Length
-      then
-         raise Write_Error with "write failed";
-      end if;
-   end Special_Output_Proc;
+      return To_String (Self.Buffer);
+   end Result;
 
 end GPR2.Project.Pretty_Printer;
