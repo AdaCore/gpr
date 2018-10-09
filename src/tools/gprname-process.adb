@@ -828,14 +828,4 @@ begin
          raise GPRname_Exception with
            "could not create naming project file " & Naming_Project_Path.Value;
    end;
-
-   --  Check if the resulting project tree is OK
-
-   begin
-      Tree.Load (Project_Path, Context);
-   exception
-      when others =>
-         Show_Tree_Load_Errors (Tree);
-         raise GPRname_Exception with "failed to load modified project";
-   end;
 end GPRname.Process;
