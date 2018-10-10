@@ -609,7 +609,7 @@ package body GPR2.Project.Pretty_Printer is
             when others =>
                --  Should not happen
 
-               raise AST_Error with "unexpected construct";
+               raise Project_Error with "unexpected construct in AST node";
          end case;
       end Print;
 

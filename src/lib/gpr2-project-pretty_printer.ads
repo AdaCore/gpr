@@ -40,9 +40,6 @@ package GPR2.Project.Pretty_Printer is
 
    use type Project.View.Object;
 
-   Write_Error : exception;
-   AST_Error   : exception;
-
    type Object is tagged private;
 
    subtype Max_Length_Of_Line is Positive range 50 .. 255;
