@@ -118,9 +118,7 @@ private
       Value_Case_Sensitive : Boolean := True;
    end record;
 
-   Undefined : constant Object :=
-                 (Name_Values.Undefined
-                  with Null_Unbounded_String, True, True);
+   Undefined : constant Object := (Name_Values.Undefined with others => <>);
 
    Default_Source_Dirs : constant Object :=
                            (Name_Values.Create
