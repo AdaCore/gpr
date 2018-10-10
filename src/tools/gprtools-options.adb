@@ -27,12 +27,12 @@ package body GPRtools.Options is
       Define_Switch
         (Self.Config, Self.Help'Access,
          "-h", Long_Switch => "--help",
-         Help           => "Display this help message and exit");
+         Help              => "Display this help message and exit");
 
       Define_Switch
         (Self.Config, Self.Version'Access,
          Long_Switch => "--version",
-         Help => "Display version and exit");
+         Help        => "Display version and exit");
 
       Define_Switch
         (Self.Config, Self.Verbose'Access,

@@ -233,27 +233,12 @@ package body GPRinstall.Install is
          Sym_Link      : Boolean := False;
          Executable    : Boolean := False;
          Extract_Debug : Boolean := False)
-        with Pre => (File = No_Name) /= From.Is_Directory
-            or else (File = No_Name) /= To.Is_Directory;
-      --  From.Is_Directory 1 1 1 1 0 0 0 0
-      --  To.Is_Directory   1 1 0 0 1 1 0 0
-      --  File = No_Name    1 0 1 0 1 0 1 0
-      --  result            0 1 1 1 1 1 1 0
-      --  Copy file From into To.
-      --  If From and To are directories and File not defined we do not know
-      --  what to copy.
-      --  If From and To are files and File is defined we have redundant
-      --  information about what simple filename to copy.
-      --  If From and To are directories and File is defined we copying this
-      --  file between From and To.
-      --  If one of From and To is directory but another is a file we compose
-      --  from directory one the full pathname for opposite site to copy.
-      --  If File is present it is used to create the source and possible
-      --  destination full path-name, and in this case From expected to be
-      --  directory.
-      --  If To is directory then full destination filename composed from To
-      --  and source simple filename whereever it was defined either in From or
-      --  in File parameters.
+        with Pre =>
+          (if From.Is_Directory
+           then not To.Is_Directory or else File /= No_Name
+           else To.Is_Directory or else File = No_Name);
+      --  Copy file From into To. If From and To are directories the full path
+      --  name is using the File which must not be empty in this case.
       --  If Sym_Link is set a symbolic link is created.
       --  If Executable is set, the destination file exec attribute is set.
       --  When Extract_Debug is set to True the debug information for the
@@ -600,15 +585,17 @@ package body GPRinstall.Install is
          Src_Path      : constant Path_Name.Object :=
                            (if From.Is_Directory
                             then From.Compose
-                                   (if File = No_Name then To.Simple_Name
-                                    else File)
+                                  (if File = No_Name
+                                   then To.Simple_Name
+                                   else File)
                             else From);
          F             : constant String := String (Src_Path.Value);
          Dest_Path     : constant Path_Name.Object :=
                            (if To.Is_Directory
                             then To.Compose
-                                   (if File = No_Name then From.Simple_Name
-                                     else File)
+                                   (if File = No_Name
+                                    then From.Simple_Name
+                                    else File)
                             else To);
          T             : constant String := String (Dest_Path.Dir_Name);
          Dest_Filename : aliased String  := Dest_Path.Value;
