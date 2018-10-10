@@ -34,6 +34,23 @@ with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Configuration is
 
+   --------------------
+   -- Archive_Suffix --
+   --------------------
+
+   function Archive_Suffix (Self : Object) return Name_Type is
+   begin
+      if Self.Conf.Has_Attributes
+        (Project.Registry.Attribute.Archive_Suffix)
+      then
+         return Name_Type
+           (Self.Conf.Attribute
+              (Project.Registry.Attribute.Archive_Suffix).Value);
+      else
+         return ".a";
+      end if;
+   end Archive_Suffix;
+
    ------------------------
    -- Corresponding_View --
    ------------------------

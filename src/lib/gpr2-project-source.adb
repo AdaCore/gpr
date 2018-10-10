@@ -23,7 +23,9 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Message;
+with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -38,40 +40,8 @@ package body GPR2.Project.Source is
    ---------------
 
    function Artifacts (Self : Object) return Artifact.Object is
-
-      Src  : constant Name_Type := Self.Source.Path_Name.Base_Name;
-      Lang : constant Name_Type := Self.Source.Language;
-      View : constant GPR2.Project.View.Object := Self.View;
-
-      O_Suffix     : constant Optional_Name_Type :=
-                       (if View.Tree.Has_Configuration
-                        then View.Tree.Configuration.Object_File_Suffix (Lang)
-                        else ".o");
-
-      D_Suffix     : constant Optional_Name_Type :=
-                       (if View.Tree.Has_Configuration
-                        then View.Tree.
-                               Configuration.Dependency_File_Suffix (Lang)
-                        elsif Lang = "ada" then ".ali" else ".d");
-
-      P_Suffix     : constant Optional_Name_Type := ".prep";
-
-      Object       : constant Path_Name.Object :=
-                       Path_Name.Create_File
-                         (Src & O_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
-
-      Dependency   : constant Path_Name.Object :=
-                       Path_Name.Create_File
-                         (Src & D_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
-
-      Preprocessed : constant Path_Name.Object :=
-                       Path_Name.Create_File
-                         (Src & P_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
    begin
-      return Artifact.Create (Self, Object, Dependency, Preprocessed);
+      return Artifact.Create (Self);
    end Artifacts;
 
    ------------
@@ -261,6 +231,19 @@ package body GPR2.Project.Source is
    begin
       return Self.Source.Other_Part /= GPR2.Source.Undefined;
    end Has_Other_Part;
+
+   -------------
+   -- Is_Main --
+   -------------
+
+   function Is_Main (Self : Object) return Boolean is
+      Path  : constant Path_Name.Object := Self.Source.Path_Name;
+      Mains : constant Attribute.Object :=
+                Self.View.Attribute (Registry.Attribute.Main);
+   begin
+      return Mains.Has_Value (Value_Type (Path.Base_Name))
+        or else Mains.Has_Value (Value_Type (Path.Simple_Name));
+   end Is_Main;
 
    ----------------
    -- Other_Part --

@@ -97,6 +97,11 @@ package GPR2.Project.Configuration is
    --  Returns the runtime specified for Language or the empty string if no
    --  specific runtime has been specified for this language.
 
+   function Archive_Suffix (Self : Object) return Name_Type
+     with Pre  => Self /= Undefined,
+          Post => Archive_Suffix'Result (Archive_Suffix'Result'First) = '.';
+   --  Returns the archive file suffix (with the leading dot)
+
    function Object_File_Suffix
      (Self     : Object;
       Language : Name_Type) return Name_Type

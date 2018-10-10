@@ -309,6 +309,11 @@ package GPR2.Project.View is
    --  Returns True if the library is a static one, so either static or
    --  static-pic.
 
+   function Has_Library_Interface (Self : Object) return Boolean
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Retruns whether the optional library interface attribute is defined
+
    function Has_Library_Version (Self : Object) return Boolean
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
@@ -347,6 +352,11 @@ package GPR2.Project.View is
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the kind for the standalone library
 
+   function Is_Library_Standalone (Self : Object) return Boolean
+     with Pre => Self /= Undefined
+                 and then Self.Kind in K_Library | K_Aggregate_Library;
+   --  Returns whether the library is standalone
+
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self /= Undefined
@@ -384,6 +394,12 @@ private
      (Name_Type (Self.Attribute (Registry.Attribute.Library_Name).Value));
 
    function Has_Library_Version (Self : Object) return Boolean is
-     (Self.Has_Attributes (Project.Registry.Attribute.Library_Version));
+     (Self.Has_Attributes (Registry.Attribute.Library_Version));
+
+   function Has_Library_Interface (Self : Object) return Boolean is
+     (Self.Has_Attributes (Registry.Attribute.Library_Interface));
+
+   function Is_Library_Standalone (Self : Object) return Boolean is
+      (Self.Library_Standalone /= No);
 
 end GPR2.Project.View;

@@ -35,16 +35,11 @@ package GPR2.Project.Source.Artifact is
 
    Undefined : constant Object;
 
-   function Create
-     (Source              : GPR2.Project.Source.Object;
-      Object              : Path_Name.Object;
-      Dependency          : Path_Name.Object := Path_Name.Undefined;
-      Preprocessed_Source : Path_Name.Object := Path_Name.Undefined)
-      return Artifact.Object
-     with Pre => Source /= GPR2.Project.Source.Undefined;
+   function Create (Source : Project.Source.Object) return Artifact.Object
+     with Pre => Source /= Project.Source.Undefined;
    --  Constructor for Object defining the artifacts for the given Source
 
-   function Source (Self : Object) return GPR2.Project.Source.Object
+   function Source (Self : Object) return Project.Source.Object
      with Pre => Self /= Undefined;
    --  The project's source used to generate the artifacts
 

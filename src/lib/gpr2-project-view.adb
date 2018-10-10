@@ -427,7 +427,7 @@ package body GPR2.Project.View is
       return Self.Has_Attributes (Project.Registry.Attribute.Externally_Built)
         and then
           Self.Attribute
-            (Project.Registry.Attribute.Externally_Built).Value = "yes";
+            (Project.Registry.Attribute.Externally_Built).Value_Equal ("true");
    end Is_Externally_Built;
 
    -----------------------

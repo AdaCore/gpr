@@ -258,6 +258,17 @@ package GPR2.Project.Tree is
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
    --  Returns the Tree project search paths
 
+   function Archive_Suffix (Tree : Object) return Name_Type;
+   --  Returns archive suffix for the project tree
+
+   function Object_Suffix
+     (Tree : Object; Language : Name_Type := "ada") return Name_Type;
+   --  Returns object suffix for language in project tree
+
+   function Dependency_Suffix
+     (Tree : Object; Language : Name_Type := "ada") return Name_Type;
+   --  Returns dependency suffix for language in project tree
+
 private
 
    package Name_View is
@@ -304,5 +315,23 @@ private
    No_Element : constant Cursor :=
                   (Project_View_Store.Empty_Vector,
                    1, View.Undefined);
+
+   function Archive_Suffix (Tree : Object) return Name_Type is
+     (if Tree.Has_Configuration
+      then Tree.Configuration.Archive_Suffix
+      else ".a");
+
+   function Object_Suffix
+     (Tree : Object; Language : Name_Type := "ada") return Name_Type
+   is (if Tree.Has_Configuration
+       then Tree.Configuration.Object_File_Suffix (Language)
+       else ".o");
+
+   function Dependency_Suffix
+     (Tree : Object; Language : Name_Type := "ada") return Name_Type
+   is
+     (if Tree.Has_Configuration
+      then Tree.Configuration.Dependency_File_Suffix (Language)
+      elsif Language = "ada" then ".ali" else ".d");
 
 end GPR2.Project.Tree;

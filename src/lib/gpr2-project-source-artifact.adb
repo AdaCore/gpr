@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Project.Tree;
+
 package body GPR2.Project.Source.Artifact is
 
    ------------
@@ -29,17 +31,38 @@ package body GPR2.Project.Source.Artifact is
    ------------
 
    function Create
-     (Source              : GPR2.Project.Source.Object;
-      Object              : Path_Name.Object;
-      Dependency          : Path_Name.Object := Path_Name.Undefined;
-      Preprocessed_Source : Path_Name.Object := Path_Name.Undefined)
-      return Artifact.Object is
+     (Source : Project.Source.Object) return Artifact.Object
+   is
+      Src  : constant Name_Type := Source.Source.Path_Name.Base_Name;
+      Lang : constant Name_Type := Source.Source.Language;
+      View : constant Project.View.Object := Source.View;
+      Tree : constant access Project.Tree.Object := View.Tree;
+
+      O_Suffix : constant Name_Type := Tree.Object_Suffix (Lang);
+      D_Suffix : constant Name_Type := Tree.Dependency_Suffix (Lang);
+      P_Suffix : constant Name_Type := ".prep";
+
+      Object   : constant Path_Name.Object :=
+                   Path_Name.Create_File
+                     (Src & O_Suffix,
+                      Optional_Name_Type (View.Object_Directory.Value));
+
+      Dependency   : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & D_Suffix,
+                          Optional_Name_Type (View.Object_Directory.Value));
+
+      Preprocessed : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & P_Suffix,
+                          Optional_Name_Type (View.Object_Directory.Value));
+
    begin
       return Artifact.Object'
         (Source           => Source,
          Object           => Object,
          Dependency       => Dependency,
-         Preprocessed_Src => Preprocessed_Source);
+         Preprocessed_Src => Preprocessed);
    end Create;
 
    ----------------
@@ -57,6 +80,8 @@ package body GPR2.Project.Source.Artifact is
    ----------
 
    function List (Self : Object) return Path_Name.Set.Object is
+      Source : constant GPR2.Source.Object := Self.Source.Source;
+      View   : constant Project.View.Object := Self.Source.View;
       Result : Path_Name.Set.Object;
    begin
       if Self.Has_Object_Code then
@@ -68,14 +93,37 @@ package body GPR2.Project.Source.Artifact is
             Dir  : constant Optional_Name_Type :=
                      Optional_Name_Type
                        (Self.Source.View.Object_Directory.Value);
+
+            procedure Append_File (Name : Name_Type);
+            --  Append full filename constructed from Name and Dir to result
+
+            -----------------
+            -- Append_File --
+            -----------------
+
+            procedure Append_File (Name : Name_Type) is
+            begin
+               Result.Append (Path_Name.Create_File (Name, Dir));
+            end Append_File;
+
          begin
-            Result.Append (Path_Name.Create_File (Name & ".stdout", Dir));
-            Result.Append (Path_Name.Create_File (Name & ".stderr", Dir));
+            Append_File (Name & ".stdout");
+            Append_File (Name & ".stderr");
          end;
       end if;
 
       if Self.Has_Dependency then
          Result.Append (Self.Dependency);
+
+         --  Library project has the same ALI files in object and library
+         --  directories.
+
+         if View.Kind = K_Library and then Source.Language = "Ada" then
+            Result.Append
+              (Path_Name.Create_File
+                 (Self.Dependency.Simple_Name,
+                  Optional_Name_Type (View.Library_Directory.Value)));
+         end if;
       end if;
 
       if Self.Has_Preprocessed_Source then

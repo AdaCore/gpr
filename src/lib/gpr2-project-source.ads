@@ -75,6 +75,10 @@ package GPR2.Project.Source is
      with Pre => Self /= Undefined;
    --  Returns whether the source comes from a naming exception
 
+   function Is_Main (Self : Object) return Boolean
+     with Pre => Self /= Undefined and then Self.View.Has_Mains;
+   --  Returns whether the source is the main file to create executable
+
    function Artifacts (Self : Object) return Artifact.Object
      with Pre => Self /= Undefined;
    --  Returns the source artifacts for this source. Note that the returned
