@@ -91,6 +91,9 @@ package GPR2 is
 
    subtype Value_Type is String;
 
+   subtype Value_Not_Empty is Value_Type
+     with Dynamic_Predicate => Value_Not_Empty'Length > 0;
+
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
 
