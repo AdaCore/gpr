@@ -288,7 +288,7 @@ package GPR2.Project.View is
    function Mains (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre  => Self /= Undefined and then Self.Has_Mains,
           Post => Mains'Result.Length > 0;
-   --  Returns the mains's full pathname
+   --  Returns the mains's binary full pathname
 
    function Library_Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined

@@ -37,6 +37,7 @@ with GNAT.Regexp;
 
 with GPR2.Message;
 with GPR2.Project.Definition;
+with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -47,7 +48,7 @@ with GPR2.Unit;
 
 package body GPR2.Project.View is
 
-   use Ada.Strings.Unbounded;
+   use Ada.Strings.Unbounded, GNAT;
 
    Builtin_Naming_Package : Project.Pack.Object;
    --  The default naming package to use if no Naming package specified in the
@@ -57,6 +58,9 @@ package body GPR2.Project.View is
    Builtin_Languages      : Project.Attribute.Object;
    --  The default languages to use if no languages attribute specified in the
    --  project. The default value is just "ada".
+
+   Executable_Suffix : constant access constant String :=
+                         OS_Lib.Get_Executable_Suffix;
 
    ----------------
    -- Aggregated --
@@ -558,8 +562,8 @@ package body GPR2.Project.View is
       is
          use GNAT.Regexp;
 
-         Reg      : constant Regexp := Compile (String (Lib_Filename)
-                                                & ".[0-9]+.[0-9]+");
+         Reg      : constant GNAT.Regexp.Regexp :=
+                      Compile (String (Lib_Filename) & ".[0-9]+.[0-9]+");
          Matched  : constant Boolean := Match (String (Lib_Version), Reg);
          Last_Maj : Positive := Lib_Version'Last;
 
@@ -648,28 +652,91 @@ package body GPR2.Project.View is
    -----------
 
    function Mains (Self : Object) return GPR2.Path_Name.Set.Object is
+      use GPR2.Project.Pack;
 
-      function Create (Name : Name_Type) return GPR2.Path_Name.Object;
-      --  Returns the full pathname for the givem main
+      package A renames GPR2.Project.Registry.Attribute;
+      package P renames GPR2.Project.Registry.Pack;
+
+      Tree    : constant not null access Project.Tree.Object := Self.Tree;
+      Builder : GPR2.Project.Pack.Object;
+
+      function Create (Source : Value_Not_Empty) return GPR2.Path_Name.Object;
+      --  Returns the full pathname of the main executable for the givem main
 
       ------------
       -- Create --
       ------------
 
-      function Create (Name : Name_Type) return GPR2.Path_Name.Object is
+      function Create
+        (Source : Value_Not_Empty) return GPR2.Path_Name.Object
+      is
+
+         function Executable_Suffix return String;
+         --  Return the target executable suffix
+
+         ---------------------
+         -- Executable_Suffix --
+         ---------------------
+
+         function Executable_Suffix return String is
+         begin
+            if Tree.Has_Configuration
+              and then
+                Tree.Configuration.Corresponding_View.Has_Attributes
+                  (A.Executable_Suffix)
+            then
+               return Tree.Configuration.Corresponding_View.Attribute
+                 (A.Executable_Suffix).Value;
+
+            elsif Builder /= Project.Pack.Undefined
+              and then Builder.Has_Attributes (A.Executable_Suffix)
+            then
+               return Builder.Attribute (A.Executable_Suffix).Value;
+            else
+               return View.Executable_Suffix.all;
+            end if;
+         end Executable_Suffix;
+
+         Attr : GPR2.Project.Attribute.Object;
+
       begin
+         if Builder /= Project.Pack.Undefined then
+            if Builder.Has_Attributes (A.Executable, Source) then
+               Attr := Builder.Attribute (A.Executable, Source);
+
+            else
+               --  Not found but an extension is present, check without
+
+               declare
+                  BN : constant Value_Type :=
+                      Ada.Directories.Base_Name (Source);
+               begin
+                  if Source /= BN
+                    and then Builder.Has_Attributes (A.Executable, BN)
+                  then
+                     Attr := Builder.Attribute (A.Executable, BN);
+                  end if;
+               end;
+            end if;
+         end if;
+
          return GPR2.Path_Name.Create_File
-           (Name,
-            Directory =>
-              Optional_Name_Type (Self.Executable_Directory.Dir_Name));
+           (Name_Type
+              ((if Attr = GPR2.Project.Attribute.Undefined
+                then Ada.Directories.Base_Name (String (Source))
+                else Attr.Value)
+               & Executable_Suffix),
+            Optional_Name_Type (Self.Executable_Directory.Dir_Name));
       end Create;
 
    begin
+      if Self.Has_Packages (P.Builder) then
+         Builder := Self.Packages.Element (P.Builder);
+      end if;
+
       return Set : GPR2.Path_Name.Set.Object do
-         for Main
-           of Self.Attribute (Project.Registry.Attribute.Main).Values
-         loop
-            Set.Append (Mains.Create (Name_Type (Main)));
+         for Main of Self.Attribute (A.Main).Values loop
+            Set.Append (Mains.Create (Main));
          end loop;
       end return;
    end Mains;
@@ -916,7 +983,6 @@ package body GPR2.Project.View is
    procedure Update_Sources (Self : Object) is
 
       use Ada;
-      use GNAT;
       use type MD5.Binary_Message_Digest;
 
       package Unit_Naming is

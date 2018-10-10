@@ -1,0 +1,9 @@
+Demo1    K_STANDARD
+mains/call1.exe
+Demo2    K_STANDARD
+mains/obj/call2.exe
+Demo3    K_STANDARD
+mains/exec/call3_1.exe
+mains/exec/call3_2.exe
+Demo4    K_STANDARD
+mains/exec4/call4.exe

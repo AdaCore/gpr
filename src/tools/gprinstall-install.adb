@@ -227,14 +227,33 @@ package body Gprinstall.Install is
       --     generated project.
 
       procedure Copy_File
-        (From, To       : Path_Name.Object;
-         File           : Name_Type;
-         From_Ver       : Path_Name.Object  := Path_Name.Undefined;
-         Sym_Link       : Boolean := False;
-         Executable     : Boolean := False;
-         Extract_Debug  : Boolean := False);
-      --  Copy file From into To. If From is directory then the source full
-      --  filename is composed from From and File parameters.
+        (From, To      : Path_Name.Object;
+         File          : Optional_Name_Type := No_Name;
+         From_Ver      : Path_Name.Object := Path_Name.Undefined;
+         Sym_Link      : Boolean := False;
+         Executable    : Boolean := False;
+         Extract_Debug : Boolean := False)
+        with Pre => (File = No_Name) /= From.Is_Directory
+            or else (File = No_Name) /= To.Is_Directory;
+      --  From.Is_Directory 1 1 1 1 0 0 0 0
+      --  To.Is_Directory   1 1 0 0 1 1 0 0
+      --  File = No_Name    1 0 1 0 1 0 1 0
+      --  result            0 1 1 1 1 1 1 0
+      --  Copy file From into To.
+      --  If From and To are directories and File not defined we do not know
+      --  what to copy.
+      --  If From and To are files and File is defined we have redundant
+      --  information about what simple filename to copy.
+      --  If From and To are directories and File is defined we copying this
+      --  file between From and To.
+      --  If one of From and To is directory but another is a file we compose
+      --  from directory one the full pathname for opposite site to copy.
+      --  If File is present it is used to create the source and possible
+      --  destination full path-name, and in this case From expected to be
+      --  directory.
+      --  If To is directory then full destination filename composed from To
+      --  and source simple filename whereever it was defined either in From or
+      --  in File parameters.
       --  If Sym_Link is set a symbolic link is created.
       --  If Executable is set, the destination file exec attribute is set.
       --  When Extract_Debug is set to True the debug information for the
@@ -288,11 +307,6 @@ package body Gprinstall.Install is
         (Project : GPR2.Project.View.Object) return Boolean;
       --  Returns True if Project gives visibility to some sources directly or
       --  indirectly via the with clauses.
-
-      function Main_Binary (Source : Name_Type) return Name_Type;
-      --  Give the source name found in the Main attribute, returns the actual
-      --  binary as built by gprbuild. This routine looks into the Builder
-      --  switches for a the Executable attribute.
 
       function Is_Install_Active
         (Project : GPR2.Project.View.Object) return Boolean;
@@ -576,21 +590,28 @@ package body Gprinstall.Install is
       ---------------
 
       procedure Copy_File
-        (From, To       : Path_Name.Object;
-         File           : Name_Type;
-         From_Ver       : Path_Name.Object  := Path_Name.Undefined;
-         Sym_Link       : Boolean := False;
-         Executable     : Boolean := False;
-         Extract_Debug  : Boolean := False)
+        (From, To      : Path_Name.Object;
+         File          : Optional_Name_Type := No_Name;
+         From_Ver      : Path_Name.Object := Path_Name.Undefined;
+         Sym_Link      : Boolean := False;
+         Executable    : Boolean := False;
+         Extract_Debug : Boolean := False)
       is
          Src_Path      : constant Path_Name.Object :=
-                           (if From.Is_Directory then From.Compose (File)
+                           (if From.Is_Directory
+                            then From.Compose
+                                   (if File = No_Name then To.Simple_Name
+                                    else File)
                             else From);
          F             : constant String := String (Src_Path.Value);
-         T             : constant String := String (To.Value);
          Dest_Path     : constant Path_Name.Object :=
-                           Path_Name.Compose (To, File);
-         Dest_Filename : aliased String := Dest_Path.Value;
+                           (if To.Is_Directory
+                            then To.Compose
+                                   (if File = No_Name then From.Simple_Name
+                                     else File)
+                            else To);
+         T             : constant String := String (Dest_Path.Dir_Name);
+         Dest_Filename : aliased String  := Dest_Path.Value;
       begin
          pragma Warnings (Off, "*can never be executed*");
 
@@ -648,7 +669,7 @@ package body Gprinstall.Install is
                  "file " & F & " does not exist, build may not be complete";
             end if;
 
-            if (not Sym_Link and then not To.Exists)
+            if (not Sym_Link and then not Directories.Exists (T))
               or else (Sym_Link and then not Src_Path.Exists)
             then
                if Options.Create_Dest_Dir then
@@ -656,7 +677,7 @@ package body Gprinstall.Install is
                      if Sym_Link then
                         Directories.Create_Path (Src_Path.Dir_Name);
                      else
-                        Directories.Create_Path (To.Value);
+                        Directories.Create_Path (T);
                      end if;
                   exception
                      when Text_IO.Use_Error =>
@@ -869,8 +890,6 @@ package body Gprinstall.Install is
                     (From       =>
                        Path_Name.Create_File (Name_Type (Fullname)),
                      To         => Destination,
-                     File       => Name_Type
-                                     (Directories.Simple_Name (Fullname)),
                      Executable => OS_Lib.Is_Executable_File (Fullname));
 
                   if Required then
@@ -992,8 +1011,7 @@ package body Gprinstall.Install is
                      then
                         Copy_File
                           (From => Atf.Object_Code,
-                           To   => Lib_Dir,
-                           File => Atf.Object_Code.Simple_Name);
+                           To   => Lib_Dir);
                      end if;
 
                      --  Only install Ada .ali files (always name the .ali
@@ -1095,8 +1113,6 @@ package body Gprinstall.Install is
                   Copy_File
                     (From          => Project.Library_Version_Filename,
                      To            => Lib_Dir,
-                     File          =>
-                       Project.Library_Version_Filename.Simple_Name,
                      Executable    => True,
                      Extract_Debug => Side_Debug);
 
@@ -1190,9 +1206,8 @@ package body Gprinstall.Install is
          if Copy (Executable) and then not Options.Sources_Only then
             for Main of Project.Mains loop
                Copy_File
-                 (From          => Project.Executable_Directory,
+                 (From          => Main,
                   To            => Exec_Dir,
-                  File          => Main_Binary (Main.Name),
                   Executable    => True,
                   Extract_Debug => Side_Debug);
             end loop;
@@ -2372,72 +2387,6 @@ package body Gprinstall.Install is
               (L_Dir, Optional_Name_Type (Prefix_Dir.V.all));
          end if;
       end Link_Lib_Dir;
-
-      -----------------
-      -- Main_Binary --
-      -----------------
-
-      function Main_Binary (Source : Name_Type) return Name_Type is
-
-         use type GPR2.Project.Attribute.Object;
-
-         function Get_Exec_Suffix return String;
-         --  Return the target executable suffix
-
-         ---------------------
-         -- Get_Exec_Suffix --
-         ---------------------
-
-         function Get_Exec_Suffix return String is
-         begin
-            if Tree.Has_Configuration
-              and then
-                Tree.Configuration.Corresponding_View.Has_Attributes
-                  (A.Executable_Suffix)
-            then
-               return Tree.Configuration.Corresponding_View.Attribute
-                 (A.Executable_Suffix).Value;
-            else
-               return "";
-            end if;
-         end Get_Exec_Suffix;
-
-         Attr : GPR2.Project.Attribute.Object;
-
-      begin
-         if Project.Has_Packages (P.Builder) then
-            declare
-               Pck : constant GPR2.Project.Pack.Object :=
-                       Project.Packages.Element (P.Builder);
-            begin
-               if Pck.Has_Attributes (A.Executable, Value_Type (Source)) then
-                  Attr := Pck.Attribute (A.Executable, Value_Type (Source));
-
-               else
-                  --  Not found but an extension is present, check without
-
-                  declare
-                     BN : constant Value_Type :=
-                            Value_Type
-                              (Directories.Base_Name (String (Source)));
-                  begin
-                     if Source /= Name_Type (BN)
-                       and then Pck.Has_Attributes (A.Executable, BN)
-                     then
-                        Attr := Pck.Attribute (A.Executable, BN);
-                     end if;
-                  end;
-               end if;
-            end;
-         end if;
-
-         if Attr = GPR2.Project.Attribute.Undefined then
-            return Name_Type
-              (Directories.Base_Name (String (Source)) & Get_Exec_Suffix);
-         else
-            return Name_Type (Attr.Value & Get_Exec_Suffix);
-         end if;
-      end Main_Binary;
 
       -------------------------
       -- Open_Check_Manifest --

@@ -162,6 +162,10 @@ procedure GPRclean is
             end loop;
          end;
       end loop;
+
+      for M of View.Mains loop
+         Exclude_File (M.Value);
+      end loop;
    end Sources;
 
 begin
