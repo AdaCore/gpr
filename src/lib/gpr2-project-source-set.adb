@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2017, Free Software Foundation, Inc.            --
+--         Copyright (C) 2017-2018, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -180,7 +180,10 @@ package body GPR2.Project.Source.Set is
               (case Iter.Filter is
                   when S_Compilable =>
                      (Source.Source.Other_Part = GPR2.Source.Undefined
-                      and then Kind /= GPR2.Source.S_Separate)
+                      and then Kind /= GPR2.Source.S_Separate
+                      and then Source.Source.Language = "Ada")
+                      --  The condition above is about Ada package spec without
+                      --  body have to be compilable.
                      or else Kind = GPR2.Source.S_Body,
 
                   when S_Spec       =>
