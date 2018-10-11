@@ -190,26 +190,15 @@ procedure GPRdump is
          loop
             declare
                S : constant Project.Source.Object := Sources_Set (C);
-               R : GPR2.Project.Source.Artifact.Object;
             begin
                if Display_Sources or Display_All_Sources then
                   Text_IO.Put_Line (S.Source.Path_Name.Value);
                end if;
 
                if Display_Artifacts then
-                  R := S.Artifacts;
-
-                  if R.Has_Object_Code then
-                     Text_IO.Put_Line (R.Object_Code.Value);
-                  end if;
-
-                  if R.Has_Dependency then
-                     Text_IO.Put_Line (R.Dependency.Value);
-                  end if;
-
-                  if R.Has_Preprocessed_Source then
-                     Text_IO.Put_Line (R.Preprocessed_Source.Value);
-                  end if;
+                  for A of S.Artifacts.List loop
+                     Text_IO.Put_Line (A.Value);
+                  end loop;
                end if;
             end;
          end loop;
