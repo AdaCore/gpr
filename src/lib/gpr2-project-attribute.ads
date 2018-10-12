@@ -99,7 +99,8 @@ package GPR2.Project.Attribute is
 
    overriding function Image
      (Self : Object; Name_Len : Natural := 0) return String;
-   --  Returns a string representation
+   --  Returns a string representation. The attribute name is represented with
+   --  Name_Len characters (right padding with space) except if Name_Len is 0.
 
    Default_Source_Dirs : constant Object;
 
