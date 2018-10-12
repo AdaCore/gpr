@@ -79,23 +79,39 @@ package GPR2.Project.Name_Values is
           Post => Values'Result.Length = Self.Count_Values;
    --  Returns the values for the Name/Values pair object
 
+   function Has_Value (Self : Object; Value : Value_Type) return Boolean
+     with Pre => Self.Kind = List;
+   --  Returns true whether the list of value contains Value
+
    function Value (Self : Object) return Value_Type
      with Pre => Self /= Undefined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
+
+   function Value_Equal (Self : Object; Value : Value_Type) return Boolean
+     with Pre => Self.Kind = Single;
+   --  Returns True if the attribute's value is equal to Value taking into
+   --  account the case-sensitivity of the value.
 
    function Image (Self : Object; Name_Len : Natural := 0) return String;
    --  Returns a string representation. Name_Len represents the length in
    --  character than the Name should take, so possibly some space padding
    --  are added.
 
+   procedure Set_Case
+     (Self                    : in out Object;
+      Value_Is_Case_Sensitive : Boolean);
+   --  Sets values case sensitivity which is by default it is case-sensitive
+
 private
 
    use Ada.Strings.Unbounded;
 
    type Object is new Source_Reference.Object with record
-      Kind   : Registry.Attribute.Value_Kind := List;
-      Name   : Unbounded_String;
-      Values : Containers.Value_List;
+      Kind                 : Registry.Attribute.Value_Kind := List;
+      Name                 : Unbounded_String;
+      Values               : Containers.Value_List;
+      Value_Case_Sensitive : Boolean := True;
+      V_Set                : Containers.Value_Set;  -- for fast check
    end record;
 
    Undefined : constant Object :=

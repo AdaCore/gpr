@@ -90,11 +90,6 @@ package GPR2.Project.Attribute is
    --  Returns True if the attribute's index is equal to Value taking into
    --  account the case-sensitivity of the index.
 
-   function Value_Equal (Self : Object; Value : Value_Type) return Boolean
-     with Pre => Self.Kind = Single;
-   --  Returns True if the attribute's value is equal to Value taking into
-   --  account the case-sensitivity of the value.
-
    procedure Set_Case
      (Self                    : in out Object;
       Index_Is_Case_Sensitive : Boolean;

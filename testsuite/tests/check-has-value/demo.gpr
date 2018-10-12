@@ -1,0 +1,5 @@
+
+project Demo is
+   for Languages use ("Ada", "C", "FoRtRan");
+   for Source_Dirs use (".", "src1", "SRC2");
+end Demo;

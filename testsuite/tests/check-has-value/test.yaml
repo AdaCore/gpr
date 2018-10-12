@@ -1,0 +1,5 @@
+description:
+    Check Has_Value for an attribute
+driver: build_and_run
+project_file: check_has_att
+main: main

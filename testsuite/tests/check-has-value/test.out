@@ -1,0 +1,12 @@
+Demo     K_STANDARD
+for Languages use ("Ada", "C", "FoRtRan");
+ada TRUE
+Ada TRUE
+FORTRAN TRUE
+fortran TRUE
+for Source_Dirs use (".", "src1", "SRC2");
+. TRUE
+src1 TRUE
+sRc1 FALSE
+SRC2 TRUE
+Src2 FALSE

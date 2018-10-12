@@ -158,21 +158,8 @@ package body GPR2.Project.Attribute is
       Index_Is_Case_Sensitive : Boolean;
       Value_Is_Case_Sensitive : Boolean) is
    begin
+      Name_Values.Object (Self).Set_Case (Value_Is_Case_Sensitive);
       Self.Index_Case_Sensitive := Index_Is_Case_Sensitive;
-      Self.Value_Case_Sensitive := Value_Is_Case_Sensitive;
    end Set_Case;
-
-   -----------------
-   -- Value_Equal --
-   -----------------
-
-   function Value_Equal (Self : Object; Value : Value_Type) return Boolean is
-   begin
-      if Self.Value_Case_Sensitive then
-         return Self.Value = String (Value);
-      else
-         return Equal_Case_Insensitive (Self.Value, String (Value));
-      end if;
-   end Value_Equal;
 
 end GPR2.Project.Attribute;

@@ -22,7 +22,36 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Equal_Case_Insensitive;
+with Ada.Characters.Handling;
+
 package body GPR2.Project.Name_Values is
+
+   function Build_Set
+     (Values         : Containers.Value_List;
+      Case_Sensitive : Boolean) return Containers.Value_Set;
+   --  Returns a set with the value in values
+
+   ---------------
+   -- Build_Set --
+   ---------------
+
+   function Build_Set
+     (Values         : Containers.Value_List;
+      Case_Sensitive : Boolean) return Containers.Value_Set
+   is
+      use Ada;
+   begin
+      return R : Containers.Value_Set do
+         for V of Values loop
+            if Case_Sensitive then
+               R.Include (V);
+            else
+               R.Include (Characters.Handling.To_Lower (V));
+            end if;
+         end loop;
+      end return;
+   end Build_Set;
 
    ------------------
    -- Count_Values --
@@ -40,13 +69,16 @@ package body GPR2.Project.Name_Values is
    function Create
      (Name  : Name_Type;
       Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object is
+      Sloc  : Source_Reference.Object) return Object
+   is
+      Values : constant Containers.Value_List :=
+                 Containers.Value_Type_List.To_Vector (String (Value), 1);
    begin
       return Object'
         (Sloc
          with Single,
               To_Unbounded_String (String (Name)),
-              Containers.Value_Type_List.To_Vector (String (Value), 1));
+              Values, True, Build_Set (Values, True));
    end Create;
 
    function Create
@@ -55,8 +87,23 @@ package body GPR2.Project.Name_Values is
       Sloc   : Source_Reference.Object) return Object is
    begin
       return Object'
-        (Sloc with List, To_Unbounded_String (String (Name)), Values);
+        (Sloc with List,
+         To_Unbounded_String (String (Name)),
+         Values, True, Build_Set (Values, True));
    end Create;
+
+   ---------------
+   -- Has_Value --
+   ---------------
+
+   function Has_Value (Self : Object; Value : Value_Type) return Boolean is
+      use Ada;
+   begin
+      return Self.V_Set.Contains
+        (if Self.Value_Case_Sensitive
+         then Value
+         else Characters.Handling.To_Lower (Value));
+   end Has_Value;
 
    -----------
    -- Image --
@@ -96,6 +143,22 @@ package body GPR2.Project.Name_Values is
       return Name_Type (To_String (Self.Name));
    end Name;
 
+   --------------
+   -- Set_Case --
+   --------------
+
+   procedure Set_Case
+     (Self                    : in out Object;
+      Value_Is_Case_Sensitive : Boolean) is
+   begin
+      --  Are we changing the casing
+
+      if Value_Is_Case_Sensitive /= Self.Value_Case_Sensitive then
+         Self.Value_Case_Sensitive := Value_Is_Case_Sensitive;
+         Self.V_Set := Build_Set (Self.Values, Value_Is_Case_Sensitive);
+      end if;
+   end Set_Case;
+
    -----------
    -- Value --
    -----------
@@ -104,6 +167,20 @@ package body GPR2.Project.Name_Values is
    begin
       return Self.Values.First_Element;
    end Value;
+
+   -----------------
+   -- Value_Equal --
+   -----------------
+
+   function Value_Equal (Self : Object; Value : Value_Type) return Boolean is
+      use Ada.Strings;
+   begin
+      if Self.Value_Case_Sensitive then
+         return Self.Value = String (Value);
+      else
+         return Equal_Case_Insensitive (Self.Value, String (Value));
+      end if;
+   end Value_Equal;
 
    ------------
    -- Values --
