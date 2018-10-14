@@ -137,8 +137,8 @@ package GPR2.Project.View is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : String := "") return Boolean
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
@@ -146,8 +146,8 @@ package GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : String := "") return Attribute.Set.Object
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Attribute.Set.Object
      with Post =>
        (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty);
    --  Get the list of attributes, possibly an empty list if it does not
@@ -156,7 +156,7 @@ package GPR2.Project.View is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : String := "") return Attribute.Object
+      Index : Value_Type := No_Value) return Attribute.Object
      with
        Pre =>
          Self /= Undefined
@@ -168,7 +168,7 @@ package GPR2.Project.View is
 
    function Has_Types
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean
+      Name : Optional_Name_Type := No_Name) return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some types defined
 
@@ -186,7 +186,7 @@ package GPR2.Project.View is
 
    function Has_Variables
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean
+      Name : Optional_Name_Type := No_Name) return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some variables defined
 
@@ -204,7 +204,7 @@ package GPR2.Project.View is
 
    function Has_Packages
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean
+      Name : Optional_Name_Type := No_Name) return Boolean
      with Pre => Self /= Undefined;
    --  Returns true if the project view has some packages defined
 

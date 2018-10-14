@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -77,7 +77,7 @@ package body GPR2.Project.Attribute.Set is
    function Contains
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Boolean
+      Index : Value_Type := No_Value) return Boolean
    is
       Position : constant Cursor := Self.Find (Name, Index);
    begin
@@ -103,7 +103,7 @@ package body GPR2.Project.Attribute.Set is
    function Element
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Attribute.Object
+      Index : Value_Type := No_Value) return Attribute.Object
    is
       Position : constant Cursor := Self.Find (Name, Index);
    begin
@@ -120,8 +120,8 @@ package body GPR2.Project.Attribute.Set is
 
    function Filter
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Object is
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Object is
    begin
       if Name = No_Name and then Index = No_Value then
          return Self;
@@ -146,7 +146,7 @@ package body GPR2.Project.Attribute.Set is
    function Find
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Cursor
+      Index : Value_Type := No_Value) return Cursor
    is
       use Ada.Characters.Handling;
 
@@ -162,7 +162,7 @@ package body GPR2.Project.Attribute.Set is
          --  is case sensitive or not. If not we need to iterate through
          --  all values to get the proper element.
 
-         if Index /= ""
+         if Index /= No_Value
            and then not Result.Set.Is_Empty
            and then not Result.Set.First_Element.Index_Case_Sensitive
          then
@@ -312,8 +312,8 @@ package body GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "")
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do

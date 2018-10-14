@@ -43,7 +43,7 @@ package GPR2.Project.Attribute.Set is
    function Contains
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Boolean;
+      Index : Value_Type := No_Value) return Boolean;
    --  Check whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
@@ -58,7 +58,7 @@ package GPR2.Project.Attribute.Set is
    function Element
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Attribute.Object
+      Index : Value_Type := No_Value) return Attribute.Object
      with Post =>
        (if Self.Contains (Name, Index)
         then Element'Result /= Attribute.Undefined
@@ -90,7 +90,7 @@ package GPR2.Project.Attribute.Set is
    function Find
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Cursor;
+      Index : Value_Type := No_Value) return Cursor;
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -115,15 +115,15 @@ package GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "")
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value)
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Object
-     with Post => (if Name = No_Name and then Index = ""
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Object
+     with Post => (if Name = No_Name and then Index = No_Value
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
    --  the given filter.

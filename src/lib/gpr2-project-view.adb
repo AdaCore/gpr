@@ -85,7 +85,7 @@ package body GPR2.Project.View is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Project.Attribute.Object is
+      Index : Value_Type := No_Value) return Project.Attribute.Object is
    begin
       return Definition.Get (Self).Attrs.Element (Name, Index);
    end Attribute;
@@ -96,8 +96,8 @@ package body GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Project.Attribute.Set.Object is
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Project.Attribute.Set.Object is
    begin
       return Definition.Get (Self).Attrs.Filter (Name, Index);
    end Attributes;
@@ -205,8 +205,8 @@ package body GPR2.Project.View is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Boolean is
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Boolean is
    begin
       if Name = No_Name and then Index = No_Value then
          return not Definition.Get (Self).Attrs.Is_Empty;
@@ -309,7 +309,7 @@ package body GPR2.Project.View is
 
    function Has_Packages
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean is
+      Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
          return not Definition.Get (Self).Packs.Is_Empty;
@@ -337,7 +337,7 @@ package body GPR2.Project.View is
 
    function Has_Types
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean is
+      Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
          return not Definition.Get (Self).Types.Is_Empty;
@@ -352,7 +352,7 @@ package body GPR2.Project.View is
 
    function Has_Variables
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean is
+      Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
          return not Definition.Get (Self).Vars.Is_Empty;
