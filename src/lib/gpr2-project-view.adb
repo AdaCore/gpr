@@ -1101,12 +1101,12 @@ package body GPR2.Project.View is
                           Dir'Length > 2
                           and then Dir (Dir'Last) = '*'
                           and then Dir (Dir'Last - 1) = '*';
-         --  Recursivityy is controlled by a double * at the end of the
+         --  Recursivity is controlled by a double * at the end of the
          --  directory.
 
          Dir_Name     : constant GPR2.Path_Name.Full_Name :=
                           (if Is_Recursive
-                           then Dir (Dir'First .. Dir'Last - 1)
+                           then Dir (Dir'First .. Dir'Last - 2)
                            else Dir);
          Dir_Search   : Directories.Search_Type;
          Dir_Entry    : Directories.Directory_Entry_Type;
