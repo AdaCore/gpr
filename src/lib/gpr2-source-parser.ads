@@ -44,6 +44,6 @@ private package GPR2.Source.Parser is
    end record;
 
    function Check (Filename : GPR2.Path_Name.Object) return Data;
-   --  Check the sources and returns the corresponding information
+   --  Checks the sources and returns the corresponding information
 
 end GPR2.Source.Parser;

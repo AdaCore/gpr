@@ -30,16 +30,16 @@
 --        and support. This layer is based on the LangKit parser.
 --
 --     Project
---        This child unit and all the childrent are the high-level API to
+--        This child unit and all the children are the high-level API to
 --         work with projects. This is the end-user API.
 --
 --     Message
---        Messages (warnings, error,information) with source referebce
+--        Messages (warnings, error,information) with source reference
 --
 --     Context
 --        Context of a project
 --
---     Builting
+--     Builtin
 --        The project's build-in implementation
 --
 --     Log
@@ -113,7 +113,7 @@ package GPR2 is
    --  A case sensitive name
 
    procedure Set_Debug (Enable : Boolean);
-   --  Set global debug flag's value
+   --  Sets global debug flag's value
 
 private
 

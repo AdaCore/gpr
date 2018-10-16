@@ -22,9 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This container is design to contain the set of import for a specific
---  project. It is used to detect duplicate import project in with clause
---  for example. We also have fast check/access to any import project name.
+--  This container is designed to contain the set of imports for a specific
+--  project. It is used to detect duplicate imported projects in with clauses
+--  for example. We also have fast check/access for any imported project name.
 
 with Ada.Iterator_Interfaces;
 with GPR2.Containers;

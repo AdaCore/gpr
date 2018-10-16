@@ -22,9 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This unit represent a unit object. This is useful for unit based language
---  like Ada. Note that we associate a spec with multiple bodies as we can
---  have a main body and a set of separate source.
+--  This package represents a unit object. This is useful for unit-based
+--  language like Ada. Note that we associate a spec with multiple bodies
+--  as we can have a main body and a set of separate source.
 
 with GPR2.Project.Source.Set;
 
@@ -56,12 +56,12 @@ package GPR2.Unit is
    procedure Update_Spec
      (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source /= Project.Source.Undefined;
-   --  Set unit spec
+   --  Sets unit spec
 
    procedure Update_Bodies
      (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source /= Project.Source.Undefined;
-   --  Set or append unit's body
+   --  Sets or appends unit body
 
    function Is_Interface (Self : Object) return Boolean
      with Pre => Self /= Undefined;

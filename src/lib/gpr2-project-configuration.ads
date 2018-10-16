@@ -65,36 +65,36 @@ package GPR2.Project.Configuration is
       Path     : Optional_Name_Type := No_Name;
       Name     : Optional_Name_Type := No_Name) return Description;
    --  Returns a description for a configuration. This description object is
-   --  used to retreive the available and corresponding compilers. That is,
-   --  the compilers for the given language, the runtime if specificed, etc.
+   --  used to retrieve the available and corresponding compilers. That is,
+   --  the compilers for the given language, the runtime if specified, etc.
 
    function Create
      (Settings : Description_Set;
       Target   : Name_Type := "all") return Object;
-   --  Create a configuration based on the settings requested
+   --  Creates a configuration based on the settings requested
 
    function Load
      (Filename : Path_Name.Object;
       Target   : Name_Type := "all") return Object;
-   --  Create a configuration object for the given configuration file
+   --  Creates a configuration object for the given configuration file
 
    procedure Release (Self : in out Object)
      with Pre => Self /= Undefined;
-   --  Release memory associated with the configuration object
+   --  Releases memory associated with the configuration object
 
    function Corresponding_View (Self : Object) return Project.View.Object
      with Pre  => Self /= Undefined,
           Post => Corresponding_View'Result /= Project.View.Undefined;
-   --  Get project for the given configuration object
+   --  Gets project for the given configuration object
 
    function Target (Self : Object) return Optional_Name_Type
      with Pre => Self /= Undefined;
-   --  Return the target used for the configuration
+   --  Returns the target used for the configuration
 
    function Runtime
      (Self : Object; Language : Name_Type) return Optional_Name_Type
      with Pre => Self /= Undefined;
-   --  Returns the runtime specificed for Language or the empty string if no
+   --  Returns the runtime specified for Language or the empty string if no
    --  specific runtime has been specified for this language.
 
    function Object_File_Suffix

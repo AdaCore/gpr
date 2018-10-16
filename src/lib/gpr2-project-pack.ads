@@ -50,7 +50,7 @@ package GPR2.Project.Pack is
       Attributes : Attribute.Set.Object;
       Variables  : Project.Variable.Set.Object;
       Sloc       : Source_Reference.Object) return Object;
-   --  Create a package object with the given Name and the list of attributes.
+   --  Creates a package object with the given Name and the list of attributes.
    --  Note that the list of attribute can be empty as a package can contain no
    --  declaration.
 

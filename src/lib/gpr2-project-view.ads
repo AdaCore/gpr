@@ -270,7 +270,7 @@ package GPR2.Project.View is
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
    --  Ensure that the view sources are up-to-date. This is needed before
-   --  computing the dependecies of a source in the project tree. This routine
+   --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
    --  Some common attributes redefined here and when some pathname are
@@ -312,7 +312,7 @@ package GPR2.Project.View is
    function Has_Library_Version (Self : Object) return Boolean
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
-   --  Retruns whether the optional library version name is defined
+   --  Returns whether the optional library version name is defined
 
    function Library_Major_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
@@ -321,7 +321,7 @@ package GPR2.Project.View is
    --  Returns the library major name if it exists. That is, if the project
    --  Library_Version exists and is set to libxyz.so.1.2 for example then the
    --  returned value is libxyz.so.1. If no major version is computable an
-   --  undefined path-naeme is returned.
+   --  undefined path-name is returned.
 
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self /= Undefined
@@ -340,12 +340,12 @@ package GPR2.Project.View is
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library directory, note that this may be difference than
    --  getting the Library_Dir attribute value as the result here is always
-   --  a path-name with proper resoluion for relative directory specification.
+   --  a path-name with proper resolution for relative directory specification.
 
    function Library_Standalone (Self : Object) return Standalone_Library_Kind
      with Pre => Self /= Undefined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
-   --  Retruns the kind for the standalone library
+   --  Returns the kind for the standalone library
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
@@ -360,14 +360,14 @@ package GPR2.Project.View is
    --  As above but for the Exec_Dir attribute
 
    type Id is new Natural;
-   --  A single unique Id which represent a reference to the view in the
+   --  A single unique Id which represents a reference to the view in the
    --  registry.
 
    function From_Id (Id : View.Id) return Object;
    --  Returns a View.Object given its internal Id unique reference
 
    procedure Release (Self : in out Object);
-   --  Release the project view and release all associated memory
+   --  Releases the project view and release all associated memory
 
 private
 

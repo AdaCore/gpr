@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -116,9 +116,9 @@ package GPR2.Log is
       Read        : Boolean := True;
       Unread      : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class;
-   --  Iterate over all log messages corresponding to the given Filter. The
-   --  Unread messages are marked as Read after this call (either explit call
-   --  or using a for-of ieterator). Using the Unread flag it is possible to
+   --  Iterates over all log messages corresponding to the given Filter. The
+   --  Unread messages are marked as Read after this call (either explicit call
+   --  or using a for-of iterator). Using the Unread flag it is possible to
    --  keep all messages into the list (no need to call Clear) and yet be able
    --  to check for new Unread messages.
 

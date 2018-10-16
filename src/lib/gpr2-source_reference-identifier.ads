@@ -37,7 +37,7 @@ package GPR2.Source_Reference.Identifier is
       Identifier   : Name_Type) return Object'Class;
 
    function Identifier (Self : Object) return Name_Type;
-   --  Return the message associated with the reference
+   --  Returns the message associated with the reference
 
 private
 

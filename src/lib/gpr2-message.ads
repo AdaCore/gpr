@@ -66,7 +66,7 @@ package GPR2.Message is
 
    procedure Set_Status (Self : in out Object; Status : Status_Type)
      with Post => Self.Status = Status;
-   --  Set message as Read or Unread as specified by Status
+   --  Sets message as Read or Unread as specified by Status
 
 private
 

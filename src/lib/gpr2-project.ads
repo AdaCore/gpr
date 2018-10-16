@@ -57,7 +57,7 @@ package GPR2.Project is
      (Name  : Name_Type;
       Paths : Path_Name.Set.Object := Path_Name.Set.Set.Empty_List)
       return Path_Name.Object;
-   --  Given a filename (possibly a full pathname) return a Path_Name_Type. If
+   --  Given a filename (possibly a full pathname) returns a Path_Name_Type. If
    --  Name is not an absolute path name it is looked into Paths.
 
    function Search_Paths
@@ -66,7 +66,7 @@ package GPR2.Project is
      with Pre  => Root_Project /= Path_Name.Undefined
                   and then not Tree_Search_Paths.Is_Empty,
           Post => not Search_Paths'Result.Is_Empty;
-   --  Retrurn the project search path for the given project and the give tree
+   --  Returns the project search path for the given project and the give tree
 
 private
 

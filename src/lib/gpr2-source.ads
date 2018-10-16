@@ -49,7 +49,7 @@ package GPR2.Source is
 
    function Path_Name (Self : Object) return Path_Name.Object
      with Pre => Self /= Undefined;
-   --  Retruns the filename for the given source
+   --  Returns the filename for the given source
 
    function Kind (Self : Object) return Kind_Type
      with Pre => Self /= Undefined;
@@ -79,7 +79,7 @@ package GPR2.Source is
 
    function Time_Stamp (Self : Object) return Calendar.Time
      with Pre => Self /= Undefined;
-   --  Retruns the time-stamp for this source
+   --  Returns the time-stamp for this source
 
    function Create
      (Filename  : GPR2.Path_Name.Object;
@@ -94,12 +94,12 @@ package GPR2.Source is
      (Self       : Object;
       Other_Part : Object)
      with Pre => Self /= Undefined and then Other_Part /= Undefined;
-   --  Set the other-part for Self. The other-part is the body for a spec or
+   --  Sets the other-part for Self. The other-part is the body for a spec or
    --  the spec for a body or separate unit.
 
    procedure Release (Self : in out Object)
      with Pre => Self /= Undefined;
-   --  Release source object if not referenced anymore
+   --  Releases source object if not referenced anymore
 
 private
 

@@ -59,7 +59,7 @@ private package GPR2.Project.Definition is
    type Relation_Status is (Root, Imported, Aggregated);
 
    --  Data contains a project view data. We have all the attributes, variables
-   --  and pakcages with the final values as parsed with the project's context
+   --  and packages with the final values as parsed with the project's context
    --  in the given tree. Imports here are the project views corresponding to
    --  the imports in Trees.
    --
@@ -99,7 +99,7 @@ private package GPR2.Project.Definition is
       --  the Undefined view (means root project) which contains the context
       --  from the running environment or an aggregate project which has
       --  a context from the External attribute. Undefined is used for the
-      --  root view to differenciate a root context from a root and aggregate
+      --  root view to differentiate a root context from a root and aggregate
       --  project.
 
       Status            : Relation_Status := Root;
@@ -129,7 +129,7 @@ private package GPR2.Project.Definition is
                     and then
                   (Def.Kind = K_Configuration or else Def.Tree /= null),
           Post => Get (Register'Result) = Def;
-   --  Register a new project definition, returns the corresponding view
+   --  Registers a new project definition, returns the corresponding view
 
    procedure Unregister (View : Project.View.Object)
      with Pre  => Get (View).Trees.Project /= Parser.Project.Undefined,
@@ -164,6 +164,6 @@ private package GPR2.Project.Definition is
    procedure Set (View : Project.View.Object; Def : Data)
      with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
           Post => Get (View) = Def;
-   --  Set the project data defintion for the given view
+   --  Sets the project data definition for the given view
 
 end GPR2.Project.Definition;

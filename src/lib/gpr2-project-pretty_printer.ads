@@ -51,7 +51,7 @@ package GPR2.Project.Pretty_Printer is
       Max_Line_Length        : Max_Length_Of_Line := 80;
       Minimize_Empty_Lines   : Boolean            := False;
       Backward_Compatibility : Boolean            := False) return Object;
-   --  Create a pretty-printer object.
+   --  Creates a pretty-printer object.
    --
    --  Initial_Indent is the initial indentation.
    --
@@ -86,8 +86,8 @@ package GPR2.Project.Pretty_Printer is
                     (Write_Character /= null
                      and then  Write_String /= null
                      and then Write_EOL /= null));
-   --  Pretty print the project, either use the specified Write_* procedures,
-   --  or create string representation in memory.
+   --  Pretty prints the project, either uses the specified Write_* procedures,
+   --  or creates string representation in memory.
 
    function Result (Self : Object) return String;
    --  Returns the result of the pretty printer

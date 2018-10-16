@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -59,10 +59,10 @@ package GPR2.Context is
            or else (for all E of Externals => not Self.Contains (E))
         then Signature'Result = Default_Signature
         else Signature'Result /= Default_Signature);
-   --  Compute and returns a MD5 signature for the Externals given the context.
+   --  Computes and returns MD5 signature for the Externals given the context.
    --  This is used to check if a project's environment has been changed and
-   --  if so the project is to be analysed again. Note that if there is no
-   --  Externals the project has no need to be analysed again, in this case
+   --  if so the project is to be analyzed again. Note that if there is no
+   --  Externals the project has no need to be analyzed again, in this case
    --  the Default_Signature is returned.
 
 private

@@ -95,7 +95,7 @@ package GPR2.Project.Source is
 
    procedure Release (Self : in out Object)
      with Pre => Self /= Undefined;
-   --  Release the project source
+   --  Releases the project source
 
 private
 

@@ -39,13 +39,13 @@ private package GPR2.Parser.Registry is
      (Pathname : Path_Name.Object; Project : Parser.Project.Object)
      with Pre  => Pathname /= Path_Name.Undefined,
           Post => Exists (Pathname);
-   --  Register a new project syntactic tree for Pathname or increment the
+   --  Registers a new project syntactic tree for Pathname or increment the
    --  reference count for the given project as this object can be shared
    --  by multiple project tree.
 
    procedure Unregister (Pathname : Path_Name.Object)
      with Pre => Exists (Pathname);
-   --  Unregister the given project, remove it from the store if no more
+   --  Unregisters the given project, removes it from the store if no longer
    --  referenced (reference count is 0).
 
    function Get (Pathname : Path_Name.Object) return Project.Object

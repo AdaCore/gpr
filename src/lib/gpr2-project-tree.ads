@@ -62,16 +62,16 @@ package GPR2.Project.Tree is
       Context  : GPR2.Context.Object;
       Config   : Configuration.Object := Configuration.Undefined)
      with Pre => Filename /= Path_Name.Undefined;
-   --  Load a root-project
+   --  Loads a root project
 
    procedure Load_Configuration
      (Self     : in out Object;
       Filename : Path_Name.Object)
      with Pre => Filename /= Path_Name.Undefined;
-   --  Load a configuration project for this tree
+   --  Loads a configuration project for this tree
 
    procedure Unload (Self : in out Object);
-   --  Unload the tree and free all associated objects (projects, sources,
+   --  Unloads the tree and free all associated objects (projects, sources,
    --  etc...).
 
    function Root_Project (Self : Object) return View.Object
@@ -94,7 +94,7 @@ package GPR2.Project.Tree is
    --  Returns the configuration project for the given tree
 
    function Target (Self : Object) return Name_Type;
-   --  Return the target for the project tree
+   --  Returns the target for the project tree
 
    function Runtime
      (Self : Object; Language : Name_Type) return Optional_Name_Type
@@ -130,7 +130,7 @@ package GPR2.Project.Tree is
       Message : GPR2.Message.Object)
      with Pre  => Self /= Undefined,
           Post => Self.Log_Messages.Count = Self.Log_Messages.Count'Old + 1;
-   --  Add new message into the Log of Self
+   --  Adds new message into the Log of Self
 
    --  Context
 
@@ -157,9 +157,9 @@ package GPR2.Project.Tree is
           Post => Self.Context = Context
                   or else Self.Root_Project.Qualifier
                             in K_Aggregate | K_Aggregate_Library;
-   --  Set the context for the project tree. The callback Changed is called for
-   --  any project view which is impacted by this change of context. That is,
-   --  if the project view does reference directly or indirectly an external
+   --  Sets the context for the project tree. The callback Changed is called
+   --  for any project view which is impacted by this change of context, i.e.
+   --  if the project view references directly or indirectly an external
    --  variable.
 
    --  Iterator
@@ -198,10 +198,10 @@ package GPR2.Project.Tree is
       return Project_Iterator.Forward_Iterator'Class
      with Pre => Self /= Undefined
           and then Kind /= Iterator_Kind'(I_Invalid => True, others => False);
-   --  Iterate over all project views in the tree given the iterator kind (only
-   --  the project with or without imports) and the filter which can be used to
-   --  iterate over only some specific projects (only the library projects for
-   --  example).
+   --  Iterates over all project views in the tree given the iterator kind
+   --  (only the project with or without imports) and the filter which can be
+   --  used to iterate over only some specific projects (only the library
+   --  projects for example).
 
    --  Unit/View
 
@@ -211,33 +211,33 @@ package GPR2.Project.Tree is
       Source : Path_Name.Full_Name;
       Unit   : Name_Type)
      with Pre => Self /= Undefined;
-   --  Record the view in which unit is defined
+   --  Records the view in which unit is defined
 
    procedure Clear_View
      (Self : in out Object;
       Unit : GPR2.Unit.Object)
      with Pre => Self /= Undefined;
-   --  Clear the view set for the given unit
+   --  Clears the view set for the given unit
 
    function Get_View
      (Self : Object;
       Unit : Name_Type) return Project.View.Object
      with Pre => Self /= Undefined;
-   --  Get the view in which unit is defined, returns Undefined if the unit
+   --  Gets the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
    function Get_View
      (Self   : Object;
       Source : Path_Name.Object) return Project.View.Object
      with Pre => Self /= Undefined;
-   --  Get the view in which unit is defined, returns Undefined if the unit
+   --  Gets the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
    procedure Invalidate_Sources
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
      with Pre => Self /= Undefined;
-   --  Invalidate the sources for all views in the tree if View is set or the
+   --  Invalidates the sources for all views in the tree if View is set or the
    --  source in the given view otherwise. This is needed when some sources
    --  are added or removed from the view. It is not required to call
    --  Update_Sources below, when the routine Sources on one of the views
@@ -245,15 +245,15 @@ package GPR2.Project.Tree is
 
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
-   --  Ensure that all views' sources are up-to-date. This is needed before
-   --  computing the dependecies of a source in the project tree. This routine
+   --  Ensures that all views' sources are up-to-date. This is needed before
+   --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
    procedure Register_Project_Search_Path
      (Self : in out Object;
       Dir  : Path_Name.Object)
      with Pre => Self /= Undefined and then Dir /= Path_Name.Undefined;
-   --  Add a project search path for this tree
+   --  Adds a project search path for this tree
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
    --  Returns the Tree project search paths

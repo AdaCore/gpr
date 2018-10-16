@@ -115,7 +115,7 @@ package GPR2.Path_Name is
 
    procedure Create_Sym_Link (Self, To : Object)
      with Pre => Self /= Undefined and then To /= Undefined;
-   --  Create a sym-link for Self as To
+   --  Creates a sym-link for Self as To
 
    function Relative_Path (Self, To : Object) return Object
      with Pre  => Self /= Undefined and then To /= Undefined,

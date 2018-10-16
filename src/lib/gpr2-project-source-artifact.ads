@@ -67,7 +67,7 @@ package GPR2.Project.Source.Artifact is
 
    function Has_Preprocessed_Source (Self : Object) return Boolean
      with Pre => Self /= Undefined;
-   --  Retruns True if a preprocessed-source is defined
+   --  Returns True if a preprocessed-source is defined
 
    function Preprocessed_Source (Self : Object) return Path_Name.Object
      with Pre => Self /= Undefined;

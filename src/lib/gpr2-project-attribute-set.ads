@@ -44,7 +44,7 @@ package GPR2.Project.Attribute.Set is
      (Self  : Object;
       Name  : Name_Type;
       Index : Value_Type := No_Value) return Boolean;
-   --  Check whether the set contains the attribute with the given Name and
+   --  Checks whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
    function Contains
@@ -68,12 +68,12 @@ package GPR2.Project.Attribute.Set is
      (Self : in out Object; Attribute : Project.Attribute.Object)
      with Pre  => not Self.Contains (Attribute.Name, Attribute.Index),
           Post => Self.Contains (Attribute.Name, Attribute.Index);
-   --  Insert Attribute into the set
+   --  Inserts Attribute into the set
 
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
      with Post => Self.Contains (Attribute.Name, Attribute.Index);
-   --  Insert or replace an Attribute into the set
+   --  Inserts or replaces an Attribute into the set
 
    --  Iterator
 
