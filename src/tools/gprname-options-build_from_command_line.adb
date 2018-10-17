@@ -209,10 +209,10 @@ begin
          Self.Follow_Symlinks := True;
 
       elsif Arg.all = "-v" then
-         if Self.Verbosity = Low then
-            Self.Verbosity := High;
-         else
+         if Self.Verbosity = None then
             Self.Verbosity := Low;
+         elsif Self.Verbosity = Low then
+            Self.Verbosity := High;
          end if;
 
       elsif Arg'Length = 4 and then Arg (1 .. 3) = "-vP"
