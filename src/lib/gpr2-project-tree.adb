@@ -54,8 +54,9 @@ package body GPR2.Project.Tree is
    --  Check for GPRls executable
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
-      Kind   : Iterator_Kind;
-      Filter : Project_Filter;
+      Kind   : Iterator_Control;
+      Filter : Filter_Control;
+      Status : Status_Control;
       Root   : not null access constant Object;
    end record;
 
@@ -312,10 +313,14 @@ package body GPR2.Project.Tree is
       procedure For_Imports (View : Project.View.Object) is
       begin
          for I of Definition.Get (View).Imports loop
-            if Iter.Kind (I_Recursive) then
-               For_Project (I);
-            else
-               Append (I);
+            if Equal (Iter.Status (S_Externally_Built),
+                      I.Is_Externally_Built) in True | Indeterminate
+            then
+               if Iter.Kind (I_Recursive) then
+                  For_Project (I);
+               else
+                  Append (I);
+               end if;
             end if;
          end loop;
       end For_Imports;
@@ -501,11 +506,12 @@ package body GPR2.Project.Tree is
 
    function Iterate
      (Self   : Object;
-      Kind   : Iterator_Kind := Default_Iterator;
-      Filter : Project_Filter := Default_Filter)
+      Kind   : Iterator_Control := Default_Iterator;
+      Filter : Filter_Control   := Default_Filter;
+      Status : Status_Control   := Default_Status)
       return Project_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Kind, Filter, Self.Self);
+      return Iterator'(Kind, Filter, Status, Self.Self);
    end Iterate;
 
    ----------

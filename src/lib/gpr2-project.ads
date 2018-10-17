@@ -22,10 +22,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GNATCOLL.Tribooleans;
 with GPR2.Path_Name.Set;
 
 package GPR2.Project is
 
+   use GNATCOLL.Tribooleans;
    use type GPR2.Path_Name.Object;
 
    --  This package is the root of the high level abstraction of a hierarchy of
@@ -37,21 +39,24 @@ package GPR2.Project is
    --  Iterators
    --
 
-   type Iterator_Control is
-     (I_Invalid, I_Project, I_Extended, I_Imported, I_Aggregated, I_Recursive);
+   type Iterator_Kind is
+     (I_Project, I_Extended, I_Imported, I_Aggregated, I_Recursive);
+   type Iterator_Control is array (Iterator_Kind) of Boolean  with Pack;
 
-   type Iterator_Kind is array (Iterator_Control) of Boolean  with Pack;
+   Default_Iterator : constant Iterator_Control;
 
-   Default_Iterator : constant Iterator_Kind;
+   type Filter_Kind is
+     (F_Standard, F_Library, F_Abstract, F_Aggregate, F_Aggregate_Library);
+   type Filter_Control is array (Filter_Kind) of Boolean with Pack;
 
-   type Filter_Control is
-     (F_Invalid, F_Standard, F_Library, F_Abstract,
-      F_Aggregate, F_Aggregate_Library);
+   Default_Filter : constant Filter_Control;
+   Library_Filter : constant Filter_Control;
 
-   type Project_Filter is array (Filter_Control) of Boolean with Pack;
+   type Status_Kind is
+     (S_Externally_Built);
+   type Status_Control is array (Status_Kind) of Triboolean;
 
-   Default_Filter : constant Project_Filter;
-   Library_Filter : constant Project_Filter;
+   Default_Status : constant Status_Control;
 
    function Create
      (Name  : Name_Type;
@@ -70,17 +75,14 @@ package GPR2.Project is
 
 private
 
-   Default_Iterator : constant Iterator_Kind :=
-                        (I_Project | I_Imported | I_Extended
-                         | I_Aggregated | I_Recursive => True,
-                         others                       => False);
+   Default_Iterator : constant Iterator_Control := (others => True);
 
-   Default_Filter   : constant Project_Filter :=
-                        (F_Standard | F_Library | F_Abstract
-                         | F_Aggregate | F_Aggregate_Library => True,
-                         others                              => False);
+   Default_Filter   : constant Filter_Control := (others => True);
 
-   Library_Filter   : constant Project_Filter :=
+   Library_Filter   : constant Filter_Control :=
                         (F_Library | F_Aggregate_Library => True,
                          others                          => False);
+
+   Default_Status : constant Status_Control := (others => Indeterminate);
+
 end GPR2.Project;

@@ -193,11 +193,11 @@ package GPR2.Project.Tree is
 
    function Iterate
      (Self   : Object;
-      Kind   : Iterator_Kind := Default_Iterator;
-      Filter : Project_Filter := Default_Filter)
+      Kind   : Iterator_Control := Default_Iterator;
+      Filter : Filter_Control   := Default_Filter;
+      Status : Status_Control   := Default_Status)
       return Project_Iterator.Forward_Iterator'Class
-     with Pre => Self /= Undefined
-          and then Kind /= Iterator_Kind'(I_Invalid => True, others => False);
+     with Pre => Self /= Undefined;
    --  Iterates over all project views in the tree given the iterator kind
    --  (only the project with or without imports) and the filter which can be
    --  used to iterate over only some specific projects (only the library
