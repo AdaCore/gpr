@@ -30,6 +30,7 @@ with GNATCOLL.Tribooleans;
 
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Configuration;
 with GPR2.Project.Source.Artifact;
@@ -74,8 +75,10 @@ procedure GPRclean is
    Project_Path  : Path_Name.Object;
    Project_Tree  : Project.Tree.Object;
    Context       : GPR2.Context.Object;
-   Config        : Path_Name.Object;
+   Config_File   : Path_Name.Object;
+   Config        : Project.Configuration.Object;
    Target        : Unbounded_String := To_Unbounded_String ("all");
+   Config_Error  : Boolean := False;
 
    Binder_Prefix : constant Name_Type := "b__";
 
@@ -346,7 +349,7 @@ procedure GPRclean is
             Value (Idx + 1 .. Value'Last));
 
       elsif Switch = "--config" then
-         Config := Path_Name.Create_File (Name_Type (Normalize_Value));
+         Config_File := Path_Name.Create_File (Name_Type (Normalize_Value));
 
       elsif Switch = "--target" then
          Target := To_Unbounded_String (Normalize_Value);
@@ -358,12 +361,34 @@ begin
    Parse_Command_Line;
 
    if not Version then
-      Project_Tree.Load
-        (Project_Path, Context,
-         (if Config = Undefined
-          then Project.Configuration.Undefined
-          else Project.Configuration.Load
-                 (Config, Name_Type (To_String (Target)))));
+      if Config_File /= Undefined then
+         Config := Project.Configuration.Load
+           (Config_File, Name_Type (To_String (Target)));
+
+         if Config.Has_Messages then
+            for M of Config.Log_Messages loop
+               case M.Level is
+                  when Message.Information =>
+                     if Verbose then
+                        Text_IO.Put_Line (M.Format);
+                     end if;
+                  when Message.Warning =>
+                     if not Quiet_Output then
+                        Text_IO.Put_Line (M.Format);
+                     end if;
+                  when Message.Error =>
+                     Text_IO.Put_Line (M.Format);
+                     Config_Error := True;
+               end case;
+            end loop;
+         end if;
+      end if;
+
+      if Config_Error then
+         return;
+      end if;
+
+      Project_Tree.Load (Project_Path, Context, Config);
 
       for V in Project_Tree.Iterate
         (Kind   => (Project.I_Recursive => All_Projects,

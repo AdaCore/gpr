@@ -212,6 +212,7 @@ package body GPR2.Project.Configuration is
      (Filename : Path_Name.Object;
       Target   : Name_Type := "all") return Object
    is
+      use type Parser.Project.Object;
       Result  : Object;
       Project : constant Parser.Project.Object :=
                   Parser.Project.Parse (Filename, Result.Messages);
@@ -220,16 +221,18 @@ package body GPR2.Project.Configuration is
       --  Continue only if there is no parsing error on the configuration
       --  project.
 
-      Data.Trees.Project := Project;
-      Data.Context_View  := View.Undefined;
-      Data.Status        := Definition.Root;
-      Data.Kind          := K_Configuration;
+      if Project /= Parser.Project.Undefined then
+         Data.Trees.Project := Project;
+         Data.Context_View  := View.Undefined;
+         Data.Status        := Definition.Root;
+         Data.Kind          := K_Configuration;
 
-      Result.Conf         := Definition.Register (Data);
-      Result.Target       :=
-        (if Target = "all"
-         then Null_Unbounded_String
-         else To_Unbounded_String (String (Target)));
+         Result.Conf         := Definition.Register (Data);
+         Result.Target       :=
+           (if Target = "all"
+            then Null_Unbounded_String
+            else To_Unbounded_String (String (Target)));
+      end if;
 
       return Result;
    end Load;
