@@ -264,7 +264,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map := Set.Element (Position);
          begin
-            A.Insert  (To_String (Attribute.Index), Attribute);
+            A.Insert (To_String (Attribute.Index), Attribute);
             Self.Attributes.Replace_Element (Position, A);
          end;
 

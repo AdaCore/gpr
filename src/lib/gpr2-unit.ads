@@ -74,9 +74,7 @@ private
       Bodies : Project.Source.Set.Object;
    end record;
 
-   Undefined : constant Object :=
-                 (Spec   => <>,
-                  Bodies => <>);
+   Undefined : constant Object := (others => <>);
 
    function Has_Spec (Self : Object) return Boolean is
      (Self.Spec /= Project.Source.Undefined);

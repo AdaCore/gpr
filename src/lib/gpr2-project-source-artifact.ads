@@ -81,11 +81,7 @@ private
       Preprocessed_Src : Path_Name.Object := Path_Name.Undefined;
    end record;
 
-   Undefined : constant Object :=
-                 (Source           => <>,
-                  Object           => Path_Name.Undefined,
-                  Dependency       => Path_Name.Undefined,
-                  Preprocessed_Src => Path_Name.Undefined);
+   Undefined : constant Object := (others => <>);
 
    function Has_Object_Code (Self : Object) return Boolean is
      (Self.Object /= Path_Name.Undefined);

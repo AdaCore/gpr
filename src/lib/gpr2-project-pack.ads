@@ -191,7 +191,6 @@ private
    end record;
 
    Undefined : constant Object :=
-                 Object'(Source_Reference.Object
-                         with Null_Unbounded_String, Attrs => <>, Vars => <>);
+                 Object'(Source_Reference.Object with others => <>);
 
 end GPR2.Project.Pack;

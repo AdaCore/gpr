@@ -46,6 +46,6 @@ private
    end record;
 
    Undefined : constant Object :=
-                 (GPR2.Source_Reference.Undefined with Null_Unbounded_String);
+                 (GPR2.Source_Reference.Undefined with others => <>);
 
 end GPR2.Source_Reference.Identifier;

@@ -52,12 +52,10 @@ private
 
    type Object is new Source_Reference.Object with record
       Path_Name  : GPR2.Path_Name.Object;
-      Is_Limited : Boolean;
+      Is_Limited : Boolean := False;
    end record;
 
    Undefined : constant Object :=
-                 (Source_Reference.Undefined
-                  with Path_Name  => GPR2.Path_Name.Undefined,
-                       Is_Limited => False);
+                 (Source_Reference.Undefined with others => <>);
 
 end GPR2.Project.Import;

@@ -73,16 +73,13 @@ private
    use Ada.Strings.Unbounded;
 
    type Object is tagged record
-      Level   : Level_Value;
-      Status  : Status_Type;
-      Message : Unbounded_String;
+      Level   : Level_Value := Warning;
+      Status  : Status_Type := Read;
+      Message : Unbounded_String := To_Unbounded_String ((1 => ASCII.NUL));
       Sloc    : Source_Reference.Object;
    end record
      with Dynamic_Predicate => Message /= Null_Unbounded_String;
 
-   Undefined : constant Object :=
-                 (Warning, Read,
-                  To_Unbounded_String (String'(1 => ASCII.NUL)),
-                  Sloc => <>);
+   Undefined : constant Object := (others => <>);
 
 end GPR2.Message;

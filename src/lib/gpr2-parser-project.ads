@@ -138,9 +138,6 @@ private
       Context   : Analysis_Context := No_Analysis_Context;
    end record;
 
-   Undefined : constant Object :=
-                 (Unit    => No_Analysis_Unit,
-                  Context => No_Analysis_Context,
-                  others  => <>);
+   Undefined : constant Object := (others  => <>);
 
 end GPR2.Parser.Project;

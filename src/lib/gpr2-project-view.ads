@@ -385,10 +385,10 @@ private
       Id : View.Id := 0;
    end record;
 
+   Undefined : constant Object := (others => <>);
+
    function "<" (Left, Right : Object) return Boolean is
      (Left.Id < Right.Id);
-
-   Undefined : constant Object := (Id => 0);
 
    function Library_Name (Self : Object) return Name_Type is
      (Name_Type (Self.Attribute (Registry.Attribute.Library_Name).Value));

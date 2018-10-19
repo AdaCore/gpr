@@ -106,15 +106,11 @@ private
    type Object is tagged record
       Source               : GPR2.Source.Object;
       View                 : Project.View.Object;
-      Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean;
+      Is_Interface         : Boolean := False;
+      Has_Naming_Exception : Boolean := False;
    end record;
 
-   Undefined : constant Object :=
-                 (Source               => GPR2.Source.Undefined,
-                  View                 => Project.View.Undefined,
-                  Is_Interface         => False,
-                  Has_Naming_Exception => False);
+   Undefined : constant Object := (others => <>);
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Source < Right.Source);

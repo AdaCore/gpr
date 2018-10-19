@@ -140,19 +140,14 @@ private
    use Ada.Strings.Unbounded;
 
    type Object is tagged record
-      Is_Dir    : Boolean;
+      Is_Dir    : Boolean := False;
       As_Is     : Unbounded_String;
       Value     : Unbounded_String; -- the normalized path-name
       Base_Name : Unbounded_String;
       Dir_Name  : Unbounded_String;
    end record;
 
-   Undefined : constant Object :=
-                 (False,
-                  Null_Unbounded_String,
-                  Null_Unbounded_String,
-                  Null_Unbounded_String,
-                  Null_Unbounded_String);
+   Undefined : constant Object := (others => <>);
 
    overriding function "=" (Left, Right : Object) return Boolean is
      (Left.Value = Right.Value);

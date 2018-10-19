@@ -302,15 +302,7 @@ private
    type Constant_Reference_Type
      (View : not null access constant Project.View.Object) is null record;
 
-   Undefined  : constant Object :=
-                  (Self         => <>,
-                   Root         => View.Undefined,
-                   Conf         => Project.Configuration.Undefined,
-                   Runtime      => View.Undefined,
-                   Units        => <>,
-                   Sources      => <>,
-                   Messages     => <>,
-                   Search_Paths => <>);
+   Undefined  : constant Object := (others => <>);
 
    No_Element : constant Cursor :=
                   (Project_View_Store.Empty_Vector,
