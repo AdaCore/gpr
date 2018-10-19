@@ -360,49 +360,51 @@ begin
    GNATCOLL.Traces.Parse_Config_File;
    Parse_Command_Line;
 
-   if not Version then
-      if Config_File /= Undefined then
-         Config := Project.Configuration.Load
-           (Config_File, Name_Type (To_String (Target)));
+   if Version then
+      return;
+   end if;
 
-         if Config.Has_Messages then
-            for M of Config.Log_Messages loop
-               case M.Level is
-                  when Message.Information =>
-                     if Verbose then
-                        Text_IO.Put_Line (M.Format);
-                     end if;
-                  when Message.Warning =>
-                     if not Quiet_Output then
-                        Text_IO.Put_Line (M.Format);
-                     end if;
-                  when Message.Error =>
+   if Config_File /= Undefined then
+      Config := Project.Configuration.Load
+        (Config_File, Name_Type (To_String (Target)));
+
+      if Config.Has_Messages then
+         for M of Config.Log_Messages loop
+            case M.Level is
+               when Message.Information =>
+                  if Verbose then
                      Text_IO.Put_Line (M.Format);
-                     Config_Error := True;
-               end case;
-            end loop;
-         end if;
-      end if;
-
-      if Config_Error then
-         return;
-      end if;
-
-      Project_Tree.Load (Project_Path, Context, Config);
-
-      for V in Project_Tree.Iterate
-        (Kind   => (Project.I_Recursive => All_Projects,
-                    Project.I_Imported  => All_Projects, others => True),
-         Status => (Project.S_Externally_Built => False))
-      loop
-         Sources (Project.Tree.Element (V));
-      end loop;
-
-      if Verbose then
-         for M of Project_Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
+                  end if;
+               when Message.Warning =>
+                  if not Quiet_Output then
+                     Text_IO.Put_Line (M.Format);
+                  end if;
+               when Message.Error =>
+                  Text_IO.Put_Line (M.Format);
+                  Config_Error := True;
+            end case;
          end loop;
       end if;
+   end if;
+
+   if Config_Error then
+      return;
+   end if;
+
+   Project_Tree.Load (Project_Path, Context, Config);
+
+   for V in Project_Tree.Iterate
+     (Kind   => (Project.I_Recursive => All_Projects,
+                 Project.I_Imported  => All_Projects, others => True),
+      Status => (Project.S_Externally_Built => False))
+   loop
+      Sources (Project.Tree.Element (V));
+   end loop;
+
+   if Verbose then
+      for M of Project_Tree.Log_Messages.all loop
+         Text_IO.Put_Line (M.Format);
+      end loop;
    end if;
 
 exception
