@@ -111,7 +111,6 @@ private
    type Object is new Name_Values.Object with record
       Index                : Unbounded_String;
       Index_Case_Sensitive : Boolean := True;
-      Value_Case_Sensitive : Boolean := True;
    end record;
 
    Undefined : constant Object := (Name_Values.Undefined with others => <>);
@@ -121,6 +120,6 @@ private
                               (Project.Registry.Attribute.Source_Dirs,
                                Containers.Value_Type_List.To_Vector (".", 1),
                                Source_Reference.Undefined)
-                              with Null_Unbounded_String, True, True);
+                              with Null_Unbounded_String, True);
 
 end GPR2.Project.Attribute;

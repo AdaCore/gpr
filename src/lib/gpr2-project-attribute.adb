@@ -62,8 +62,7 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Value, Sloc)
          with Index                => Null_Unbounded_String,
-              Index_Case_Sensitive => True,
-              Value_Case_Sensitive => True);
+              Index_Case_Sensitive => True);
    end Create;
 
    overriding function Create
@@ -74,8 +73,7 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Values, Sloc)
          with Index                => Null_Unbounded_String,
-              Index_Case_Sensitive => True,
-              Value_Case_Sensitive => True);
+              Index_Case_Sensitive => True);
    end Create;
 
    ---------------
