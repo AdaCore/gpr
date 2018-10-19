@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
+
 with GPR2.Containers;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
@@ -83,7 +85,7 @@ package GPR2.Project.Attribute is
    --  Returns True if the attribute has an index
 
    function Index (Self : Object) return Value_Type
-     with Pre => Self /= Undefined;
+     with Inline, Pre => Self /= Undefined;
    --  Returns the attribute's index value
 
    function Index_Equal (Self : Object; Value : Value_Type) return Boolean;
@@ -112,6 +114,13 @@ private
       Index                : Unbounded_String;
       Index_Case_Sensitive : Boolean := True;
    end record;
+
+   function Case_Aware_Index (Self : Object) return Value_Type is
+     (if Self.Index_Case_Sensitive
+      then Index (Self)
+      else Ada.Characters.Handling.To_Lower (Index (Self)));
+   --  Returns Index in lower case if index is case insensitive, returns as is
+   --  otherwise.
 
    Undefined : constant Object := (Name_Values.Undefined with others => <>);
 

@@ -148,8 +148,6 @@ package body GPR2.Project.Attribute.Set is
       Name  : Name_Type;
       Index : Value_Type := No_Value) return Cursor
    is
-      use Ada.Characters.Handling;
-
       Result : Cursor :=
                  (CM  => Self.Attributes.Find (Name),
                   CA  => Set_Attribute.No_Element,
@@ -159,26 +157,14 @@ package body GPR2.Project.Attribute.Set is
          Result.Set := Self.Attributes.Constant_Reference (Result.CM).Element;
 
          --  If we have an attribute in the bucket let's check if the index
-         --  is case sensitive or not. If not we need to iterate through
-         --  all values to get the proper element.
+         --  is case sensitive or not.
 
-         if Index /= No_Value
-           and then not Result.Set.Is_Empty
-           and then not Result.Set.First_Element.Index_Case_Sensitive
-         then
-            --  The index is not case sensitive for this attribute, we need to
-            --  check the index by looping over all values.
-
-            for E in Result.Set.Iterate loop
-               if To_Lower (Set_Attribute.Key (E)) = To_Lower (Index) then
-                  Result.CA := E;
-                  exit;
-               end if;
-            end loop;
-
-         else
-            Result.CA := Result.Set.Find (String (Index));
-         end if;
+         Result.CA := Result.Set.Find
+           (if Index = No_Value
+              or else Result.Set.Is_Empty
+              or else Result.Set.First_Element.Index_Case_Sensitive
+            then Index
+            else Ada.Characters.Handling.To_Lower (Index));
       end if;
 
       return Result;
@@ -232,7 +218,7 @@ package body GPR2.Project.Attribute.Set is
             A : Set_Attribute.Map := Set.Element (Position);
          begin
             Present := A.Contains (To_String (Attribute.Index));
-            A.Include  (To_String (Attribute.Index), Attribute);
+            A.Include  (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Replace_Element (Position, A);
          end;
 
@@ -241,7 +227,7 @@ package body GPR2.Project.Attribute.Set is
             A : Set_Attribute.Map;
          begin
             Present := A.Contains (To_String (Attribute.Index));
-            A.Include (To_String (Attribute.Index), Attribute);
+            A.Include (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Insert (Attribute.Name, A);
          end;
       end if;
@@ -264,7 +250,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map := Set.Element (Position);
          begin
-            A.Insert (To_String (Attribute.Index), Attribute);
+            A.Insert (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Replace_Element (Position, A);
          end;
 
@@ -272,7 +258,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map;
          begin
-            A.Insert (To_String (Attribute.Index), Attribute);
+            A.Insert (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Insert (Attribute.Name, A);
          end;
       end if;

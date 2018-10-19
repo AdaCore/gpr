@@ -772,13 +772,8 @@ package body GPR2.Project.View is
                Sloc       => Source_Reference.Object (Naming));
          end;
 
-      elsif Data.Tree.Has_Configuration
-        and then
-          Data.Tree.Configuration.Corresponding_View.Has_Packages
-            (Project.Registry.Pack.Naming)
-      then
-         return Data.Tree.Configuration.Corresponding_View.Packages.Element
-           (Project.Registry.Pack.Naming);
+      elsif Data.Tree.Has_Configuration then
+         return Data.Tree.Configuration.Corresponding_View.Naming_Package;
 
       else
          return Builtin_Naming_Package;
