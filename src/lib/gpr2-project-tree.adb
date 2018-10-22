@@ -1336,7 +1336,7 @@ package body GPR2.Project.Tree is
             P_Data.Types);
 
          --  If an aggregate project and an attribute external is defined then
-         --  remove the dependency on the corresponding externalq.
+         --  remove the dependency on the corresponding externals.
 
          if View.Qualifier = K_Aggregate then
             for C in P_Data.Attrs.Iterate

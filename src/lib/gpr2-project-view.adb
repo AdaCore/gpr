@@ -754,7 +754,7 @@ package body GPR2.Project.View is
       if Self.Has_Packages (Registry.Pack.Naming) then
          declare
             Naming : constant Project.Pack.Object :=
-                       Self.Packages.Element (Registry.Pack.Naming);
+                       Self.Pack (Registry.Pack.Naming);
             Result : Project.Attribute.Set.Object :=
                        Builtin_Naming_Package.Attributes;
          begin
