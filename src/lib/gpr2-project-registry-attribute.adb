@@ -41,6 +41,17 @@ package body GPR2.Project.Registry.Attribute is
 
    Store : Attribute_Definitions.Map;
 
+   procedure Store_Insert
+     (Name                 : Qualified_Name;
+      Index                : Index_Kind;
+      Others_Allowed       : Boolean;
+      Index_Case_Sensitive : Boolean;
+      Value                : Value_Kind;
+      Value_Case_Sensitive : Boolean;
+      Read_Only            : Boolean;
+      Is_Allowed_In        : Allowed_In) with Inline;
+   --  Calls Store.Insert with Key => Name and Value created from other fields
+
    --  Constants for some common attribute definitions
 
    Everywhere       : constant Allowed_In := (others => True);
@@ -88,2208 +99,2233 @@ package body GPR2.Project.Registry.Attribute is
       return Store (Q_Name);
    end Get;
 
+   ------------------
+   -- Store_Insert --
+   ------------------
+
+   procedure Store_Insert
+     (Name                 : Qualified_Name;
+      Index                : Index_Kind;
+      Others_Allowed       : Boolean;
+      Index_Case_Sensitive : Boolean;
+      Value                : Value_Kind;
+      Value_Case_Sensitive : Boolean;
+      Read_Only            : Boolean;
+      Is_Allowed_In        : Allowed_In) is
+   begin
+      Store.Insert
+        (Name,
+         Def'(Index                => Index,
+              Others_Allowed       => Others_Allowed,
+              Index_Case_Sensitive => Index_Case_Sensitive,
+              Value                => Value,
+              Value_Case_Sensitive => Value_Case_Sensitive,
+              Read_Only            => Read_Only,
+              Is_Allowed_In        => Is_Allowed_In));
+   end Store_Insert;
+
 begin
    --  name
-   Store.Insert
+   Store_Insert
      ("name",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => True,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => True,
+      Is_Allowed_In        => Everywhere);
 
    --  project_dir
-   Store.Insert
+   Store_Insert
      ("project_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => True,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => True,
+      Is_Allowed_In        => Everywhere);
 
    --  main
-   Store.Insert
+   Store_Insert
      ("main",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  languages
-   Store.Insert
+   Store_Insert
      ("languages",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => False,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  roots
-   Store.Insert
+   Store_Insert
      ("roots",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  externally_built
-   Store.Insert
+   Store_Insert
      ("externally_built",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => False,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  object_dir
-   Store.Insert
+   Store_Insert
      ("object_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  exec_dir
-   Store.Insert
+   Store_Insert
      ("exec_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  source_dirs
-   Store.Insert
+   Store_Insert
      ("source_dirs",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  inherit_source_path
-   Store.Insert
+   Store_Insert
      ("inherit_source_path",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  excluded_source_dirs
-   Store.Insert
+   Store_Insert
      ("excluded_source_dirs",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ignore_source_sub_dirs
-   Store.Insert
+   Store_Insert
      ("ignore_source_sub_dirs",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  source_files
-   Store.Insert
+   Store_Insert
      ("source_files",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  locally_removed_files
-   Store.Insert
+   Store_Insert
      ("locally_removed_files",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  excluded_source_files
-   Store.Insert
+   Store_Insert
      ("excluded_source_files",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  source_list_file
-   Store.Insert
+   Store_Insert
      ("source_list_file",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  excluded_source_list_file
-   Store.Insert
+   Store_Insert
      ("excluded_source_list_file",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  interfaces
-   Store.Insert
+   Store_Insert
      ("interfaces",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  project_files
-   Store.Insert
+   Store_Insert
      ("project_files",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
-                                    others => False)));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
+                               others => False));
 
    --  project_path
-   Store.Insert
+   Store_Insert
      ("project_path",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
-                                    others => False)));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
+                               others => False));
 
    --  external
-   Store.Insert
+   Store_Insert
      ("external",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => True,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
-                                    others => False)));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => True,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
+                               others => False));
 
    --  library_dir
-   Store.Insert
+   Store_Insert
      ("library_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_name
-   Store.Insert
+   Store_Insert
      ("library_name",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_kind
-   Store.Insert
+   Store_Insert
      ("library_kind",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => False,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_version
-   Store.Insert
+   Store_Insert
      ("library_version",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_interface
-   Store.Insert
+   Store_Insert
      ("library_interface",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_standalone
-   Store.Insert
+   Store_Insert
      ("library_standalone",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => False,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_encapsulated_options
-   Store.Insert
+   Store_Insert
      ("library_encapsulated_options",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_encapsulated_supported
-   Store.Insert
+   Store_Insert
      ("library_encapsulated_supported",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Configuration));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Configuration);
 
    --  library_auto_init
-   Store.Insert
+   Store_Insert
      ("library_auto_init",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  leading_library_options
-   Store.Insert
+   Store_Insert
      ("leading_library_options",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_options
-   Store.Insert
+   Store_Insert
      ("library_options",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_rpath_options
-   Store.Insert
+   Store_Insert
      ("library_rpath_options",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_src_dir
-   Store.Insert
+   Store_Insert
      ("library_src_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_ali_dir
-   Store.Insert
+   Store_Insert
      ("library_ali_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_gcc
-   Store.Insert
+   Store_Insert
      ("library_gcc",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_symbol_file
-   Store.Insert
+   Store_Insert
      ("library_symbol_file",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_symbol_policy
-   Store.Insert
+   Store_Insert
      ("library_symbol_policy",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => In_Library));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => In_Library);
 
    --  library_reference_symbol_file
-   Store.Insert
+   Store_Insert
      ("library_reference_symbol_file",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  default_language
-   Store.Insert
+   Store_Insert
      ("default_language",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  run_path_option
-   Store.Insert
+   Store_Insert
      ("run_path_option",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  run_path_origin
-   Store.Insert
+   Store_Insert
      ("run_path_origin",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  separate_run_path_options
-   Store.Insert
+   Store_Insert
      ("separate_run_path_options",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  toolchain_version
-   Store.Insert
+   Store_Insert
      ("toolchain_version",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  toolchain_description
-   Store.Insert
+   Store_Insert
      ("toolchain_description",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  object_generated
-   Store.Insert
+   Store_Insert
      ("object_generated",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  objects_linked
-   Store.Insert
+   Store_Insert
      ("objects_linked",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  target
-   Store.Insert
+   Store_Insert
      ("target",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  runtime
-   Store.Insert
+   Store_Insert
      ("runtime",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_builder
-   Store.Insert
+   Store_Insert
      ("library_builder",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_support
-   Store.Insert
+   Store_Insert
      ("library_support",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  archive_builder
-   Store.Insert
+   Store_Insert
      ("archive_builder",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  archive_builder_append_option
-   Store.Insert
+   Store_Insert
      ("archive_builder_append_option",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  archive_indexer
-   Store.Insert
+   Store_Insert
      ("archive_indexer",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  archive_suffix
-   Store.Insert
+   Store_Insert
      ("archive_suffix",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_partial_linker
-   Store.Insert
+   Store_Insert
      ("library_partial_linker",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  object_lister
-   Store.Insert
+   Store_Insert
      ("object_lister",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  object_lister_matcher
-   Store.Insert
+   Store_Insert
      ("object_lister_matcher",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  shared_library_prefix
-   Store.Insert
+   Store_Insert
      ("shared_library_prefix",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  shared_library_suffix
-   Store.Insert
+   Store_Insert
      ("shared_library_suffix",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  symbolic_link_supported
-   Store.Insert
+   Store_Insert
      ("symbolic_link_supported",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_major_minor_id_supported
-   Store.Insert
+   Store_Insert
      ("library_major_minor_id_supported",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_auto_init_supported
-   Store.Insert
+   Store_Insert
      ("library_auto_init_supported",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  shared_library_minimum_switches
-   Store.Insert
+   Store_Insert
      ("shared_library_minimum_switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_version_switches
-   Store.Insert
+   Store_Insert
      ("library_version_switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  library_install_name_option
-   Store.Insert
+   Store_Insert
      ("library_install_name_option",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  runtime_dir
-   Store.Insert
+   Store_Insert
      ("runtime_dir",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  runtime_library_dir
-   Store.Insert
+   Store_Insert
      ("runtime_library_dir",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  runtime_source_dir
-   Store.Insert
+   Store_Insert
      ("runtime_source_dir",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  runtime_source_dirs
-   Store.Insert
+   Store_Insert
      ("runtime_source_dirs",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.spec_suffix
-   Store.Insert
+   Store_Insert
      ("naming.spec_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.body_suffix
-   Store.Insert
+   Store_Insert
      ("naming.body_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.specification_suffix
-   Store.Insert
+   Store_Insert
      ("naming.specification_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.implementation_suffix
-   Store.Insert
+   Store_Insert
      ("naming.implementation_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.separate_suffix
-   Store.Insert
+   Store_Insert
      ("naming.separate_suffix",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.casing
-   Store.Insert
+   Store_Insert
      ("naming.casing",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => False,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.dot_replacement
-   Store.Insert
+   Store_Insert
      ("naming.dot_replacement",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.spec
-   Store.Insert
+   Store_Insert
      ("naming.spec",
-      Def'(Index                => Optional,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.specification
-   Store.Insert
+   Store_Insert
      ("naming.specification",
-      Def'(Index                => Optional,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.body
-   Store.Insert
+   Store_Insert
      ("naming.body",
-      Def'(Index                => Optional,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.implementation
-   Store.Insert
+   Store_Insert
      ("naming.implementation",
-      Def'(Index                => Optional,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.specification_exceptions
-   Store.Insert
+   Store_Insert
      ("naming.specification_exceptions",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  naming.implementation_exceptions
-   Store.Insert
+   Store_Insert
      ("naming.implementation_exceptions",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.default_switches
-   Store.Insert
+   Store_Insert
      ("compiler.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  compiler.switches
-   Store.Insert
+   Store_Insert
      ("compiler.switches",
-      Def'(Index                => Optional,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.local_configuration_pragmas
-   Store.Insert
+   Store_Insert
      ("compiler.local_configuration_pragmas",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.local_config_file
-   Store.Insert
+   Store_Insert
      ("compiler.local_config_file",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.driver
-   Store.Insert
+   Store_Insert
      ("compiler.driver",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.language_kind
-   Store.Insert
+   Store_Insert
      ("compiler.language_kind",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.dependency_kind
-   Store.Insert
+   Store_Insert
      ("compiler.dependency_kind",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.required_switches
-   Store.Insert
+   Store_Insert
      ("compiler.required_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.leading_required_switches
-   Store.Insert
+   Store_Insert
      ("compiler.leading_required_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.trailing_required_switches
-   Store.Insert
+   Store_Insert
      ("compiler.trailing_required_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.pic_option
-   Store.Insert
+   Store_Insert
      ("compiler.pic_option",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.path_syntax
-   Store.Insert
+   Store_Insert
      ("compiler.path_syntax",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.source_file_switches
-   Store.Insert
+   Store_Insert
      ("compiler.source_file_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.object_file_suffix
-   Store.Insert
+   Store_Insert
      ("compiler.object_file_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.object_file_switches
-   Store.Insert
+   Store_Insert
      ("compiler.object_file_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.multi_unit_switches
-   Store.Insert
+   Store_Insert
      ("compiler.multi_unit_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.multi_unit_object_separator
-   Store.Insert
+   Store_Insert
      ("compiler.multi_unit_object_separator",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.mapping_file_switches
-   Store.Insert
+   Store_Insert
      ("compiler.mapping_file_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.mapping_spec_suffix
-   Store.Insert
+   Store_Insert
      ("compiler.mapping_spec_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.mapping_body_suffix
-   Store.Insert
+   Store_Insert
      ("compiler.mapping_body_suffix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_file_switches
-   Store.Insert
+   Store_Insert
      ("compiler.config_file_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_body_file_name
-   Store.Insert
+   Store_Insert
      ("compiler.config_body_file_name",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_body_file_name_index
-   Store.Insert
+   Store_Insert
      ("compiler.config_body_file_name_index",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_body_file_name_pattern
-   Store.Insert
+   Store_Insert
      ("compiler.config_body_file_name_pattern",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_spec_file_name
-   Store.Insert
+   Store_Insert
      ("compiler.config_spec_file_name",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_spec_file_name_index
-   Store.Insert
+   Store_Insert
      ("compiler.config_spec_file_name_index",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_spec_file_name_pattern
-   Store.Insert
+   Store_Insert
      ("compiler.config_spec_file_name_pattern",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.config_file_unique
-   Store.Insert
+   Store_Insert
      ("compiler.config_file_unique",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.dependency_switches
-   Store.Insert
+   Store_Insert
      ("compiler.dependency_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.dependency_driver
-   Store.Insert
+   Store_Insert
      ("compiler.dependency_driver",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.include_switches
-   Store.Insert
+   Store_Insert
      ("compiler.include_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.include_path
-   Store.Insert
+   Store_Insert
      ("compiler.include_path",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.include_path_file
-   Store.Insert
+   Store_Insert
      ("compiler.include_path_file",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.object_path_switches
-   Store.Insert
+   Store_Insert
      ("compiler.object_path_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.max_command_line_length
-   Store.Insert
+   Store_Insert
      ("compiler.max_command_line_length",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.response_file_format
-   Store.Insert
+   Store_Insert
      ("compiler.response_file_format",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  compiler.response_file_switches
-   Store.Insert
+   Store_Insert
      ("compiler.response_file_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  builder.default_switches
-   Store.Insert
+   Store_Insert
      ("builder.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  builder.switches
-   Store.Insert
+   Store_Insert
      ("builder.switches",
-      Def'(Index                => Optional,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  builder.global_compilation_switches
-   Store.Insert
+   Store_Insert
      ("builder.global_compilation_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  builder.executable
-   Store.Insert
+   Store_Insert
      ("builder.executable",
-      Def'(Index                => Optional,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Optional,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  builder.executable_suffix
-   Store.Insert
+   Store_Insert
      ("builder.executable_suffix",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  builder.global_configuration_pragmas
-   Store.Insert
+   Store_Insert
      ("builder.global_configuration_pragmas",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  builder.global_config_file
-   Store.Insert
+   Store_Insert
      ("builder.global_config_file",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  gnatls.switches
-   Store.Insert
+   Store_Insert
      ("gnatls.switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  binder.default_switches
-   Store.Insert
+   Store_Insert
      ("binder.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  binder.switches
-   Store.Insert
+   Store_Insert
      ("binder.switches",
-      Def'(Index                => Optional,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  binder.driver
-   Store.Insert
+   Store_Insert
      ("binder.driver",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  binder.required_switches
-   Store.Insert
+   Store_Insert
      ("binder.required_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  binder.prefix
-   Store.Insert
+   Store_Insert
      ("binder.prefix",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  binder.objects_path
-   Store.Insert
+   Store_Insert
      ("binder.objects_path",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  binder.objects_path_file
-   Store.Insert
+   Store_Insert
      ("binder.objects_path_file",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.required_switches
-   Store.Insert
+   Store_Insert
      ("linker.required_switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.default_switches
-   Store.Insert
+   Store_Insert
      ("linker.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  linker.leading_switches
-   Store.Insert
+   Store_Insert
      ("linker.leading_switches",
-      Def'(Index                => Optional,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.switches
-   Store.Insert
+   Store_Insert
      ("linker.switches",
-      Def'(Index                => Optional,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.trailing_switches
-   Store.Insert
+   Store_Insert
      ("linker.trailing_switches",
-      Def'(Index                => Optional,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Optional,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.linker_options
-   Store.Insert
+   Store_Insert
      ("linker.linker_options",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.map_file_option
-   Store.Insert
+   Store_Insert
      ("linker.map_file_option",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.driver
-   Store.Insert
+   Store_Insert
      ("linker.driver",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.max_command_line_length
-   Store.Insert
+   Store_Insert
      ("linker.max_command_line_length",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.response_file_format
-   Store.Insert
+   Store_Insert
      ("linker.response_file_format",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.response_file_switches
-   Store.Insert
+   Store_Insert
      ("linker.response_file_switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.export_file_format
-   Store.Insert
+   Store_Insert
      ("linker.export_file_format",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  linker.export_file_switch
-   Store.Insert
+   Store_Insert
      ("linker.export_file_switch",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  clean.switches
-   Store.Insert
+   Store_Insert
      ("clean.switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  clean.source_artifact_extensions
-   Store.Insert
+   Store_Insert
      ("clean.source_artifact_extensions",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  clean.object_artifact_extensions
-   Store.Insert
+   Store_Insert
      ("clean.object_artifact_extensions",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  clean.artifacts_in_exec_dir
-   Store.Insert
+   Store_Insert
      ("clean.artifacts_in_exec_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  clean.artifacts_in_object_dir
-   Store.Insert
+   Store_Insert
      ("clean.artifacts_in_object_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  cross_reference.default_switches
-   Store.Insert
+   Store_Insert
      ("cross_reference.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  cross_reference.switches
-   Store.Insert
+   Store_Insert
      ("cross_reference.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  finder.default_switches
-   Store.Insert
+   Store_Insert
      ("finder.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  finder.switches
-   Store.Insert
+   Store_Insert
      ("finder.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  pretty_printer.default_switches
-   Store.Insert
+   Store_Insert
      ("pretty_printer.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  pretty_printer.switches
-   Store.Insert
+   Store_Insert
      ("pretty_printer.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  gnatstub.default_switches
-   Store.Insert
+   Store_Insert
      ("gnatstub.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  gnatstub.switches
-   Store.Insert
+   Store_Insert
      ("gnatstub.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  check.default_switches
-   Store.Insert
+   Store_Insert
      ("check.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  check.switches
-   Store.Insert
+   Store_Insert
      ("check.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  eliminate.default_switches
-   Store.Insert
+   Store_Insert
      ("eliminate.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  eliminate.switches
-   Store.Insert
+   Store_Insert
      ("eliminate.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  metrics.default_switches
-   Store.Insert
+   Store_Insert
      ("metrics.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  metrics.switches
-   Store.Insert
+   Store_Insert
      ("metrics.switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => True,
-           Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => True,
+      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.default_switches
-   Store.Insert
+   Store_Insert
      ("ide.default_switches",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => No_Aggregates));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => No_Aggregates);
 
    --  ide.remote_host
-   Store.Insert
+   Store_Insert
      ("ide.remote_host",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.program_host
-   Store.Insert
+   Store_Insert
      ("ide.program_host",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.communication_protocol
-   Store.Insert
+   Store_Insert
      ("ide.communication_protocol",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.compiler_command
-   Store.Insert
+   Store_Insert
      ("ide.compiler_command",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.debugger_command
-   Store.Insert
+   Store_Insert
      ("ide.debugger_command",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.gnatlist
-   Store.Insert
+   Store_Insert
      ("ide.gnatlist",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.vcs_kind
-   Store.Insert
+   Store_Insert
      ("ide.vcs_kind",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.vcs_file_check
-   Store.Insert
+   Store_Insert
      ("ide.vcs_file_check",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.vcs_log_check
-   Store.Insert
+   Store_Insert
      ("ide.vcs_log_check",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  ide.documentation_dir
-   Store.Insert
+   Store_Insert
      ("ide.documentation_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.prefix
-   Store.Insert
+   Store_Insert
      ("install.prefix",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.sources_subdir
-   Store.Insert
+   Store_Insert
      ("install.sources_subdir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.exec_subdir
-   Store.Insert
+   Store_Insert
      ("install.exec_subdir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.lib_subdir
-   Store.Insert
+   Store_Insert
      ("install.lib_subdir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.project_subdir
-   Store.Insert
+   Store_Insert
      ("install.project_subdir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.active
-   Store.Insert
+   Store_Insert
      ("install.active",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.artifacts
-   Store.Insert
+   Store_Insert
      ("install.artifacts",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => True,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => True,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.required_artifacts
-   Store.Insert
+   Store_Insert
      ("install.required_artifacts",
-      Def'(Index                => Yes,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => True,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => True,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.mode
-   Store.Insert
+   Store_Insert
      ("install.mode",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  install.install_name
-   Store.Insert
+   Store_Insert
      ("install.install_name",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  remote.root_dir
-   Store.Insert
+   Store_Insert
      ("remote.root_dir",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  remote.excluded_patterns
-   Store.Insert
+   Store_Insert
      ("remote.excluded_patterns",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  remote.included_patterns
-   Store.Insert
+   Store_Insert
      ("remote.included_patterns",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  remote.included_artifact_patterns
-   Store.Insert
+   Store_Insert
      ("remote.included_artifact_patterns",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  stack.switches
-   Store.Insert
+   Store_Insert
      ("stack.switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  codepeer.output_directory
-   Store.Insert
+   Store_Insert
      ("codepeer.output_directory",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  codepeer.database_directory
-   Store.Insert
+   Store_Insert
      ("codepeer.database_directory",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  codepeer.message_patterns
-   Store.Insert
+   Store_Insert
      ("codepeer.message_patterns",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  codepeer.additional_patterns
-   Store.Insert
+   Store_Insert
      ("codepeer.additional_patterns",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  codepeer.switches
-   Store.Insert
+   Store_Insert
      ("codepeer.switches",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  codepeer.excluded_source_files
-   Store.Insert
+   Store_Insert
      ("codepeer.excluded_source_files",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => List,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
    --  origin_project
-   Store.Insert
+   Store_Insert
      ("origin_project",
-      Def'(Index                => No,
-           Others_Allowed       => False,
-           Index_Case_Sensitive => False,
-           Value                => Single,
-           Value_Case_Sensitive => True,
-           Read_Only            => False,
-           Is_Allowed_In        => Everywhere));
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
 
 end GPR2.Project.Registry.Attribute;
