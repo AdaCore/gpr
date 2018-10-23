@@ -73,9 +73,10 @@ library project GPR2 is
             for Default_Switches ("C") use Common_C_Options & ("-g");
 
             --  Langkit/Quex
-            for Switches ("gpr_parser*") use ("-g", "-O0");
+            for Switches ("gpr_parser-*") use ("-g", "-O0");
+            for Switches ("gpr_parser.*") use ("-g", "-O0");
             for Switches ("adalog*") use  ("-g", "-O0");
-            for Switches ("quex_*") use Common_C_Options & ("-g3", "-O0");
+            for Switches ("gpr_parser_quex_*") use Common_C_Options & ("-g3", "-O0");
 
          when "release" =>
             for Default_Switches ("Ada") use Common_Options & Release_Options;
