@@ -102,6 +102,34 @@ package body GPR2.Project.View is
       return Definition.Get (Self).Attrs.Filter (Name, Index);
    end Attributes;
 
+   -------------------
+   -- Binder_Prefix --
+   -------------------
+
+   function Binder_Prefix
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+   is
+      package P renames GPR2.Project.Registry.Pack;
+      package A renames GPR2.Project.Registry.Attribute;
+      Binder : Project.Pack.Object;
+   begin
+      if Self.Has_Packages (P.Binder) then
+         Binder := Self.Pack (P.Binder);
+
+         if Binder.Has_Attributes (A.Prefix, Value_Type (Language)) then
+            return Name_Type
+              (Binder.Attribute (A.Prefix, Value_Type (Language)).Value);
+         end if;
+      end if;
+
+      if Self.Tree.Has_Configuration then
+         return Self.Tree.Configuration.Corresponding_View.Binder_Prefix
+           (Language);
+      end if;
+
+      return "";
+   end Binder_Prefix;
+
    -------------
    -- Context --
    -------------

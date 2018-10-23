@@ -27,6 +27,7 @@ with GNAT.OS_Lib;
 
 with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
+with GNATCOLL.Utils;
 
 with GPR2.Context;
 with GPR2.Log;
@@ -80,8 +81,6 @@ procedure GPRclean is
    Target        : Unbounded_String := To_Unbounded_String ("all");
    Config_Error  : Boolean := False;
 
-   Binder_Prefix : constant Name_Type := "b__";
-
    ------------------
    -- Exclude_File --
    ------------------
@@ -101,7 +100,7 @@ procedure GPRclean is
          Delete_File (Name, Success);
 
          if not Quiet_Output and then Success then
-            Text_IO.Put_Line ('"' & Name & """ has beed deleted");
+            Text_IO.Put_Line ('"' & Name & """ has been deleted");
 
          elsif Verbose and then not Success then
             Text_IO.Put_Line ('"' & Name & """ absent");
@@ -214,35 +213,46 @@ procedure GPRclean is
       Obj_Dir : constant Path_Name.Object := View.Object_Directory;
       Tree    : constant access Project.Tree.Object := View.Tree;
 
-      procedure Binder_Artifacts (Base_Name : Name_Type);
+      procedure Binder_Artifacts
+        (Name : Name_Type; Language : Optional_Name_Type := No_Name);
       --  Add binder artefacts for the name
-
-      procedure Add_Main_Artifacts (Src : Project.Source.Object);
-      --  Add main artefacts if source is main
-
-      ------------------------
-      -- Add_Main_Artifacts --
-      ------------------------
-
-      procedure Add_Main_Artifacts (Src : Project.Source.Object) is
-         Base : constant Name_Type := Src.Source.Path_Name.Base_Name;
-      begin
-         Exclude_File (Obj_Dir.Compose (Base).Value & ".bexch");
-         Binder_Artifacts (Base);
-      end Add_Main_Artifacts;
 
       ----------------------
       -- Binder_Artifacts --
       ----------------------
 
-      procedure Binder_Artifacts (Base_Name : Name_Type) is
-         PB : constant Path_Name.Full_Name :=
-                Obj_Dir.Compose (Binder_Prefix & Base_Name).Value;
+      procedure Binder_Artifacts
+        (Name : Name_Type; Language : Optional_Name_Type := No_Name)
+      is
+         use Ada.Text_IO;
+
+         File      : File_Type;
+         Generated : Boolean := False;
+         BF        : constant Path_Name.Full_Name :=
+                       Obj_Dir.Compose
+                         ((if Language = No_Name
+                           then No_Name
+                           else View.Binder_Prefix (Language)) & Name).Value;
       begin
-         Exclude_File (PB & ".ads");
-         Exclude_File (PB & ".adb");
-         Exclude_File (PB & Value_Type (Tree.Object_Suffix));
-         Exclude_File (PB & Value_Type (Tree.Dependency_Suffix));
+         if not GNAT.OS_Lib.Is_Regular_File (BF) then
+            return;
+         end if;
+
+         Open (File, Mode => In_File, Name => BF);
+         while not End_Of_File (File) loop
+            declare
+               use GNATCOLL.Utils;
+               Line : constant String := Get_Line (File);
+            begin
+               if Line (Line'First) = '[' then
+                  Generated := Starts_With (Line, "[GENERATED ");
+               elsif Generated then
+                  Exclude_File (Obj_Dir.Compose (Name_Type (Line)).Value);
+               end if;
+            end;
+         end loop;
+         Exclude_File (BF);
+         Close (File);
       end Binder_Artifacts;
 
       Has_Main : constant Boolean := View.Has_Mains;
@@ -270,7 +280,9 @@ procedure GPRclean is
                end if;
 
                if S.Is_Main then
-                  Add_Main_Artifacts (S);
+                  Binder_Artifacts
+                    (S.Source.Path_Name.Base_Name & ".bexch",
+                     Language => S.Source.Language);
                end if;
             end if;
          end;
@@ -306,14 +318,11 @@ procedure GPRclean is
             begin
                if not Remain_Useful then
                   Exclude_File
-                    (View.Library_Directory.Compose ("lib" & Lib_Name).Value
-                     & Value_Type (Project_Tree.Archive_Suffix));
+                    (View.Library_Directory.Compose
+                       ("lib" & Lib_Name & Project_Tree.Archive_Suffix).Value);
                end if;
-               Exclude_File (Obj_Dir.Compose (Lib_Name).Value & ".lexch");
 
-               if View.Is_Library_Standalone then
-                  Binder_Artifacts (Lib_Name);
-               end if;
+               Binder_Artifacts (Lib_Name & ".lexch");
             end;
          end if;
       end;

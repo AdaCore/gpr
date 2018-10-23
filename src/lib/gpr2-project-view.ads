@@ -369,6 +369,13 @@ package GPR2.Project.View is
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Exec_Dir attribute
 
+   function Binder_Prefix
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     with Pre => Self /= Undefined;
+   --  Prefix to be used for the binder exchange file name for the language.
+   --  Used to have different binder exchange file names when binding different
+   --  languages.
+
    type Id is new Natural;
    --  A single unique Id which represents a reference to the view in the
    --  registry.
