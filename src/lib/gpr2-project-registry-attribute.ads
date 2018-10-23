@@ -30,6 +30,11 @@ package GPR2.Project.Registry.Attribute is
 
    type Value_Kind is (Single, List);
 
+   type Empty_Value_Status is (Allow, Ignore, Error);
+   --  Allow  : an empty value is allowed for the attribute.
+   --  Ignore : an empty value is ignored and reported as warning.
+   --  Error  : an empty value is erroneous and reported as error.
+
    type Qualified_Name (<>) is private;
    --  A qualified name is an attribute name possibly prefixed with a package
    --  name. It is the only way to create a non-ambiguous reference to an
@@ -48,6 +53,7 @@ package GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive : Boolean;
       Value                : Value_Kind;
       Value_Case_Sensitive : Boolean;
+      Value_Empty          : Empty_Value_Status;
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In;
    end record

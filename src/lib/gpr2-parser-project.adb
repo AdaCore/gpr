@@ -1901,63 +1901,81 @@ package body GPR2.Parser.Project is
             declare
                Values : constant Item_Values := Get_Term_List (Expr);
                A      : GPR2.Project.Attribute.Object;
+               package A_Reg renames GPR2.Project.Registry.Attribute;
+
+               Allow : Boolean := True;
+
+               Q_Name : constant A_Reg.Qualified_Name :=
+                          A_Reg.Create
+                            (N_Str,
+                             Optional_Name_Type (To_String (Pack_Name)));
             begin
-               if Present (Index) then
-                  if Values.Single then
-                     A := GPR2.Project.Attribute.Create
-                       (Name  => N_Str,
-                        Index => I_Str,
-                        Value => Values.Values.First_Element,
-                        Sloc  => Sloc);
-
-                  else
-                     A := GPR2.Project.Attribute.Create
-                       (Name   => N_Str,
-                        Index  => I_Str,
-                        Values => Values.Values,
-                        Sloc   => Sloc);
-                  end if;
-
+               if Values.Single then
+                  A := GPR2.Project.Attribute.Create
+                    (Name  => N_Str,
+                     Index => I_Str,
+                     Value => Values.Values.First_Element,
+                     Sloc  => Sloc);
                else
-                  if Values.Single then
-                     A := GPR2.Project.Attribute.Create
-                       (Name  => N_Str,
-                        Value => Values.Values.First_Element,
-                        Sloc  => Sloc);
-                  else
-                     A := GPR2.Project.Attribute.Create
-                       (Name   => N_Str,
-                        Values => Values.Values,
-                        Sloc   => Sloc);
-                  end if;
+                  A := GPR2.Project.Attribute.Create
+                    (Name   => N_Str,
+                     Index  => I_Str,
+                     Values => Values.Values,
+                     Sloc   => Sloc);
                end if;
 
                --  Record attribute with proper casing definition if found
 
-               declare
-                  package A_Reg renames GPR2.Project.Registry.Attribute;
+               if A_Reg.Exists (Q_Name) then
+                  declare
+                     Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
 
-                  Q_Name : constant A_Reg.Qualified_Name :=
-                             A_Reg.Create
-                               (A.Name,
-                                Optional_Name_Type (To_String (Pack_Name)));
-               begin
-                  if A_Reg.Exists (Q_Name) then
-                     declare
-                        Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
-                     begin
-                        A.Set_Case
-                          (Def.Index_Case_Sensitive,
-                           Def.Value_Case_Sensitive);
-                     end;
-                  end if;
+                     function Attr_Name_Image return String is
+                       ((if Pack_Name = Null_Unbounded_String then ""
+                         else To_String (Pack_Name) & '.') & String (N_Str));
 
+                  begin
+                     if (Values.Single
+                         and then Values.Values.First_Element = "")
+                       or else (not Values.Single
+                                and then Values.Values.Length = 0)
+                     then
+                        case Def.Value_Empty is
+                           when A_Reg.Allow =>
+                              null;
+
+                           when A_Reg.Ignore =>
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Warning,
+                                    Sloc    => Sloc,
+                                    Message => "Empty attribute "
+                                    & Attr_Name_Image & " ignored"));
+                              Allow := False;
+
+                           when A_Reg.Error =>
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    => Sloc,
+                                    Message => "Attribute " & Attr_Name_Image
+                                    & " can't be empty"));
+                        end case;
+                     end if;
+
+                     A.Set_Case
+                       (Def.Index_Case_Sensitive,
+                        Def.Value_Case_Sensitive);
+                  end;
+               end if;
+
+               if Allow then
                   if In_Pack then
                      Record_Attribute (Pack_Attrs, A);
                   else
                      Record_Attribute (Attrs, A);
                   end if;
-               end;
+               end if;
             end;
 
             Att_Name := Null_Unbounded_String;

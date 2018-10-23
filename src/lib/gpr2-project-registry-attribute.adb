@@ -48,6 +48,7 @@ package body GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive : Boolean;
       Value                : Value_Kind;
       Value_Case_Sensitive : Boolean;
+      Value_Empty          : Empty_Value_Status := Allow;
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In) with Inline;
    --  Calls Store.Insert with Key => Name and Value created from other fields
@@ -110,6 +111,7 @@ package body GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive : Boolean;
       Value                : Value_Kind;
       Value_Case_Sensitive : Boolean;
+      Value_Empty          : Empty_Value_Status := Allow;
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In) is
    begin
@@ -121,7 +123,8 @@ package body GPR2.Project.Registry.Attribute is
               Value                => Value,
               Value_Case_Sensitive => Value_Case_Sensitive,
               Read_Only            => Read_Only,
-              Is_Allowed_In        => Is_Allowed_In));
+              Is_Allowed_In        => Is_Allowed_In,
+              Value_Empty          => Value_Empty));
    end Store_Insert;
 
 begin
@@ -1489,6 +1492,7 @@ begin
       Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
       Value                => Single,
       Value_Case_Sensitive => True,
+      Value_Empty          => Ignore,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates);
 
