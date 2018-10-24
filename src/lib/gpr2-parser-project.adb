@@ -1899,16 +1899,18 @@ package body GPR2.Parser.Project is
             Idx_Name := To_Unbounded_String (String (I_Str));
 
             declare
-               Values : constant Item_Values := Get_Term_List (Expr);
-               A      : GPR2.Project.Attribute.Object;
                package A_Reg renames GPR2.Project.Registry.Attribute;
 
-               Allow : Boolean := True;
+               Q_Name    : constant A_Reg.Qualified_Name :=
+                             A_Reg.Create
+                               (N_Str,
+                                Optional_Name_Type (To_String (Pack_Name)));
 
-               Q_Name : constant A_Reg.Qualified_Name :=
-                          A_Reg.Create
-                            (N_Str,
-                             Optional_Name_Type (To_String (Pack_Name)));
+               Values    : constant Item_Values := Get_Term_List (Expr);
+               A         : GPR2.Project.Attribute.Object;
+               Is_Valid  : Boolean := True;
+               --  Set to False if the attribute definition is invalid
+
             begin
                if Values.Single then
                   A := GPR2.Project.Attribute.Create
@@ -1940,7 +1942,7 @@ package body GPR2.Parser.Project is
                        or else (not Values.Single
                                 and then Values.Values.Length = 0)
                      then
-                        case Def.Value_Empty is
+                        case Def.Empty_Value is
                            when A_Reg.Allow =>
                               null;
 
@@ -1951,7 +1953,7 @@ package body GPR2.Parser.Project is
                                     Sloc    => Sloc,
                                     Message => "Empty attribute "
                                     & Attr_Name_Image & " ignored"));
-                              Allow := False;
+                              Is_Valid := False;
 
                            when A_Reg.Error =>
                               Tree.Log_Messages.Append
@@ -1969,7 +1971,7 @@ package body GPR2.Parser.Project is
                   end;
                end if;
 
-               if Allow then
+               if Is_Valid then
                   if In_Pack then
                      Record_Attribute (Pack_Attrs, A);
                   else

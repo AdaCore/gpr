@@ -53,7 +53,7 @@ package GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive : Boolean;
       Value                : Value_Kind;
       Value_Case_Sensitive : Boolean;
-      Value_Empty          : Empty_Value_Status;
+      Empty_Value          : Empty_Value_Status;
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In;
    end record
