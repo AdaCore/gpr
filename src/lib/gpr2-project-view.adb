@@ -33,7 +33,6 @@ with Ada.Text_IO;
 
 with GNAT.MD5;
 with GNAT.OS_Lib;
-with GNAT.Regexp;
 
 with GPR2.Message;
 with GPR2.Project.Definition;
@@ -537,14 +536,10 @@ package body GPR2.Project.View is
 
       --  Library suffix
 
-      if Self.Is_Static_Library
-        and then Config_Has_Attribute (A.Archive_Suffix)
-      then
-         Append (File_Name, Config.Attribute (A.Archive_Suffix).Value);
+      if Self.Is_Static_Library then
+         Append (File_Name, String (Self.Tree.Archive_Suffix));
 
-      elsif not Self.Is_Static_Library
-        and then Config_Has_Attribute (A.Shared_Lib_Suffix)
-      then
+      elsif Config_Has_Attribute (A.Shared_Lib_Suffix) then
          Append (File_Name, Config.Attribute (A.Shared_Lib_Suffix).Value);
 
       else
@@ -578,53 +573,36 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object
    is
 
-      function Major_Version_Name
-        (Lib_Filename : Name_Type;
-         Lib_Version  : Name_Type) return String;
+      function Major_Version_Name (Lib_Version : Name_Type) return Name_Type;
       --  Returns the major version name
 
       ------------------------
       -- Major_Version_Name --
       ------------------------
 
-      function Major_Version_Name
-        (Lib_Filename : Name_Type;
-         Lib_Version  : Name_Type) return String
-      is
-         use GNAT.Regexp;
-
-         Reg      : constant GNAT.Regexp.Regexp :=
-                      Compile (String (Lib_Filename) & ".[0-9]+.[0-9]+");
-         Matched  : constant Boolean := Match (String (Lib_Version), Reg);
-         Last_Maj : Positive := Lib_Version'Last;
-
+      function Major_Version_Name (Lib_Version : Name_Type) return Name_Type is
       begin
-         if Matched then
-            while Lib_Version (Last_Maj) /= '.' loop
-               Last_Maj := Last_Maj - 1;
-            end loop;
+         for J in reverse Lib_Version'Range loop
+            if Lib_Version (J) = '.' then
+               return Lib_Version (Lib_Version'First .. J - 1);
+            end if;
+         end loop;
 
-            Last_Maj := Last_Maj - 1;
-            return String (Lib_Version (Lib_Version'First .. Last_Maj));
-         else
-            return "";
-         end if;
+         --  inpossible if project view was validated just after parse
+
+         raise Program_Error;
       end Major_Version_Name;
 
       package A renames GPR2.Project.Registry.Attribute;
 
    begin
-      if Self.Has_Attributes (A.Library_Version) then
-         declare
-            L_File : constant GPR2.Path_Name.Object := Self.Library_Filename;
-         begin
-            return GPR2.Path_Name.Create_File
-              (Optional_Name_Type
-                 (Major_Version_Name
-                      (Self.Library_Filename.Name,
-                       Name_Type (Self.Attribute (A.Library_Version).Value))),
-              Directory => Optional_Name_Type (L_File.Dir_Name));
-         end;
+      if Self.Has_Attributes (A.Library_Version)
+        and then not Self.Is_Static_Library
+      then
+         return GPR2.Path_Name.Create_File
+           (Major_Version_Name
+              (Name_Type (Self.Attribute (A.Library_Version).Value)),
+            Directory => Optional_Name_Type (Self.Library_Filename.Dir_Name));
 
       else
          return GPR2.Path_Name.Undefined;

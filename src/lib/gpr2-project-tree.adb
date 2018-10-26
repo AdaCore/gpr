@@ -43,15 +43,22 @@ with GPR2.Source_Reference;
 with GPR2.Unit;
 
 with GNAT.OS_Lib;
+with GNAT.Regexp;
 with GNAT.String_Split;
+
+with GNATCOLL.Utils;
 
 package body GPR2.Project.Tree is
 
    use Ada;
+   use GNAT;
 
-   GPRls : constant GNAT.OS_Lib.String_Access :=
-             GNAT.OS_Lib.Locate_Exec_On_Path ("gprls");
+   GPRls : constant OS_Lib.String_Access :=
+             OS_Lib.Locate_Exec_On_Path ("gprls");
    --  Check for GPRls executable
+
+   Version_Regexp : constant Regexp.Regexp :=
+                      Regexp.Compile (".[0-9]+.[0-9]+");
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Kind   : Iterator_Control;
@@ -177,7 +184,7 @@ package body GPR2.Project.Tree is
 
    function Create_Runtime_View (Self : Object) return View.Object is
       CV   : constant View.Object := Self.Conf.Corresponding_View;
-      DS   : Character renames GNAT.OS_Lib.Directory_Separator;
+      DS   : Character renames OS_Lib.Directory_Separator;
       Data : Project.Definition.Data (Has_Context => False);
    begin
       --  Check runtime path
@@ -567,8 +574,6 @@ package body GPR2.Project.Tree is
            (Result : in out Path_Name.Set.Object;
             Values : String)
          is
-            use GNAT;
-
             V  : String_Split.Slice_Set;
          begin
             String_Split.Create
@@ -766,10 +771,6 @@ package body GPR2.Project.Tree is
          end loop;
 
          Set_Context (Self, Context);
-
-         if Has_Error then
-            raise Project_Error with Filename.Value & " semantic error";
-         end if;
 
       else
          raise Project_Error with Filename.Value & " syntax error";
@@ -1659,6 +1660,37 @@ package body GPR2.Project.Tree is
                end if;
             end;
          end loop;
+
+         --  Check Library_Version attribute format
+
+         declare
+            package A renames GPR2.Project.Registry.Attribute;
+         begin
+            if View.Kind in K_Library | K_Aggregate_Library
+              and then not View.Is_Static_Library
+              and then View.Has_Attributes (A.Library_Version)
+            then
+               declare
+                  Lib_Ver : constant Value_Type :=
+                              View.Attribute (A.Library_Version).Value;
+                  Lib_Fn  : constant Value_Type :=
+                              Value_Type (View.Library_Filename.Name);
+               begin
+                  if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
+                    or else not Regexp.Match
+                      (Lib_Ver (Lib_Ver'First + Lib_Fn'Length .. Lib_Ver'Last),
+                       Version_Regexp)
+                  then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           '"' & View.Attribute (A.Library_Version).Value
+                           & """ not correct format for Library_Version",
+                           Sloc => View.Attribute (A.Library_Version)));
+                  end if;
+               end;
+            end if;
+         end;
       end Validity_Check;
 
    begin
@@ -1707,6 +1739,11 @@ package body GPR2.Project.Tree is
          for View of Self loop
             Validity_Check (View);
          end loop;
+      end if;
+
+      if Has_Error then
+         raise Project_Error
+           with Self.Root.Path_Name.Value & " semantic error";
       end if;
    end Set_Context;
 

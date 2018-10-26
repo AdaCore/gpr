@@ -9,3 +9,15 @@ Library Version Filename : libabc.so.1.2
 Library Major Version Filename : libabc.so.1
                                : /lib/libabc.so.1
 Library_Standalone : NO
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : lib
+                  : /lib/
+Library Filename : libabc.so
+                 : /lib/libabc.so
+Library Version Filename : libabc.so.1.4
+                         : /lib/libabc.so.1.4
+Library Major Version Filename : libabc.so.1
+                               : /lib/libabc.so.1
+Library_Standalone : NO
+demo.gpr:35:4: "libabc.so.A.B" not correct format for Library_Version

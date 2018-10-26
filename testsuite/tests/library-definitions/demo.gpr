@@ -27,8 +27,11 @@ project Demo is
    for Source_Dirs use ("src");
    for Object_Dir use "obj";
 
+   Version := external ("VERSION", "1.2");
+
    for Library_Name use "abc";
+   for Library_Kind use "dynamic";
    for Library_Dir use "lib";
-   for Library_Version use "lib" & Project'Library_Name & ".so.1.2";
+   for Library_Version use "lib" & Project'Library_Name & ".so." & VERSION;
 
 end Demo;

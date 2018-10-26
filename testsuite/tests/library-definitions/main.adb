@@ -26,6 +26,7 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -36,11 +37,15 @@ procedure Main is
    use Ada;
    use GPR2;
    use GPR2.Project;
+   use GPR2.Message;
 
    procedure Display (Prj : Project.View.Object);
 
-   function Filter_Path (Filename : Path_Name.Full_Name) return String;
-   --  Remove the leading tmp directory
+   function Filter_Path (Line : String) return String;
+   --  Remove the tmp directory where test is processing
+
+   Prj : Project.Tree.Object;
+   Ctx : Context.Object;
 
    -------------
    -- Display --
@@ -82,17 +87,33 @@ procedure Main is
    -- Filter_Path --
    -----------------
 
-   function Filter_Path (Filename : Path_Name.Full_Name) return String is
-      D : constant String := "library-definitions";
-      I : constant Positive := Strings.Fixed.Index (Filename, D);
+   function Filter_Path (Line : String) return String is
+      D : constant String := Prj.Root_Project.Path_Name.Dir_Name;
+      I : constant Positive := Strings.Fixed.Index (Line, D);
    begin
-      return Filename (I + D'Length .. Filename'Last);
+      return Line (Line'First .. I) & Line (I + D'Length .. Line'Last);
    end Filter_Path;
-
-   Prj : Project.Tree.Object;
-   Ctx : Context.Object;
 
 begin
    Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+
    Display (Prj.Root_Project);
+
+   Ctx.Insert ("VERSION", "1.4");
+   Prj.Set_Context (Ctx);
+
+   Display (Prj.Root_Project);
+
+   Ctx.Replace ("VERSION", "A.B");
+   Prj.Set_Context (Ctx);
+
+   Display (Prj.Root_Project);
+
+exception
+   when Project_Error =>
+      for M of Prj.Log_Messages.all loop
+         if M.Level /= Information then
+            Text_IO.Put_Line (M.Format);
+         end if;
+      end loop;
 end Main;

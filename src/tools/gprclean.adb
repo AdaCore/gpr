@@ -330,9 +330,7 @@ procedure GPRclean is
                Lib_Name : constant Name_Type := View.Library_Name;
             begin
                if not Remain_Useful then
-                  Exclude_File
-                    (View.Library_Directory.Compose
-                       ("lib" & Lib_Name & Project_Tree.Archive_Suffix).Value);
+                  Exclude_File (View.Library_Filename.Value);
                end if;
 
                Binder_Artifacts (Lib_Name & ".lexch");
