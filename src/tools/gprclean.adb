@@ -441,7 +441,8 @@ exception
       else
          --  Display only errors
          for C in Project_Tree.Log_Messages.Iterate
-           (False, False, True, True, True)
+           (Information => False, Warning => False,
+            Error => True, Read => True, Unread => True)
          loop
             Text_IO.Put_Line (Log.Element (C).Format);
          end loop;

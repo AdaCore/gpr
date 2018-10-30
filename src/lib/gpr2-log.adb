@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -192,8 +192,13 @@ package body GPR2.Log is
       Unread      : Boolean := True)
       return Log_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Information,  Warning, Error, Read, Unread,
-                       Store => Self.Store'Unrestricted_Access);
+      return Iterator'
+        (Information => Information,
+         Warning     => Warning,
+         Error       => Error,
+         Read        => Read,
+         Unread      => Unread,
+         Store       => Self.Store'Unrestricted_Access);
    end Iterate;
 
    ----------
