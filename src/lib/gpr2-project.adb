@@ -93,6 +93,39 @@ package body GPR2.Project is
         (GPR_Name, Name_Type (Directories.Current_Directory));
    end Create;
 
+   ------------------------------
+   -- Look_For_Default_Project --
+   ------------------------------
+
+   function Look_For_Default_Project return Path_Name.Object is
+      use Directories;
+      Default_Name : constant String := "default.gpr";
+      Search       : Search_Type;
+      Item         : Directory_Entry_Type;
+   begin
+      if Exists (Default_Name)
+        and then Kind (Default_Name) = Ordinary_File
+      then
+         return Path_Name.Create_File (Name_Type (Default_Name));
+      end if;
+
+      Start_Search
+        (Search, ".", "*.gpr", (Ordinary_File => True, others => False));
+
+      if not More_Entries (Search) then
+         return Path_Name.Undefined;
+      end if;
+
+      Get_Next_Entry (Search, Item);
+
+      if More_Entries (Search) then
+         --  Only one project in current directory can be default one
+         return Path_Name.Undefined;
+      else
+         return Path_Name.Create_File (Name_Type (Full_Name (Item)));
+      end if;
+   end Look_For_Default_Project;
+
    ------------------
    -- Search_Paths --
    ------------------

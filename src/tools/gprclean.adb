@@ -190,6 +190,10 @@ procedure GPRclean is
       end loop Read_Arguments;
 
       if Project_Path = Undefined then
+         Project_Path := Project.Look_For_Default_Project;
+      end if;
+
+      if Project_Path = Undefined then
          Display_Help (Config);
          raise Invalid_Switch;
       end if;
