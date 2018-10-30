@@ -162,7 +162,12 @@ procedure GPRclean is
 
       Define_Switch
         (Config, Remain_Useful'Access, "-c",
-         Help => "Only delete compiler-generated files");
+         Help => "Only delete compiler generated files");
+
+      Define_Switch
+        (Config, Value_Callback'Unrestricted_Access,
+         "-aP:",
+         Help => "Add directory ARG to project search path");
 
       Getopt (Config);
 
@@ -362,6 +367,10 @@ procedure GPRclean is
 
       elsif Switch = "--target" then
          Target := To_Unbounded_String (Normalize_Value);
+
+      elsif Switch = "-aP" then
+         Project_Tree.Register_Project_Search_Path
+           (Path_Name.Create_Directory (Name_Type (Value)));
       end if;
    end Value_Callback;
 
