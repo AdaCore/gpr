@@ -92,6 +92,7 @@ procedure GPRclean is
       if Dry_Run then
          if Is_Regular_File (Name) then
             Text_IO.Put_Line (Name);
+
          elsif Verbose then
             Text_IO.Put_Line ("absent: " & Name);
          end if;
@@ -223,7 +224,8 @@ procedure GPRclean is
       Tree    : constant access Project.Tree.Object := View.Tree;
 
       procedure Binder_Artifacts
-        (Name : Name_Type; Language : Optional_Name_Type := No_Name);
+        (Name     : Name_Type;
+         Language : Optional_Name_Type := No_Name);
       --  Add binder artefacts for the name
 
       ----------------------
@@ -231,17 +233,19 @@ procedure GPRclean is
       ----------------------
 
       procedure Binder_Artifacts
-        (Name : Name_Type; Language : Optional_Name_Type := No_Name)
+        (Name     : Name_Type;
+         Language : Optional_Name_Type := No_Name)
       is
          use Ada.Text_IO;
 
-         File      : File_Type;
-         Generated : Boolean := False;
          BF        : constant Path_Name.Full_Name :=
                        Obj_Dir.Compose
                          ((if Language = No_Name
                            then No_Name
                            else View.Binder_Prefix (Language)) & Name).Value;
+         File      : File_Type;
+         Generated : Boolean := False;
+
       begin
          if GNAT.OS_Lib.Is_Regular_File (BF) then
             Open (File, Mode => In_File, Name => BF);
@@ -397,10 +401,12 @@ begin
                   if Verbose then
                      Text_IO.Put_Line (M.Format);
                   end if;
+
                when Message.Warning =>
                   if not Quiet_Output then
                      Text_IO.Put_Line (M.Format);
                   end if;
+
                when Message.Error =>
                   Text_IO.Put_Line (M.Format);
                   Config_Error := True;
@@ -449,6 +455,7 @@ exception
             Text_IO.Put_Line (Log.Element (C).Format);
          end loop;
       end if;
+
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 
    when E : others =>
