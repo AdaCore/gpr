@@ -112,17 +112,18 @@ package body GPR2.Project is
       Start_Search
         (Search, ".", "*.gpr", (Ordinary_File => True, others => False));
 
-      if not More_Entries (Search) then
-         return Path_Name.Undefined;
-      end if;
-
-      Get_Next_Entry (Search, Item);
-
       if More_Entries (Search) then
-         --  Only one project in current directory can be default one
-         return Path_Name.Undefined;
+         Get_Next_Entry (Search, Item);
+
+         if More_Entries (Search) then
+            --  Only one project in current directory can be default one
+            return Path_Name.Undefined;
+         else
+            return Path_Name.Create_File (Name_Type (Full_Name (Item)));
+         end if;
+
       else
-         return Path_Name.Create_File (Name_Type (Full_Name (Item)));
+         return Path_Name.Undefined;
       end if;
    end Look_For_Default_Project;
 

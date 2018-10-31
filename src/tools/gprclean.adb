@@ -243,25 +243,25 @@ procedure GPRclean is
                            then No_Name
                            else View.Binder_Prefix (Language)) & Name).Value;
       begin
-         if not GNAT.OS_Lib.Is_Regular_File (BF) then
-            return;
-         end if;
+         if GNAT.OS_Lib.Is_Regular_File (BF) then
+            Open (File, Mode => In_File, Name => BF);
 
-         Open (File, Mode => In_File, Name => BF);
-         while not End_Of_File (File) loop
-            declare
-               use GNATCOLL.Utils;
-               Line : constant String := Get_Line (File);
-            begin
-               if Line (Line'First) = '[' then
-                  Generated := Starts_With (Line, "[GENERATED ");
-               elsif Generated then
-                  Exclude_File (Obj_Dir.Compose (Name_Type (Line)).Value);
-               end if;
-            end;
-         end loop;
-         Exclude_File (BF);
-         Close (File);
+            while not End_Of_File (File) loop
+               declare
+                  use GNATCOLL.Utils;
+                  Line : constant String := Get_Line (File);
+               begin
+                  if Line (Line'First) = '[' then
+                     Generated := Starts_With (Line, "[GENERATED ");
+                  elsif Generated then
+                     Exclude_File (Obj_Dir.Compose (Name_Type (Line)).Value);
+                  end if;
+               end;
+            end loop;
+
+            Exclude_File (BF);
+            Close (File);
+         end if;
       end Binder_Artifacts;
 
       Has_Main : constant Boolean := View.Has_Mains;
@@ -409,24 +409,22 @@ begin
       end if;
    end if;
 
-   if Config_Error then
-      return;
-   end if;
+   if not Config_Error then
+      Project_Tree.Load (Project_Path, Context, Config);
 
-   Project_Tree.Load (Project_Path, Context, Config);
-
-   for V in Project_Tree.Iterate
-     (Kind   => (Project.I_Recursive => All_Projects,
-                 Project.I_Imported  => All_Projects, others => True),
-      Status => (Project.S_Externally_Built => False))
-   loop
-      Sources (Project.Tree.Element (V));
-   end loop;
-
-   if Verbose then
-      for M of Project_Tree.Log_Messages.all loop
-         Text_IO.Put_Line (M.Format);
+      for V in Project_Tree.Iterate
+        (Kind   => (Project.I_Recursive => All_Projects,
+                    Project.I_Imported  => All_Projects, others => True),
+         Status => (Project.S_Externally_Built => False))
+      loop
+         Sources (Project.Tree.Element (V));
       end loop;
+
+      if Verbose then
+         for M of Project_Tree.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
+      end if;
    end if;
 
 exception
