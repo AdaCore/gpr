@@ -1550,7 +1550,7 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute " & String (A.Name) & " cannot have index",
+                     "attribute """ & String (A.Name) & """ cannot have index",
                      Source_Reference.Object (A)));
             end if;
 
@@ -1560,7 +1560,7 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute " & String (A.Name) & " cannot be a list",
+                     "attribute """ & String (A.Name) & """ cannot be a list",
                      Source_Reference.Object (A)));
             end if;
 
@@ -1570,7 +1570,7 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute " & String (A.Name) & " must be a list",
+                     "attribute """ & String (A.Name) & """ must be a list",
                      Source_Reference.Object (A)));
             end if;
          end Check_Def;
@@ -1609,8 +1609,8 @@ package body GPR2.Project.Tree is
                            Self.Messages.Append
                              (Message.Create
                                 (Message.Error,
-                                 "attribute " & String (A.Name)
-                                 & " cannot be used in package "
+                                 "attribute """ & String (A.Name)
+                                 & """ cannot be used in package "
                                  & String (P.Name),
                                  Source_Reference.Object (A)));
                         end if;
@@ -1621,8 +1621,9 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "attribute " & String (A.Name)
-                              & " not supported in package " & String (P.Name),
+                              "attribute """ & String (A.Name)
+                              & """ not supported in package "
+                              & String (P.Name),
                               Source_Reference.Object (A)));
                      end if;
                   end;
@@ -1641,7 +1642,7 @@ package body GPR2.Project.Tree is
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "unknown attribute " & String (A.Name),
+                        "unrecognized attribute """ & String (A.Name) & '"',
                         Source_Reference.Object (A)));
 
                else
@@ -1651,8 +1652,8 @@ package body GPR2.Project.Tree is
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
-                           "attribute " & String (A.Name)
-                           & " cannot be used in " & Image (P_Kind),
+                           "attribute """ & String (A.Name)
+                           & """ cannot be used in " & Image (P_Kind),
                            Source_Reference.Object (A)));
                   end if;
 

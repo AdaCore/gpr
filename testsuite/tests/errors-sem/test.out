@@ -3,9 +3,9 @@ Messages found:
 ERROR
  3
  4
-attribute Project_Files must be a list
+attribute "Project_Files" must be a list
 > /errors-sem/demo.gpr
 ERROR
  11
  4
-attribute Object_Dir cannot be a list
+attribute "Object_Dir" cannot be a list

@@ -1136,7 +1136,7 @@ package body GPR2.Parser.Project is
                Tree.Log_Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute '" & String (Name) & "' is not defined",
+                     "attribute """ & String (Name) & """ is not defined",
                      Get_Source_Reference
                        (Self.File,
                         Sloc_Range (Node))));
