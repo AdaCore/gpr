@@ -28,7 +28,6 @@ with Ada.Directories;
 with GNAT.OS_Lib;
 
 with GPR2.Message;
-with GPR2.Parser.Project;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 
@@ -50,6 +49,22 @@ package body GPR2.Project.Configuration is
          return ".a";
       end if;
    end Archive_Suffix;
+
+   ------------------
+   -- Bind_To_Tree --
+   ------------------
+
+   procedure Bind_To_Tree
+     (Self : in out Object; Tree : access Project.Tree.Object)
+   is
+      Data : Definition.Data (Has_Context => False);
+   begin
+      Data.Trees.Project := Self.Project;
+      Data.Status        := Root;
+      Data.Kind          := K_Configuration;
+      Data.Tree          := Tree;
+      Self.Conf          := Definition.Register (Data);
+   end Bind_To_Tree;
 
    ------------------------
    -- Corresponding_View --
@@ -214,21 +229,14 @@ package body GPR2.Project.Configuration is
    is
       use type Parser.Project.Object;
       Result  : Object;
-      Project : constant Parser.Project.Object :=
-                  Parser.Project.Parse (Filename, Result.Messages);
-      Data    : GPR2.Project.Definition.Data (Has_Context => False);
    begin
+      Result.Project := Parser.Project.Parse (Filename, Result.Messages);
+
       --  Continue only if there is no parsing error on the configuration
       --  project.
 
-      if Project /= Parser.Project.Undefined then
-         Data.Trees.Project := Project;
-         Data.Context_View  := View.Undefined;
-         Data.Status        := Definition.Root;
-         Data.Kind          := K_Configuration;
-
-         Result.Conf         := Definition.Register (Data);
-         Result.Target       :=
+      if Result.Project /= Parser.Project.Undefined then
+         Result.Target :=
            (if Target = "all"
             then Null_Unbounded_String
             else To_Unbounded_String (String (Target)));
@@ -303,4 +311,6 @@ package body GPR2.Project.Configuration is
       return Optional_Name_Type (To_String (Self.Target));
    end Target;
 
+begin
+   Definition.Bind_Configuration_To_Tree := Bind_To_Tree'Access;
 end GPR2.Project.Configuration;

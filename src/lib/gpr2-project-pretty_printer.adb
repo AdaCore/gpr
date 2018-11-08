@@ -869,7 +869,7 @@ package body GPR2.Project.Pretty_Printer is
       Self.Buffer := Null_Unbounded_String;
 
       if Unit = No_Analysis_Unit then
-         Unit := GPR2.Project.Definition.Get (View).Trees.Project.Unit;
+         Unit := GPR2.Project.Definition.Get_RO (View).Trees.Project.Unit;
       end if;
 
       Print (Root (Unit), Self.Initial_Indent);

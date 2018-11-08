@@ -64,6 +64,10 @@ package body GPR2.Project.View is
    Executable_Suffix : constant access constant String :=
                          OS_Lib.Get_Executable_Suffix;
 
+   function From_Id
+     (Id : View.Id; Tree : access Project.Tree.Object) return Object;
+   --  Returns a View.Object given its internal Id unique reference
+
    ----------------
    -- Aggregated --
    ----------------
@@ -71,7 +75,7 @@ package body GPR2.Project.View is
    function Aggregated (Self : Object) return GPR2.Project.View.Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
-         for Agg of Definition.Get (Self).Aggregated loop
+         for Agg of Definition.Get_RO (Self).Aggregated loop
             Set.Insert (Agg);
          end loop;
       end return;
@@ -86,7 +90,7 @@ package body GPR2.Project.View is
       Name  : Name_Type;
       Index : Value_Type := No_Value) return Project.Attribute.Object is
    begin
-      return Definition.Get (Self).Attrs.Element (Name, Index);
+      return Definition.Get_RO (Self).Attrs.Element (Name, Index);
    end Attribute;
 
    ----------------
@@ -98,7 +102,7 @@ package body GPR2.Project.View is
       Name  : Optional_Name_Type := No_Name;
       Index : Value_Type := No_Value) return Project.Attribute.Set.Object is
    begin
-      return Definition.Get (Self).Attrs.Filter (Name, Index);
+      return Definition.Get_RO (Self).Attrs.Filter (Name, Index);
    end Attributes;
 
    -------------------
@@ -146,7 +150,7 @@ package body GPR2.Project.View is
 
       function Recursive_Context (Self : Object) return GPR2.Context.Object is
 
-         Data : constant Definition.Data := Definition.Get (Self);
+         Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
 
          function Root_Context return GPR2.Context.Object;
          --  Returns the constext of the root project
@@ -156,8 +160,8 @@ package body GPR2.Project.View is
          ------------------
 
          function Root_Context return GPR2.Context.Object is
-            R_Data : constant Definition.Data :=
-                       Definition.Get (Data.Tree.Root_Project);
+            R_Data : constant Definition.Const_Ref :=
+                       Definition.Get_RO (Data.Tree.Root_Project);
          begin
             return R_Data.Context;
          end Root_Context;
@@ -214,16 +218,17 @@ package body GPR2.Project.View is
 
    function Extended (Self : Object) return Object is
    begin
-      return Definition.Get (Self).Extended;
+      return Definition.Get_RO (Self).Extended;
    end Extended;
 
    -------------
    -- From_Id --
    -------------
 
-   function From_Id (Id : View.Id) return Object is
+   function From_Id
+     (Id : View.Id; Tree : access Project.Tree.Object) return Object is
    begin
-      return Object'(Id => Id);
+      return Object'(Id => Id, Tree => Tree);
    end From_Id;
 
    --------------------
@@ -236,10 +241,10 @@ package body GPR2.Project.View is
       Index : Value_Type := No_Value) return Boolean is
    begin
       if Name = No_Name and then Index = No_Value then
-         return not Definition.Get (Self).Attrs.Is_Empty;
+         return not Definition.Get_RO (Self).Attrs.Is_Empty;
 
       elsif Index = No_Value then
-         return Definition.Get (Self).Attrs.Contains (Name);
+         return Definition.Get_RO (Self).Attrs.Contains (Name);
 
       else
          return not Attributes (Self, Name, Index).Is_Empty;
@@ -263,7 +268,7 @@ package body GPR2.Project.View is
 
       function Recursive_Has_Context (Self : Object) return Boolean is
 
-         Data : constant Definition.Data := Definition.Get (Self);
+         Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
 
          function Root_Has_Context return Boolean;
          --  Returns wether the root project has a context
@@ -273,8 +278,8 @@ package body GPR2.Project.View is
          ------------------
 
          function Root_Has_Context return Boolean is
-            R_Data : constant Definition.Data :=
-                       Definition.Get (Data.Tree.Root_Project);
+            R_Data : constant Definition.Const_Ref :=
+                       Definition.Get_RO (Data.Tree.Root_Project);
          begin
             return not R_Data.Context.Is_Empty;
          end Root_Has_Context;
@@ -307,7 +312,7 @@ package body GPR2.Project.View is
 
    function Has_Extended (Self : Object) return Boolean is
    begin
-      return Definition.Get (Self).Extended /= Undefined;
+      return Definition.Get_RO (Self).Extended /= Undefined;
    end Has_Extended;
 
    -----------------
@@ -316,7 +321,7 @@ package body GPR2.Project.View is
 
    function Has_Imports (Self : Object) return Boolean is
    begin
-      return not Definition.Get (Self).Trees.Imports.Is_Empty;
+      return not Definition.Get_RO (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
    ---------------
@@ -339,9 +344,9 @@ package body GPR2.Project.View is
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
-         return not Definition.Get (Self).Packs.Is_Empty;
+         return not Definition.Get_RO (Self).Packs.Is_Empty;
       else
-         return Definition.Get (Self).Packs.Contains (Name_Type (Name));
+         return Definition.Get_RO (Self).Packs.Contains (Name_Type (Name));
       end if;
    end Has_Packages;
 
@@ -355,7 +360,7 @@ package body GPR2.Project.View is
       --  below. Remember the sources are cached and computed only when
       --  requested.
    begin
-      return not Definition.Get (Self).Sources.Is_Empty;
+      return not Definition.Get_RO (Self).Sources.Is_Empty;
    end Has_Sources;
 
    ---------------
@@ -367,9 +372,9 @@ package body GPR2.Project.View is
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
-         return not Definition.Get (Self).Types.Is_Empty;
+         return not Definition.Get_RO (Self).Types.Is_Empty;
       else
-         return Definition.Get (Self).Types.Contains (Name);
+         return Definition.Get_RO (Self).Types.Contains (Name);
       end if;
    end Has_Types;
 
@@ -382,9 +387,9 @@ package body GPR2.Project.View is
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
-         return not Definition.Get (Self).Vars.Is_Empty;
+         return not Definition.Get_RO (Self).Vars.Is_Empty;
       else
-         return Definition.Get (Self).Vars.Contains (Name);
+         return Definition.Get_RO (Self).Vars.Contains (Name);
       end if;
    end Has_Variables;
 
@@ -407,7 +412,7 @@ package body GPR2.Project.View is
 
       procedure Add (Self : Object) is
       begin
-         for Import of Definition.Get (Self).Imports loop
+         for Import of Definition.Get_RO (Self).Imports loop
             if not Result.Contains (Import) then
                Result.Insert (Import);
 
@@ -427,13 +432,10 @@ package body GPR2.Project.View is
    -- Invalidate_Sources --
    ------------------------
 
-   procedure Invalidate_Sources (Self : Object) is
-      Data : Definition.Data := Definition.Get (Self);
-      --  View definition data, will be updated and recorded back into the
-      --  definition set.
+   procedure Invalidate_Sources (Self : in out Object) is
    begin
-      Data.Sources_Signature := GPR2.Context.Default_Signature;
-      Definition.Set (Self, Data);
+      Definition.Get_RW (Self).Sources_Signature :=
+        GPR2.Context.Default_Signature;
    end Invalidate_Sources;
 
    ---------------------
@@ -442,7 +444,7 @@ package body GPR2.Project.View is
 
    function Is_Extended_All (Self : Object) return Boolean is
    begin
-      return Definition.Get (Self).Trees.Project.Is_Extended_All;
+      return Definition.Get_RO (Self).Trees.Project.Is_Extended_All;
    end Is_Extended_All;
 
    -------------------------
@@ -473,7 +475,7 @@ package body GPR2.Project.View is
 
    function Kind (Self : Object) return Project_Kind is
    begin
-      return Definition.Get (Self).Kind;
+      return Definition.Get_RO (Self).Kind;
    end Kind;
 
    ---------------
@@ -747,7 +749,7 @@ package body GPR2.Project.View is
 
    function Name (Self : Object) return Name_Type is
    begin
-      return Definition.Get (Self).Trees.Project.Name;
+      return Definition.Get_RO (Self).Trees.Project.Name;
    end Name;
 
    --------------------
@@ -755,7 +757,7 @@ package body GPR2.Project.View is
    --------------------
 
    function Naming_Package (Self : Object) return Project.Pack.Object is
-      Data : constant Definition.Data := Definition.Get (Self);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
       if Self.Has_Packages (Registry.Pack.Naming) then
          declare
@@ -811,7 +813,7 @@ package body GPR2.Project.View is
      (Self : Object;
       Name : Name_Type) return Project.Pack.Object is
    begin
-      return Definition.Get (Self).Packs (Name);
+      return Definition.Get_RO (Self).Packs (Name);
    end Pack;
 
    --------------
@@ -820,7 +822,7 @@ package body GPR2.Project.View is
 
    function Packages (Self : Object) return Project.Pack.Set.Object is
    begin
-      return Definition.Get (Self).Packs;
+      return Definition.Get_RO (Self).Packs;
    end Packages;
 
    ---------------
@@ -829,7 +831,7 @@ package body GPR2.Project.View is
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Definition.Get (Self).Trees.Project.Path_Name;
+      return Definition.Get_RO (Self).Trees.Project.Path_Name;
    end Path_Name;
 
    ---------------
@@ -838,7 +840,7 @@ package body GPR2.Project.View is
 
    function Qualifier (Self : Object) return Project_Kind is
    begin
-      return Definition.Get (Self).Trees.Project.Qualifier;
+      return Definition.Get_RO (Self).Trees.Project.Qualifier;
    end Qualifier;
 
    -------------
@@ -846,7 +848,7 @@ package body GPR2.Project.View is
    -------------
 
    procedure Release (Self : in out Object) is
-      Data : constant Definition.Data := Definition.Get (Self);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
       for C in Data.Sources.Iterate loop
          declare
@@ -865,7 +867,7 @@ package body GPR2.Project.View is
 
    function Signature (Self : Object) return GPR2.Context.Binary_Signature is
    begin
-      return Definition.Get (Self).Signature;
+      return Definition.Get_RO (Self).Signature;
    end Signature;
 
    ------------
@@ -878,7 +880,7 @@ package body GPR2.Project.View is
    begin
       Self.Update_Sources;
 
-      for S of Definition.Get (Self).Sources loop
+      for S of Definition.Get_RO (Self).Sources loop
          if S.Source.Path_Name.Value = File.Value then
             return S;
          end if;
@@ -894,7 +896,7 @@ package body GPR2.Project.View is
    function Source_Directories
      (Self : Object) return Project.Attribute.Object
    is
-      Data : constant Definition.Data := Definition.Get (Self);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
       --  View definition data, will be updated and recorded back into the
       --  definition set.
    begin
@@ -916,13 +918,13 @@ package body GPR2.Project.View is
       Self.Update_Sources;
 
       if Filter = K_All then
-         return Definition.Get (Self).Sources;
+         return Definition.Get_RO (Self).Sources;
 
       else
          return S_Set : Project.Source.Set.Object do
             declare
-               Data : constant Project.Definition.Data :=
-                        Definition.Get (Self);
+               Data : constant Project.Definition.Const_Ref :=
+                        Definition.Get_RO (Self);
             begin
                for S of Data.Sources loop
                   declare
@@ -950,7 +952,7 @@ package body GPR2.Project.View is
 
    function Tree (Self : Object) return not null access Project.Tree.Object is
    begin
-      return Definition.Get (Self).Tree;
+      return Self.Tree;
    end Tree;
 
    ---------
@@ -959,7 +961,7 @@ package body GPR2.Project.View is
 
    function Typ (Self : Object; Name : Name_Type) return Project.Typ.Object is
    begin
-      return Definition.Get (Self).Types (Name);
+      return Definition.Get_RO (Self).Types (Name);
    end Typ;
 
    -----------
@@ -968,7 +970,7 @@ package body GPR2.Project.View is
 
    function Types (Self : Object) return Project.Typ.Set.Object is
    begin
-      return Definition.Get (Self).Types;
+      return Definition.Get_RO (Self).Types;
    end Types;
 
    --------------------
@@ -1062,7 +1064,7 @@ package body GPR2.Project.View is
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
 
-      Data : Definition.Data := Definition.Get (Self);
+      Data : Definition.Data := Definition.Get_RO (Self).all;
       --  View definition data, will be updated and recorded back into the
       --  definition set.
 
@@ -1072,7 +1074,7 @@ package body GPR2.Project.View is
       Interfaces_Found  : Interfaces_Unit.Map;
 
       Tree              : constant not null access Project.Tree.Object :=
-                            Definition.Get (Self).Tree;
+                            Data.Tree;
 
       Message_Count     : constant Containers.Count_Type :=
                             Tree.Log_Messages.Count;
@@ -1496,11 +1498,7 @@ package body GPR2.Project.View is
 
          if Data.Kind = K_Aggregate_Library then
             for A of Data.Aggregated loop
-               declare
-                  A_Data : constant Definition.Data := Definition.Get (A);
-               begin
-                  Handle (A_Data);
-               end;
+               Handle (Definition.Get_RO (A).all);
             end loop;
          end if;
 
@@ -1950,7 +1948,7 @@ package body GPR2.Project.View is
    function Variable
      (Self : Object; Name : Name_Type) return Project.Variable.Object is
    begin
-      return Definition.Get (Self).Vars (Name);
+      return Definition.Get_RO (Self).Vars (Name);
    end Variable;
 
    ---------------
@@ -1959,46 +1957,54 @@ package body GPR2.Project.View is
 
    function Variables (Self : Object) return Project.Variable.Set.Object is
    begin
-      return Definition.Get (Self).Vars;
+      return Definition.Get_RO (Self).Vars;
    end Variables;
 
    --------------
    -- View_For --
    --------------
 
-   function View_For
-     (Self : Object;
-      Name : Name_Type) return View.Object
-   is
-      Data : constant Definition.Data := Definition.Get (Self);
-      View : Project.View.Object := Definition.Get (Self, Name);
+   function View_For (Self : Object; Name : Name_Type) return View.Object is
+      Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      if View = Project.View.Undefined then
-         declare
-            CV : constant Project.View.Object :=
-                   (if Data.Tree.Has_Configuration
-                    then Data.Tree.Configuration.Corresponding_View
-                    else Project.View.Undefined);
-         begin
-            --  If not found let's check if it is the configuration or runtime
-            --  project. Note that this means that any Runtime or Config user's
-            --  project name will have precedence.
+      --  Returns the project view corresponding to Name and found in the
+      --  context of View (e.g. imported or extended).
 
-            if CV /= Project.View.Undefined and then CV.Name = Name then
-               View := CV;
+      if Data.Extended /= Project.View.Undefined
+        and then Definition.Get_RO (Data.Extended).Trees.Project.Name = Name
+      then
+         return Data.Extended;
 
-            elsif Data.Tree.Has_Runtime_Project
-              and then Data.Tree.Runtime_Project.Name = Name
-            then
-               View := Data.Tree.Runtime_Project;
-            end if;
-         end;
+      elsif Data.Imports.Contains (Name) then
+         return Data.Imports.Element (Name);
       end if;
 
-      return View;
+      declare
+         CV : constant Project.View.Object :=
+                (if Data.Tree.Has_Configuration
+                 then Data.Tree.Configuration.Corresponding_View
+                 else Project.View.Undefined);
+      begin
+         --  If not found let's check if it is the configuration or runtime
+         --  project. Note that this means that any Runtime or Config user's
+         --  project name will have precedence.
+
+         if CV /= Project.View.Undefined and then CV.Name = Name then
+            return CV;
+
+         elsif Data.Tree.Has_Runtime_Project
+           and then Data.Tree.Runtime_Project.Name = Name
+         then
+            return Data.Tree.Runtime_Project;
+         end if;
+      end;
+
+      return Undefined;
    end View_For;
 
 begin
+   Definition.From_Id := From_Id'Access;
+
    --  Setup the default/build-in naming package
 
    declare

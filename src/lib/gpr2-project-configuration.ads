@@ -26,10 +26,13 @@
 
 with GPR2.Containers;
 with GPR2.Log;
+with GPR2.Parser.Project;
 with GPR2.Project.View;
 
 private with Ada.Containers.Vectors;
 private with Ada.Strings.Unbounded;
+
+limited with GPR2.Project.Tree;
 
 package GPR2.Project.Configuration is
 
@@ -135,9 +138,14 @@ private
    type Object is tagged record
       Messages     : Log.Object;
       Target       : Unbounded_String;
-      Conf         : Project.View.Object;
+      Project      : Parser.Project.Object;
+      Conf         : GPR2.Project.View.Object;
       Descriptions : Configuration.Descriptions.Vector;
    end record;
+
+   procedure Bind_To_Tree
+     (Self : in out Object; Tree : access Project.Tree.Object);
+   --  Bind configuration to Tree
 
    Undefined : constant Object := (others => <>);
 

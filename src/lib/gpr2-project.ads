@@ -23,6 +23,8 @@
 ------------------------------------------------------------------------------
 
 with GNATCOLL.Tribooleans;
+with GPR2.Containers;
+with GPR2.Context;
 with GPR2.Path_Name.Set;
 
 package GPR2.Project is
@@ -78,6 +80,27 @@ package GPR2.Project is
    --  not found.
 
 private
+
+   type Relation_Status is (Root, Imported, Aggregated);
+
+   type Definition_Base (Has_Context : Boolean) is abstract tagged record
+      Externals         : Containers.Name_List;
+      --  List of externals directly or indirectly visible
+      Signature         : Context.Binary_Signature :=
+                            Context.Default_Signature;
+      Status            : Relation_Status := Root;
+      Kind              : Project_Kind;
+      Sources_Signature : Context.Binary_Signature :=
+                            Context.Default_Signature;
+
+      case Has_Context is
+         when True =>
+            Context   : GPR2.Context.Object; -- root context
+            A_Context : GPR2.Context.Object; -- aggregate context
+         when False =>
+            null;
+      end case;
+   end record;
 
    Default_Iterator : constant Iterator_Control := (others => True);
 

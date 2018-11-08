@@ -24,10 +24,10 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Parser.Project.Set;
 with GPR2.Project.Attribute.Set;
+with GPR2.Project.Configuration;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Typ.Set;
@@ -56,8 +56,6 @@ private package GPR2.Project.Definition is
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
 
-   type Relation_Status is (Root, Imported, Aggregated);
-
    --  Data contains a project view data. We have all the attributes, variables
    --  and packages with the final values as parsed with the project's context
    --  in the given tree. Imports here are the project views corresponding to
@@ -70,12 +68,9 @@ private package GPR2.Project.Definition is
    --  projects have a context. All other projects are referencing a project
    --  which own a context.
 
-   type Data (Has_Context : Boolean) is tagged record
+   type Data (Has_Context : Boolean) is new Definition_Base (Has_Context)
+   with record
       Trees             : Tree;
-      Externals         : Containers.Name_List;
-      --  List of externals directly or indirectly visible
-      Signature         : Context.Binary_Signature :=
-                            Context.Default_Signature;
 
       --  Actual values for the view
       Extended          : View.Object;
@@ -87,8 +82,6 @@ private package GPR2.Project.Definition is
       Types             : Project.Typ.Set.Object;
 
       Sources           : Project.Source.Set.Object;
-      Sources_Signature : Context.Binary_Signature :=
-                            Context.Default_Signature;
 
       Units             : Unit.Set.Object;
 
@@ -102,19 +95,8 @@ private package GPR2.Project.Definition is
       --  root view to differentiate a root context from a root and aggregate
       --  project.
 
-      Status            : Relation_Status := Root;
-      Kind              : Project_Kind;
-
       --  The project tree for this view
       Tree              : access Project.Tree.Object;
-
-      case Has_Context is
-         when True =>
-            Context   : GPR2.Context.Object; -- root context
-            A_Context : GPR2.Context.Object; -- aggregate context
-         when False =>
-            null;
-      end case;
    end record
      with Dynamic_Predicate =>
             --  Only a root-aggregate project can have a context defined via
@@ -124,46 +106,41 @@ private package GPR2.Project.Definition is
                      and then Data.Status = Root)
             or else Data.A_Context.Is_Empty;
 
-   function Register (Def : Data) return View.Object
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined
-                    and then
-                  (Def.Kind = K_Configuration or else Def.Tree /= null),
-          Post => Get (Register'Result) = Def;
-   --  Registers a new project definition, returns the corresponding view
+   type Ref is access all Data;
 
-   procedure Unregister (View : Project.View.Object)
-     with Pre  => Get (View).Trees.Project /= Parser.Project.Undefined,
-          Post => Get (View).Tree = null;
+   type Const_Ref is access constant Data;
 
-   function Get (View : Project.View.Object) return Data
-     with Post => Get'Result.Trees.Project /= Parser.Project.Undefined;
-   --  Returns the project data definition for the given view
+   --------------------------------------------------------------
+   -- Private routines exported from GPR2.Project.View package --
+   --------------------------------------------------------------
 
-   function Get
-     (Path_Name    : GPR2.Path_Name.Object;
-      Context_View : GPR2.Project.View.Object;
-      Status       : Relation_Status;
-      Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
-   --  Returns the project view corresponding to Path_Name, Status and
-   --  Context_View in the given Tree or Undefined if this project is not
-   --  yet registered.
+   From_Id : access function
+     (Id : View.Id; Tree : access Project.Tree.Object) return View.Object;
+   --  Returns a View.Object given its internal Id unique reference
 
-   function Get
-     (Name         : Name_Type;
-      Context_View : Project.View.Object;
-      Tree         : GPR2.Project.Tree.Object) return Project.View.Object;
-   --  Returns the project view corresponding to Name and Context in the given
-   --  Tree or Undefined if this project is not yet registered.
+   --------------------------------------------------------------
+   -- Private routines exported from GPR2.Project.Tree package --
+   --------------------------------------------------------------
 
-   function Get
-     (View : Project.View.Object;
-      Name : Name_Type) return Project.View.Object;
-   --  Returns the project view corresponding to Name and found in the context
-   --  of View (e.g. imported or extended).
+   Register : access function
+     (Def : Definition.Data) return Project.View.Object;
+   --  Register view definition in the project tree
 
-   procedure Set (View : Project.View.Object; Def : Data)
-     with Pre  => Def.Trees.Project /= Parser.Project.Undefined,
-          Post => Get (View) = Def;
-   --  Sets the project data definition for the given view
+   Get_RO : access function (View : Project.View.Object) return Const_Ref;
+   --  Returns the project data definition constant reference for the given
+   --  view.
+
+   Get_RW : access function (View : in out Project.View.Object) return Ref;
+   --  Returns the project data definition reference to modify view.
+
+   Set : access procedure (View : Project.View.Object; Def : Data);
+   --  Set the data definition for the view
+
+   -----------------------------------------------------------------------
+   -- Private routines exported from GPR2.Project.Configuration package --
+   -----------------------------------------------------------------------
+
+   Bind_Configuration_To_Tree : access procedure
+     (Config : in out Configuration.Object; Tree : access Project.Tree.Object);
 
 end GPR2.Project.Definition;

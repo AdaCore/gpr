@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers;
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Iterator_Interfaces;
 
 with GPR2.Context;
@@ -31,11 +31,10 @@ with GPR2.Message;
 with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
-with GPR2.Project.View;
+with GPR2.Project.View.Set;
 
 limited with GPR2.Unit;
 
-private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Vectors;
 
 package GPR2.Project.Tree is
@@ -275,6 +274,17 @@ private
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, View.Object);
    --  Map to find in which view a unit/source is defined
 
+   package View_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, View.Set.Object, "=" => View.Set."=");
+
+   package View_Definitions is new Ada.Containers.Indefinite_Ordered_Maps
+     (View.Object, Definition_Base'Class);
+
+   type Internal_Data is record
+      Seq   : View.Id := 0;
+      Views : View_Definitions.Map;
+   end record;
+
    type Object is tagged limited record
       Self         : not null access Object := Object'Unchecked_Access;
       Root         : View.Object := View.Undefined;
@@ -285,6 +295,8 @@ private
       Sources      : Name_View.Map;
       Messages     : aliased Log.Object;
       Search_Paths : Path_Name.Set.Object;
+      Views        : aliased View_Maps.Map;
+      Internal     : Internal_Data;
    end record;
 
    function "=" (Left, Right : Object) return Boolean

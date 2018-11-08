@@ -114,7 +114,7 @@ package body GPR2.Project.Source is
          end loop;
       end Insert;
 
-      Data : constant Definition.Data := Definition.Get (Self.View);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (Self.View);
 
       Buf  : Source_Reference.Set.Object := Self.Source.Withed_Units;
       --  Buf contains units to be checked, this list is extended when looking
@@ -183,7 +183,8 @@ package body GPR2.Project.Source is
 
                else
                   declare
-                     Data : constant Definition.Data := Definition.Get (View);
+                     Data : constant Definition.Const_Ref :=
+                              Definition.Get_RO (View);
                      --  The view information for the unit Identifier
                      SU   : GPR2.Unit.Object;
                   begin

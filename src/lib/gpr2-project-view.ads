@@ -111,9 +111,7 @@ package GPR2.Project.View is
    function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
      with Pre => Self /= Undefined and then Self.Kind in Aggregate_Kind;
 
-   function View_For
-     (Self : Object;
-      Name : Name_Type) return View.Object
+   function View_For (Self : Object; Name : Name_Type) return View.Object
      with Pre => Self /= Undefined;
    --  Returns the view for the given name accessible from Self context. This
    --  can be either an import project, an extends project or the special
@@ -261,7 +259,7 @@ package GPR2.Project.View is
      with Pre => Self /= Undefined;
    --  Get project source object corresponding to the given File
 
-   procedure Invalidate_Sources (Self : Object)
+   procedure Invalidate_Sources (Self : in out Object)
      with Pre => Self /= Undefined;
    --  Invalidate the sources for the view. This means that the Sources routine
    --  above will have to recompute the proper sources list for the view. This
@@ -380,16 +378,14 @@ package GPR2.Project.View is
    --  A single unique Id which represents a reference to the view in the
    --  registry.
 
-   function From_Id (Id : View.Id) return Object;
-   --  Returns a View.Object given its internal Id unique reference
-
    procedure Release (Self : in out Object);
    --  Releases the project view and release all associated memory
 
 private
 
    type Object is tagged record
-      Id : View.Id := 0;
+      Id   : View.Id := 0;
+      Tree : access Project.Tree.Object;
    end record;
 
    Undefined : constant Object := (others => <>);
