@@ -1935,8 +1935,17 @@ package body GPR2.Project.Tree is
    procedure Update_Sources (Self : Object) is
    begin
       for V in Self.Internal.Views.Iterate loop
-         View_Definitions.Key (V).Update_Sources;
+         Definition.Data
+           (Self.Self.Internal.Views.Reference (V).Element.all).Update_Sources
+             (View_Definitions.Key (V));
       end loop;
+   end Update_Sources;
+
+   procedure Update_Sources (Self : Object; View : Project.View.Object) is
+   begin
+      Definition.Data
+        (Self.Self.Internal.Views.Reference (View).Element.all).Update_Sources
+          (View);
    end Update_Sources;
 
    --------------
@@ -1981,5 +1990,4 @@ begin
    Definition.Register := Register_View'Access;
    Definition.Get_RO   := Get_View_RO'Access;
    Definition.Get_RW   := Get_View_RW'Access;
-   Definition.Set      := Set_View'Access;
 end GPR2.Project.Tree;

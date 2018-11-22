@@ -248,6 +248,9 @@ package GPR2.Project.Tree is
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
+   procedure Update_Sources (Self : Object; View : Project.View.Object)
+     with Pre => Self /= Undefined and then View /= Project.View.Undefined;
+
    procedure Register_Project_Search_Path
      (Self : in out Object;
       Dir  : Path_Name.Object)

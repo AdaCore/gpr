@@ -265,12 +265,6 @@ package GPR2.Project.View is
    --  above will have to recompute the proper sources list for the view. This
    --  is needed when some sources are added or removed from the view.
 
-   procedure Update_Sources (Self : Object)
-     with Pre => Self /= Undefined;
-   --  Ensure that the view sources are up-to-date. This is needed before
-   --  computing the dependencies of a source in the project tree. This routine
-   --  is called where needed and is there for internal use only.
-
    --  Some common attributes redefined here and when some pathname are
    --  relative to the view, the proper value is returned. Following
    --  routines are for internal use only and convert from a View unique Id.

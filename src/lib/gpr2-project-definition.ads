@@ -39,9 +39,7 @@ limited with GPR2.Project.Tree;
 
 private package GPR2.Project.Definition is
 
-   use type View.Id;
    use type View.Object;
-   use type Parser.Project.Object;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded tree. That is there is always a single instance of
@@ -133,14 +131,60 @@ private package GPR2.Project.Definition is
    Get_RW : access function (View : in out Project.View.Object) return Ref;
    --  Returns the project data definition reference to modify view.
 
-   Set : access procedure (View : Project.View.Object; Def : Data);
-   --  Set the data definition for the view
-
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------
 
    Bind_Configuration_To_Tree : access procedure
      (Config : in out Configuration.Object; Tree : access Project.Tree.Object);
+
+   -------------------------------------------
+   -- Helper routines for GPR2.Project.View --
+   -------------------------------------------
+
+   function Has_Packages
+     (Def : Data; Name : Optional_Name_Type) return Boolean
+   is
+     (if Name = No_Name
+      then not Def.Packs.Is_Empty
+      else Def.Packs.Contains (Name_Type (Name)));
+   --  Returns true if the project view definition has some packages defined
+
+   function Has_Types
+     (Def : Data; Name : Optional_Name_Type) return Boolean
+   is
+     (if Name = No_Name
+      then not Def.Types.Is_Empty
+      else Def.Types.Contains (Name));
+
+   function Has_Attributes
+     (Def   : Data;
+      Name  : Optional_Name_Type;
+      Index : Value_Type := No_Value) return Boolean
+   is
+     (if Name = No_Name and then Index = No_Value then not Def.Attrs.Is_Empty
+      elsif Index = No_Value then Def.Attrs.Contains (Name)
+      else not Def.Attrs.Filter (Name, Index).Is_Empty);
+
+   function Languages (Def : Data) return Containers.Value_List;
+   --  Returns the languages used on this project, this is not necessary the
+   --  content of the Languages attribute as if not defined it returns the
+   --  default language Ada.
+
+   function Source_Directories (Def : Data) return Project.Attribute.Object;
+   --  Returns the sources dirs for the project view. This is only defined for
+   --  project having sources. If not defined in the project itself, the view
+   --  does have the project directory has source dir.
+
+   function Naming_Package (Def : Data) return Project.Pack.Object;
+   --  Returns the Naming package for the current view. This is either
+   --  the view Naming package, the project's tree Naming package from the
+   --  loaded configuration project if any and finally the default Naming
+   --  package.
+
+   procedure Update_Sources (Def : in out Data; View : Project.View.Object);
+   --  Ensure that the view definition sources are up-to-date. This is needed
+   --  before computing the dependencies of a source in the project tree. This
+   --  routine is called where needed and is there for internal use only.
 
 end GPR2.Project.Definition;
