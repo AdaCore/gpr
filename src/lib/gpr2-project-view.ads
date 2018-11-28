@@ -368,24 +368,18 @@ package GPR2.Project.View is
    --  Used to have different binder exchange file names when binding different
    --  languages.
 
-   type Id is new Natural;
-   --  A single unique Id which represents a reference to the view in the
-   --  registry.
-
    procedure Release (Self : in out Object);
    --  Releases the project view and release all associated memory
 
 private
 
-   type Object is tagged record
-      Id   : View.Id := 0;
-      Tree : access Project.Tree.Object;
-   end record;
+   type Object is new Definition_References.Ref with null record;
 
-   Undefined : constant Object := (others => <>);
+   Undefined : constant Object :=
+                 Object'(Definition_References.Null_Ref with null record);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Id < Right.Id);
+     (Left.Get.Id < Right.Get.Id);
 
    function Library_Name (Self : Object) return Name_Type is
      (Name_Type (Self.Attribute (Registry.Attribute.Library_Name).Value));

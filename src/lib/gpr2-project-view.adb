@@ -48,9 +48,17 @@ package body GPR2.Project.View is
    Executable_Suffix : constant access constant String :=
                          OS_Lib.Get_Executable_Suffix;
 
-   function From_Id
-     (Id : View.Id; Tree : not null access Project.Tree.Object) return Object;
-   --  Returns a View.Object given its internal Id unique reference
+   function Get_Ref (View : Object) return Definition.Ref is
+      (View.Get.Element);
+
+   function Get_RO (View : Object) return Definition.Const_Ref is
+      (View.Get.Element);
+
+   function Get_RW (View : in out Object) return Definition.Ref is
+      (View.Get.Element);
+
+   procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
+   --  Convert definition to view
 
    procedure Update_Sources (Self : Object)
      with Pre => Self /= Undefined;
@@ -210,17 +218,6 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Extended;
    end Extended;
-
-   -------------
-   -- From_Id --
-   -------------
-
-   function From_Id
-     (Id   : View.Id;
-      Tree : not null access Project.Tree.Object) return Object is
-   begin
-      return Object'(Id => Id, Tree => Tree);
-   end From_Id;
 
    --------------------
    -- Has_Attributes --
@@ -813,6 +810,15 @@ package body GPR2.Project.View is
       Self := Undefined;
    end Release;
 
+   -------------
+   -- Set_Def --
+   -------------
+
+   procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class) is
+   begin
+      Definition_References.Set (Ref, Def);
+   end Set_Def;
+
    ---------------
    -- Signature --
    ---------------
@@ -896,7 +902,7 @@ package body GPR2.Project.View is
 
    function Tree (Self : Object) return not null access Project.Tree.Object is
    begin
-      return Self.Tree;
+      return Definition.Get_RO (Self).Tree;
    end Tree;
 
    ---------
@@ -923,7 +929,7 @@ package body GPR2.Project.View is
 
    procedure Update_Sources (Self : Object) is
    begin
-      Self.Tree.Update_Sources (Self);
+      Get_Ref (Self).Update_Sources (Self);
    end Update_Sources;
 
    --------------
@@ -988,5 +994,8 @@ package body GPR2.Project.View is
    end View_For;
 
 begin
-   Definition.From_Id := From_Id'Access;
+   Definition.Get_RO  := Get_RO'Access;
+   Definition.Get_RW  := Get_RW'Access;
+   Definition.Get     := Get_Ref'Access;
+   Definition.Set     := Set_Def'Access;
 end GPR2.Project.View;

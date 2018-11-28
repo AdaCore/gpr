@@ -110,21 +110,21 @@ private package GPR2.Project.Definition is
    type Const_Ref is access constant Data;
 
    --------------------------------------------------------------
-   -- Private routines exported from GPR2.Project.View package --
-   --------------------------------------------------------------
-
-   From_Id : access function
-     (Id   : View.Id;
-      Tree : not null access Project.Tree.Object) return View.Object;
-   --  Returns a View.Object given its internal Id unique reference
-
-   --------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Tree package --
    --------------------------------------------------------------
 
    Register : access function
-     (Def : Definition.Data) return Project.View.Object;
+     (Def : in out Definition.Data) return Project.View.Object;
    --  Register view definition in the project tree
+
+   Set : access procedure
+     (Ref : out View.Object; Def : Definition_Base'Class);
+   --  Convert definition to view to register
+
+   Get : access function (View : Project.View.Object) return Ref;
+   --  Returns the project data definition reference for the given view.
+   --  This routine should be used only when we need to change view definition
+   --  for the read only object.
 
    Get_RO : access function (View : Project.View.Object) return Const_Ref;
    --  Returns the project data definition constant reference for the given

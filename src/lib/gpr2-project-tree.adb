@@ -59,42 +59,15 @@ package body GPR2.Project.Tree is
    Version_Regexp : constant Regexp.Regexp :=
                       Regexp.Compile (".[0-9]+.[0-9]+");
 
-   function Register_View (Def : Definition.Data) return Project.View.Object
+   function Register_View
+     (Def : in out Definition.Data) return Project.View.Object
      with Post => Register_View'Result /= View.Undefined;
    --  Register view definition in the Tree and return the View object
 
-   function To_RO
-     (Ref : View_Definitions.Constant_Reference_Type)
-      return Definition.Const_Ref
-   is
-     (Definition.Data (Ref.Element.all)'Unrestricted_Access);
-   --  Converf constant reference to abstract View_Definition_Base'Class
-   --  to Definition.Const_Ref.
-
-   function To_RW
-     (Ref : View_Definitions.Reference_Type) return Definition.Ref
-   is
-     (Definition.Data (Ref.Element.all)'Unrestricted_Access);
-   --  Converf reference to abstract View_Definition_Base'Class
-   --  to Definition.Ref.
-
-   procedure Set_View (View : Project.View.Object; Def : Definition.Data)
-     with Pre => View /= Project.View.Undefined;
-   --  Replace the view definition for the new one
-
-   function Get_View_RO
-     (View : Project.View.Object) return Definition.Const_Ref
-   is
-     (To_RO (View.Tree.Internal.Views.Constant_Reference (View)))
-       with Pre => View /= Project.View.Undefined;
-   --  Get view read only reference
-
-   function Get_View_RW
-     (View : in out Project.View.Object) return Definition.Ref
-   is
-     (To_RW (View.Tree.Internal.Views.Reference (View)))
-       with Pre => View /= Project.View.Undefined;
-   --  Get view read/write reference
+   procedure Copy_Definition
+     (Target : Definition.Ref; Source : Definition.Data)
+     with Inline, Pre => Target.Id = Source.Id;
+   --  Copy definition fields
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Kind   : Iterator_Control;
@@ -225,6 +198,16 @@ package body GPR2.Project.Tree is
       return Self.Root_Project.Context;
    end Context;
 
+   ---------------------
+   -- Copy_Definition --
+   ---------------------
+
+   procedure Copy_Definition
+     (Target : Definition.Ref; Source : Definition.Data) is
+   begin
+      Target.all := Source;
+   end Copy_Definition;
+
    -------------------------
    -- Create_Runtime_View --
    -------------------------
@@ -350,7 +333,7 @@ package body GPR2.Project.Tree is
       procedure For_Aggregated (View : Project.View.Object) is
       begin
          if View.Kind in K_Aggregate | K_Aggregate_Library then
-            for A of Get_View_RO (View).Aggregated loop
+            for A of Definition.Get_RO (View).Aggregated loop
                if Iter.Kind (I_Recursive) then
                   For_Project (A);
                else
@@ -366,7 +349,7 @@ package body GPR2.Project.Tree is
 
       procedure For_Imports (View : Project.View.Object) is
       begin
-         for I of Get_View_RO (View).Imports loop
+         for I of Definition.Get_RO (View).Imports loop
             if Equal (Iter.Status (S_Externally_Built),
                       I.Is_Externally_Built) in True | Indeterminate
             then
@@ -398,7 +381,8 @@ package body GPR2.Project.Tree is
 
             if Iter.Kind (I_Extended) then
                declare
-                  Data : constant Definition.Const_Ref := Get_View_RO (View);
+                  Data : constant Definition.Const_Ref :=
+                           Definition.Get_RO (View);
                begin
                   if Data.Extended /= Project.View.Undefined then
                      if Iter.Kind (I_Recursive) then
@@ -448,7 +432,7 @@ package body GPR2.Project.Tree is
       if Tree.Views.Contains (Key) then
          for V of Tree.Views (Key) loop
             declare
-               Defs : constant Definition.Const_Ref := Get_View_RO (V);
+               Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
             begin
                if Defs.Tree.all = Tree
                  and then Defs.Context_View = Context_View
@@ -472,7 +456,7 @@ package body GPR2.Project.Tree is
       if Tree.Views.Contains (Name) then
          for V of Tree.Views.Constant_Reference (Name) loop
             declare
-               Defs : constant Definition.Const_Ref := Get_View_RO (V);
+               Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
             begin
                if Defs.Tree.all = Tree
                  and then Defs.Context_View = Context_View
@@ -592,12 +576,12 @@ package body GPR2.Project.Tree is
       View : Project.View.Object := Project.View.Undefined) is
    begin
       if View = Project.View.Undefined then
-         for V of Self.Self.Internal.Views loop
-            Definition.Data (V).Sources_Signature :=
+         for V of Self.Views_Set loop
+            Definition.Get (V).Sources_Signature :=
               GPR2.Context.Default_Signature;
          end loop;
       else
-         To_RW (Self.Self.Internal.Views.Reference (View)).Sources_Signature :=
+         Definition.Get (View).Sources_Signature :=
            GPR2.Context.Default_Signature;
       end if;
    end Invalidate_Sources;
@@ -808,7 +792,7 @@ package body GPR2.Project.Tree is
 
          declare
             C_View : Project.View.Object := Self.Conf.Corresponding_View;
-            P_Data : constant Definition.Ref := Get_View_RW (C_View);
+            P_Data : constant Definition.Ref := Definition.Get_RW (C_View);
          begin
             --  Set and record the tree now, needed for the parsing
 
@@ -843,14 +827,14 @@ package body GPR2.Project.Tree is
       --  Do nothing more if there are errors during the parsing
 
       if not Has_Error then
-         for V_Data of Self.Internal.Views loop
+         for V_Data of Self.Views_Set loop
             --  Compute the external dependencies for the views. This
             --  is the set of external used in the project and in all
             --  imported project.
 
-            for V of Definition.Data (V_Data).Imports loop
-               for E of Get_View_RO (V).Externals loop
-                  if not Definition.Data (V_Data).Externals.Contains (E) then
+            for V of Definition.Get_RO (V_Data).Imports loop
+               for E of Definition.Get_RO (V).Externals loop
+                  if not Definition.Get_RO (V_Data).Externals.Contains (E) then
                      --  Note that if we have an aggregate project, then
                      --  we are not dependent of the external if it is
                      --  statically redefined in the aggregate project. Yet
@@ -858,7 +842,8 @@ package body GPR2.Project.Tree is
                      --
                      --  The externals will be removed in Set_Context when
                      --  the parsing is done.
-                     Definition.Data (V_Data).Externals.Append (E);
+
+                     Definition.Get (V_Data).Externals.Append (E);
                   end if;
                end loop;
             end loop;
@@ -1065,7 +1050,11 @@ package body GPR2.Project.Tree is
                Data.Status       := Status;
 
                View := Register_View (Data);
+            end;
 
+            declare
+               Data : constant Definition.Ref := Definition.Get_RW (View);
+            begin
                --  Load the extended project if any
 
                if Data.Trees.Project.Has_Extended then
@@ -1210,10 +1199,6 @@ package body GPR2.Project.Tree is
                      end if;
                   end;
                end loop;
-
-               --  And record back new data for this view
-
-               Set_View (View, Data);
             end;
          end if;
 
@@ -1342,19 +1327,23 @@ package body GPR2.Project.Tree is
    -- Register_View --
    -------------------
 
-   function Register_View (Def : Definition.Data) return Project.View.Object is
-      use type View.Id;
-
+   function Register_View
+     (Def : in out Definition.Data) return Project.View.Object
+   is
       Name      : constant Name_Type := Def.Trees.Project.Name;
       Path_Name : constant Name_Type :=
                     Name_Type (Def.Trees.Project.Path_Name.Value);
       View      : Project.View.Object;
    begin
-      View := Definition.From_Id (Def.Tree.Internal.Seq + 1, Def.Tree);
+      if Def.Tree.Views_Set.Is_Empty then
+         Def.Id := 1;
+      else
+         Def.Id := Definition.Get_RO (Def.Tree.Views_Set.Last_Element).Id + 1;
+      end if;
 
-      Def.Tree.Internal.Seq := Def.Tree.Internal.Seq + 1;
+      Definition.Set (View, Def);
 
-      Def.Tree.Internal.Views.Insert (View, Def);
+      Def.Tree.Views_Set.Insert (View);
 
       if Def.Tree.Views.Contains (Path_Name) then
          Def.Tree.Views (Path_Name).Insert (View);
@@ -1441,7 +1430,7 @@ package body GPR2.Project.Tree is
       is
          use type GPR2.Context.Binary_Signature;
 
-         P_Data        : Definition.Data := Get_View_RO (View).all;
+         P_Data        : Definition.Data := Definition.Get_RO (View).all;
          Old_Signature : constant GPR2.Context.Binary_Signature :=
                            P_Data.Signature;
          New_Signature : constant GPR2.Context.Binary_Signature :=
@@ -1631,7 +1620,7 @@ package body GPR2.Project.Tree is
                end if;
             end if;
 
-            Set_View (View, P_Data);
+            Copy_Definition (Definition.Get (View), P_Data);
 
             --  Signal project change only if we have different and non default
             --  signature. That is if there is at least some external used
@@ -1700,7 +1689,7 @@ package body GPR2.Project.Tree is
          end Check_Def;
 
          P_Kind : constant Project_Kind := View.Kind;
-         P_Data : constant Definition.Const_Ref := Get_View_RO (View);
+         P_Data : constant Definition.Const_Ref := Definition.Get_RO (View);
 
       begin
          --  Check packages
@@ -1821,7 +1810,7 @@ package body GPR2.Project.Tree is
    begin
       --  Register the root context for this project tree
 
-      Get_View_RW (Self.Root).Context := Context;
+      Definition.Get_RW (Self.Root).Context := Context;
 
       --  Now the first step is to set the configuration project view if any
       --  and to create the runtime project if possible.
@@ -1866,15 +1855,6 @@ package body GPR2.Project.Tree is
            with Self.Root.Path_Name.Value & " semantic error";
       end if;
    end Set_Context;
-
-   --------------
-   -- Set_View --
-   --------------
-
-   procedure Set_View (View : Project.View.Object; Def : Definition.Data) is
-   begin
-      To_RW (View.Tree.Internal.Views.Reference (View)).all := Def;
-   end Set_View;
 
    ------------
    -- Target --
@@ -1934,18 +1914,9 @@ package body GPR2.Project.Tree is
 
    procedure Update_Sources (Self : Object) is
    begin
-      for V in Self.Internal.Views.Iterate loop
-         Definition.Data
-           (Self.Self.Internal.Views.Reference (V).Element.all).Update_Sources
-             (View_Definitions.Key (V));
+      for V of Self.Views_Set loop
+         Definition.Get (V).Update_Sources (V);
       end loop;
-   end Update_Sources;
-
-   procedure Update_Sources (Self : Object; View : Project.View.Object) is
-   begin
-      Definition.Data
-        (Self.Self.Internal.Views.Reference (View).Element.all).Update_Sources
-          (View);
    end Update_Sources;
 
    --------------
@@ -1988,6 +1959,4 @@ begin
    --  Export routines to Definitions to avoid cyclic dependencies.
 
    Definition.Register := Register_View'Access;
-   Definition.Get_RO   := Get_View_RO'Access;
-   Definition.Get_RW   := Get_View_RW'Access;
 end GPR2.Project.Tree;

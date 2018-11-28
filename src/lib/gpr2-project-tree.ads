@@ -248,10 +248,6 @@ package GPR2.Project.Tree is
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
-   procedure Update_Sources (Self : Object; View : Project.View.Object)
-     with Pre => Self /= Undefined and then View /= Project.View.Undefined;
-   --  As above but for a single view
-
    procedure Register_Project_Search_Path
      (Self : in out Object;
       Dir  : Path_Name.Object)
@@ -281,26 +277,17 @@ private
    package View_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Set.Object, "=" => View.Set."=");
 
-   package View_Definitions is new Ada.Containers.Indefinite_Ordered_Maps
-     (View.Object, Definition_Base'Class);
-
-   type Internal_Data is record
-      Seq   : View.Id := 0;
-      Views : View_Definitions.Map;
-   end record;
-
    type Object is tagged limited record
       Self         : not null access Object := Object'Unchecked_Access;
-      Root         : View.Object := View.Undefined;
-      Conf         : Project.Configuration.Object :=
-                       Project.Configuration.Undefined;
-      Runtime      : View.Object := View.Undefined;
+      Root         : View.Object;
+      Conf         : Project.Configuration.Object;
+      Runtime      : View.Object;
       Units        : Name_View.Map;
       Sources      : Name_View.Map;
       Messages     : aliased Log.Object;
       Search_Paths : Path_Name.Set.Object;
       Views        : aliased View_Maps.Map;
-      Internal     : Internal_Data;
+      Views_Set    : View.Set.Object; -- All projects in registration order
    end record;
 
    function "=" (Left, Right : Object) return Boolean

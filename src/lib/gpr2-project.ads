@@ -22,7 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GNATCOLL.Refcount;
 with GNATCOLL.Tribooleans;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
@@ -84,6 +86,7 @@ private
    type Relation_Status is (Root, Imported, Aggregated);
 
    type Definition_Base (Has_Context : Boolean) is abstract tagged record
+      Id                : Natural := 0;
       Externals         : Containers.Name_List;
       --  List of externals directly or indirectly visible
       Signature         : Context.Binary_Signature :=
@@ -101,6 +104,9 @@ private
             null;
       end case;
    end record;
+
+   package Definition_References is new GNATCOLL.Refcount.Shared_Pointers
+     (Definition_Base'Class);
 
    Default_Iterator : constant Iterator_Control := (others => True);
 
