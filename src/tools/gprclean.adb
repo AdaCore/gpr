@@ -39,6 +39,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
+with GPRtools.Options;
 with GPR2.Version;
 
 procedure GPRclean is
@@ -67,10 +68,7 @@ procedure GPRclean is
    procedure Set_Project (Path : String);
    --  Set project pathname, raise exception if already done
 
-   Version       : aliased Boolean := False;
-   Verbose       : aliased Boolean := False;
    Dry_Run       : aliased Boolean := False;
-   Quiet_Output  : aliased Boolean := False;
    All_Projects  : aliased Boolean := False;
    Remain_Useful : aliased Boolean := False;
    Project_Path  : Path_Name.Object;
@@ -80,6 +78,7 @@ procedure GPRclean is
    Config        : Project.Configuration.Object;
    Target        : Unbounded_String := To_Unbounded_String ("all");
    Config_Error  : Boolean := False;
+   Options       : GPRtools.Options.Object; -- Common options for all tools
 
    ------------------
    -- Exclude_File --
@@ -93,17 +92,17 @@ procedure GPRclean is
          if Is_Regular_File (Name) then
             Text_IO.Put_Line (Name);
 
-         elsif Verbose then
+         elsif Options.Verbose then
             Text_IO.Put_Line ("absent: " & Name);
          end if;
 
       else
          Delete_File (Name, Success);
 
-         if not Quiet_Output and then Success then
+         if not Options.Quiet and then Success then
             Text_IO.Put_Line ('"' & Name & """ has been deleted");
 
-         elsif Verbose and then not Success then
+         elsif Options.Verbose and then not Success then
             Text_IO.Put_Line ('"' & Name & """ absent");
          end if;
       end if;
@@ -116,20 +115,10 @@ procedure GPRclean is
    procedure Parse_Command_Line is
       use GNAT.Command_Line;
 
-      Config : Command_Line_Configuration;
+      Config : Command_Line_Configuration renames Options.Config;
 
    begin
-      Define_Switch
-        (Config, Version'Access, Long_Switch => "--version",
-         Help => "Display version and exit");
-
-      Define_Switch
-        (Config, "-h", Long_Switch => "--help",
-         Help => "Display this help message and exit");
-
-      Define_Switch
-        (Config, Verbose'Access, "-v", Long_Switch => "--verbose",
-         Help => "Verbose mode");
+      GPRtools.Options.Setup (Options);
 
       Define_Switch
         (Config, Value_Callback'Unrestricted_Access, "-P:",
@@ -147,10 +136,6 @@ procedure GPRclean is
       Define_Switch
         (Config, Dry_Run'Access, "-n",
          Help => "Nothing to do: only list files to delete");
-
-      Define_Switch
-        (Config, Quiet_Output'Access, "-q",
-         Help => "Be quiet/terse");
 
       Define_Switch
         (Config, Value_Callback'Unrestricted_Access, "-X:",
@@ -172,7 +157,7 @@ procedure GPRclean is
 
       Getopt (Config);
 
-      if Version then
+      if Options.Version then
          GPR2.Version.Display
            ("GPRCLEAN", "2018", Version_String => GPR2.Version.Long_Value);
          return;
@@ -277,7 +262,7 @@ procedure GPRclean is
             S : constant Project.Source.Object :=
                   Project.Source.Set.Element (C);
          begin
-            if Verbose then
+            if Options.Verbose then
                Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value);
             end if;
 
@@ -384,7 +369,7 @@ begin
    GNATCOLL.Traces.Parse_Config_File;
    Parse_Command_Line;
 
-   if Version then
+   if Options.Version then
       return;
    end if;
 
@@ -396,12 +381,12 @@ begin
          for M of Config.Log_Messages loop
             case M.Level is
                when Message.Information =>
-                  if Verbose then
+                  if Options.Verbose then
                      Text_IO.Put_Line (M.Format);
                   end if;
 
                when Message.Warning =>
-                  if not Quiet_Output then
+                  if not Options.Quiet then
                      Text_IO.Put_Line (M.Format);
                   end if;
 
@@ -424,7 +409,7 @@ begin
          Sources (Project.Tree.Element (V));
       end loop;
 
-      if Verbose then
+      if Options.Verbose then
          for M of Project_Tree.Log_Messages.all loop
             Text_IO.Put_Line (M.Format);
          end loop;
@@ -438,7 +423,7 @@ exception
       Command_Line.Set_Exit_Status (Command_Line.Failure);
 
    when Project_Error =>
-      if Verbose then
+      if Options.Verbose then
          --  Display all messagges
          for M of Project_Tree.Log_Messages.all loop
             Text_IO.Put_Line (M.Format);
