@@ -40,6 +40,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
 with GPRtools.Options;
+with GPRtools.Util;
 with GPR2.Version;
 
 procedure GPRclean is
@@ -373,6 +374,7 @@ procedure GPRclean is
 begin
    GNATCOLL.Traces.Parse_Config_File;
    Parse_Command_Line;
+   GPRtools.Util.Set_Program_Name ("gprclean");
 
    if Options.Version then
       return;
@@ -415,9 +417,8 @@ begin
       end loop;
 
       if Options.Verbose then
-         for M of Project_Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
+         GPRtools.Util.Output_Messages
+           (Project_Tree, True, Text_IO.Standard_Output);
       end if;
    end if;
 
@@ -428,25 +429,9 @@ exception
       Command_Line.Set_Exit_Status (Command_Line.Failure);
 
    when Project_Error =>
-      if Options.Verbose then
-         --  Display all messagges
-         for M of Project_Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
-
-      else
-         --  Display only errors
-         for C in Project_Tree.Log_Messages.Iterate
-           (Information => False, Warning => False,
-            Error => True, Read => True, Unread => True)
-         loop
-            Text_IO.Put_Line (Log.Element (C).Format);
-         end loop;
-      end if;
-
-      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+      GPRtools.Util.Project_Processing_Failed (Project_Tree, Options.Verbose);
 
    when E : others =>
-      Text_IO.Put_Line ("cannot parse project: " & Exception_Information (E));
-      Command_Line.Set_Exit_Status (Command_Line.Failure);
+      GPRtools.Util.Fail_Program
+        ("cannot parse project: " & Exception_Information (E));
 end GPRclean;
