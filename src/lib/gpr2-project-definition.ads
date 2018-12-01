@@ -113,7 +113,8 @@ private package GPR2.Project.Definition is
    --------------------------------------------------------------
 
    From_Id : access function
-     (Id : View.Id; Tree : access Project.Tree.Object) return View.Object;
+     (Id   : View.Id;
+      Tree : not null access Project.Tree.Object) return View.Object;
    --  Returns a View.Object given its internal Id unique reference
 
    --------------------------------------------------------------
@@ -136,7 +137,8 @@ private package GPR2.Project.Definition is
    -----------------------------------------------------------------------
 
    Bind_Configuration_To_Tree : access procedure
-     (Config : in out Configuration.Object; Tree : access Project.Tree.Object);
+     (Config : in out Configuration.Object;
+      Tree   : not null access Project.Tree.Object);
 
    -------------------------------------------
    -- Helper routines for GPR2.Project.View --

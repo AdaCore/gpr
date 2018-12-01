@@ -144,7 +144,8 @@ private
    end record;
 
    procedure Bind_To_Tree
-     (Self : in out Object; Tree : access Project.Tree.Object);
+     (Self : in out Object;
+      Tree : not null access Project.Tree.Object);
    --  Bind configuration to Tree
 
    Undefined : constant Object := (others => <>);

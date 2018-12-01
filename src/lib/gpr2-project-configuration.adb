@@ -55,7 +55,8 @@ package body GPR2.Project.Configuration is
    ------------------
 
    procedure Bind_To_Tree
-     (Self : in out Object; Tree : access Project.Tree.Object)
+     (Self : in out Object;
+      Tree : not null access Project.Tree.Object)
    is
       Data : Definition.Data (Has_Context => False);
    begin

@@ -49,7 +49,7 @@ package body GPR2.Project.View is
                          OS_Lib.Get_Executable_Suffix;
 
    function From_Id
-     (Id : View.Id; Tree : access Project.Tree.Object) return Object;
+     (Id : View.Id; Tree : not null access Project.Tree.Object) return Object;
    --  Returns a View.Object given its internal Id unique reference
 
    procedure Update_Sources (Self : Object)
@@ -216,7 +216,8 @@ package body GPR2.Project.View is
    -------------
 
    function From_Id
-     (Id : View.Id; Tree : access Project.Tree.Object) return Object is
+     (Id   : View.Id;
+      Tree : not null access Project.Tree.Object) return Object is
    begin
       return Object'(Id => Id, Tree => Tree);
    end From_Id;
