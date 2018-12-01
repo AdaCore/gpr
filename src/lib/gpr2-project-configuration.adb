@@ -229,7 +229,7 @@ package body GPR2.Project.Configuration is
       Target   : Name_Type := "all") return Object
    is
       use type Parser.Project.Object;
-      Result  : Object;
+      Result : Object;
    begin
       Result.Project := Parser.Project.Parse (Filename, Result.Messages);
 

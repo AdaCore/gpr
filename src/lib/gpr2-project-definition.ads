@@ -66,7 +66,8 @@ private package GPR2.Project.Definition is
    --  projects have a context. All other projects are referencing a project
    --  which own a context.
 
-   type Data (Has_Context : Boolean) is new Definition_Base (Has_Context)
+   type Data (Has_Context : Boolean) is
+     new Definition_Base (Has_Context)
    with record
       Trees             : Tree;
 
@@ -130,7 +131,7 @@ private package GPR2.Project.Definition is
    --  view.
 
    Get_RW : access function (View : in out Project.View.Object) return Ref;
-   --  Returns the project data definition reference to modify view.
+   --  Returns the project data definition reference to modify view
 
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --

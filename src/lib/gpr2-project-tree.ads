@@ -250,6 +250,7 @@ package GPR2.Project.Tree is
 
    procedure Update_Sources (Self : Object; View : Project.View.Object)
      with Pre => Self /= Undefined and then View /= Project.View.Undefined;
+   --  As above but for a single view
 
    procedure Register_Project_Search_Path
      (Self : in out Object;
