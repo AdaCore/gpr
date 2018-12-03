@@ -33,6 +33,7 @@ with GNAT.String_Split;
 
 with GNATCOLL.OS.Constants;
 
+with GPR2.Compil_Unit;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Name_Values;
@@ -915,9 +916,8 @@ package body GPRinstall.Install is
 
          procedure Copy_Project_Sources (Project : GPR2.Project.View.Object) is
 
-            use type GPR2.Source.Object;
             use all type GPR2.Project.Standalone_Library_Kind;
-            use all type GPR2.Source.Kind_Type;
+            use all type GPR2.Compil_Unit.Kind_Type;
 
             function Is_Ada
               (Source : GPR2.Project.Source.Object) return Boolean with Inline;
@@ -983,18 +983,21 @@ package body GPRinstall.Install is
                      --  When a naming exception is present for a body which
                      --  is not installed we must exclude the Naming from the
                      --  generated project.
-                     Excluded_Naming.Include (String (Src.Unit_Name));
+                     for CU of Src.Compil_Units loop
+                        Excluded_Naming.Include (String (CU.Unit_Name));
+                     end loop;
                   end if;
 
                   --  Objects / Deps
 
                   if not Options.Sources_Only
                     and then
-                      (not Source.Has_Other_Part
-                       or else Src.Kind /= GPR2.Source.S_Spec)
+                      (not Source.Has_Other_Part (1)
+                       or else Src.Compil_Units.Element (1).Kind /=
+                             GPR2.Compil_Unit.S_Spec)
                   then
                      if Copy (Object)
-                       and then Src.Kind /= S_Separate
+                       and then Src.Compil_Units.Element (1).Kind /= S_Separate
 --                       and then Sid.Compilable = Yes
                      then
                         Copy_File
@@ -1006,20 +1009,20 @@ package body GPRinstall.Install is
                      --  against the spec file).
 
                      if Copy (Dependency)
-                       and then Src.Kind /= S_Separate
+                       and then Src.Compil_Units.Element (1).Kind /= S_Separate
                        and then Is_Ada (Source)
                      then
                         declare
                            Proj : GPR2.Project.View.Object;
                            Ssrc : GPR2.Project.Source.Object;
                         begin
-                           if not Source.Has_Other_Part
+                           if not Source.Has_Other_Part (1)
                              or else Source.Has_Naming_Exception
                              or else Options.All_Sources
                            then
                               Ssrc := Source;
                            else
-                              Ssrc := Source.Other_Part;
+                              Ssrc := Source.Other_Part (1);
                            end if;
 
                            if Project.Qualifier = K_Aggregate_Library then
@@ -1492,7 +1495,7 @@ package body GPRinstall.Install is
                      for Source
                        of Project.Sources (Filter => K_Interface_Only)
                      loop
-                        if Source.Source.Has_Unit then
+                        if Source.Source.Has_Units then
                            if not First then
                               Append (Line, ", ");
                            else
@@ -1500,7 +1503,9 @@ package body GPRinstall.Install is
                            end if;
 
                            Append (Line, """");
-                           Append (Line, String (Source.Source.Unit_Name));
+                           Append (Line,
+                                   String (Source.Source.Compil_Units.Element
+                                     (1).Unit_Name));
                            Append (Line, """");
                         end if;
                      end loop;
