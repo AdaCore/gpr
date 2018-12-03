@@ -147,6 +147,11 @@ procedure GPRclean is
          Help => "Specify the configuration project file name");
 
       Define_Switch
+        (Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--autoconf:",
+         Help => "Specify generated config project file name");
+
+      Define_Switch
         (Config, Remain_Useful'Access, "-c",
          Help => "Only delete compiler generated files");
 
@@ -353,7 +358,7 @@ procedure GPRclean is
            (Name_Type (Value (Value'First .. Idx - 1)),
             Value (Idx + 1 .. Value'Last));
 
-      elsif Switch = "--config" then
+      elsif Switch in "--config" | "--autoconf" then
          Config_File := Path_Name.Create_File (Name_Type (Normalize_Value));
 
       elsif Switch = "--target" then
