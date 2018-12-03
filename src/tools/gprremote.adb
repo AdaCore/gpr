@@ -38,6 +38,7 @@ with GPR2.Compilation.Sync;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
+with GPRtools;
 
 procedure GPRremote is
 
@@ -47,13 +48,10 @@ procedure GPRremote is
    use Ada.Text_IO;
 
    use GPR2;
-
+   use GPRtools;
    use GPR.Util;
 
    use type GNAT.OS_Lib.String_Access;
-
-   Usage_Error : exception;
-   --  Raised when a wrong usage is detected
 
    procedure Parse_Command_Line;
    --  Parse command line parameters

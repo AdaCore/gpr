@@ -16,7 +16,54 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
+
+with GNATCOLL.Utils;
+with GNATCOLL.OS.Constants;
+
 package body GPRtools.Options is
+
+   ------------------------------
+   -- Read_Remaining_Arguments --
+   ------------------------------
+
+   procedure Read_Remaining_Arguments
+     (Project : in out GPR2.Path_Name.Object;
+      Mains   :    out GPR2.Containers.Value_Set)
+   is
+      use GNATCOLL;
+      use GNATCOLL.OS;
+      use GPR2.Path_Name;
+
+      File_Name_Case_Sensitive : constant Boolean :=
+                                   Constants.Default_Casing_Policy = Sensitive;
+   begin
+      Read_Arguments : loop
+         declare
+            Arg : constant String := Get_Argument;
+         begin
+            exit Read_Arguments when Arg = "";
+
+            if Utils.Ends_With
+              ((if File_Name_Case_Sensitive
+                then Arg
+                else Ada.Characters.Handling.To_Lower (Arg)),
+               ".gpr")
+            then
+               if Project = Undefined then
+                  Project := Create_File (GPR2.Name_Type (Arg));
+
+               else
+                  raise GNAT.Command_Line.Invalid_Switch with
+                    '"' & Arg & """, project already """ & Project.Value & '"';
+               end if;
+
+            else
+               Mains.Include (Arg);
+            end if;
+         end;
+      end loop Read_Arguments;
+   end Read_Remaining_Arguments;
 
    -----------
    -- Setup --

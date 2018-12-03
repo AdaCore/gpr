@@ -53,9 +53,7 @@ procedure GPRinstall.Main is
    use GNAT.OS_Lib;
 
    use GPR2;
-
-   Usage_Error : exception;
-   --  Raised when a wrong usage is detected
+   use GPRtools;
 
    Tree    : GPR2.Project.Tree.Object;
    Context : GPR2.Context.Object;

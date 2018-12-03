@@ -22,5 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package GPRtools with Pure is
+package GPRtools is
+
+   Usage_Error : exception;
+   --  Raised when a wrong usage is detected
+
 end GPRtools;

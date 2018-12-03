@@ -18,12 +18,15 @@
 
 with GNAT.Command_Line;
 
+with GPR2.Containers;
+with GPR2.Path_Name;
+
 package GPRtools.Options is
 
    use GNAT.Command_Line;
 
    type Object is tagged record
-      Config : Command_Line_Configuration;
+      Config  : Command_Line_Configuration;
 
       Help    : aliased Boolean := False;
       --  Set by switch -h: usage will be displayed after all command line
@@ -36,5 +39,11 @@ package GPRtools.Options is
 
    procedure Setup (Self : in out Object);
    --  Setup command line parsing options
+
+   procedure Read_Remaining_Arguments
+     (Project : in out GPR2.Path_Name.Object;
+      Mains   :    out GPR2.Containers.Value_Set);
+   --  Take project and main file names from command line parameters.
+   --  Should be used in gprclean and gprbuild.
 
 end GPRtools.Options;

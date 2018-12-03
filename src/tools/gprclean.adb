@@ -29,6 +29,7 @@ with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.Utils;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
@@ -52,6 +53,7 @@ procedure GPRclean is
    use GNATCOLL.Tribooleans;
 
    use GPR2;
+   use GPRtools;
    use GPR2.Path_Name;
 
    procedure Sources (View : Project.View.Object);
@@ -71,7 +73,10 @@ procedure GPRclean is
 
    Dry_Run       : aliased Boolean := False;
    All_Projects  : aliased Boolean := False;
+   Mains         : GPR2.Containers.Value_Set;
+   Arg_Mains     : Boolean;
    Remain_Useful : aliased Boolean := False;
+   No_Project    : aliased Boolean := False;
    Project_Path  : Path_Name.Object;
    Project_Tree  : Project.Tree.Object;
    Context       : GPR2.Context.Object;
@@ -127,6 +132,11 @@ procedure GPRclean is
          Help => "Project file");
 
       Define_Switch
+        (Config, No_Project'Access,
+         Long_Switch => "--no-project",
+         Help        => "Do not use project file");
+
+      Define_Switch
         (Config, Value_Callback'Unrestricted_Access,
          Long_Switch => "--target:",
          Help => "Specify a target for cross platforms");
@@ -172,23 +182,20 @@ procedure GPRclean is
 
       --  Now read arguments
 
-      Read_Arguments : loop
-         declare
-            Arg : constant String := Get_Argument;
-         begin
-            exit Read_Arguments when Arg = "";
+      GPRtools.Options.Read_Remaining_Arguments (Project_Path, Mains);
 
-            Set_Project (Arg);
-         end;
-      end loop Read_Arguments;
+      Arg_Mains := not Mains.Is_Empty;
 
       if not Project_Path.Is_Defined then
          Project_Path := Project.Look_For_Default_Project;
+      elsif No_Project then
+         raise Usage_Error with
+           "cannot specify --no-project with a project file";
       end if;
 
       if not Project_Path.Is_Defined then
          Display_Help (Config);
-         raise Invalid_Switch;
+         raise Usage_Error with "Can't determine project file to work with";
       end if;
    end Parse_Command_Line;
 
@@ -202,7 +209,7 @@ procedure GPRclean is
          Project_Path := Project.Create (Optional_Name_Type (Path));
 
       else
-         raise GNAT.Command_Line.Invalid_Switch with
+         raise Usage_Error with
            '"' & Path & """, project already """ & Project_Path.Value & '"';
       end if;
    end Set_Project;
@@ -268,14 +275,19 @@ procedure GPRclean is
          declare
             S : constant Project.Source.Object :=
                   Project.Source.Set.Element (C);
+            Cleanup : Boolean := True;
+            --  To disable cleanup if main files list exists and the main file
+            --  is not from list.
+            In_Mains : Boolean := False;
          begin
             if Options.Verbose then
                Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value);
             end if;
 
-            for F of S.Artifacts.List loop
-               Exclude_File (F.Value);
-            end loop;
+            if Mains.Contains (String (S.Source.Path_Name.Simple_Name)) then
+               In_Mains := True;
+               Mains.Delete (String (S.Source.Path_Name.Simple_Name));
+            end if;
 
             if Has_Main then
                if not Need_Main_Archive
@@ -285,13 +297,29 @@ procedure GPRclean is
                end if;
 
                if S.Is_Main then
-                  Binder_Artifacts
-                    (S.Source.Path_Name.Base_Name & ".bexch",
-                     Language => S.Source.Language);
+                  if Arg_Mains and then not In_Mains then
+                     Cleanup := False;
+                  else
+                     Binder_Artifacts
+                       (S.Source.Path_Name.Base_Name & ".bexch",
+                        Language => S.Source.Language);
+                  end if;
                end if;
+            end if;
+
+            if Cleanup then
+               for F of S.Artifacts.List loop
+                  Exclude_File (F.Value);
+               end loop;
             end if;
          end;
       end loop;
+
+      if Arg_Mains and then not Mains.Is_Empty then
+         GPRtools.Util.Fail_Program
+           ('"' & Mains.First_Element
+            & """ was not found in the sources of any project");
+      end if;
 
       if not Remain_Useful and then View.Has_Mains then
          for M of View.Mains loop
@@ -352,7 +380,7 @@ procedure GPRclean is
          Idx := Ada.Strings.Fixed.Index (Value, "=");
 
          if Idx = 0 then
-            raise GNAT.Command_Line.Invalid_Switch with
+            raise Usage_Error with
               "Can't split '" & Value & "' to name and value";
          end if;
 
