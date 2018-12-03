@@ -88,6 +88,9 @@ procedure Main is
                   begin
                      K := Strings.Fixed.Index (Val, "adainclude");
                      if K = 0 then
+                        K := Strings.Fixed.Index (Val, "adalib");
+                     end if;
+                     if K = 0 then
                         Text_IO.Put (" " & Val (Val'First .. Val'Last));
                      else
                         Text_IO.Put (" ..." & Val (K - 1 .. Val'Last));

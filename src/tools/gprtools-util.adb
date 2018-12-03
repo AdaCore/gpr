@@ -16,13 +16,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Text_IO;           use Ada.Text_IO;
-with GNAT.OS_Lib;           use GNAT.OS_Lib;
-with GPR2.Message;
+with Ada.Strings.Unbounded;
+with Ada.Text_IO;
+
+with GNAT.Case_Util;
+with GNAT.OS_Lib;
+
 with GPR2.Containers;
+with GPR2.Message;
 
 package body GPRtools.Util is
+
+   use Ada;
+   use Ada.Strings.Unbounded;
+
+   use GPR2;
 
    Keep_Program_Name : Unbounded_String;
 
@@ -37,6 +45,7 @@ package body GPRtools.Util is
    ------------------
 
    procedure Exit_Program (Exit_Code : Exit_Code_Type) is
+      use GNAT.OS_Lib;
    begin
       --  The program will exit with the following status:
 
@@ -78,7 +87,9 @@ package body GPRtools.Util is
 
    procedure Finish_Program
      (Exit_Code : Exit_Code_Type := E_Success;
-      Message   : String := "") is
+      Message   : String := "")
+   is
+      use Ada.Text_IO;
    begin
       if Message'Length > 0 then
          Put_Line
@@ -91,6 +102,114 @@ package body GPRtools.Util is
       Exit_Program (Exit_Code);
    end Finish_Program;
 
+   ------------------------------
+   -- Look_For_Default_Project --
+   ------------------------------
+
+   function Look_For_Default_Project return GPR2.Path_Name.Object is
+
+      function Executable_Prefix_Path return String;
+
+      ----------------------------
+      -- Executable_Prefix_Path --
+      ----------------------------
+
+      function Executable_Prefix_Path return String is
+         use GNAT.OS_Lib;
+
+         --  Exec_Name : constant String := Ada.Command_Line.Command_Name;
+         Exec_Name : constant String := "gnat";
+
+         function Get_Install_Dir (S : String) return String;
+         --  S is the executable name preceded by the absolute or relative
+         --  path, e.g. "c:\usr\bin\gcc.exe". Returns the absolute directory
+         --  where "bin" lies (in the example "C:\usr").
+         --  If the executable is not in a "bin" directory, returns "".
+
+         ---------------------
+         -- Get_Install_Dir --
+         ---------------------
+
+         function Get_Install_Dir (S : String) return String is
+            use GNAT.Case_Util;
+
+            Exec      : String  :=
+                          Normalize_Pathname (S, Resolve_Links => True);
+            Path_Last : Integer := 0;
+
+         begin
+            for J in reverse Exec'Range loop
+               if Exec (J) = Directory_Separator then
+                  Path_Last := J - 1;
+                  exit;
+               end if;
+            end loop;
+
+            if Path_Last >= Exec'First + 2 then
+               To_Lower (Exec (Path_Last - 2 .. Path_Last));
+            end if;
+
+            if Path_Last < Exec'First + 2
+              or else Exec (Path_Last - 2 .. Path_Last) /= "bin"
+              or else (Path_Last - 3 >= Exec'First
+                       and then Exec (Path_Last - 3) /= Directory_Separator)
+            then
+               return "";
+            end if;
+
+            return (Exec (Exec'First .. Path_Last - 4)) & Directory_Separator;
+         end Get_Install_Dir;
+
+      begin
+         --  First determine if a path prefix was placed in front of the
+         --  executable name.
+
+         for J in reverse Exec_Name'Range loop
+            if Exec_Name (J) = Directory_Separator then
+               return Get_Install_Dir (Exec_Name);
+            end if;
+         end loop;
+
+         --  If we get here, the user has typed the executable name with no
+         --  directory prefix.
+
+         declare
+            Path : GNAT.OS_Lib.String_Access :=
+                     Locate_Exec_On_Path (Exec_Name);
+         begin
+            if Path = null then
+               return "";
+            else
+               declare
+                  Dir : constant String := Get_Install_Dir (Path.all);
+               begin
+                  Free (Path);
+                  return Dir;
+               end;
+            end if;
+         end;
+      end Executable_Prefix_Path;
+
+      Result : GPR2.Path_Name.Object;
+
+   begin
+      Result := GPR2.Project.Look_For_Default_Project;
+
+      if not Result.Is_Defined then
+         Result := Path_Name.Create_File
+           (Optional_Name_Type
+              (Executable_Prefix_Path & "/share/gpr/_default.gpr"));
+
+         if Result.Exists then
+            return Result;
+         else
+            return Path_Name.Undefined;
+         end if;
+      else
+         return Result;
+      end if;
+   end Look_For_Default_Project;
+
    ---------------------
    -- Output_Messages --
    ---------------------
@@ -100,6 +219,7 @@ package body GPRtools.Util is
       Verbosity      : Verbosity_Level;
       Full_Path_Name : Boolean)
    is
+      use Ada.Text_IO;
       Displayed : GPR2.Containers.Value_Set;
    begin
       for C in Log.Iterate

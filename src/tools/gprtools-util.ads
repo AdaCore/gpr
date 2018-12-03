@@ -19,6 +19,7 @@
 --  Common utilities for all gpr tools
 
 with GPR2.Log;
+with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
 package GPRtools.Util is
@@ -54,6 +55,11 @@ package GPRtools.Util is
    --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.
+
+   function Look_For_Default_Project return GPR2.Path_Name.Object;
+   --  Calls GPR2.Project.Look_For_Default_Project, and if the result is
+   --  Undefined then look for _default.gpr using the location of the current
+   --  executable.
 
    procedure Finish_Program
      (Exit_Code : Exit_Code_Type := E_Success;

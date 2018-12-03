@@ -354,7 +354,7 @@ package body GPR2.Project.Definition is
                        (View, Source => File.Value, Unit => Unit);
 
                      if Def.Units.Contains (Unit) then
-                        U_Def := Def.Units (Unit);
+                        U_Def := Def.Units.Element (Unit);
 
                         Register_Src;
 

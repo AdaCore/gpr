@@ -184,7 +184,7 @@ package body GPR2.Project.Source is
                      SU   : GPR2.Unit.Object;
                   begin
                      if Data.Units.Contains (W.Text) then
-                        SU := Data.Units (W.Text);
+                        SU := Data.Units.Element (W.Text);
 
                         --  At least the dependencies are the spec and body of
                         --  the withed unit.

@@ -181,7 +181,7 @@ private package GPR2.Project.Definition is
    function Source_Directories (Def : Data) return Project.Attribute.Object;
    --  Returns the sources dirs for the project view. This is only defined for
    --  project having sources. If not defined in the project itself, the view
-   --  does have the project directory has source dir.
+   --  does have the project directory as source dir.
 
    function Naming_Package (Def : Data) return Project.Pack.Object;
    --  Returns the Naming package for the current view. This is either

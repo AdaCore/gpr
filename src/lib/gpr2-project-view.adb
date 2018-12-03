@@ -31,6 +31,7 @@ with GPR2.Project.View.Set;
 with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
+with GPR2.Unit.Set;
 
 package body GPR2.Project.View is
 
@@ -922,10 +923,13 @@ package body GPR2.Project.View is
    ------------
 
    function Source
-     (Self : Object;
-      File : GPR2.Path_Name.Object) return Project.Source.Object is
+     (Self        : Object;
+      File        : GPR2.Path_Name.Object;
+      Need_Update : Boolean := True) return Project.Source.Object is
    begin
-      Self.Update_Sources;
+      if Need_Update then
+         Self.Update_Sources;
+      end if;
 
       for S of Definition.Get_RO (Self).Sources loop
          if S.Source.Path_Name.Value = File.Value then
@@ -951,10 +955,13 @@ package body GPR2.Project.View is
    -------------
 
    function Sources
-     (Self   : Object;
-      Filter : Source_Kind := K_All) return Project.Source.Set.Object is
+     (Self        : Object;
+      Filter      : Source_Kind := K_All;
+      Need_Update : Boolean := True) return Project.Source.Set.Object is
    begin
-      Self.Update_Sources;
+      if Need_Update then
+         Self.Update_Sources;
+      end if;
 
       if Filter = K_All then
          return Definition.Get_RO (Self).Sources;
@@ -968,7 +975,7 @@ package body GPR2.Project.View is
                for S of Data.Sources loop
                   declare
                      Unit_Is_Interface : constant Boolean :=
-                                           Data.Units
+                                           Data.Units.Element
                                              (S.Source.Unit_Name).Is_Interface;
                   begin
                      if (Filter = K_Interface_Only and then Unit_Is_Interface)
@@ -1022,6 +1029,40 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Types;
    end Types;
+
+   -----------
+   -- Units --
+   -----------
+
+   function Unit (Self        : Object;
+                  Name        : Name_Type;
+                  Need_Update : Boolean := True) return GPR2.Unit.Object is
+   begin
+      if Need_Update then
+         Self.Update_Sources;
+      end if;
+
+      if Definition.Get_RO (Self).Units.Contains (Name) then
+         return Definition.Get_RO (Self).Units.Element (Name);
+      else
+         return GPR2.Unit.Undefined;
+      end if;
+   end Unit;
+
+   -----------
+   -- Units --
+   -----------
+
+   function Units
+     (Self        : Object;
+      Need_Update : Boolean := True) return GPR2.Unit.Set.Object is
+   begin
+      if Need_Update then
+         Self.Update_Sources;
+      end if;
+
+      return Definition.Get_RO (Self).Units;
+   end Units;
 
    --------------------
    -- Update_Sources --

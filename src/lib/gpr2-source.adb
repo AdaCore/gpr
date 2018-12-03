@@ -20,12 +20,17 @@ with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Strings.Unbounded;
 
+with GNAT.Calendar.Time_IO;
+with GNAT.OS_Lib;
+
 with GPR2.Source.Registry;
 with GPR2.Source.Parser;
 
 package body GPR2.Source is
 
    use Ada.Strings.Unbounded;
+
+   function Modification_Time (F : String) return Ada.Calendar.Time;
 
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self.Is_Defined;
@@ -74,7 +79,7 @@ package body GPR2.Source is
          Registry.Shared.Register
            (Registry.Data'
               (Path_Name  => Filename,
-               Timestamp  => Directories.Modification_Time (Filename.Value),
+               Timestamp  => Modification_Time (Filename.Value),
                Language   => To_Unbounded_String (String (Language)),
                Unit_Name  => To_Unbounded_String (String (Unit_Name)),
                Kind       => Kind,
@@ -133,6 +138,53 @@ package body GPR2.Source is
    begin
       return Name_Type (To_String (Registry.Shared.Get (Self).Language));
    end Language;
+
+   -----------------------
+   -- Modification_Time --
+   -----------------------
+
+   function Modification_Time (F : String) return Ada.Calendar.Time
+   is
+      use GNAT.OS_Lib;
+
+      TS : String (1 .. 14);
+
+      Y  : Year_Type;
+      Mo : Month_Type;
+      D  : Day_Type;
+      H  : Hour_Type;
+      Mn : Minute_Type;
+      S  : Second_Type;
+
+      Z : constant := Character'Pos ('0');
+
+      T : OS_Time;
+
+   begin
+      T := File_Time_Stamp (F);
+
+      pragma Assert (T /= Invalid_Time);
+
+      GM_Split (T, Y, Mo, D, H, Mn, S);
+
+      TS (01) := Character'Val (Z + Y / 1000);
+      TS (02) := Character'Val (Z + (Y / 100) mod 10);
+      TS (03) := Character'Val (Z + (Y / 10) mod 10);
+      TS (04) := Character'Val (Z + Y mod 10);
+      TS (05) := Character'Val (Z + Mo / 10);
+      TS (06) := Character'Val (Z + Mo mod 10);
+      TS (07) := Character'Val (Z + D / 10);
+      TS (08) := Character'Val (Z + D mod 10);
+      TS (09) := Character'Val (Z + H / 10);
+      TS (10) := Character'Val (Z + H mod 10);
+      TS (11) := Character'Val (Z + Mn / 10);
+      TS (12) := Character'Val (Z + Mn mod 10);
+      TS (13) := Character'Val (Z + S / 10);
+      TS (14) := Character'Val (Z + S mod 10);
+
+      return GNAT.Calendar.Time_IO.Value
+        (TS (01 .. 08) & "T" & TS (09 .. 14));
+   end Modification_Time;
 
    ----------------
    -- Other_Part --

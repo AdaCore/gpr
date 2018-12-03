@@ -120,6 +120,8 @@ package GPR2 is
    procedure Set_Debug (Enable : Boolean);
    --  Sets global debug flag's value
 
+   type Word is mod 2 ** 32;
+
 private
 
    No_Name  : constant Optional_Name_Type := "";

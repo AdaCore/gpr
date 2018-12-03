@@ -35,6 +35,7 @@ with GPR2.Project.Variable.Set;
 limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
+limited with GPR2.Unit.Set;
 
 package GPR2.Project.View is
 
@@ -260,14 +261,17 @@ package GPR2.Project.View is
    type Source_Kind is (K_All, K_Interface_Only, K_Not_Interface);
 
    function Sources
-     (Self   : Object;
-      Filter : Source_Kind := K_All) return Project.Source.Set.Object
+     (Self        : Object;
+      Filter      : Source_Kind := K_All;
+      Need_Update : Boolean := True) return Project.Source.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the sources for the view, note that this routine ensure that
    --  the current sources are up-to-date by calling Update_Sources below.
 
    function Source
-     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
+     (Self        : Object;
+      File        : GPR2.Path_Name.Object;
+      Need_Update : Boolean := True) return Project.Source.Object
      with Pre => Self.Is_Defined;
    --  Get project source object corresponding to the given File
 
@@ -280,6 +284,19 @@ package GPR2.Project.View is
    --  Some common attributes redefined here and when some pathname are
    --  relative to the view, the proper value is returned. Following
    --  routines are for internal use only and convert from a View unique Id.
+
+   --  Units
+
+   function Units (Self        : Object;
+                   Need_Update : Boolean := True) return GPR2.Unit.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns all the units for the view, note that this routine ensure that
+   --  the current sources and units are up-to-date by calling Update_Sources.
+
+   function Unit (Self         : Object;
+                  Name         : Name_Type;
+                  Need_Update  : Boolean := True) return GPR2.Unit.Object
+     with Pre => Self.Is_Defined;
 
    function Is_Externally_Built (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
