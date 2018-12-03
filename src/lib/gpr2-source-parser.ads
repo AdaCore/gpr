@@ -16,28 +16,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded;
-
-with GPR2.Source_Reference.Set;
+with GPR2.Compilation_Unit.List;
 
 private package GPR2.Source.Parser is
+   --  The following package provides unit information from Ada sources,
+   --  using Libadalang.
 
-   use Ada.Strings.Unbounded;
-
-   --  This is to get some information from the Ada sources. We need for
-   --  example to know if the unit is a separate unit (not possible to detect
-   --  this based on the file extension if the same as the body). We also need
-   --  to get the list of withed units to be able to compute the full closure
-   --  of a given unit.
-
-   type Data is record
-      Is_Separate : Boolean := False;
-      Sep_From    : Unbounded_String;
-      W_Units     : Source_Reference.Set.Object;
-      Unit_Name   : Unbounded_String;
-   end record;
-
-   function Check (Filename : GPR2.Path_Name.Object) return Data;
-   --  Checks the sources and returns the corresponding information
+   function Parse
+     (Filename : GPR2.Path_Name.Object) return Compilation_Unit.List.Object
+     with Pre => Filename.Is_Defined;
+   --  Parses the source Filename with Libadalang and returns a list of
+   --  Compilation Units.
+   --  An empty result means that something went wrong, and we should not
+   --  attempt to use information from the parser.
+   --  In any case, information from the project has precedence because Ada
+   --  sources may contain bad syntax and we still want to try building the
+   --  project as the user intended.
 
 end GPR2.Source.Parser;

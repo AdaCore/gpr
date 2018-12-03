@@ -183,23 +183,25 @@ begin
       Display (Prj.Runtime_Project, Full => True);
 
       for Source of Prj.Runtime_Project.Sources loop
-         declare
-            S : constant GPR2.Source.Object := Source.Source;
-            U : constant Optional_Name_Type := S.Unit_Name;
-         begin
-            if U in "Ada.Strings" | "Ada.Containers" | "Ada"
-                 | "Ada.Tags" | "Ada.Strings.Unbounded"
-                 | "Ada.Calendar" | "Ada.Unchecked_Deallocation"
-            then
+         if Strings.Fixed.Head
+           (String (Source.Source.Path_Name.Base_Name), 8) in
+           "a-calend" | "a-strunb" | "a-tags  " | "a-calend" | "a-contai"
+             | "a-string" | "a-strunb" | "a-tags  " | "a-uncdea" | "ada     "
+         then
+            declare
+               S : constant GPR2.Source.Object := Source.Source;
+               U : constant Optional_Name_Type :=
+                     (if S.Has_Units then S.Unit_Name else "");
+            begin
                Output_Filename (S.Path_Name.Value);
 
                Text_IO.Set_Col (27);
                Text_IO.Put
-                 ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
+                 ("   Kind: " & GPR2.Kind_Type'Image (S.Kind));
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
-            end if;
-         end;
+            end;
+         end if;
       end loop;
    end if;
 

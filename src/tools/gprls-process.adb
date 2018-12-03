@@ -470,15 +470,17 @@ begin
                   Compute_Closure (Unit_Obj.Spec);
                end if;
 
-               for B of Unit_Obj.Bodies loop
+               if Unit_Obj.Has_Body then
+                  Compute_Closure (Unit_Obj.Main_Body);
+               end if;
+
+               for B of Unit_Obj.Separates loop
                   Compute_Closure (B);
                end loop;
             end Recurs_On_Sources_For_Unit;
 
             ALI_File   : Path_Name.Object;
             ALI_Object : ALI_Data.Object;
-
-            use type GPR2.Source.Kind_Type;
 
          begin
             if Closures.Contains (Source) then
@@ -487,7 +489,7 @@ begin
 
             Closures.Insert (Source);
 
-            if Source.Source.Kind = GPR2.Source.S_Separate then
+            if Source.Source.Kind = GPR2.S_Separate then
                return;  --  No ALI file for a separate
             end if;
 
@@ -813,7 +815,7 @@ begin
          for S of V.Sources (Need_Update => False) loop
             All_Sources.Append (S);
 
-            Src_Simple_Names.Insert
+            Src_Simple_Names.Include
               (String (S.Source.Path_Name.Simple_Name),
                Positive (All_Sources.Length));
 

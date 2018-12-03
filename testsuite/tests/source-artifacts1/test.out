@@ -1,18 +1,18 @@
 Project: Demo1
  > main.adb
- > obj/main.o
  > obj/main.ali
+ > obj/main.o
 
 Project: Demo2
  > file3.c
- > obj/file3.o
  > obj/file3.d
+ > obj/file3.o
 
  > src/file3.h
- > obj/file3.o
  > obj/file3.d
+ > obj/file3.o
 
  > main.adb
- > obj/main.o
  > obj/main.ali
+ > obj/main.o
 

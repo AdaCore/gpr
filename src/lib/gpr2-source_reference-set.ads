@@ -26,4 +26,6 @@ package GPR2.Source_Reference.Set is
 
    subtype Cursor is Set.Cursor;
 
+   Empty_Set : constant Object := Set.Empty_Set;
+
 end GPR2.Source_Reference.Set;

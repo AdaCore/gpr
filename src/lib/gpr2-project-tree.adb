@@ -146,26 +146,25 @@ package body GPR2.Project.Tree is
 
    procedure Clear_View
      (Self : in out Object;
-      Unit : GPR2.Unit.Object)
-   is
-      --  If the spec is not present, then the actual source object used is the
-      --  first body which must exist. We can't have no spec and no body.
-
-      Src : constant Project.Source.Object :=
-              (if not Unit.Spec.Is_Defined
-               then Unit.Bodies.First_Element
-               else Unit.Spec);
+      Unit : GPR2.Unit.Object) is
    begin
-      --  Clear the unit
-
-      Self.Units.Exclude (Src.Source.Unit_Name);
-
       --  Clear the corresponding sources
 
-      Self.Sources.Exclude (Name_Type (Src.Source.Path_Name.Value));
+      --  TODO: Self.Sources should contain a case-sensitive string type
+      --        instead of Name_Type.
 
-      for B of Unit.Bodies loop
-         Self.Sources.Exclude (Name_Type (B.Source.Path_Name.Value));
+      if Unit.Spec.Is_Defined then
+         Self.Sources.Exclude
+           (Name_Type (Unit.Spec.Source.Path_Name.Value));
+      end if;
+
+      if Unit.Main_Body.Is_Defined then
+         Self.Sources.Exclude
+           (Name_Type (Unit.Main_Body.Source.Path_Name.Value));
+      end if;
+
+      for S of Unit.Separates loop
+         Self.Sources.Exclude (Name_Type (S.Source.Path_Name.Value));
       end loop;
    end Clear_View;
 

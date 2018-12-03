@@ -1,6 +1,6 @@
 Project: Demo
 
- > src/abc.adb   unit: ABC
+ > src/abc.adb   unit: Abc
 
  > src/api.adb   unit: Api
 
@@ -9,9 +9,9 @@ Project: Demo
  > src/tst.adb   unit: Tst
    ABC.Plop
 
- > src/abc.ads   unit: ABC
+ > src/abc.ads   unit: Abc
 
- > src/abc-plop.ads   unit: ABC.Plop
+ > src/abc-plop.ads   unit: Abc.Plop
    API
 
  > src/api.ads   unit: Api

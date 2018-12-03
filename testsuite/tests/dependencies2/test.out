@@ -1,6 +1,6 @@
 Project: Demo
 
- > /src/abc.adb   unit: ABC
+ > /src/abc.adb   unit: Abc
 ..... DIRECT
 ..... UNIT
 ..... CLOSURE
@@ -57,12 +57,12 @@ Project: Demo
    > /src/api.ads
    > /src2/toto.ads
 
- > /src/abc.ads   unit: ABC
+ > /src/abc.ads   unit: Abc
 ..... DIRECT
 ..... UNIT
 ..... CLOSURE
 
- > /src/abc-plop.ads   unit: ABC.Plop
+ > /src/abc-plop.ads   unit: Abc.Plop
 ..... DIRECT
    > /src/api.adb
    > /src/api.ads

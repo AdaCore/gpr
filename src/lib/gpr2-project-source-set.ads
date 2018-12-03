@@ -36,6 +36,9 @@ package GPR2.Project.Source.Set is
 
    function Length (Self : Object) return Containers.Count_Type;
 
+   procedure Include (Self : in out Object; Source : Project.Source.Object)
+     with Pre => Source /= Undefined;
+
    procedure Insert (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source.Is_Defined;
 
@@ -75,6 +78,8 @@ package GPR2.Project.Source.Set is
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type;
 
+   Empty_Set : constant Object;
+
    type Source_Filter is mod 2 ** 8;
 
    S_Compilable : constant Source_Filter;
@@ -104,6 +109,8 @@ private
 
    type Constant_Reference_Type
      (Source : not null access constant Project.Source.Object) is null record;
+
+   Empty_Set : constant Object := Object'(S => Set.Empty_Set);
 
    S_Compilable : constant Source_Filter := 1;
    S_Spec       : constant Source_Filter := 2;

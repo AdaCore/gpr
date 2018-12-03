@@ -1,0 +1,4 @@
+with GPR2;
+
+package Source1 is
+end Source1;

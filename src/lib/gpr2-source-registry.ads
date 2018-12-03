@@ -17,31 +17,42 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
-with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Strings.Unbounded;
 
+with GPR2.Compilation_Unit.Map;
 with GPR2.Path_Name;
 
 private package GPR2.Source.Registry is
 
    use Ada.Strings.Unbounded;
 
-   type Data is record
-      Path_Name  : GPR2.Path_Name.Object;
-      Timestamp  : Calendar.Time;
-      Language   : Unbounded_String;
-      Unit_Name  : Unbounded_String;
-      Kind       : Kind_Type;
-      Other_Part : GPR2.Path_Name.Object;
-      Units      : Source_Reference.Set.Object;
-      Parsed     : Boolean := False;
-      Ref_Count  : Natural := 0;
+   type Data (Is_Ada_Source : Boolean) is record
+      Path_Name    : GPR2.Path_Name.Object;
+      Timestamp    : Calendar.Time;
+      Language     : Unbounded_String;
+      Other_Part   : GPR2.Path_Name.Object;
+      Ref_Count    : Natural := 0;
+
+      case Is_Ada_Source is
+         when True =>
+            Parsed        : Boolean := False;
+            Is_RTS_Source : Boolean := False;
+            CU_List       : Compilation_Unit.List.Object;
+            CU_Map        : Compilation_Unit.Map.Object;
+
+         when False =>
+            Kind : Kind_Type;
+      end case;
    end record;
+   --  Record that holds relevant source information, including details about
+   --  the compilation unit(s) for Ada sources.
 
    package Source_Store is
-     new Ada.Containers.Ordered_Maps (GPR2.Path_Name.Object, Data);
+     new Ada.Containers.Indefinite_Ordered_Maps (GPR2.Path_Name.Object, Data);
 
    protected Shared is
+      function Print_Store return Boolean;
 
       procedure Register (Def : Data)
         with Pre => Def.Path_Name.Is_Defined;

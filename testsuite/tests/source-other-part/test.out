@@ -6,8 +6,8 @@ Project: Demo
       language: c       Kind: S_SPEC   other part : undefined
 
 /src/pck.adb -> /src/pck.ads
-      language: ada     Kind: S_BODY   unit: Pck   other part : /src/pck.ads
+      language: Ada     Kind: S_BODY   unit: Pck   other part : /src/pck.ads
 
 /src/pck.ads -> /src/pck.adb
-      language: ada     Kind: S_SPEC   unit: Pck   other part : /src/pck.adb
+      language: Ada     Kind: S_SPEC   unit: Pck   other part : /src/pck.adb
 

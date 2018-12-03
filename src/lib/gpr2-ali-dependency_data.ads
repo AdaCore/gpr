@@ -32,8 +32,6 @@ package GPR2.ALI.Dependency_Data is
 
    Undefined : constant Object;
 
-   use GPR2.Source;
-
    function Create
      (Sfile     : Simple_Name;
       Stamp     : Ada.Calendar.Time;

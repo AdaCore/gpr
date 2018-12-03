@@ -54,15 +54,6 @@ package GPR2.Project.Source is
    function Source (Self : Object) return GPR2.Source.Object;
    --  The source object
 
-   function Has_Other_Part (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True if an other part exists for this project source
-
-   function Other_Part (Self : Object) return Object
-     with Pre  => Self.Is_Defined and then Self.Has_Other_Part,
-          Post => Other_Part'Result.Is_Defined;
-   --  Returns the other part for this project source
-
    function Is_Interface (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self is part of the project view interface
@@ -81,6 +72,14 @@ package GPR2.Project.Source is
    --  Source artifacts may not exist if the compilation has not yet been
    --  done/finished.
 
+   procedure Release (Self : in out Object)
+     with Pre => Self.Is_Defined;
+   --  Releases the project source
+
+   --
+   --  The following routines only make sense if Has_Units is True
+   --
+
    type Dependency is (Direct, Unit, Closure);
    --  Direct  : the dependencies from the source withed units.
    --  Unit    : the dependencies from the spec/body for this source.
@@ -90,12 +89,22 @@ package GPR2.Project.Source is
    function Dependencies
      (Self : Object;
       Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Source.Has_Units;
    --  Returns the dependencies for this given source
 
-   procedure Release (Self : in out Object)
-     with Pre => Self.Is_Defined;
-   --  Releases the project source
+   --
+   --  The following routines may be used for both unit-based and
+   --  non-unit-based sources. In the latter case, Index is not used.
+   --
+
+   function Has_Other_Part (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if an other part exists for this project source
+
+   function Other_Part (Self : Object) return Object
+     with Pre => Self /= Undefined and then Self.Has_Other_Part,
+          Post => Other_Part'Result.Is_Defined;
+   --  Returns the other part for this project source
 
 private
 

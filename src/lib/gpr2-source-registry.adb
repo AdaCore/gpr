@@ -16,6 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Text_IO;
+
+with GPR2.Source_Reference.Identifier;
+
 package body GPR2.Source.Registry is
 
    ------------
@@ -32,6 +36,56 @@ package body GPR2.Source.Registry is
       begin
          return Store (Object.Pathname);
       end Get;
+
+      -----------------
+      -- Print_Store --
+      -----------------
+
+      function Print_Store return Boolean is
+         use Ada.Text_IO;
+      begin
+         if not GPR2.Debug then
+            return False;
+         end if;
+
+         Put_Line ("Store:");
+         for Cur in Store.Iterate loop
+            declare
+               K : constant GPR2.Path_Name.Object := Source_Store.Key (Cur);
+               E : constant Data := Source_Store.Element (Cur);
+            begin
+               Put_Line ("  Key " & K.Value);
+               Put_Line ("    Is_Ada_Source = " & E.Is_Ada_Source'Image);
+               Put_Line ("    Language      = " & To_String (E.Language));
+               Put_Line ("    Other_Part    = " &
+                         (if E.Other_Part.Is_Defined then E.Other_Part.Value
+                            else ""));
+               if E.Is_Ada_Source then
+                  Put_Line ("    Parsed        = " & E.Parsed'Image);
+                  Put_Line ("    Compil units  = ");
+                  for CU of E.CU_List loop
+                     Put_Line ("     #" & CU.Index'Image);
+                     Put_Line ("      name     = " & String (CU.Unit_Name));
+                     Put_Line ("      kind     = " & CU.Kind'Image);
+                     Put_Line ("      withed   = ");
+                     for W of CU.Withed_Units loop
+                        Put_Line ("         ("
+                                  & String (W.Text) & ","
+                                  & W.Line'Image & ","
+                                  & W.Column'Image & ")");
+                     end loop;
+                     if CU.Is_Separate then
+                        Put_Line ("      sep from = "
+                                  & String (CU.Is_Separate_From));
+                     end if;
+                  end loop;
+               end if;
+            end;
+         end loop;
+         New_Line;
+
+         return True;
+      end Print_Store;
 
       --------------
       -- Register --
@@ -89,7 +143,9 @@ package body GPR2.Source.Registry is
          D.Ref_Count := D.Ref_Count - 1;
 
          if D.Ref_Count = 0 then
-            D.Units.Clear;
+            D.CU_List.Clear;
+            D.CU_Map.Clear;
+
             Store.Delete (Object.Pathname);
 
             Object := Undefined;

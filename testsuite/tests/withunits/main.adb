@@ -67,7 +67,7 @@ procedure Main is
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
 
-               for W of S.Withed_Units loop
+               for W of S.With_Clauses loop
                   Text_IO.Put_Line ("   " & String (Id (W).Text));
                end loop;
             end if;

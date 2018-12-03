@@ -35,7 +35,6 @@ package GPR2.ALI.ALI_Data is
    use Ada;
 
    use GPR2.Containers;
-   use GPR2.Source;
 
    --
    --  Main object to hold ALI data

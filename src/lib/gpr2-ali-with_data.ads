@@ -24,8 +24,6 @@ package GPR2.ALI.With_Data is
    --  Withed units (W and Z lines below a U line)
    --
 
-   use GPR2.Source;
-
    type Object is tagged private;
 
    function Create

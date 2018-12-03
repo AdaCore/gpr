@@ -1280,8 +1280,13 @@ package body GPR2.Parser.Project is
             Status : Visit_Status := Into;
 
             procedure Handle_String (Node : String_Literal)
-              with Pre  => Present (Node);
+              with Pre => Present (Node);
             --  A simple static string
+
+            procedure Handle_String_At (Node : String_Literal_At)
+              with Pre => Present (Node);
+            --  A simple static string with "at" number.
+            --  The number is retrieved and used later in Parse_Attribute_Decl.
 
             procedure Handle_Variable (Node : Variable_Reference)
               with Pre => Present (Node);
@@ -1488,6 +1493,20 @@ package body GPR2.Parser.Project is
                      Get_Source_Reference (Self.File, Node)));
             end Handle_String;
 
+            ----------------------
+            -- Handle_String_At --
+            ----------------------
+
+            procedure Handle_String_At (Node : String_Literal_At) is
+            begin
+               Record_Value
+                 (Get_Value_Reference
+                    (Unquote (Value_Type (To_UTF8 (Node.F_Str_Lit.Text))),
+                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
+               Status := Over;
+               --  Stop here to avoid parsing into the String_Literal child
+            end Handle_String_At;
+
             ---------------------
             -- Handle_Variable --
             ---------------------
@@ -1512,6 +1531,9 @@ package body GPR2.Parser.Project is
 
                when GPR_String_Literal =>
                   Handle_String (Node.As_String_Literal);
+
+               when GPR_String_Literal_At =>
+                  Handle_String_At (Node.As_String_Literal_At);
 
                when GPR_Variable_Reference =>
                   Handle_Variable (Node.As_Variable_Reference);
@@ -1866,14 +1888,15 @@ package body GPR2.Parser.Project is
             declare
                package A_Reg renames GPR2.Project.Registry.Attribute;
 
-               Q_Name    : constant A_Reg.Qualified_Name :=
+               Q_Name : constant A_Reg.Qualified_Name :=
                              A_Reg.Create
                                (N_Str,
                                 Optional_Name_Type (To_String (Pack_Name)));
 
-               Values    : constant Item_Values := Get_Term_List (Expr);
-               A         : GPR2.Project.Attribute.Object;
-               Is_Valid  : Boolean := True;
+               Values   : constant Item_Values := Get_Term_List (Expr);
+               At_Lit   : GPR_Node := No_GPR_Node;
+               A        : GPR2.Project.Attribute.Object;
+               Is_Valid : Boolean := True;
                --  Set to False if the attribute definition is invalid
 
                I_Sloc    : constant Source_Reference.Value.Object :=
@@ -1884,11 +1907,28 @@ package body GPR2.Parser.Project is
 
             begin
                if Values.Single then
-                  A := GPR2.Project.Attribute.Create
-                    (Name  => Get_Identifier_Reference
-                                (Self.Path_Name, Sloc_Range (Name), N_Str),
-                     Index => I_Sloc,
-                     Value => Values.Values.First_Element);
+                  pragma Assert (Expr.Children_Count >= 1);
+
+                  if Kind (Expr.Child (1)) = GPR_String_Literal_At then
+                     At_Lit := GPR_Node
+                       (Expr.Child (1).As_String_Literal_At.F_At_Lit);
+                  end if;
+
+                  if At_Lit /= No_GPR_Node then
+                     A := GPR2.Project.Attribute.Create
+                       (Name   => Get_Identifier_Reference
+                                    (Self.Path_Name, Sloc_Range (Name), N_Str),
+                        Index  => I_Sloc,
+                        Value  => Values.Values.First_Element,
+                        At_Num => Integer'Value (To_UTF8 (At_Lit.Text)));
+                  else
+                     A := GPR2.Project.Attribute.Create
+                       (Name  => Get_Identifier_Reference
+                                   (Self.Path_Name, Sloc_Range (Name), N_Str),
+                        Index => I_Sloc,
+                        Value => Values.Values.First_Element);
+                  end if;
+
                else
                   A := GPR2.Project.Attribute.Create
                     (Name   => Get_Identifier_Reference

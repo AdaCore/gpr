@@ -1,12 +1,12 @@
 **************** Iterator Prj1
 Prj1     K_STANDARD
- > /p1/pck1.adb   language: ada    Kind: S_BODY   unit: Pck1
- > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: Pck1
+ > /p1/pck1.adb   language: Ada    Kind: S_BODY   unit: Pck1
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: Pck1
 **************** Iterator Prj2
 Prj1     K_STANDARD
- > /p1/pck1.adb   language: ada    Kind: S_BODY   unit: Pck1
- > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: Pck1
+ > /p1/pck1.adb   language: Ada    Kind: S_BODY   unit: Pck1
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: Pck1
 Prj2     K_STANDARD
- > /p2/pck1.adb   language: ada    Kind: S_BODY   unit: Pck1
- > /p1/pck1.ads   language: ada    Kind: S_SPEC   unit: Pck1
- > /p2/pck2.ads   language: ada    Kind: S_SPEC   unit: Pck2
+ > /p2/pck1.adb   language: Ada    Kind: S_BODY   unit: Pck1
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: Pck1
+ > /p2/pck2.ads   language: Ada    Kind: S_SPEC   unit: Pck2

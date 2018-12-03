@@ -21,19 +21,20 @@
 
 with Ada.Calendar;
 
+with GPR2.Compilation_Unit;
+with GPR2.Compilation_Unit.List;
 with GPR2.Path_Name;
-with GPR2.Source_Reference.Set;
+with GPR2.Source_Reference.Identifier.Set;
 
 package GPR2.Source is
 
    use Ada;
+
    use type GPR2.Path_Name.Object;
 
    type Object is tagged private;
 
    Undefined : constant Object;
-
-   type Kind_Type is (S_Spec, S_Body, S_Separate);
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -48,55 +49,99 @@ package GPR2.Source is
      with Pre => Self.Is_Defined;
    --  Returns the filename for the given source
 
-   function Kind (Self : Object) return Kind_Type
-     with Pre => Self.Is_Defined;
-   --  Returns the kind of source
-
-   function Other_Part (Self : Object) return Object
-     with Pre => Self.Is_Defined;
-   --  Returns the other-part of the source. This is either the spec for a body
-   --  or the body for a spec.
-
-   function Has_Unit (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True if source has unit information
-
-   function Unit_Name (Self : Object) return Name_Type
-     with Pre => Self.Is_Defined and then Self.Has_Unit;
-   --  Returns the unit name for the given source or the empty string if the
-   --  language does not have support for unit.
-
    function Language (Self : Object) return Name_Type
      with Pre => Self.Is_Defined;
    --  Returns the language for the given source
-
-   function Withed_Units (Self : Object) return Source_Reference.Set.Object
-     with Pre => Self.Is_Defined;
-   --  Returns the list of withed units on this source
 
    function Time_Stamp (Self : Object) return Calendar.Time
      with Pre => Self.Is_Defined;
    --  Returns the time-stamp for this source
 
    function Create
-     (Filename  : GPR2.Path_Name.Object;
-      Kind      : Kind_Type;
-      Language  : Name_Type;
-      Unit_Name : Optional_Name_Type) return Object
-     with Pre  => Filename.Is_Defined,
+     (Filename : GPR2.Path_Name.Object;
+      Language : Name_Type;
+      Kind     : Kind_Type) return Object
+     with Pre  => Filename.Is_Defined and then Language /= "Ada",
           Post => Create'Result.Is_Defined;
-   --  Constructor for a source object
+   --  Constructor for a non-Ada source object
 
-   procedure Set_Other_Part
-     (Self       : Object;
-      Other_Part : Object)
-     with Pre => Self.Is_Defined and then Other_Part.Is_Defined;
-   --  Sets the other-part for Self. The other-part is the body for a spec or
-   --  the spec for a body or separate unit.
+   function Create_Ada
+     (Filename          : GPR2.Path_Name.Object;
+      Compilation_Units : Compilation_Unit.List.Object;
+      Is_RTS_Source     : Boolean) return Object
+     with Pre  => Filename.Is_Defined and then not Compilation_Units.Is_Empty,
+          Post => Create_Ada'Result.Is_Defined;
+   --  Constructor for an Ada source object
 
    procedure Release (Self : in out Object)
      with Pre => Self.Is_Defined;
    --  Releases source object if not referenced anymore
+
+   function Has_Units (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if source is unit-based (i.e. Ada)
+
+   --
+   --  The following routines only make sense if Has_Units is True
+   --
+
+   function Has_Single_Unit (Self : Object) return Boolean
+     with Pre => Self /= Undefined and then Self.Has_Units;
+   --  Returns True if Self has only one compilation unit
+
+   function Compilation_Units
+     (Self : Object) return Compilation_Unit.List.Object
+     with Pre => Self /= Undefined and then Self.Has_Units;
+   --  Returns the compilation units for Self
+
+   type Unit_Index is new Positive;
+
+   function Has_Compilation_Unit_At
+     (Self : Object; Index : Natural) return Boolean
+     with Pre => Self /= Undefined and then Self.Has_Units;
+   --  Returns True if Self has a compilation unit at Index
+
+   function Unit_Name (Self : Object; Index : Natural := 1) return Name_Type
+     with Pre => Self /= Undefined and then Self.Has_Units
+                 and then Self.Has_Compilation_Unit_At (Index);
+   --  Returns the unit name for the source Self at Index (default = 1)
+
+   function With_Clauses
+     (Self  : Object;
+      Index : Natural := 1) return Source_Reference.Identifier.Set.Object
+     with Pre => Self.Is_Defined and then Self.Has_Units
+                 and then Self.Has_Compilation_Unit_At (Index);
+   --  Returns the list of withed units for the source Self at
+   --  Index (default = 1).
+
+   function With_Clauses
+     (Self : Object;
+      Unit : Name_Type) return Source_Reference.Identifier.Set.Object
+     with Pre => Self /= Undefined and then Self.Has_Units;
+   --  Returns the dependencies in Self associated with all the compilation
+   --  units for Unit. The result may be empty.
+
+   --
+   --  The following routines may be used for both unit-based and
+   --  non-unit-based sources. In the latter case, Index is not used.
+   --
+
+   function Kind (Self : Object; Index : Natural := 1) return Kind_Type
+     with Pre =>
+       Self /= Undefined
+       and then (not Self.Has_Units
+                 or else Self.Has_Compilation_Unit_At (Index));
+   --  Returns the kind for the source Self
+
+   function Other_Part (Self : Object) return Object
+     with Pre => Self /= Undefined;
+   --  Returns the other part for the source Self.
+
+   procedure Set_Other_Part (Self : Object; Other_Part : Object)
+     with Pre => Self.Is_Defined and then Other_Part.Is_Defined;
+   --  Sets the other part for the source Self, and the other way around.
+   --  The other part is the body for a spec, or the spec for a body or
+   --  separate unit.
 
 private
 

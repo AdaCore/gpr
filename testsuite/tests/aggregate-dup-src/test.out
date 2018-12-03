@@ -1,4 +1,4 @@
 Messages found:
-b.gpr:2:8: unit "Src" cannot belong to several projects
+b.gpr:2:8: source "src.ads" cannot belong to several projects
 b.gpr:2:8:   project "A", "<path>/aggregate-dup-src/src-a/src.ads"
 b.gpr:2:8:   project "B", "<path>/aggregate-dup-src/src-b/src.ads"

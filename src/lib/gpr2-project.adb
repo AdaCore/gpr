@@ -30,7 +30,7 @@ package body GPR2.Project is
 
    function Create
      (Name  : Name_Type;
-      Paths : Path_Name.Set.Object := Path_Name.Set.Set.Empty_List)
+      Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return GPR2.Path_Name.Object
    is
       use GNAT;

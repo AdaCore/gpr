@@ -25,6 +25,15 @@ package body GPR2.Project.Attribute is
    use Ada.Strings.Unbounded;
 
    ------------
+   -- At_Num --
+   ------------
+
+   function At_Num (Self : Object) return Positive is
+   begin
+      return Self.At_Num;
+   end At_Num;
+
+   ------------
    -- Create --
    ------------
 
@@ -41,10 +50,23 @@ package body GPR2.Project.Attribute is
    function Create
      (Name   : Source_Reference.Identifier.Object;
       Index  : Source_Reference.Value.Object;
+      Value  : Source_Reference.Value.Object;
+      At_Num : Natural) return Object is
+   begin
+      return A : Object := Create (Name, Value) do
+         A.Index  := Index;
+         A.At_Num := At_Num;
+      end return;
+   end Create;
+
+   function Create
+     (Name   : Source_Reference.Identifier.Object;
+      Index  : Source_Reference.Value.Object;
       Values : Containers.Source_Value_List) return Object is
    begin
       return A : Object := Create (Name, Values) do
-         A.Index := Index;
+         A.Index  := Index;
+         A.At_Num := At_Num_Undefined;
       end return;
    end Create;
 
@@ -55,7 +77,8 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Value)
          with Index                => Source_Reference.Value.Undefined,
-              Index_Case_Sensitive => True);
+              Index_Case_Sensitive => True,
+              At_Num               => At_Num_Undefined);
    end Create;
 
    overriding function Create
@@ -65,8 +88,18 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Values)
          with Index                => Source_Reference.Value.Undefined,
-              Index_Case_Sensitive => True);
+              Index_Case_Sensitive => True,
+              At_Num               => At_Num_Undefined);
    end Create;
+
+   ----------------
+   -- Has_At_Num --
+   ----------------
+
+   function Has_At_Num (Self : Object) return Boolean is
+   begin
+      return Self.At_Num /= At_Num_Undefined;
+   end Has_At_Num;
 
    ---------------
    -- Has_Index --
@@ -106,6 +139,10 @@ package body GPR2.Project.Attribute is
       case Self.Kind is
          when Single =>
             Append (Result, '"' & Self.Value.Text & '"');
+
+            if Self.Has_At_Num then
+               Append (Result, " at" & Integer'Image (Self.At_Num));
+            end if;
 
          when List =>
             Append (Result, Containers.Image (Self.Values));

@@ -1,7 +1,7 @@
 
 project Demo1 is
    for Languages use ("ada");
-   for Source_Dirs use (".");
+   for Source_Dirs use ("src1");
    for Object_Dir use "obj";
    for Main use ("main.adb");
 end Demo1;

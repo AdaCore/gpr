@@ -1,8 +1,8 @@
 Project: Demo1
  > src/pck__unix.adb
-                  language: ada    Kind: S_BODY   unit: Pck excep: TRUE
- > src/pck.ads    language: ada    Kind: S_SPEC   unit: Pck excep: FALSE
+                  language: Ada    Kind: S_BODY   unit: Pck excep: TRUE
+ > src/pck.ads    language: Ada    Kind: S_SPEC   unit: Pck excep: FALSE
 Project: Demo2
  > src/pck__win.adb
-                  language: ada    Kind: S_BODY   unit: Pck excep: TRUE
- > src/pck.ads    language: ada    Kind: S_SPEC   unit: Pck excep: FALSE
+                  language: Ada    Kind: S_BODY   unit: Pck excep: TRUE
+ > src/pck.ads    language: Ada    Kind: S_SPEC   unit: Pck excep: FALSE

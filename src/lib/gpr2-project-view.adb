@@ -31,7 +31,6 @@ with GPR2.Project.View.Set;
 with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
-with GPR2.Unit.Set;
 
 package body GPR2.Project.View is
 
@@ -1001,13 +1000,19 @@ package body GPR2.Project.View is
                for S of Data.Sources loop
                   declare
                      Unit_Is_Interface : constant Boolean :=
-                                           Data.Units.Element
-                                             (S.Source.Unit_Name).Is_Interface;
+                                           S.Source.Has_Single_Unit
+                                               and then Data.Units.Contains
+                                                 (S.Source.Unit_Name)
+                                                   and then Data.Units.Element
+                                                     (S.Source.Unit_Name).
+                                                     Is_Interface;
+                     --  All sources related to an interface unit are also
+                     --  taken as interface (not only the spec)???
                   begin
                      if (Filter = K_Interface_Only and then Unit_Is_Interface)
                        or else
-                        (Filter = K_Not_Interface
-                         and then not Unit_Is_Interface)
+                         (Filter = K_Not_Interface
+                          and then not Unit_Is_Interface)
                      then
                         S_Set.Insert (S);
                      end if;

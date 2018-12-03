@@ -1,0 +1,5 @@
+description:
+    Basic multi-unit test
+driver: build_and_run
+project_file: multi
+main: main

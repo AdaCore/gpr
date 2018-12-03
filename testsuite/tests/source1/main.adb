@@ -58,13 +58,13 @@ procedure Main is
          begin
             Output_Filename (S.Path_Name.Value);
 
-            Text_IO.Set_Col (16);
+            Text_IO.Set_Col (20);
             Text_IO.Put ("   language: " & String (S.Language));
 
-            Text_IO.Set_Col (33);
-            Text_IO.Put ("   Kind: " & GPR2.Source.Kind_Type'Image (S.Kind));
+            Text_IO.Set_Col (37);
+            Text_IO.Put ("   Kind: " & GPR2.Kind_Type'Image (S.Kind));
 
-            if S.Has_Unit then
+            if S.Has_Units then
                Text_IO.Put ("   unit: " & String (S.Unit_Name));
             end if;
 

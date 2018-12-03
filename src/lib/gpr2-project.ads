@@ -57,7 +57,7 @@ package GPR2.Project is
 
    function Create
      (Name  : Name_Type;
-      Paths : Path_Name.Set.Object := Path_Name.Set.Set.Empty_List)
+      Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return Path_Name.Object;
    --  Given a filename (possibly a full pathname) returns a Path_Name_Type. If
    --  Name is not an absolute path name it is looked into Paths.

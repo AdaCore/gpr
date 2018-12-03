@@ -46,7 +46,7 @@
 --        Represent a source file reference (line, column).
 --
 --     Unit
---        A unit with its spec and possible bodies
+--        A unit with its spec and possible bodies (main body and separates)
 
 package GPR2 is
 
@@ -61,6 +61,8 @@ package GPR2 is
 
    subtype Aggregate_Kind
      is Project_Kind range K_Aggregate .. K_Aggregate_Library;
+
+   type Kind_Type is (S_Spec, S_Body, S_Separate);
 
    function Image (Kind : Project_Kind) return String;
    --  Returns a human representation of kind value
@@ -77,16 +79,18 @@ package GPR2 is
      with Dynamic_Predicate => Name_Type'Length > 0;
    --  A non case sensitive name
 
+   subtype Value_Type is String;
+   --  A basic string type (case-sensitive, may be empty)
+
+   subtype Value_Not_Empty is Value_Type
+     with Dynamic_Predicate => Value_Not_Empty'Length > 0;
+   --  A string type which cannot be empty
+
    subtype Simple_Name is Name_Type
      with Dynamic_Predicate =>
        (for all C of Simple_Name => C not in '/' | '\');
    --  A simple name, non empty and without some characters not allowed in
    --  filenames for example.
-
-   subtype Value_Type is String;
-
-   subtype Value_Not_Empty is Value_Type
-     with Dynamic_Predicate => Value_Not_Empty'Length > 0;
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;

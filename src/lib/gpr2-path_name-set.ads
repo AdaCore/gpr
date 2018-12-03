@@ -24,4 +24,6 @@ package GPR2.Path_Name.Set is
 
    subtype Object is Set.List;
 
+   Empty_Set : constant Object := Set.Empty_List;
+
 end GPR2.Path_Name.Set;

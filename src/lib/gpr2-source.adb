@@ -20,23 +20,21 @@ with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Strings.Unbounded;
 
-with GNAT.Calendar.Time_IO;
-with GNAT.OS_Lib;
-
-with GPR2.Source.Registry;
+with GPR2.Compilation_Unit.Map;
+with GPR2.Containers;
 with GPR2.Source.Parser;
+with GPR2.Source.Registry;
 
 package body GPR2.Source is
 
    use Ada.Strings.Unbounded;
 
-   function Modification_Time (F : String) return Ada.Calendar.Time;
-
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self.Is_Defined;
    --  Returns the key for Self, this is used to compare a source object
 
-   procedure Parse (Self : Object) with Inline;
+   procedure Update (Self : Object)
+     with Inline;
    --  Run the parser on the given source and register information in the
    --  registry.
 
@@ -65,42 +63,103 @@ package body GPR2.Source is
       end if;
    end "=";
 
+   ------------------
+   -- Compil_Units --
+   ------------------
+
+   function Compilation_Units
+     (Self : Object) return Compilation_Unit.List.Object is
+   begin
+      Update (Self);
+      return Registry.Shared.Get (Self).CU_List;
+   end Compilation_Units;
+
    ------------
    -- Create --
    ------------
 
    function Create
-     (Filename  : GPR2.Path_Name.Object;
-      Kind      : Kind_Type;
-      Language  : Name_Type;
-      Unit_Name : Optional_Name_Type) return Object is
+     (Filename : GPR2.Path_Name.Object;
+      Language : Name_Type;
+      Kind     : Kind_Type) return Object is
    begin
       return Result : Object do
          Registry.Shared.Register
            (Registry.Data'
-              (Path_Name  => Filename,
-               Timestamp  => Modification_Time (Filename.Value),
-               Language   => To_Unbounded_String (String (Language)),
-               Unit_Name  => To_Unbounded_String (String (Unit_Name)),
-               Kind       => Kind,
-               Other_Part => GPR2.Path_Name.Undefined,
-               Units      => <>,
-               Parsed     => False,
-               Ref_Count  => 1));
+              (Is_Ada_Source => False,
+               Path_Name     => Filename,
+               Timestamp     => Directories.Modification_Time (Filename.Value),
+               Language      => To_Unbounded_String (String (Language)),
+               Other_Part    => GPR2.Path_Name.Undefined,
+               Kind          => Kind,
+               Ref_Count     => 1));
 
          Result.Pathname := Filename;
       end return;
    end Create;
 
+   ----------------
+   -- Create_Ada --
+   ----------------
+
+   function Create_Ada
+     (Filename          : GPR2.Path_Name.Object;
+      Compilation_Units : Compilation_Unit.List.Object;
+      Is_RTS_Source     : Boolean) return Object
+   is
+      CU_Map : Compilation_Unit.Map.Object;
+   begin
+      for CU of Compilation_Units loop
+         CU_Map.Insert (CU.Index, CU);
+      end loop;
+
+      return Result : Object do
+         Registry.Shared.Register
+           (Registry.Data'
+              (Is_Ada_Source => True,
+               Path_Name     => Filename,
+               Timestamp     => Directories.Modification_Time (Filename.Value),
+               Language      => To_Unbounded_String (String'("Ada")),
+               Other_Part    => GPR2.Path_Name.Undefined,
+               Parsed        => False,
+               Is_RTS_Source => Is_RTS_Source,
+               Cu_List       => Compilation_Units,
+               CU_Map        => CU_Map,
+               Ref_Count     => 1));
+
+         Result.Pathname := Filename;
+      end return;
+   end Create_Ada;
+
+   -----------------------------
+   -- Has_Compilation_Unit_At --
+   -----------------------------
+
+   function Has_Compilation_Unit_At
+     (Self : Object; Index : Natural) return Boolean is
+   begin
+      return Registry.Shared.Get (Self).CU_Map.Contains (Index);
+   end Has_Compilation_Unit_At;
+
+   ---------------------
+   -- Has_Single_Unit --
+   ---------------------
+
+   function Has_Single_Unit (Self : Object) return Boolean is
+      use type Containers.Count_Type;
+   begin
+      return Registry.Shared.Get (Self).CU_List.Length = 1;
+   end Has_Single_Unit;
+
    --------------
    -- Has_Unit --
    --------------
 
-   function Has_Unit (Self : Object) return Boolean is
+   function Has_Units (Self : Object) return Boolean is
    begin
-      Parse (Self);
-      return Registry.Shared.Get (Self).Unit_Name /= Null_Unbounded_String;
-   end Has_Unit;
+      Update (Self);
+      return Registry.Shared.Get (Self).Is_Ada_Source;
+   end Has_Units;
 
    ---------
    -- Key --
@@ -110,13 +169,20 @@ package body GPR2.Source is
       use Ada.Characters;
       Data : constant Registry.Data := Registry.Shared.Get (Self);
    begin
-      if Data.Unit_Name = Null_Unbounded_String then
-         --  Not unit based
-         return Data.Path_Name.Value;
-
+      if Data.Is_Ada_Source then
+         --  In this case, the relevant information is unit name + unit kind
+         declare
+            Result : Unbounded_String;
+         begin
+            for CU of Data.CU_List loop
+               Result := Result & Kind_Type'Image (CU.Kind)
+                 & "|" & Handling.To_Lower (String (CU.Unit_Name));
+            end loop;
+            return To_String (Result);
+         end;
       else
-         return Kind_Type'Image (Data.Kind)
-           & "|" & Handling.To_Lower (To_String (Data.Unit_Name));
+         --  Not unit based: just use the full path
+         return Data.Path_Name.Value;
       end if;
    end Key;
 
@@ -124,10 +190,14 @@ package body GPR2.Source is
    -- Kind --
    ----------
 
-   function Kind (Self : Object) return Kind_Type is
+   function Kind (Self : Object; Index : Natural := 1) return Kind_Type is
    begin
-      Parse (Self);
-      return Registry.Shared.Get (Self).Kind;
+      Update (Self);
+      if Self.Has_Units then
+         return Registry.Shared.Get (Self).CU_Map (Index).Kind;
+      else
+         return Registry.Shared.Get (Self).Kind;
+      end if;
    end Kind;
 
    --------------
@@ -139,121 +209,21 @@ package body GPR2.Source is
       return Name_Type (To_String (Registry.Shared.Get (Self).Language));
    end Language;
 
-   -----------------------
-   -- Modification_Time --
-   -----------------------
-
-   function Modification_Time (F : String) return Ada.Calendar.Time
-   is
-      use GNAT.OS_Lib;
-
-      TS : String (1 .. 14);
-
-      Y  : Year_Type;
-      Mo : Month_Type;
-      D  : Day_Type;
-      H  : Hour_Type;
-      Mn : Minute_Type;
-      S  : Second_Type;
-
-      Z : constant := Character'Pos ('0');
-
-      T : OS_Time;
-
-   begin
-      T := File_Time_Stamp (F);
-
-      pragma Assert (T /= Invalid_Time);
-
-      GM_Split (T, Y, Mo, D, H, Mn, S);
-
-      TS (01) := Character'Val (Z + Y / 1000);
-      TS (02) := Character'Val (Z + (Y / 100) mod 10);
-      TS (03) := Character'Val (Z + (Y / 10) mod 10);
-      TS (04) := Character'Val (Z + Y mod 10);
-      TS (05) := Character'Val (Z + Mo / 10);
-      TS (06) := Character'Val (Z + Mo mod 10);
-      TS (07) := Character'Val (Z + D / 10);
-      TS (08) := Character'Val (Z + D mod 10);
-      TS (09) := Character'Val (Z + H / 10);
-      TS (10) := Character'Val (Z + H mod 10);
-      TS (11) := Character'Val (Z + Mn / 10);
-      TS (12) := Character'Val (Z + Mn mod 10);
-      TS (13) := Character'Val (Z + S / 10);
-      TS (14) := Character'Val (Z + S mod 10);
-
-      return GNAT.Calendar.Time_IO.Value
-        (TS (01 .. 08) & "T" & TS (09 .. 14));
-   end Modification_Time;
-
    ----------------
    -- Other_Part --
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      Other_Part : constant GPR2.Path_Name.Object :=
-                     Registry.Shared.Get (Self).Other_Part;
+      Other_Part : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
    begin
+      Other_Part := Registry.Shared.Get (Self).Other_Part;
+
       if Other_Part = GPR2.Path_Name.Undefined then
          return Undefined;
       else
          return Object'(Pathname => Other_Part);
       end if;
    end Other_Part;
-
-   -----------
-   -- Parse --
-   -----------
-
-   procedure Parse (Self : Object) is
-      use type Calendar.Time;
-
-      S        : Registry.Data := Registry.Shared.Get (Self);
-      Filename : constant String := Self.Pathname.Value;
-   begin
-      --  Parse if not yet parsed or if the file has changed on disk
-
-      if not S.Parsed
-        or else
-          (Directories.Exists (Filename)
-           and then S.Timestamp < Directories.Modification_Time (Filename))
-      then
-         declare
-            Data : constant Source.Parser.Data :=
-                     Source.Parser.Check (S.Path_Name);
-         begin
-            --  Check if separate unit
-
-            if Data.Is_Separate then
-               S.Kind := S_Separate;
-
-            elsif S.Kind = S_Separate then
-               --  It was a separate but not anymore, the source may have been
-               --  changed to be a child unit.
-
-               S.Kind := S_Body;
-            end if;
-
-            --  Record the withed units
-
-            S.Units := Data.W_Units;
-
-            --  The unit-name from the source if possible
-
-            if Data.Unit_Name /= Null_Unbounded_String then
-               S.Unit_Name := Data.Unit_Name;
-            end if;
-
-            --  Record that this is now parsed
-
-            S.Parsed := True;
-
-            --  Update registry
-
-            Registry.Shared.Set (Self, S);
-         end;
-      end if;
-   end Parse;
 
    ---------------
    -- Path_Name --
@@ -277,9 +247,7 @@ package body GPR2.Source is
    -- Set_Other_Part --
    --------------------
 
-   procedure Set_Other_Part
-     (Self       : Object;
-      Other_Part : Object) is
+   procedure Set_Other_Part (Self : Object; Other_Part : Object) is
    begin
       Registry.Shared.Set_Other_Part (Self, Other_Part);
    end Set_Other_Part;
@@ -297,20 +265,128 @@ package body GPR2.Source is
    -- Unit_Name --
    ---------------
 
-   function Unit_Name (Self : Object) return Name_Type is
+   function Unit_Name (Self : Object; Index : Natural := 1) return Name_Type is
    begin
-      Parse (Self);
-      return Name_Type (To_String (Registry.Shared.Get (Self).Unit_Name));
+      Update (Self);
+      return Registry.Shared.Get (Self).CU_Map (Index).Unit_Name;
    end Unit_Name;
+
+   ------------
+   -- Update --
+   ------------
+
+   procedure Update (Self : Object) is
+      use type Calendar.Time;
+
+      S        : Registry.Data := Registry.Shared.Get (Self);
+      Filename : constant String := Self.Pathname.Value;
+   begin
+      pragma Assert (Directories.Exists (Filename));
+
+      declare
+         New_TS  : constant Calendar.Time :=
+                     Directories.Modification_Time (Filename);
+
+         Updated      : Boolean := False;
+
+         New_CU_List : Compilation_Unit.List.Object;
+         New_CU_Map  : Compilation_Unit.Map.Object;
+
+      begin
+         if S.Timestamp /= New_TS then
+            S.Timestamp := New_TS;
+            Updated := True;
+         end if;
+
+         if S.Is_Ada_Source and then (not S.Parsed or else Updated) then
+            New_CU_List := Source.Parser.Parse (S.Path_Name);
+
+            for CU of New_CU_List loop
+               declare
+                  New_CU : Compilation_Unit.Object;
+                  Kind   : Kind_Type := CU.Kind;
+
+               begin
+                  if CU.Kind /= S_Separate
+                    and then S.CU_Map.Contains (CU.Index)
+                    and then S.CU_Map.Element (CU.Index).Kind = S_Separate
+                  --  ??? Add check on the unit name, but we need to compare
+                  --  the new name stripped from the old unit's "sep from".
+                  then
+                     --  It was a separate but not anymore, the source may
+                     --  have been changed to be a child unit.
+
+                     Kind := S_Body;
+                  end if;
+
+                  --  Why not assign the kind given by the parser, and
+                  --  directly insert (New_CU.Index, CU)???
+
+                  New_CU := Compilation_Unit.Create
+                    (Unit_Name    => CU.Unit_Name,
+                     Index        => CU.Index,
+                     Kind         => Kind,
+                     Withed_Units => CU.Withed_Units,
+                     Is_Sep_From  => (if CU.Is_Separate
+                                      then CU.Is_Separate_From
+                                      else No_Name));
+
+                  New_CU_Map.Insert (New_CU.Index, New_CU);
+               end;
+            end loop;
+
+            if New_CU_List.Is_Empty and then S.Is_RTS_Source then
+               --  Source from RTS with a pragma No_Body?
+               --  In this case we keep the current compilation unit record.
+
+               null;
+
+            else
+               S.CU_Map := New_CU_Map;
+               S.CU_List := New_CU_List;
+            end if;
+
+            --  TODO: if we find inconsistencies on the unit name or kind
+            --  deduced previously by means of the naming scheme/exceptions,
+            --  raise an exception.
+
+            S.Parsed := True;
+
+            Updated := True;
+         end if;
+
+         if Updated then
+            Registry.Shared.Set (Self, S);
+         end if;
+      end;
+   end Update;
 
    ------------------
    -- Withed_Units --
    ------------------
 
-   function Withed_Units (Self : Object) return Source_Reference.Set.Object is
+   function With_Clauses
+     (Self  : Object;
+      Index : Natural := 1) return Source_Reference.Identifier.Set.Object
+   is
    begin
-      Parse (Self);
-      return Registry.Shared.Get (Self).Units;
-   end Withed_Units;
+      Update (Self);
+      return Registry.Shared.Get (Self).CU_Map (Index).Withed_Units;
+   end With_Clauses;
+
+   function With_Clauses
+     (Self : Object;
+      Unit : Name_Type) return Source_Reference.Identifier.Set.Object
+   is
+      Res : Source_Reference.Identifier.Set.Object;
+   begin
+      Update (Self);
+      for CU of Registry.Shared.Get (Self).CU_List loop
+         if CU.Unit_Name = Unit then
+            Res.Union (CU.Withed_Units);
+         end if;
+      end loop;
+      return Res;
+   end With_Clauses;
 
 end GPR2.Source;

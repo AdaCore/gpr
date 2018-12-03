@@ -16,328 +16,222 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
-with Ada.Strings.Maps.Constants;
-with Ada.Streams.Stream_IO;
+with Ada.Characters.Conversions;
+with Ada.Strings.Unbounded;
+with Ada.Strings.Wide_Wide_Unbounded;
 
+with Langkit_Support.Text;
+
+with Libadalang;
+with Libadalang.Analysis;
+with Libadalang.Common;
+
+with GNAT.Case_Util;
+
+with GPR2.Compilation_Unit;
 with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Identifier.Set;
 
 package body GPR2.Source.Parser is
 
-   --  The following IO package is a temporary solution before the full and
-   --  real implementation is based on LibAdaLang. Note that we do not want to
-   --  parse the whole Ada syntax here at the moment. The elements that are
-   --  needed are:
-   --
-   --  1. whether the package is a separate unit. the parsing is necessary as
-   --  it is not possible to get this information while the body suffix and
-   --  separate suffix are identical.
-   --
-   --  2. the actual unit name as declared in the package, this is needed to
-   --  get correct unit name for krunched filenames.
-   --
-   --  3. the dependent units. we need the withed entities to be able to
-   --  compute the full dependencies of a given unit to compile.
-   --
-   --  So basically we just need to get the context of the unit and we never
-   --  parse the content passed the procedure, package or function declaration.
+   use Ada.Strings.Unbounded;
 
-   package IO is
-
-      use Ada.Streams;
-
-      Size_Chunk : constant := 2_048;
-      --  Size of the chunk read by the implementation
-
-      type Handle is record
-         FD      : Stream_IO.File_Type;
-         Buffer  : Stream_Element_Array (1 .. Size_Chunk);
-         Current : Stream_Element_Offset := -1;
-         Last    : Stream_Element_Offset := -1;
-         Is_Id   : Boolean; --  True when last parsing was an identifier
-         Line    : Positive := 1;
-      end record;
-
-      procedure Open
-        (File     : in out Handle;
-         Filename : GPR2.Path_Name.Object)
-        with Post => Stream_IO.Is_Open (File.FD)
-                     and then File.Current = 0
-                     and then File.Last >= 0;
-      --  Open Filename and initialize the corresponding handle
-
-      procedure Close (File : in out Handle)
-        with Post => not Stream_IO.Is_Open (File.FD);
-
-      function Get_Token (File : in out Handle) return String
-        with Pre => Stream_IO.Is_Open (File.FD);
-      --  Get next token on the file
-
-   end IO;
+   function "+"
+     (Source : String) return Unbounded_String renames To_Unbounded_String;
+   function "-"
+     (Source : Unbounded_String) return String renames To_String;
 
    -----------
-   -- Check --
+   -- Parse --
    -----------
 
-   function Check (Filename : GPR2.Path_Name.Object) return Data is
+   function Parse
+     (Filename : GPR2.Path_Name.Object) return Compilation_Unit.List.Object
+   is
+      use GNAT;
 
-      H : IO.Handle;
+      use Ada.Strings.Wide_Wide_Unbounded;
+      use Ada.Characters.Conversions;
 
-      function Read_Unit return Unbounded_String with Inline;
-      --  Read a unit name
+      use Libadalang.Analysis;
+      use Libadalang.Common;
 
-      ---------------
-      -- Read_Unit --
-      ---------------
+      use Langkit_Support.Text;
 
-      function Read_Unit return Unbounded_String is
-         Unit : Unbounded_String;
+      Ctx    : constant Analysis_Context := Create_Context;
+      A_Unit : constant Analysis_Unit    :=
+                 Get_From_File (Ctx, Filename.Value);
+
+      function To_String (T : Unbounded_Text_Type) return String is
+        (To_String (To_Wide_Wide_String (T)));
+
+      Found : Compilation_Unit.List.Object;
+      --  Stores the compilation units found while traversing the AST
+
+      Index : Integer := 0;
+      --  Source index, incremented every time we parse a compilation unit
+
+      function Callback (Node : Ada_Node'Class) return Visit_Status;
+
+      --------------
+      -- Callback --
+      --------------
+
+      function Callback (Node : Ada_Node'Class) return Visit_Status is
       begin
-         Read_Unit : loop
-            declare
-               Tok : constant String := IO.Get_Token (H);
-            begin
-               exit Read_Unit when Tok in "" | "is" | "renames" | "with"
-                 or else not (H.Is_Id or else Tok = ".");
+         if Node = No_Ada_Node then
+            return Over;
+         end if;
 
-               --  Skip token body as in "package body"
-
-               if Tok /= "body" then
-                  Unit := Unit & Tok;
+         case Node.Kind is
+            when Ada_Compilation_Unit =>
+               if Node.As_Compilation_Unit.Is_Null then
+                  return Over;
                end if;
-            end;
-         end loop Read_Unit;
 
-         return Unit;
-      end Read_Unit;
+               declare
+                  function Process_Defining_Name
+                    (N : Ada_Node'Class) return Unbounded_String;
 
-      R : Data;
+                  ---------------------------
+                  -- Process_Defining_Name --
+                  ---------------------------
+
+                  function Process_Defining_Name
+                    (N : Ada_Node'Class) return Unbounded_String is
+                  begin
+                     case N.Kind is
+                        when Ada_Identifier =>
+                           return +To_UTF8 (N.Text);
+
+                        when Ada_Dotted_Name =>
+                           return Process_Defining_Name
+                             (N.As_Dotted_Name.F_Prefix) & (+".") &
+                           (+To_UTF8 (N.As_Dotted_Name.F_Suffix.Text));
+
+                        when others =>
+                           pragma Assert (False);
+                           return +("");
+                     end case;
+                  end Process_Defining_Name;
+
+                  U_Name        : Unbounded_String;
+                  U_Kind        : Kind_Type;
+                  U_Withed      : Source_Reference.Identifier.Set.Object;
+                  U_Is_Sep_From : Unbounded_String;
+
+                  U_Prelude : constant Ada_Node_List :=
+                                Node.As_Compilation_Unit.F_Prelude;
+                  U_Body    : constant Ada_Node :=
+                                Node.As_Compilation_Unit.F_Body;
+
+               begin
+                  if U_Prelude.Is_Null or else U_Body.Is_Null then
+                     return Over;
+                  end if;
+
+                  --  Unit name, fully qualified.
+                  --  The Unit and its parents are also the first direct
+                  --  dependencies that we register.
+
+                  declare
+                     Is_First_Iteration : Boolean := True;
+                  begin
+                     for UN of Node.As_Compilation_Unit.
+                       P_Syntactic_Fully_Qualified_Name
+                     loop
+                        if Is_First_Iteration then
+                           U_Name := +To_String (UN);
+                        else
+                           U_Name := U_Name & (+".") & (+To_String (UN));
+                        end if;
+                        Is_First_Iteration := False;
+                     end loop;
+                  exception
+                     when Property_Error =>
+                        return Over;
+                  end;
+
+                  --  Get the direct dependencies, if any
+
+                  for WC of U_Prelude loop
+                     if WC.Kind = Ada_With_Clause then
+                        for P of WC.As_With_Clause.F_Packages loop
+                           U_Withed.Insert
+                             (Source_Reference.Identifier.Create
+                                (Filename => Filename.Value,
+                                 Line     => Natural
+                                   (WC.Sloc_Range.Start_Line),
+                                 Column   => Natural
+                                   (WC.Sloc_Range.Start_Column),
+                                 Text     => Name_Type
+                                   (-(Process_Defining_Name (P)))));
+                        end loop;
+                     end if;
+                  end loop;
+
+                  --  Unit kind
+
+                  case U_Body.Kind is
+                     when Ada_Library_Item =>
+                        case Node.As_Compilation_Unit.P_Unit_Kind is
+                           when Analysis_Unit_Kind'(Unit_Specification) =>
+                              U_Kind := S_Spec;
+                           when Analysis_Unit_Kind'(Unit_Body)          =>
+                              U_Kind := S_Body;
+                        end case;
+
+                     when Ada_Subunit =>
+                        U_Kind := S_Separate;
+                        U_Is_Sep_From := Process_Defining_Name
+                          (U_Body.As_Subunit.F_Name);
+
+                        pragma Assert
+                          (Length (U_Name) > Length (U_Is_Sep_From) + 1);
+
+                        Delete (U_Name, 1, Length (U_Is_Sep_From) + 1);
+
+                     when others =>
+                        pragma Assert (False);
+                  end case;
+
+                  declare
+                     Unit_Name : String := -U_Name;
+                  begin
+                     Case_Util.To_Mixed (Unit_Name);
+
+                     for I in Unit_Name'First + 1 .. Unit_Name'Last loop
+                        if Unit_Name (I - 1) = '.' then
+                           Unit_Name (I) := Case_Util.To_Upper (Unit_Name (I));
+                        end if;
+                     end loop;
+
+                     U_Name := +Unit_Name;
+                  end;
+
+                  --  Construct the unit and add it to "Found"
+
+                  Index := Index + 1;
+
+                  Found.Append
+                    (Compilation_Unit.Create
+                       (Unit_Name    => Name_Type (-(U_Name)),
+                        Index        => Index,
+                        Kind         => U_Kind,
+                        Withed_Units => U_Withed,
+                        Is_Sep_From  => Optional_Name_Type (-U_Is_Sep_From)));
+               end;
+
+               return Over;
+
+            when others =>
+               return Into;
+         end case;
+      end Callback;
+
    begin
-      IO.Open (H, Filename);
-
-      Check_Context : loop
-         declare
-            Tok : constant String :=
-                    Characters.Handling.To_Lower (IO.Get_Token (H));
-         begin
-            if Tok = "separate" then
-               R.Is_Separate := True;
-
-               --  Read the unit it is a separate which is surrounded by
-               --  parenthesis.
-
-               declare
-                  Tok : constant String := IO.Get_Token (H);
-               begin
-                  if Tok = "(" then
-                     R.Sep_From := Read_Unit;
-                  end if;
-               end;
-
-            elsif Tok = "with" then
-               declare
-                  Unit : constant Unbounded_String := Read_Unit;
-               begin
-                  --  Check for a null unit, this can happen if the source is
-                  --  partial or invalid.
-
-                  if Unit /= Null_Unbounded_String then
-                     R.W_Units.Insert
-                       (Source_Reference.Identifier.Create
-                          (Filename.Value, H.Line, 1,
-                           Name_Type (To_String (Unit))));
-                  end if;
-               end;
-
-            elsif Tok in "procedure" | "package" | "function" then
-               R.Unit_Name := Read_Unit;
-               exit Check_Context;
-            end if;
-
-            --  Stop parsing when reaching the unit declaration or when
-            --  end-of-file.
-
-            exit Check_Context when Tok = "";
-         end;
-      end loop Check_Context;
-
-      IO.Close (H);
-      return R;
-   end Check;
-
-   --------
-   -- IO --
-   --------
-
-   package body IO is
-
-      procedure Fill_Buffer (File : in out Handle)
-        with Inline, Post => File.Current = 0;
-      --  Read a chunk of data in the buffer or nothing if there is no more
-      --  data to read.
-
-      -----------
-      -- Close --
-      -----------
-
-      procedure Close (File : in out Handle) is
-      begin
-         Stream_IO.Close (File.FD);
-      end Close;
-
-      -----------------
-      -- Fill_Buffer --
-      -----------------
-
-      procedure Fill_Buffer (File : in out Handle) is
-      begin
-         Stream_IO.Read (File.FD, File.Buffer, File.Last);
-         File.Current := 0;
-      end Fill_Buffer;
-
-      ---------------
-      -- Get_Token --
-      ---------------
-
-      function Get_Token (File : in out Handle) return String is
-
-         use all type Strings.Maps.Character_Set;
-
-         Ada_Word : constant Strings.Maps.Character_Set :=
-                      Strings.Maps.Constants.Alphanumeric_Set
-                      or Strings.Maps.To_Set ("_");
-
-         function Next_Char return Character with Inline;
-         --  Get next char in buffer
-
-         subtype Content_Index is Natural range 0 .. 1_024;
-         subtype Content_Range is Content_Index range 1 .. Content_Index'Last;
-
-         Tok  : String (Content_Range);
-         Cur  : Content_Index := 0;
-         P, C : Character := ASCII.NUL;
-
-         procedure Skip_EOL with Inline;
-         --  Skip chars until an end-of-line
-
-         procedure Clear_Context
-           with Inline,
-                Post => P = ASCII.NUL and then C = ASCII.NUL;
-         --  Clear current context
-
-         procedure Get_Word with Inline;
-         --  Read a work, result will be in Tok (Tok'First .. Cur)
-
-         -------------------
-         -- Clear_Context --
-         -------------------
-
-         procedure Clear_Context is
-         begin
-            P := ASCII.NUL;
-            C := ASCII.NUL;
-         end Clear_Context;
-
-         --------------
-         -- Get_Word --
-         --------------
-
-         procedure Get_Word is
-            C : Character;
-         begin
-            loop
-               C := Next_Char;
-
-               if Strings.Maps.Is_In (C, Ada_Word) then
-                  Cur := Cur + 1;
-                  Tok (Cur) := C;
-
-               else
-                  File.Current := File.Current - 1;
-                  exit;
-               end if;
-            end loop;
-         end Get_Word;
-
-         ---------------
-         -- Next_Char --
-         ---------------
-
-         function Next_Char return Character is
-         begin
-            if File.Current = File.Last then
-               if Stream_IO.End_Of_File (File.FD) then
-                  --  Nothing more to read
-                  return ASCII.EOT;
-               else
-                  Fill_Buffer (File);
-               end if;
-            end if;
-
-            File.Current := File.Current + 1;
-            return Character'Val (File.Buffer (File.Current));
-         end Next_Char;
-
-         --------------
-         -- Skip_EOL --
-         --------------
-
-         procedure Skip_EOL is
-         begin
-            loop
-               exit when Next_Char in ASCII.LF | ASCII.EOT;
-            end loop;
-         end Skip_EOL;
-
-      begin
-         File.Is_Id := False;
-
-         Read_Token : loop
-            C := Next_Char;
-
-            Cur := 1;
-            Tok (Cur) := C;
-
-            if C = ASCII.EOT then
-               Cur := 0;
-               exit Read_Token;
-
-            elsif P = '-' and then C = '-' then
-               Skip_EOL;
-               Clear_Context;
-               File.Line := File.Line + 1;
-
-            elsif Strings.Maps.Is_In (C, Ada_Word) then
-               Get_Word;
-               File.Is_Id := True;
-               exit Read_Token;
-
-            elsif C in '.' | ';' | '(' | ')' then
-               exit Read_Token;
-
-            elsif C in ASCII.LF then
-               File.Line := File.Line + 1;
-            end if;
-
-            P := C;
-         end loop Read_Token;
-
-         return Tok (1 .. Cur);
-      end Get_Token;
-
-      ----------
-      -- Open --
-      ----------
-
-      procedure Open
-        (File     : in out Handle;
-         Filename : GPR2.Path_Name.Object) is
-      begin
-         Stream_IO.Open (File.FD, Stream_IO.In_File, Filename.Value);
-         Fill_Buffer (File);
-         File.Line := 1;
-      end Open;
-
-   end IO;
+      Traverse (A_Unit.Root, Callback'Access);
+      return Found;
+   end Parse;
 
 end GPR2.Source.Parser;

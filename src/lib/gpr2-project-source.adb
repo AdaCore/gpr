@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Compilation_Unit;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
@@ -23,8 +24,9 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
-with GPR2.Source_Reference.Set;
+with GPR2.Source_Reference;
 with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Unit;
 
 package body GPR2.Project.Source is
@@ -103,19 +105,24 @@ package body GPR2.Project.Source is
             Insert (Deps, Unit.Spec);
          end if;
 
-         for B of Unit.Bodies loop
-            Insert (Deps, B);
+         if Unit.Has_Body then
+            Insert (Deps, Unit.Main_Body);
+         end if;
+
+         for Sep of Unit.Separates loop
+            Insert (Deps, Sep);
          end loop;
       end Insert;
 
       View : constant Project.View.Object  := Definition.Strong (Self.View);
       Data : constant Definition.Const_Ref := Definition.Get_RO (View);
 
-      Buf  : Source_Reference.Set.Object := Self.Source.Withed_Units;
+      Buf : Source_Reference.Identifier.Set.Object :=
+              Self.Source.With_Clauses;
       --  Buf contains units to be checked, this list is extended when looking
       --  for the full-closure. Using this list we avoid a recursive call.
 
-      Done : Source_Reference.Set.Object;
+      Done : Source_Reference.Identifier.Set.Object;
       --  Fast look-up table to avoid analysing the same unit multiple time and
       --  more specifically avoid circularities.
 
@@ -129,10 +136,12 @@ package body GPR2.Project.Source is
       procedure To_Analyse (Src : GPR2.Project.Source.Object) is
       begin
          if Src.Is_Defined then
-            for W of Src.Source.Withed_Units loop
-               if not Done.Contains (W) and then not Buf.Contains (W) then
-                  Buf.Insert (W);
-               end if;
+            for CU of Src.Source.Compilation_Units loop
+               for W of CU.Withed_Units loop
+                  if not Done.Contains (W) and then not Buf.Contains (W) then
+                     Buf.Include (W);
+                  end if;
+               end loop;
             end loop;
          end if;
       end To_Analyse;
@@ -146,10 +155,9 @@ package body GPR2.Project.Source is
       --  For Unit or Closure add dependencies from the other part
 
       if Mode in Unit | Closure then
-         To_Analyse
-           (Object'
-              (Self.Source.Other_Part, Self.View,
-               False, Self.Has_Naming_Exception));
+         if Self.Source.Has_Single_Unit and then Self.Has_Other_Part then
+            To_Analyse (Self.Other_Part);
+         end if;
       end if;
 
       For_Every_Unit : loop
@@ -197,9 +205,9 @@ package body GPR2.Project.Source is
 
                         if Mode = Closure then
                            To_Analyse (SU.Spec);
-
-                           for B of SU.Bodies loop
-                              To_Analyse (B);
+                           To_Analyse (SU.Main_Body);
+                           for Sep of SU.Separates loop
+                              To_Analyse (Sep);
                            end loop;
                         end if;
 
@@ -225,7 +233,9 @@ package body GPR2.Project.Source is
 
    function Has_Other_Part (Self : Object) return Boolean is
    begin
-      return Self.Source.Other_Part.Is_Defined;
+      return Self.Source.Has_Units
+        and then Self.Source.Has_Single_Unit
+        and then Self.Source.Other_Part.Is_Defined;
    end Has_Other_Part;
 
    -------------
@@ -247,9 +257,13 @@ package body GPR2.Project.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
+      Source : constant GPR2.Source.Object := Self.Source.Other_Part;
    begin
-      return Definition.Strong (Self.View).Source
-               (Self.Source.Other_Part.Path_Name);
+      if Source.Is_Defined then
+         return Definition.Strong (Self.View).Source (Source.Path_Name);
+      else
+         return Undefined;
+      end if;
    end Other_Part;
 
    -------------

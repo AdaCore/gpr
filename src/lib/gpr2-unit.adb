@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Source;
-
 package body GPR2.Unit is
 
    ------------
@@ -25,27 +23,48 @@ package body GPR2.Unit is
    ------------
 
    function Create
-     (Spec   : Project.Source.Object;
-      Bodies : Project.Source.Set.Object) return Object is
+     (Name      : Name_Type;
+      Spec      : Project.Source.Object;
+      Main_Body : Project.Source.Object;
+      Separates : Project.Source.Set.Object) return Object is
    begin
-      return Object'(Spec, Bodies);
+      return Object'(To_Unbounded_String (String (Name)),
+                     Spec,
+                     Main_Body,
+                     Separates);
    end Create;
 
    -------------------
    -- Update_Bodies --
    -------------------
 
-   procedure Update_Bodies
+   procedure Update_Body
      (Self : in out Object; Source : Project.Source.Object) is
    begin
+      Self.Main_Body := Source;
+
       --  If the spec is already defined associate it with the new body
 
       if Self.Spec.Source.Is_Defined then
          Source.Source.Set_Other_Part (Self.Spec.Source);
       end if;
+   end Update_Body;
 
-      Self.Bodies.Insert (Source);
-   end Update_Bodies;
+   ----------------------
+   -- Update_Separates --
+   ----------------------
+
+   procedure Update_Separates
+     (Self : in out Object; Source : Project.Source.Object) is
+   begin
+      Self.Separates.Include (Source);
+
+      --  If the spec is already defined associate it with the new body
+
+      if Self.Spec.Source.Is_Defined then
+         Source.Source.Set_Other_Part (Self.Spec.Source);
+      end if;
+   end Update_Separates;
 
    -----------------
    -- Update_Spec --
@@ -56,10 +75,15 @@ package body GPR2.Unit is
    begin
       Self.Spec := Source;
 
-      --  And make sure the bodies (body & separate) are
-      --  referencing this as the spec.
+      --  If the body is already defined associate it with the new spec
 
-      for S of Self.Bodies loop
+      if Self.Main_Body.Source.Is_Defined then
+         Source.Source.Set_Other_Part (Self.Main_Body.Source);
+      end if;
+
+      --  And make sure the separates are referencing this as the spec
+
+      for S of Self.Separates loop
          S.Source.Set_Other_Part (Source.Source);
       end loop;
    end Update_Spec;

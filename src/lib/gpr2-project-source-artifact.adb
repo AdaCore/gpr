@@ -16,6 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Fixed;
+
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
 
@@ -41,15 +43,8 @@ package body GPR2.Project.Source.Artifact is
       P_Suffix : constant Name_Type := ".prep";
       S_Suffix : constant Name_Type := ".cswi";
 
-      Object       : constant Path_Name.Object :=
-                       Path_Name.Create_File
-                         (Src & O_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
-
-      Dependency   : constant Path_Name.Object :=
-                       Path_Name.Create_File
-                         (Src & D_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
+      Object_Files     : Index_Path_Name_Map.Map;
+      Dependency_Files : Index_Path_Name_Map.Map;
 
       Preprocessed : constant Path_Name.Object :=
                        Path_Name.Create_File
@@ -62,10 +57,43 @@ package body GPR2.Project.Source.Artifact is
                           Optional_Name_Type (View.Object_Directory.Value));
 
    begin
+      if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
+         Object_Files.Insert
+           (1, Path_Name.Create_File
+              (Src & D_Suffix,
+               Optional_Name_Type (View.Object_Directory.Value)));
+         Dependency_Files.Insert
+           (1, Path_Name.Create_File
+              (Src & O_Suffix,
+               Optional_Name_Type (View.Object_Directory.Value)));
+
+      else
+         for CU of Source.Source.Compilation_Units loop
+            if CU.Kind = S_Body then
+               declare
+                  use Ada.Strings;
+                  Index_Suffix : constant Name_Type := "~" & Name_Type
+                    (Fixed.Trim (CU.Index'Image, Left));
+               begin
+                  Object_Files.Insert
+                    (CU.Index,
+                     Path_Name.Create_File
+                       (Src & Index_Suffix & D_Suffix,
+                        Optional_Name_Type (View.Object_Directory.Value)));
+                  Dependency_Files.Insert
+                    (CU.Index,
+                     Path_Name.Create_File
+                       (Src & Index_Suffix & O_Suffix,
+                        Optional_Name_Type (View.Object_Directory.Value)));
+               end;
+            end if;
+         end loop;
+      end if;
+
       return Artifact.Object'
         (Source           => Source,
-         Object           => Object,
-         Dependency       => Dependency,
+         Object_Files     => Object_Files,
+         Dependency_Files => Dependency_Files,
          Switches         => Switches,
          Preprocessed_Src => Preprocessed);
    end Create;
@@ -75,9 +103,9 @@ package body GPR2.Project.Source.Artifact is
    ----------------
 
    function Dependency
-     (Self : Artifact.Object) return Path_Name.Object is
+     (Self : Artifact.Object; Index : Natural := 1) return Path_Name.Object is
    begin
-      return Self.Dependency;
+      return Self.Dependency_Files (Index);
    end Dependency;
 
    ----------
@@ -91,7 +119,9 @@ package body GPR2.Project.Source.Artifact is
       Result : Path_Name.Set.Object;
    begin
       if Self.Has_Object_Code then
-         Result.Append (Self.Object_Code);
+         for O of Self.Object_Files loop
+            Result.Append (O);
+         end loop;
 
          declare
             Name : constant Name_Type := Source.Path_Name.Simple_Name;
@@ -118,34 +148,36 @@ package body GPR2.Project.Source.Artifact is
       end if;
 
       if Self.Has_Dependency then
-         Result.Append (Self.Dependency);
+         for D of Self.Dependency_Files loop
+            Result.Append (D);
 
-         --  Library project has the same ALI files in object and library
-         --  directories.
+            --  Library project has the same ALI files in object and library
+            --  directories.
 
-         if View.Is_Library and then Source.Language = "Ada" then
-            Result.Append
-              (Path_Name.Create_File
-                 (Self.Dependency.Simple_Name,
-                  Optional_Name_Type (View.Library_Directory.Value)));
-         end if;
+            if View.Is_Library and then Source.Language = "Ada" then
+               Result.Append
+                 (Path_Name.Create_File
+                    (D.Simple_Name,
+                     Optional_Name_Type (View.Library_Directory.Value)));
+            end if;
 
-         --  Dependency files must be placed into the Library_Directory of the
-         --  aggregate library.
+            --  Dependency files must be placed into the Library_Directory of
+            --  the aggregate library.
 
-         if View.Is_Aggregated then
-            declare
-               Aggregate : constant Project.View.Object := View.Aggregate;
-            begin
-               if Aggregate.Kind = K_Aggregate_Library then
-                  Result.Append
-                    (Path_Name.Create_File
-                       (Self.Dependency.Simple_Name,
-                        Optional_Name_Type
-                          (Aggregate.Library_Directory.Value)));
-               end if;
-            end;
-         end if;
+            if View.Is_Aggregated then
+               declare
+                  Aggregate : constant Project.View.Object := View.Aggregate;
+               begin
+                  if Aggregate.Kind = K_Aggregate_Library then
+                     Result.Append
+                       (Path_Name.Create_File
+                          (D.Simple_Name,
+                           Optional_Name_Type
+                             (Aggregate.Library_Directory.Value)));
+                  end if;
+               end;
+            end if;
+         end loop;
       end if;
 
       if Self.Has_Preprocessed_Source then
@@ -164,9 +196,9 @@ package body GPR2.Project.Source.Artifact is
    -----------------
 
    function Object_Code
-     (Self : Artifact.Object) return Path_Name.Object is
+     (Self : Artifact.Object; Index : Natural := 1) return Path_Name.Object is
    begin
-      return Self.Object;
+      return Self.Object_Files (Index);
    end Object_Code;
 
    -------------------------

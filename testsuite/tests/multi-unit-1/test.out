@@ -1,0 +1,46 @@
+main.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Main
+    kind         = S_BODY
+    withed units = { U Ada Pkg }
+    object file  = main.o
+pkg.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_BODY
+    object file  = pkg.o
+sep.adb
+  single-unit          = FALSE
+  has naming exception = TRUE
+  - compilation unit at 1
+    unit name    = V
+    kind         = S_SEPARATE
+    separate from U
+    withed units = { Ada.Text_IO }
+  - compilation unit at 2
+    unit name    = W
+    kind         = S_SEPARATE
+    separate from U
+    withed units = { GNAT.Regexp }
+pkg.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_SPEC
+    object file  = pkg.o
+u.adb
+  single-unit          = FALSE
+  has naming exception = TRUE
+  - compilation unit at 1
+    unit name    = U
+    kind         = S_SPEC
+  - compilation unit at 2
+    unit name    = U
+    kind         = S_BODY
+    withed units = { GNAT.OS_Lib }
+    object file  = u~2.o

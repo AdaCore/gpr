@@ -16,6 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Compilation_Unit;
+
 package body GPR2.Project.Source.Set is
 
    type Iterator (Filter : Source_Filter) is
@@ -110,6 +112,15 @@ package body GPR2.Project.Source.Set is
       return Set.Has_Element (Position.Current);
    end Has_Element;
 
+   -------------
+   -- Include --
+   -------------
+
+   procedure Include (Self : in out Object; Source : Project.Source.Object) is
+   begin
+      Self.S.Include (Source);
+   end Include;
+
    ------------
    -- Insert --
    ------------
@@ -154,12 +165,10 @@ package body GPR2.Project.Source.Set is
    ------------------
 
    function Match_Filter
-     (Iter : Iterator'Class; Source : Project.Source.Object) return Boolean
-   is
-      use all type GPR2.Source.Kind_Type;
+     (Iter : Iterator'Class; Source : Project.Source.Object) return Boolean is
    begin
       --  We check the S_All filter here as getting the Kind for a source may
-      --  need a parsing to know whether we have a body or a separate unit.
+      --  require a parsing to know whether we have a body or a separate unit.
       --  So to avoid any parsing when we just want all sources we check this
       --  specific case now.
 
@@ -167,32 +176,56 @@ package body GPR2.Project.Source.Set is
          return True;
 
       else
-         declare
-            Kind : constant GPR2.Source.Kind_Type := Source.Source.Kind;
-         begin
-            return
-              (case Iter.Filter is
-                  when S_Compilable =>
-                     (not Source.Source.Other_Part.Is_Defined
-                      and then Kind /= GPR2.Source.S_Separate
-                      and then Source.Source.Language = "Ada")
-                      --  The condition above is about Ada package spec without
-                      --  body have to be compilable.
-                     or else Kind = GPR2.Source.S_Body,
+         case Iter.Filter is
+            when S_Compilable =>
+               if Source.Source.Has_Units then
+                  for CU of Source.Source.Compilation_Units loop
+                     if not
+                       ((Source.Source.Has_Single_Unit and then
+                             not Source.Has_Other_Part
+                         and then CU.Kind /= GPR2.S_Separate
+                         and then Source.Source.Language = "Ada")
+                        --  The condition above is about Ada package specs
+                        --  without a body, which have to be compilable.
+                        or else CU.Kind = GPR2.S_Body)
+                     then
+                        return False;
+                     end if;
+                  end loop;
+               else
+                  return Source.Source.Kind = GPR2.S_Body;
+               end if;
 
-                  when S_Spec       =>
-                     Kind = GPR2.Source.S_Spec,
+            when S_Spec     =>
+               if Source.Source.Has_Units then
+                  return (for all CU of Source.Source.Compilation_Units =>
+                            CU.Kind = GPR2.S_Spec);
+               else
+                  return Source.Source.Kind = GPR2.S_Spec;
+               end if;
 
-                  when S_Body       =>
-                     Kind = GPR2.Source.S_Body,
+            when S_Body     =>
+               if Source.Source.Has_Units then
+                  return (for all CU of Source.Source.Compilation_Units =>
+                            CU.Kind = GPR2.S_Body);
+               else
+                  return Source.Source.Kind = GPR2.S_Body;
+               end if;
 
-                  when S_Separate   =>
-                     Kind = GPR2.Source.S_Separate,
+            when S_Separate =>
+               if Source.Source.Has_Units then
+                  return (for all CU of Source.Source.Compilation_Units =>
+                            CU.Kind = GPR2.S_Separate);
+               else
+                  return False;
+               end if;
 
-                  when others       =>
-                     True);
-         end;
+            when others     =>
+               return True;
+         end case;
       end if;
+
+      return True;
    end Match_Filter;
 
    ----------

@@ -18,6 +18,7 @@
 
 with Ada.Environment_Variables;
 with Ada.Streams.Stream_IO;
+
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 
@@ -37,6 +38,8 @@ package body GPR2.Path_Name is
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
    Keep_Temporary_Directory : Unbounded_String;
+
+   --  From old GPR
 
    procedure Determine_Temporary_Directory;
    --  Determine temporary directory
