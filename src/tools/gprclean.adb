@@ -77,6 +77,7 @@ procedure GPRclean is
    Context       : GPR2.Context.Object;
    Config_File   : Path_Name.Object;
    Config        : Project.Configuration.Object;
+   Remove_Config : Boolean := False;
    Target        : Unbounded_String := To_Unbounded_String ("all");
    Config_Error  : Boolean := False;
    Options       : GPRtools.Options.Object; -- Common options for all tools
@@ -359,7 +360,16 @@ procedure GPRclean is
            (Name_Type (Value (Value'First .. Idx - 1)),
             Value (Idx + 1 .. Value'Last));
 
-      elsif Switch in "--config" | "--autoconf" then
+      elsif Switch = "--config" then
+         Config_File := Path_Name.Create_File (Name_Type (Normalize_Value));
+
+      elsif Switch = "--autoconf" then
+         --  --autoconf option for gprbuild mean that the file have to be
+         --  generated if absent. The gprclean have to remove all gprbuild
+         --  generated files.
+
+         Remove_Config := True;
+
          Config_File := Path_Name.Create_File (Name_Type (Normalize_Value));
 
       elsif Switch = "--target" then
@@ -415,6 +425,10 @@ begin
       loop
          Sources (Project.Tree.Element (V));
       end loop;
+
+      if Remove_Config then
+         Exclude_File (Config_File.Value);
+      end if;
 
       if Options.Verbose then
          GPRtools.Util.Output_Messages
