@@ -49,7 +49,8 @@ project GPR2.Tools is
    --  Common options used for the Debug and Release modes
 
    Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall");
+     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall",
+      "-fstack-check");
 
    Release_Options :=
      ("-O2", "-gnatn");

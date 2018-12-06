@@ -123,7 +123,9 @@ package body GPR2.Project.View is
          end if;
       end if;
 
-      if Self.Tree.Has_Configuration then
+      if Self.Tree.Has_Configuration
+        and then Self /= Self.Tree.Configuration.Corresponding_View
+      then
          return Self.Tree.Configuration.Corresponding_View.Binder_Prefix
            (Language);
       end if;
