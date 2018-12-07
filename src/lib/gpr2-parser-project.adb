@@ -29,6 +29,7 @@ with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
+with Langkit_Support.Text;
 
 with GPR2.Builtin;
 with GPR2.Message;
@@ -46,6 +47,7 @@ package body GPR2.Parser.Project is
 
    use Ada;
    use GPR_Parser.Common;
+   use Langkit_Support.Text;
    use type Ada.Containers.Count_Type;
 
    --  Some helpers routines for the parser
@@ -142,7 +144,7 @@ package body GPR2.Parser.Project is
          procedure Handle_String (Node : String_Literal) is
          begin
             Result := To_Unbounded_String
-              (Unquote (Value_Type (Node.String_Text)));
+              (Unquote (Value_Type (To_UTF8 (Node.Text))));
          end Handle_String;
 
       begin
@@ -593,10 +595,10 @@ package body GPR2.Parser.Project is
                Ext  : constant Project_Extension := F_Extension (N);
             begin
                Project.Name := To_Unbounded_String
-                 (F_Project_Name (N).String_Text);
+                 (To_UTF8 (F_Project_Name (N).Text));
 
                if Name (Project)
-                 /= Name_Type (F_End_Name (N).String_Text)
+                 /= Name_Type (To_UTF8 (F_End_Name (N).Text))
                then
                   Messages.Append
                     (GPR2.Message.Create
@@ -1510,7 +1512,7 @@ package body GPR2.Parser.Project is
             procedure Handle_String (Node : String_Literal) is
             begin
                Record_Value
-                 (Unquote (Value_Type (Node.String_Text)));
+                 (Unquote (Value_Type (To_UTF8 (Node.Text))));
             end Handle_String;
 
             ---------------------
@@ -1723,7 +1725,7 @@ package body GPR2.Parser.Project is
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
-         Name    : constant Simple_Name := Simple_Name (Name_1.String_Text);
+         Name    : constant Simple_Name := Simple_Name (To_UTF8 (Name_1.Text));
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -1731,7 +1733,7 @@ package body GPR2.Parser.Project is
                --    <project>.<package>'<attribute>
                return Get_Attribute_Ref
                  (Project => Name,
-                  Pack    => Optional_Name_Type (Name_2.String_Text),
+                  Pack    => Optional_Name_Type (To_UTF8 (Name_2.Text)),
                   Node    => Att_Ref);
 
             else
@@ -2068,7 +2070,7 @@ package body GPR2.Parser.Project is
                -------------------
 
                procedure Handle_String (Node : String_Literal) is
-                  Value : constant Value_Type := Unquote (Node.String_Text);
+                  Value : constant Value_Type := Unquote (To_UTF8 (Node.Text));
                begin
                   Is_Case_Item_Matches :=
                     Is_Case_Item_Matches

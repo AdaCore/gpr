@@ -50,6 +50,8 @@ with GPRname.Source;
 with GPRname.Source.Vector;
 with GPRname.Unit;
 
+with Langkit_Support.Text;
+
 procedure GPRname.Process (Opt : GPRname.Options.Object) is
 
    use Ada;
@@ -72,6 +74,8 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    use GPRname.Source;
    use GPRname.Source.Vector;
    use GPRname.Options;
+
+   use Langkit_Support.Text;
 
    package Language_Sources_Map is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Type,
@@ -477,7 +481,7 @@ begin
       use Characters.Conversions;
 
       function Get_Name_Type (Node : Single_Tok_Node'Class) return Name_Type is
-        (Name_Type (Node.String_Text));
+        (Name_Type (To_UTF8 (Node.Text)));
       --  Get the string (as a Name_Type) associated with a single-token node
 
       Ctx  : constant Analysis_Context := Create_Context;
