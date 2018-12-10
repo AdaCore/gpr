@@ -91,7 +91,8 @@ procedure Main is
       D : constant String := Prj.Root_Project.Path_Name.Dir_Name;
       I : constant Positive := Strings.Fixed.Index (Line, D);
    begin
-      return Line (Line'First .. I) & Line (I + D'Length .. Line'Last);
+      return Line (Line'First .. I - 1) & "/" &
+        Line (I + D'Length .. Line'Last);
    end Filter_Path;
 
 begin
