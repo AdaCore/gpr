@@ -24,6 +24,7 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Iterator_Interfaces;
+with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
 with GPR2.Context;
@@ -63,7 +64,8 @@ package GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
-      Config   : Configuration.Object := Configuration.Undefined)
+      Config   : Configuration.Object := Configuration.Undefined;
+      Subdirs  : Optional_Name_Type   := No_Name)
      with Pre => Filename.Is_Defined;
    --  Loads a root project
 
@@ -77,6 +79,7 @@ package GPR2.Project.Tree is
      (Self                 : in out Object;
       Filename             : Path_Name.Object;
       Context              : GPR2.Context.Object;
+      Subdirs              : Optional_Name_Type := No_Name;
       Target               : Optional_Name_Type := No_Name;
       Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
         GPR2.Containers.Name_Value_Map_Package.Empty_Map)
@@ -289,6 +292,12 @@ package GPR2.Project.Tree is
      (Self : Object; Language : Name_Type := "ada") return Name_Type;
    --  Returns dependency suffix for language in project tree
 
+   function Subdirs (Tree : Object) return Optional_Name_Type
+     with Pre => Tree.Is_Defined;
+   --  Returns the subdirs parameter <sub> of the project tree such that, for
+   --  each project, the actual {executable,object,library} directories are
+   --  {<exec>,<obj>,<lib>}/<sub>.
+
 private
 
    package Name_View is
@@ -307,6 +316,7 @@ private
       Sources      : Name_View.Map;
       Messages     : aliased Log.Object;
       Search_Paths : Path_Name.Set.Object;
+      Subdirs      : Ada.Strings.Unbounded.Unbounded_String;
       Views        : aliased View_Maps.Map;
       Views_Set    : View.Set.Object; -- All projects in registration order
    end record;
@@ -352,5 +362,8 @@ private
      (if Self.Has_Configuration
       then Self.Configuration.Dependency_File_Suffix (Language)
       elsif Language = "ada" then ".ali" else ".d");
+
+   function Subdirs (Tree : Object) return Optional_Name_Type is
+     (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));
 
 end GPR2.Project.Tree;

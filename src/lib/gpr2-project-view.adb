@@ -66,6 +66,11 @@ package body GPR2.Project.View is
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
 
+   function Apply_Root_And_Subdirs
+     (Self : Object; Dir : Value_Type) return GPR2.Path_Name.Object;
+   --  Apply project path and subdir option for library, object and executable
+   --  directories.
+
    ----------------
    -- Aggregated --
    ----------------
@@ -78,6 +83,26 @@ package body GPR2.Project.View is
          end loop;
       end return;
    end Aggregated;
+
+   ----------------------------
+   -- Apply_Root_And_Subdirs --
+   ----------------------------
+
+   function Apply_Root_And_Subdirs
+     (Self : Object; Dir : Value_Type) return GPR2.Path_Name.Object
+   is
+      Subdirs : constant Optional_Name_Type := Self.Tree.Subdirs;
+      Result  : constant GPR2.Path_Name.Object :=
+                  GPR2.Path_Name.Create_Directory
+                    (Name_Type (Dir), Name_Type (Self.Path_Name.Dir_Name));
+   begin
+      if Subdirs = No_Name then
+         return Result;
+      end if;
+
+      return GPR2.Path_Name.Create_Directory
+               (Subdirs, Name_Type (Result.Value));
+   end Apply_Root_And_Subdirs;
 
    ---------------
    -- Attribute --
@@ -200,16 +225,13 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object
    is
       package A renames GPR2.Project.Registry.Attribute;
-
-      Dir : constant Value_Type :=
-              (if Self.Has_Attributes (A.Exec_Dir)
-               then Self.Attribute (A.Exec_Dir).Value
-               elsif  Self.Has_Attributes (A.Object_Dir)
-               then Self.Attribute (A.Object_Dir).Value
-               else ".");
    begin
-      return GPR2.Path_Name.Create_Directory
-        (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
+      return Self.Apply_Root_And_Subdirs
+        (if Self.Has_Attributes (A.Exec_Dir)
+         then Self.Attribute (A.Exec_Dir).Value
+         elsif  Self.Has_Attributes (A.Object_Dir)
+         then Self.Attribute (A.Object_Dir).Value
+         else ".");
    end Executable_Directory;
 
    --------------
@@ -474,11 +496,9 @@ package body GPR2.Project.View is
    -----------------------
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object is
-      Dir : constant Value_Type :=
-              Self.Attribute (Project.Registry.Attribute.Library_Dir).Value;
    begin
-      return GPR2.Path_Name.Create_Directory
-        (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
+      return Self.Apply_Root_And_Subdirs
+        (Self.Attribute (Project.Registry.Attribute.Library_Dir).Value);
    end Library_Directory;
 
    ----------------------
@@ -746,13 +766,11 @@ package body GPR2.Project.View is
 
       package A renames GPR2.Project.Registry.Attribute;
 
-      Dir : constant Value_Type :=
-              (if Self.Has_Attributes (A.Object_Dir)
-               then Self.Attribute (A.Object_Dir).Value
-               else ".");
    begin
-      return GPR2.Path_Name.Create_Directory
-        (Name_Type (Dir), Optional_Name_Type (Self.Path_Name.Dir_Name));
+      return Self.Apply_Root_And_Subdirs
+        (if Self.Has_Attributes (A.Object_Dir)
+         then Self.Attribute (A.Object_Dir).Value
+         else ".");
    end Object_Directory;
 
    ----------

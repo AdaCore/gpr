@@ -86,6 +86,7 @@ procedure GPRclean is
    Target        : Unbounded_String := To_Unbounded_String ("all");
    Config_Error  : Boolean := False;
    Options       : GPRtools.Options.Object; -- Common options for all tools
+   Subdirs       : Unbounded_String;
 
    ------------------
    -- Exclude_File --
@@ -144,6 +145,12 @@ procedure GPRclean is
       Define_Switch
         (Config, All_Projects'Access, "-r",
          Help => "Clean all projects recursively");
+
+      Define_Switch
+        (Options.Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--subdirs:",
+         Help        => "Real obj/lib/exec dirs are subdirs",
+         Argument    => "<dir>");
 
       Define_Switch
         (Config, Dry_Run'Access, "-n",
@@ -406,6 +413,9 @@ procedure GPRclean is
       elsif Switch = "-aP" then
          Project_Tree.Register_Project_Search_Path
            (Path_Name.Create_Directory (Name_Type (Value)));
+
+      elsif Switch = "--subdirs" then
+         Subdirs := To_Unbounded_String (Normalize_Value);
       end if;
    end Value_Callback;
 
@@ -444,7 +454,9 @@ begin
    end if;
 
    if not Config_Error then
-      Project_Tree.Load (Project_Path, Context, Config);
+      Project_Tree.Load
+        (Project_Path, Context, Config,
+         Optional_Name_Type (To_String (Subdirs)));
 
       for V in Project_Tree.Iterate
         (Kind   => (Project.I_Recursive => All_Projects,

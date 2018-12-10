@@ -105,6 +105,10 @@ begin
 
    Display (Prj.Root_Project);
 
+   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx, Subdirs => "release");
+
+   Display (Prj.Root_Project);
+
    Ctx.Replace ("VERSION", "A.B");
    Prj.Set_Context (Ctx);
 

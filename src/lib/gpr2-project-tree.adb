@@ -52,6 +52,8 @@ package body GPR2.Project.Tree is
    use GNAT;
    use type GPR2.Path_Name.Object;
 
+   package PC renames Project.Configuration;
+
    GPRls : constant OS_Lib.String_Access :=
              OS_Lib.Locate_Exec_On_Path ("gprls");
    --  Check for GPRls executable
@@ -163,8 +165,7 @@ package body GPR2.Project.Tree is
    -- Configuration --
    -------------------
 
-   function Configuration
-     (Self : Object) return Project.Configuration.Object is
+   function Configuration (Self : Object) return PC.Object is
    begin
       return Self.Conf;
    end Configuration;
@@ -614,9 +615,11 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
-      Config   : Project.Configuration.Object :=
-                   Project.Configuration.Undefined)
+      Config   : PC.Object          := PC.Undefined;
+      Subdirs  : Optional_Name_Type := No_Name)
    is
+      use Ada.Strings.Unbounded;
+
       function Has_Error return Boolean is
         (Self.Messages.Has_Element
            (Error       => True,
@@ -813,6 +816,8 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
+      Self.Subdirs := To_Unbounded_String (String (Subdirs));
+
       --  Now we can initialize the project search paths
 
       Set_Project_Search_Paths;
@@ -861,6 +866,7 @@ package body GPR2.Project.Tree is
      (Self                 : in out Object;
       Filename             : Path_Name.Object;
       Context              : GPR2.Context.Object;
+      Subdirs              : Optional_Name_Type := No_Name;
       Target               : Optional_Name_Type := No_Name;
       Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
         GPR2.Containers.Name_Value_Map_Package.Empty_Map)
@@ -869,7 +875,7 @@ package body GPR2.Project.Tree is
       Conf        : Project.Configuration.Object;
 
    begin
-      Self.Load (Filename, Context);
+      Self.Load (Filename, Context, Subdirs => Subdirs);
 
       declare
          Actual_Target : constant Optional_Name_Type :=
@@ -920,7 +926,7 @@ package body GPR2.Project.Tree is
                                                   Actual_Target);
          end if;
 
-         Self.Load (Filename, Context, Conf);
+         Self.Load (Filename, Context, Conf, Subdirs => Subdirs);
       end;
    end Load_Autoconf;
 
@@ -934,7 +940,7 @@ package body GPR2.Project.Tree is
    begin
       Self.Self := Self'Unchecked_Access;
 
-      Self.Conf := Project.Configuration.Load (Filename);
+      Self.Conf := PC.Load (Filename);
       Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
       if Self.Conf.Has_Messages then

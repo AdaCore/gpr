@@ -78,4 +78,7 @@ begin
 
    Project.Tree.Load (Prj, Create ("demo4.gpr"), Ctx);
    Display (Prj.Root_Project);
+
+   Project.Tree.Load (Prj, Create ("demo1.gpr"), Ctx, Subdirs => "experiment");
+   Display (Prj.Root_Project);
 end Main;

@@ -648,7 +648,11 @@ begin
          DB.List (Options);
 
       else
-         Tree.Load (Options.Project_File, Context, Config);
+         Tree.Load
+           (Options.Project_File, Context, Config,
+            (if Options.Subdirs = null
+             then ""
+             else Optional_Name_Type (Options.Subdirs.all)));
 
          if Options.Verbose then
             for M of Tree.Log_Messages.all loop

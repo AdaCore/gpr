@@ -2,3 +2,5 @@ Demo1    K_STANDARD
 object-directory/obj/
 Demo2    K_STANDARD
 object-directory/
+Demo2    K_STANDARD
+object-directory/debug/
