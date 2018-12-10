@@ -25,17 +25,24 @@
 with Ada.Streams.Stream_IO;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
+
 with System;
 
 with GPR.Tempdir;
 with GPR.Util;
 
 with GNAT.OS_Lib;
+with GNAT.Regexp;
 
 package body GPR2.Path_Name is
 
    use Ada;
+
    use GNAT;
+   use GNAT.Regexp;
+
+   Root_Path : constant GNAT.Regexp.Regexp := Compile
+     ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
    --  From old GPR
 
@@ -46,13 +53,13 @@ package body GPR2.Path_Name is
      (Path : String) return String renames GPR.Util.Ensure_Directory;
 
    function Base_Name (Path : String) return String is
-     (if Path = "/" or else Path = "\"
+     (if Match (Path, Root_Path)
       then "."
       else Directories.Base_Name (Path));
    --  Base_Name for / is '.'
 
    function Containing_Directory (Path : String) return String is
-     (if Path = "/" or else Path = "\"
+     (if Match (Path, Root_Path)
       then Path
       else Directories.Containing_Directory (Path));
    --  Containing directroy for / is '/'
