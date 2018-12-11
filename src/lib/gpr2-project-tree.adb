@@ -954,15 +954,6 @@ package body GPR2.Project.Tree is
          Root_Context : out GPR2.Context.Object;
          Messages     : out Log.Object) return View.Object;
 
-      procedure Push
-        (Path_Name   : GPR2.Path_Name.Object;
-         Project     : GPR2.Project.Import.Object;
-         Is_Extended : Boolean := False);
-      --  Record a new project as seen and record path
-
-      procedure Pop;
-      --  Remove last record pushed
-
       procedure Add_Paths_Messages;
       --  Add into Messages the path of the detected circularity
 
@@ -976,6 +967,10 @@ package body GPR2.Project.Tree is
 
       Sets  : Data_Set.Map;
       Paths : Path_Name.Set.Object;
+      --  Path to the root of the tree from the currently processing project
+
+      Limited_Count : Natural := 0;
+      --  Number of limited imports in the Paths
 
       ------------------------
       -- Add_Paths_Messages --
@@ -1054,6 +1049,52 @@ package body GPR2.Project.Tree is
 
             declare
                Data : constant Definition.Ref := Definition.Get_RW (View);
+
+               procedure Push
+                 (Path_Name   : GPR2.Path_Name.Object;
+                  Project     : GPR2.Project.Import.Object;
+                  Is_Extended : Boolean := False);
+               --  Record a new project as seen and record path
+
+               procedure Pop;
+               --  Remove last record pushed
+
+               function Is_Limited (Item : Path_Name.Object) return Boolean is
+                 (Data.Trees.Project.Imports.Element (Item).Is_Limited);
+
+               ---------
+               -- Pop --
+               ---------
+
+               procedure Pop is
+                  Last : constant Path_Name.Object := Paths.Last_Element;
+               begin
+                  if not Sets (Last).Extended and then Is_Limited (Last) then
+                     Limited_Count := Limited_Count - 1;
+                  end if;
+
+                  Paths.Delete_Last;
+                  Sets.Delete (Last);
+               end Pop;
+
+               ----------
+               -- Push --
+               ----------
+
+               procedure Push
+                 (Path_Name   : GPR2.Path_Name.Object;
+                  Project     : GPR2.Project.Import.Object;
+                  Is_Extended : Boolean := False) is
+               begin
+                  if not Is_Extended and then Is_Limited (Path_Name) then
+                     Limited_Count := Limited_Count + 1;
+                  end if;
+
+                  Sets.Insert
+                    (Path_Name, Recursive_Load.Data'(Project, Is_Extended));
+                  Paths.Append (Path_Name);
+               end Push;
+
             begin
                --  Load the extended project if any
 
@@ -1117,7 +1158,7 @@ package body GPR2.Project.Tree is
                      if Recursive_Load.Filename = Project.Path_Name then
                         --  We are importing the root-project
 
-                        if not Is_Limited then
+                        if not Is_Limited and then Limited_Count = 0 then
                            Messages.Append
                              (Message.Create
                                 (Message.Error,
@@ -1145,7 +1186,7 @@ package body GPR2.Project.Tree is
                      elsif Sets.Contains (Project.Path_Name) then
                         --  We are importing a project already imported
 
-                        if not Is_Limited then
+                        if not Is_Limited and then Limited_Count = 0 then
                            Messages.Append
                              (Message.Create
                                 (Message.Error,
@@ -1165,7 +1206,7 @@ package body GPR2.Project.Tree is
                         --  We are importing Starting_From which is an
                         --  aggregate project taken as root project.
 
-                        if not Is_Limited then
+                        if not Is_Limited and then Limited_Count = 0 then
                            Messages.Append
                              (Message.Create
                                 (Message.Error,
@@ -1280,30 +1321,6 @@ package body GPR2.Project.Tree is
 
          return Data;
       end Load;
-
-      ---------
-      -- Pop --
-      ---------
-
-      procedure Pop is
-         Last : constant Path_Name.Object := Paths.Last_Element;
-      begin
-         Paths.Delete_Last;
-         Sets.Delete (Last);
-      end Pop;
-
-      ----------
-      -- Push --
-      ----------
-
-      procedure Push
-        (Path_Name   : GPR2.Path_Name.Object;
-         Project     : GPR2.Project.Import.Object;
-         Is_Extended : Boolean := False) is
-      begin
-         Sets.Insert (Path_Name, Data'(Project, Is_Extended));
-         Paths.Append (Path_Name);
-      end Push;
 
    begin
       Circularities := False;
