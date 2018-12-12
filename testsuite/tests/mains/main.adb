@@ -51,7 +51,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       for M of Prj.Mains loop
-         Text_IO.Put_Line (Filter_Path (M.Value));
+         Text_IO.Put_Line (Filter_Path (M.Dir_Name & String (M.Base_Name)));
       end loop;
    end Display;
 
