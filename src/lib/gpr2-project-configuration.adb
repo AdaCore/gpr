@@ -119,13 +119,19 @@ package body GPR2.Project.Configuration is
       --  this case we just write the temporary file into the current working
       --  directory.
 
+      Key : constant String := Config_File_Key'Img;
+
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
+
       Conf_Filename : constant String :=
                         (if Path_Name.Temporary_Directory = Path_Name.Undefined
                          then ""
                          else Path_Name.Compose
                            (Path_Name.Temporary_Directory,
                             Name_Type
-                              (Process_Id & "-gpr2_tmp_conf.cgpr")).Value);
+                              (Process_Id & "-gpr2_tmp_conf_"
+                               & Trim (Key, Left) & ".cgpr")).Value);
 
       GPRconfig : constant OS_Lib.String_Access :=
                     OS_Lib.Locate_Exec_On_Path ("gprconfig");
@@ -166,6 +172,11 @@ package body GPR2.Project.Configuration is
       for K in Args'Range loop
          OS_Lib.Free (Args (K));
       end loop;
+
+      --  Increment the key to make sure we have distinct files if Debug mode
+      --  is set.
+
+      Config_File_Key := Config_File_Key + 1;
 
       --  Load the configuration object generated if execution was succeful
 

@@ -1,0 +1,9 @@
+project B is
+   for Languages use ("Ada", "C++");
+
+   --  Should not be taken into account in configuration: only those attributes
+   --  from the root project are.
+
+   for Runtime ("Ada") use "bar";
+   for Runtime ("C++") use "foo";
+end B;

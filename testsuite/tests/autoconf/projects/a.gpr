@@ -1,0 +1,10 @@
+with "b.gpr";
+
+project A is
+   for Languages use ("Ada");
+
+   for Target use "x86_64-linux";
+
+   for Runtime ("Ada") use "zfp";
+   for Runtime ("C++") use "rts_cpp/";
+end A;

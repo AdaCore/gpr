@@ -25,6 +25,7 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Iterator_Interfaces;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
@@ -68,6 +69,23 @@ package GPR2.Project.Tree is
       Filename : Path_Name.Object)
      with Pre => Filename /= Path_Name.Undefined;
    --  Loads a configuration project for this tree
+
+   procedure Load_Autoconf
+     (Self                 : in out Object;
+      Filename             : Path_Name.Object;
+      Context              : GPR2.Context.Object;
+      Target               : Optional_Name_Type := No_Name;
+      Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
+        GPR2.Containers.Name_Value_Map_Package.Empty_Map)
+       with Pre => Filename /= Path_Name.Undefined;
+   --  Loads a tree in autoconf mode.
+   --  If Target is specified, then we use it directly instead of fetching
+   --  the root project attribute.
+   --  Same with the Language_Runtime map: for each language Lang in the
+   --  project tree, if the map has an association (Lang,RTS) then we use it
+   --  instead of any attribute Runtime (Lang) declared in the root project.
+   --  Typically this is useful to enforce precedence of the command-line
+   --  options --target and --RTS[:lang].
 
    procedure Unload (Self : in out Object);
    --  Unloads the tree and free all associated objects (projects, sources,
@@ -251,21 +269,21 @@ package GPR2.Project.Tree is
    procedure Register_Project_Search_Path
      (Self : in out Object;
       Dir  : Path_Name.Object)
-     with Pre => Self /= Undefined and then Dir /= Path_Name.Undefined;
+     with Pre => Dir /= Path_Name.Undefined;
    --  Adds a project search path for this tree
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
    --  Returns the Tree project search paths
 
-   function Archive_Suffix (Tree : Object) return Name_Type;
+   function Archive_Suffix (Self : Object) return Name_Type;
    --  Returns archive suffix for the project tree
 
    function Object_Suffix
-     (Tree : Object; Language : Name_Type := "ada") return Name_Type;
+     (Self : Object; Language : Name_Type := "ada") return Name_Type;
    --  Returns object suffix for language in project tree
 
    function Dependency_Suffix
-     (Tree : Object; Language : Name_Type := "ada") return Name_Type;
+     (Self : Object; Language : Name_Type := "ada") return Name_Type;
    --  Returns dependency suffix for language in project tree
 
 private
@@ -278,7 +296,7 @@ private
      (Name_Type, View.Set.Object, "=" => View.Set."=");
 
    type Object is tagged limited record
-      Self         : not null access Object := Object'Unchecked_Access;
+      Self         : access Object := null;
       Root         : View.Object;
       Conf         : Project.Configuration.Object;
       Runtime      : View.Object;
@@ -311,22 +329,22 @@ private
                   (Project_View_Store.Empty_Vector,
                    1, View.Undefined);
 
-   function Archive_Suffix (Tree : Object) return Name_Type is
-     (if Tree.Has_Configuration
-      then Tree.Configuration.Archive_Suffix
+   function Archive_Suffix (Self : Object) return Name_Type is
+     (if Self.Has_Configuration
+      then Self.Configuration.Archive_Suffix
       else ".a");
 
    function Object_Suffix
-     (Tree : Object; Language : Name_Type := "ada") return Name_Type
-   is (if Tree.Has_Configuration
-       then Tree.Configuration.Object_File_Suffix (Language)
+     (Self : Object; Language : Name_Type := "ada") return Name_Type
+   is (if Self.Has_Configuration
+       then Self.Configuration.Object_File_Suffix (Language)
        else ".o");
 
    function Dependency_Suffix
-     (Tree : Object; Language : Name_Type := "ada") return Name_Type
+     (Self : Object; Language : Name_Type := "ada") return Name_Type
    is
-     (if Tree.Has_Configuration
-      then Tree.Configuration.Dependency_File_Suffix (Language)
+     (if Self.Has_Configuration
+      then Self.Configuration.Dependency_File_Suffix (Language)
       elsif Language = "ada" then ".ali" else ".d");
 
 end GPR2.Project.Tree;

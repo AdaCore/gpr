@@ -1,0 +1,6 @@
+description:
+    A test for the autoconf util
+    # requires x86_64-vx7-linux64/gnat/install/bin on PATH
+driver: build_and_run
+project_file: autoconf
+main: main

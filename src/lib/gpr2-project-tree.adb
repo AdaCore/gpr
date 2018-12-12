@@ -29,7 +29,6 @@ with Ada.Text_IO;
 
 with GPR.Sdefault;
 
-with GPR2.Containers;
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
@@ -780,6 +779,8 @@ package body GPR2.Project.Tree is
       Circularities : Boolean;
 
    begin
+      Self.Self := Self'Unchecked_Access;
+
       --  First record and parse the configuration object, this is needed as
       --  used to check the target in Set_Project_Search_Paths above.
 
@@ -836,8 +837,8 @@ package body GPR2.Project.Tree is
                for E of Definition.Get_RO (V).Externals loop
                   if not Definition.Get_RO (V_Data).Externals.Contains (E) then
                      --  Note that if we have an aggregate project, then
-                     --  we are not dependent of the external if it is
-                     --  statically redefined in the aggregate project. Yet
+                     --  we are not dependent on the external if it is
+                     --  statically redefined in the aggregate project. But
                      --  at this point we have not yet parsed the project.
                      --
                      --  The externals will be removed in Set_Context when
@@ -856,6 +857,77 @@ package body GPR2.Project.Tree is
       end if;
    end Load;
 
+   -------------------
+   -- Load_Autoconf --
+   -------------------
+
+   procedure Load_Autoconf
+     (Self                 : in out Object;
+      Filename             : Path_Name.Object;
+      Context              : GPR2.Context.Object;
+      Target               : Optional_Name_Type := No_Name;
+      Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
+        GPR2.Containers.Name_Value_Map_Package.Empty_Map)
+   is
+      Descr_Index : Integer := 0;
+      Conf        : Project.Configuration.Object;
+
+   begin
+      Self.Load (Filename, Context);
+
+      declare
+         Actual_Target : constant Optional_Name_Type :=
+                           (if Target /= No_Name then Target
+                            elsif Self.Root_Project.Has_Attributes ("Target")
+                            then Name_Type
+                              (Self.Root_Project.Attribute ("Target").Value)
+                            else No_Name);
+
+         Conf_Descriptions : Project.Configuration.Description_Set
+           (1 .. Integer (Self.Root_Project.Languages.Length));
+
+      begin
+         for L of Self.Root_Project.Languages loop
+            Descr_Index := Descr_Index + 1;
+
+            declare
+               L_Name : constant Name_Type := Name_Type (L);
+               RTS    : constant Name_Type :=
+                          (if Language_Runtime_Map.Contains (L_Name) and then
+                           Language_Runtime_Map.Element (L_Name) /= No_Value
+                           then
+                              Name_Type (Language_Runtime_Map.Element (L_Name))
+                           elsif Self.Root_Project.Has_Attributes
+                             ("Runtime", "Ada") then Name_Type
+                             (Self.Root_Project.Attribute
+                                ("Runtime", "Ada").Value)
+                           else No_Name);
+
+               --  RTS should be a Value_Path (type introduced in the
+               --  multi-unit patch)
+
+            begin
+               Conf_Descriptions (Descr_Index) :=
+                 Project.Configuration.Create
+                   (Language => L_Name,
+                    Version  => No_Name,
+                    Runtime  => RTS,
+                    Path     => No_Name,
+                    Name     => No_Name);
+            end;
+         end loop;
+
+         if Actual_Target = No_Name then
+            Conf := Project.Configuration.Create (Conf_Descriptions);
+         else
+            Conf := Project.Configuration.Create (Conf_Descriptions,
+                                                  Actual_Target);
+         end if;
+
+         Self.Load (Filename, Context, Conf);
+      end;
+   end Load_Autoconf;
+
    ------------------------
    -- Load_Configuration --
    ------------------------
@@ -864,6 +936,8 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object) is
    begin
+      Self.Self := Self'Unchecked_Access;
+
       Self.Conf := Project.Configuration.Load (Filename);
       Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
@@ -1923,6 +1997,13 @@ package body GPR2.Project.Tree is
       Self.Root    := Undefined.Root;
       Self.Conf    := Undefined.Conf;
       Self.Runtime := Undefined.Runtime;
+
+      Self.Units.Clear;
+      Self.Sources.Clear;
+      Self.Messages.Clear;
+      Self.Search_Paths.Clear;
+      Self.Views.Clear;
+      Self.Views_Set.Clear;
    end Unload;
 
    --------------------

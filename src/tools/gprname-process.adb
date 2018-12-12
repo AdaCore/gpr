@@ -274,7 +274,8 @@ begin
                    (if Opt.Target /= No_String
                     then Optional_Name_Type (Opt.Target)
                     elsif Tree.Root_Project.Has_Attributes ("Target") then
-                       Tree.Root_Project.Attribute ("Target").Name
+                       Name_Type
+                      (Tree.Root_Project.Attribute ("Target").Value)
                     else No_Name);
 
       Runtime  : constant Optional_Name_Type :=
@@ -282,7 +283,8 @@ begin
                     then Optional_Name_Type (Opt.RTS)
                     elsif Tree.Root_Project.Has_Attributes
                       ("Runtime", "Ada") then
-                       Tree.Root_Project.Attribute ("Runtime", "Ada").Name
+                       Name_Type
+                      (Tree.Root_Project.Attribute ("Runtime", "Ada").Value)
                     else No_Name);
 
       --  Name/Path of the compiler: see IDE.Compiler_Command, and GPR.Conf

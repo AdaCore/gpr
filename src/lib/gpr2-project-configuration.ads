@@ -36,6 +36,8 @@ limited with GPR2.Project.Tree;
 
 package GPR2.Project.Configuration is
 
+   Config_File_Key : Integer := 1;
+
    use type Containers.Count_Type;
    use type Project.View.Object;
 
