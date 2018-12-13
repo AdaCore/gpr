@@ -41,8 +41,8 @@ package body GPR2.Path_Name is
    use GNAT;
    use GNAT.Regexp;
 
-   Root_Path : constant GNAT.Regexp.Regexp := Compile
-     ("/+|[A-Z]:\\+", Case_Sensitive => False);
+   Root_Path : constant GNAT.Regexp.Regexp :=
+                 Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
    --  From old GPR
 
