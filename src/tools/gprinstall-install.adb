@@ -691,7 +691,7 @@ package body GPRinstall.Install is
 
                Add_To_Manifest (Src_Path);
 
-               if From_Ver /= Path_Name.Undefined then
+               if From_Ver.Is_Defined then
                   From_Ver.Create_Sym_Link (To => Dest_Path);
                   Add_To_Manifest (From_Ver);
                end if;

@@ -176,9 +176,8 @@ package body GPR2.Parser.Project is
    ------------------
 
    function Has_Extended (Self : Object) return Boolean is
-      use type GPR2.Project.Import.Object;
    begin
-      return Self.Extended /= GPR2.Project.Import.Undefined;
+      return Self.Extended.Is_Defined;
    end Has_Extended;
 
    -------------------
@@ -1075,7 +1074,6 @@ package body GPR2.Parser.Project is
          Node    : Attribute_Reference;
          Pack    : Optional_Name_Type := "") return Item_Values
       is
-         use type GPR2.Project.Attribute.Object;
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
          Name   : constant Name_Type :=
@@ -1277,7 +1275,7 @@ package body GPR2.Parser.Project is
             end if;
          end if;
 
-         if Attr = GPR2.Project.Attribute.Undefined then
+         if not Attr.Is_Defined then
             Result.Single := False;
 
          else
@@ -1711,7 +1709,6 @@ package body GPR2.Parser.Project is
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values
       is
-         use type GPR2.Project.Import.Object;
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
          Sloc    : constant Source_Reference.Object :=
@@ -1738,7 +1735,7 @@ package body GPR2.Parser.Project is
                --  If a single name it can be either a project or a package
 
                if Self.Imports.Contains (Name)
-                 or else (Self.Extended /= GPR2.Project.Import.Undefined
+                 or else (Self.Extended.Is_Defined
                             and then
                           Optional_Name_Type
                             (Self.Extended.Path_Name.Base_Name) = Name)
@@ -1785,14 +1782,12 @@ package body GPR2.Parser.Project is
             begin
                if Self.Extended.Is_Defined then
                   declare
-                     use type GPR2.Project.View.Object;
-
                      View : constant GPR2.Project.View.Object :=
                               Process.View.View_For
                                 (Name_Type
                                    (Self.Extended.Path_Name.Base_Name));
                   begin
-                     if View /= GPR2.Project.View.Undefined
+                     if View.Is_Defined
                        and then View.Has_Variables (Name)
                      then
                         declare

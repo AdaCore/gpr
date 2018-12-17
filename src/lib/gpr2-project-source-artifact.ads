@@ -39,7 +39,7 @@ package GPR2.Project.Source.Artifact is
    --  Returns true if Self is defined
 
    function Create (Source : Project.Source.Object) return Artifact.Object
-     with Pre => Source /= Project.Source.Undefined;
+     with Pre => Source.Is_Defined;
    --  Constructor for Object defining the artifacts for the given Source
 
    function Source (Self : Object) return Project.Source.Object
@@ -90,12 +90,12 @@ private
      (Self /= Undefined);
 
    function Has_Object_Code (Self : Object) return Boolean is
-     (Self.Object /= Path_Name.Undefined);
+     (Self.Object.Is_Defined);
 
    function Has_Dependency (Self : Object) return Boolean is
-     (Self.Dependency /= Path_Name.Undefined);
+     (Self.Dependency.Is_Defined);
 
    function Has_Preprocessed_Source (Self : Object) return Boolean is
-     (Self.Preprocessed_Src /= Path_Name.Undefined);
+     (Self.Preprocessed_Src.Is_Defined);
 
 end GPR2.Project.Source.Artifact;

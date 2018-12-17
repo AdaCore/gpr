@@ -42,7 +42,6 @@ package body GPRinstall.Uninstall is
       Options      : in out GPRinstall.Options.Object)
    is
       use GNAT;
-      use type Path_Name.Object;
 
       procedure Delete_File (Position : File_Set.Cursor);
       --  Delete file pointed to by Position, do nothing if the file is not
@@ -187,7 +186,7 @@ package body GPRinstall.Uninstall is
                end if;
 
                if Options.Global_Prefix_Dir.Default then
-                  if Prefix = Path_Name.Undefined then
+                  if not Prefix.Is_Defined then
                      Prefix := Path_Name.Create_Directory
                        (Name_Type (Path.Dir_Name));
                   else
@@ -214,7 +213,7 @@ package body GPRinstall.Uninstall is
 
       Text_IO.Close (Man);
 
-      if Prefix /= Path_Name.Undefined then
+      if Prefix.Is_Defined then
          Options.Global_Prefix_Dir := (new String'(Prefix.Value), False);
       end if;
 

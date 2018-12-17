@@ -67,14 +67,12 @@ procedure GPRdump is
    ------------------
 
    procedure Full_Closure (Tree : Project.Tree.Object; Filename : String) is
-      use type Project.View.Object;
-
       File : constant GPR2.Path_Name.Object :=
                GPR2.Path_Name.Create_File (Name_Type (Filename));
       View : constant GPR2.Project.View.Object :=
                Tree.Get_View (File);
    begin
-      if View = Project.View.Undefined then
+      if not View.Is_Defined then
          Text_IO.Put_Line ("view for " & Filename & " not found.");
 
       else

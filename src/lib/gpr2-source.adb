@@ -56,13 +56,12 @@ package body GPR2.Source is
 
    overriding function "=" (Left, Right : Object) return Boolean is
    begin
-      if Left.Pathname = GPR2.Path_Name.Undefined
-        and then Right.Pathname = GPR2.Path_Name.Undefined
+      if not Left.Pathname.Is_Defined
+        and then not Right.Pathname.Is_Defined
       then
          return True;
       else
-         return not (Left.Pathname = GPR2.Path_Name.Undefined
-                     xor Right.Pathname = GPR2.Path_Name.Undefined)
+         return Left.Pathname.Is_Defined = Right.Pathname.Is_Defined
            and then Key (Left) = Key (Right);
       end if;
    end "=";

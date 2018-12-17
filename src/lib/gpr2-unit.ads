@@ -83,7 +83,7 @@ private
      (Self /= Undefined);
 
    function Has_Spec (Self : Object) return Boolean is
-     (Self.Spec /= Project.Source.Undefined);
+     (Self.Spec.Is_Defined);
 
    function Spec
      (Self : Object) return Project.Source.Object is (Self.Spec);

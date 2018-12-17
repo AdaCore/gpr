@@ -68,9 +68,9 @@ procedure Main is
             Text_IO.Put_Line
               (Filter_Filename (S.Path_Name.Value)
                & " -> "
-               & (if O = GPR2.Source.Undefined
-                  then "undefined"
-                  else Filter_Filename (S.Other_Part.Path_Name.Value)));
+               & (if O.Is_Defined
+                  then Filter_Filename (S.Other_Part.Path_Name.Value)
+                  else "undefined"));
 
             Text_IO.Set_Col (4);
             Text_IO.Put ("   language: " & String (S.Language));

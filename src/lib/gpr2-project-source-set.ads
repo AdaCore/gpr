@@ -61,8 +61,8 @@ package GPR2.Project.Source.Set is
    function Element (Position : Cursor) return Project.Source.Object
      with Post =>
        (if Has_Element (Position)
-        then Element'Result /= Project.Source.Undefined
-        else Element'Result = Project.Source.Undefined);
+        then Element'Result.Is_Defined
+        else not Element'Result.Is_Defined);
 
    function Has_Element (Position : Cursor) return Boolean;
 

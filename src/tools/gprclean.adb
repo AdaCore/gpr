@@ -182,11 +182,11 @@ procedure GPRclean is
          end;
       end loop Read_Arguments;
 
-      if Project_Path = Undefined then
+      if not Project_Path.Is_Defined then
          Project_Path := Project.Look_For_Default_Project;
       end if;
 
-      if Project_Path = Undefined then
+      if not Project_Path.Is_Defined then
          Display_Help (Config);
          raise Invalid_Switch;
       end if;
@@ -198,7 +198,7 @@ procedure GPRclean is
 
    procedure Set_Project (Path : String) is
    begin
-      if Project_Path = Undefined then
+      if not Project_Path.Is_Defined then
          Project_Path := Project.Create (Optional_Name_Type (Path));
 
       else
@@ -390,7 +390,7 @@ begin
       return;
    end if;
 
-   if Config_File /= Undefined then
+   if Config_File.Is_Defined then
       Config := Project.Configuration.Load
         (Config_File, Name_Type (To_String (Target)));
 

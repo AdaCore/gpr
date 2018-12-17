@@ -50,6 +50,7 @@ package body GPR2.Project.Tree is
 
    use Ada;
    use GNAT;
+   use type GPR2.Path_Name.Object;
 
    GPRls : constant OS_Lib.String_Access :=
              OS_Lib.Locate_Exec_On_Path ("gprls");
@@ -1032,7 +1033,7 @@ package body GPR2.Project.Tree is
       end record;
 
       package Data_Set is new Ada.Containers.Ordered_Maps
-        (GPR2.Path_Name.Object, Data);
+        (GPR2.Path_Name.Object, Data, "<" => GPR2.Path_Name."<");
 
       Sets  : Data_Set.Map;
       Paths : Path_Name.Set.Object;

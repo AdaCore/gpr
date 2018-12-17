@@ -69,8 +69,8 @@ package GPR2.Project.Import.Set is
    function Element (Position : Cursor) return Project.Import.Object
      with Post =>
        (if Has_Element (Position)
-        then Element'Result /= Project.Import.Undefined
-        else Element'Result = Project.Import.Undefined);
+        then Element'Result.Is_Defined
+        else not Element'Result.Is_Defined);
 
    function Has_Element (Position : Cursor) return Boolean;
 

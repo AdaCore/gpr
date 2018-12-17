@@ -131,7 +131,7 @@ package body GPR2.Project.Source is
 
       procedure To_Analyse (Src : GPR2.Project.Source.Object) is
       begin
-         if Src /= GPR2.Project.Source.Undefined then
+         if Src.Is_Defined then
             for W of Src.Source.Withed_Units loop
                if not Done.Contains (W) and then not Buf.Contains (W) then
                   Buf.Insert (W);
@@ -228,7 +228,7 @@ package body GPR2.Project.Source is
 
    function Has_Other_Part (Self : Object) return Boolean is
    begin
-      return Self.Source.Other_Part /= GPR2.Source.Undefined;
+      return Self.Source.Other_Part.Is_Defined;
    end Has_Other_Part;
 
    -------------

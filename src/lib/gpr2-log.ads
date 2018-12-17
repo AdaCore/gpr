@@ -85,8 +85,8 @@ package GPR2.Log is
    function Element (Position : Cursor) return Message.Object
      with Post =>
        (if Has_Element (Position)
-        then Element'Result /= Message.Undefined
-        else Element'Result = Message.Undefined);
+        then Element'Result.Is_Defined
+        else not Element'Result.Is_Defined);
 
    function Has_Element (Position : Cursor) return Boolean;
 

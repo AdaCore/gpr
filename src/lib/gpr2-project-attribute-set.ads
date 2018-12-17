@@ -84,8 +84,8 @@ package GPR2.Project.Attribute.Set is
    function Element (Position : Cursor) return Attribute.Object
      with Post =>
        (if Has_Element (Position)
-        then Element'Result /= Attribute.Undefined
-        else Element'Result = Attribute.Undefined);
+        then Element'Result.Is_Defined
+        else not Element'Result.Is_Defined);
 
    function Find
      (Self  : Object;

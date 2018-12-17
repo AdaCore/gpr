@@ -179,7 +179,7 @@ package body GPR2.Project.Source.Set is
             return
               (case Iter.Filter is
                   when S_Compilable =>
-                     (Source.Source.Other_Part = GPR2.Source.Undefined
+                     (not Source.Source.Other_Part.Is_Defined
                       and then Kind /= GPR2.Source.S_Separate
                       and then Source.Source.Language = "Ada")
                       --  The condition above is about Ada package spec without

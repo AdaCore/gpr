@@ -36,8 +36,6 @@ private with Ada.Strings.Unbounded;
 package GPR2.Project.Pack is
 
    use type Containers.Count_Type;
-   use type Project.Attribute.Object;
-   use type Project.Variable.Object;
 
    type Object is new Source_Reference.Object with private;
 
@@ -105,7 +103,7 @@ package GPR2.Project.Pack is
      (Self : Object;
       Name : Name_Type) return Variable.Object
      with Pre  => Self.Is_Defined and then Self.Has_Variables (Name),
-          Post => Variable'Result /= Project.Variable.Undefined;
+          Post => Variable'Result.Is_Defined;
    --  Returns variable named Name
 
    --  To ease the use of some attributes (some have synonyms for example)
@@ -117,7 +115,7 @@ package GPR2.Project.Pack is
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
-         (if Spec_Suffix'Result = Project.Attribute.Undefined
+         (if not Spec_Suffix'Result.Is_Defined
           then
             not Self.Has_Attributes
                   (Registry.Attribute.Spec_Suffix,
@@ -134,7 +132,7 @@ package GPR2.Project.Pack is
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
-         (if Body_Suffix'Result = Project.Attribute.Undefined
+         (if not Body_Suffix'Result.Is_Defined
           then
             not Self.Has_Attributes
                   (Registry.Attribute.Body_Suffix,
@@ -151,7 +149,7 @@ package GPR2.Project.Pack is
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
-         (Separate_Suffix'Result = Project.Attribute.Undefined
+         (not Separate_Suffix'Result.Is_Defined
           xor Self.Has_Attributes
             (Registry.Attribute.Separate_Suffix,
              Value_Type (Language)));
@@ -163,7 +161,7 @@ package GPR2.Project.Pack is
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
-         (if Specification'Result = Project.Attribute.Undefined
+         (if not Specification'Result.Is_Defined
           then
             not Self.Has_Attributes (Registry.Attribute.Spec)
               and then
@@ -176,7 +174,7 @@ package GPR2.Project.Pack is
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
-         (if Implementation'Result = Project.Attribute.Undefined
+         (if not Implementation'Result.Is_Defined
           then
             not Self.Has_Attributes (Registry.Attribute.Body_N)
               and then

@@ -53,7 +53,6 @@ procedure GPRinstall.Main is
    use GNAT.OS_Lib;
 
    use GPR2;
-   use type GPR2.Path_Name.Object;
 
    Usage_Error : exception;
    --  Raised when a wrong usage is detected
@@ -492,7 +491,7 @@ procedure GPRinstall.Main is
          begin
             exit Read_Arguments when Arg = "";
 
-            if Options.Project_File = Path_Name.Undefined then
+            if not Options.Project_File.Is_Defined then
                Options.Project_File := Path_Name.Create_File
                  (Name_Type (Arg),
                   Optional_Name_Type (Directories.Current_Directory));
@@ -563,7 +562,7 @@ procedure GPRinstall.Main is
 
       --  If no project file was specified, this is an error
 
-      if Options.Project_File = Path_Name.Undefined
+      if not Options.Project_File.Is_Defined
         and then not Options.List_Mode
       then
          raise Usage_Error with "no project file specified";

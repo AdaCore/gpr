@@ -32,7 +32,6 @@ with GPR2.Path_Name.Set;
 package GPR2.Project is
 
    use GNATCOLL.Tribooleans;
-   use type GPR2.Path_Name.Object;
 
    --  This package is the root of the high level abstraction of a hierarchy of
    --  projects given by a root project.
@@ -72,7 +71,7 @@ package GPR2.Project is
    function Search_Paths
      (Root_Project      : Path_Name.Object;
       Tree_Search_Paths : Path_Name.Set.Object) return Path_Name.Set.Object
-     with Pre  => Root_Project /= Path_Name.Undefined
+     with Pre  => Root_Project.Is_Defined
                   and then not Tree_Search_Paths.Is_Empty,
           Post => not Search_Paths'Result.Is_Empty;
    --  Returns the project search path for the given project and the give tree

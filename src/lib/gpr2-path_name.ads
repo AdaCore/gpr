@@ -129,7 +129,7 @@ package GPR2.Path_Name is
 
    function Common_Prefix (Self, Path : Object) return Object
      with Pre  => Self.Is_Defined and then Path.Is_Defined,
-          Post => Common_Prefix'Result = Undefined
+          Post => not Common_Prefix'Result.Is_Defined
      or else
        (Self.Value (1 .. Common_Prefix'Result.Value'Length)
          = Common_Prefix'Result.Value

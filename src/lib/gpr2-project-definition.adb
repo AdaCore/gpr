@@ -447,7 +447,7 @@ package body GPR2.Project.Definition is
                Spec_Suffix : constant Project.Attribute.Object :=
                                Naming.Spec_Suffix (Name_Type (Lang));
             begin
-               if Spec_Suffix /= Project.Attribute.Undefined
+               if Spec_Suffix.Is_Defined
                  and then Ends_With (Filename, Spec_Suffix.Value)
                then
                   Kind := GPR2.Source.S_Spec;
@@ -466,7 +466,7 @@ package body GPR2.Project.Definition is
                Body_Suffix : constant Project.Attribute.Object :=
                                Naming.Body_Suffix (Name_Type (Lang));
             begin
-               if Body_Suffix /= Project.Attribute.Undefined
+               if Body_Suffix.Is_Defined
                  and then Ends_With (Filename, Body_Suffix.Value)
                then
                   Kind := GPR2.Source.S_Body;
@@ -478,7 +478,7 @@ package body GPR2.Project.Definition is
                Sep_Suffix : constant Project.Attribute.Object :=
                               Naming.Separate_Suffix (Name_Type (Lang));
             begin
-               if Sep_Suffix /= Project.Attribute.Undefined
+               if Sep_Suffix.Is_Defined
                  and then Ends_With (Filename, Sep_Suffix.Value)
                then
                   Kind := GPR2.Source.S_Separate;
@@ -791,7 +791,7 @@ package body GPR2.Project.Definition is
                                when GPR2.Source.S_Separate =>
                                   Project.Attribute.Undefined);
                begin
-                  if Attr /= Project.Attribute.Undefined
+                  if Attr.Is_Defined
                     and then Attr.Value /= String (Filename)
                   then
                      --  We have a naming exception for this unit and the body
