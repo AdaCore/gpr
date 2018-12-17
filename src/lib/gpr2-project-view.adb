@@ -61,7 +61,7 @@ package body GPR2.Project.View is
    --  Convert definition to view
 
    procedure Update_Sources (Self : Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Ensure that the view sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
@@ -167,7 +167,7 @@ package body GPR2.Project.View is
          end Root_Context;
 
       begin
-         if Data.Context_View = Undefined then
+         if not Data.Context_View.Is_Defined then
             --  Let's return the Root_Project context and possibly the
             --  aggregate context if any.
 
@@ -275,7 +275,7 @@ package body GPR2.Project.View is
          end Root_Has_Context;
 
       begin
-         if Data.Context_View = Undefined then
+         if not Data.Context_View.Is_Defined then
             --  Let's return the Root_Project context and possibly the
             --  aggregate context if any.
 
@@ -302,7 +302,7 @@ package body GPR2.Project.View is
 
    function Has_Extended (Self : Object) return Boolean is
    begin
-      return Definition.Get_RO (Self).Extended /= Undefined;
+      return Definition.Get_RO (Self).Extended.Is_Defined;
    end Has_Extended;
 
    -----------------
@@ -663,7 +663,7 @@ package body GPR2.Project.View is
                                 Tree.Configuration.Corresponding_View.
                                   Attribute (A.Executable_Suffix).Value
 
-                             elsif Builder /= Project.Pack.Undefined
+                             elsif Builder.Is_Defined
                                  and then
                                Builder.Has_Attributes (A.Executable_Suffix)
                              then
@@ -684,7 +684,7 @@ package body GPR2.Project.View is
       is
          Attr : GPR2.Project.Attribute.Object;
       begin
-         if Builder /= Project.Pack.Undefined then
+         if Builder.Is_Defined then
             if Builder.Has_Attributes (A.Executable, Source) then
                Attr := Builder.Attribute (A.Executable, Source);
 
@@ -692,8 +692,7 @@ package body GPR2.Project.View is
                --  Not found but an extension is present, check without
 
                declare
-                  BN : constant Value_Type :=
-                         Directories.Base_Name (Source);
+                  BN : constant Value_Type := Directories.Base_Name (Source);
                begin
                   if Source /= BN
                     and then Builder.Has_Attributes (A.Executable, BN)
@@ -706,9 +705,9 @@ package body GPR2.Project.View is
 
          return GPR2.Path_Name.Create_File
            (Name_Type
-              ((if Attr = GPR2.Project.Attribute.Undefined
-                then Ada.Directories.Base_Name (String (Source))
-                else Attr.Value)
+              ((if Attr.Is_Defined
+                then Attr.Value
+                else Ada.Directories.Base_Name (String (Source)))
                & Executable_Suffix),
             Optional_Name_Type (Self.Executable_Directory.Dir_Name));
       end Create;
@@ -963,7 +962,7 @@ package body GPR2.Project.View is
       --  Returns the project view corresponding to Name and found in the
       --  context of View (e.g. imported or extended).
 
-      if Data.Extended /= Project.View.Undefined
+      if Data.Extended.Is_Defined
         and then Definition.Get_RO (Data.Extended).Trees.Project.Name = Name
       then
          return Data.Extended;
@@ -982,7 +981,7 @@ package body GPR2.Project.View is
          --  project. Note that this means that any Runtime or Config user's
          --  project name will have precedence.
 
-         if CV /= Project.View.Undefined and then CV.Name = Name then
+         if CV.Is_Defined and then CV.Name = Name then
             return CV;
 
          elsif Data.Tree.Has_Runtime_Project

@@ -101,7 +101,7 @@ private package GPR2.Project.Definition is
             --  Only a root-aggregate project can have a context defined via
             --  the External attribute.
             not Data.Has_Context
-            or else (Data.Context_View = View.Undefined
+            or else (not Data.Context_View.Is_Defined
                      and then Data.Status = Root)
             or else Data.A_Context.Is_Empty;
 

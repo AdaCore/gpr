@@ -32,6 +32,9 @@ package GPR2.Project.Variable is
 
    Undefined : constant Object;
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    overriding function Image
      (Self : Object; Name_Len : Natural := 0) return String;
    --  Returns a string representation
@@ -41,5 +44,8 @@ private
    type Object is new Name_Values.Object with null record;
 
    Undefined : constant Object := (Name_Values.Undefined with null record);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Project.Variable;

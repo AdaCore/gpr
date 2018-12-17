@@ -43,6 +43,9 @@ package GPR2.Project.Name_Values is
 
    subtype Value_Kind is Registry.Attribute.Value_Kind;
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create
      (Name  : Name_Type;
       Value : Value_Type;
@@ -62,20 +65,20 @@ package GPR2.Project.Name_Values is
    --  Create a multi-valued object
 
    function Kind (Self : Object'Class) return Registry.Attribute.Value_Kind
-     with Pre => Object (Self) /= Undefined;
+     with Pre => Object (Self).Is_Defined;
    --  Returns the Kind for the Name/Values pair object
 
    function Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the name of the Name/Value pair object
 
    function Count_Values (Self : Object) return Containers.Count_Type
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Kind = Single then Count_Values'Result = 1);
    --  Returns the number of values for the Name/Values pair object
 
    function Values (Self : Object) return Containers.Value_List
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Values'Result.Length = Self.Count_Values;
    --  Returns the values for the Name/Values pair object
 
@@ -84,7 +87,7 @@ package GPR2.Project.Name_Values is
    --  Returns true whether the list of value contains Value
 
    function Value (Self : Object) return Value_Type
-     with Pre => Self /= Undefined and then Self.Kind = Single;
+     with Pre => Self.Is_Defined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
 
    function Value_Equal (Self : Object; Value : Value_Type) return Boolean
@@ -116,5 +119,8 @@ private
 
    Undefined : constant Object :=
                  Object'(Source_Reference.Undefined with others => <>);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Project.Name_Values;

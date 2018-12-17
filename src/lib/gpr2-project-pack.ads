@@ -45,6 +45,9 @@ package GPR2.Project.Pack is
 
    subtype Project_Pack is Object;
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create
      (Name       : Name_Type;
       Attributes : Attribute.Set.Object;
@@ -55,14 +58,14 @@ package GPR2.Project.Pack is
    --  declaration.
 
    function Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the name of the project
 
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := "";
       Index : Value_Type := "") return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the package has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
    --  Name and/or Index is defined.
@@ -71,7 +74,7 @@ package GPR2.Project.Pack is
      (Self  : Object;
       Name  : Optional_Name_Type := "";
       Index : Value_Type := "") return Attribute.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns all attributes defined for the package. Possibly an empty list
    --  if it does not contain attributes or if Name and Index does not match
    --  any attribute.
@@ -81,7 +84,7 @@ package GPR2.Project.Pack is
       Name  : Name_Type;
       Index : Value_Type := "") return Project.Attribute.Object
      with Pre =>
-       Self /= Undefined
+       Self.Is_Defined
        and then Self.Has_Attributes (Name, Index)
        and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
@@ -89,19 +92,19 @@ package GPR2.Project.Pack is
    function Has_Variables
      (Self : Object;
       Name : Optional_Name_Type := "") return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the package has some variables defined. If Name is set
    --  it returns True if a variable with the given Name is defined.
 
    function Variables (Self : Object) return Variable.Set.Object
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
    --  Returns all defined variables
 
    function Variable
      (Self : Object;
       Name : Name_Type) return Variable.Object
-     with Pre  => Self /= Undefined and then Self.Has_Variables (Name),
+     with Pre  => Self.Is_Defined and then Self.Has_Variables (Name),
           Post => Variable'Result /= Project.Variable.Undefined;
    --  Returns variable named Name
 
@@ -192,5 +195,8 @@ private
 
    Undefined : constant Object :=
                  Object'(Source_Reference.Object with others => <>);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Project.Pack;

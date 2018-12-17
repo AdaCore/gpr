@@ -1077,7 +1077,6 @@ package body GPR2.Parser.Project is
       is
          use type GPR2.Project.Attribute.Object;
          use type GPR2.Project.Registry.Attribute.Value_Kind;
-         use type GPR2.Project.View.Object;
 
          Name   : constant Name_Type :=
                     Get_Name_Type
@@ -1249,7 +1248,7 @@ package body GPR2.Parser.Project is
             end if;
 
          else
-            if View /= GPR2.Project.View.Undefined then
+            if View.Is_Defined then
                if Pack = "" then
                   if View.Has_Attributes (Name, Index) then
                      Attr := View.Attributes.Element (Name, Index);
@@ -1624,7 +1623,6 @@ package body GPR2.Parser.Project is
          Pack    : Identifier := No_Identifier) return Item_Values
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
-         use type GPR2.Project.View.Object;
 
          function Get_Pack_Var
            (Pack : GPR2.Project.Pack.Object;
@@ -1660,7 +1658,7 @@ package body GPR2.Parser.Project is
          Result : Item_Values := Empty_Item_Values;
 
       begin
-         if View = GPR2.Project.View.Undefined then
+         if not View.Is_Defined then
             --  Some maybe Project is actually a local package
 
             declare
@@ -1785,7 +1783,7 @@ package body GPR2.Parser.Project is
             declare
                Result : Item_Values := Empty_Item_Values;
             begin
-               if Self.Extended /= GPR2.Project.Import.Undefined then
+               if Self.Extended.Is_Defined then
                   declare
                      use type GPR2.Project.View.Object;
 
@@ -2149,8 +2147,6 @@ package body GPR2.Parser.Project is
          -----------------------------
 
          procedure Parse_Package_Extension (Node : Package_Extension) is
-            use type GPR2.Project.View.Object;
-
             Sloc    : constant Source_Reference.Object :=
                         Get_Source_Reference
                           (Self.File, Sloc_Range (GPR_Node (Node)));
@@ -2180,7 +2176,7 @@ package body GPR2.Parser.Project is
                      Message =>
                        "cannot have a reference to a limited project"));
 
-            elsif View = GPR2.Project.View.Undefined then
+            elsif not View.Is_Defined then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -2212,8 +2208,6 @@ package body GPR2.Parser.Project is
          ----------------------------
 
          procedure Parse_Package_Renaming (Node : Package_Renaming) is
-            use type GPR2.Project.View.Object;
-
             Sloc    : constant Source_Reference.Object :=
                         Get_Source_Reference
                           (Self.File, Sloc_Range (GPR_Node (Node)));
@@ -2243,7 +2237,7 @@ package body GPR2.Parser.Project is
                      Message =>
                        "cannot have a reference to a limited project"));
 
-            elsif View = GPR2.Project.View.Undefined then
+            elsif not View.Is_Defined then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -2275,8 +2269,6 @@ package body GPR2.Parser.Project is
          -------------------------
 
          procedure Parse_Variable_Decl (Node : Variable_Decl) is
-
-            use type GPR2.Project.Typ.Object;
 
             function Search_Paths return GPR2.Path_Name.Set.Object is
               (GPR2.Project.Search_Paths
@@ -2330,7 +2322,7 @@ package body GPR2.Parser.Project is
                      end;
                   end if;
 
-                  if Type_Def = GPR2.Project.Typ.Undefined
+                  if not Type_Def.Is_Defined
                     or else Type_Def.Count_Values = 0
                   then
                      if Self.Types.Contains (T_Name) then
@@ -2355,7 +2347,7 @@ package body GPR2.Parser.Project is
 
                   --  Check that the type has been defined
 
-                  if Type_Def /= GPR2.Project.Typ.Undefined
+                  if Type_Def.Is_Defined
                     and then Type_Def.Count_Values /= 0
                   then
                      --  Check that we have a single value

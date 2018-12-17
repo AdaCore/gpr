@@ -42,13 +42,11 @@ package body GPR2.Unit is
    -------------------
 
    procedure Update_Bodies
-     (Self : in out Object; Source : Project.Source.Object)
-   is
-      use type GPR2.Source.Object;
+     (Self : in out Object; Source : Project.Source.Object) is
    begin
       --  If the spec is already defined associate it with the new body
 
-      if Self.Spec.Source /= GPR2.Source.Undefined then
+      if Self.Spec.Source.Is_Defined then
          Source.Source.Set_Other_Part (Self.Spec.Source);
       end if;
 

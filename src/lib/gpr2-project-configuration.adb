@@ -125,7 +125,7 @@ package body GPR2.Project.Configuration is
       use Ada.Strings.Fixed;
 
       Conf_Filename : constant String :=
-                        (if Path_Name.Temporary_Directory = Path_Name.Undefined
+                        (if not Path_Name.Temporary_Directory.Is_Defined
                          then ""
                          else Path_Name.Compose
                            (Path_Name.Temporary_Directory,
@@ -239,7 +239,6 @@ package body GPR2.Project.Configuration is
      (Filename : Path_Name.Object;
       Target   : Name_Type := "all") return Object
    is
-      use type Parser.Project.Object;
       Result : Object;
    begin
       Result.Project := Parser.Project.Parse (Filename, Result.Messages);
@@ -247,7 +246,7 @@ package body GPR2.Project.Configuration is
       --  Continue only if there is no parsing error on the configuration
       --  project.
 
-      if Result.Project /= Parser.Project.Undefined then
+      if Result.Project.Is_Defined then
          Result.Target :=
            (if Target = "all"
             then Null_Unbounded_String

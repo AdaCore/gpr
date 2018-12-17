@@ -60,7 +60,7 @@ package body GPR2.Project.Tree is
 
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
-     with Post => Register_View'Result /= View.Undefined;
+     with Post => Register_View'Result.Is_Defined;
    --  Register view definition in the Tree and return the View object
 
    procedure Copy_Definition
@@ -91,14 +91,14 @@ package body GPR2.Project.Tree is
       Circularities : out Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
-       (if Starting_From /= View.Undefined
+       (if Starting_From.Is_Defined
         then Starting_From.Qualifier in K_Aggregate | K_Aggregate_Library);
    --  Load a project filename recursively and returns the corresponding root
    --  view. Starting_From if set is the aggregate library starting point for
    --  the parsing. It is passed here for detecting circular dependencies.
 
    function Create_Runtime_View (Self : Object) return View.Object
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Has_Configuration;
    --  Create the runtime view given the configuration project
 
@@ -137,13 +137,11 @@ package body GPR2.Project.Tree is
      (Self : in out Object;
       Unit : GPR2.Unit.Object)
    is
-      use type Project.Source.Object;
-
       --  If the spec is not present, then the actual source object used is the
       --  first body which must exist. We can't have no spec and no body.
 
       Src : constant Project.Source.Object :=
-              (if Unit.Spec = Project.Source.Undefined
+              (if not Unit.Spec.Is_Defined
                then Unit.Bodies.First_Element
                else Unit.Spec);
    begin
@@ -383,7 +381,7 @@ package body GPR2.Project.Tree is
                   Data : constant Definition.Const_Ref :=
                            Definition.Get_RO (View);
                begin
-                  if Data.Extended /= Project.View.Undefined then
+                  if Data.Extended.Is_Defined then
                      if Iter.Kind (I_Recursive) then
                         For_Project (Data.Extended);
                      else
@@ -525,9 +523,8 @@ package body GPR2.Project.Tree is
    -----------------------
 
    function Has_Configuration (Self : Object) return Boolean is
-      use type Project.Configuration.Object;
    begin
-      return Self.Conf /= Project.Configuration.Undefined;
+      return Self.Conf.Is_Defined;
    end Has_Configuration;
 
    -----------------
@@ -563,7 +560,7 @@ package body GPR2.Project.Tree is
 
    function Has_Runtime_Project (Self : Object) return Boolean is
    begin
-      return Self.Runtime /= View.Undefined;
+      return Self.Runtime.Is_Defined;
    end Has_Runtime_Project;
 
    ------------------------
@@ -574,7 +571,7 @@ package body GPR2.Project.Tree is
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined) is
    begin
-      if View = Project.View.Undefined then
+      if not View.Is_Defined then
          for V of Self.Views_Set loop
             Definition.Get (V).Sources_Signature :=
               GPR2.Context.Default_Signature;
@@ -619,8 +616,6 @@ package body GPR2.Project.Tree is
       Config   : Project.Configuration.Object :=
                    Project.Configuration.Undefined)
    is
-      use type Project.Configuration.Object;
-
       function Has_Error return Boolean is
         (Self.Messages.Has_Element
            (Error       => True,
@@ -784,7 +779,7 @@ package body GPR2.Project.Tree is
       --  First record and parse the configuration object, this is needed as
       --  used to check the target in Set_Project_Search_Paths above.
 
-      if Config /= Project.Configuration.Undefined then
+      if Config.Is_Defined then
          --  Set Tree for this config project
 
          Self.Conf := Config;
@@ -1081,7 +1076,7 @@ package body GPR2.Project.Tree is
          View : Project.View.Object :=
                   Self.Get (Filename, Context_View, Status);
       begin
-         if View = Project.View.Undefined then
+         if not View.Is_Defined then
             declare
                Data : Definition.Data := Load (Filename);
             begin
@@ -1274,7 +1269,7 @@ package body GPR2.Project.Tree is
                            Circularities := True;
                         end if;
 
-                     elsif Starting_From /= GPR2.Project.View.Undefined
+                     elsif Starting_From.Is_Defined
                        and then Starting_From.Path_Name = Project.Path_Name
                      then
                         --  We are importing Starting_From which is an
@@ -1326,8 +1321,6 @@ package body GPR2.Project.Tree is
 
       function Load (Filename : Path_Name.Object) return Definition.Data is
 
-         use type Parser.Project.Object;
-
          function Has_Error return Boolean is
            (Messages.Has_Element
               (Error       => True,
@@ -1342,9 +1335,9 @@ package body GPR2.Project.Tree is
                      Parser.Project.Parse (Filename, Messages);
          Data    : Definition.Data
                        (Has_Context =>
-                          Project /= Parser.Project.Undefined
+                          Project.Is_Defined
                             and then
-                          (Context_View = GPR2.Project.View.Undefined
+                          (not Context_View.Is_Defined
                            or else Project.Qualifier = K_Aggregate));
       begin
          Data.Trees.Project := Project;
@@ -2028,7 +2021,7 @@ package body GPR2.Project.Tree is
    is
       View : Project.View.Object := Self.Get (Name, Context_View);
    begin
-      if View = Project.View.Undefined then
+      if not View.Is_Defined then
          declare
             CV : constant Project.View.Object :=
                    (if Self.Has_Configuration
@@ -2039,7 +2032,7 @@ package body GPR2.Project.Tree is
             --  project. Note that this means that any Runtime or Config user's
             --  project name will have precedence.
 
-            if CV /= Project.View.Undefined and then CV.Name = Name then
+            if CV.Is_Defined and then CV.Name = Name then
                View := CV;
 
             elsif Self.Has_Runtime_Project

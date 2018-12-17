@@ -34,7 +34,7 @@ package body GPR2.Source is
    use Ada.Strings.Unbounded;
 
    function Key (Self : Object) return Value_Type
-     with Inline, Pre => Self /= Undefined;
+     with Inline, Pre => Self.Is_Defined;
    --  Returns the key for Self, this is used to compare a source object
 
    procedure Parse (Self : Object) with Inline;

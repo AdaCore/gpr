@@ -44,12 +44,9 @@ limited with GPR2.Project.View.Set;
 
 package GPR2.Project.View is
 
-   use type Attribute.Object;
    use type Containers.Count_Type;
    use type Context.Object;
    use type Pack.Object;
-   use type Typ.Object;
-   use type Variable.Object;
 
    type Object is tagged private;
 
@@ -57,62 +54,65 @@ package GPR2.Project.View is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function "<" (Left, Right : View.Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Full pathname of the corresponding project file
 
    function Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The name of the project
 
    function Qualifier (Self : Object) return Project_Kind
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The qualifier as specified in the project file
 
    function Kind (Self : Object) return Project_Kind
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Kind'Result = Self.Qualifier
                   or else Self.Qualifier = K_Standard;
    --  The actual kind of the project file. This may be different if the
    --  Qualifier is not specified.
 
    function Tree (Self : Object) return not null access Project.Tree.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the corresponding project tree
 
    function Signature (Self : Object) return Context.Binary_Signature;
    --  Returns the signature for the view
 
    function Has_Imports (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the project has some imports
 
    function Imports
      (Self      : Object;
       Recursive : Boolean := False) return GPR2.Project.View.Set.Object
-     with Pre => Self /= Undefined and then Self.Has_Imports;
+     with Pre => Self.Is_Defined and then Self.Has_Imports;
    --  Returns all imported project views
 
    function Has_Extended (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the project is extending another project
 
    function Extended (Self : Object) return Object
-     with Pre => Self /= Undefined and then Self.Has_Extended;
+     with Pre => Self.Is_Defined and then Self.Has_Extended;
    --  Returns the extended project
 
    function Is_Extended_All (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the project is extending all another project
 
    function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
-     with Pre => Self /= Undefined and then Self.Kind in Aggregate_Kind;
+     with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
 
    function View_For (Self : Object; Name : Name_Type) return View.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the view for the given name accessible from Self context. This
    --  can be either an import project, an extends project or the special
    --  projects Runtime or Config if defined in the corresponding project tree.
@@ -120,14 +120,14 @@ package GPR2.Project.View is
    --  Context
 
    function Has_Context (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the project tree has some context. If any of the project
    --  in the tree has some external variables then a context is present. A
    --  project without context is fully static has it does not reference any
    --  external (and so modifiable) variables.
 
    function Context (Self : Object) return Context.Object
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
    --  Returns the Context for the given project tree
 
@@ -137,7 +137,7 @@ package GPR2.Project.View is
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
       Index : Value_Type := No_Value) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the project view has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
    --  Name and/or Index is defined.
@@ -157,7 +157,7 @@ package GPR2.Project.View is
       Index : Value_Type := No_Value) return Attribute.Object
      with
        Pre =>
-         Self /= Undefined
+         Self.Is_Defined
          and then Self.Has_Attributes (Name, Index)
          and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
@@ -167,17 +167,17 @@ package GPR2.Project.View is
    function Has_Types
      (Self : Object;
       Name : Optional_Name_Type := No_Name) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the project view has some types defined
 
    function Types (Self : Object) return Typ.Set.Object
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Types then not Types'Result.Is_Empty);
    --  Get the list of all types defined
 
    function Typ (Self : Object; Name : Name_Type) return Typ.Object
-     with Pre  => Self /= Undefined and then Self.Has_Types (Name),
-          Post => Typ'Result /= Project.Typ.Undefined;
+     with Pre  => Self.Is_Defined and then Self.Has_Types (Name),
+          Post => Typ'Result.Is_Defined;
    --  Returns the type with the given name
 
    --  Variables
@@ -185,17 +185,17 @@ package GPR2.Project.View is
    function Has_Variables
      (Self : Object;
       Name : Optional_Name_Type := No_Name) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the project view has some variables defined
 
    function Variables (Self : Object) return Variable.Set.Object
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
    --  Get the list of all variables defined
 
    function Variable (Self : Object; Name : Name_Type) return Variable.Object
-     with Pre  => Self /= Undefined and then Self.Has_Variables (Name),
-          Post => Variable'Result /= Project.Variable.Undefined;
+     with Pre  => Self.Is_Defined and then Self.Has_Variables (Name),
+          Post => Variable'Result.Is_Defined;
    --  Returns the variable with the given name
 
    --  Packages
@@ -203,22 +203,22 @@ package GPR2.Project.View is
    function Has_Packages
      (Self : Object;
       Name : Optional_Name_Type := No_Name) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the project view has some packages defined
 
    function Packages (Self : Object) return Pack.Set.Object
-     with Pre  => Self /= Undefined and then Self.Has_Packages,
+     with Pre  => Self.Is_Defined and then Self.Has_Packages,
           Post => Packages'Result.Length > 0;
    --  Get the list of packages defined in the project
 
    function Pack (Self : Object; Name : Name_Type) return Pack.Object
-     with Pre  => Self /= Undefined and then Self.Has_Packages (Name),
-          Post => Pack'Result /= Project.Pack.Undefined;
+     with Pre  => Self.Is_Defined and then Self.Has_Packages (Name),
+          Post => Pack'Result.Is_Defined;
    --  Get the package with the given Name
 
    function Naming_Package (Self : Object) return Project.Pack.Object
-     with Pre  => Self /= Undefined,
-          Post => Naming_Package'Result /= Project.Pack.Undefined;
+     with Pre  => Self.Is_Defined,
+          Post => Naming_Package'Result.Is_Defined;
    --  Returns the Naming package for the current view. This is either
    --  the view Naming package, the project's tree Naming package from the
    --  loaded configuration project if any and finally the default Naming
@@ -227,21 +227,21 @@ package GPR2.Project.View is
    --  Sources
 
    function Languages (Self : Object) return Containers.Value_List
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Languages'Result.Length > 0;
    --  Returns the languages used on this project, this is not necessary the
    --  content of the Languages attribute as if not defined it returns the
    --  default language Ada.
 
    function Source_Directories (Self : Object) return Project.Attribute.Object
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Qualifier not in K_Aggregate | K_Abstract;
    --  Returns the sources dirs for the project view. This is only defined for
    --  project having sources. If not defined in the project itself, the view
    --  does have the project directory has source dir.
 
    function Has_Sources (Self : Object) return Boolean
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Kind = K_Abstract then not Has_Sources'Result);
    --  Returns true if the project view has some sources
 
@@ -250,17 +250,17 @@ package GPR2.Project.View is
    function Sources
      (Self   : Object;
       Filter : Source_Kind := K_All) return Project.Source.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns all the sources for the view, note that this routine ensure that
    --  the current sources are up-to-date by calling Update_Sources below.
 
    function Source
      (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Get project source object corresponding to the given File
 
    procedure Invalidate_Sources (Self : in out Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Invalidate the sources for the view. This means that the Sources routine
    --  above will have to recompute the proper sources list for the view. This
    --  is needed when some sources are added or removed from the view.
@@ -270,25 +270,25 @@ package GPR2.Project.View is
    --  routines are for internal use only and convert from a View unique Id.
 
    function Is_Externally_Built (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the project is externally built
 
    function Has_Mains (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns true if the project has some mains defined
 
    function Mains (Self : Object) return GPR2.Path_Name.Set.Object
-     with Pre  => Self /= Undefined and then Self.Has_Mains,
+     with Pre  => Self.Is_Defined and then Self.Has_Mains,
           Post => Mains'Result.Length > 0;
    --  Returns the mains's binary full pathname
 
    function Library_Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library name
 
    function Library_Kind (Self : Object) return Name_Type
-     with Pre  => Self /= Undefined
+     with Pre  => Self.Is_Defined
                   and then Self.Kind in K_Library | K_Aggregate_Library,
           Post => Self.Has_Attributes (Project.Registry.Attribute.Library_Kind)
                   or else Library_Kind'Result = "static";
@@ -296,24 +296,24 @@ package GPR2.Project.View is
    --  defined.
 
    function Is_Static_Library (Self : Object) return Boolean
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns True if the library is a static one, so either static or
    --  static-pic.
 
    function Has_Library_Interface (Self : Object) return Boolean
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Retruns whether the optional library interface attribute is defined
 
    function Has_Library_Version (Self : Object) return Boolean
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns whether the optional library version name is defined
 
    function Library_Major_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library major name if it exists. That is, if the project
    --  Library_Version exists and is set to libxyz.so.1.2 for example then the
@@ -321,49 +321,49 @@ package GPR2.Project.View is
    --  undefined path-name is returned.
 
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the actual file name for the library
 
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Has_Library_Version
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library version filename
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the library directory, note that this may be difference than
    --  getting the Library_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 
    function Library_Standalone (Self : Object) return Standalone_Library_Kind
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns the kind for the standalone library
 
    function Is_Library_Standalone (Self : Object) return Boolean
-     with Pre => Self /= Undefined
+     with Pre => Self.Is_Defined
                  and then Self.Kind in K_Library | K_Aggregate_Library;
    --  Returns whether the library is standalone
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
-       Self /= Undefined
+       Self.Is_Defined
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Object_Dir attribute
 
    function Executable_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
-       Self /= Undefined
+       Self.Is_Defined
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Exec_Dir attribute
 
    function Binder_Prefix
      (Self : Object; Language : Name_Type) return Optional_Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Prefix to be used for the binder exchange file name for the language.
    --  Used to have different binder exchange file names when binding different
    --  languages.
@@ -377,6 +377,9 @@ private
 
    Undefined : constant Object :=
                  Object'(Definition_References.Null_Ref with null record);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Get.Id < Right.Get.Id);

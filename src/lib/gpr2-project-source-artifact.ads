@@ -35,41 +35,44 @@ package GPR2.Project.Source.Artifact is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create (Source : Project.Source.Object) return Artifact.Object
      with Pre => Source /= Project.Source.Undefined;
    --  Constructor for Object defining the artifacts for the given Source
 
    function Source (Self : Object) return Project.Source.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The project's source used to generate the artifacts
 
    function Has_Object_Code (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if an object-code path is defined
 
    function Object_Code (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The target-dependent code (generally .o or .obj)
 
    function Has_Dependency (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if a dependency path is defined
 
    function Dependency (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  A file containing information (.ali for GNAT, .d for GCC) like
    --  cross-reference, units used by the source, etc.
 
    function Has_Preprocessed_Source (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if a preprocessed-source is defined
 
    function Preprocessed_Source (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the file containing the pre-processed source
 
    function List (Self : Object) return Path_Name.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns all artifacts
 
 private
@@ -82,6 +85,9 @@ private
    end record;
 
    Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Has_Object_Code (Self : Object) return Boolean is
      (Self.Object /= Path_Name.Undefined);

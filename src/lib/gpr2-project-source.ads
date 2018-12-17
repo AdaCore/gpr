@@ -31,7 +31,6 @@ limited with GPR2.Project.Source.Set;
 package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
-   use type GPR2.Project.View.Object;
 
    type Object is tagged private;
 
@@ -39,7 +38,11 @@ package GPR2.Project.Source is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function "<" (Left, Right : Object) return Boolean;
+
    overriding function "=" (Left, Right : Object) return Boolean;
 
    function Create
@@ -47,40 +50,39 @@ package GPR2.Project.Source is
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean) return Object
-     with Pre => Source /= GPR2.Source.Undefined
-                 and then View /= GPR2.Project.View.Undefined;
+     with Pre => Source.Is_Defined and then View.Is_Defined;
    --  Constructor for Object
 
    function View (Self : Object) return Project.View.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The view the source is in
 
    function Source (Self : Object) return GPR2.Source.Object;
    --  The source object
 
    function Has_Other_Part (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if an other part exists for this project source
 
    function Other_Part (Self : Object) return Object
-     with Pre  => Self /= Undefined and then Self.Has_Other_Part,
-          Post => Other_Part'Result /= Undefined;
+     with Pre  => Self.Is_Defined and then Self.Has_Other_Part,
+          Post => Other_Part'Result.Is_Defined;
    --  Returns the other part for this project source
 
    function Is_Interface (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if Self is part of the project view interface
 
    function Has_Naming_Exception (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
 
    function Is_Main (Self : Object) return Boolean
-     with Pre => Self /= Undefined and then Self.View.Has_Mains;
+     with Pre => Self.Is_Defined and then Self.View.Has_Mains;
    --  Returns whether the source is the main file to create executable
 
    function Artifacts (Self : Object) return Artifact.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the source artifacts for this source. Note that the returned
    --  Source artifacts may not exist if the compilation has not yet been
    --  done/finished.
@@ -94,11 +96,11 @@ package GPR2.Project.Source is
    function Dependencies
      (Self : Object;
       Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the dependencies for this given source
 
    procedure Release (Self : in out Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Releases the project source
 
 private
@@ -111,6 +113,9 @@ private
    end record;
 
    Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Source < Right.Source);

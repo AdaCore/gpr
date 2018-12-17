@@ -38,8 +38,6 @@ package GPR2.Project.Pretty_Printer is
    use GPR_Parser;
    use GPR_Parser.Analysis;
 
-   use type Project.View.Object;
-
    type Object is tagged private;
 
    subtype Max_Length_Of_Line is Positive range 50 .. 255;
@@ -76,7 +74,7 @@ package GPR2.Project.Pretty_Printer is
       Write_Character : access procedure (C : Character) := null;
       Write_String    : access procedure (S : String)    := null;
       Write_EOL       : access procedure                 := null)
-     with Pre => (View /= Project.View.Undefined
+     with Pre => (View.Is_Defined
                   or else Analysis_Unit /= No_Analysis_Unit)
                     and then
                  ((Write_Character = null

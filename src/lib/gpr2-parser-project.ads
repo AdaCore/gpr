@@ -48,6 +48,9 @@ package GPR2.Parser.Project is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Parse
      (Filename : GPR2.Path_Name.Object;
       Messages : out Log.Object) return Object;
@@ -63,14 +66,14 @@ package GPR2.Parser.Project is
       Vars    : in out GPR2.Project.Variable.Set.Object;
       Packs   : in out GPR2.Project.Pack.Set.Object;
       Types   : in out GPR2.Project.Typ.Set.Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed. The Changed callback
    --  is called whenever a specific project has been impacted by the context
    --  change.
 
    function Qualifier (Self : Object) return Project_Kind
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the project qualifier if present when parsing. Returns
    --  Q_Standard if no qualifier is present. Note that the actual project
    --  kind may be different as computed based on the attributes present on
@@ -88,37 +91,37 @@ package GPR2.Parser.Project is
    --  Returns the extended project
 
    function Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The name of the project file
 
    function Path_Name (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  The full path name of the project file
 
    function Has_Imports (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if Project has some imported projects
 
    function Imports (Self : Object) return GPR2.Project.Import.Set.Object
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Imports
                    then not Imports'Result.Is_Empty
                    else Imports'Result.Is_Empty);
    --  Returns the list of path name for all imported projects
 
    function Has_Externals (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the project has some external variable reference
 
    function Externals (Self : Object) return Containers.Name_List
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Externals
                    then not Externals'Result.Is_Empty
                    else Externals'Result.Is_Empty);
    --  Returns the list of all external variables
 
    function Unit (Self : Object) return Analysis_Unit
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the GPR_Parser analysis unit
 
 private
@@ -139,5 +142,8 @@ private
    end record;
 
    Undefined : constant Object := (others  => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Parser.Project;

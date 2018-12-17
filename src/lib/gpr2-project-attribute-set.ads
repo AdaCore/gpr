@@ -61,8 +61,8 @@ package GPR2.Project.Attribute.Set is
       Index : Value_Type := No_Value) return Attribute.Object
      with Post =>
        (if Self.Contains (Name, Index)
-        then Element'Result /= Attribute.Undefined
-        else Element'Result = Attribute.Undefined);
+        then Element'Result.Is_Defined
+        else not Element'Result.Is_Defined);
 
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)

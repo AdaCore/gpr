@@ -42,6 +42,9 @@ package GPR2.Project.Attribute is
 
    Undefined : constant Object;
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create
      (Name  : Name_Type;
       Index : Value_Type;
@@ -81,11 +84,11 @@ package GPR2.Project.Attribute is
    --  Creates a multi-valued object
 
    function Has_Index (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the attribute has an index
 
    function Index (Self : Object) return Value_Type
-     with Inline, Pre => Self /= Undefined;
+     with Inline, Pre => Self.Is_Defined;
    --  Returns the attribute's index value
 
    function Index_Equal (Self : Object; Value : Value_Type) return Boolean;
@@ -130,5 +133,8 @@ private
                                Containers.Value_Type_List.To_Vector (".", 1),
                                Source_Reference.Undefined)
                               with Null_Unbounded_String, True);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Project.Attribute;

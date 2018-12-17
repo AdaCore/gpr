@@ -39,12 +39,15 @@ package GPR2.Source_Reference is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create
      (Filename     : Path_Name.Full_Name;
       Line, Column : Natural) return Object'Class;
 
    function Filename (Self : Object) return Path_Name.Full_Name
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the full pathname where the entity is defined
 
    function Has_Source_Reference (Self : Object) return Boolean;
@@ -79,5 +82,8 @@ private
      is (Self.Column > 0 and then Self.Line > 0);
 
    Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Source_Reference;

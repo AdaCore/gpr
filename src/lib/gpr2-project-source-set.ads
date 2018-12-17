@@ -43,14 +43,14 @@ package GPR2.Project.Source.Set is
    function Length (Self : Object) return Containers.Count_Type;
 
    procedure Insert (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source /= Undefined;
+     with Pre => Source.Is_Defined;
 
    function Contains
      (Self : Object; Source : Project.Source.Object) return Boolean
-     with Pre => Source /= Undefined;
+     with Pre => Source.Is_Defined;
 
    procedure Replace (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source /= Undefined;
+     with Pre => Source.Is_Defined;
 
    function First_Element (Self : Object) return Project.Source.Object;
 

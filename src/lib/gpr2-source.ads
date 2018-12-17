@@ -41,6 +41,9 @@ package GPR2.Source is
 
    type Kind_Type is (S_Spec, S_Body, S_Separate);
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function "<" (Left, Right : Object) return Boolean;
 
    overriding function "=" (Left, Right : Object) return Boolean;
@@ -48,37 +51,37 @@ package GPR2.Source is
    --  and if it is the same filename otherwise.
 
    function Path_Name (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the filename for the given source
 
    function Kind (Self : Object) return Kind_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the kind of source
 
    function Other_Part (Self : Object) return Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the other-part of the source. This is either the spec for a body
    --  or the body for a spec.
 
    function Has_Unit (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if source has unit information
 
    function Unit_Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined and then Self.Has_Unit;
+     with Pre => Self.Is_Defined and then Self.Has_Unit;
    --  Returns the unit name for the given source or the empty string if the
    --  language does not have support for unit.
 
    function Language (Self : Object) return Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the language for the given source
 
    function Withed_Units (Self : Object) return Source_Reference.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the list of withed units on this source
 
    function Time_Stamp (Self : Object) return Calendar.Time
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the time-stamp for this source
 
    function Create
@@ -86,19 +89,19 @@ package GPR2.Source is
       Kind      : Kind_Type;
       Language  : Name_Type;
       Unit_Name : Optional_Name_Type) return Object
-     with Pre  => Filename /= GPR2.Path_Name.Undefined,
-          Post => Create'Result /= Undefined;
+     with Pre  => Filename.Is_Defined,
+          Post => Create'Result.Is_Defined;
    --  Constructor for a source object
 
    procedure Set_Other_Part
      (Self       : Object;
       Other_Part : Object)
-     with Pre => Self /= Undefined and then Other_Part /= Undefined;
+     with Pre => Self.Is_Defined and then Other_Part.Is_Defined;
    --  Sets the other-part for Self. The other-part is the body for a spec or
    --  the spec for a body or separate unit.
 
    procedure Release (Self : in out Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Releases source object if not referenced anymore
 
 private
@@ -109,5 +112,8 @@ private
 
    Undefined : constant Object :=
                  Object'(Pathname => GPR2.Path_Name.Undefined);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Source;

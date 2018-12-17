@@ -50,24 +50,24 @@ private package GPR2.Source.Registry is
    protected Shared is
 
       procedure Register (Def : Data)
-        with Pre => Def.Path_Name /= GPR2.Path_Name.Undefined;
+        with Pre => Def.Path_Name.Is_Defined;
       --  Registers element in Store
 
       procedure Unregister (Object : in out Source.Object)
-        with Pre => Object /= Undefined;
+        with Pre => Object.Is_Defined;
       --  Unregisters the given source, release memory if not used anymore
 
       function Get (Object : Source.Object) return Data
-        with Pre => Object /= Undefined;
+        with Pre => Object.Is_Defined;
       --  Gets the source data for the given source object
 
       procedure Set (Object : Source.Object; Def : Data)
-        with Pre => Object /= Undefined
-             and then Def.Path_Name /= GPR2.Path_Name.Undefined;
+        with Pre => Object.Is_Defined
+             and then Def.Path_Name.Is_Defined;
       --  Sets the source data for the given source object
 
       procedure Set_Other_Part (Object1, Object2 : Object)
-        with Pre => Object1 /= Undefined and then Object2 /= Undefined;
+        with Pre => Object1.Is_Defined and then Object2.Is_Defined;
       --  Registers that Def1 is the other part for Def2 and the other way
       --  around too.
 

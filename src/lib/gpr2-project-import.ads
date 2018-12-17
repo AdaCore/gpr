@@ -34,18 +34,21 @@ package GPR2.Project.Import is
 
    Undefined : constant Object;
 
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create
      (Path_Name  : GPR2.Path_Name.Object;
       Sloc       : Source_Reference.Object;
       Is_Limited : Boolean) return Object
-     with Pre => Sloc /= Source_Reference.Undefined;
+     with Pre => Sloc.Is_Defined;
 
    function Path_Name (Self : Object) return Path_Name.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Full pathname of the corresponding project file
 
    function Is_Limited (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if this is a limited import
 
 private
@@ -57,5 +60,8 @@ private
 
    Undefined : constant Object :=
                  (Source_Reference.Undefined with others => <>);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Project.Import;

@@ -39,11 +39,13 @@ package GPR2.Project.Configuration is
    Config_File_Key : Integer := 1;
 
    use type Containers.Count_Type;
-   use type Project.View.Object;
 
    type Object is tagged private;
 
    Undefined : constant Object;
+
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
 
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this configuration
@@ -84,33 +86,33 @@ package GPR2.Project.Configuration is
    --  Creates a configuration object for the given configuration file
 
    procedure Release (Self : in out Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Releases memory associated with the configuration object
 
    function Corresponding_View (Self : Object) return Project.View.Object
-     with Pre  => Self /= Undefined,
-          Post => Corresponding_View'Result /= Project.View.Undefined;
+     with Pre  => Self.Is_Defined,
+          Post => Corresponding_View'Result.Is_Defined;
    --  Gets project for the given configuration object
 
    function Target (Self : Object) return Optional_Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the target used for the configuration
 
    function Runtime
      (Self : Object; Language : Name_Type) return Optional_Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the runtime specified for Language or the empty string if no
    --  specific runtime has been specified for this language.
 
    function Archive_Suffix (Self : Object) return Name_Type
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Archive_Suffix'Result (Archive_Suffix'Result'First) = '.';
    --  Returns the archive file suffix (with the leading dot)
 
    function Object_File_Suffix
      (Self     : Object;
       Language : Name_Type) return Name_Type
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Object_File_Suffix'Result
                     (Object_File_Suffix'Result'First) = '.';
    --  Returns the object file suffix (with the leading dot)
@@ -118,7 +120,7 @@ package GPR2.Project.Configuration is
    function Dependency_File_Suffix
      (Self     : Object;
       Language : Name_Type) return Name_Type
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Dependency_File_Suffix'Result
                     (Dependency_File_Suffix'Result'First) = '.';
    --  Returns the dependency file suffix (with the leading dot)
@@ -151,6 +153,9 @@ private
    --  Bind configuration to Tree
 
    Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    Default_Description : constant Description_Set (1 .. 1) :=
                            (1 => (Language => To_Unbounded_String ("ada"),

@@ -48,6 +48,9 @@ package GPR2.Message is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Level (Self : Object) return Level_Value with Inline;
    --  Returns the message level associated with the message
 
@@ -81,5 +84,8 @@ private
      with Dynamic_Predicate => Message /= Null_Unbounded_String;
 
    Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
 end GPR2.Message;

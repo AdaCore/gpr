@@ -1019,7 +1019,7 @@ package body GPR2.Project.Definition is
          --  Finally get the sources from the extended's project if defined. We
          --  only add the sources not already defined in the current set.
 
-         if Def.Extended /= Project.View.Undefined then
+         if Def.Extended.Is_Defined then
             Insert (Def.Extended.Sources, Skip);
          end if;
 

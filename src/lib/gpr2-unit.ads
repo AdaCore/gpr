@@ -36,35 +36,38 @@ package GPR2.Unit is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function Create
      (Spec   : Project.Source.Object;
       Bodies : Project.Source.Set.Object) return Object;
    --  Constructor for a Unit object
 
    function Has_Spec (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if a spec is defined for this unit
 
    function Spec (Self : Object) return Project.Source.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the Spec
 
    function Bodies (Self : Object) return Project.Source.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns all bodies
 
    procedure Update_Spec
      (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source /= Project.Source.Undefined;
+     with Pre => Source.Is_Defined;
    --  Sets unit spec
 
    procedure Update_Bodies
      (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source /= Project.Source.Undefined;
+     with Pre => Source.Is_Defined;
    --  Sets or appends unit body
 
    function Is_Interface (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if the unit is an interface
 
 private
@@ -75,6 +78,9 @@ private
    end record;
 
    Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Has_Spec (Self : Object) return Boolean is
      (Self.Spec /= Project.Source.Undefined);

@@ -53,6 +53,9 @@ package GPR2.Project.Tree is
 
    Undefined : constant Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
    function "=" (Left, Right : Object) return Boolean;
    --  Returns True if Left and Right are the same tree
 
@@ -61,13 +64,13 @@ package GPR2.Project.Tree is
       Filename : Path_Name.Object;
       Context  : GPR2.Context.Object;
       Config   : Configuration.Object := Configuration.Undefined)
-     with Pre => Filename /= Path_Name.Undefined;
+     with Pre => Filename.Is_Defined;
    --  Loads a root project
 
    procedure Load_Configuration
      (Self     : in out Object;
       Filename : Path_Name.Object)
-     with Pre => Filename /= Path_Name.Undefined;
+     with Pre => Filename.Is_Defined;
    --  Loads a configuration project for this tree
 
    procedure Load_Autoconf
@@ -77,7 +80,7 @@ package GPR2.Project.Tree is
       Target               : Optional_Name_Type := No_Name;
       Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
         GPR2.Containers.Name_Value_Map_Package.Empty_Map)
-       with Pre => Filename /= Path_Name.Undefined;
+       with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
    --  the root project attribute.
@@ -92,22 +95,22 @@ package GPR2.Project.Tree is
    --  etc...).
 
    function Root_Project (Self : Object) return View.Object
-     with Pre  => Self /= Undefined,
-          Post => Root_Project'Result /= View.Undefined;
+     with Pre  => Self.Is_Defined,
+          Post => Root_Project'Result.Is_Defined;
    --  Returns the root project for the given tree
 
    function Has_Configuration (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if a configuration project is loaded on this tree
 
    function Configuration (Self : Object) return Configuration.Object
-     with Pre => Self /= Undefined and then Self.Has_Configuration;
+     with Pre => Self.Is_Defined and then Self.Has_Configuration;
 
    function Has_Runtime_Project (Self : Object) return Boolean;
    --  Returns True if a configuration project is loaded on this tree
 
    function Runtime_Project (Self : Object) return View.Object
-     with Pre => Self /= Undefined and then Self.Has_Runtime_Project;
+     with Pre => Self.Is_Defined and then Self.Has_Runtime_Project;
    --  Returns the configuration project for the given tree
 
    function Target (Self : Object) return Name_Type;
@@ -115,7 +118,7 @@ package GPR2.Project.Tree is
 
    function Runtime
      (Self : Object; Language : Name_Type) return Optional_Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
@@ -123,7 +126,7 @@ package GPR2.Project.Tree is
      (Self         : Object;
       Name         : Name_Type;
       Context_View : View.Object) return View.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the project's view in the tree which corresponds to project name
    --  and that is matching the context. The context is needed as in the tree
    --  the same project can have different views with different context (e.g.
@@ -145,7 +148,7 @@ package GPR2.Project.Tree is
    procedure Append_Message
      (Self    : in out Object;
       Message : GPR2.Message.Object)
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Self.Log_Messages.Count = Self.Log_Messages.Count'Old + 1;
    --  Adds new message into the Log of Self
 
@@ -155,14 +158,14 @@ package GPR2.Project.Tree is
    --  the root project view.
 
    function Has_Context (Self : Object) return Boolean
-     with Pre  => Self /= Undefined;
+     with Pre  => Self.Is_Defined;
    --  Returns True if the project tree has some context. If any of the project
    --  in the tree has some external variables then a context is present. A
    --  project without context is fully static has it does not reference any
    --  external (and so modifiable) variables.
 
    function Context (Self : Object) return Context.Object
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
    --  Returns the Context for the given project tree
 
@@ -170,7 +173,7 @@ package GPR2.Project.Tree is
      (Self    : in out Object;
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
-     with Pre  => Self /= Undefined,
+     with Pre  => Self.Is_Defined,
           Post => Self.Context = Context
                   or else Self.Root_Project.Qualifier
                             in K_Aggregate | K_Aggregate_Library;
@@ -188,8 +191,8 @@ package GPR2.Project.Tree is
    function Element (Position : Cursor) return View.Object
      with Post =>
        (if Has_Element (Position)
-        then Element'Result /= View.Undefined
-        else Element'Result = View.Undefined);
+        then Element'Result.Is_Defined
+        else not Element'Result.Is_Defined);
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -206,7 +209,7 @@ package GPR2.Project.Tree is
    function Constant_Reference
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type
-     with Pre => Self /= Undefined and then Position /= No_Element;
+     with Pre => Self.Is_Defined and then Position /= No_Element;
 
    function Iterate
      (Self   : Object;
@@ -214,7 +217,7 @@ package GPR2.Project.Tree is
       Filter : Filter_Control   := Default_Filter;
       Status : Status_Control   := Default_Status)
       return Project_Iterator.Forward_Iterator'Class
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Iterates over all project views in the tree given the iterator kind
    --  (only the project with or without imports) and the filter which can be
    --  used to iterate over only some specific projects (only the library
@@ -227,33 +230,33 @@ package GPR2.Project.Tree is
       View   : GPR2.Project.View.Object;
       Source : Path_Name.Full_Name;
       Unit   : Name_Type)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Records the view in which unit is defined
 
    procedure Clear_View
      (Self : in out Object;
       Unit : GPR2.Unit.Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Clears the view set for the given unit
 
    function Get_View
      (Self : Object;
       Unit : Name_Type) return Project.View.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Gets the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
    function Get_View
      (Self   : Object;
       Source : Path_Name.Object) return Project.View.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Gets the view in which unit is defined, returns Undefined if the unit
    --  has not been found.
 
    procedure Invalidate_Sources
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Invalidates the sources for all views in the tree if View is set or the
    --  source in the given view otherwise. This is needed when some sources
    --  are added or removed from the view. It is not required to call
@@ -261,7 +264,7 @@ package GPR2.Project.Tree is
    --  of the tree will be called, the set of sources will be recomputed.
 
    procedure Update_Sources (Self : Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
@@ -269,7 +272,7 @@ package GPR2.Project.Tree is
    procedure Register_Project_Search_Path
      (Self : in out Object;
       Dir  : Path_Name.Object)
-     with Pre => Dir /= Path_Name.Undefined;
+     with Pre => Dir.Is_Defined;
    --  Adds a project search path for this tree
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
@@ -320,14 +323,17 @@ private
       Root    : View.Object;
    end record;
 
-   type Constant_Reference_Type
-     (View : not null access constant Project.View.Object) is null record;
-
-   Undefined  : constant Object := (others => <>);
-
    No_Element : constant Cursor :=
                   (Project_View_Store.Empty_Vector,
                    1, View.Undefined);
+
+   type Constant_Reference_Type
+     (View : not null access constant Project.View.Object) is null record;
+
+   Undefined : constant Object := (others => <>);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Archive_Suffix (Self : Object) return Name_Type is
      (if Self.Has_Configuration
