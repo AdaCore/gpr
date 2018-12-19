@@ -76,13 +76,13 @@ package GPR2.Project.Tree is
    --  Loads a configuration project for this tree
 
    procedure Load_Autoconf
-     (Self                 : in out Object;
-      Filename             : Path_Name.Object;
-      Context              : GPR2.Context.Object;
-      Subdirs              : Optional_Name_Type := No_Name;
-      Target               : Optional_Name_Type := No_Name;
-      Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
-        GPR2.Containers.Name_Value_Map_Package.Empty_Map)
+     (Self              : in out Object;
+      Filename          : Path_Name.Object;
+      Context           : GPR2.Context.Object;
+      Subdirs           : Optional_Name_Type := No_Name;
+      Target            : Optional_Name_Type := No_Name;
+      Language_Runtimes : GPR2.Containers.Name_Value_Map :=
+                            GPR2.Containers.Name_Value_Map_Package.Empty_Map)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching

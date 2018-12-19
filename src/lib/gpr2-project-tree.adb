@@ -863,16 +863,18 @@ package body GPR2.Project.Tree is
    -------------------
 
    procedure Load_Autoconf
-     (Self                 : in out Object;
-      Filename             : Path_Name.Object;
-      Context              : GPR2.Context.Object;
-      Subdirs              : Optional_Name_Type := No_Name;
-      Target               : Optional_Name_Type := No_Name;
-      Language_Runtime_Map : GPR2.Containers.Name_Value_Map :=
-        GPR2.Containers.Name_Value_Map_Package.Empty_Map)
+     (Self              : in out Object;
+      Filename          : Path_Name.Object;
+      Context           : GPR2.Context.Object;
+      Subdirs           : Optional_Name_Type := No_Name;
+      Target            : Optional_Name_Type := No_Name;
+      Language_Runtimes : GPR2.Containers.Name_Value_Map :=
+                            GPR2.Containers.Name_Value_Map_Package.Empty_Map)
    is
-      Descr_Index : Integer := 0;
-      Conf        : Project.Configuration.Object;
+      Nb_Languages : constant Natural :=
+                       Natural (Self.Root_Project.Languages.Length);
+      Descr_Index  : Natural := 0;
+      Conf         : Project.Configuration.Object;
 
    begin
       Self.Load (Filename, Context, Subdirs => Subdirs);
@@ -886,7 +888,7 @@ package body GPR2.Project.Tree is
                             else No_Name);
 
          Conf_Descriptions : Project.Configuration.Description_Set
-           (1 .. Integer (Self.Root_Project.Languages.Length));
+                               (1 .. Nb_Languages);
 
       begin
          for L of Self.Root_Project.Languages loop
@@ -895,14 +897,15 @@ package body GPR2.Project.Tree is
             declare
                L_Name : constant Name_Type := Name_Type (L);
                RTS    : constant Name_Type :=
-                          (if Language_Runtime_Map.Contains (L_Name) and then
-                           Language_Runtime_Map.Element (L_Name) /= No_Value
+                          (if Language_Runtimes.Contains (L_Name)
+                             and then
+                              Language_Runtimes.Element (L_Name) /= No_Value
                            then
-                              Name_Type (Language_Runtime_Map.Element (L_Name))
+                              Name_Type (Language_Runtimes.Element (L_Name))
                            elsif Self.Root_Project.Has_Attributes
-                             ("Runtime", "Ada") then Name_Type
-                             (Self.Root_Project.Attribute
-                                ("Runtime", "Ada").Value)
+                             ("Runtime", "Ada")
+                           then Name_Type (Self.Root_Project.Attribute
+                             ("Runtime", "Ada").Value)
                            else No_Name);
 
                --  RTS should be a Value_Path (type introduced in the
@@ -922,8 +925,8 @@ package body GPR2.Project.Tree is
          if Actual_Target = No_Name then
             Conf := Project.Configuration.Create (Conf_Descriptions);
          else
-            Conf := Project.Configuration.Create (Conf_Descriptions,
-                                                  Actual_Target);
+            Conf := Project.Configuration.Create
+                      (Conf_Descriptions, Actual_Target);
          end if;
 
          Self.Load (Filename, Context, Conf, Subdirs => Subdirs);
@@ -2054,7 +2057,7 @@ package body GPR2.Project.Tree is
    end View_For;
 
 begin
-   --  Export routines to Definitions to avoid cyclic dependencies.
+   --  Export routines to Definitions to avoid cyclic dependencies
 
    Definition.Register := Register_View'Access;
 end GPR2.Project.Tree;

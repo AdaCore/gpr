@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-2017, Free Software Foundation, Inc.         --
+--          Copyright (C) 2016-2018, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -31,8 +31,8 @@ with GPR2.Project.View;
 package GPR2.Compilation.Slave is
 
    procedure Register_Remote_Slaves
-     (Tree               : GPR2.Project.Tree.Object;
-      Synchronize        : Boolean);
+     (Tree        : GPR2.Project.Tree.Object;
+      Synchronize : Boolean);
    --  Same as above. Synchronize is set to true if the project has to be
    --  synchronized to the remote slave.
 
