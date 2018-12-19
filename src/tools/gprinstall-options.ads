@@ -145,4 +145,7 @@ package GPRinstall.Options is
       --  Make obj/lib/exec dirs as subdirs
    end record;
 
+   function Project_Dir (Self : Object) return String;
+   --  Returns the full pathname to the destination project directory
+
 end GPRinstall.Options;

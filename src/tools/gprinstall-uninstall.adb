@@ -53,9 +53,6 @@ package body GPRinstall.Uninstall is
       procedure Delete_Empty_Directory (Dir_Name : String);
       --  Delete Dir_Name if empty, if removed try with parent directory
 
-      function Project_Dir return String;
-      --  Returns the full pathname to the project directory
-
       ----------------------------
       -- Delete_Empty_Directory --
       ----------------------------
@@ -91,31 +88,10 @@ package body GPRinstall.Uninstall is
          end if;
       end Do_Delete;
 
-      -----------------
-      -- Project_Dir --
-      -----------------
-
-      function Project_Dir return String is
-      begin
-         if OS_Lib.Is_Absolute_Path (Install_Name) then
-            return Containing_Directory (Containing_Directory (Install_Name));
-
-         else
-            if OS_Lib.Is_Absolute_Path
-              (Options.Global_Project_Subdir.V.all)
-            then
-               return Options.Global_Project_Subdir.V.all;
-            else
-               return Options.Global_Prefix_Dir.V.all
-                 & Options.Global_Project_Subdir.V.all;
-            end if;
-         end if;
-      end Project_Dir;
-
       Dir  : constant String :=
                (if OS_Lib.Is_Absolute_Path (Install_Name)
                 then Containing_Directory (Install_Name)
-                else Project_Dir & "manifests") & DS;
+                else Options.Project_Dir & "manifests") & DS;
 
       Name : constant String :=
                (if OS_Lib.Is_Absolute_Path (Install_Name)

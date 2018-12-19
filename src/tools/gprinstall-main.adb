@@ -476,9 +476,7 @@ procedure GPRinstall.Main is
       end if;
 
       if Options.Install_Name.all /= "" then
-         Set_Param
-           (Options.Global_Install_Name,
-            Options.Install_Name.all, Is_Dir => False);
+         Options.Global_Install_Name := (Options.Install_Name, False);
       end if;
 
       --  Now read arguments

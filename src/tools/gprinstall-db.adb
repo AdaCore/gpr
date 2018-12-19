@@ -44,9 +44,6 @@ package body GPRinstall.DB is
          Bytes             : Directories.File_Size := 0;
       end record;
 
-      function Project_Dir return String;
-      --  Returns the install project directory
-
       function Get_Stat (Manifest : String) return Stats;
       --  Compute the stats for the given manifest file
 
@@ -160,21 +157,7 @@ package body GPRinstall.DB is
          New_Line;
       end Process;
 
-      -----------------
-      -- Project_Dir --
-      -----------------
-
-      function Project_Dir return String is
-      begin
-         if OS_Lib.Is_Absolute_Path (Options.Global_Project_Subdir.V.all) then
-            return Options.Global_Project_Subdir.V.all;
-         else
-            return Options.Global_Prefix_Dir.V.all
-              & Options.Global_Project_Subdir.V.all;
-         end if;
-      end Project_Dir;
-
-      Dir : constant String := Project_Dir & "manifests";
+      Dir : constant String := Options.Project_Dir & "manifests";
 
    begin
       New_Line;

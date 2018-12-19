@@ -36,4 +36,18 @@ package body GPRinstall.Options is
       OS_Lib.Free (P.V);
    end Free;
 
+   -----------------
+   -- Project_Dir --
+   -----------------
+
+   function Project_Dir (Self : Object) return String is
+   begin
+      if OS_Lib.Is_Absolute_Path (Self.Global_Project_Subdir.V.all) then
+         return Self.Global_Project_Subdir.V.all;
+      else
+         return Self.Global_Prefix_Dir.V.all
+                & Self.Global_Project_Subdir.V.all;
+      end if;
+   end Project_Dir;
+
 end GPRinstall.Options;

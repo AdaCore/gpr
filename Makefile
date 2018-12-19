@@ -47,6 +47,7 @@ BUILD_DIR     =
 SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
 ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
 	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
+GPRINSTALL=gprinstall
 
 # Load current setup if any
 -include makefile.setup
@@ -87,7 +88,7 @@ GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
 	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC}
 
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS}
-INSTALLER=gprinstall -p -f ${GPR_OPTIONS} --prefix=${prefix}
+INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --install-name=gpr2 --uninstall
 
@@ -133,7 +134,7 @@ install-tools:
 # setup #
 #########
 
-.SILENT: setup
+.SILENT: setup setup2
 
 setup: langkit/build
 	echo "prefix=$(prefix)" > makefile.setup
@@ -142,6 +143,9 @@ setup: langkit/build
 	echo "PROCESSORS=$(PROCESSORS)" >> makefile.setup
 	echo "TARGET=$(TARGET)" >> makefile.setup
 	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
+
+setup2: setup
+	echo "GPRINSTALL=.build/$(BUILD)/obj-tools/gpr2install" >> makefile.setup
 
 langkit:
 	mkdir -p langkit
