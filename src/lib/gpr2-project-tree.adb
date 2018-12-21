@@ -620,14 +620,6 @@ package body GPR2.Project.Tree is
    is
       use Ada.Strings.Unbounded;
 
-      function Has_Error return Boolean is
-        (Self.Messages.Has_Element
-           (Error       => True,
-            Information => False,
-            Warning     => False,
-            Read        => False,
-            Unread      => True));
-
       procedure Set_Project_Search_Paths;
       --  Set project search path for the tree
 
@@ -828,7 +820,7 @@ package body GPR2.Project.Tree is
 
       --  Do nothing more if there are errors during the parsing
 
-      if not Has_Error then
+      if not Self.Messages.Has_Error then
          for V_Data of Self.Views_Set loop
             --  Compute the external dependencies for the views. This
             --  is the set of external used in the project and in all
@@ -1331,14 +1323,6 @@ package body GPR2.Project.Tree is
 
       function Load (Filename : Path_Name.Object) return Definition.Data is
 
-         function Has_Error return Boolean is
-           (Messages.Has_Element
-              (Error       => True,
-               Information => False,
-               Warning     => False,
-               Read        => False,
-               Unread      => True));
-
          Paths   : constant Path_Name.Set.Object :=
                      GPR2.Project.Search_Paths (Filename, Self.Search_Paths);
          Project : constant Parser.Project.Object :=
@@ -1359,7 +1343,7 @@ package body GPR2.Project.Tree is
 
          --  Do the following only if there are no error messages
 
-         if not Has_Error then
+         if not Messages.Has_Error then
             Data.Kind := Project.Qualifier;
             Data.Externals := Data.Trees.Project.Externals;
 
@@ -1507,12 +1491,7 @@ package body GPR2.Project.Tree is
       --  Do validity check on the given view
 
       function Has_Error return Boolean is
-        (Self.Messages.Has_Element
-           (Error       => True,
-            Information => False,
-            Warning     => False,
-            Read        => False,
-            Unread      => True));
+        (Self.Messages.Has_Error);
 
       --------------
       -- Set_View --
@@ -1629,12 +1608,7 @@ package body GPR2.Project.Tree is
                         --  If there was error messages during the parsing of
                         --  the aggregated project, just return now.
 
-                        if Messages.Has_Element
-                          (Information => False,
-                           Warning     => False,
-                           Read        => False)
-                          or else Circularities
-                        then
+                        if Messages.Has_Error or else Circularities then
                            if Circularities then
                               Self.Messages.Append
                                 (Message.Create

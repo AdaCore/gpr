@@ -1052,13 +1052,7 @@ package body GPR2.Project.Definition is
          --  Then returns the sources
 
          if Message_Count < Tree.Log_Messages.Count
-           and then
-             Tree.Log_Messages.Has_Element
-               (Information => False,
-                Warning     => False,
-                Error       => True,
-                Read        => False,
-                Unread      => True)
+           and then Tree.Log_Messages.Has_Error
          then
             --  Some messages have been logged, raise an exception
             raise Project_Error with "cannot retrieve the sources";

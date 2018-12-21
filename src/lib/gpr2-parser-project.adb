@@ -1017,12 +1017,7 @@ package body GPR2.Parser.Project is
       --  the same package.
 
       function Has_Error return Boolean is
-        (Tree.Log_Messages.Has_Element
-           (Error       => True,
-            Information => False,
-            Warning     => False,
-            Read        => False,
-            Unread      => True));
+        (Tree.Log_Messages.Has_Error);
 
       --  Global variables used to keep state during the parsing. While
       --  visiting child nodes we may need to record status (when in a package

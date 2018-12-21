@@ -78,6 +78,9 @@ package GPR2.Log is
    --  Returns True if the log contains some information/warning/error
    --  depending on the value specified.
 
+   function Has_Error (Self : Object) return Boolean;
+   --  Returns True if the log contains unread errors
+
    --  Iterator
 
    type Cursor is private;
@@ -141,5 +144,13 @@ private
 
    type Reference_Type
      (Message : not null access GPR2.Message.Object) is null record;
+
+   function Has_Error (Self : Object) return Boolean is
+     (Self.Has_Element
+        (Information => False,
+         Warning     => False,
+         Error       => True,
+         Read        => False,
+         Unread      => True));
 
 end GPR2.Log;
