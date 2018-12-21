@@ -90,10 +90,10 @@ begin
    Ctx.Insert ("VSB_DIR", ".");
 
    Project_Tree.Load_Autoconf
-     (Filename             => Project.Create ("projects/a.gpr"),
-      Context              => Ctx,
-      Target               => "x86_64-vx7",
-      Language_Runtime_Map => RTS);
+     (Filename          => Project.Create ("projects/a.gpr"),
+      Context           => Ctx,
+      Target            => "x86_64-vx7",
+      Language_Runtimes => RTS);
 
    Print_Config_Info;
 
