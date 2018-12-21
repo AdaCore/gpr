@@ -26,6 +26,10 @@ with Ada.Strings.Unbounded;
 
 package body GPR2.Containers is
 
+   -----------
+   -- Image --
+   -----------
+
    function Image (Values : Value_List) return String is
       use Ada.Strings.Unbounded;
 
@@ -47,5 +51,23 @@ package body GPR2.Containers is
 
       return To_String (Result);
    end Image;
+
+   ----------------------
+   -- Value_Or_Default --
+   ----------------------
+
+   function Value_Or_Default
+     (Map     : Name_Value_Map;
+      Key     : Name_Type;
+      Default : Value_Type := No_Value) return Value_Type
+   is
+      C : constant Name_Value_Map_Package.Cursor := Map.Find (Key);
+   begin
+      if Name_Value_Map_Package.Has_Element (C) then
+         return Map (C);
+      else
+         return Default;
+      end if;
+   end Value_Or_Default;
 
 end GPR2.Containers;

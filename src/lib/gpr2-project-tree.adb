@@ -863,13 +863,14 @@ package body GPR2.Project.Tree is
       Language_Runtimes : GPR2.Containers.Name_Value_Map :=
                             GPR2.Containers.Name_Value_Map_Package.Empty_Map)
    is
-      Nb_Languages : constant Natural :=
-                       Natural (Self.Root_Project.Languages.Length);
+      Nb_Languages : Natural;
       Descr_Index  : Natural := 0;
       Conf         : Project.Configuration.Object;
 
    begin
       Self.Load (Filename, Context, Subdirs => Subdirs);
+
+      Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
       declare
          Actual_Target : constant Optional_Name_Type :=
@@ -887,13 +888,12 @@ package body GPR2.Project.Tree is
             Descr_Index := Descr_Index + 1;
 
             declare
-               L_Name : constant Name_Type := Name_Type (L);
-               RTS    : constant Name_Type :=
-                          (if Language_Runtimes.Contains (L_Name)
-                             and then
-                              Language_Runtimes.Element (L_Name) /= No_Value
-                           then
-                              Name_Type (Language_Runtimes.Element (L_Name))
+               LRT : constant Value_Type :=
+                       Containers.Value_Or_Default
+                         (Language_Runtimes, Name_Type (L));
+               RTS : constant Optional_Name_Type :=
+                          (if LRT /= No_Value
+                           then Name_Type (LRT)
                            elsif Self.Root_Project.Has_Attributes
                              ("Runtime", "Ada")
                            then Name_Type (Self.Root_Project.Attribute
@@ -906,7 +906,7 @@ package body GPR2.Project.Tree is
             begin
                Conf_Descriptions (Descr_Index) :=
                  Project.Configuration.Create
-                   (Language => L_Name,
+                   (Language => Name_Type (L),
                     Version  => No_Name,
                     Runtime  => RTS,
                     Path     => No_Name,

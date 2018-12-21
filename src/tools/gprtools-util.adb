@@ -20,8 +20,6 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;           use Ada.Text_IO;
 with GNAT.OS_Lib;           use GNAT.OS_Lib;
 
-with GPR2.Log;
-
 package body GPRtools.Util is
 
    Keep_Program_Name : Unbounded_String;
@@ -96,13 +94,13 @@ package body GPRtools.Util is
    ---------------------
 
    procedure Output_Messages
-     (Tree    : GPR2.Project.Tree.Object;
+     (Log     : GPR2.Log.Object;
       Verbose : Boolean;
       Output  : Ada.Text_IO.File_Type) is
    begin
-      for C in Tree.Log_Messages.Iterate
-        (Information => Verbose, Warning => Verbose,
-         Error => True, Read => True, Unread => True)
+      for C in Log.Iterate
+                 (Information => Verbose, Warning => Verbose, Error => True,
+                  Read => True, Unread => True)
       loop
          Put_Line (Output, GPR2.Log.Element (C).Format);
       end loop;
@@ -115,7 +113,7 @@ package body GPRtools.Util is
    procedure Project_Processing_Failed
      (Tree : GPR2.Project.Tree.Object; Verbose : Boolean) is
    begin
-      Output_Messages (Tree, Verbose, Standard_Error);
+      Output_Messages (Tree.Log_Messages.all, Verbose, Standard_Error);
       Fail_Program
         ('"' & String (Tree.Root_Project.Path_Name.Simple_Name)
          & """ processing failed");

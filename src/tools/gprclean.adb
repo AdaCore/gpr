@@ -84,7 +84,6 @@ procedure GPRclean is
    Config        : Project.Configuration.Object;
    Remove_Config : Boolean := False;
    Target        : Unbounded_String := To_Unbounded_String ("all");
-   Config_Error  : Boolean := False;
    Options       : GPRtools.Options.Object; -- Common options for all tools
    Subdirs       : Unbounded_String;
 
@@ -432,48 +431,39 @@ begin
       Config := Project.Configuration.Load
         (Config_File, Name_Type (To_String (Target)));
 
-      if Config.Has_Messages then
-         for M of Config.Log_Messages loop
-            case M.Level is
-               when Message.Information =>
-                  if Options.Verbose then
-                     Text_IO.Put_Line (M.Format);
-                  end if;
-
-               when Message.Warning =>
-                  if not Options.Quiet then
-                     Text_IO.Put_Line (M.Format);
-                  end if;
-
-               when Message.Error =>
-                  Text_IO.Put_Line (M.Format);
-                  Config_Error := True;
-            end case;
-         end loop;
+      if Config.Log_Messages.Has_Error then
+         Util.Output_Messages
+           (Config.Log_Messages, Options.Verbose, Text_IO.Standard_Error);
+         Util.Fail_Program
+           ("Config file """ & String (Config_File.Simple_Name)
+            & """ parse error");
       end if;
-   end if;
 
-   if not Config_Error then
       Project_Tree.Load
         (Project_Path, Context, Config,
          Optional_Name_Type (To_String (Subdirs)));
 
-      for V in Project_Tree.Iterate
-        (Kind   => (Project.I_Recursive => All_Projects,
-                    Project.I_Imported  => All_Projects, others => True),
-         Status => (Project.S_Externally_Built => False))
-      loop
-         Sources (Project.Tree.Element (V));
-      end loop;
+   else
+      Project_Tree.Load_Autoconf
+        (Project_Path, Context,
+         Optional_Name_Type (To_String (Subdirs)));
+   end if;
 
-      if Remove_Config then
-         Exclude_File (Config_File.Value);
-      end if;
+   for V in Project_Tree.Iterate
+     (Kind   => (Project.I_Recursive => All_Projects,
+                 Project.I_Imported  => All_Projects, others => True),
+      Status => (Project.S_Externally_Built => False))
+   loop
+      Sources (Project.Tree.Element (V));
+   end loop;
 
-      if Options.Verbose then
-         GPRtools.Util.Output_Messages
-           (Project_Tree, True, Text_IO.Standard_Output);
-      end if;
+   if Remove_Config then
+      Exclude_File (Config_File.Value);
+   end if;
+
+   if Options.Verbose then
+      Util.Output_Messages
+        (Project_Tree.Log_Messages.all, True, Text_IO.Standard_Output);
    end if;
 
 exception

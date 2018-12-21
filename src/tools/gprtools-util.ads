@@ -19,9 +19,12 @@
 --  Common utilities for all gpr tools
 
 with Ada.Text_IO;
+with GPR2.Log;
 with GPR2.Project.Tree;
 
 package GPRtools.Util is
+
+   use Ada;
 
    type Exit_Code_Type is
      (E_Success,    -- No warnings or errors
@@ -35,11 +38,10 @@ package GPRtools.Util is
    procedure Set_Program_Name (Name : String);
 
    procedure Output_Messages
-     (Tree    : GPR2.Project.Tree.Object;
+     (Log     : GPR2.Log.Object;
       Verbose : Boolean;
-      Output  : Ada.Text_IO.File_Type);
-   --  Output errors and if Verbose is True other messages from Tree processing
-   --  log.
+      Output  : Text_IO.File_Type);
+   --  Output errors and if Verbose is True other messages from log
 
    -------------------------
    -- Program termination --
@@ -50,7 +52,7 @@ package GPRtools.Util is
 
    procedure Project_Processing_Failed
      (Tree : GPR2.Project.Tree.Object; Verbose : Boolean);
-   --  Output or not project processing error messages depend on Quiet, Verbose
+   --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.
 

@@ -56,4 +56,12 @@ package GPR2.Containers is
 
    subtype Name_Value_Map is Name_Value_Map_Package.Map;
 
+   function Value_Or_Default
+     (Map     : Name_Value_Map;
+      Key     : Name_Type;
+      Default : Value_Type := No_Value) return Value_Type
+     with Post => (if not Map.Contains (Key)
+                   then Value_Or_Default'Result = Default);
+   --  Returns value by key if exists or Default value if key not found
+
 end GPR2.Containers;
