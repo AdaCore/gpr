@@ -86,6 +86,8 @@ procedure GPRclean is
    Target        : Unbounded_String := To_Unbounded_String ("all");
    Options       : GPRtools.Options.Object; -- Common options for all tools
    Subdirs       : Unbounded_String;
+   Dummy         : aliased Boolean := False;
+   --  For not working backward compartible switches
 
    ------------------
    -- Exclude_File --
@@ -177,6 +179,10 @@ procedure GPRclean is
         (Config, Value_Callback'Unrestricted_Access,
          "-aP:",
          Help => "Add directory ARG to project search path");
+
+      Define_Switch
+        (Config, Dummy'Access, "-eL",
+         Help => "For backwards compatibility, has no effect");
 
       Getopt (Config);
 
