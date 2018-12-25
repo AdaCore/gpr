@@ -277,6 +277,10 @@ procedure GPRclean is
       Need_Main_Archive : Boolean := False;
 
    begin
+      if Options.Verbose then
+         Text_IO.Put_Line ("Cleaning project: """ & String (View.Name) & '"');
+      end if;
+
       for C in View.Sources.Iterate (Project.Source.Set.S_Compilable) loop
          declare
             S : constant Project.Source.Object :=
@@ -450,8 +454,9 @@ begin
    end if;
 
    for V in Project_Tree.Iterate
-     (Kind   => (Project.I_Recursive => All_Projects,
-                 Project.I_Imported  => All_Projects, others => True),
+     (Kind   => (Project.I_Recursive  => All_Projects,
+                 Project.I_Imported   => All_Projects,
+                 Project.I_Aggregated => All_Projects, others => True),
       Status => (Project.S_Externally_Built => False))
    loop
       Sources (Project.Tree.Element (V));
