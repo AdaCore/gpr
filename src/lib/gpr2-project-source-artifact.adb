@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2018, Free Software Foundation, Inc.            --
+--         Copyright (C) 2018-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -118,7 +118,9 @@ package body GPR2.Project.Source.Artifact is
          --  Library project has the same ALI files in object and library
          --  directories.
 
-         if View.Kind = K_Library and then Source.Language = "Ada" then
+         if View.Kind in K_Library | K_Aggregate_Library
+           and then Source.Language = "Ada"
+         then
             Result.Append
               (Path_Name.Create_File
                  (Self.Dependency.Simple_Name,
