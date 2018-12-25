@@ -258,10 +258,10 @@ begin
 
    --  Some project kinds are not supported in gprname
 
-   if Tree.Root_Project.Qualifier in K_Aggregate then
+   if Tree.Root_Project.Qualifier = K_Aggregate then
       raise GPRname_Exception with
         "aggregate projects are not supported";
-   elsif Tree.Root_Project.Qualifier in K_Aggregate_Library then
+   elsif Tree.Root_Project.Qualifier = K_Aggregate_Library then
       raise GPRname_Exception with
         "aggregate library projects are not supported";
    end if;

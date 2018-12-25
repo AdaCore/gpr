@@ -61,9 +61,13 @@ package body GPR2.Project.Registry.Attribute is
                         (K_Library | K_Aggregate_Library => True,
                          others                          => False);
 
+   In_Aggregates    : constant Allowed_In :=
+                        (Aggregate_Kind => True,
+                         others         => False);
+
    No_Aggregates    : constant Allowed_In :=
-                        (K_Aggregate | K_Aggregate_Library => False,
-                         others                            => True);
+                        (Aggregate_Kind => False,
+                         others         => True);
 
    In_Configuration : constant Allowed_In :=
                         (K_Configuration => True, others => False);
@@ -335,8 +339,7 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
-                               others => False));
+      Is_Allowed_In        => In_Aggregates);
 
    --  project_path
    Store_Insert
@@ -347,8 +350,7 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
-                               others => False));
+      Is_Allowed_In        => In_Aggregates);
 
    --  external
    Store_Insert
@@ -359,8 +361,7 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => (K_Aggregate | K_Aggregate_Library => True,
-                               others => False));
+      Is_Allowed_In        => In_Aggregates);
 
    --  library_dir
    Store_Insert

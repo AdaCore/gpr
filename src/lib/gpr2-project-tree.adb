@@ -95,7 +95,7 @@ package body GPR2.Project.Tree is
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
-        then Starting_From.Qualifier in K_Aggregate | K_Aggregate_Library);
+        then Starting_From.Qualifier in Aggregate_Kind);
    --  Load a project filename recursively and returns the corresponding root
    --  view. Starting_From if set is the aggregate library starting point for
    --  the parsing. It is passed here for detecting circular dependencies.
@@ -331,7 +331,7 @@ package body GPR2.Project.Tree is
 
       procedure For_Aggregated (View : Project.View.Object) is
       begin
-         if View.Kind in K_Aggregate | K_Aggregate_Library then
+         if View.Kind in Aggregate_Kind then
             for A of Definition.Get_RO (View).Aggregated loop
                if Iter.Kind (I_Recursive) then
                   For_Project (A);
@@ -1546,7 +1546,7 @@ package body GPR2.Project.Tree is
          --  new Project_Files attribute value. This attribute may be set
          --  depending on the parsing of the imported projects.
 
-         if View.Qualifier in K_Aggregate | K_Aggregate_Library then
+         if View.Qualifier in Aggregate_Kind then
             P_Data.Aggregated.Clear;
 
             --  Pathname for Project_Files projects are relative to the

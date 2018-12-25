@@ -197,9 +197,7 @@ package body GPR2.Project.View is
             --  aggregate context if any.
 
             return Ctx : GPR2.Context.Object := Root_Context do
-               if Data.Trees.Project.Qualifier
-                  in  K_Aggregate | K_Aggregate_Library
-               then
+               if Data.Trees.Project.Qualifier in Aggregate_Kind then
                   for C in Data.A_Context.Iterate loop
                      Ctx.Include
                        (GPR2.Context.Key_Value.Key (C),
@@ -302,9 +300,7 @@ package body GPR2.Project.View is
             --  aggregate context if any.
 
             return Result : Boolean := Root_Has_Context do
-               if Data.Trees.Project.Qualifier
-                  in  K_Aggregate | K_Aggregate_Library
-               then
+               if Data.Trees.Project.Qualifier in Aggregate_Kind then
                   Result := Result or else not Data.A_Context.Is_Empty;
                end if;
             end return;
