@@ -36,11 +36,12 @@ package body GPR2.Message is
    function Create
      (Level   : Level_Value;
       Message : String;
-      Sloc    : Source_Reference.Object'Class) return Object is
+      Sloc    : Source_Reference.Object'Class;
+      Indent  : Natural := 0) return Object is
    begin
       return Object'
         (Level, Unread, To_Unbounded_String (Message),
-         Source_Reference.Object (Sloc));
+         Source_Reference.Object (Sloc), Indent);
    end Create;
 
    ------------
@@ -50,8 +51,9 @@ package body GPR2.Message is
    function Format (Self : Object) return String is
       use Ada;
       use GNAT.Formatted_String;
-
       Filename : constant Path_Name.Full_Name := Self.Sloc.Filename;
+      Indented : constant String :=
+                   (1 .. Self.Indent * 2 => ' ') & To_String (Self.Message);
    begin
       if Self.Sloc.Has_Source_Reference then
          declare
@@ -60,7 +62,7 @@ package body GPR2.Message is
             return -(Format
                      & Directories.Simple_Name (Filename)
                      & Self.Sloc.Line & Self.Sloc.Column
-                     & To_String (Self.Message));
+                     & Indented);
          end;
 
       else
@@ -68,8 +70,8 @@ package body GPR2.Message is
             Format : constant Formatted_String := +"%s: %s";
          begin
             return -(Format
-                     & Directories.Simple_Name (Filename)
-                     & To_String (Self.Message));
+                     & Directories.Simple_Name (Self.Sloc.Filename)
+                     & Indented);
          end;
       end if;
    end Format;

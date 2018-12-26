@@ -1,0 +1,5 @@
+description:
+    Check for duplicate source in aggregated projects
+driver: build_and_run
+project_file: aggdup
+main: main

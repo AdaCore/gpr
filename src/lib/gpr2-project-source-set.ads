@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -57,6 +57,10 @@ package GPR2.Project.Source.Set is
    type Cursor is private;
 
    No_Element : constant Cursor;
+
+   function Find
+     (Self : Object; Source : Project.Source.Object) return Cursor
+     with Pre => Source.Is_Defined;
 
    function Element (Position : Cursor) return Project.Source.Object
      with Post =>
@@ -113,5 +117,10 @@ private
    S_Separate   : constant Source_Filter := 8;
    S_All        : constant Source_Filter :=
                     S_Compilable + S_Spec + S_Body + S_Separate;
+
+   function Find
+     (Self : Object; Source : Project.Source.Object) return Cursor
+   is
+     (Current => Self.S.Find (Source));
 
 end GPR2.Project.Source.Set;

@@ -162,7 +162,10 @@ package body GPR2.Project.Definition is
       --  Read Filename and insert each line in Set
 
       procedure Insert
-        (Sources : Project.Source.Set.Object; Mode : Insert_Mode);
+        (Sources : Project.Source.Set.Object;
+         Mode    : Insert_Mode;
+         Sloc    : Source_Reference.Object'Class :=
+                     Source_Reference.Undefined);
       --  Insert Sources into Data.Sources
 
       procedure Fill_Naming_Exceptions (Set : Project.Attribute.Set.Object)
@@ -386,16 +389,45 @@ package body GPR2.Project.Definition is
       ------------
 
       procedure Insert
-        (Sources : Project.Source.Set.Object; Mode : Insert_Mode) is
+        (Sources : Project.Source.Set.Object;
+         Mode    : Insert_Mode;
+         Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined)
+      is
+         C : Project.Source.Set.Cursor;
+
+         procedure Source_Message (Src : Project.Source.Object);
+
+         --------------------
+         -- Source_Message --
+         --------------------
+
+         procedure Source_Message (Src : Project.Source.Object) is
+         begin
+            Tree.Append_Message
+              (Message.Create
+                 (Message.Error,
+                  "project """ & String (Src.View.Name)
+                  & """, """ & Src.Source.Path_Name.Value & '"',
+                  Sloc, Indent => 1));
+         end Source_Message;
+
       begin
          for Source of Sources loop
-            if Def.Sources.Contains (Source) then
+            C := Def.Sources.Find (Source);
+            if Project.Source.Set.Has_Element (C) then
                case Mode is
                   when Replace =>
                      Def.Sources.Replace (Source);
 
                   when Error =>
-                     null;
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit """ & String (Source.Source.Unit_Name)
+                           & """ cannot belong to several projects",
+                           Sloc));
+                     Source_Message (Project.Source.Set.Element (C));
+                     Source_Message (Source);
 
                   when Skip =>
                      null;
@@ -994,7 +1026,16 @@ package body GPR2.Project.Definition is
             --  sources of the aggregated projects.
 
             for Agg of Def.Aggregated loop
-               Insert (Agg.Sources, Error);
+               declare
+                  DA : constant Const_Ref := Get_RO (Agg);
+               begin
+                  Insert
+                    (Agg.Sources, Error,
+                     (if DA.Attrs.Has_Source_Dirs
+                      then DA.Attrs.Source_Dirs
+                      else Source_Reference.Create
+                             (DA.Trees.Project.Path_Name.Value, 0, 0)));
+               end;
             end loop;
 
          else
