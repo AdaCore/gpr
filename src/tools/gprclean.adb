@@ -458,7 +458,9 @@ begin
      (Kind   => (Project.I_Recursive  => All_Projects,
                  Project.I_Imported   => All_Projects,
                  Project.I_Aggregated => All_Projects, others => True),
-      Status => (Project.S_Externally_Built => False))
+      Status => (Project.S_Externally_Built => False),
+      Filter => (Project.F_Abstract | Project.F_Aggregate => False,
+                 others => True))
    loop
       Sources (Project.Tree.Element (V));
    end loop;
