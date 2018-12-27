@@ -71,6 +71,15 @@ package body GPR2.Project.View is
    --  Apply project path and subdir option for library, object and executable
    --  directories.
 
+   ---------------
+   -- Aggregate --
+   ---------------
+
+   function Aggregate (Self : Object) return GPR2.Project.View.Object is
+   begin
+      return Definition.Get_RO (Self).Aggregate;
+   end Aggregate;
+
    ----------------
    -- Aggregated --
    ----------------
@@ -437,6 +446,26 @@ package body GPR2.Project.View is
       Definition.Get_RW (Self).Sources_Signature :=
         GPR2.Context.Default_Signature;
    end Invalidate_Sources;
+
+   -------------------
+   -- Is_Aggregated --
+   -------------------
+
+   function Is_Aggregated (Self : Object) return Boolean is
+   begin
+      return Definition.Get_RO (Self).Aggregate.Is_Defined;
+   end Is_Aggregated;
+
+   ------------------------------
+   -- Is_Aggregated_In_Library --
+   ------------------------------
+
+   function Is_Aggregated_In_Library (Self : Object) return Boolean is
+      Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
+   begin
+      return Ref.Aggregate.Is_Defined
+        and then Ref.Aggregate.Kind = K_Aggregate_Library;
+   end Is_Aggregated_In_Library;
 
    ---------------------
    -- Is_Extended_All --

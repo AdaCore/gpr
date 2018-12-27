@@ -338,6 +338,7 @@ procedure GPRclean is
       end if;
 
       declare
+         Lexch : constant Name_Type := ".lexch";
          GI_DB : constant Name_Type := "gnatinspect.db";
       begin
          Exclude_File (Obj_Dir.Compose (GI_DB).Value);
@@ -356,15 +357,15 @@ procedure GPRclean is
          end if;
 
          if View.Kind in K_Library | K_Aggregate_Library then
-            declare
-               Lib_Name : constant Name_Type := View.Library_Name;
-            begin
+            if View.Is_Aggregated_In_Library then
+               Binder_Artifacts (View.Aggregate.Library_Name & Lexch);
+            else
                if not Remain_Useful then
                   Exclude_File (View.Library_Filename.Value);
                end if;
 
-               Binder_Artifacts (Lib_Name & ".lexch");
-            end;
+               Binder_Artifacts (View.Library_Name & Lexch);
+            end if;
          end if;
       end;
    end Sources;

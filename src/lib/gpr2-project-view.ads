@@ -111,6 +111,18 @@ package GPR2.Project.View is
    function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
 
+   function Aggregate (Self : Object) return GPR2.Project.View.Object
+     with Pre  => Self.Is_Defined and then Self.Is_Aggregated,
+          Post => Aggregate'Result.Kind in Aggregate_Kind;
+
+   function Is_Aggregated (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Self is part of an aggregate project
+
+   function Is_Aggregated_In_Library (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Self is part of an aggregate library project
+
    function View_For (Self : Object; Name : Name_Type) return View.Object
      with Pre => Self.Is_Defined;
    --  Returns the view for the given name accessible from Self context. This

@@ -73,6 +73,7 @@ private package GPR2.Project.Definition is
 
       --  Actual values for the view
       Extended          : View.Object;
+      Aggregate         : View.Object;
       Imports           : Project_View_Store.Map;
       Aggregated        : Project_View_Store.Map;
       Attrs             : Project.Attribute.Set.Object;

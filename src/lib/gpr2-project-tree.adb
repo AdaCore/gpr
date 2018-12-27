@@ -1023,7 +1023,8 @@ package body GPR2.Project.Tree is
          Context_View : View.Object;
          Status       : Relation_Status;
          Root_Context : out GPR2.Context.Object;
-         Messages     : out Log.Object) return View.Object;
+         Messages     : out Log.Object;
+         Aggregate    : View.Object) return View.Object;
 
       procedure Add_Paths_Messages;
       --  Add into Messages the path of the detected circularity
@@ -1073,7 +1074,8 @@ package body GPR2.Project.Tree is
          Context_View : View.Object;
          Status       : Relation_Status;
          Root_Context : out GPR2.Context.Object;
-         Messages     : out Log.Object) return View.Object
+         Messages     : out Log.Object;
+         Aggregate    : View.Object) return View.Object
       is
          View : Project.View.Object :=
                   Self.Get (Filename, Context_View, Status);
@@ -1089,6 +1091,8 @@ package body GPR2.Project.Tree is
                then
                   return View;
                end if;
+
+               Data.Aggregate := Aggregate;
 
                --  Let's setup the full external environment for project
 
@@ -1196,7 +1200,8 @@ package body GPR2.Project.Tree is
                              Context_View => Context_View,
                              Status       => Imported,
                              Root_Context => Root_Context,
-                             Messages     => Messages);
+                             Messages     => Messages,
+                             Aggregate    => Project.View.Undefined);
 
                         Pop;
 
@@ -1305,7 +1310,8 @@ package body GPR2.Project.Tree is
                               Context_View => Context_View,
                               Status       => Imported,
                               Root_Context => Root_Context,
-                              Messages     => Messages));
+                              Messages     => Messages,
+                              Aggregate    => GPR2.Project.View.Undefined));
 
                         Pop;
                      end if;
@@ -1387,7 +1393,8 @@ package body GPR2.Project.Tree is
       Circularities := False;
 
       return Internal
-        (Self, Filename, Context_View, Status, Root_Context, Messages);
+        (Self, Filename, Context_View, Status, Root_Context, Messages,
+         Starting_From);
    end Recursive_Load;
 
    ----------------------------------
@@ -1596,14 +1603,14 @@ package body GPR2.Project.Tree is
                         Circularities : Boolean;
                         A_View        : constant GPR2.Project.View.Object :=
                                           Recursive_Load
-                                            (Self,
-                                             Pathname,
-                                             View,
-                                             Aggregated,
-                                             Ctx,
-                                             Messages,
-                                             Circularities,
-                                             View);
+                                            (Self          => Self,
+                                             Filename      => Pathname,
+                                             Context_View  => View,
+                                             Status        => Aggregated,
+                                             Root_Context  => Ctx,
+                                             Messages      => Messages,
+                                             Circularities => Circularities,
+                                             Starting_From => View);
                      begin
                         --  If there was error messages during the parsing of
                         --  the aggregated project, just return now.
