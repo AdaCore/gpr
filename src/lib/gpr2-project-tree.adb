@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1059,7 +1059,7 @@ package body GPR2.Project.Tree is
                     (Message.Error,
                      (if Def.Extended then "extends" else "imports")
                       & " " & Import.Value,
-                     Source_Reference.Object (Def.Project)));
+                     Def.Project));
             end;
          end loop;
       end Add_Paths_Messages;
@@ -1213,9 +1213,7 @@ package body GPR2.Project.Tree is
                               Message => "extended project file "
                               & String (Path_Name.Name)
                               & " not found",
-                              Sloc    =>
-                                Source_Reference.Object
-                                  (Data.Trees.Project.Extended)));
+                              Sloc    => Data.Trees.Project.Extended));
                      end if;
                   end;
                end if;
@@ -1239,9 +1237,7 @@ package body GPR2.Project.Tree is
                              (Message.Create
                                 (Message.Error,
                                  "circular dependency detected",
-                                 Source_Reference.Object
-                                   (Sets.Element
-                                        (Paths.First_Element).Project)));
+                                 Sets.Element (Paths.First_Element).Project));
 
                            Add_Paths_Messages;
 
@@ -1252,9 +1248,8 @@ package body GPR2.Project.Tree is
                              (Message.Create
                                 (Message.Error,
                                  "imports " & Project.Path_Name.Value,
-                                 Source_Reference.Object
-                                   (Data.Trees.Project.Imports.Element
-                                        (Project.Path_Name))));
+                                 Data.Trees.Project.Imports.Element
+                                   (Project.Path_Name)));
 
                            Circularities := True;
                         end if;
@@ -1267,9 +1262,8 @@ package body GPR2.Project.Tree is
                              (Message.Create
                                 (Message.Error,
                                  "circular dependency detected",
-                                 Source_Reference.Object
-                                   (Data.Trees.Project.Imports.Element
-                                        (Project.Path_Name))));
+                                 Data.Trees.Project.Imports.Element
+                                        (Project.Path_Name)));
 
                            Add_Paths_Messages;
 
@@ -1287,9 +1281,8 @@ package body GPR2.Project.Tree is
                              (Message.Create
                                 (Message.Error,
                                  "imports " & Project.Path_Name.Value,
-                                 Source_Reference.Object
-                                   (Data.Trees.Project.Imports.Element
-                                        (Project.Path_Name))));
+                                 Data.Trees.Project.Imports.Element
+                                   (Project.Path_Name)));
 
                            Add_Paths_Messages;
 
@@ -1379,7 +1372,7 @@ package body GPR2.Project.Tree is
                            Message => "imported project file "
                                         & String (Import.Path_Name.Name)
                                         & " not found",
-                           Sloc    => Source_Reference.Object (Import)));
+                           Sloc    => Import));
                      exit;
                   end if;
                end;
@@ -1576,9 +1569,8 @@ package body GPR2.Project.Tree is
                           (Message.Error,
                            "project cannot aggregate itself "
                            & String (Pathname.Base_Name),
-                           Source_Reference.Object
-                             (P_Data.Attrs.Element
-                                (Registry.Attribute.Project_Files))));
+                           P_Data.Attrs.Element
+                             (Registry.Attribute.Project_Files)));
 
                   elsif P_Data.Aggregated.Contains
                     (Name_Type (Pathname.Value))
@@ -1591,9 +1583,8 @@ package body GPR2.Project.Tree is
                              (Message.Warning,
                               "duplicate aggregated project "
                               & String (Pathname.Base_Name),
-                              Source_Reference.Object
-                                (P_Data.Attrs.Element
-                                   (Registry.Attribute.Project_Files))));
+                              P_Data.Attrs.Element
+                                (Registry.Attribute.Project_Files)));
                      end if;
 
                   else
@@ -1621,18 +1612,16 @@ package body GPR2.Project.Tree is
                                 (Message.Create
                                    (Message.Error,
                                     "circular dependency detected",
-                                    Source_Reference.Object
-                                      (P_Data.Attrs.Element
-                                         (Registry.Attribute.Project_Files))));
+                                    P_Data.Attrs.Element
+                                      (Registry.Attribute.Project_Files)));
                            end if;
 
                            Self.Messages.Append
                              (Message.Create
                                 (Message.Error,
                                  "aggregate " & Project,
-                                 Source_Reference.Object
-                                   (P_Data.Attrs.Element
-                                      (Registry.Attribute.Project_Files))));
+                                 P_Data.Attrs.Element
+                                   (Registry.Attribute.Project_Files)));
 
                            --  And copy back all messages from the recursive
                            --  load routine above.
@@ -1739,7 +1728,7 @@ package body GPR2.Project.Tree is
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (A.Name) & """ cannot have index",
-                     Source_Reference.Object (A)));
+                     A));
             end if;
 
             if Def.Value = Registry.Attribute.Single
@@ -1749,7 +1738,7 @@ package body GPR2.Project.Tree is
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (A.Name) & """ cannot be a list",
-                     Source_Reference.Object (A)));
+                     A));
             end if;
 
             if Def.Value = Registry.Attribute.List
@@ -1759,7 +1748,7 @@ package body GPR2.Project.Tree is
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (A.Name) & """ must be a list",
-                     Source_Reference.Object (A)));
+                     A));
             end if;
          end Check_Def;
 
@@ -1779,7 +1768,7 @@ package body GPR2.Project.Tree is
                        (Message.Error,
                         "package " & String (P.Name) & " cannot be used in "
                         & Image (P_Kind),
-                        Source_Reference.Object (P)));
+                        P));
                end if;
 
                --  Check package's attributes
@@ -1800,7 +1789,7 @@ package body GPR2.Project.Tree is
                                  "attribute """ & String (A.Name)
                                  & """ cannot be used in package "
                                  & String (P.Name),
-                                 Source_Reference.Object (A)));
+                                 A));
                         end if;
 
                         Check_Def (Def, A);
@@ -1812,7 +1801,7 @@ package body GPR2.Project.Tree is
                               "attribute """ & String (A.Name)
                               & """ not supported in package "
                               & String (P.Name),
-                              Source_Reference.Object (A)));
+                              A));
                      end if;
                   end;
                end loop;
@@ -1831,7 +1820,7 @@ package body GPR2.Project.Tree is
                     (Message.Create
                        (Message.Error,
                         "unrecognized attribute """ & String (A.Name) & '"',
-                        Source_Reference.Object (A)));
+                        A));
 
                else
                   if not Registry.Attribute.Get
@@ -1842,7 +1831,7 @@ package body GPR2.Project.Tree is
                           (Message.Error,
                            "attribute """ & String (A.Name)
                            & """ cannot be used in " & Image (P_Kind),
-                           Source_Reference.Object (A)));
+                           A));
                   end if;
 
                   Check_Def (Registry.Attribute.Get (Q_Name), A);

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -874,9 +874,7 @@ package body GPR2.Parser.Project is
               (GPR2.Message.Create
                  (Level   => Message.Error,
                   Message => "project file not found",
-                  Sloc    => Source_Reference.Object
-                               (Source_Reference.Create
-                                 (Filename.Value, 1, 1))));
+                  Sloc    => Source_Reference.Create (Filename.Value, 1, 1)));
             return Undefined;
          end if;
 
@@ -897,7 +895,7 @@ package body GPR2.Parser.Project is
                      Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
-                           Sloc    => Source_Reference.Object (Sloc),
+                           Sloc    => Sloc,
                            Message =>
                              To_String (To_Wide_Wide_String (D.Message))));
                   end;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -816,7 +816,7 @@ package body GPR2.Project.Definition is
                  (Message.Error,
                   "unit '" & To_String (Result)
                   & "' not valid, should start with a letter",
-                  GPR2.Source_Reference.Object (Def.Attrs.Source_Dirs)));
+                  Def.Attrs.Source_Dirs));
          end if;
 
          --  Cannot have 2 consecutive underscores, cannot have a dot after an
@@ -836,8 +836,7 @@ package body GPR2.Project.Definition is
                            "unit '" & To_String (Result)
                            & "' not valid, cannot contains"
                            & " dot after underscore",
-                           Source_Reference.Object
-                             (Def.Attrs.Source_Dirs)));
+                           Def.Attrs.Source_Dirs));
 
                   elsif Prev = '_' then
                      Ok := False;
@@ -847,8 +846,7 @@ package body GPR2.Project.Definition is
                            "unit '" & To_String (Result)
                            & "' not valid, two consecutive"
                            & " underlines not permitted",
-                           GPR2.Source_Reference.Object
-                             (Def.Attrs.Source_Dirs)));
+                           Def.Attrs.Source_Dirs));
                   end if;
 
                elsif not Characters.Handling.Is_Alphanumeric (Current)
@@ -861,8 +859,7 @@ package body GPR2.Project.Definition is
                         "unit '" & To_String (Result)
                         & "' not valid, should have only alpha numeric"
                         & " characters",
-                        GPR2.Source_Reference.Object
-                          (Def.Attrs.Source_Dirs)));
+                        Def.Attrs.Source_Dirs));
                end if;
             end;
          end loop;
@@ -905,8 +902,7 @@ package body GPR2.Project.Definition is
                        (Message.Warning,
                         "duplicate unit '" & Unit
                         & "' in library_interface attribute",
-                        GPR2.Source_Reference.Object
-                          (Def.Attrs.Library_Interface)));
+                        Def.Attrs.Library_Interface));
                else
                   Interfaces.Insert
                     (Name_Type (Unit), Def.Attrs.Library_Interface);
@@ -924,8 +920,7 @@ package body GPR2.Project.Definition is
                        (Message.Warning,
                         "duplicate unit '" & Source
                         & "' in interfaces attribute",
-                        GPR2.Source_Reference.Object
-                          (Def.Attrs.Interfaces)));
+                        Def.Attrs.Interfaces));
                else
                   Interfaces.Insert
                     (Simple_Name (Source), Def.Attrs.Interfaces);
@@ -1040,7 +1035,7 @@ package body GPR2.Project.Definition is
                         & " '"
                         & String (Interfaces_Unit.Key (Unit))
                         & "' not found",
-                        GPR2.Source_Reference.Object (Attr)));
+                        Attr));
                end;
             end loop;
          end if;
