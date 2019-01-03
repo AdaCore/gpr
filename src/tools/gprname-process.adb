@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                     Copyright (C) 2018, AdaCore                          --
+--                     Copyright (C) 2018-2019, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -42,6 +42,7 @@ with GPR2.Project.Pack;
 with GPR2.Project.Pretty_Printer;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
+with GPR2.Source_Reference;
 
 with GPRname.Common;
 with GPRname.Options;
@@ -270,13 +271,13 @@ begin
       --  Find the right values for Target, Runtime, Path, and Name,
       --  either from the command-line or the main project's attributes.
 
-      Target   : constant Optional_Name_Type :=
+      Target   : constant Name_Type :=
                    (if Opt.Target /= No_String
                     then Optional_Name_Type (Opt.Target)
                     elsif Tree.Root_Project.Has_Attributes ("Target") then
                        Name_Type
                       (Tree.Root_Project.Attribute ("Target").Value)
-                    else No_Name);
+                    else "all");
 
       Runtime  : constant Optional_Name_Type :=
                    (if Opt.RTS /= No_String
@@ -306,13 +307,8 @@ begin
 
       --  Set the configuration object to be attached to the main project
 
-      if Target = No_Name then
-         Cnf := Configuration.Create
-           (Configuration.Description_Set'(1 => Des));
-      else
-         Cnf := Configuration.Create
-           (Configuration.Description_Set'(1 => Des), Target);
-      end if;
+      Cnf := Configuration.Create
+        (Configuration.Description_Set'(1 => Des), Target, Project_Path);
 
       --  Finally, reload the project with the configuration
 

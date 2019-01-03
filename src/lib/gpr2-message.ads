@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -41,9 +41,9 @@ package GPR2.Message is
    function Create
      (Level   : Level_Value;
       Message : String;
-      Sloc    : Source_Reference.Object'Class := Source_Reference.Undefined)
-      return Object
-     with Post => Create'Result.Status = Unread;
+      Sloc    : Source_Reference.Object'Class) return Object
+     with Pre  => Sloc.Is_Defined,
+          Post => Create'Result.Status = Unread;
    --  Constructor for a log message
 
    Undefined : constant Object;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2017-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -77,8 +77,10 @@ package GPR2.Project.Configuration is
 
    function Create
      (Settings : Description_Set;
-      Target   : Name_Type := "all") return Object;
-   --  Creates a configuration based on the settings requested
+      Target   : Name_Type;
+      Project  : GPR2.Path_Name.Object) return Object;
+   --  Creates a configuration based on the settings requested.
+   --  Project parameter need to log error if happen.
 
    function Load
      (Filename : Path_Name.Object;

@@ -873,12 +873,12 @@ package body GPR2.Project.Tree is
       Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
       declare
-         Actual_Target : constant Optional_Name_Type :=
+         Actual_Target : constant Name_Type :=
                            (if Target /= No_Name then Target
                             elsif Self.Root_Project.Has_Attributes ("Target")
                             then Name_Type
                               (Self.Root_Project.Attribute ("Target").Value)
-                            else No_Name);
+                            else "all");
 
          Conf_Descriptions : Project.Configuration.Description_Set
                                (1 .. Nb_Languages);
@@ -914,12 +914,8 @@ package body GPR2.Project.Tree is
             end;
          end loop;
 
-         if Actual_Target = No_Name then
-            Conf := Project.Configuration.Create (Conf_Descriptions);
-         else
-            Conf := Project.Configuration.Create
-                      (Conf_Descriptions, Actual_Target);
-         end if;
+         Conf := Project.Configuration.Create
+           (Conf_Descriptions, Actual_Target, Filename);
 
          Self.Load (Filename, Context, Conf, Subdirs => Subdirs);
       end;

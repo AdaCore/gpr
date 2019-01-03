@@ -30,6 +30,7 @@ with Ada.Strings.Fixed;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
@@ -112,13 +113,15 @@ procedure Main is
       end if;
    end Display;
 
+   Gpr : constant GPR2.Path_Name.Object := Create ("demo.gpr");
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
 
    Des : Configuration.Description :=
            Configuration.Create (Language => "Ada");
    Cnf : Configuration.Object :=
-           Configuration.Create (Configuration.Description_Set'(1 => Des));
+           Configuration.Create
+             (Configuration.Description_Set'(1 => Des), "all", Gpr);
 begin
    if Cnf.Has_Messages then
       for M of Cnf.Log_Messages loop
@@ -134,8 +137,7 @@ begin
    end if;
 
    Ctx.Include ("OS", "Linux");
-   Project.Tree.Load
-     (Prj, Create ("demo.gpr"), Ctx, Config => Cnf);
+   Project.Tree.Load (Prj, Gpr, Ctx, Config => Cnf);
 
    Display (Prj.Root_Project);
 

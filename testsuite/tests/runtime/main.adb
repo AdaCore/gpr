@@ -147,10 +147,12 @@ procedure Main is
       Text_IO.Put (" > " & Filename (I .. Filename'Last));
    end Output_Filename;
 
+   Gpr : constant Path_Name.Object := Create ("demo.gpr");
    Des : constant Configuration.Description :=
            Configuration.Create (Language => "Ada");
    Cnf : constant Configuration.Object :=
-           Configuration.Create (Configuration.Description_Set'(1 => Des));
+           Configuration.Create
+             (Configuration.Description_Set'(1 => Des), "all", Gpr);
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;
@@ -169,8 +171,7 @@ begin
       end loop;
    end if;
 
-   Project.Tree.Load
-     (Prj, Create ("demo.gpr"), Ctx, Config => Cnf);
+   Project.Tree.Load (Prj, Gpr, Ctx, Config => Cnf);
 
    Display (Prj.Root_Project);
 

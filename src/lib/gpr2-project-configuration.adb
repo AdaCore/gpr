@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2017-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -30,6 +30,7 @@ with GNAT.OS_Lib;
 with GPR2.Message;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Source_Reference;
 
 package body GPR2.Project.Configuration is
 
@@ -100,7 +101,8 @@ package body GPR2.Project.Configuration is
 
    function Create
      (Settings : Description_Set;
-      Target   : Name_Type := "all") return Object
+      Target   : Name_Type;
+      Project  : GPR2.Path_Name.Object) return Object
    is
       --  Note that this is a temporary implementation to bring a solution
       --  for the configuration support in LibGPR2. The long term and proper
@@ -193,7 +195,8 @@ package body GPR2.Project.Configuration is
          Result.Messages.Append
            (Message.Create
               (Message.Error,
-               "cannot create configuration file, fail to execute gprconfig"));
+               "cannot create configuration file, fail to execute gprconfig",
+               Sloc => Source_Reference.Create (Project.Value, 1, 1)));
       end if;
 
       if Directories.Exists (Conf_Filename) and then not Debug then

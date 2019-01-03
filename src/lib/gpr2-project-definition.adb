@@ -682,7 +682,8 @@ package body GPR2.Project.Definition is
                   Ok := False;
                   Tree.Append_Message
                     (Message.Create
-                       (Message.Error, "invalid name, contains dot"));
+                       (Message.Error, "invalid name, contains dot",
+                        Source_Reference.Create (String (Filename), 1, 1)));
 
                else
                   declare

@@ -6,7 +6,7 @@ Has_Element (warn) TRUE
 Has_Element (error) TRUE
 Has_Element (read) FALSE
 Has_Element (unread) TRUE
-Count (err)  0
+prj2.gpr:2:3: test error
 
 Log is empty: FALSE
 Has_Element (info) TRUE
@@ -14,7 +14,7 @@ Has_Element (warn) TRUE
 Has_Element (error) FALSE
 Has_Element (read) TRUE
 Has_Element (unread) TRUE
-Count (warn)  0
+prj1.gpr:1:2: test warning
 
 Log is empty: FALSE
 Has_Element (info) TRUE
@@ -22,7 +22,7 @@ Has_Element (warn) FALSE
 Has_Element (error) FALSE
 Has_Element (read) TRUE
 Has_Element (unread) TRUE
-Count (warn)  0
+prj3.gpr:3:4: test information
 
 Log is empty: FALSE
 Has_Element (info) FALSE
