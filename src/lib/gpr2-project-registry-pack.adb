@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -39,8 +39,7 @@ package body GPR2.Project.Registry.Pack is
    Everywhere    : constant Projects_Kind := (others => True);
 
    No_Aggregates : constant Projects_Kind :=
-                     (K_Aggregate | K_Aggregate_Library => False,
-                      others => True);
+                     (Aggregate_Kind => False, others => True);
 
    ------------
    -- Exists --
