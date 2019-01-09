@@ -994,24 +994,7 @@ package body GPR2.Project.Definition is
             --  sources of the aggregated projects.
 
             for Agg of Def.Aggregated loop
-               declare
-                  Sources : Project.Source.Set.Object;
-               begin
-                  for S of Agg.Sources loop
-                     --  Update the View to aggregate library as dependency
-                     --  files must be placed into the Library_Directory of the
-                     --  aggregate library.
-
-                     Sources.Insert
-                       (Source.Create
-                          (Source               => S.Source,
-                           View                 => View,
-                           Is_Interface         => S.Is_Interface,
-                           Has_Naming_Exception => S.Has_Naming_Exception));
-                  end loop;
-
-                  Insert (Sources, Error);
-               end;
+               Insert (Agg.Sources, Error);
             end loop;
 
          else

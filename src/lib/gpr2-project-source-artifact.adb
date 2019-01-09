@@ -126,6 +126,23 @@ package body GPR2.Project.Source.Artifact is
                  (Self.Dependency.Simple_Name,
                   Optional_Name_Type (View.Library_Directory.Value)));
          end if;
+
+         --  Dependency files must be placed into the Library_Directory of the
+         --  aggregate library.
+
+         if View.Is_Aggregated then
+            declare
+               Aggregate : constant Project.View.Object := View.Aggregate;
+            begin
+               if Aggregate.Kind = K_Aggregate_Library then
+                  Result.Append
+                    (Path_Name.Create_File
+                       (Self.Dependency.Simple_Name,
+                        Optional_Name_Type
+                          (Aggregate.Library_Directory.Value)));
+               end if;
+            end;
+         end if;
       end if;
 
       if Self.Has_Preprocessed_Source then
