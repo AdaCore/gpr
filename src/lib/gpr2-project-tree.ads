@@ -178,9 +178,7 @@ package GPR2.Project.Tree is
      (Self    : in out Object;
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
-     with Pre  => Self.Is_Defined,
-          Post => Self.Context = Context
-                  or else Self.Root_Project.Qualifier in Aggregate_Kind;
+     with Pre => Self.Is_Defined;
    --  Sets the context for the project tree. The callback Changed is called
    --  for any project view which is impacted by this change of context, i.e.
    --  if the project view references directly or indirectly an external

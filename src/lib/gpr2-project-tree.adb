@@ -71,6 +71,11 @@ package body GPR2.Project.Tree is
      with Inline, Pre => Target.Id = Source.Id;
    --  Copy definition fields
 
+   procedure Set_Context
+     (Self    : in out Object;
+      Changed : access procedure (Project : View.Object) := null);
+   --  Update project tree with updated context
+
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Kind   : Iterator_Control;
       Filter : Filter_Control;
@@ -120,6 +125,12 @@ package body GPR2.Project.Tree is
       Context_View : Project.View.Object) return Project.View.Object;
    --  Returns the project view corresponding to Name and Context in the given
    --  Tree or Undefined if this project is not yet registered.
+
+   procedure Fill_Externals_From_Environment
+     (Context   : in out GPR2.Context.Object;
+      Externals : Containers.Name_List);
+   --  If any of externals is not available in context, try to get it from
+   --  process environment and put into the context.
 
    --------------------
    -- Append_Message --
@@ -265,6 +276,24 @@ package body GPR2.Project.Tree is
    begin
       return Position.Views (Position.Current);
    end Element;
+
+   -------------------------------------
+   -- Fill_Externals_From_Environment --
+   -------------------------------------
+
+   procedure Fill_Externals_From_Environment
+     (Context   : in out GPR2.Context.Object;
+      Externals : Containers.Name_List) is
+   begin
+      for E of Externals loop
+         --  Fill all known external in the environment variables
+         if not Context.Contains (E)
+           and then Environment_Variables.Exists (String (E))
+         then
+            Context.Insert (E, Environment_Variables.Value (String (E)));
+         end if;
+      end loop;
+   end Fill_Externals_From_Environment;
 
    -----------
    -- First --
@@ -949,7 +978,7 @@ package body GPR2.Project.Tree is
          end loop;
 
       else
-         Set_Context (Self, Self.Context);
+         Set_Context (Self);
       end if;
    end Load_Configuration;
 
@@ -1093,15 +1122,7 @@ package body GPR2.Project.Tree is
 
                --  Let's setup the full external environment for project
 
-               for E of Data.Externals loop
-                  --  Fill all known external in the environment variables
-                  if not Root_Context.Contains (E)
-                    and then Environment_Variables.Exists (String (E))
-                  then
-                     Root_Context.Insert
-                       (E, Environment_Variables.Value (String (E)));
-                  end if;
-               end loop;
+               Fill_Externals_From_Environment (Root_Context, Data.Externals);
 
                --  If we have the root project, record the global context
 
@@ -1469,6 +1490,25 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
+      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
+   begin
+      --  Register the root context for this project tree
+
+      Root.Context := Context;
+
+      --  Take missing external values from environment
+
+      Fill_Externals_From_Environment (Root.Context, Root.Externals);
+
+      Set_Context (Self, Changed);
+   end Set_Context;
+
+   procedure Set_Context
+     (Self    : in out Object;
+      Changed : access procedure (Project : View.Object) := null)
+   is
+      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
+
       procedure Set_View
         (View           : Project.View.Object;
          Aggregate_Only : Boolean := False);
@@ -1494,9 +1534,8 @@ package body GPR2.Project.Tree is
          Old_Signature : constant GPR2.Context.Binary_Signature :=
                            P_Data.Signature;
          New_Signature : constant GPR2.Context.Binary_Signature :=
-                           Context.Signature (P_Data.Externals);
-         Context       : constant GPR2.Context.Object :=
-                           View.Context;
+                           Root.Context.Signature (P_Data.Externals);
+         Context       : constant GPR2.Context.Object := View.Context;
          Paths         : Path_Name.Set.Object;
       begin
          Parser.Project.Process
@@ -1906,10 +1945,6 @@ package body GPR2.Project.Tree is
       end Validity_Check;
 
    begin
-      --  Register the root context for this project tree
-
-      Definition.Get_RW (Self.Root).Context := Context;
-
       --  Now the first step is to set the configuration project view if any
       --  and to create the runtime project if possible.
 
