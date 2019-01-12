@@ -1014,13 +1014,9 @@ package body GPR2.Project.Tree is
       --  Returns the Data definition for the given project
 
       function Internal
-        (Self         : Object;
-         Filename     : Path_Name.Object;
-         Context_View : View.Object;
-         Status       : Relation_Status;
-         Root_Context : out GPR2.Context.Object;
-         Messages     : out Log.Object;
-         Aggregate    : View.Object) return View.Object;
+        (Filename  : Path_Name.Object;
+         Status    : Relation_Status;
+         Aggregate : View.Object) return View.Object;
 
       procedure Add_Paths_Messages;
       --  Add into Messages the path of the detected circularity
@@ -1065,13 +1061,9 @@ package body GPR2.Project.Tree is
       --------------
 
       function Internal
-        (Self         : Object;
-         Filename     : Path_Name.Object;
-         Context_View : View.Object;
-         Status       : Relation_Status;
-         Root_Context : out GPR2.Context.Object;
-         Messages     : out Log.Object;
-         Aggregate    : View.Object) return View.Object
+        (Filename  : Path_Name.Object;
+         Status    : Relation_Status;
+         Aggregate : View.Object) return View.Object
       is
          View : Project.View.Object :=
                   Self.Get (Filename, Context_View, Status);
@@ -1191,13 +1183,9 @@ package body GPR2.Project.Tree is
 
                         Data.Extended :=
                           Internal
-                            (Self,
-                             Path_Name,
-                             Context_View => Context_View,
-                             Status       => Imported,
-                             Root_Context => Root_Context,
-                             Messages     => Messages,
-                             Aggregate    => Project.View.Undefined);
+                            (Path_Name,
+                             Status    => Imported,
+                             Aggregate => Project.View.Undefined);
 
                         Pop;
 
@@ -1294,13 +1282,9 @@ package body GPR2.Project.Tree is
                         Data.Imports.Insert
                           (Project.Name,
                            Internal
-                             (Self,
-                              Project.Path_Name,
-                              Context_View => Context_View,
-                              Status       => Imported,
-                              Root_Context => Root_Context,
-                              Messages     => Messages,
-                              Aggregate    => GPR2.Project.View.Undefined));
+                             (Project.Path_Name,
+                              Status    => Imported,
+                              Aggregate => GPR2.Project.View.Undefined));
 
                         Pop;
                      end if;
@@ -1381,9 +1365,7 @@ package body GPR2.Project.Tree is
    begin
       Circularities := False;
 
-      return Internal
-        (Self, Filename, Context_View, Status, Root_Context, Messages,
-         Starting_From);
+      return Internal (Filename, Status, Starting_From);
    end Recursive_Load;
 
    ----------------------------------
