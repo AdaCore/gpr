@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                       Copyright (C) 2018, AdaCore                        --
+--                     Copyright (C) 2018-2019, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -40,6 +40,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
+with GPR2.Source_Reference;
 with GPRtools.Options;
 with GPRtools.Util;
 with GPR2.Version;
@@ -458,6 +459,23 @@ begin
       Project_Tree.Load_Autoconf
         (Project_Path, Context,
          Optional_Name_Type (To_String (Subdirs)));
+   end if;
+
+   if Project_Tree.Root_Project.Kind in K_Library | K_Aggregate_Library
+     and then Arg_Mains
+   then
+      Project_Tree.Log_Messages.Append
+        (GPR2.Message.Create
+           (GPR2.Message.Error,
+            "main cannot be a source of a library project: """
+            & Mains.First_Element & '"',
+            GPR2.Source_Reference.Create (Project_Path.Value, 0, 0)));
+
+      Util.Output_Messages
+        (Project_Tree.Log_Messages.all, Options.Verbose,
+         Text_IO.Standard_Output);
+
+      GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
 
    for V in Project_Tree.Iterate
