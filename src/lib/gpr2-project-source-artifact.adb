@@ -118,9 +118,7 @@ package body GPR2.Project.Source.Artifact is
          --  Library project has the same ALI files in object and library
          --  directories.
 
-         if View.Kind in K_Library | K_Aggregate_Library
-           and then Source.Language = "Ada"
-         then
+         if View.Is_Library and then Source.Language = "Ada" then
             Result.Append
               (Path_Name.Create_File
                  (Self.Dependency.Simple_Name,

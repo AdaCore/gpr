@@ -1822,7 +1822,7 @@ package body GPR2.Project.Tree is
          declare
             package A renames GPR2.Project.Registry.Attribute;
          begin
-            if View.Kind in K_Library | K_Aggregate_Library
+            if View.Is_Library
               and then not View.Is_Static_Library
               and then View.Has_Attributes (A.Library_Version)
             then

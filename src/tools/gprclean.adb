@@ -363,7 +363,7 @@ procedure GPRclean is
             end;
          end if;
 
-         if View.Kind in K_Library | K_Aggregate_Library then
+         if View.Is_Library then
             if View.Is_Aggregated_In_Library then
                Binder_Artifacts (View.Aggregate.Library_Name & Lexch);
             else
@@ -461,9 +461,7 @@ begin
          Optional_Name_Type (To_String (Subdirs)));
    end if;
 
-   if Project_Tree.Root_Project.Kind in K_Library | K_Aggregate_Library
-     and then Arg_Mains
-   then
+   if Project_Tree.Root_Project.Is_Library and then Arg_Mains then
       Project_Tree.Log_Messages.Append
         (GPR2.Message.Create
            (GPR2.Message.Error,

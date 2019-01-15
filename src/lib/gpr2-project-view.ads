@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -295,70 +295,69 @@ package GPR2.Project.View is
    --  Returns the mains's binary full pathname
 
    function Library_Name (Self : Object) return Name_Type
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the library name
 
    function Library_Kind (Self : Object) return Name_Type
      with Pre  => Self.Is_Defined
-                  and then Self.Kind in K_Library | K_Aggregate_Library,
+                  and then Self.Is_Library,
           Post => Self.Has_Attributes (Project.Registry.Attribute.Library_Kind)
                   or else Library_Kind'Result = "static";
    --  Returns the library kind, "static" if the corresponding attribute is not
    --  defined.
 
+   function Is_Library (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the project is library
+
    function Is_Static_Library (Self : Object) return Boolean
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns True if the library is a static one, so either static or
    --  static-pic.
 
+   function Is_Shared_Library (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Is_Library;
+   --  Returns True if the library is a shared one
+
    function Has_Library_Interface (Self : Object) return Boolean
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Retruns whether the optional library interface attribute is defined
 
    function Has_Library_Version (Self : Object) return Boolean
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the optional library version name is defined
 
    function Library_Major_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the library major name if it exists. That is, if the project
    --  Library_Version exists and is set to libxyz.so.1.2 for example then the
    --  returned value is libxyz.so.1. If no major version is computable an
    --  undefined path-name is returned.
 
    function Library_Filename (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the actual file name for the library
 
    function Library_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined
-                 and then Self.Has_Library_Version
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+                 and then Self.Is_Library
+                 and then Self.Has_Library_Version;
    --  Returns the library version filename
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the library directory, note that this may be difference than
    --  getting the Library_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 
    function Library_Standalone (Self : Object) return Standalone_Library_Kind
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the kind for the standalone library
 
    function Is_Library_Standalone (Self : Object) return Boolean
-     with Pre => Self.Is_Defined
-                 and then Self.Kind in K_Library | K_Aggregate_Library;
+     with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the library is standalone
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
@@ -395,6 +394,9 @@ private
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Get.Id < Right.Get.Id);
+
+   function Is_Library (Self : Object) return Boolean is
+      (Self.Kind in K_Library | K_Aggregate_Library);
 
    function Library_Name (Self : Object) return Name_Type is
      (Name_Type (Self.Attribute (Registry.Attribute.Library_Name).Value));
