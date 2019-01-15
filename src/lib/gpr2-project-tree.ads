@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -61,11 +61,12 @@ package GPR2.Project.Tree is
    --  Returns True if Left and Right are the same tree
 
    procedure Load
-     (Self     : in out Object;
-      Filename : Path_Name.Object;
-      Context  : GPR2.Context.Object;
-      Config   : Configuration.Object := Configuration.Undefined;
-      Subdirs  : Optional_Name_Type   := No_Name)
+     (Self             : in out Object;
+      Filename         : Path_Name.Object;
+      Context          : GPR2.Context.Object;
+      Config           : Configuration.Object := Configuration.Undefined;
+      Subdirs          : Optional_Name_Type   := No_Name;
+      Check_Shared_Lib : Boolean              := True)
      with Pre => Filename.Is_Defined;
    --  Loads a root project
 
@@ -80,6 +81,7 @@ package GPR2.Project.Tree is
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
       Subdirs           : Optional_Name_Type := No_Name;
+      Check_Shared_Lib  : Boolean            := True;
       Target            : Optional_Name_Type := No_Name;
       Language_Runtimes : GPR2.Containers.Name_Value_Map :=
                             GPR2.Containers.Name_Value_Map_Package.Empty_Map)
@@ -307,17 +309,18 @@ private
      (Name_Type, View.Set.Object, "=" => View.Set."=");
 
    type Object is tagged limited record
-      Self         : access Object := null;
-      Root         : View.Object;
-      Conf         : Project.Configuration.Object;
-      Runtime      : View.Object;
-      Units        : Name_View.Map;
-      Sources      : Name_View.Map;
-      Messages     : aliased Log.Object;
-      Search_Paths : Path_Name.Set.Object;
-      Subdirs      : Ada.Strings.Unbounded.Unbounded_String;
-      Views        : aliased View_Maps.Map;
-      Views_Set    : View.Set.Object; -- All projects in registration order
+      Self             : access Object := null;
+      Root             : View.Object;
+      Conf             : Project.Configuration.Object;
+      Runtime          : View.Object;
+      Units            : Name_View.Map;
+      Sources          : Name_View.Map;
+      Messages         : aliased Log.Object;
+      Search_Paths     : Path_Name.Set.Object;
+      Subdirs          : Ada.Strings.Unbounded.Unbounded_String;
+      Check_Shared_Lib : Boolean := True;
+      Views            : aliased View_Maps.Map;
+      Views_Set        : View.Set.Object; -- All projects in registration order
    end record;
 
    function "=" (Left, Right : Object) return Boolean

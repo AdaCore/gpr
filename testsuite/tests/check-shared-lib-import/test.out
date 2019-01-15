@@ -1,0 +1,3 @@
+base.gpr:2:6: shared library project "Shared" cannot import project "Nolib" that is not a shared library project
+base.gpr:1:6: shared library project "Shared" cannot import static library project "Static"
+gprclean: "prj.gpr" processing failed

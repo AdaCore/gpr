@@ -72,12 +72,16 @@ procedure GPRclean is
    procedure Set_Project (Path : String);
    --  Set project pathname, raise exception if already done
 
-   Dry_Run       : aliased Boolean := False;
-   All_Projects  : aliased Boolean := False;
+   Dry_Run                     : aliased Boolean := False;
+   All_Projects                : aliased Boolean := False;
+   Remain_Useful               : aliased Boolean := False;
+   No_Project                  : aliased Boolean := False;
+   Unchecked_Shared_Lib_Import : aliased Boolean := False;
+   Dummy                       : aliased Boolean := False;
+   --  For not working backward compartible switches
+
    Mains         : GPR2.Containers.Value_Set;
    Arg_Mains     : Boolean;
-   Remain_Useful : aliased Boolean := False;
-   No_Project    : aliased Boolean := False;
    Project_Path  : Path_Name.Object;
    Project_Tree  : Project.Tree.Object;
    Context       : GPR2.Context.Object;
@@ -87,8 +91,6 @@ procedure GPRclean is
    Target        : Unbounded_String := To_Unbounded_String ("all");
    Options       : GPRtools.Options.Object; -- Common options for all tools
    Subdirs       : Unbounded_String;
-   Dummy         : aliased Boolean := False;
-   --  For not working backward compartible switches
 
    ------------------
    -- Exclude_File --
@@ -184,6 +186,11 @@ procedure GPRclean is
       Define_Switch
         (Config, Dummy'Access, "-eL",
          Help => "For backwards compatibility, has no effect");
+
+      Define_Switch
+        (Config, Unchecked_Shared_Lib_Import'Access,
+         Long_Switch => "--unchecked-shared-lib-imports",
+         Help => "Shared lib projects may import any project");
 
       Getopt (Config);
 
@@ -453,12 +460,14 @@ begin
 
       Project_Tree.Load
         (Project_Path, Context, Config,
-         Optional_Name_Type (To_String (Subdirs)));
+         Optional_Name_Type (To_String (Subdirs)),
+         Check_Shared_Lib => not Unchecked_Shared_Lib_Import);
 
    else
       Project_Tree.Load_Autoconf
         (Project_Path, Context,
-         Optional_Name_Type (To_String (Subdirs)));
+         Optional_Name_Type (To_String (Subdirs)),
+         Check_Shared_Lib => not Unchecked_Shared_Lib_Import);
    end if;
 
    if Project_Tree.Root_Project.Is_Library and then Arg_Mains then

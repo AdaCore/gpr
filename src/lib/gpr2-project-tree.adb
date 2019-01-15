@@ -612,11 +612,12 @@ package body GPR2.Project.Tree is
    ----------
 
    procedure Load
-     (Self     : in out Object;
-      Filename : Path_Name.Object;
-      Context  : GPR2.Context.Object;
-      Config   : PC.Object          := PC.Undefined;
-      Subdirs  : Optional_Name_Type := No_Name)
+     (Self             : in out Object;
+      Filename         : Path_Name.Object;
+      Context          : GPR2.Context.Object;
+      Config           : PC.Object          := PC.Undefined;
+      Subdirs          : Optional_Name_Type := No_Name;
+      Check_Shared_Lib : Boolean            := True)
    is
       use Ada.Strings.Unbounded;
 
@@ -808,7 +809,8 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
-      Self.Subdirs := To_Unbounded_String (String (Subdirs));
+      Self.Subdirs          := To_Unbounded_String (String (Subdirs));
+      Self.Check_Shared_Lib := Check_Shared_Lib;
 
       --  Now we can initialize the project search paths
 
@@ -859,6 +861,7 @@ package body GPR2.Project.Tree is
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
       Subdirs           : Optional_Name_Type := No_Name;
+      Check_Shared_Lib  : Boolean            := True;
       Target            : Optional_Name_Type := No_Name;
       Language_Runtimes : GPR2.Containers.Name_Value_Map :=
                             GPR2.Containers.Name_Value_Map_Package.Empty_Map)
@@ -868,7 +871,10 @@ package body GPR2.Project.Tree is
       Conf         : Project.Configuration.Object;
 
    begin
-      Self.Load (Filename, Context, Subdirs => Subdirs);
+      Self.Load
+        (Filename, Context,
+         Subdirs          => Subdirs,
+         Check_Shared_Lib => Check_Shared_Lib);
 
       Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
@@ -917,7 +923,10 @@ package body GPR2.Project.Tree is
          Conf := Project.Configuration.Create
            (Conf_Descriptions, Actual_Target, Filename);
 
-         Self.Load (Filename, Context, Conf, Subdirs => Subdirs);
+         Self.Load
+           (Filename, Context, Conf,
+            Subdirs          => Subdirs,
+            Check_Shared_Lib => Check_Shared_Lib);
       end;
    end Load_Autoconf;
 
@@ -1821,30 +1830,77 @@ package body GPR2.Project.Tree is
 
          declare
             package A renames GPR2.Project.Registry.Attribute;
-         begin
-            if View.Is_Library
-              and then not View.Is_Static_Library
-              and then View.Has_Attributes (A.Library_Version)
-            then
-               declare
-                  Lib_Ver : constant Value_Type :=
-                              View.Attribute (A.Library_Version).Value;
-                  Lib_Fn  : constant Value_Type :=
-                              Value_Type (View.Library_Filename.Name);
-               begin
-                  if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
-                    or else not Regexp.Match
-                      (Lib_Ver (Lib_Ver'First + Lib_Fn'Length .. Lib_Ver'Last),
-                       Version_Regexp)
-                  then
+
+            procedure Check_Shared_Lib (PV : Project.View.Object);
+            --  Check that shared library project does not have in imports
+            --  static library or standard projects.
+
+            ----------------------
+            -- Check_Shared_Lib --
+            ----------------------
+
+            procedure Check_Shared_Lib (PV : Project.View.Object) is
+               P_Data : constant Definition.Const_Ref :=
+                          Definition.Get_RO (PV);
+            begin
+               for Imp of P_Data.Imports loop
+                  if Imp.Kind = K_Abstract then
+                     --  Check imports further in recursion
+
+                     Check_Shared_Lib (Imp);
+
+                  elsif not Imp.Is_Library then
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
-                           '"' & View.Attribute (A.Library_Version).Value
-                           & """ not correct format for Library_Version",
-                           Sloc => View.Attribute (A.Library_Version)));
+                           "shared library project """ & String (View.Name)
+                           & """ cannot import project """
+                           & String (Imp.Name)
+                           & """ that is not a shared library project",
+                           P_Data.Trees.Project.Imports.Element
+                             (Imp.Path_Name)));
+
+                  elsif Imp.Is_Static_Library then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "shared library project """ & String (View.Name)
+                           & """ cannot import static library project """
+                           & String (Imp.Name) & '"',
+                           P_Data.Trees.Project.Imports.Element
+                             (Imp.Path_Name)));
                   end if;
-               end;
+               end loop;
+            end Check_Shared_Lib;
+
+         begin
+            if View.Is_Library and then View.Is_Shared_Library then
+               if View.Has_Attributes (A.Library_Version) then
+                  declare
+                     Lib_Ver : constant Value_Type :=
+                                 View.Attribute (A.Library_Version).Value;
+                     Lib_Fn  : constant Value_Type :=
+                                 Value_Type (View.Library_Filename.Name);
+                  begin
+                     if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
+                       or else not Regexp.Match
+                         (Lib_Ver (Lib_Ver'First + Lib_Fn'Length
+                            .. Lib_Ver'Last),
+                          Version_Regexp)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              '"' & View.Attribute (A.Library_Version).Value
+                              & """ not correct format for Library_Version",
+                              Sloc => View.Attribute (A.Library_Version)));
+                     end if;
+                  end;
+               end if;
+
+               if Self.Check_Shared_Lib then
+                  Check_Shared_Lib (View);
+               end if;
             end if;
          end;
       end Validity_Check;

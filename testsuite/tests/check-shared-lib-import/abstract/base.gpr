@@ -1,0 +1,5 @@
+with "../static/static.gpr";
+with "../nolib/nolib.gpr";
+
+abstract project Base is
+end Base;

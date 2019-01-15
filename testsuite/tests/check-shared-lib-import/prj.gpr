@@ -1,0 +1,5 @@
+with "shared/shared.gpr";
+project Prj is
+   for Main use ("main.adb");
+end Prj;
+
