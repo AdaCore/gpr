@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2018, Free Software Foundation, Inc.            --
+--         Copyright (C) 2018-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -79,9 +79,10 @@ private
 
    type Object is tagged record
       Source           : Project.Source.Object;
-      Object           : Path_Name.Object := Path_Name.Undefined;
-      Dependency       : Path_Name.Object := Path_Name.Undefined;
-      Preprocessed_Src : Path_Name.Object := Path_Name.Undefined;
+      Object           : Path_Name.Object;
+      Dependency       : Path_Name.Object;
+      Switches         : Path_Name.Object;
+      Preprocessed_Src : Path_Name.Object;
    end record;
 
    Undefined : constant Object := (others => <>);

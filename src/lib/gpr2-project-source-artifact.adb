@@ -41,11 +41,12 @@ package body GPR2.Project.Source.Artifact is
       O_Suffix : constant Name_Type := Tree.Object_Suffix (Lang);
       D_Suffix : constant Name_Type := Tree.Dependency_Suffix (Lang);
       P_Suffix : constant Name_Type := ".prep";
+      S_Suffix : constant Name_Type := ".cswi";
 
-      Object   : constant Path_Name.Object :=
-                   Path_Name.Create_File
-                     (Src & O_Suffix,
-                      Optional_Name_Type (View.Object_Directory.Value));
+      Object       : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & O_Suffix,
+                          Optional_Name_Type (View.Object_Directory.Value));
 
       Dependency   : constant Path_Name.Object :=
                        Path_Name.Create_File
@@ -57,11 +58,17 @@ package body GPR2.Project.Source.Artifact is
                          (Src & P_Suffix,
                           Optional_Name_Type (View.Object_Directory.Value));
 
+      Switches     : constant Path_Name.Object :=
+                       Path_Name.Create_File
+                         (Src & S_Suffix,
+                          Optional_Name_Type (View.Object_Directory.Value));
+
    begin
       return Artifact.Object'
         (Source           => Source,
          Object           => Object,
          Dependency       => Dependency,
+         Switches         => Switches,
          Preprocessed_Src => Preprocessed);
    end Create;
 
@@ -145,6 +152,10 @@ package body GPR2.Project.Source.Artifact is
 
       if Self.Has_Preprocessed_Source then
          Result.Append (Self.Preprocessed_Source);
+      end if;
+
+      if Self.Switches.Is_Defined and then Self.Switches.Exists then
+         Result.Append (Self.Switches);
       end if;
 
       return Result;
