@@ -103,7 +103,8 @@ package body GPR2.Project.View is
       Subdirs : constant Optional_Name_Type := Self.Tree.Subdirs;
       Result  : constant GPR2.Path_Name.Object :=
                   GPR2.Path_Name.Create_Directory
-                    (Name_Type (Dir), Name_Type (Self.Path_Name.Dir_Name));
+                    (Name_Type (Value_Type'(if Dir = "" then "." else Dir)),
+                     Name_Type (Self.Path_Name.Dir_Name));
    begin
       if Subdirs = No_Name then
          return Result;

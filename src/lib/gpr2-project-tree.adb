@@ -1733,6 +1733,10 @@ package body GPR2.Project.Tree is
          use type Registry.Attribute.Index_Kind;
          use type Registry.Attribute.Value_Kind;
 
+         Check_Object_Dir_Exists : Boolean := True;
+         --  To avoid error on check Object_Dir existence when attribute is not
+         --  correct.
+
          procedure Check_Def
            (Def : Registry.Attribute.Def;
             A   : Attribute.Object);
@@ -1765,6 +1769,10 @@ package body GPR2.Project.Tree is
                     (Message.Error,
                      "attribute """ & String (A.Name) & """ cannot be a list",
                      A));
+
+               if A.Name = Registry.Attribute.Object_Dir then
+                  Check_Object_Dir_Exists := False;
+               end if;
             end if;
 
             if Def.Value = Registry.Attribute.List
@@ -1940,6 +1948,19 @@ package body GPR2.Project.Tree is
                if Self.Check_Shared_Lib then
                   Check_Shared_Lib (View);
                end if;
+            end if;
+
+            if View.Kind in K_Standard | K_Library | K_Aggregate_Library
+              and then Check_Object_Dir_Exists
+              and then View.Has_Attributes (A.Object_Dir)
+              and then not View.Object_Directory.Exists
+            then
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Warning,
+                     "object directory """
+                     & View.Attribute (A.Object_Dir).Value & """ not found",
+                     Sloc => View.Attribute (A.Object_Dir)));
             end if;
          end;
       end Validity_Check;

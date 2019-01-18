@@ -514,10 +514,9 @@ begin
       Exclude_File (Config_File.Value);
    end if;
 
-   if Options.Verbose then
-      Util.Output_Messages
-        (Project_Tree.Log_Messages.all, True, Full_Path_Name_For_Brief);
-   end if;
+   Util.Output_Messages
+     (Project_Tree.Log_Messages.all, Options.Verbose,
+      Full_Path_Name_For_Brief);
 
 exception
    when GNAT.Command_Line.Invalid_Switch
