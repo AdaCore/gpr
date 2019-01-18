@@ -109,15 +109,15 @@ package body GPRtools.Util is
          declare
             use GPR2.Message;
 
-            Msg   : constant GPR2.Log.Constant_Reference_Type :=
-                      Log.Constant_Reference (C);
-            Text  : constant String := Msg.Format (Full_Path_Name);
-            Dummy : GPR2.Containers.Value_Type_Set.Cursor;
-            OK    : Boolean;
+            Msg      : constant GPR2.Log.Constant_Reference_Type :=
+                         Log.Constant_Reference (C);
+            Text     : constant String := Msg.Format (Full_Path_Name);
+            Dummy    : GPR2.Containers.Value_Type_Set.Cursor;
+            Inserted : Boolean;
          begin
-            Displayed.Insert (Text, Dummy, OK);
+            Displayed.Insert (Text, Dummy, Inserted);
 
-            if OK then
+            if Inserted then
                Put_Line
                  (File_Access'
                     (case Msg.Level is
