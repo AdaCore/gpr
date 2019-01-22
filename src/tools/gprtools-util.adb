@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                       Copyright (C) 2018, AdaCore                        --
+--                     Copyright (C) 2018-2019, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -19,6 +19,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;           use Ada.Text_IO;
 with GNAT.OS_Lib;           use GNAT.OS_Lib;
+with GPR2.Containers;
 
 package body GPRtools.Util is
 
@@ -96,13 +97,25 @@ package body GPRtools.Util is
    procedure Output_Messages
      (Log     : GPR2.Log.Object;
       Verbose : Boolean;
-      Output  : Ada.Text_IO.File_Type) is
+      Output  : Ada.Text_IO.File_Type)
+   is
+      Displayed : GPR2.Containers.Value_Set;
    begin
       for C in Log.Iterate
                  (Information => Verbose, Warning => Verbose, Error => True,
                   Read => True, Unread => True)
       loop
-         Put_Line (Output, GPR2.Log.Element (C).Format);
+         declare
+            Message : constant String := GPR2.Log.Element (C).Format;
+            Dummy   : GPR2.Containers.Value_Type_Set.Cursor;
+            OK      : Boolean;
+         begin
+            Displayed.Insert (Message, Dummy, OK);
+
+            if OK then
+               Put_Line (Output, Message);
+            end if;
+         end;
       end loop;
    end Output_Messages;
 
