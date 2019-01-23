@@ -78,6 +78,7 @@ procedure GPRclean is
    No_Project                  : aliased Boolean := False;
    Unchecked_Shared_Lib_Import : aliased Boolean := False;
    Dummy                       : aliased Boolean := False;
+   Full_Path_Name_For_Brief    : aliased Boolean := False;
    --  For not working backward compartible switches
 
    Mains         : GPR2.Containers.Value_Set;
@@ -191,6 +192,11 @@ procedure GPRclean is
         (Config, Unchecked_Shared_Lib_Import'Access,
          Long_Switch => "--unchecked-shared-lib-imports",
          Help => "Shared lib projects may import any project");
+
+      Define_Switch
+        (Config, Full_Path_Name_For_Brief'Access,
+         Switch => "-F",
+         Help   => "Full project path name in brief log messages");
 
       Getopt (Config);
 
@@ -452,7 +458,8 @@ begin
 
       if Config.Log_Messages.Has_Error then
          Util.Output_Messages
-           (Config.Log_Messages, Options.Verbose, Text_IO.Standard_Error);
+           (Config.Log_Messages, Options.Verbose, Text_IO.Standard_Error,
+            Full_Path_Name_For_Brief);
          Util.Fail_Program
            ("Config file """ & String (Config_File.Simple_Name)
             & """ parse error");
@@ -480,7 +487,7 @@ begin
 
       Util.Output_Messages
         (Project_Tree.Log_Messages.all, Options.Verbose,
-         Text_IO.Standard_Output);
+         Text_IO.Standard_Output, Full_Path_Name_For_Brief);
 
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
@@ -502,7 +509,8 @@ begin
 
    if Options.Verbose then
       Util.Output_Messages
-        (Project_Tree.Log_Messages.all, True, Text_IO.Standard_Output);
+        (Project_Tree.Log_Messages.all, True, Text_IO.Standard_Output,
+         Full_Path_Name_For_Brief);
    end if;
 
 exception
@@ -512,7 +520,8 @@ exception
       Command_Line.Set_Exit_Status (Command_Line.Failure);
 
    when Project_Error =>
-      GPRtools.Util.Project_Processing_Failed (Project_Tree, Options.Verbose);
+      GPRtools.Util.Project_Processing_Failed
+        (Project_Tree, Options.Verbose, Full_Path_Name_For_Brief);
 
    when E : others =>
       GPRtools.Util.Fail_Program

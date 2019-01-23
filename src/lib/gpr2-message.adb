@@ -48,10 +48,15 @@ package body GPR2.Message is
    -- Format --
    ------------
 
-   function Format (Self : Object) return String is
+   function Format
+     (Self : Object; Full_Path_Name : Boolean := False) return String
+   is
       use Ada;
       use GNAT.Formatted_String;
-      Filename : constant Path_Name.Full_Name := Self.Sloc.Filename;
+      Filename : constant String :=
+                   (if Full_Path_Name
+                    then Self.Sloc.Filename
+                    else Directories.Simple_Name (Self.Sloc.Filename));
       Indented : constant String :=
                    (1 .. Self.Indent * 2 => ' ') & To_String (Self.Message);
    begin
@@ -60,8 +65,7 @@ package body GPR2.Message is
             Format : constant Formatted_String := +"%s:%d:%d: %s";
          begin
             return -(Format
-                     & Directories.Simple_Name (Filename)
-                     & Self.Sloc.Line & Self.Sloc.Column
+                     & Filename & Self.Sloc.Line & Self.Sloc.Column
                      & Indented);
          end;
 
@@ -69,9 +73,7 @@ package body GPR2.Message is
          declare
             Format : constant Formatted_String := +"%s: %s";
          begin
-            return -(Format
-                     & Directories.Simple_Name (Self.Sloc.Filename)
-                     & Indented);
+            return -(Format & Filename & Indented);
          end;
       end if;
    end Format;

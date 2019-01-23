@@ -95,9 +95,10 @@ package body GPRtools.Util is
    ---------------------
 
    procedure Output_Messages
-     (Log     : GPR2.Log.Object;
-      Verbose : Boolean;
-      Output  : Ada.Text_IO.File_Type)
+     (Log            : GPR2.Log.Object;
+      Verbose        : Boolean;
+      Output         : Ada.Text_IO.File_Type;
+      Full_Path_Name : Boolean := False)
    is
       Displayed : GPR2.Containers.Value_Set;
    begin
@@ -106,7 +107,8 @@ package body GPRtools.Util is
                   Read => True, Unread => True)
       loop
          declare
-            Message : constant String := GPR2.Log.Element (C).Format;
+            Message : constant String :=
+                        GPR2.Log.Element (C).Format (Full_Path_Name);
             Dummy   : GPR2.Containers.Value_Type_Set.Cursor;
             OK      : Boolean;
          begin
@@ -124,9 +126,12 @@ package body GPRtools.Util is
    -------------------------------
 
    procedure Project_Processing_Failed
-     (Tree : GPR2.Project.Tree.Object; Verbose : Boolean) is
+     (Tree           : GPR2.Project.Tree.Object;
+      Verbose        : Boolean;
+      Full_Path_Name : Boolean := False) is
    begin
-      Output_Messages (Tree.Log_Messages.all, Verbose, Standard_Error);
+      Output_Messages
+        (Tree.Log_Messages.all, Verbose, Standard_Error, Full_Path_Name);
       Fail_Program
         ('"' & String (Tree.Root_Project.Path_Name.Simple_Name)
          & """ processing failed");

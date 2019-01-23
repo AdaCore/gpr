@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                       Copyright (C) 2018, AdaCore                        --
+--                     Copyright (C) 2018-2019, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -38,9 +38,10 @@ package GPRtools.Util is
    procedure Set_Program_Name (Name : String);
 
    procedure Output_Messages
-     (Log     : GPR2.Log.Object;
-      Verbose : Boolean;
-      Output  : Text_IO.File_Type);
+     (Log            : GPR2.Log.Object;
+      Verbose        : Boolean;
+      Output         : Text_IO.File_Type;
+      Full_Path_Name : Boolean := False);
    --  Output errors and if Verbose is True other messages from log
 
    -------------------------
@@ -51,7 +52,9 @@ package GPRtools.Util is
    --  Terminate program with a message and a fatal status code.
 
    procedure Project_Processing_Failed
-     (Tree : GPR2.Project.Tree.Object; Verbose : Boolean);
+     (Tree           : GPR2.Project.Tree.Object;
+      Verbose        : Boolean;
+      Full_Path_Name : Boolean := False);
    --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.

@@ -64,9 +64,12 @@ package GPR2.Message is
    function Sloc (Self : Object) return Source_Reference.Object with Inline;
    --  Returns the actual source reference associated with this message
 
-   function Format (Self : Object) return String;
+   function Format
+     (Self : Object; Full_Path_Name : Boolean := False) return String;
    --  Returns the message with a standard message as expected by compiler
    --  tools: <filename>:<line>:<col>: <message>
+   --  <filename> format controlled by Full_Path_Name parameter. Default False
+   --  is for simple file name, True is for full path name format.
 
    procedure Set_Status (Self : in out Object; Status : Status_Type)
      with Post => Self.Status = Status;
