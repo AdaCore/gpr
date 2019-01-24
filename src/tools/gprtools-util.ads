@@ -18,13 +18,10 @@
 
 --  Common utilities for all gpr tools
 
-with Ada.Text_IO;
 with GPR2.Log;
 with GPR2.Project.Tree;
 
 package GPRtools.Util is
-
-   use Ada;
 
    type Exit_Code_Type is
      (E_Success,    -- No warnings or errors
@@ -40,7 +37,6 @@ package GPRtools.Util is
    procedure Output_Messages
      (Log            : GPR2.Log.Object;
       Verbose        : Boolean;
-      Output         : Text_IO.File_Type;
       Full_Path_Name : Boolean := False);
    --  Output errors and if Verbose is True other messages from log
 

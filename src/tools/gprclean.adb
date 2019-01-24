@@ -458,8 +458,7 @@ begin
 
       if Config.Log_Messages.Has_Error then
          Util.Output_Messages
-           (Config.Log_Messages, Options.Verbose, Text_IO.Standard_Error,
-            Full_Path_Name_For_Brief);
+           (Config.Log_Messages, Options.Verbose, Full_Path_Name_For_Brief);
          Util.Fail_Program
            ("Config file """ & String (Config_File.Simple_Name)
             & """ parse error");
@@ -487,7 +486,7 @@ begin
 
       Util.Output_Messages
         (Project_Tree.Log_Messages.all, Options.Verbose,
-         Text_IO.Standard_Output, Full_Path_Name_For_Brief);
+         Full_Path_Name_For_Brief);
 
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
@@ -509,8 +508,7 @@ begin
 
    if Options.Verbose then
       Util.Output_Messages
-        (Project_Tree.Log_Messages.all, True, Text_IO.Standard_Output,
-         Full_Path_Name_For_Brief);
+        (Project_Tree.Log_Messages.all, True, Full_Path_Name_For_Brief);
    end if;
 
 exception

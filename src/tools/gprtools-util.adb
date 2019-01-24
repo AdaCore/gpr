@@ -19,6 +19,7 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Text_IO;           use Ada.Text_IO;
 with GNAT.OS_Lib;           use GNAT.OS_Lib;
+with GPR2.Message;
 with GPR2.Containers;
 
 package body GPRtools.Util is
@@ -97,25 +98,32 @@ package body GPRtools.Util is
    procedure Output_Messages
      (Log            : GPR2.Log.Object;
       Verbose        : Boolean;
-      Output         : Ada.Text_IO.File_Type;
       Full_Path_Name : Boolean := False)
    is
       Displayed : GPR2.Containers.Value_Set;
    begin
       for C in Log.Iterate
-                 (Information => Verbose, Warning => Verbose, Error => True,
+                 (Information => Verbose, Warning => True, Error => True,
                   Read => True, Unread => True)
       loop
          declare
-            Message : constant String :=
-                        GPR2.Log.Element (C).Format (Full_Path_Name);
-            Dummy   : GPR2.Containers.Value_Type_Set.Cursor;
-            OK      : Boolean;
+            use GPR2.Message;
+
+            Msg   : constant GPR2.Log.Constant_Reference_Type :=
+                      Log.Constant_Reference (C);
+            Text  : constant String := Msg.Format (Full_Path_Name);
+            Dummy : GPR2.Containers.Value_Type_Set.Cursor;
+            OK    : Boolean;
          begin
-            Displayed.Insert (Message, Dummy, OK);
+            Displayed.Insert (Text, Dummy, OK);
 
             if OK then
-               Put_Line (Output, Message);
+               Put_Line
+                 (File_Access'
+                    (case Msg.Level is
+                        when Information     => Current_Output,
+                        when Warning | Error => Current_Error).all,
+                  Text);
             end if;
          end;
       end loop;
@@ -130,8 +138,7 @@ package body GPRtools.Util is
       Verbose        : Boolean;
       Full_Path_Name : Boolean := False) is
    begin
-      Output_Messages
-        (Tree.Log_Messages.all, Verbose, Standard_Error, Full_Path_Name);
+      Output_Messages (Tree.Log_Messages.all, Verbose, Full_Path_Name);
       Fail_Program
         ('"' & String (Tree.Root_Project.Path_Name.Simple_Name)
          & """ processing failed");
