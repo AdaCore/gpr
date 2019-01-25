@@ -78,6 +78,7 @@ procedure GPRclean is
    No_Project                  : aliased Boolean := False;
    Unchecked_Shared_Lib_Import : aliased Boolean := False;
    Dummy                       : aliased Boolean := False;
+   Debug_Mode                  : aliased Boolean := False;
    Full_Path_Name_For_Brief    : aliased Boolean := False;
    --  For not working backward compartible switches
 
@@ -194,11 +195,18 @@ procedure GPRclean is
          Help => "Shared lib projects may import any project");
 
       Define_Switch
+        (Config, Debug_Mode'Access,
+         Switch => "-d",
+         Help   => "Debug mode");
+
+      Define_Switch
         (Config, Full_Path_Name_For_Brief'Access,
          Switch => "-F",
          Help   => "Full project path name in brief log messages");
 
       Getopt (Config);
+
+      GPR2.Set_Debug (Debug_Mode);
 
       if Options.Version then
          GPR2.Version.Display
