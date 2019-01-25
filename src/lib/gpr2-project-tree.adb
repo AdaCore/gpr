@@ -905,6 +905,18 @@ package body GPR2.Project.Tree is
          Subdirs          => Subdirs,
          Check_Shared_Lib => Check_Shared_Lib);
 
+      if not Self.Root_Project.Has_Languages then
+         pragma Assert (Self.Root_Project.Attributes.Has_Languages);
+
+         Self.Append_Message
+           (Message.Create
+              (Level   => Message.Warning,
+               Message => "no language for the project:"
+               & " configuration skipped",
+               Sloc    => Self.Root_Project.Attributes.Languages));
+         return;
+      end if;
+
       Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
       declare

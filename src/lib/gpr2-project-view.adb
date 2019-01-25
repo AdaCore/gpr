@@ -342,6 +342,15 @@ package body GPR2.Project.View is
       return not Definition.Get_RO (Self).Trees.Imports.Is_Empty;
    end Has_Imports;
 
+   -------------------
+   -- Has_Languages --
+   -------------------
+
+   function Has_Languages (Self : Object) return Boolean is
+   begin
+      return not Definition.Get_RO (Self).Languages.Is_Empty;
+   end Has_Languages;
+
    ---------------
    -- Has_Mains --
    ---------------
