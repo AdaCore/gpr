@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:3:4: duplicate aggregated project a
+demo.gpr:3:4: warning: duplicate aggregated project a

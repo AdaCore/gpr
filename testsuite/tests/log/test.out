@@ -14,7 +14,7 @@ Has_Element (warn) TRUE
 Has_Element (error) FALSE
 Has_Element (read) TRUE
 Has_Element (unread) TRUE
-prj1.gpr:1:2: test warning
+prj1.gpr:1:2: warning: test warning
 
 Log is empty: FALSE
 Has_Element (info) TRUE

@@ -57,8 +57,11 @@ package body GPR2.Message is
                    (if Full_Path_Name
                     then Self.Sloc.Filename
                     else Directories.Simple_Name (Self.Sloc.Filename));
-      Indented : constant String :=
-                   (1 .. Self.Indent * 2 => ' ') & To_String (Self.Message);
+      Indented : constant String := (1 .. Self.Indent * 2 => ' ')
+                   & (if Self.Level = Warning then "warning: " else "")
+                   & To_String (Self.Message);
+      --  Need to distingush warnings from errors because they are both going
+      --  to the error output.
    begin
       if Self.Sloc.Has_Source_Reference then
          declare

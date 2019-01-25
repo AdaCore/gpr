@@ -79,7 +79,7 @@ Project: Demo
 ..... DIRECT
    > /src2/toto.adb
    > /src2/toto.ads
-api.ads:3:1: withed unit titi not found
+api.ads:3:1: warning: withed unit titi not found
 ..... UNIT
    > /src2/toto.adb
    > /src2/toto.ads
