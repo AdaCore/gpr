@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2018, Free Software Foundation, Inc.            --
+--         Copyright (C) 2018-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -291,7 +291,8 @@ package body GPR2.Path_Name is
       end if;
 
       return Create_Directory
-        (Name_Type (String'(N * "../") & P (Pi + 1 .. P'Last)),
+        (Name_Type (String'(N * "../")
+         & (if Pi = P'Last and then N = 0 then "." else P (Pi + 1 .. P'Last))),
          Optional_Name_Type (To_Path));
    end Relative_Path;
 

@@ -37,8 +37,15 @@ procedure Main is
           Path_Name.Create_File ("/dir1/dir2/dir3/toto");
    P3 : constant Path_Name.Object :=
           Path_Name.Create_File ("/dira/toto");
+   P4 : constant Path_Name.Object :=
+          Path_Name.Create_Directory ("/dira/dirb/dirc");
 
 begin
    Text_IO.Put_Line ("1: " & String (Path_Name.Relative_Path (P1, P2).Name));
    Text_IO.Put_Line ("2: " & String (Path_Name.Relative_Path (P3, P2).Name));
+   Text_IO.Put_Line ("3: " & String (Path_Name.Relative_Path (P2, P1).Name));
+   Text_IO.Put_Line ("4: " & String (Path_Name.Relative_Path (P3, P4).Name));
+   Text_IO.Put_Line ("5: " & String (Path_Name.Relative_Path (P4, P3).Name));
+   Text_IO.Put_Line ("6: " & String (Path_Name.Relative_Path (P1, P1).Name));
+   Text_IO.Put_Line ("7: " & String (Path_Name.Relative_Path (P4, P4).Name));
 end Main;
