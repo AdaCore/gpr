@@ -1,15 +1,17 @@
 from language.parser import A
 from langkit.parsers import Opt, List, Or, Pick
-from langkit.dsl import EnumNode, Field
+from langkit.dsl import Field
 
 from language.parser import GPRNode
 
 
-class AllQualifier(EnumNode):
+class AllQualifier(GPRNode):
+    enum_node = True
     qualifier = True
 
 
-class Limited(EnumNode):
+class Limited(GPRNode):
+    enum_node = True
     qualifier = True
 
 
