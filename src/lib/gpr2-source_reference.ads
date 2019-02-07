@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -74,9 +74,9 @@ private
      with Dynamic_Predicate => Filename /= Null_Unbounded_String;
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Filename < Right.Filename
-       or else
-      (Left.Filename = Right.Filename and then Left.Line < Right.Line));
+     (if Left.Filename /= Right.Filename then Left.Filename < Right.Filename
+      elsif Left.Line /= Right.Line then Left.Line < Right.Line
+      else Left.Column < Right.Column);
 
    function Has_Source_Reference (Self : Object) return Boolean
      is (Self.Column > 0 and then Self.Line > 0);
