@@ -39,7 +39,8 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
-with GPR2.Source_Reference;
+with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Value;
 
 with GPR_Parser.Common;
 
@@ -69,6 +70,31 @@ package body GPR2.Parser.Project is
            (Path_Name.Value,
             Positive (Slr.Start_Line),
             Positive (Slr.Start_Column))));
+
+   function Get_Value_Reference
+     (Path_Name : GPR2.Path_Name.Object;
+      Slr       : Langkit_Support.Slocs.Source_Location_Range;
+      Value     : Value_Type)
+      return Source_Reference.Value.Object is
+     (Source_Reference.Value.Object
+       (Source_Reference.Value.Create
+         (Get_Source_Reference (Path_Name, Slr), Value)));
+
+   function Get_Value_Reference
+     (Value : Value_Type;
+      Sloc  : Source_Reference.Object := Source_Reference.Undefined)
+      return Source_Reference.Value.Object is
+     (Source_Reference.Value.Object
+       (Source_Reference.Value.Create (Sloc, Value)));
+
+   function Get_Identifier_Reference
+     (Path_Name  : GPR2.Path_Name.Object;
+      Slr        : Langkit_Support.Slocs.Source_Location_Range;
+      Identifier : Name_Type)
+      return Source_Reference.Identifier.Object is
+     (Source_Reference.Identifier.Object
+       (Source_Reference.Identifier.Create
+         (Get_Source_Reference (Path_Name, Slr), Identifier)));
 
    function Get_String_Literal
      (N     : GPR_Node'Class;
@@ -703,7 +729,7 @@ package body GPR2.Parser.Project is
                Num_Childs : constant Natural := Children_Count (Values);
                Cur_Child  : GPR_Node;
                Set        : Containers.Value_Set;
-               List       : Containers.Value_List;
+               List       : Containers.Source_Value_List;
             begin
                if Project.Types.Contains (Name) then
                   Messages.Append
@@ -739,7 +765,9 @@ package body GPR2.Parser.Project is
                                       & String (Value) & '''));
                            else
                               Set.Insert (Value);
-                              List.Append (Value);
+                              List.Append
+                                (Get_Value_Reference
+                                   (Filename, Sloc_Range (Cur_Child), Value));
                            end if;
                         end;
                      end if;
@@ -748,9 +776,8 @@ package body GPR2.Parser.Project is
                   Project.Types.Insert
                     (Name,
                      GPR2.Project.Typ.Create
-                       (Name, List,
-                        Get_Source_Reference
-                          (Filename, Sloc_Range (F_Type_Id (N)))));
+                       (Get_Identifier_Reference
+                          (Filename, Sloc_Range (F_Type_Id (N)), Name), List));
                end if;
             end Parse_Typed_String_Decl;
 
@@ -961,11 +988,15 @@ package body GPR2.Parser.Project is
    is
 
       type Item_Values is record
-         Values : Containers.Value_List;
+         Values : Containers.Source_Value_List;
          Single : Boolean := False;
       end record
         with Dynamic_Predicate =>
           (if Item_Values.Single then Item_Values.Values.Length = 1);
+
+      function To_Set
+        (Values : Containers.Source_Value_List) return Containers.Value_Set;
+      --  Create a set for fast searchiing from a list of values
 
       Empty_Item_Values : constant Item_Values :=
                             (Single => False, Values => <>);
@@ -1069,6 +1100,8 @@ package body GPR2.Parser.Project is
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
+         Sloc   : constant Source_Reference.Object :=
+                    Get_Source_Reference (Self.File, Sloc_Range (Node));
          Name   : constant Name_Type :=
                     Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
@@ -1129,9 +1162,7 @@ package body GPR2.Parser.Project is
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (Name) & """ is not defined",
-                     Get_Source_Reference
-                       (Self.File,
-                        Sloc_Range (Node))));
+                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
 
                return Empty_Item_Values;
             end if;
@@ -1164,8 +1195,9 @@ package body GPR2.Parser.Project is
                      return R : Item_Values do
                         R.Single := True;
                         R.Values.Append
-                          (Characters.Handling.To_Lower
-                             (String (Tree.Target)));
+                          (Get_Value_Reference
+                             (Characters.Handling.To_Lower
+                                (String (Tree.Target)), Sloc));
                      end return;
 
                   elsif Name = GPR2.Project.Registry.Attribute.Project_Dir then
@@ -1174,8 +1206,9 @@ package body GPR2.Parser.Project is
                      return R : Item_Values do
                         R.Single := True;
                         R.Values.Append
-                          (Characters.Handling.To_Lower
-                             (String (Self.File.Name)));
+                          (Get_Value_Reference
+                             (Characters.Handling.To_Lower
+                                (String (Self.File.Name)), Sloc));
                      end return;
 
                   elsif Name = GPR2.Project.Registry.Attribute.Name then
@@ -1184,8 +1217,9 @@ package body GPR2.Parser.Project is
                      return R : Item_Values do
                         R.Single := True;
                         R.Values.Append
-                          (Characters.Handling.To_Lower
-                             (To_String (Self.Name)));
+                          (Get_Value_Reference
+                             (Characters.Handling.To_Lower
+                                (To_String (Self.Name)), Sloc));
                      end return;
                   end if;
 
@@ -1197,9 +1231,10 @@ package body GPR2.Parser.Project is
                   return R : Item_Values do
                      R.Single := True;
                      R.Values.Append
-                       (Characters.Handling.To_Lower
-                          (String (Tree.Runtime
-                            (Optional_Name_Type (Index)))));
+                       (Get_Value_Reference
+                          (Characters.Handling.To_Lower
+                             (String (Tree.Runtime
+                              (Optional_Name_Type (Index)))), Sloc));
                   end return;
 
                elsif Is_Self then
@@ -1293,7 +1328,7 @@ package body GPR2.Parser.Project is
 
          function Parser (Node : GPR_Node'Class) return Visit_Status;
 
-         procedure Record_Value (Value : Value_Type)
+         procedure Record_Value (Value : Source_Reference.Value.Object)
            with Post => Result.Values.Length'Old <= Result.Values.Length;
          --  Record Value into Result, either add it as a new value in the list
          --  (Single = False) or append the value to the current one.
@@ -1377,7 +1412,7 @@ package body GPR2.Parser.Project is
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      New_Item := True;
-                     Record_Value (V);
+                     Record_Value (Get_Value_Reference (V));
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1414,7 +1449,8 @@ package body GPR2.Parser.Project is
                         if Values.Single then
                            Record_Value
                              (Builtin.External
-                                (Context, Var, Values.Values.First_Element));
+                                (Context,
+                                 Var, Values.Values.First_Element));
 
                         else
                            Tree.Log_Messages.Append
@@ -1447,7 +1483,7 @@ package body GPR2.Parser.Project is
                               Get_Source_Reference
                                 (Self.File, Sloc_Range (Parameters)),
                            Message => Exception_Message (E)));
-                     Record_Value ("");
+                     Record_Value (Get_Value_Reference (""));
                      Status := Over;
                end Handle_External_Variable;
 
@@ -1470,7 +1506,7 @@ package body GPR2.Parser.Project is
                begin
                   for V of Builtin.Split (Str, Sep) loop
                      New_Item := True;
-                     Record_Value (V);
+                     Record_Value (Get_Value_Reference (V));
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1502,7 +1538,9 @@ package body GPR2.Parser.Project is
             procedure Handle_String (Node : String_Literal) is
             begin
                Record_Value
-                 (Unquote (Value_Type (To_UTF8 (Node.Text))));
+                 (Get_Value_Reference
+                    (Unquote (Value_Type (To_UTF8 (Node.Text))),
+                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
             end Handle_String;
 
             ---------------------
@@ -1553,7 +1591,7 @@ package body GPR2.Parser.Project is
          -- Record_Value --
          ------------------
 
-         procedure Record_Value (Value : Value_Type) is
+         procedure Record_Value (Value : Source_Reference.Value.Object) is
          begin
             if New_Item then
                Result.Values.Append (Value);
@@ -1563,10 +1601,15 @@ package body GPR2.Parser.Project is
                declare
                   Last      : constant Containers.Extended_Index :=
                                 Result.Values.Last_Index;
+                  Old_Value : constant Source_Reference.Value.Object :=
+                                Result.Values (Last);
+                  Sloc      : constant Source_Reference.Object :=
+                                Source_Reference.Object (Value);
                   New_Value : constant Value_Type :=
-                                Result.Values (Last) & Value;
+                                Old_Value.Text & Value.Text;
                begin
-                  Result.Values.Replace_Element (Last, New_Value);
+                  Result.Values.Replace_Element
+                    (Last, Get_Value_Reference (New_Value, Sloc));
                end;
             end if;
          end Record_Value;
@@ -1902,16 +1945,16 @@ package body GPR2.Parser.Project is
             begin
                if Values.Single then
                   A := GPR2.Project.Attribute.Create
-                    (Name  => N_Str,
+                    (Name  => Get_Identifier_Reference
+                                (Self.Path_Name, Sloc_Range (Name), N_Str),
                      Index => I_Str,
-                     Value => Values.Values.First_Element,
-                     Sloc  => Sloc);
+                     Value => Values.Values.First_Element);
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name   => N_Str,
+                    (Name  => Get_Identifier_Reference
+                                (Self.Path_Name, Sloc_Range (Name), N_Str),
                      Index  => I_Str,
-                     Values => Values.Values,
-                     Sloc   => Sloc);
+                     Values => Values.Values);
                end if;
 
                --  Record attribute with proper casing definition if found
@@ -1926,7 +1969,7 @@ package body GPR2.Parser.Project is
 
                   begin
                      if (Values.Single
-                         and then Values.Values.First_Element = "")
+                         and then Values.Values.First_Element.Text = "")
                        or else (not Values.Single
                                 and then Values.Values.Length = 0)
                      then
@@ -1978,11 +2021,11 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Case_Construction (Node : Case_Construction) is
             Var   : constant Variable_Reference := F_Var_Ref (Node);
-            Value : constant Containers.Value_List :=
+            Value : constant Containers.Source_Value_List :=
                       Get_Variable_Values (Var).Values;
          begin
             if Value.Length = 1 then
-               Case_Values.Prepend (Value.First_Element);
+               Case_Values.Prepend (Value.First_Element.Text);
 
                --  Set status to close for now, this will be open when a
                --  when_clause will match the value pushed just above on
@@ -2343,8 +2386,8 @@ package body GPR2.Parser.Project is
                      if Values.Single then
                         --  Check that the value is part of the type
 
-                        if not Type_Def.Values.Contains
-                          (Values.Values.First_Element)
+                        if not To_Set (Type_Def.Values).Contains
+                          (Values.Values.First_Element.Text)
                         then
                            Tree.Log_Messages.Append
                              (Message.Create
@@ -2352,7 +2395,7 @@ package body GPR2.Parser.Project is
                                  Sloc    => Sloc,
                                  Message =>
                                    "value '"
-                                   & String (Values.Values.First_Element)
+                                   & String (Values.Values.First_Element.Text)
                                    & "' is illegal for typed string '"
                                    & String
                                        (Get_Name_Type
@@ -2387,14 +2430,20 @@ package body GPR2.Parser.Project is
 
             if Values.Single then
                V := GPR2.Project.Variable.Create
-                 (Name  => Get_Name_Type (Single_Tok_Node (Name)),
-                  Value => Values.Values.First_Element,
-                  Sloc  => Sloc);
+                 (Name  =>
+                    Get_Identifier_Reference
+                      (Self.File,
+                       Sloc_Range (Name),
+                       Get_Name_Type (Single_Tok_Node (Name))),
+                  Value => Values.Values.First_Element);
             else
                V := GPR2.Project.Variable.Create
-                 (Name   => Get_Name_Type (Single_Tok_Node (Name)),
-                  Values => Values.Values,
-                  Sloc   => Sloc);
+                 (Name =>
+                    Get_Identifier_Reference
+                      (Self.File,
+                       Sloc_Range (Name),
+                       Get_Name_Type (Single_Tok_Node (Name))),
+                  Values => Values.Values);
             end if;
 
             if In_Pack then
@@ -2497,6 +2546,20 @@ package body GPR2.Parser.Project is
          Undefined_Attribute_Count := 0;
          return Result;
       end Stop_Iteration;
+
+      ------------
+      -- To_Set --
+      ------------
+
+      function To_Set
+        (Values : Containers.Source_Value_List) return Containers.Value_Set is
+      begin
+         return Set : Containers.Value_Set do
+            for V of Values loop
+               Set.Insert (V.Text);
+            end loop;
+         end return;
+      end To_Set;
 
    begin
       Attrs.Clear;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-2018, Free Software Foundation, Inc.         --
+--          Copyright (C) 2016-2019, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -54,14 +54,16 @@ procedure Main is
       Compiler_Driver : constant Path_Name.Object :=
                           Path_Name.Create_File
                             (Name_Type (Config_View.Pack ("compiler").Attribute
-                             (Name  => "driver", Index => "Ada").Value));
+                                          (Name  => "driver",
+                                           Index => "Ada").Value.Text));
       Runtime_Dir     : constant Path_Name.Object :=
                           Path_Name.Create_Directory
                             (Name_Type (Config_View.Attribute
-                             (Name  => "Runtime_Dir", Index => "Ada").Value));
+                                          (Name  => "Runtime_Dir",
+                                           Index => "Ada").Value.Text));
    begin
       Text_IO.Put_Line ("target = "
-                        & String (Config_View.Attribute ("Target").Value));
+                        & Config_View.Attribute ("Target").Value.Text);
       Text_IO.Put_Line ("compiler driver = "
                         & String (Compiler_Driver.Base_Name));
 
@@ -82,7 +84,6 @@ procedure Main is
    end Print_Config_Info;
 
 begin
-
    --  Equivalent to command line options:
    --     --RTS=zfp target=x86-linux
 

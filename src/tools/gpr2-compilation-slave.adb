@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2017-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -104,7 +104,8 @@ package body GPR2.Compilation.Slave is
             if Project.Has_Variables then
                for V of Project.Variables loop
                   if V.Kind = Single then
-                     Set.Include (String (V.Name) & "=" & String (V.Value));
+                     Set.Include
+                       (String (V.Name) & "=" & String (V.Value.Text));
                   end if;
                end loop;
             end if;
@@ -143,7 +144,7 @@ package body GPR2.Compilation.Slave is
 
       procedure Insert
         (List   : out Sync.Str_Vect.Vector;
-         Values : GPR2.Containers.Value_List);
+         Values : GPR2.Containers.Source_Value_List);
       --  Inserts all values into the vector
 
       Excluded_Patterns          : Sync.Str_Vect.Vector;
@@ -156,10 +157,10 @@ package body GPR2.Compilation.Slave is
 
       procedure Insert
         (List   : out Sync.Str_Vect.Vector;
-         Values : GPR2.Containers.Value_List) is
+         Values : GPR2.Containers.Source_Value_List) is
       begin
          for V of Values loop
-            List.Append (V);
+            List.Append (V.Text);
          end loop;
       end Insert;
 
@@ -277,7 +278,7 @@ package body GPR2.Compilation.Slave is
             if Pck.Has_Attributes (Attrs.Root_Dir) then
                declare
                   RD : constant String :=
-                         Pck.Attribute (Attrs.Root_Dir).Value;
+                         Pck.Attribute (Attrs.Root_Dir).Value.Text;
                begin
                   if Is_Absolute_Path (RD) then
                      return RD;

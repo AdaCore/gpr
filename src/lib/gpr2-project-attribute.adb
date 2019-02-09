@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -33,45 +33,41 @@ package body GPR2.Project.Attribute is
    ------------
 
    function Create
-     (Name  : Name_Type;
+     (Name  : Source_Reference.Identifier.Object;
       Index : Value_Type;
-      Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object is
+      Value : Source_Reference.Value.Object) return Object is
    begin
-      return A : Object := Create (Name, Value, Sloc) do
+      return A : Object := Create (Name, Value) do
          A.Index := To_Unbounded_String (String (Index));
       end return;
    end Create;
 
    function Create
-     (Name   : Name_Type;
+     (Name   : Source_Reference.Identifier.Object;
       Index  : Value_Type;
-      Values : Containers.Value_List;
-      Sloc   : Source_Reference.Object) return Object is
+      Values : Containers.Source_Value_List) return Object is
    begin
-      return A : Object := Create (Name, Values, Sloc) do
+      return A : Object := Create (Name, Values) do
          A.Index := To_Unbounded_String (String (Index));
       end return;
    end Create;
 
    overriding function Create
-     (Name  : Name_Type;
-      Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object is
+     (Name  : Source_Reference.Identifier.Object;
+      Value : Source_Reference.Value.Object) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Value, Sloc)
+        (Name_Values.Create (Name, Value)
          with Index                => Null_Unbounded_String,
               Index_Case_Sensitive => True);
    end Create;
 
    overriding function Create
-     (Name   : Name_Type;
-      Values : Containers.Value_List;
-      Sloc   : Source_Reference.Object) return Object is
+     (Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Values, Sloc)
+        (Name_Values.Create (Name, Values)
          with Index                => Null_Unbounded_String,
               Index_Case_Sensitive => True);
    end Create;
@@ -113,7 +109,7 @@ package body GPR2.Project.Attribute is
 
       case Self.Kind is
          when Single =>
-            Append (Result, '"' & Self.Value & '"');
+            Append (Result, '"' & Self.Value.Text & '"');
 
          when List =>
             Append (Result, Containers.Image (Self.Values));

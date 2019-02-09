@@ -2,10 +2,10 @@ Messages found:
 > /errors-sem/second.gpr
 ERROR
  3
- 4
+ 8
 attribute "Project_Files" must be a list
 > /errors-sem/demo.gpr
 ERROR
  11
- 4
+ 8
 attribute "Object_Dir" cannot be a list

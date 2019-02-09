@@ -59,7 +59,7 @@ procedure Main is
                Text_IO.Put (" ->");
 
                for V of Element (A).Values loop
-                  Text_IO.Put (" " & '"' & V & '"');
+                  Text_IO.Put (" " & '"' & V.Text & '"');
                end loop;
                Text_IO.New_Line;
             end loop;
@@ -70,7 +70,7 @@ procedure Main is
                Text_IO.Put ("V:   " & String (Key (V)));
                Text_IO.Put (" ->");
                for Val of Element (V).Values loop
-                  Text_IO.Put (" " & '"' & Val & '"');
+                  Text_IO.Put (" " & '"' & Val.Text & '"');
                end loop;
                Text_IO.New_Line;
             end loop;

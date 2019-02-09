@@ -276,7 +276,7 @@ begin
                     then Optional_Name_Type (Opt.Target)
                     elsif Tree.Root_Project.Has_Attributes ("Target") then
                        Name_Type
-                      (Tree.Root_Project.Attribute ("Target").Value)
+                      (Tree.Root_Project.Attribute ("Target").Value.Text)
                     else "all");
 
       Runtime  : constant Optional_Name_Type :=
@@ -285,7 +285,8 @@ begin
                     elsif Tree.Root_Project.Has_Attributes
                       ("Runtime", "Ada") then
                        Name_Type
-                      (Tree.Root_Project.Attribute ("Runtime", "Ada").Value)
+                      (Tree.Root_Project.Attribute
+                         ("Runtime", "Ada").Value.Text)
                     else No_Name);
 
       --  Name/Path of the compiler: see IDE.Compiler_Command, and GPR.Conf
@@ -364,7 +365,8 @@ begin
            "no compiler driver found in configuration project";
       end if;
 
-      Compiler_Path := Path_Name.Create_File (Name_Type (Driver_Attr.Value));
+      Compiler_Path :=
+        Path_Name.Create_File (Name_Type (Driver_Attr.Value.Text));
 
       if not Compiler_Path.Exists then
          Put_Line ("warning: invalid compiler path from configuration ("

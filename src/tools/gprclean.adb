@@ -256,6 +256,11 @@ procedure GPRclean is
       Obj_Dir : constant Path_Name.Object := View.Object_Directory;
       Tree    : constant access Project.Tree.Object := View.Tree;
 
+      pragma Warnings (Off);
+
+      function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
+      --  ??? work around a strange visibility issue
+
       procedure Binder_Artifacts
         (Name     : Name_Type;
          Language : Optional_Name_Type := No_Name);

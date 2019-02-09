@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2018, Free Software Foundation, Inc.            --
+--         Copyright (C) 2018-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -52,7 +52,7 @@ package body GPR2.Project.Variable is
 
       case Self.Kind is
          when Single =>
-            Append (Result, '"' & Self.Value & '"');
+            Append (Result, '"' & Self.Value.Text & '"');
 
          when List =>
             declare
@@ -65,7 +65,7 @@ package body GPR2.Project.Variable is
                      Append (Result, ", ");
                   end if;
 
-                  Append (Result, '"' & String (V) & '"');
+                  Append (Result, '"' & String (V.Text) & '"');
                   First := False;
                end loop;
 

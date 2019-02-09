@@ -244,7 +244,7 @@ package GPR2.Project.View is
    --  The case where it returns false is a project declaring an empty
    --  Language attribute.
 
-   function Languages (Self : Object) return Containers.Value_List
+   function Languages (Self : Object) return Containers.Source_Value_List
      with Pre  => Self.Is_Defined,
           Post => Languages'Result.Length > 0;
    --  Returns the languages used on this project, this is not necessary the
@@ -405,7 +405,8 @@ private
       (Self.Kind in K_Library | K_Aggregate_Library);
 
    function Library_Name (Self : Object) return Name_Type is
-     (Name_Type (Self.Attribute (Registry.Attribute.Library_Name).Value));
+     (Name_Type
+        (Self.Attribute (Registry.Attribute.Library_Name).Value.Text));
 
    function Has_Library_Version (Self : Object) return Boolean is
      (Self.Has_Attributes (Registry.Attribute.Library_Version));

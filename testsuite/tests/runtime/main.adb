@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2017-2018, Free Software Foundation, Inc.         --
+--          Copyright (C) 2017-2019, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -68,7 +68,7 @@ procedure Main is
       Text_IO.Put (" ->");
 
       for V of Att.Values loop
-         Text_IO.Put (" " & V);
+         Text_IO.Put (" " & V.Text);
       end loop;
       Text_IO.New_Line;
    end Display;
@@ -89,13 +89,16 @@ procedure Main is
                Text_IO.Put (" ->");
 
                for V of Element (A).Values loop
-                  K := Strings.Fixed.Index (V, "adainclude");
-                  if K = 0 then
-                     Text_IO.Put (" " & V (V'First .. V'Last));
-                  else
-                     Text_IO.Put (" ..." & V (K - 1 .. V'Last));
-                  end if;
-
+                  declare
+                     Val : constant GPR2.Value_Type := V.Text;
+                  begin
+                     K := Strings.Fixed.Index (Val, "adainclude");
+                     if K = 0 then
+                        Text_IO.Put (" " & Val (Val'First .. Val'Last));
+                     else
+                        Text_IO.Put (" ..." & Val (K - 1 .. Val'Last));
+                     end if;
+                  end;
                end loop;
                Text_IO.New_Line;
             end loop;
@@ -107,7 +110,7 @@ procedure Main is
                Text_IO.Put (" -> ");
 
                declare
-                  Val : constant String := String (Element (V).Value);
+                  Val : constant String := Element (V).Value.Text;
                begin
                   K := Strings.Fixed.Index (Val, "adainclude");
 

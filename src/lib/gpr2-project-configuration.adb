@@ -45,7 +45,7 @@ package body GPR2.Project.Configuration is
       then
          return Name_Type
            (Self.Conf.Attribute
-              (Project.Registry.Attribute.Archive_Suffix).Value);
+              (Project.Registry.Attribute.Archive_Suffix).Value.Text);
       else
          return ".a";
       end if;
@@ -282,7 +282,7 @@ package body GPR2.Project.Configuration is
          return Name_Type
            (Self.Conf.Attribute
               (Project.Registry.Attribute.Object_File_Suffix,
-               String (Language)).Value);
+               String (Language)).Value.Text);
       else
          return ".o";
       end if;

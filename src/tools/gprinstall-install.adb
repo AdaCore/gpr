@@ -2,7 +2,7 @@
 --                                                                          --
 --                             GPR TECHNOLOGY                               --
 --                                                                          --
---                     Copyright (C) 2012-2018, AdaCore                     --
+--                     Copyright (C) 2012-2019, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -457,62 +457,63 @@ package body GPRinstall.Install is
                      --  If Install.Prefix is a relative path, it is made
                      --  relative to the global prefix.
 
-                     if OS_Lib.Is_Absolute_Path (V.Value) then
+                     if OS_Lib.Is_Absolute_Path (V.Value.Text) then
                         if Options.Global_Prefix_Dir.Default then
-                           Replace (Prefix_Dir, V.Value, Normalize => True);
+                           Replace
+                             (Prefix_Dir, V.Value.Text, Normalize => True);
                         end if;
 
                      else
                         Replace
                           (Prefix_Dir,
-                           Options.Global_Prefix_Dir.V.all & V.Value,
+                           Options.Global_Prefix_Dir.V.all & V.Value.Text,
                            Normalize => True);
                      end if;
 
                   elsif  V.Name = A.Exec_Subdir
                     and then Options.Global_Exec_Subdir.Default
                   then
-                     Replace (Exec_Subdir, V.Value);
+                     Replace (Exec_Subdir, V.Value.Text);
 
                   elsif V.Name = A.Lib_Subdir
                     and then Options.Global_Lib_Subdir.Default
                   then
-                     Replace (Lib_Subdir, V.Value);
+                     Replace (Lib_Subdir, V.Value.Text);
 
                   elsif V.Name = A.ALI_Subdir
                     and then Options.Global_ALI_Subdir.Default
                   then
-                     Replace (ALI_Subdir, V.Value);
+                     Replace (ALI_Subdir, V.Value.Text);
 
                   elsif V.Name = A.Link_Lib_Subdir
                     and then Options.Global_Link_Lib_Subdir.Default
                   then
-                     Replace (Link_Lib_Subdir, V.Value);
+                     Replace (Link_Lib_Subdir, V.Value.Text);
 
                   elsif V.Name = A.Sources_Subdir
                     and then Options.Global_Sources_Subdir.Default
                   then
-                     Replace (Sources_Subdir, V.Value);
+                     Replace (Sources_Subdir, V.Value.Text);
 
                   elsif V.Name = A.Project_Subdir
                     and then Options.Global_Project_Subdir.Default
                   then
-                     Replace (Project_Subdir, V.Value);
+                     Replace (Project_Subdir, V.Value.Text);
 
                   elsif V.Name = A.Mode
                     and then Options.Global_Install_Mode.Default
                   then
-                     Replace (Install_Mode, V.Value);
+                     Replace (Install_Mode, V.Value.Text);
 
                   elsif V.Name = A.Install_Name
                     and then Options.Global_Install_Name.Default
                   then
                      Replace
-                       (Install_Name, V.Value, Is_Dir => False);
+                       (Install_Name, V.Value.Text, Is_Dir => False);
 
                   elsif V.Name = A.Active then
                      declare
-                        Val : constant String := To_Lower (V.Value);
+                        Val : constant String := To_Lower (V.Value.Text);
                      begin
                         if Val = "false" then
                            Active := False;
@@ -523,7 +524,7 @@ package body GPRinstall.Install is
 
                   elsif V.Name = A.Side_Debug then
                      declare
-                        Val : constant String := To_Lower (V.Value);
+                        Val : constant String := To_Lower (V.Value.Text);
                      begin
                         if Val = "true" then
                            Side_Debug := True;
@@ -534,7 +535,7 @@ package body GPRinstall.Install is
 
                   elsif V.Name = A.Install_Project then
                      declare
-                        Val : constant String := To_Lower (V.Value);
+                        Val : constant String := To_Lower (V.Value.Text);
                      begin
                         if Val = "false" then
                            Install_Project := False;
@@ -550,7 +551,7 @@ package body GPRinstall.Install is
                         Artifacts.Append
                           (Artifacts_Data'
                              (To_Unbounded_String (V.Index),
-                              To_Unbounded_String (S),
+                              To_Unbounded_String (S.Text),
                               Required =>
                                 (if V.Name = A.Artifacts
                                  then False else True)));
@@ -1468,12 +1469,12 @@ package body GPRinstall.Install is
 
                if Project.Has_Attributes (A.Standalone_Library)
                  and then
-                   Project.Attribute (A.Standalone_Library).Value /= "no"
+                   Project.Attribute (A.Standalone_Library).Value.Text /= "no"
                then
                   if not Project.Is_Static_Library then
                      Line := +"         for Library_Standalone use """;
                      Line := Line & Characters.Handling.To_Lower
-                       (Project.Attribute (A.Standalone_Library).Value);
+                       (Project.Attribute (A.Standalone_Library).Value.Text);
                      Line := Line & """;";
                      V.Append (-Line);
                   end if;
@@ -1585,12 +1586,13 @@ package body GPRinstall.Install is
                               Compiler : constant GPR2.Project.Pack.Object :=
                                            C.Packages.Element (P.Compiler);
                            begin
-                              if Compiler.Has_Attributes (A.Driver, Lang)
+                              if Compiler.Has_Attributes
+                                (A.Driver, Lang.Text)
                                 and then
                                  Compiler.Attribute
-                                   (A.Driver, Lang).Value /= ""
+                                   (A.Driver, Lang.Text).Value.Text /= ""
                               then
-                                 Langs.Include (Lang);
+                                 Langs.Include (Lang.Text);
                               end if;
                            end;
                         end if;
@@ -1661,8 +1663,8 @@ package body GPRinstall.Install is
             procedure Append (Attribute : GPR2.Project.Attribute.Object) is
             begin
                for V of Attribute.Values loop
-                  Opts.Append (V);
-                  Seen.Include (V);
+                  Opts.Append (V.Text);
+                  Seen.Include (V.Text);
                end loop;
             end Append;
 
@@ -2313,7 +2315,7 @@ package body GPRinstall.Install is
                if V.Name = A.Active then
                   declare
                      Val : constant String :=
-                             Characters.Handling.To_Lower (V.Value);
+                             Characters.Handling.To_Lower (V.Value.Text);
                   begin
                      if Val = "false" then
                         return False;

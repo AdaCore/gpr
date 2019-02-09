@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -170,7 +170,7 @@ private package GPR2.Project.Definition is
       elsif Index = No_Value then Def.Attrs.Contains (Name)
       else not Def.Attrs.Filter (Name, Index).Is_Empty);
 
-   function Languages (Def : Data) return Containers.Value_List;
+   function Languages (Def : Data) return Containers.Source_Value_List;
    --  Returns the languages used on this project, this is not necessary the
    --  content of the Languages attribute as if not defined it returns the
    --  default language Ada.

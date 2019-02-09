@@ -3,7 +3,7 @@ BEFORE: Has unread Message: TRUE
 > /source-errors/demo1.gpr
 ERROR
  3
- 4
+ 8
 unit '1pck' not valid, should start with a letter
 AFTER: Has unread Message: FALSE
 
@@ -12,7 +12,7 @@ BEFORE: Has unread Message: TRUE
 > /source-errors/demo2.gpr
 ERROR
  4
- 4
+ 8
 unit 'pck._b' not valid, cannot contains dot after underscore
 AFTER: Has unread Message: FALSE
 

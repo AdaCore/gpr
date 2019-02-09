@@ -37,7 +37,8 @@ with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source;
-with GPR2.Source_Reference;
+with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Value;
 with GPR2.Unit;
 
 with GNAT.OS_Lib;
@@ -235,22 +236,35 @@ package body GPR2.Project.Tree is
 
          declare
             Runtime_Dir : constant String :=
-                            CV.Attribute ("runtime_dir", "ada").Value;
+                            CV.Attribute ("runtime_dir", "ada").Value.Text;
          begin
             Data.Attrs.Insert
               (Project.Attribute.Create
-                 (Name  => Project.Registry.Attribute.Source_Dirs,
-                  Value => Runtime_Dir & DS & "adainclude",
-                  Sloc  => Source_Reference.Undefined));
+                 (Name  =>
+                    Source_Reference.Identifier.Object
+                      (Source_Reference.Identifier.Create
+                         (Source_Reference.Undefined,
+                          Project.Registry.Attribute.Source_Dirs)),
+                  Value =>
+                    Source_Reference.Value.Object
+                      (Source_Reference.Value.Create
+                           (Source_Reference.Undefined,
+                            Runtime_Dir & DS & "adainclude"))));
          end;
 
          --  The only language supported is Ada
 
          Data.Attrs.Insert
            (Project.Attribute.Create
-              (Name  => Project.Registry.Attribute.Languages,
-               Value => "ada",
-               Sloc  => Source_Reference.Undefined));
+              (Name  =>
+                   Source_Reference.Identifier.Object
+                     (Source_Reference.Identifier.Create
+                       (Source_Reference.Undefined,
+                        Project.Registry.Attribute.Languages)),
+               Value =>
+                    Source_Reference.Value.Object
+                      (Source_Reference.Value.Create
+                         (Source_Reference.Undefined, "ada"))));
 
          Data.Tree   := Self.Self;
          Data.Status := Root;
@@ -924,7 +938,8 @@ package body GPR2.Project.Tree is
                            (if Target /= No_Name then Target
                             elsif Self.Root_Project.Has_Attributes ("Target")
                             then Name_Type
-                              (Self.Root_Project.Attribute ("Target").Value)
+                              (Self.Root_Project.Attribute
+                                 ("Target").Value.Text)
                             else "all");
 
          Conf_Descriptions : Project.Configuration.Description_Set
@@ -937,14 +952,14 @@ package body GPR2.Project.Tree is
             declare
                LRT : constant Value_Type :=
                        Containers.Value_Or_Default
-                         (Language_Runtimes, Name_Type (L));
+                         (Language_Runtimes, Name_Type (L.Text));
                RTS : constant Optional_Name_Type :=
                           (if LRT /= No_Value
                            then Name_Type (LRT)
                            elsif Self.Root_Project.Has_Attributes
                              ("Runtime", "Ada")
                            then Name_Type (Self.Root_Project.Attribute
-                             ("Runtime", "Ada").Value)
+                             ("Runtime", "Ada").Value.Text)
                            else No_Name);
 
                --  RTS should be a Value_Path (type introduced in the
@@ -953,7 +968,7 @@ package body GPR2.Project.Tree is
             begin
                Conf_Descriptions (Descr_Index) :=
                  Project.Configuration.Create
-                   (Language => Name_Type (L),
+                   (Language => Name_Type (L.Text),
                     Version  => No_Name,
                     Runtime  => RTS,
                     Path     => No_Name,
@@ -1597,7 +1612,7 @@ package body GPR2.Project.Tree is
             loop
                declare
                   Pathname : constant Path_Name.Object :=
-                               Create (Name_Type (Project), Paths);
+                               Create (Name_Type (Project.Text), Paths);
                begin
                   if Pathname = View.Path_Name then
                      --  We are loading recursively the aggregate project
@@ -1657,7 +1672,7 @@ package body GPR2.Project.Tree is
                            Self.Messages.Append
                              (Message.Create
                                 (Message.Error,
-                                 "aggregate " & Project,
+                                 "aggregate " & Project.Text,
                                  P_Data.Attrs.Element
                                    (Registry.Attribute.Project_Files)));
 
@@ -1696,7 +1711,7 @@ package body GPR2.Project.Tree is
                   --  loaded/resolved.
                   if External.Kind = Single then
                      P_Data.A_Context.Include
-                       (Name_Type (External.Index), External.Value);
+                       (Name_Type (External.Index), External.Value.Text);
                   end if;
                end;
             end loop;
@@ -1937,7 +1952,8 @@ package body GPR2.Project.Tree is
                if View.Has_Attributes (A.Library_Version) then
                   declare
                      Lib_Ver : constant Value_Type :=
-                                 View.Attribute (A.Library_Version).Value;
+                                 View.Attribute
+                                   (A.Library_Version).Value.Text;
                      Lib_Fn  : constant Value_Type :=
                                  Value_Type (View.Library_Filename.Name);
                   begin
@@ -1950,7 +1966,8 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              '"' & View.Attribute (A.Library_Version).Value
+                              '"' & View.Attribute
+                                (A.Library_Version).Value.Text
                               & """ not correct format for Library_Version",
                               Sloc => View.Attribute (A.Library_Version)));
                      end if;
@@ -1971,7 +1988,8 @@ package body GPR2.Project.Tree is
                  (Message.Create
                     (Message.Warning,
                      "object directory """
-                     & View.Attribute (A.Object_Dir).Value & """ not found",
+                     & View.Attribute (A.Object_Dir).Value.Text
+                     & """ not found",
                      Sloc => View.Attribute (A.Object_Dir)));
             end if;
          end;
@@ -2039,7 +2057,7 @@ package body GPR2.Project.Tree is
       then
          return Name_Type
            (Self.Conf.Corresponding_View.Attribute
-              (Registry.Attribute.Target).Value);
+              (Registry.Attribute.Target).Value.Text);
 
       else
          return Name_Type (GPR.Sdefault.Hostname);

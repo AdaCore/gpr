@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -27,7 +27,8 @@ with Ada.Characters.Handling;
 with GPR2.Containers;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Source_Reference;
+with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Value;
 
 private with Ada.Strings.Unbounded;
 
@@ -46,40 +47,36 @@ package GPR2.Project.Attribute is
    --  Returns true if Self is defined
 
    function Create
-     (Name  : Name_Type;
+     (Name  : Source_Reference.Identifier.Object;
       Index : Value_Type;
-      Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object
+      Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name
+                  and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object
 
    function Create
-     (Name   : Name_Type;
+     (Name   : Source_Reference.Identifier.Object;
       Index  : Value_Type;
-      Values : Containers.Value_List;
-      Sloc   : Source_Reference.Object) return Object
+      Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name
+                  and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object
 
    overriding function Create
-     (Name  : Name_Type;
-      Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object
+     (Name  : Source_Reference.Identifier.Object;
+      Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name
+                  and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object
 
    overriding function Create
-     (Name   : Name_Type;
-      Values : Containers.Value_List;
-      Sloc   : Source_Reference.Object) return Object
+     (Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name
+                  and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object
 
@@ -127,11 +124,19 @@ private
 
    Undefined : constant Object := (Name_Values.Undefined with others => <>);
 
+   Current_Dir : constant Source_Reference.Value.Object :=
+                   Source_Reference.Value.Object
+                     (Source_Reference.Value.Create
+                        (Source_Reference.Undefined, "."));
+
    Default_Source_Dirs : constant Object :=
                            (Name_Values.Create
-                              (Project.Registry.Attribute.Source_Dirs,
-                               Containers.Value_Type_List.To_Vector (".", 1),
-                               Source_Reference.Undefined)
+                             (Source_Reference.Identifier.Object
+                                (Source_Reference.Identifier.Create
+                                   (Source_Reference.Undefined,
+                                    Project.Registry.Attribute.Source_Dirs)),
+                               Containers.Source_Value_Type_List.To_Vector
+                                 (Current_Dir, 1))
                               with Null_Unbounded_String, True);
 
    overriding function Is_Defined (Self : Object) return Boolean is

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -27,6 +27,8 @@
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Sets;
+
+with GPR2.Source_Reference.Value;
 
 package GPR2.Containers is
 
@@ -63,5 +65,24 @@ package GPR2.Containers is
      with Post => (if not Map.Contains (Key)
                    then Value_Or_Default'Result = Default);
    --  Returns value by key if exists or Default value if key not found
+
+   function "=" (Left, Right : Source_Reference.Value.Object) return Boolean
+     renames GPR2.Source_Reference.Value."=";
+
+   function "<" (Left, Right : Source_Reference.Value.Object) return Boolean
+     renames GPR2.Source_Reference.Value."<";
+
+   package Source_Value_Type_List is new Ada.Containers.Indefinite_Vectors
+     (Positive, Source_Reference.Value.Object);
+
+   subtype Source_Value_List is Source_Value_Type_List.Vector;
+
+   function Image (Values : Source_Value_List) return String;
+   --  Returns a string representation of the list of values
+
+   package Source_Value_Type_Set is new Ada.Containers.Indefinite_Ordered_Sets
+     (Source_Reference.Value.Object);
+
+   subtype Source_Value_Set is Source_Value_Type_Set.Set;
 
 end GPR2.Containers;

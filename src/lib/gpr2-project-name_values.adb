@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,13 +22,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Characters.Handling;
+with Ada.Strings.Equal_Case_Insensitive;
 
 package body GPR2.Project.Name_Values is
 
    function Build_Set
-     (Values         : Containers.Value_List;
+     (Values         : Containers.Source_Value_List;
       Case_Sensitive : Boolean) return Containers.Value_Set;
    --  Returns a set with the value in values
 
@@ -37,7 +37,7 @@ package body GPR2.Project.Name_Values is
    ---------------
 
    function Build_Set
-     (Values         : Containers.Value_List;
+     (Values         : Containers.Source_Value_List;
       Case_Sensitive : Boolean) return Containers.Value_Set
    is
       use Ada;
@@ -45,9 +45,10 @@ package body GPR2.Project.Name_Values is
       return R : Containers.Value_Set do
          for V of Values loop
             if Case_Sensitive then
-               R.Include (V);
+               R.Include (V.Text);
+
             else
-               R.Include (Characters.Handling.To_Lower (V));
+               R.Include (Characters.Handling.To_Lower (V.Text));
             end if;
          end loop;
       end return;
@@ -67,28 +68,30 @@ package body GPR2.Project.Name_Values is
    ------------
 
    function Create
-     (Name  : Name_Type;
-      Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object
+     (Name  : Source_Reference.Identifier.Object;
+      Value : Source_Reference.Value.Object) return Object
    is
-      Values : constant Containers.Value_List :=
-                 Containers.Value_Type_List.To_Vector (String (Value), 1);
+      Sloc   : constant Source_Reference.Object :=
+                 Source_Reference.Object (Name);
+      Values : constant Containers.Source_Value_List :=
+                 Containers.Source_Value_Type_List.To_Vector
+                   (Value, 1);
    begin
       return Object'
         (Sloc
          with Single,
-              To_Unbounded_String (String (Name)),
+              To_Unbounded_String (String (Name.Text)),
               Values, True, Build_Set (Values, True));
    end Create;
 
    function Create
-     (Name   : Name_Type;
-      Values : Containers.Value_List;
-      Sloc   : Source_Reference.Object) return Object is
+     (Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List) return Object is
    begin
       return Object'
-        (Sloc with List,
-         To_Unbounded_String (String (Name)),
+        (Source_Reference.Object (Name)
+         with List,
+         To_Unbounded_String (String (Name.Text)),
          Values, True, Build_Set (Values, True));
    end Create;
 
@@ -119,7 +122,7 @@ package body GPR2.Project.Name_Values is
       Append (Result, " :");
 
       for V of Self.Values loop
-         Append (Result, ' ' & V);
+         Append (Result, ' ' & V.Text);
       end loop;
 
       return To_String (Result);
@@ -163,7 +166,7 @@ package body GPR2.Project.Name_Values is
    -- Value --
    -----------
 
-   function Value (Self : Object) return Value_Type is
+   function Value (Self : Object) return Source_Reference.Value.Object is
    begin
       return Self.Values.First_Element;
    end Value;
@@ -176,9 +179,9 @@ package body GPR2.Project.Name_Values is
       use Ada.Strings;
    begin
       if Self.Value_Case_Sensitive then
-         return Self.Value = String (Value);
+         return Self.Value.Text = String (Value);
       else
-         return Equal_Case_Insensitive (Self.Value, String (Value));
+         return Equal_Case_Insensitive (Self.Value.Text, String (Value));
       end if;
    end Value_Equal;
 
@@ -186,7 +189,7 @@ package body GPR2.Project.Name_Values is
    -- Values --
    ------------
 
-   function Values (Self : Object) return Containers.Value_List is
+   function Values (Self : Object) return Containers.Source_Value_List is
    begin
       return Self.Values;
    end Values;

@@ -26,6 +26,9 @@ with GPR2.Project.Tree;
 
 package body GPR2.Project.Source.Artifact is
 
+   function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
+   --  ??? work around a strange visibility issue
+
    ------------
    -- Create --
    ------------

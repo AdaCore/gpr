@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---            Copyright (C) 2016, Free Software Foundation, Inc.            --
+--          Copyright (C) 2016-2019, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -45,13 +45,13 @@ begin
    Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
    Text_IO.Put_Line
-     (Prj.Root_Project.Attribute ("object_dir").Value);
+     (Prj.Root_Project.Attribute ("object_dir").Value.Text);
 
    Ctx.Include ("OS", "Windows");
    Prj.Set_Context (Ctx);
 
    Text_IO.Put_Line
-     (Prj.Root_Project.Attribute ("object_dir").Value);
+     (Prj.Root_Project.Attribute ("object_dir").Value.Text);
 
 exception
    when GPR2.Project_Error =>

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-0218, Free Software Foundation, Inc.         --
+--          Copyright (C) 2016-0219, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -59,7 +59,7 @@ procedure Main is
                Text_IO.Put (" ->");
 
                for V of Element (A).Values loop
-                  Text_IO.Put (" " & V);
+                  Text_IO.Put (" " & V.Text);
                end loop;
                Text_IO.New_Line;
             end loop;
@@ -69,7 +69,7 @@ procedure Main is
             for V in Prj.Variables.Iterate loop
                Text_IO.Put ("V:   " & String (Key (V)));
                Text_IO.Put (" -> ");
-               Text_IO.Put (String (Element (V).Value));
+               Text_IO.Put (Element (V).Value.Text);
                Text_IO.New_Line;
             end loop;
          end if;

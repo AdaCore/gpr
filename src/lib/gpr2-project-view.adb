@@ -154,7 +154,7 @@ package body GPR2.Project.View is
 
          if Binder.Has_Attributes (A.Prefix, Value_Type (Language)) then
             return Name_Type
-              (Binder.Attribute (A.Prefix, Value_Type (Language)).Value);
+              (Binder.Attribute (A.Prefix, Value_Type (Language)).Value.Text);
          end if;
       end if;
 
@@ -236,9 +236,9 @@ package body GPR2.Project.View is
    begin
       return Self.Apply_Root_And_Subdirs
         (if Self.Has_Attributes (A.Exec_Dir)
-         then Self.Attribute (A.Exec_Dir).Value
+         then Self.Attribute (A.Exec_Dir).Value.Text
          elsif  Self.Has_Attributes (A.Object_Dir)
-         then Self.Attribute (A.Object_Dir).Value
+         then Self.Attribute (A.Object_Dir).Value.Text
          else ".");
    end Executable_Directory;
 
@@ -531,7 +531,7 @@ package body GPR2.Project.View is
    -- Languages --
    ---------------
 
-   function Languages (Self : Object) return Containers.Value_List is
+   function Languages (Self : Object) return Containers.Source_Value_List is
    begin
       return Definition.Get_RO (Self).Languages;
    end Languages;
@@ -543,7 +543,7 @@ package body GPR2.Project.View is
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Apply_Root_And_Subdirs
-        (Self.Attribute (Project.Registry.Attribute.Library_Dir).Value);
+        (Self.Attribute (Project.Registry.Attribute.Library_Dir).Value.Text);
    end Library_Directory;
 
    ----------------------
@@ -570,14 +570,16 @@ package body GPR2.Project.View is
       if not Self.Is_Static_Library
         and then Config_Has_Attribute (A.Shared_Lib_Prefix)
       then
-         Append (File_Name, Config.Attribute (A.Shared_Lib_Prefix).Value);
+         Append
+           (File_Name,
+            Config.Attribute (A.Shared_Lib_Prefix).Value.Text);
       else
          Append (File_Name, "lib");
       end if;
 
       --  Library name
 
-      Append (File_Name, Self.Attribute (A.Library_Name).Value);
+      Append (File_Name, Self.Attribute (A.Library_Name).Value.Text);
 
       --  Library suffix
 
@@ -585,7 +587,9 @@ package body GPR2.Project.View is
          Append (File_Name, String (Self.Tree.Archive_Suffix));
 
       elsif Config_Has_Attribute (A.Shared_Lib_Suffix) then
-         Append (File_Name, Config.Attribute (A.Shared_Lib_Suffix).Value);
+         Append
+           (File_Name,
+            Config.Attribute (A.Shared_Lib_Suffix).Value.Text);
 
       else
          Append (File_Name, ".so");
@@ -604,7 +608,7 @@ package body GPR2.Project.View is
       package A renames GPR2.Project.Registry.Attribute;
    begin
       if Self.Has_Attributes (A.Library_Kind) then
-         return Name_Type (Self.Attribute (A.Library_Kind).Value);
+         return Name_Type (Self.Attribute (A.Library_Kind).Value.Text);
       else
          return "static";
       end if;
@@ -646,7 +650,7 @@ package body GPR2.Project.View is
       then
          return GPR2.Path_Name.Create_File
            (Major_Version_Name
-              (Name_Type (Self.Attribute (A.Library_Version).Value)),
+              (Name_Type (Self.Attribute (A.Library_Version).Value.Text)),
             Directory => Optional_Name_Type (Self.Library_Filename.Dir_Name));
 
       else
@@ -674,7 +678,7 @@ package body GPR2.Project.View is
          then
             return Standalone_Library_Kind'Value
               (Self.Attribute
-                 (Project.Registry.Attribute.Library_Standalone).Value);
+                 (Project.Registry.Attribute.Library_Standalone).Value.Text);
 
          else
             --  By default, if there is no attribute Library_Standalone we are
@@ -698,7 +702,7 @@ package body GPR2.Project.View is
       return GPR2.Path_Name.Create_File
         (Name_Type
            (Self.Attribute
-              (Project.Registry.Attribute.Library_Version).Value),
+              (Project.Registry.Attribute.Library_Version).Value.Text),
          Directory => Optional_Name_Type (Self.Library_Directory.Dir_Name));
    end Library_Version_Filename;
 
@@ -726,13 +730,14 @@ package body GPR2.Project.View is
                                  Has_Attributes (A.Executable_Suffix)
                              then
                                 Tree.Configuration.Corresponding_View.
-                                  Attribute (A.Executable_Suffix).Value
+                                  Attribute (A.Executable_Suffix).Value.Text
 
                              elsif Builder.Is_Defined
                                  and then
                                Builder.Has_Attributes (A.Executable_Suffix)
                              then
-                                Builder.Attribute (A.Executable_Suffix).Value
+                               Builder.Attribute
+                                 (A.Executable_Suffix).Value.Text
 
                              else
                                 View.Executable_Suffix.all);
@@ -771,7 +776,7 @@ package body GPR2.Project.View is
          return GPR2.Path_Name.Create_File
            (Name_Type
               ((if Attr.Is_Defined
-                then Attr.Value
+                then Attr.Value.Text
                 else Ada.Directories.Base_Name (String (Source)))
                & Executable_Suffix),
             Optional_Name_Type (Self.Executable_Directory.Dir_Name));
@@ -780,7 +785,7 @@ package body GPR2.Project.View is
    begin
       return Set : GPR2.Path_Name.Set.Object do
          for Main of Self.Attribute (A.Main).Values loop
-            Set.Append (Mains.Create (Main));
+            Set.Append (Mains.Create (Main.Text));
          end loop;
       end return;
    end Mains;
@@ -814,7 +819,7 @@ package body GPR2.Project.View is
    begin
       return Self.Apply_Root_And_Subdirs
         (if Self.Has_Attributes (A.Object_Dir)
-         then Self.Attribute (A.Object_Dir).Value
+         then Self.Attribute (A.Object_Dir).Value.Text
          else ".");
    end Object_Directory;
 

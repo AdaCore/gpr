@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2017, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,6 +29,7 @@
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.Source_Reference.Value;
 
 package GPR2.Builtin is
 
@@ -38,10 +39,12 @@ package GPR2.Builtin is
    function External
      (Context       : GPR2.Context.Object;
       Variable      : Name_Type;
-      Default_Value : Value_Type := No_Value) return Value_Type
+      Default_Value : Source_Reference.Value.Object :=
+                        Source_Reference.Value.Undefined)
+      return Source_Reference.Value.Object
      with Post =>
        (if Context.Contains (Variable)
-        then External'Result = Context (Variable));
+        then External'Result.Text = Context (Variable));
    --  The External built-in. Returns the value for Variable either in the
    --  context if found or the default value otherwise. If no default value
    --  is specified, the exception is raised.

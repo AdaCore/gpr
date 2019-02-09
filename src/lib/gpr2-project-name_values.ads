@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -28,7 +28,8 @@
 
 with GPR2.Containers;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Source_Reference;
+with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Value;
 
 private with Ada.Strings.Unbounded;
 
@@ -47,20 +48,18 @@ package GPR2.Project.Name_Values is
    --  Returns true if Self is defined
 
    function Create
-     (Name  : Name_Type;
-      Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Object
+     (Name  : Source_Reference.Identifier.Object;
+      Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name
+                  and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Create a single-valued object
 
    function Create
-     (Name   : Name_Type;
-      Values : Containers.Value_List;
-      Sloc   : Source_Reference.Object) return Object
+     (Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name
+                  and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Create a multi-valued object
 
@@ -77,7 +76,7 @@ package GPR2.Project.Name_Values is
           Post => (if Self.Kind = Single then Count_Values'Result = 1);
    --  Returns the number of values for the Name/Values pair object
 
-   function Values (Self : Object) return Containers.Value_List
+   function Values (Self : Object) return Containers.Source_Value_List
      with Pre  => Self.Is_Defined,
           Post => Values'Result.Length = Self.Count_Values;
    --  Returns the values for the Name/Values pair object
@@ -86,7 +85,7 @@ package GPR2.Project.Name_Values is
      with Pre => Self.Kind = List;
    --  Returns true whether the list of value contains Value
 
-   function Value (Self : Object) return Value_Type
+   function Value (Self : Object) return Source_Reference.Value.Object
      with Pre => Self.Is_Defined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
 
@@ -112,7 +111,7 @@ private
    type Object is new Source_Reference.Object with record
       Kind                 : Registry.Attribute.Value_Kind := List;
       Name                 : Unbounded_String;
-      Values               : Containers.Value_List;
+      Values               : Containers.Source_Value_List;
       Value_Case_Sensitive : Boolean := True;
       V_Set                : Containers.Value_Set;  -- for fast check
    end record;

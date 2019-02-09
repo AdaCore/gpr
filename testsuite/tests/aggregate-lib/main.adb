@@ -72,7 +72,7 @@ procedure Main is
             Text_IO.Put (" ->");
 
             for V of Element (A).Values loop
-               Text_IO.Put (" " & V);
+               Text_IO.Put (" " & V.Text);
             end loop;
             Text_IO.New_Line;
          end loop;

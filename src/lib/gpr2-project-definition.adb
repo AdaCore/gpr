@@ -38,7 +38,8 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Source;
-with GPR2.Source_Reference;
+with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Definition is
 
@@ -59,7 +60,7 @@ package body GPR2.Project.Definition is
       then Def.Attrs.Source_Dirs
       else Project.Attribute.Default_Source_Dirs);
 
-   function Languages (Def : Data) return Containers.Value_List is
+   function Languages (Def : Data) return Containers.Source_Value_List is
      (if Def.Attrs.Has_Languages
       then Def.Attrs.Languages.Values
       else Builtin_Languages.Values);
@@ -136,7 +137,8 @@ package body GPR2.Project.Definition is
 
       function Language_For
         (Filename : GPR2.Path_Name.Full_Name;
-         Kind     : out GPR2.Source.Kind_Type) return Value_Type;
+         Kind     : out GPR2.Source.Kind_Type)
+         return Source_Reference.Value.Object;
       --  The language for Filename based on the Naming package. It also
       --  returns in Kind if Filename is a spec, a body or a separate.
 
@@ -182,13 +184,15 @@ package body GPR2.Project.Definition is
 
       Dot_Repl : constant String :=
                    Naming.Attribute
-                     (Registry.Attribute.Dot_Replacement).Value;
+                     (Registry.Attribute.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
 
       Is_Standard_GNAT_Naming : constant  Boolean :=
-                                  (Naming.Spec_Suffix ("ada").Value = ".ads")
+                                  (Naming.Spec_Suffix
+                                       ("ada").Value.Text = ".ads")
                                      and then
-                                  (Naming.Body_Suffix ("ada").Value = ".adb")
+                                  (Naming.Body_Suffix
+                                       ("ada").Value.Text = ".adb")
                                      and then
                                   (Dot_Repl = "-");
       --  True if the current naming scheme is GNAT's default naming scheme.
@@ -216,7 +220,7 @@ package body GPR2.Project.Definition is
       begin
          for A of Set loop
             Naming_Exceptions.Insert
-              (Directories.Simple_Name (A.Value), Name_Type (A.Index));
+              (Directories.Simple_Name (A.Value.Text), Name_Type (A.Index));
          end loop;
       end Fill_Naming_Exceptions;
 
@@ -273,7 +277,7 @@ package body GPR2.Project.Definition is
       procedure Handle_File (Filename : GPR2.Path_Name.Full_Name) is
          Kind     : GPR2.Source.Kind_Type;
          Language : constant Value_Type :=
-                      Language_For (Filename, Kind);
+                      Language_For (Filename, Kind).Text;
       begin
          --  Check the language, if no language found this is not a source for
          --  this project.
@@ -446,7 +450,7 @@ package body GPR2.Project.Definition is
       function Language_For
         (Filename : GPR2.Path_Name.Full_Name;
          Kind     : out GPR2.Source.Kind_Type)
-         return Value_Type
+         return Source_Reference.Value.Object
       is
 
          function Ends_With (Str, Ending : String) return Boolean with Inline;
@@ -477,10 +481,10 @@ package body GPR2.Project.Definition is
          for Lang of Languages.Values loop
             Check_Spec : declare
                Spec_Suffix : constant Project.Attribute.Object :=
-                               Naming.Spec_Suffix (Name_Type (Lang));
+                               Naming.Spec_Suffix (Name_Type (Lang.Text));
             begin
                if Spec_Suffix.Is_Defined
-                 and then Ends_With (Filename, Spec_Suffix.Value)
+                 and then Ends_With (Filename, Spec_Suffix.Value.Text)
                then
                   Kind := GPR2.Source.S_Spec;
                   return Lang;
@@ -496,10 +500,10 @@ package body GPR2.Project.Definition is
 
             Check_Body : declare
                Body_Suffix : constant Project.Attribute.Object :=
-                               Naming.Body_Suffix (Name_Type (Lang));
+                               Naming.Body_Suffix (Name_Type (Lang.Text));
             begin
                if Body_Suffix.Is_Defined
-                 and then Ends_With (Filename, Body_Suffix.Value)
+                 and then Ends_With (Filename, Body_Suffix.Value.Text)
                then
                   Kind := GPR2.Source.S_Body;
                   return Lang;
@@ -508,10 +512,10 @@ package body GPR2.Project.Definition is
 
             Check_Separate : declare
                Sep_Suffix : constant Project.Attribute.Object :=
-                              Naming.Separate_Suffix (Name_Type (Lang));
+                              Naming.Separate_Suffix (Name_Type (Lang.Text));
             begin
                if Sep_Suffix.Is_Defined
-                 and then Ends_With (Filename, Sep_Suffix.Value)
+                 and then Ends_With (Filename, Sep_Suffix.Value.Text)
                then
                   Kind := GPR2.Source.S_Separate;
                   return Lang;
@@ -519,7 +523,7 @@ package body GPR2.Project.Definition is
             end Check_Separate;
          end loop;
 
-         return No_Value;
+         return Source_Reference.Value.Undefined;
       end Language_For;
 
       ---------------
@@ -571,7 +575,7 @@ package body GPR2.Project.Definition is
             begin
                MD5.Update (C, String (A.Name) & "/");
                for Value of A.Values loop
-                  MD5.Update (C, Value);
+                  MD5.Update (C, Value.Text);
                end loop;
             end Add;
 
@@ -692,11 +696,11 @@ package body GPR2.Project.Definition is
                Suffix : constant Value_Type :=
                           (case Kind is
                               when GPR2.Source.S_Spec     =>
-                                 Naming.Spec_Suffix ("ada").Value,
+                                 Naming.Spec_Suffix ("ada").Value.Text,
                               when GPR2.Source.S_Body     =>
-                                 Naming.Body_Suffix ("ada").Value,
+                                 Naming.Body_Suffix ("ada").Value.Text,
                               when GPR2.Source.S_Separate =>
-                                 Naming.Separate_Suffix ("ada").Value);
+                                 Naming.Separate_Suffix ("ada").Value.Text);
             begin
                if Length (Result) > Suffix'Length then
                   Delete
@@ -825,7 +829,7 @@ package body GPR2.Project.Definition is
                                   Project.Attribute.Undefined);
                begin
                   if Attr.Is_Defined
-                    and then Attr.Value /= String (Filename)
+                    and then Attr.Value.Text /= String (Filename)
                   then
                      --  We have a naming exception for this unit and the body
                      --  does not corresponds to the current filename. We skip
@@ -929,16 +933,16 @@ package body GPR2.Project.Definition is
 
          if Def.Attrs.Has_Library_Interface then
             for Unit of Def.Attrs.Library_Interface.Values loop
-               if Interfaces.Contains (Name_Type (Unit)) then
+               if Interfaces.Contains (Name_Type (Unit.Text)) then
                   Tree.Append_Message
                     (Message.Create
                        (Message.Warning,
-                        "duplicate unit '" & Unit
+                        "duplicate unit '" & Unit.Text
                         & "' in library_interface attribute",
-                        Def.Attrs.Library_Interface));
+                        Unit));
                else
                   Interfaces.Insert
-                    (Name_Type (Unit), Def.Attrs.Library_Interface);
+                    (Name_Type (Unit.Text), Def.Attrs.Library_Interface);
                end if;
             end loop;
          end if;
@@ -947,16 +951,16 @@ package body GPR2.Project.Definition is
 
          if Def.Attrs.Has_Interfaces then
             for Source of Def.Attrs.Interfaces.Values loop
-               if Interfaces.Contains (Simple_Name (Source)) then
+               if Interfaces.Contains (Simple_Name (Source.Text)) then
                   Tree.Append_Message
                     (Message.Create
                        (Message.Warning,
-                        "duplicate unit '" & Source
+                        "duplicate unit '" & Source.Text
                         & "' in interfaces attribute",
-                        Def.Attrs.Interfaces));
+                        Source));
                else
                   Interfaces.Insert
-                    (Simple_Name (Source), Def.Attrs.Interfaces);
+                    (Simple_Name (Source.Text), Def.Attrs.Interfaces);
                end if;
             end loop;
          end if;
@@ -985,7 +989,7 @@ package body GPR2.Project.Definition is
                           (Root,
                            Def.Attrs.Element
                              (Registry.Attribute.Excluded_Source_List_File)
-                           .Value);
+                           .Value.Text);
             begin
                Read_File (File, Excluded_Sources);
             end;
@@ -995,7 +999,7 @@ package body GPR2.Project.Definition is
 
          if Def.Attrs.Has_Excluded_Source_Files then
             for File of Def.Attrs.Excluded_Source_Files.Values loop
-               Excluded_Sources.Include (Optional_Name_Type (File));
+               Excluded_Sources.Include (Optional_Name_Type (File.Text));
             end loop;
          end if;
 
@@ -1007,7 +1011,8 @@ package body GPR2.Project.Definition is
                         Directories.Compose
                           (Root,
                            Def.Attrs.Element
-                             (Registry.Attribute.Source_List_File).Value);
+                             (Registry.Attribute.Source_List_File)
+                               .Value.Text);
             begin
                Read_File (File, Included_Sources);
             end;
@@ -1017,7 +1022,7 @@ package body GPR2.Project.Definition is
 
          if Def.Attrs.Has_Source_Files then
             for File of Def.Attrs.Source_Files.Values loop
-               Included_Sources.Include (Optional_Name_Type (File));
+               Included_Sources.Include (Optional_Name_Type (File.Text));
             end loop;
          end if;
 
@@ -1043,11 +1048,11 @@ package body GPR2.Project.Definition is
                --  Handle Source_Dirs
 
                for Dir of Def.Source_Directories.Values loop
-                  if OS_Lib.Is_Absolute_Path (Dir) then
-                     Handle_Directory (Dir);
+                  if OS_Lib.Is_Absolute_Path (Dir.Text) then
+                     Handle_Directory (Dir.Text);
                   else
                      Handle_Directory
-                       (Root & OS_Lib.Directory_Separator & Dir);
+                       (Root & OS_Lib.Directory_Separator & Dir.Text);
                   end if;
                end loop;
             end Populate_Sources;
@@ -1065,9 +1070,23 @@ package body GPR2.Project.Definition is
          if not Interfaces.Is_Empty then
             for Unit in Interfaces.Iterate loop
                declare
-                  Attr : constant Project.Attribute.Object :=
-                           Interfaces_Unit.Element (Unit);
+                  Attr      : constant Project.Attribute.Object :=
+                                Interfaces_Unit.Element (Unit);
+                  Unit_Name : constant Name_Type :=
+                                Interfaces_Unit.Key (Unit);
+                  Sloc      : Source_Reference.Object :=
+                                Source_Reference.Object (Attr);
                begin
+                  --  Check for the sloc of the corresponding value
+
+                  for V of Attr.Values loop
+                     if V.Text /= No_Value then
+                        if Name_Type (V.Text) = Unit_Name then
+                           Sloc := Source_Reference.Object (V);
+                        end if;
+                     end if;
+                  end loop;
+
                   Tree.Append_Message
                     (Message.Create
                        (Message.Error,
@@ -1077,7 +1096,7 @@ package body GPR2.Project.Definition is
                         & " '"
                         & String (Interfaces_Unit.Key (Unit))
                         & "' not found",
-                        Attr));
+                        Sloc));
                end;
             end loop;
          end if;
@@ -1117,7 +1136,14 @@ begin
          return Project.Attribute.Object
       is
          A   : Project.Attribute.Object :=
-                 Project.Attribute.Create (Name, Index, Value, Undef_Sloc);
+                 Project.Attribute.Create
+                   (Source_Reference.Identifier.Object
+                      (Source_Reference.Identifier.Create
+                         (Undef_Sloc, Name)),
+                    Index,
+                    (Source_Reference.Value.Object
+                      (Source_Reference.Value.Create
+                         (Undef_Sloc, Value))));
          Def : constant Project.Registry.Attribute.Def :=
                  Project.Registry.Attribute.Get
                    (Project.Registry.Attribute.Create
@@ -1136,11 +1162,16 @@ begin
       C_Body   : constant Project.Attribute.Object :=
                    Create (Registry.Attribute.Body_Suffix, "c", ".c");
       Dot_Repl : constant Project.Attribute.Object :=
-                   Project.Attribute.Create
-                     (Registry.Attribute.Dot_Replacement,
-                      "", "-", Undef_Sloc);
+                 Project.Attribute.Create
+                   (Source_Reference.Identifier.Object
+                      (Source_Reference.Identifier.Create
+                         (Undef_Sloc, Registry.Attribute.Dot_Replacement)),
+                    "",
+                    (Source_Reference.Value.Object
+                      (Source_Reference.Value.Create
+                          (Undef_Sloc, "-"))));
       Attrs    : Project.Attribute.Set.Object;
-      Langs    : Containers.Value_List;
+      Langs    : Containers.Source_Value_List;
    begin
       --  Default naming package
 
@@ -1157,9 +1188,16 @@ begin
 
       --  Default languages attribute
 
-      Langs.Append ("ada");
+      Langs.Append
+        (Source_Reference.Value.Object
+           (Source_Reference.Value.Create
+                (Source_Reference.Undefined,
+                 "ada")));
       Builtin_Languages :=
         Project.Attribute.Create
-          (Registry.Attribute.Languages, Langs, Undef_Sloc);
+          (Source_Reference.Identifier.Object
+             (Source_Reference.Identifier.Create
+                (Source_Reference.Undefined, Registry.Attribute.Languages)),
+           Langs);
    end;
 end GPR2.Project.Definition;

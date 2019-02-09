@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---          Copyright (C) 2016-2018, Free Software Foundation, Inc.         --
+--          Copyright (C) 2016-2019, Free Software Foundation, Inc.         --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -54,7 +54,7 @@ procedure Main is
          Text_IO.Put ("Type : " & String (T.Name) & " -");
 
          for V of T.Values loop
-            Text_IO.Put (' ' & V);
+            Text_IO.Put (' ' & V.Text);
          end loop;
       end loop;
 
