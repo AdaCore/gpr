@@ -2166,7 +2166,10 @@ package body GPR2.Parser.Project is
 
             Packs.Include
               (Name_Type (P_Name),
-               GPR2.Project.Pack.Create (P_Name, Pack_Attrs, Pack_Vars, Sloc));
+               GPR2.Project.Pack.Create
+                 (Source_Reference.Identifier.Object
+                    (Source_Reference.Identifier.Create (Sloc, P_Name)),
+                  Pack_Attrs, Pack_Vars));
 
             --  Skip all nodes for this construct
 

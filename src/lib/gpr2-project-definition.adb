@@ -86,10 +86,13 @@ package body GPR2.Project.Definition is
             end loop;
 
             return Project.Pack.Create
-              (Name       => Registry.Pack.Naming,
+              (Name       =>
+                 Source_Reference.Identifier.Object
+                   (Source_Reference.Identifier.Create
+                      (Source_Reference.Object (Naming),
+                       Registry.Pack.Naming)),
                Attributes => Result,
-               Variables  => Project.Variable.Set.Set.Empty_Map,
-               Sloc       => Source_Reference.Object (Naming));
+               Variables  => Project.Variable.Set.Set.Empty_Map);
          end;
 
       elsif Def.Tree.Has_Configuration then
@@ -1180,11 +1183,13 @@ begin
       Attrs.Insert (C_Spec);
       Attrs.Insert (C_Body);
       Attrs.Insert (Dot_Repl);
+
       Builtin_Naming_Package :=
         Project.Pack.Create
-          (Registry.Pack.Naming,
-           Attrs, Project.Variable.Set.Set.Empty_Map,
-           Undef_Sloc);
+          (Source_Reference.Identifier.Object
+             (Source_Reference.Identifier.Create
+                (Undef_Sloc, Registry.Pack.Naming)),
+           Attrs, Project.Variable.Set.Set.Empty_Map);
 
       --  Default languages attribute
 
