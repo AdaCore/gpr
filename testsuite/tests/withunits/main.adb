@@ -74,7 +74,7 @@ procedure Main is
                Text_IO.New_Line;
 
                for W of S.Withed_Units loop
-                  Text_IO.Put_Line ("   " & String (Id (W).Identifier));
+                  Text_IO.Put_Line ("   " & String (Id (W).Text));
                end loop;
             end if;
          end;

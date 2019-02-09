@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2016-2018, Free Software Foundation, Inc.          --
+--         Copyright (C) 2016-2019, Free Software Foundation, Inc.          --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -170,13 +170,13 @@ package body GPR2.Project.Source is
             if not Done.Contains (W) then
                Done.Include (W);
 
-               View := Data.Tree.Get_View (Unit => W.Identifier);
+               View := Data.Tree.Get_View (Unit => W.Text);
 
                if not View.Is_Defined then
                   Data.Tree.Log_Messages.Append
                     (Message.Create
                        (Message.Warning,
-                        "withed unit " & String (W.Identifier) & " not found",
+                        "withed unit " & String (W.Text) & " not found",
                         W));
 
                else
@@ -186,8 +186,8 @@ package body GPR2.Project.Source is
                      --  The view information for the unit Identifier
                      SU   : GPR2.Unit.Object;
                   begin
-                     if Data.Units.Contains (W.Identifier) then
-                        SU := Data.Units (W.Identifier);
+                     if Data.Units.Contains (W.Text) then
+                        SU := Data.Units (W.Text);
 
                         --  At least the dependencies are the spec and body of
                         --  the withed unit.

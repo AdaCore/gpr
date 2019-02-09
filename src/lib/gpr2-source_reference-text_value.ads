@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2017-2019, Free Software Foundation, Inc.          --
+--            Copyright (C) 2019, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -25,7 +25,39 @@
 --  This package represents an entity source reference with an associated
 --  message. This is mostly to report warnings/errors while parsing sources.
 
-with GPR2.Source_Reference.Text_Value;
+generic
+   type Text_Type is new String;
+package GPR2.Source_Reference.Text_Value is
 
-package GPR2.Source_Reference.Identifier is
-  new GPR2.Source_Reference.Text_Value (Name_Type);
+   type Object is new GPR2.Source_Reference.Object with private;
+
+   Undefined : constant Object;
+
+   overriding function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
+
+   function Create
+     (Filename     : Path_Name.Full_Name;
+      Line, Column : Natural;
+      Text         : Text_Type) return Object'Class;
+
+   function Create
+     (Sloc  : GPR2.Source_Reference.Object;
+      Text  : Text_Type) return Object'Class;
+
+   function Text (Self : Object) return Text_Type;
+   --  Returns the message associated with the reference
+
+private
+
+   type Object is new GPR2.Source_Reference.Object with record
+      Text : Unbounded_String;
+   end record;
+
+   Undefined : constant Object :=
+                 (GPR2.Source_Reference.Undefined with others => <>);
+
+   overriding function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
+
+end GPR2.Source_Reference.Text_Value;

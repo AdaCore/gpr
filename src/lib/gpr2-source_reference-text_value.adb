@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---         Copyright (C) 2017-2018, Free Software Foundation, Inc.          --
+--            Copyright (C) 2019, Free Software Foundation, Inc.            --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,31 +22,42 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body GPR2.Source_Reference.Identifier is
+--  This package represents an entity source reference with an associated
+--  message. This is mostly to report warnings/errors while parsing sources.
+
+package body GPR2.Source_Reference.Text_Value is
 
    ------------
    -- Create --
    ------------
 
    function Create
-     (Filename     : Path_Name.Full_Name;
-      Line, Column : Natural;
-      Identifier   : Name_Type)
-      return Object'Class is
+     (Sloc : GPR2.Source_Reference.Object;
+      Text : Text_Type) return Object'Class is
    begin
       return Object'
-        (GPR2.Source_Reference.Object
-           (GPR2.Source_Reference.Create (Filename, Line, Column))
-         with Identifier => To_Unbounded_String (String (Identifier)));
+        (Sloc with Text => To_Unbounded_String (String (Text)));
    end Create;
 
-   ----------------
-   -- Identifier --
-   ----------------
-
-   function Identifier (Self : Object) return Name_Type is
+   function Create
+     (Filename     : Path_Name.Full_Name;
+      Line, Column : Natural;
+      Text         : Text_Type)
+      return Object'Class is
    begin
-      return Name_Type (To_String (Self.Identifier));
-   end Identifier;
+      return Create
+        (GPR2.Source_Reference.Object
+           (GPR2.Source_Reference.Create (Filename, Line, Column)),
+         Text);
+   end Create;
 
-end GPR2.Source_Reference.Identifier;
+   ----------
+   -- Text --
+   ----------
+
+   function Text (Self : Object) return Text_Type is
+   begin
+      return Text_Type (To_String (Self.Text));
+   end Text;
+
+end GPR2.Source_Reference.Text_Value;
