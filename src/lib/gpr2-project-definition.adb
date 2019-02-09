@@ -1123,8 +1123,6 @@ begin
    --  Setup the default/build-in naming package
 
    declare
-      Undef_Sloc : Source_Reference.Object renames Source_Reference.Undefined;
-
       function Create
         (Name : Name_Type; Index, Value : Value_Type)
          return Project.Attribute.Object;
@@ -1142,11 +1140,11 @@ begin
                  Project.Attribute.Create
                    (Source_Reference.Identifier.Object
                       (Source_Reference.Identifier.Create
-                         (Undef_Sloc, Name)),
+                         (Source_Reference.Builtin, Name)),
                     Index,
                     (Source_Reference.Value.Object
                       (Source_Reference.Value.Create
-                         (Undef_Sloc, Value))));
+                         (Source_Reference.Builtin, Value))));
          Def : constant Project.Registry.Attribute.Def :=
                  Project.Registry.Attribute.Get
                    (Project.Registry.Attribute.Create
@@ -1168,11 +1166,12 @@ begin
                  Project.Attribute.Create
                    (Source_Reference.Identifier.Object
                       (Source_Reference.Identifier.Create
-                         (Undef_Sloc, Registry.Attribute.Dot_Replacement)),
+                         (Source_Reference.Builtin,
+                          Registry.Attribute.Dot_Replacement)),
                     "",
                     (Source_Reference.Value.Object
                       (Source_Reference.Value.Create
-                          (Undef_Sloc, "-"))));
+                          (Source_Reference.Builtin, "-"))));
       Attrs    : Project.Attribute.Set.Object;
       Langs    : Containers.Source_Value_List;
    begin
@@ -1188,21 +1187,19 @@ begin
         Project.Pack.Create
           (Source_Reference.Identifier.Object
              (Source_Reference.Identifier.Create
-                (Undef_Sloc, Registry.Pack.Naming)),
+                (Source_Reference.Builtin, Registry.Pack.Naming)),
            Attrs, Project.Variable.Set.Set.Empty_Map);
 
       --  Default languages attribute
 
       Langs.Append
         (Source_Reference.Value.Object
-           (Source_Reference.Value.Create
-                (Source_Reference.Undefined,
-                 "ada")));
+           (Source_Reference.Value.Create (Source_Reference.Builtin, "ada")));
       Builtin_Languages :=
         Project.Attribute.Create
           (Source_Reference.Identifier.Object
              (Source_Reference.Identifier.Create
-                (Source_Reference.Undefined, Registry.Attribute.Languages)),
+                (Source_Reference.Builtin, Registry.Attribute.Languages)),
            Langs);
    end;
 end GPR2.Project.Definition;

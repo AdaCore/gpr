@@ -39,6 +39,9 @@ package GPR2.Source_Reference is
 
    Undefined : constant Object;
 
+   Builtin   : constant Object;
+   --  Source reference for built-in objects
+
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
@@ -82,6 +85,8 @@ private
      is (Self.Column > 0 and then Self.Line > 0);
 
    Undefined : constant Object := (others => <>);
+
+   Builtin   : constant Object := (0, 0, To_Unbounded_String ("<builtin>"));
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
