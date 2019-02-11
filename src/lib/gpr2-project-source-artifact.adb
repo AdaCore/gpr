@@ -98,8 +98,7 @@ package body GPR2.Project.Source.Artifact is
          Result.Append (Self.Object_Code);
 
          declare
-            Name : constant Name_Type :=
-                     Self.Source.Source.Path_Name.Simple_Name;
+            Name : constant Name_Type := Source.Path_Name.Simple_Name;
             Dir  : constant Optional_Name_Type :=
                      Optional_Name_Type
                        (Self.Source.View.Object_Directory.Value);
@@ -119,6 +118,7 @@ package body GPR2.Project.Source.Artifact is
          begin
             Append_File (Name & ".stdout");
             Append_File (Name & ".stderr");
+            Append_File (Source.Path_Name.Base_Name & ".adt");
          end;
       end if;
 
