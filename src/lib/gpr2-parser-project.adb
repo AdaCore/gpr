@@ -58,18 +58,26 @@ package body GPR2.Parser.Project is
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range)
-      return Source_Reference.Object is
+      return Source_Reference.Object
+   is
      (Source_Reference.Object
         (Source_Reference.Create
            (Path_Name.Value,
             Positive (Slr.Start_Line),
             Positive (Slr.Start_Column))));
 
+   function Get_Source_Reference
+     (Path_Name : GPR2.Path_Name.Object;
+      Node      : GPR_Node'Class) return Source_Reference.Object
+   is
+     (Get_Source_Reference (Path_Name, Sloc_Range (Node)));
+
    function Get_Value_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range;
       Value     : Value_Type)
-      return Source_Reference.Value.Object is
+      return Source_Reference.Value.Object
+   is
      (Source_Reference.Value.Object
        (Source_Reference.Value.Create
          (Get_Source_Reference (Path_Name, Slr), Value)));
@@ -77,7 +85,8 @@ package body GPR2.Parser.Project is
    function Get_Value_Reference
      (Value : Value_Type;
       Sloc  : Source_Reference.Object := Source_Reference.Undefined)
-      return Source_Reference.Value.Object is
+      return Source_Reference.Value.Object
+   is
      (Source_Reference.Value.Object
        (Source_Reference.Value.Create (Sloc, Value)));
 
@@ -85,7 +94,8 @@ package body GPR2.Parser.Project is
      (Path_Name  : GPR2.Path_Name.Object;
       Slr        : Langkit_Support.Slocs.Source_Location_Range;
       Identifier : Name_Type)
-      return Source_Reference.Identifier.Object is
+      return Source_Reference.Identifier.Object
+   is
      (Source_Reference.Identifier.Object
        (Source_Reference.Identifier.Create
          (Get_Source_Reference (Path_Name, Slr), Identifier)));
@@ -328,9 +338,7 @@ package body GPR2.Parser.Project is
                      Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference
-                               (Filename, Sloc_Range (N)),
+                           Sloc    => Get_Source_Reference (Filename, N),
                            Message =>
                              "missing parameters for external_as_list"
                              & " built-in"));
@@ -351,8 +359,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sloc_Range (Var_Node)),
+                                   Get_Source_Reference (Filename, Var_Node),
                                  Message =>
                                    "external_as_list first parameter must be "
                                    & "a simple string"));
@@ -362,8 +369,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sloc_Range (Var_Node)),
+                                   Get_Source_Reference (Filename, Var_Node),
                                  Message =>
                                    "external_as_list variable name must not "
                                    & "be empty"));
@@ -377,8 +383,7 @@ package body GPR2.Parser.Project is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
-                                Get_Source_Reference
-                                  (Filename, Sloc_Range (Exprs)),
+                                Get_Source_Reference (Filename, Exprs),
                               Message =>
                                 "external_as_list requires a second "
                                 & "parameter"));
@@ -396,7 +401,7 @@ package body GPR2.Parser.Project is
                                    (Level   => Message.Error,
                                     Sloc    =>
                                       Get_Source_Reference
-                                        (Filename, Sloc_Range (Sep_Node)),
+                                        (Filename, Sep_Node),
                                     Message =>
                                       "external_as_list second parameter must "
                                       & "be a simple string"));
@@ -407,7 +412,7 @@ package body GPR2.Parser.Project is
                                    (Level   => Message.Error,
                                     Sloc    =>
                                       Get_Source_Reference
-                                        (Filename, Sloc_Range (Sep_Node)),
+                                        (Filename, Sep_Node),
                                     Message =>
                                       "external_as_list separator must not "
                                       & "be empty"));
@@ -431,9 +436,7 @@ package body GPR2.Parser.Project is
                      Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference
-                               (Filename, Sloc_Range (N)),
+                           Sloc    => Get_Source_Reference (Filename, N),
                            Message =>
                              "missing parameter for external built-in"));
 
@@ -453,8 +456,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sloc_Range (Var_Node)),
+                                   Get_Source_Reference (Filename, Var_Node),
                                  Message =>
                                    "external first parameter must be a "
                                    & "simple string"));
@@ -464,8 +466,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sloc_Range (Var_Node)),
+                                   Get_Source_Reference (Filename, Var_Node),
                                  Message =>
                                    "external variable name must not be "
                                    & "empty"));
@@ -493,9 +494,7 @@ package body GPR2.Parser.Project is
                      Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference
-                               (Filename, Sloc_Range (N)),
+                           Sloc    => Get_Source_Reference (Filename, N),
                            Message =>
                              "missing parameters for split built-in"));
 
@@ -515,8 +514,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sloc_Range (Str_Node)),
+                                   Get_Source_Reference (Filename, Str_Node),
                                  Message =>
                                    "split first parameter must be "
                                    & "a simple string"));
@@ -526,8 +524,7 @@ package body GPR2.Parser.Project is
                              (GPR2.Message.Create
                                 (Level   => Message.Error,
                                  Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sloc_Range (Str_Node)),
+                                   Get_Source_Reference (Filename, Str_Node),
                                  Message =>
                                    "split first parameter must not "
                                    & "be empty"));
@@ -541,10 +538,8 @@ package body GPR2.Parser.Project is
                           (GPR2.Message.Create
                              (Level   => Message.Error,
                               Sloc    =>
-                                Get_Source_Reference
-                                  (Filename, Sloc_Range (Exprs)),
-                              Message =>
-                                "split requires a second parameter"));
+                                Get_Source_Reference (Filename, Exprs),
+                              Message => "split requires a second parameter"));
                      else
                         declare
                            Sep_Node : constant Term_List :=
@@ -559,7 +554,7 @@ package body GPR2.Parser.Project is
                                    (Level   => Message.Error,
                                     Sloc    =>
                                       Get_Source_Reference
-                                        (Filename, Sloc_Range (Sep_Node)),
+                                        (Filename, Sep_Node),
                                     Message =>
                                       "split separator parameter must "
                                       & "be a simple string"));
@@ -570,7 +565,7 @@ package body GPR2.Parser.Project is
                                    (Level   => Message.Error,
                                     Sloc    =>
                                       Get_Source_Reference
-                                        (Filename, Sloc_Range (Sep_Node)),
+                                        (Filename, Sep_Node),
                                     Message =>
                                       "split separator parameter must not "
                                       & "be empty"));
@@ -596,9 +591,7 @@ package body GPR2.Parser.Project is
                   Messages.Append
                     (GPR2.Message.Create
                        (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference
-                            (Filename, Sloc_Range (N)),
+                        Sloc    => Get_Source_Reference (Filename, N),
                         Message =>
                           "unknown built-in '"
                         & String (Function_Name) & "'"));
@@ -623,8 +616,7 @@ package body GPR2.Parser.Project is
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
-                          Get_Source_Reference
-                            (Filename, Sloc_Range (F_End_Name (N))),
+                          Get_Source_Reference (Filename, F_End_Name (N)),
                         Message =>
                           "'end " & String (Name (Project)) & "' expected"));
                end if;
@@ -703,8 +695,7 @@ package body GPR2.Parser.Project is
                      Project.Extended :=
                        GPR2.Project.Import.Create
                          (Path_Name,
-                          Get_Source_Reference
-                            (Filename, Sloc_Range (Ext)),
+                          Get_Source_Reference (Filename, Ext),
                           Is_Limited => False);
                      Project.Is_All := F_Is_All (Ext);
                   end;
@@ -730,8 +721,7 @@ package body GPR2.Parser.Project is
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    =>
-                          Get_Source_Reference
-                            (Filename, Sloc_Range (F_Type_Id (N))),
+                          Get_Source_Reference (Filename, F_Type_Id (N)),
                         Message =>
                           "type " & String (Name) & " already defined"));
 
@@ -752,7 +742,7 @@ package body GPR2.Parser.Project is
                                    (Level   => Message.Error,
                                     Sloc    =>
                                       Get_Source_Reference
-                                        (Filename, Sloc_Range (Cur_Child)),
+                                        (Filename, Cur_Child),
                                     Message =>
                                       String (Name)
                                       & " has duplicate value '"
@@ -809,8 +799,7 @@ package body GPR2.Parser.Project is
                                        Message => "duplicate with clause '"
                                        & String (Path.Base_Name) & ''',
                                        Sloc    => Get_Source_Reference
-                                         (Filename,
-                                          Sloc_Range (Cur_Child))));
+                                         (Filename, Cur_Child)));
 
                               else
                                  Messages.Append
@@ -819,8 +808,7 @@ package body GPR2.Parser.Project is
                                        Message => "duplicate project name '"
                                        & String (Path.Base_Name) & ''',
                                        Sloc    => Get_Source_Reference
-                                         (Filename,
-                                          Sloc_Range (Cur_Child))));
+                                         (Filename, Cur_Child)));
                                  Messages.Append
                                    (GPR2.Message.Create
                                       (Level   => Message.Warning,
@@ -828,8 +816,7 @@ package body GPR2.Parser.Project is
                                        & String (Prev.Path_Name.Name)
                                        & ''',
                                        Sloc    => Get_Source_Reference
-                                         (Filename,
-                                          Sloc_Range (Cur_Child))));
+                                         (Filename, Cur_Child)));
                               end if;
                            end;
 
@@ -837,8 +824,7 @@ package body GPR2.Parser.Project is
                            Project.Imports.Insert
                              (GPR2.Project.Import.Create
                                 (Path,
-                                 Get_Source_Reference
-                                   (Filename, Sloc_Range (Cur_Child)),
+                                 Get_Source_Reference (Filename, Cur_Child),
                                  F_Is_Limited (N)));
                         end if;
                      end;
@@ -1095,7 +1081,7 @@ package body GPR2.Parser.Project is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
          Sloc   : constant Source_Reference.Object :=
-                    Get_Source_Reference (Self.File, Sloc_Range (Node));
+                    Get_Source_Reference (Self.File, Node);
          Name   : constant Name_Type :=
                     Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
@@ -1133,7 +1119,7 @@ package body GPR2.Parser.Project is
               (Message.Create
                  (Message.Error,
                   "cannot have a reference to a limited project",
-                  Get_Source_Reference (Self.File, Sloc_Range (Node))));
+                  Get_Source_Reference (Self.File, Node)));
 
             return Empty_Item_Values;
          end if;
@@ -1156,7 +1142,7 @@ package body GPR2.Parser.Project is
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (Name) & """ is not defined",
-                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
+                     Get_Source_Reference (Self.File, Node)));
 
                return Empty_Item_Values;
             end if;
@@ -1452,7 +1438,7 @@ package body GPR2.Parser.Project is
                                 (Level   => Message.Error,
                                  Sloc    =>
                                    Get_Source_Reference
-                                     (Self.File, Sloc_Range (Parameters)),
+                                     (Self.File, Parameters),
                                  Message =>
                                    "external default parameter must be a "
                                    & "simple string"));
@@ -1474,8 +1460,7 @@ package body GPR2.Parser.Project is
                        (GPR2.Message.Create
                           (Level   => Message.Error,
                            Sloc    =>
-                              Get_Source_Reference
-                                (Self.File, Sloc_Range (Parameters)),
+                              Get_Source_Reference (Self.File, Parameters),
                            Message => Exception_Message (E)));
                      Record_Value (Get_Value_Reference (""));
                      Status := Over;
@@ -1534,7 +1519,7 @@ package body GPR2.Parser.Project is
                Record_Value
                  (Get_Value_Reference
                     (Unquote (Value_Type (To_UTF8 (Node.Text))),
-                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
+                     Get_Source_Reference (Self.File, Node)));
             end Handle_String;
 
             ---------------------
@@ -1700,7 +1685,7 @@ package body GPR2.Parser.Project is
                     (Message.Create
                        (Message.Error,
                         "project " & String (Project) & " is undefined",
-                        Get_Source_Reference (Self.File, Sloc_Range (Node))));
+                        Get_Source_Reference (Self.File, Node)));
                end if;
             end;
 
@@ -1742,9 +1727,7 @@ package body GPR2.Parser.Project is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
          Sloc    : constant Source_Reference.Object :=
-                     Get_Source_Reference
-                       (Self.File,
-                        Sloc_Range (GPR_Node (Node)));
+                     Get_Source_Reference (Self.File, Node);
 
          Name_1  : constant Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
@@ -1903,9 +1886,7 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Attribute_Decl (Node : Attribute_Decl) is
             Sloc  : constant Source_Reference.Object :=
-                      Get_Source_Reference
-                        (Self.File,
-                         Sloc_Range (GPR_Node (Node)));
+                      Get_Source_Reference (Self.File, Node);
             Name  : constant Identifier := F_Attr_Name (Node);
             Index : constant GPR_Node := F_Attr_Index (Node);
             I_Str : constant Value_Type :=
@@ -2051,9 +2032,7 @@ package body GPR2.Parser.Project is
             else
                declare
                   Sloc  : constant Source_Reference.Object :=
-                            Get_Source_Reference
-                              (Self.File,
-                               Sloc_Range (GPR_Node (Node)));
+                            Get_Source_Reference (Self.File, Node);
                   Name  : constant Identifier :=
                             F_Variable_Name1 (Var);
                begin
@@ -2128,8 +2107,7 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Package_Decl (Node : Package_Decl) is
             Sloc   : constant Source_Reference.Object :=
-                       Get_Source_Reference
-                         (Self.File, Sloc_Range (Node.As_GPR_Node));
+                       Get_Source_Reference (Self.File, Node);
             Name   : constant Identifier := F_Pkg_Name (Node);
             P_Name : constant Name_Type :=
                        Get_Name_Type (Name.As_Single_Tok_Node);
@@ -2176,8 +2154,7 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Package_Extension (Node : Package_Extension) is
             Sloc    : constant Source_Reference.Object :=
-                        Get_Source_Reference
-                          (Self.File, Sloc_Range (GPR_Node (Node)));
+                        Get_Source_Reference (Self.File, Node);
             Prj     : constant Identifier := F_Prj_Name (Node);
             Project : constant Name_Type :=
                         Get_Name_Type (Single_Tok_Node (Prj));
@@ -2237,8 +2214,7 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Package_Renaming (Node : Package_Renaming) is
             Sloc    : constant Source_Reference.Object :=
-                        Get_Source_Reference
-                          (Self.File, Sloc_Range (GPR_Node (Node)));
+                        Get_Source_Reference (Self.File, Node);
             Prj     : constant Identifier := F_Prj_Name (Node);
             Project : constant Name_Type :=
                         Get_Name_Type (Single_Tok_Node (Prj));
@@ -2303,8 +2279,7 @@ package body GPR2.Parser.Project is
                  (Self.File, Tree.Project_Search_Paths));
 
             Sloc    : constant Source_Reference.Object :=
-                        Get_Source_Reference
-                          (Self.File, Sloc_Range (GPR_Node (Node)));
+                        Get_Source_Reference (Self.File, Node);
             Name    : constant Identifier := F_Var_Name (Node);
             Expr    : constant Term_List := F_Expr (Node);
             Values  : constant Item_Values := Get_Term_List (Expr);
@@ -2415,9 +2390,7 @@ package body GPR2.Parser.Project is
                      Tree.Log_Messages.Append
                        (Message.Create
                           (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference
-                               (Self.File, Sloc_Range (GPR_Node (V_Type))),
+                           Sloc    => Get_Source_Reference (Self.File, V_Type),
                            Message =>
                              "unknown string type '" & String (T_Name) & '''));
                   end if;
