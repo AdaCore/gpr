@@ -29,17 +29,14 @@ package body GPR2.Builtin is
       Variable      : Name_Type;
       Default_Value : Source_Reference.Value.Object :=
                         Source_Reference.Value.Undefined)
-      return Source_Reference.Value.Object
-   is
-      use type Source_Reference.Value.Object;
-
+      return Source_Reference.Value.Object is
    begin
       if Context.Contains (Variable) then
          return Source_Reference.Value.Object
            (Source_Reference.Value.Create
-              (Source_Reference.Undefined, Context (Variable)));
+              (Source_Reference.Object (Default_Value), Context (Variable)));
 
-      elsif Default_Value /= Source_Reference.Value.Undefined then
+      elsif Default_Value.Is_Defined then
          return Default_Value;
 
       else
