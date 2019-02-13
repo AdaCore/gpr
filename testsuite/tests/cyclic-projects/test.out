@@ -3,8 +3,8 @@ a.gpr:1:6: circular dependency detected
 a.gpr:1:6: imports /cyclic-projects/b.gpr
 b.gpr:2:6: imports /cyclic-projects/a.gpr
 Messages found for agg.gpr
-agg.gpr:2:8: project cannot aggregate itself agg
+agg.gpr:2:27: project cannot aggregate itself agg
 Messages found for agg2.gpr
-agg2.gpr:2:8: circular dependency detected
-agg2.gpr:2:8: aggregate d.gpr
+agg2.gpr:2:27: circular dependency detected
+agg2.gpr:2:27: aggregate d.gpr
 d.gpr:1:6: imports /cyclic-projects/agg2.gpr

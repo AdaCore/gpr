@@ -2,7 +2,7 @@ Messages found:
 > /errors-sem/second.gpr
 ERROR
  3
- 8
+ 26
 attribute "Project_Files" must be a list
 > /errors-sem/demo.gpr
 ERROR

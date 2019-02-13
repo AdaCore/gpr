@@ -1616,8 +1616,7 @@ package body GPR2.Project.Tree is
                           (Message.Error,
                            "project cannot aggregate itself "
                            & String (Pathname.Base_Name),
-                           P_Data.Attrs.Element
-                             (Registry.Attribute.Project_Files)));
+                           Project));
 
                   elsif P_Data.Aggregated.Contains
                     (Name_Type (Pathname.Value))
@@ -1630,8 +1629,7 @@ package body GPR2.Project.Tree is
                              (Message.Warning,
                               "duplicate aggregated project "
                               & String (Pathname.Base_Name),
-                              P_Data.Attrs.Element
-                                (Registry.Attribute.Project_Files)));
+                              Project));
                      end if;
 
                   else
@@ -1659,16 +1657,14 @@ package body GPR2.Project.Tree is
                                 (Message.Create
                                    (Message.Error,
                                     "circular dependency detected",
-                                    P_Data.Attrs.Element
-                                      (Registry.Attribute.Project_Files)));
+                                    Project));
                            end if;
 
                            Self.Messages.Append
                              (Message.Create
                                 (Message.Error,
                                  "aggregate " & Project.Text,
-                                 P_Data.Attrs.Element
-                                   (Registry.Attribute.Project_Files)));
+                                 Project));
 
                            --  And copy back all messages from the recursive
                            --  load routine above.
@@ -1803,7 +1799,7 @@ package body GPR2.Project.Tree is
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (A.Name) & """ must be a list",
-                     A));
+                     A.Value));
             end if;
          end Check_Def;
 
@@ -1945,9 +1941,9 @@ package body GPR2.Project.Tree is
             if View.Is_Library and then View.Is_Shared_Library then
                if View.Has_Attributes (A.Library_Version) then
                   declare
-                     Lib_Ver : constant Value_Type :=
-                                 View.Attribute
-                                   (A.Library_Version).Value.Text;
+                     AV      : constant Source_Reference.Value.Object :=
+                                 View.Attribute (A.Library_Version).Value;
+                     Lib_Ver : constant Value_Type := AV.Text;
                      Lib_Fn  : constant Value_Type :=
                                  Value_Type (View.Library_Filename.Name);
                   begin
@@ -1960,10 +1956,9 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              '"' & View.Attribute
-                                (A.Library_Version).Value.Text
+                              '"' & Lib_Ver
                               & """ not correct format for Library_Version",
-                              Sloc => View.Attribute (A.Library_Version)));
+                              Sloc => AV));
                      end if;
                   end;
                end if;
@@ -1978,13 +1973,16 @@ package body GPR2.Project.Tree is
               and then View.Has_Attributes (A.Object_Dir)
               and then not View.Object_Directory.Exists
             then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Warning,
-                     "object directory """
-                     & View.Attribute (A.Object_Dir).Value.Text
-                     & """ not found",
-                     Sloc => View.Attribute (A.Object_Dir)));
+               declare
+                  AV : constant Source_Reference.Value.Object :=
+                         View.Attribute (A.Object_Dir).Value;
+               begin
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Warning,
+                        "object directory """ & AV.Text & """ not found",
+                        Sloc => AV));
+               end;
             end if;
          end;
       end Validity_Check;

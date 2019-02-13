@@ -107,6 +107,8 @@ package body GPR2.Project.Definition is
       use type MD5.Binary_Message_Digest;
       use type Project.Attribute.Object;
 
+      Source_Dir_Ref : Source_Reference.Object;
+
       package Unit_Naming is
         new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
 
@@ -850,7 +852,7 @@ package body GPR2.Project.Definition is
                  (Message.Error,
                   "unit '" & To_String (Result)
                   & "' not valid, should start with a letter",
-                  Def.Attrs.Source_Dirs));
+                  Source_Dir_Ref));
          end if;
 
          --  Cannot have 2 consecutive underscores, cannot have a dot after an
@@ -868,9 +870,9 @@ package body GPR2.Project.Definition is
                        (Message.Create
                           (Message.Error,
                            "unit '" & To_String (Result)
-                           & "' not valid, cannot contains"
+                           & "' not valid, cannot contain"
                            & " dot after underscore",
-                           Def.Attrs.Source_Dirs));
+                           Source_Dir_Ref));
 
                   elsif Prev = '_' then
                      Ok := False;
@@ -880,7 +882,7 @@ package body GPR2.Project.Definition is
                            "unit '" & To_String (Result)
                            & "' not valid, two consecutive"
                            & " underlines not permitted",
-                           Def.Attrs.Source_Dirs));
+                           Source_Dir_Ref));
                   end if;
 
                elsif not Characters.Handling.Is_Alphanumeric (Current)
@@ -891,9 +893,9 @@ package body GPR2.Project.Definition is
                     (Message.Create
                        (Message.Error,
                         "unit '" & To_String (Result)
-                        & "' not valid, should have only alpha numeric"
+                        & "' not valid, should have only alphanumeric"
                         & " characters",
-                        Def.Attrs.Source_Dirs));
+                        Source_Dir_Ref));
                end if;
             end;
          end loop;
@@ -1045,6 +1047,10 @@ package body GPR2.Project.Definition is
                --  Handle Source_Dirs
 
                for Dir of Def.Source_Directories.Values loop
+                  --  Keep reference for error messages
+
+                  Source_Dir_Ref := Source_Reference.Object (Dir);
+
                   if OS_Lib.Is_Absolute_Path (Dir.Text) then
                      Handle_Directory (Dir.Text);
                   else
