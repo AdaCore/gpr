@@ -219,7 +219,8 @@ package body GPR2.Project.Definition is
       begin
          for A of Set loop
             Naming_Exceptions.Insert
-              (Directories.Simple_Name (A.Value.Text), Name_Type (A.Index));
+              (Directories.Simple_Name (A.Value.Text),
+               Name_Type (A.Index.Text));
          end loop;
       end Fill_Naming_Exceptions;
 
@@ -1141,7 +1142,9 @@ begin
                    (Source_Reference.Identifier.Object
                       (Source_Reference.Identifier.Create
                          (Source_Reference.Builtin, Name)),
-                    Index,
+                    (Source_Reference.Value.Object
+                      (Source_Reference.Value.Create
+                         (Source_Reference.Builtin, Index))),
                     (Source_Reference.Value.Object
                       (Source_Reference.Value.Create
                          (Source_Reference.Builtin, Value))));
@@ -1168,7 +1171,9 @@ begin
                       (Source_Reference.Identifier.Create
                          (Source_Reference.Builtin,
                           Registry.Attribute.Dot_Replacement)),
-                    "",
+                    (Source_Reference.Value.Object
+                      (Source_Reference.Value.Create
+                         (Source_Reference.Builtin, ""))),
                     (Source_Reference.Value.Object
                       (Source_Reference.Value.Create
                           (Source_Reference.Builtin, "-"))));

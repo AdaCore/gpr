@@ -24,8 +24,6 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Project.Attribute is
 
    use type Containers.Count_Type;
@@ -42,7 +40,7 @@ package GPR2.Project.Attribute is
 
    function Create
      (Name  : Source_Reference.Identifier.Object;
-      Index : Value_Type;
+      Index : Source_Reference.Value.Object;
       Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name.Text
@@ -51,7 +49,7 @@ package GPR2.Project.Attribute is
 
    function Create
      (Name   : Source_Reference.Identifier.Object;
-      Index  : Value_Type;
+      Index  : Source_Reference.Value.Object;
       Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name.Text
@@ -78,7 +76,7 @@ package GPR2.Project.Attribute is
      with Pre => Self.Is_Defined;
    --  Returns True if the attribute has an index
 
-   function Index (Self : Object) return Value_Type
+   function Index (Self : Object) return Source_Reference.Value.Object
      with Inline, Pre => Self.Is_Defined;
    --  Returns the attribute's index value
 
@@ -102,17 +100,15 @@ package GPR2.Project.Attribute is
 
 private
 
-   use Ada.Strings.Unbounded;
-
    type Object is new Name_Values.Object with record
-      Index                : Unbounded_String;
+      Index                : Source_Reference.Value.Object;
       Index_Case_Sensitive : Boolean := True;
    end record;
 
    function Case_Aware_Index (Self : Object) return Value_Type is
      (if Self.Index_Case_Sensitive
-      then Index (Self)
-      else Ada.Characters.Handling.To_Lower (Index (Self)));
+      then Self.Index.Text
+      else Ada.Characters.Handling.To_Lower (Self.Index.Text));
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 
@@ -131,7 +127,7 @@ private
                                     Project.Registry.Attribute.Source_Dirs)),
                                Containers.Source_Value_Type_List.To_Vector
                                  (Current_Dir, 1))
-                              with Null_Unbounded_String, True);
+                              with Source_Reference.Value.Undefined, True);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

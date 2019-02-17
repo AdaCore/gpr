@@ -1917,18 +1917,24 @@ package body GPR2.Parser.Project is
                Is_Valid  : Boolean := True;
                --  Set to False if the attribute definition is invalid
 
+               I_Sloc    : constant Source_Reference.Value.Object :=
+                             (if Present (Index)
+                              then Get_Value_Reference
+                                    (Self.Path_Name, Sloc_Range (Index), I_Str)
+                              else Source_Reference.Value.Undefined);
+
             begin
                if Values.Single then
                   A := GPR2.Project.Attribute.Create
                     (Name  => Get_Identifier_Reference
                                 (Self.Path_Name, Sloc_Range (Name), N_Str),
-                     Index => I_Str,
+                     Index => I_Sloc,
                      Value => Values.Values.First_Element);
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name  => Get_Identifier_Reference
-                                (Self.Path_Name, Sloc_Range (Name), N_Str),
-                     Index  => I_Str,
+                    (Name   => Get_Identifier_Reference
+                                 (Self.Path_Name, Sloc_Range (Name), N_Str),
+                     Index  => I_Sloc,
                      Values => Values.Values);
                end if;
 

@@ -1578,7 +1578,7 @@ package body GPR2.Project.Tree is
             loop
                declare
                   E : constant Name_Type :=
-                        Name_Type (P_Data.Attrs (C).Index);
+                        Name_Type (P_Data.Attrs (C).Index.Text);
                   P : Containers.Name_Type_List.Cursor :=
                         P_Data.Externals.Find (E);
                begin
@@ -1701,7 +1701,7 @@ package body GPR2.Project.Tree is
                   --  loaded/resolved.
                   if External.Kind = Single then
                      P_Data.A_Context.Include
-                       (Name_Type (External.Index), External.Value.Text);
+                       (Name_Type (External.Index.Text), External.Value.Text);
                   end if;
                end;
             end loop;

@@ -16,11 +16,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded;
 with Ada.Strings.Equal_Case_Insensitive;
 
 package body GPR2.Project.Attribute is
 
    use Ada.Strings;
+   use Ada.Strings.Unbounded;
 
    ------------
    -- Create --
@@ -28,21 +30,21 @@ package body GPR2.Project.Attribute is
 
    function Create
      (Name  : Source_Reference.Identifier.Object;
-      Index : Value_Type;
+      Index : Source_Reference.Value.Object;
       Value : Source_Reference.Value.Object) return Object is
    begin
       return A : Object := Create (Name, Value) do
-         A.Index := To_Unbounded_String (String (Index));
+         A.Index := Index;
       end return;
    end Create;
 
    function Create
      (Name   : Source_Reference.Identifier.Object;
-      Index  : Value_Type;
+      Index  : Source_Reference.Value.Object;
       Values : Containers.Source_Value_List) return Object is
    begin
       return A : Object := Create (Name, Values) do
-         A.Index := To_Unbounded_String (String (Index));
+         A.Index := Index;
       end return;
    end Create;
 
@@ -52,7 +54,7 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Name_Values.Create (Name, Value)
-         with Index                => Null_Unbounded_String,
+         with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True);
    end Create;
 
@@ -62,7 +64,7 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Name_Values.Create (Name, Values)
-         with Index                => Null_Unbounded_String,
+         with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True);
    end Create;
 
@@ -72,7 +74,7 @@ package body GPR2.Project.Attribute is
 
    function Has_Index (Self : Object) return Boolean is
    begin
-      return Self.Index /= Null_Unbounded_String;
+      return Self.Index.Is_Defined;
    end Has_Index;
 
    -----------
@@ -96,7 +98,7 @@ package body GPR2.Project.Attribute is
       end if;
 
       if Self.Has_Index then
-         Append (Result, " (""" & To_String (Self.Index) & """)");
+         Append (Result, " (""" & Self.Index.Text & """)");
       end if;
 
       Append (Result, " use ");
@@ -118,9 +120,9 @@ package body GPR2.Project.Attribute is
    -- Index --
    -----------
 
-   function Index (Self : Object) return Value_Type is
+   function Index (Self : Object) return Source_Reference.Value.Object is
    begin
-      return To_String (Self.Index);
+      return Self.Index;
    end Index;
 
    -----------------
@@ -130,10 +132,9 @@ package body GPR2.Project.Attribute is
    function Index_Equal (Self : Object; Value : Value_Type) return Boolean is
    begin
       if Self.Index_Case_Sensitive then
-         return To_String (Self.Index) = String (Value);
+         return Self.Index.Text = String (Value);
       else
-         return Equal_Case_Insensitive
-           (To_String (Self.Index), String (Value));
+         return Equal_Case_Insensitive (Self.Index.Text, String (Value));
       end if;
    end Index_Equal;
 

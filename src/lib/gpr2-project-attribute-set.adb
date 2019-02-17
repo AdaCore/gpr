@@ -82,7 +82,7 @@ package body GPR2.Project.Attribute.Set is
      (Self      : Object;
       Attribute : Project.Attribute.Object) return Boolean is
    begin
-      return Self.Contains (Attribute.Name, To_String (Attribute.Index));
+      return Self.Contains (Attribute.Name, Attribute.Index.Text);
    end Contains;
 
    -------------
@@ -211,7 +211,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map := Set.Element (Position);
          begin
-            Present := A.Contains (To_String (Attribute.Index));
+            Present := A.Contains (Attribute.Index.Text);
             A.Include  (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Replace_Element (Position, A);
          end;
@@ -220,7 +220,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map;
          begin
-            Present := A.Contains (To_String (Attribute.Index));
+            Present := A.Contains (Attribute.Index.Text);
             A.Include (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Insert (Attribute.Name, A);
          end;

@@ -550,7 +550,7 @@ package body GPRinstall.Install is
                      for S of V.Values loop
                         Artifacts.Append
                           (Artifacts_Data'
-                             (To_Unbounded_String (V.Index),
+                             (To_Unbounded_String (V.Index.Text),
                               To_Unbounded_String (S.Text),
                               Required =>
                                 (if V.Name = A.Artifacts
@@ -1771,12 +1771,12 @@ package body GPRinstall.Install is
                for Att of Pck.Attributes loop
                   if Att.Has_Index then
                      if (Att.Name /= A.Body_N
-                         or else not Excluded_Naming.Contains (Att.Index))
+                         or else not Excluded_Naming.Contains (Att.Index.Text))
                        and then
                          ((Att.Name /= A.Spec_Suffix
                            and then Att.Name /= A.Body_Suffix
                            and then Att.Name /= A.Separate_Suffix)
-                          or else Is_Language_Active (Att.Index))
+                          or else Is_Language_Active (Att.Index.Text))
                      then
                         declare
                            Decl : constant String := Att.Image;

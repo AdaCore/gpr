@@ -51,7 +51,7 @@ procedure Main is
       Text_IO.Put ("   " & String (Att.Name));
 
       if Att.Has_Index then
-         Text_IO.Put (" (" & Att.Index & ")");
+         Text_IO.Put (" (" & Att.Index.Text & ")");
       end if;
 
       Text_IO.Put (" ->");
