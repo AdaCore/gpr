@@ -117,13 +117,13 @@ private
    Current_Dir : constant Source_Reference.Value.Object :=
                    Source_Reference.Value.Object
                      (Source_Reference.Value.Create
-                        (Source_Reference.Undefined, "."));
+                        (Source_Reference.Builtin, "."));
 
    Default_Source_Dirs : constant Object :=
                            (Name_Values.Create
                              (Source_Reference.Identifier.Object
                                 (Source_Reference.Identifier.Create
-                                   (Source_Reference.Undefined,
+                                   (Source_Reference.Builtin,
                                     Project.Registry.Attribute.Source_Dirs)),
                                Containers.Source_Value_Type_List.To_Vector
                                  (Current_Dir, 1))

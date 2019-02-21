@@ -237,12 +237,12 @@ package body GPR2.Project.Tree is
                  (Name  =>
                     Source_Reference.Identifier.Object
                       (Source_Reference.Identifier.Create
-                         (Source_Reference.Undefined,
+                         (Source_Reference.Builtin,
                           Project.Registry.Attribute.Source_Dirs)),
                   Value =>
                     Source_Reference.Value.Object
                       (Source_Reference.Value.Create
-                           (Source_Reference.Undefined,
+                           (Source_Reference.Builtin,
                             Runtime_Dir & DS & "adainclude"))));
          end;
 
@@ -253,12 +253,12 @@ package body GPR2.Project.Tree is
               (Name  =>
                    Source_Reference.Identifier.Object
                      (Source_Reference.Identifier.Create
-                       (Source_Reference.Undefined,
+                       (Source_Reference.Builtin,
                         Project.Registry.Attribute.Languages)),
                Value =>
                     Source_Reference.Value.Object
                       (Source_Reference.Value.Create
-                         (Source_Reference.Undefined, "ada"))));
+                         (Source_Reference.Builtin, "ada"))));
 
          Data.Tree   := Self.Self;
          Data.Status := Root;
