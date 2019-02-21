@@ -94,12 +94,28 @@ package body GPR2.Project.View is
    function Apply_Root_And_Subdirs
      (Self : Object; Dir : Value_Type) return GPR2.Path_Name.Object
    is
-      Subdirs : constant Optional_Name_Type := Self.Tree.Subdirs;
-      Result  : constant GPR2.Path_Name.Object :=
-                  GPR2.Path_Name.Create_Directory
-                    (Name_Type (Value_Type'(if Dir = "" then "." else Dir)),
-                     Name_Type (Self.Path_Name.Dir_Name));
+      Result   : GPR2.Path_Name.Object;
+      Subdirs  : constant Optional_Name_Type := Self.Tree.Subdirs;
+      Dir_Name : constant Name_Type :=
+                   (if Dir = "" then "." else Name_Type (Dir));
    begin
+      if OS_Lib.Is_Absolute_Path (Dir) then
+         Result := GPR2.Path_Name.Create_Directory (Dir_Name);
+
+      elsif Self.Tree.Build_Path.Is_Defined then
+         Result := GPR2.Path_Name.Create_Directory
+           (Self.Path_Name.Relative_Path
+              (Self.Tree.Root_Project.Path_Name).Name,
+            Name_Type (Self.Tree.Build_Path.Value));
+
+         Result := GPR2.Path_Name.Create_Directory
+           (Dir_Name, Name_Type (Result.Value));
+
+      else
+         Result := GPR2.Path_Name.Create_Directory
+           (Dir_Name, Name_Type (Self.Path_Name.Dir_Name));
+      end if;
+
       if Subdirs = No_Name then
          return Result;
       end if;

@@ -59,6 +59,7 @@ package GPR2.Project.Tree is
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
       Config           : Configuration.Object := Configuration.Undefined;
+      Build_Path       : Path_Name.Object     := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True)
      with Pre => Filename.Is_Defined;
@@ -74,6 +75,7 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
+      Build_Path        : Path_Name.Object   := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type := No_Name;
       Check_Shared_Lib  : Boolean            := True;
       Target            : Optional_Name_Type := No_Name;
@@ -291,6 +293,10 @@ package GPR2.Project.Tree is
    --  each project, the actual {executable,object,library} directories are
    --  {<exec>,<obj>,<lib>}/<sub>.
 
+   function Build_Path (Tree : Object) return Path_Name.Object
+     with Pre => Tree.Is_Defined;
+   --  Path to build tree
+
 private
 
    package Name_View is
@@ -309,6 +315,7 @@ private
       Sources          : Name_View.Map;
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object;
+      Build_Path       : Path_Name.Object;
       Subdirs          : Ada.Strings.Unbounded.Unbounded_String;
       Check_Shared_Lib : Boolean := True;
       Views            : aliased View_Maps.Map;
@@ -359,5 +366,8 @@ private
 
    function Subdirs (Tree : Object) return Optional_Name_Type is
      (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));
+
+   function Build_Path (Tree : Object) return Path_Name.Object is
+     (Tree.Build_Path);
 
 end GPR2.Project.Tree;

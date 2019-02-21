@@ -230,6 +230,8 @@ procedure GPRclean is
          Display_Help (Config);
          raise Usage_Error with "Can't determine project file to work with";
       end if;
+
+      Options.Clean_Build_Path (Project_Path);
    end Parse_Command_Line;
 
    -----------------
@@ -477,13 +479,13 @@ begin
       end if;
 
       Project_Tree.Load
-        (Project_Path, Context, Config,
+        (Project_Path, Context, Config, Options.Build_Path,
          Optional_Name_Type (To_String (Subdirs)),
          Check_Shared_Lib => not Unchecked_Shared_Lib_Import);
 
    else
       Project_Tree.Load_Autoconf
-        (Project_Path, Context,
+        (Project_Path, Context, Options.Build_Path,
          Optional_Name_Type (To_String (Subdirs)),
          Check_Shared_Lib => not Unchecked_Shared_Lib_Import);
    end if;

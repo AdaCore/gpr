@@ -48,7 +48,6 @@ with GPRinstall.Uninstall;
 procedure GPRinstall.Main is
 
    use Ada;
-   use Ada.Directories;
    use Ada.Exceptions;
 
    use GNAT.OS_Lib;
@@ -368,18 +367,6 @@ procedure GPRinstall.Main is
          Argument    => "<name>");
 
       Define_Switch
-        (Options.Config, Options.Root_Dir'Access,
-         Long_Switch => "--root-dir=",
-         Help        => "Root directory of obj/lib/exec to relocate",
-         Argument    => "<dir>");
-
-      Define_Switch
-        (Options.Config, Options.Build_Tree_Dir'Access,
-         Long_Switch => "--relocate-build-tree:",
-         Help        => "Root obj/lib/exec dirs are current-directory or dir",
-         Argument    => "<dir>");
-
-      Define_Switch
         (Options.Config, Options.Subdirs'Access,
          Long_Switch => "--subdirs=",
          Help        => "Real obj/lib/exec dirs are subdirs",
@@ -410,17 +397,6 @@ procedure GPRinstall.Main is
            "several different configuration switches cannot be specified";
       end if;
 
-      if Options.Root_Dir.all /= "" then
-         declare
-            Path : constant Path_Name.Object :=
-                     Path_Name.Create_Directory
-                       (Name_Type  (Options.Root_Dir.all));
-         begin
-            Options.Root_Dir :=
-              new String'(Normalize_Pathname (Path.Dir_Name));
-         end;
-      end if;
-
       if Options.Mode.all /= "" then
          Options.Mode.all := Characters.Handling.To_Lower (Options.Mode.all);
 
@@ -430,21 +406,6 @@ procedure GPRinstall.Main is
 
          else
             raise Usage_Error with "mode value must be dev or usage";
-         end if;
-      end if;
-
-      if Options.Build_Tree_Dir.all /= "" then
-         if Options.Build_Tree_Dir'Length = 0 then
-            Options.Build_Tree_Dir := new String'(Current_Directory);
-
-         else
-            declare
-               Path : constant Path_Name.Object :=
-                        Path_Name.Create_Directory
-                          (Name_Type (Options.Build_Tree_Dir.all));
-            begin
-               Options.Build_Tree_Dir := new String'(Path.Dir_Name);
-            end;
          end if;
       end if;
 
@@ -576,29 +537,13 @@ procedure GPRinstall.Main is
          raise Usage_Error with "--prefix argument cannot be empty";
       end if;
 
-      --  Check consistency of out-of-tree build options
-
-      if Options.Root_Dir.all /= ""
-        and then Options.Build_Tree_Dir.all = ""
-      then
-         raise Usage_Error with
-           "cannot use --root-dir without --relocate-build-tree option";
-      end if;
-
-      --  Set default Root_Dir
-
-      if Options.Build_Tree_Dir.all /= ""
-        and then Options.Root_Dir.all = ""
-      then
-         Options.Root_Dir :=
-           new String'(Normalize_Pathname (Options.Project_File.Dir_Name));
-      end if;
-
       --  Set default target
 
       if Options.Target_Name.all = "" then
          Options.Target_Name := new String'("all");
       end if;
+
+      Options.Clean_Build_Path (Options.Project_File);
    end Parse_Command_Line;
 
    Config  : Project.Configuration.Object;
@@ -649,7 +594,7 @@ begin
 
       else
          Tree.Load
-           (Options.Project_File, Context, Config,
+           (Options.Project_File, Context, Config, Options.Build_Path,
             (if Options.Subdirs = null
              then ""
              else Optional_Name_Type (Options.Subdirs.all)));

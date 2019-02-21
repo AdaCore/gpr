@@ -135,12 +135,6 @@ package GPRinstall.Options is
       Target_Name       : aliased OS_Lib.String_Access;
       --  The name of the target
 
-      Build_Tree_Dir    : aliased OS_Lib.String_Access;
-      --  For out-of-tree build
-
-      Root_Dir          : aliased OS_Lib.String_Access;
-      --  For out-the-tree build
-
       Subdirs           : aliased OS_Lib.String_Access;
       --  Make obj/lib/exec dirs as subdirs
    end record;

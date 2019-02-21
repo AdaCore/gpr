@@ -23,6 +23,36 @@ with GNATCOLL.OS.Constants;
 
 package body GPRtools.Options is
 
+   ----------------------
+   -- Clean_Build_Path --
+   ----------------------
+
+   procedure Clean_Build_Path
+     (Self : in out Object; Project : GPR2.Path_Name.Object)
+   is
+      use GPR2, GPR2.Path_Name;
+
+      function Project_Dir return GPR2.Path_Name.Object is
+        (Create_Directory (Name_Type (Project.Dir_Name)));
+
+   begin
+      if not Self.Build_Path.Is_Defined then
+         --  Check consistency of out-of-tree build options
+
+         if Self.Root_Path.Is_Defined then
+            raise Usage_Error with
+              "cannot use --root-dir without --relocate-build-tree option";
+         end if;
+
+         Self.Build_Path := Project_Dir;
+
+      elsif Self.Root_Path.Is_Defined then
+         Self.Build_Path := Create_Directory
+           (Project_Dir.Relative_Path (Self.Root_Path).Name,
+            Name_Type (Self.Build_Path.Value));
+      end if;
+   end Clean_Build_Path;
+
    ------------------------------
    -- Read_Remaining_Arguments --
    ------------------------------
@@ -70,6 +100,36 @@ package body GPRtools.Options is
    -----------
 
    procedure Setup (Self : in out Object) is
+
+      procedure Value_Callback (Switch, Value : String);
+
+      --------------------
+      -- Value_Callback --
+      --------------------
+
+      procedure Value_Callback (Switch, Value : String) is
+
+         function Normalize_Value (Default : String := "") return String is
+           (if Value in "" | "=" then Default
+            elsif Value (Value'First) = '='
+            then Value (Value'First + 1 .. Value'Last)
+            else Value);
+         --  Remove leading '=' symbol from value for options like
+         --  --config=file.cgrp
+
+      begin
+         if Switch = "--relocate-build-tree" then
+            Self.Build_Path :=
+              GPR2.Path_Name.Create_Directory
+                (GPR2.Name_Type (Normalize_Value (".")));
+
+         elsif Switch = "--root-dir" then
+            Self.Root_Path :=
+              GPR2.Path_Name.Create_Directory
+                (GPR2.Name_Type (Normalize_Value));
+         end if;
+      end Value_Callback;
+
    begin
       Define_Switch
         (Self.Config, Self.Help'Access,
@@ -90,6 +150,18 @@ package body GPRtools.Options is
         (Self.Config, Self.Quiet'Access,
          "-q", "--quiet",
          Help => "Be quiet/terse");
+
+      Define_Switch
+        (Self.Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--root-dir:",
+         Help        => "Root directory of obj/lib/exec to relocate",
+         Argument    => "<dir>");
+
+      Define_Switch
+        (Self.Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--relocate-build-tree?",
+         Help        => "Root obj/lib/exec dirs are current-directory or dir",
+         Argument    => "<dir>");
    end Setup;
 
 end GPRtools.Options;

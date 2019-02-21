@@ -653,6 +653,7 @@ package body GPR2.Project.Tree is
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
       Config           : PC.Object          := PC.Undefined;
+      Build_Path       : Path_Name.Object   := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type := No_Name;
       Check_Shared_Lib : Boolean            := True)
    is
@@ -846,6 +847,7 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
+      Self.Build_Path       := Build_Path;
       Self.Subdirs          := To_Unbounded_String (String (Subdirs));
       Self.Check_Shared_Lib := Check_Shared_Lib;
 
@@ -897,6 +899,7 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
+      Build_Path        : Path_Name.Object   := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type := No_Name;
       Check_Shared_Lib  : Boolean            := True;
       Target            : Optional_Name_Type := No_Name;
@@ -910,6 +913,7 @@ package body GPR2.Project.Tree is
    begin
       Self.Load
         (Filename, Context,
+         Build_Path       => Build_Path,
          Subdirs          => Subdirs,
          Check_Shared_Lib => Check_Shared_Lib);
 
@@ -974,7 +978,7 @@ package body GPR2.Project.Tree is
            (Conf_Descriptions, Actual_Target, Filename);
 
          Self.Load
-           (Filename, Context, Conf,
+           (Filename, Context, Conf, Build_Path,
             Subdirs          => Subdirs,
             Check_Shared_Lib => Check_Shared_Lib);
       end;
@@ -1971,17 +1975,28 @@ package body GPR2.Project.Tree is
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library
               and then Check_Object_Dir_Exists
               and then View.Has_Attributes (A.Object_Dir)
-              and then not View.Object_Directory.Exists
             then
                declare
                   AV : constant Source_Reference.Value.Object :=
                          View.Attribute (A.Object_Dir).Value;
                begin
-                  Self.Messages.Append
-                    (Message.Create
-                       (Message.Warning,
-                        "object directory """ & AV.Text & """ not found",
-                        Sloc => AV));
+                  if not View.Object_Directory.Exists then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Warning,
+                           "object directory """ & AV.Text & """ not found",
+                           Sloc => AV));
+                  elsif Self.Build_Path.Is_Defined
+                    and then OS_Lib.Is_Absolute_Path (AV.Text)
+                  then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Warning,
+                           '"' & View.Object_Directory.Relative_Path
+                                   (Self.Root_Project.Path_Name).Value
+                           & """ cannot relocate absolute object directory",
+                           Sloc => AV));
+                  end if;
                end;
             end if;
          end;
