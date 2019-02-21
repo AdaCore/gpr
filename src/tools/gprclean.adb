@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Command_Line;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
@@ -458,8 +457,8 @@ procedure GPRclean is
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
-   Parse_Command_Line;
    GPRtools.Util.Set_Program_Name ("gprclean");
+   Parse_Command_Line;
 
    if Options.Version then
       return;
@@ -524,10 +523,11 @@ begin
       Full_Path_Name_For_Brief);
 
 exception
-   when GNAT.Command_Line.Invalid_Switch
-      | GNAT.Command_Line.Exit_From_Command_Line
-      =>
-      Command_Line.Set_Exit_Status (Command_Line.Failure);
+   when E : GNAT.Command_Line.Exit_From_Command_Line
+      | GNAT.Command_Line.Invalid_Switch
+      | GNAT.Command_Line.Invalid_Parameter
+      | GPRtools.Usage_Error =>
+      GPRtools.Util.Fail_Program (Exception_Message (E));
 
    when Project_Error =>
       GPRtools.Util.Project_Processing_Failed
