@@ -37,7 +37,8 @@ package GPR2.Source_Reference.Text_Value is
 
    function Create
      (Sloc  : GPR2.Source_Reference.Object;
-      Text  : Text_Type) return Object'Class;
+      Text  : Text_Type) return Object'Class
+     with Pre => Sloc.Is_Defined;
 
    function Text (Self : Object) return Text_Type;
    --  Returns the message associated with the reference
