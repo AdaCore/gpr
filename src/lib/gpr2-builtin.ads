@@ -34,7 +34,9 @@ package GPR2.Builtin is
      (Context       : GPR2.Context.Object;
       Variable      : Name_Type;
       Default_Value : Source_Reference.Value.Object :=
-                        Source_Reference.Value.Undefined)
+                        Source_Reference.Value.Undefined;
+      Sloc          : Source_Reference.Object :=
+                        Source_Reference.Undefined)
       return Source_Reference.Value.Object
      with Post =>
        (if Context.Contains (Variable)

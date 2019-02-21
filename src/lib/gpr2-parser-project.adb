@@ -84,8 +84,7 @@ package body GPR2.Parser.Project is
 
    function Get_Value_Reference
      (Value : Value_Type;
-      Sloc  : Source_Reference.Object := Source_Reference.Undefined)
-      return Source_Reference.Value.Object
+      Sloc  : Source_Reference.Object) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
        (Source_Reference.Value.Create (Sloc, Value)));
@@ -1392,7 +1391,9 @@ package body GPR2.Parser.Project is
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      New_Item := True;
-                     Record_Value (Get_Value_Reference (V));
+                     Record_Value
+                       (Get_Value_Reference
+                          (V, Get_Source_Reference (Self.File, Parameters)));
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1446,7 +1447,11 @@ package body GPR2.Parser.Project is
                      end;
 
                   else
-                     Record_Value (Builtin.External (Context, Var));
+                     Record_Value
+                       (Builtin.External
+                          (Context, Var,
+                           Sloc => Get_Source_Reference
+                                     (Self.File, Parameters)));
                   end if;
 
                   --  Skip all child nodes, we do not want to parse a second
@@ -1462,7 +1467,9 @@ package body GPR2.Parser.Project is
                            Sloc    =>
                               Get_Source_Reference (Self.File, Parameters),
                            Message => Exception_Message (E)));
-                     Record_Value (Get_Value_Reference (""));
+                     Record_Value
+                       (Get_Value_Reference
+                          ("", Get_Source_Reference (Self.File, Parameters)));
                      Status := Over;
                end Handle_External_Variable;
 
@@ -1485,7 +1492,9 @@ package body GPR2.Parser.Project is
                begin
                   for V of Builtin.Split (Str, Sep) loop
                      New_Item := True;
-                     Record_Value (Get_Value_Reference (V));
+                     Record_Value
+                       (Get_Value_Reference
+                          (V, Get_Source_Reference (Self.File, Parameters)));
                   end loop;
 
                   --  Skip all child nodes, we do not want to parse a second

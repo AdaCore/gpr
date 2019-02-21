@@ -28,13 +28,18 @@ package body GPR2.Builtin is
      (Context       : GPR2.Context.Object;
       Variable      : Name_Type;
       Default_Value : Source_Reference.Value.Object :=
-                        Source_Reference.Value.Undefined)
+                        Source_Reference.Value.Undefined;
+      Sloc          : Source_Reference.Object :=
+                        Source_Reference.Undefined)
       return Source_Reference.Value.Object is
    begin
       if Context.Contains (Variable) then
          return Source_Reference.Value.Object
            (Source_Reference.Value.Create
-              (Source_Reference.Object (Default_Value), Context (Variable)));
+              ((if Source_Reference.Object (Default_Value).Is_Defined
+                then Source_Reference.Object (Default_Value)
+                else Sloc),
+               Context (Variable)));
 
       elsif Default_Value.Is_Defined then
          return Default_Value;
