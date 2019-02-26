@@ -101,6 +101,8 @@ private
    package Definition_References is new GNATCOLL.Refcount.Shared_Pointers
      (Definition_Base'Class);
 
+   subtype Weak_Reference is Definition_References.Weak_Ref;
+
    Default_Iterator : constant Iterator_Control := (others => True);
 
    Default_Filter   : constant Filter_Control := (others => True);

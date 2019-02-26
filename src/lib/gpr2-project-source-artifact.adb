@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Project.Tree;
+with GPR2.Project.Definition;
 
 package body GPR2.Project.Source.Artifact is
 
@@ -32,7 +33,7 @@ package body GPR2.Project.Source.Artifact is
    is
       Src  : constant Name_Type := Source.Source.Path_Name.Base_Name;
       Lang : constant Name_Type := Source.Source.Language;
-      View : constant Project.View.Object := Source.View;
+      View : constant Project.View.Object := Definition.Strong (Source.View);
       Tree : constant access Project.Tree.Object := View.Tree;
 
       O_Suffix : constant Name_Type := Tree.Object_Suffix (Lang);
@@ -85,7 +86,8 @@ package body GPR2.Project.Source.Artifact is
 
    function List (Self : Object) return Path_Name.Set.Object is
       Source : constant GPR2.Source.Object := Self.Source.Source;
-      View   : constant Project.View.Object := Self.Source.View;
+      View   : constant Project.View.Object :=
+                 Definition.Strong (Self.Source.View);
       Result : Path_Name.Set.Object;
    begin
       if Self.Has_Object_Code then
@@ -94,8 +96,7 @@ package body GPR2.Project.Source.Artifact is
          declare
             Name : constant Name_Type := Source.Path_Name.Simple_Name;
             Dir  : constant Optional_Name_Type :=
-                     Optional_Name_Type
-                       (Self.Source.View.Object_Directory.Value);
+                     Optional_Name_Type (View.Object_Directory.Value);
 
             procedure Append_File (Name : Name_Type);
             --  Append full filename constructed from Name and Dir to result

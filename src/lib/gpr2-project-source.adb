@@ -48,7 +48,9 @@ package body GPR2.Project.Source is
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean) return Object is
    begin
-      return Object'(Source, View, Is_Interface, Has_Naming_Exception);
+      return Object'
+        (Source, Definition.Weak (View), Is_Interface,
+         Has_Naming_Exception);
    end Create;
 
    ------------------
@@ -106,7 +108,8 @@ package body GPR2.Project.Source is
          end loop;
       end Insert;
 
-      Data : constant Definition.Const_Ref := Definition.Get_RO (Self.View);
+      View : constant Project.View.Object  := Definition.Strong (Self.View);
+      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
 
       Buf  : Source_Reference.Set.Object := Self.Source.Withed_Units;
       --  Buf contains units to be checked, this list is extended when looking
@@ -231,8 +234,9 @@ package body GPR2.Project.Source is
 
    function Is_Main (Self : Object) return Boolean is
       Path  : constant Path_Name.Object := Self.Source.Path_Name;
+      View  : constant Project.View.Object := Definition.Strong (Self.View);
       Mains : constant Attribute.Object :=
-                Self.View.Attribute (Registry.Attribute.Main);
+                View.Attribute (Registry.Attribute.Main);
    begin
       return Mains.Has_Value (Value_Type (Path.Base_Name))
         or else Mains.Has_Value (Value_Type (Path.Simple_Name));
@@ -244,7 +248,8 @@ package body GPR2.Project.Source is
 
    function Other_Part (Self : Object) return Object is
    begin
-      return Self.View.Source (Self.Source.Other_Part.Path_Name);
+      return Definition.Strong (Self.View).Source
+               (Self.Source.Other_Part.Path_Name);
    end Other_Part;
 
    -------------
@@ -271,7 +276,7 @@ package body GPR2.Project.Source is
 
    function View (Self : Object) return Project.View.Object is
    begin
-      return Self.View;
+      return Definition.Strong (Self.View);
    end View;
 
 end GPR2.Project.Source;

@@ -69,6 +69,11 @@ package body GPR2.Project.View is
    --  Apply project path and subdir option for library, object and executable
    --  directories.
 
+   function Weak (View : Object) return Weak_Reference is
+     (Definition_References.Weak (View));
+
+   function Strong (Weak : Weak_Reference) return Object;
+
    ---------------
    -- Aggregate --
    ---------------
@@ -980,6 +985,17 @@ package body GPR2.Project.View is
       end if;
    end Sources;
 
+   ------------
+   -- Strong --
+   ------------
+
+   function Strong (Weak : Weak_Reference) return Object is
+      Result : Object;
+   begin
+      Definition_References.Set (Result, Weak);
+      return Result;
+   end Strong;
+
    ----------
    -- Tree --
    ----------
@@ -1083,4 +1099,6 @@ begin
    Definition.Get      := Get_Ref'Access;
    Definition.Set      := Set_Def'Access;
    Definition.Refcount := Refcount'Access;
+   Definition.Weak     := Weak'Access;
+   Definition.Strong   := Strong'Access;
 end GPR2.Project.View;

@@ -131,6 +131,12 @@ private package GPR2.Project.Definition is
    Refcount : access function (View : Project.View.Object) return Natural;
    --  Returns reference counter of the view
 
+   Weak : access function (View : Project.View.Object) return Weak_Reference;
+   --  Get weak reference from view. Need to avoid circular references.
+
+   Strong : access function (View : Weak_Reference) return Project.View.Object;
+   --  Get view from weak reference
+
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------

@@ -101,7 +101,11 @@ private
 
    type Object is tagged record
       Source               : GPR2.Source.Object;
-      View                 : Project.View.Object;
+      View                 : Project.Weak_Reference;
+      --  Use weak reference to View to avoid reference cyrcle between Source
+      --  and its View. Otherwise we've got memory leak after release view and
+      --  valgrind detected mess in memory deallocations at the process exit.
+
       Is_Interface         : Boolean := False;
       Has_Naming_Exception : Boolean := False;
    end record;
