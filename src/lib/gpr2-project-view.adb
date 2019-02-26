@@ -51,6 +51,10 @@ package body GPR2.Project.View is
    function Get_RW (View : in out Object) return Definition.Ref is
       (View.Get.Element);
 
+   function Refcount (Self : Object) return Natural is
+     (Definition_References.Get_Refcount (Self));
+   --  Get view refcount
+
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
 
@@ -896,6 +900,7 @@ package body GPR2.Project.View is
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class) is
    begin
       Definition_References.Set (Ref, Def);
+      pragma Assert (Ref.Get_Refcount = 1);
    end Set_Def;
 
    ---------------
@@ -1073,8 +1078,9 @@ package body GPR2.Project.View is
    end View_For;
 
 begin
-   Definition.Get_RO  := Get_RO'Access;
-   Definition.Get_RW  := Get_RW'Access;
-   Definition.Get     := Get_Ref'Access;
-   Definition.Set     := Set_Def'Access;
+   Definition.Get_RO   := Get_RO'Access;
+   Definition.Get_RW   := Get_RW'Access;
+   Definition.Get      := Get_Ref'Access;
+   Definition.Set      := Set_Def'Access;
+   Definition.Refcount := Refcount'Access;
 end GPR2.Project.View;

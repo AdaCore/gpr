@@ -1456,17 +1456,23 @@ package body GPR2.Project.Tree is
 
       Def.Tree.Views_Set.Insert (View);
 
+      pragma Assert (Definition.Refcount (View) = 2);
+
       if Def.Tree.Views.Contains (Path_Name) then
          Def.Tree.Views (Path_Name).Insert (View);
       else
          Def.Tree.Views.Insert (Path_Name, Project.View.Set.To_Set (View));
       end if;
 
+      pragma Assert (Definition.Refcount (View) = 3);
+
       if Def.Tree.Views.Contains (Name) then
          Def.Tree.Views (Name).Insert (View);
       else
          Def.Tree.Views.Insert (Name, Project.View.Set.To_Set (View));
       end if;
+
+      pragma Assert (Definition.Refcount (View) = 4);
 
       return View;
    end Register_View;

@@ -128,6 +128,9 @@ private package GPR2.Project.Definition is
    Get_RW : access function (View : in out Project.View.Object) return Ref;
    --  Returns the project data definition reference to modify view
 
+   Refcount : access function (View : Project.View.Object) return Natural;
+   --  Returns reference counter of the view
+
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------
