@@ -64,9 +64,9 @@ package body GPR2.Path_Name is
 
    function Make_Absolute
      (Name      : Name_Type;
-      Directory : Optional_Name_Type := "") return Name_Type
+      Directory : Optional_Name_Type := "") return String
    is
-     (Name_Type
+     (OS_Lib.Normalize_Pathname
         ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
           then ""
           else Ensure_Directory (String (Directory)))
@@ -165,15 +165,14 @@ package body GPR2.Path_Name is
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-      N  : constant String := String (Make_Absolute (Name, Directory));
-      NN : constant String := Ensure_Directory (OS_Lib.Normalize_Pathname (N));
-
+      NN : constant String :=
+             Ensure_Directory (Make_Absolute (Name, Directory));
    begin
       return Object'
         (Is_Dir    => True,
          As_Is     => +String (Name),
          Value     => +NN,
-         Base_Name => +Base_Name (N),
+         Base_Name => +Base_Name (NN),
          Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create_Directory;
 
@@ -188,15 +187,15 @@ package body GPR2.Path_Name is
       function "+"
         (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-      N : constant String := String (Make_Absolute (Name, Directory));
+      NN : constant String := Make_Absolute (Name, Directory);
 
    begin
       return Object'
         (Is_Dir    => False,
          As_Is     => +String (Name),
-         Value     => +OS_Lib.Normalize_Pathname (N),
-         Base_Name => +Base_Name (N),
-         Dir_Name  => +Ensure_Directory (Containing_Directory (N)));
+         Value     => +NN,
+         Base_Name => +Base_Name (NN),
+         Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create_File;
 
    ---------------------
