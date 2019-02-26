@@ -13,3 +13,10 @@ class Testsuite(BaseTestsuite):
         'build_and_run': BuildAndRunDriver,
         'python_script': PythonScriptDriver,
     }
+    def add_options(self):
+        self.main.add_option(
+            "--valgrind",
+            dest="valgrind",
+            action="store_true",
+            default=False,
+            help="Run test executable under valgrind.")

@@ -51,4 +51,6 @@ class BuildAndRunDriver(BaseDriver):
         # Build the program and run it
         self.run_and_check(['gprbuild', '-g1', '-q', '-p',
                             '-P', self.project_file, '-bargs', '-Es'])
-        self.run_and_check([os.path.join('.', self.main_program)])
+        self.run_and_check((
+           ['valgrind', '-q'] if self.global_env['options'].valgrind else []) +
+           [os.path.join('.', self.main_program)])
