@@ -1986,6 +1986,7 @@ package body GPR2.Project.Tree is
                           (Message.Warning,
                            "object directory """ & AV.Text & """ not found",
                            Sloc => AV));
+
                   elsif Self.Build_Path.Is_Defined
                     and then OS_Lib.Is_Absolute_Path (AV.Text)
                   then
