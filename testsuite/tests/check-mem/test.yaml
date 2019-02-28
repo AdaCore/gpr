@@ -1,0 +1,6 @@
+description: Check memory leaks
+driver: python_script
+
+status:
+ - cond: "True"
+   skip: "Need to fix all memory leaks"
