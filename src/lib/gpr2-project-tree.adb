@@ -2102,10 +2102,13 @@ package body GPR2.Project.Tree is
          Self.Runtime.Release;
       end if;
 
-      Self.Self    := Undefined.Self;
-      Self.Root    := Undefined.Root;
-      Self.Conf    := Undefined.Conf;
-      Self.Runtime := Undefined.Runtime;
+      Self.Self             := Undefined.Self;
+      Self.Root             := Undefined.Root;
+      Self.Conf             := Undefined.Conf;
+      Self.Runtime          := Undefined.Runtime;
+      Self.Build_Path       := Undefined.Build_Path;
+      Self.Subdirs          := Undefined.Subdirs;
+      Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
 
       Self.Units.Clear;
       Self.Sources.Clear;

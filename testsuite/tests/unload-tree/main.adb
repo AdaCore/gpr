@@ -130,6 +130,10 @@ begin
 
    Prj1.Unload;
 
+   if Prj1.Is_Defined then
+      Text_IO.Put_Line ("Not completely unloaded");
+   end if;
+
    Text_IO.Put_Line ("**************** Iterator Prj2");
 
    for C in Project.Tree.Iterate (Prj2) loop
