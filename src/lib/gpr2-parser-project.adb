@@ -1591,13 +1591,14 @@ package body GPR2.Parser.Project is
                                 Result.Values.Last_Index;
                   Old_Value : constant Source_Reference.Value.Object :=
                                 Result.Values (Last);
-                  Sloc      : constant Source_Reference.Object :=
-                                Source_Reference.Object (Value);
                   New_Value : constant Value_Type :=
                                 Old_Value.Text & Value.Text;
                begin
                   Result.Values.Replace_Element
-                    (Last, Get_Value_Reference (New_Value, Sloc));
+                    (Last,
+                     Get_Value_Reference
+                       (New_Value,
+                        Source_Reference.Object (Value)));
                end;
             end if;
          end Record_Value;
@@ -1735,9 +1736,6 @@ package body GPR2.Parser.Project is
       is
          use type GPR2.Project.Registry.Attribute.Value_Kind;
 
-         Sloc    : constant Source_Reference.Object :=
-                     Get_Source_Reference (Self.File, Node);
-
          Name_1  : constant Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
@@ -1828,7 +1826,7 @@ package body GPR2.Parser.Project is
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
-                        Sloc    => Sloc,
+                        Sloc    => Get_Source_Reference (Self.File, Node),
                         Message =>
                           "variable '" & String (Name) & "' is undefined"));
                end if;
@@ -1894,8 +1892,6 @@ package body GPR2.Parser.Project is
          --------------------------
 
          procedure Parse_Attribute_Decl (Node : Attribute_Decl) is
-            Sloc  : constant Source_Reference.Object :=
-                      Get_Source_Reference (Self.File, Node);
             Name  : constant Identifier := F_Attr_Name (Node);
             Index : constant GPR_Node := F_Attr_Index (Node);
             I_Str : constant Value_Type :=
@@ -1956,6 +1952,12 @@ package body GPR2.Parser.Project is
                      function Attr_Name_Image return String is
                        ((if Pack_Name = Null_Unbounded_String then ""
                          else To_String (Pack_Name) & '.') & String (N_Str));
+
+                     function Sloc return Source_Reference.Object is
+                       (Get_Source_Reference (Self.File, Node));
+                     --  Use function instead of constant because Sloc need
+                     --  only in case of warning or error logging and no more
+                     --  than once.
 
                   begin
                      if (Values.Single
@@ -2121,8 +2123,6 @@ package body GPR2.Parser.Project is
          ------------------------
 
          procedure Parse_Package_Decl (Node : Package_Decl) is
-            Sloc   : constant Source_Reference.Object :=
-                       Get_Source_Reference (Self.File, Node);
             Name   : constant Identifier := F_Pkg_Name (Node);
             P_Name : constant Name_Type :=
                        Get_Name_Type (Name.As_Single_Tok_Node);
@@ -2155,7 +2155,8 @@ package body GPR2.Parser.Project is
               (Name_Type (P_Name),
                GPR2.Project.Pack.Create
                  (Source_Reference.Identifier.Object
-                    (Source_Reference.Identifier.Create (Sloc, P_Name)),
+                    (Source_Reference.Identifier.Create
+                       (Get_Source_Reference (Self.File, Node), P_Name)),
                   Pack_Attrs, Pack_Vars));
 
             --  Skip all nodes for this construct
@@ -2293,8 +2294,11 @@ package body GPR2.Parser.Project is
               (GPR2.Project.Search_Paths
                  (Self.File, Tree.Project_Search_Paths));
 
-            Sloc    : constant Source_Reference.Object :=
-                        Get_Source_Reference (Self.File, Node);
+            function Sloc return Source_Reference.Object is
+              (Get_Source_Reference (Self.File, Node));
+            --  Use function instead of constant because Sloc need only in case
+            --  of error logging and no more than once.
+
             Name    : constant Identifier := F_Var_Name (Node);
             Expr    : constant Term_List := F_Expr (Node);
             Values  : constant Item_Values := Get_Term_List (Expr);
