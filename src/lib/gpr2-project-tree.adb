@@ -21,8 +21,6 @@ with Ada.Environment_Variables;
 with Ada.Directories;
 with Ada.Text_IO;
 
-with GPR.Sdefault;
-
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
@@ -40,6 +38,10 @@ with GNAT.Regexp;
 with GNAT.String_Split;
 
 with GNATCOLL.Utils;
+
+pragma Warnings (Off);
+with System.OS_Constants;
+pragma Warnings (On);
 
 package body GPR2.Project.Tree is
 
@@ -2074,7 +2076,7 @@ package body GPR2.Project.Tree is
               (Registry.Attribute.Target).Value.Text);
 
       else
-         return Name_Type (GPR.Sdefault.Hostname);
+         return Name_Type (System.OS_Constants.Target_Name);
       end if;
    end Target;
 
