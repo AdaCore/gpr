@@ -297,10 +297,19 @@ package body GPR2.Project.Tree is
    begin
       for E of Externals loop
          --  Fill all known external in the environment variables
+
          if not Context.Contains (E)
            and then Environment_Variables.Exists (String (E))
          then
-            Context.Insert (E, Environment_Variables.Value (String (E)));
+            declare
+               V : constant String := Environment_Variables.Value (String (E));
+            begin
+               if V /= "" then
+                  --  Treat empty environment valiable like absent
+
+                  Context.Insert (E, V);
+               end if;
+            end;
          end if;
       end loop;
    end Fill_Externals_From_Environment;
