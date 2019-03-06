@@ -389,6 +389,10 @@ package GPR2.Project.View is
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Exec_Dir attribute
 
+   function Executable_Suffix (Self : Object) return String
+     with Pre => Self.Is_Defined;
+   --  Returns executable suffix for this project
+
    function Binder_Prefix
      (Self : Object; Language : Name_Type) return Optional_Name_Type
      with Pre => Self.Is_Defined;

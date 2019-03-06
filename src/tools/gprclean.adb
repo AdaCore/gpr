@@ -307,8 +307,7 @@ procedure GPRclean is
          end if;
       end Binder_Artifacts;
 
-      Has_Main : constant Boolean := View.Has_Mains;
-      Need_Main_Archive : Boolean := False;
+      Has_Mains : constant Boolean := View.Has_Mains;
 
    begin
       if Options.Verbose then
@@ -333,21 +332,15 @@ procedure GPRclean is
                Mains.Delete (String (S.Source.Path_Name.Simple_Name));
             end if;
 
-            if Has_Main then
-               if not Need_Main_Archive
-                 and then S.Source.Language /= "Ada"
+            if (Has_Mains and then S.Is_Main) or else In_Mains then
+               if Has_Mains and then S.Is_Main and then Arg_Mains
+                 and then not In_Mains
                then
-                  Need_Main_Archive := True;
-               end if;
-
-               if S.Is_Main then
-                  if Arg_Mains and then not In_Mains then
-                     Cleanup := False;
-                  else
-                     Binder_Artifacts
-                       (S.Source.Path_Name.Base_Name & ".bexch",
-                        Language => S.Source.Language);
-                  end if;
+                  Cleanup := False;
+               else
+                  Binder_Artifacts
+                    (S.Source.Path_Name.Base_Name & ".bexch",
+                     Language => S.Source.Language);
                end if;
             end if;
 
@@ -355,6 +348,18 @@ procedure GPRclean is
                for F of S.Artifacts.List loop
                   Exclude_File (F.Value);
                end loop;
+
+               if not Remain_Useful and then Arg_Mains and then In_Mains then
+                  --  When we took main procedure filename from Main project
+                  --  attributes, the executable file name included into
+                  --  atrifacts list above. This case is when main procedure
+                  --  filename defined in command line and we have to remove
+                  --  the executable file separetely.
+
+                  Exclude_File
+                    (String (S.Source.Path_Name.Base_Name)
+                     & View.Executable_Suffix);
+               end if;
             end if;
          end;
       end loop;
@@ -365,7 +370,7 @@ procedure GPRclean is
             & """ was not found in the sources of any project");
       end if;
 
-      if not Remain_Useful and then View.Has_Mains then
+      if not Remain_Useful and then View.Has_Mains and then not Arg_Mains then
          for M of View.Mains loop
             Exclude_File (M.Value);
          end loop;
@@ -379,7 +384,7 @@ procedure GPRclean is
          Exclude_File (Obj_Dir.Compose (GI_DB & "-shm").Value);
          Exclude_File (Obj_Dir.Compose (GI_DB & "-wal").Value);
 
-         if Need_Main_Archive then
+         if Has_Mains or else Arg_Mains then
             declare
                Main_Lib : constant Value_Type :=
                             Obj_Dir.Compose

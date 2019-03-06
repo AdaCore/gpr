@@ -40,9 +40,6 @@ package body GPR2.Project.View is
 
    use GNAT;
 
-   Executable_Suffix : constant access constant String :=
-                         OS_Lib.Get_Executable_Suffix;
-
    function Get_Ref (View : Object) return Definition.Ref is
       (View.Get.Element);
 
@@ -74,6 +71,13 @@ package body GPR2.Project.View is
      (Definition_References.Weak (View));
 
    function Strong (Weak : Weak_Reference) return Object;
+
+   function Builder (Self : Object) return Project.Pack.Object is
+     (if Self.Has_Packages (Registry.Pack.Builder)
+      then Self.Packages.Element (Registry.Pack.Builder)
+      else Project.Pack.Undefined);
+   --  Returns package Builder for the current project of Undefined is does not
+   --  exists.
 
    ---------------
    -- Aggregate --
@@ -261,6 +265,37 @@ package body GPR2.Project.View is
          then Self.Attribute (A.Object_Dir).Value.Text
          else ".");
    end Executable_Directory;
+
+   -----------------------
+   -- Executable_Suffix --
+   -----------------------
+
+   function Executable_Suffix (Self : Object) return String is
+      package A renames GPR2.Project.Registry.Attribute;
+
+      Tree : constant not null access Project.Tree.Object := Self.Tree;
+
+   begin
+      if Tree.Has_Configuration
+        and then Tree.Configuration.Corresponding_View.Has_Attributes
+                   (A.Executable_Suffix)
+      then
+         return Tree.Configuration.Corresponding_View.Attribute
+                  (A.Executable_Suffix).Value.Text;
+      end if;
+
+      declare
+         Builder : constant Project.Pack.Object := Self.Builder;
+      begin
+         if Builder.Is_Defined
+           and then Builder.Has_Attributes (A.Executable_Suffix)
+         then
+            return Builder.Attribute (A.Executable_Suffix).Value.Text;
+         end if;
+      end;
+
+      return OS_Lib.Get_Executable_Suffix.all;
+   end Executable_Suffix;
 
    --------------
    -- Extended --
@@ -734,33 +769,8 @@ package body GPR2.Project.View is
       use GPR2.Project.Pack;
 
       package A renames GPR2.Project.Registry.Attribute;
-      package P renames GPR2.Project.Registry.Pack;
 
-      Tree    : constant not null access Project.Tree.Object := Self.Tree;
-
-      Builder : constant GPR2.Project.Pack.Object :=
-                  (if Self.Has_Packages (P.Builder)
-                   then Self.Packages.Element (P.Builder)
-                   else Project.Pack.Undefined);
-
-      Executable_Suffix : constant String :=
-                            (if Tree.Has_Configuration
-                                 and then
-                               Tree.Configuration.Corresponding_View.
-                                 Has_Attributes (A.Executable_Suffix)
-                             then
-                                Tree.Configuration.Corresponding_View.
-                                  Attribute (A.Executable_Suffix).Value.Text
-
-                             elsif Builder.Is_Defined
-                                 and then
-                               Builder.Has_Attributes (A.Executable_Suffix)
-                             then
-                               Builder.Attribute
-                                 (A.Executable_Suffix).Value.Text
-
-                             else
-                                View.Executable_Suffix.all);
+      Builder : constant GPR2.Project.Pack.Object := Self.Builder;
 
       function Create (Source : Value_Not_Empty) return GPR2.Path_Name.Object;
       --  Returns the full pathname of the main executable for the givem main
@@ -798,7 +808,7 @@ package body GPR2.Project.View is
               ((if Attr.Is_Defined
                 then Attr.Value.Text
                 else Ada.Directories.Base_Name (String (Source)))
-               & Executable_Suffix),
+               & Self.Executable_Suffix),
             Optional_Name_Type (Self.Executable_Directory.Dir_Name));
       end Create;
 
