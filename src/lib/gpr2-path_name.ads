@@ -140,9 +140,12 @@ private
       Is_Dir    : Boolean := False;
       As_Is     : Unbounded_String;
       Value     : Unbounded_String; -- the normalized path-name
+      Comparing : Unbounded_String; -- normalized path-name for comparision
       Base_Name : Unbounded_String;
       Dir_Name  : Unbounded_String;
    end record;
+   --  Comparing is equal to Value for case sensitive OS and lowercased Value
+   --  for case insensitive OS.
 
    Undefined : constant Object := (others => <>);
 
@@ -150,10 +153,10 @@ private
      (Self /= Undefined);
 
    overriding function "=" (Left, Right : Object) return Boolean is
-     (Left.Value = Right.Value);
+     (Left.Comparing = Right.Comparing);
 
-   function "<" (Left, Right : Object) return Boolean
-     is (Left.Value < Right.Value);
+   function "<" (Left, Right : Object) return Boolean is
+     (Left.Comparing < Right.Comparing);
 
    function Base_Name (Self : Object) return GPR2.Simple_Name is
      (GPR2.Simple_Name (To_String (Self.Base_Name)));

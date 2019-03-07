@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
 with Ada.Environment_Variables;
 with Ada.Streams.Stream_IO;
 
@@ -33,6 +34,23 @@ package body GPR2.Path_Name is
 
    use GNAT;
    use GNAT.Regexp;
+
+   function "+"
+     (Str : String) return Unbounded_String renames To_Unbounded_String;
+
+   function Get_File_Names_Case_Sensitive return Integer
+     with Import, Convention => C,
+     External_Name => "__gnat_get_file_names_case_sensitive";
+
+   File_Names_Case_Sensitive : constant Boolean :=
+                                 Get_File_Names_Case_Sensitive /= 0;
+
+   function To_OS_Case (Name : Unbounded_String) return Unbounded_String is
+     (if File_Names_Case_Sensitive
+      then Name
+      else +Characters.Handling.To_Lower (To_String (Name)));
+   --  If filernames is case insensitive converts path name to lowercase,
+   --  returns the same value othervise.
 
    Root_Path : constant GNAT.Regexp.Regexp :=
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
@@ -72,8 +90,7 @@ package body GPR2.Path_Name is
      (OS_Lib.Normalize_Pathname
         ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
           then ""
-          else Ensure_Directory (String (Directory)))
-         & String (Name)));
+          else Ensure_Directory (String (Directory))) & String (Name)));
 
    -------------------
    -- Common_Prefix --
@@ -145,13 +162,13 @@ package body GPR2.Path_Name is
    ------------
 
    function Create (Name, Path_Name : Name_Type) return Object is
-      function "+"
-        (Str : String) return Unbounded_String renames To_Unbounded_String;
+      Value : constant Unbounded_String := +String (Path_Name);
    begin
       return Object'
         (Is_Dir    => False,
          As_Is     => +String (Name),
-         Value     => +String (Path_Name),
+         Value     => Value,
+         Comparing => To_OS_Case (Value),
          Base_Name => +Base_Name (String (Path_Name)),
          Dir_Name  =>
            +Ensure_Directory (Containing_Directory (String (Path_Name))));
@@ -165,16 +182,15 @@ package body GPR2.Path_Name is
      (Name      : Name_Type;
       Directory : Optional_Name_Type := "") return Object
    is
-      function "+"
-        (Str : String) return Unbounded_String renames To_Unbounded_String;
-
       NN : constant String :=
              Ensure_Directory (Make_Absolute (Name, Directory));
+      VN : constant Unbounded_String := +NN;
    begin
       return Object'
         (Is_Dir    => True,
          As_Is     => +String (Name),
-         Value     => +NN,
+         Value     => VN,
+         Comparing => To_OS_Case (VN),
          Base_Name => +Base_Name (NN),
          Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create_Directory;
@@ -187,16 +203,14 @@ package body GPR2.Path_Name is
      (Name      : Name_Type;
       Directory : Optional_Name_Type := "") return Object
    is
-      function "+"
-        (Str : String) return Unbounded_String renames To_Unbounded_String;
-
       NN : constant String := Make_Absolute (Name, Directory);
-
+      VN : constant Unbounded_String := +NN;
    begin
       return Object'
         (Is_Dir    => False,
          As_Is     => +String (Name),
-         Value     => +NN,
+         Value     => VN,
+         Comparing => To_OS_Case (VN),
          Base_Name => +Base_Name (NN),
          Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
    end Create_File;
