@@ -25,6 +25,8 @@ package GPR2.Source_Reference.Text_Value is
 
    type Object is new GPR2.Source_Reference.Object with private;
 
+   overriding function "<" (Left, Right : Object) return Boolean;
+
    Undefined : constant Object;
 
    overriding function Is_Defined (Self : Object) return Boolean;
@@ -48,6 +50,13 @@ private
    type Object is new GPR2.Source_Reference.Object with record
       Text : Unbounded_String;
    end record;
+
+   overriding function "<" (Left, Right : Object) return Boolean is
+     (if GPR2.Source_Reference.Object (Left) /=
+          GPR2.Source_Reference.Object (Right)
+      then GPR2.Source_Reference.Object (Left) <
+          GPR2.Source_Reference.Object (Right)
+      else Left.Text < Right.Text);
 
    Undefined : constant Object :=
                  (GPR2.Source_Reference.Undefined with others => <>);
