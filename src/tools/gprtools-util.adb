@@ -97,14 +97,17 @@ package body GPRtools.Util is
 
    procedure Output_Messages
      (Log            : GPR2.Log.Object;
-      Verbose        : Boolean;
-      Full_Path_Name : Boolean := False)
+      Verbosity      : Verbosity_Level;
+      Full_Path_Name : Boolean)
    is
       Displayed : GPR2.Containers.Value_Set;
    begin
       for C in Log.Iterate
-                 (Information => Verbose, Warning => True, Error => True,
-                  Read => True, Unread => True)
+        (Information => Verbosity = Verbose,
+         Warning     => Verbosity > Quiet,
+         Error       => True,
+         Read        => True,
+         Unread      => True)
       loop
          declare
             use GPR2.Message;
@@ -135,10 +138,10 @@ package body GPRtools.Util is
 
    procedure Project_Processing_Failed
      (Tree           : GPR2.Project.Tree.Object;
-      Verbose        : Boolean;
-      Full_Path_Name : Boolean := False) is
+      Verbosity      : Verbosity_Level;
+      Full_Path_Name : Boolean) is
    begin
-      Output_Messages (Tree.Log_Messages.all, Verbose, Full_Path_Name);
+      Output_Messages (Tree.Log_Messages.all, Verbosity, Full_Path_Name);
       Fail_Program
         ('"' & String (Tree.Root_Project.Path_Name.Simple_Name)
          & """ processing failed");

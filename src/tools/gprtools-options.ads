@@ -62,4 +62,7 @@ package GPRtools.Options is
    --  directory and Root is five/six, then the resulting build directory is
    --  /one/two/three plus five/six, i.e /one/two/three/five/six.
 
+   function Verbosity (Self : Object) return Verbosity_Level is
+     (if Self.Verbose then Verbose elsif Self.Quiet then Quiet else Regular);
+
 end GPRtools.Options;

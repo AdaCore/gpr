@@ -472,7 +472,7 @@ begin
 
       if Config.Log_Messages.Has_Error then
          Util.Output_Messages
-           (Config.Log_Messages, Options.Verbose, Full_Path_Name_For_Brief);
+           (Config.Log_Messages, Options.Verbosity, Full_Path_Name_For_Brief);
          Util.Fail_Program
            ("Config file """ & String (Config_File.Simple_Name)
             & """ parse error");
@@ -499,7 +499,7 @@ begin
             GPR2.Source_Reference.Create (Project_Path.Value, 0, 0)));
 
       Util.Output_Messages
-        (Project_Tree.Log_Messages.all, Options.Verbose,
+        (Project_Tree.Log_Messages.all, Options.Verbosity,
          Full_Path_Name_For_Brief);
 
       GPRtools.Util.Fail_Program ("problems with main sources");
@@ -521,7 +521,7 @@ begin
    end if;
 
    Util.Output_Messages
-     (Project_Tree.Log_Messages.all, Options.Verbose,
+     (Project_Tree.Log_Messages.all, Options.Verbosity,
       Full_Path_Name_For_Brief);
 
 exception
@@ -533,7 +533,7 @@ exception
 
    when Project_Error =>
       GPRtools.Util.Project_Processing_Failed
-        (Project_Tree, Options.Verbose, Full_Path_Name_For_Brief);
+        (Project_Tree, Options.Verbosity, Full_Path_Name_For_Brief);
 
    when E : others =>
       GPRtools.Util.Fail_Program

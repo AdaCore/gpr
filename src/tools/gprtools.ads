@@ -21,4 +21,7 @@ package GPRtools is
    Usage_Error : exception;
    --  Raised when a wrong usage is detected
 
+   type Verbosity_Level is (Quiet, Regular, Verbose);
+   --  Verbosilty level of logging to standard and/or error output
+
 end GPRtools;

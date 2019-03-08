@@ -36,8 +36,8 @@ package GPRtools.Util is
 
    procedure Output_Messages
      (Log            : GPR2.Log.Object;
-      Verbose        : Boolean;
-      Full_Path_Name : Boolean := False);
+      Verbosity      : Verbosity_Level;
+      Full_Path_Name : Boolean);
    --  Output errors and if Verbose is True other messages from log
 
    -------------------------
@@ -49,8 +49,8 @@ package GPRtools.Util is
 
    procedure Project_Processing_Failed
      (Tree           : GPR2.Project.Tree.Object;
-      Verbose        : Boolean;
-      Full_Path_Name : Boolean := False);
+      Verbosity      : Verbosity_Level;
+      Full_Path_Name : Boolean);
    --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.
