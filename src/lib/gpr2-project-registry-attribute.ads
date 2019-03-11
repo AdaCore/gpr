@@ -102,6 +102,7 @@ package GPR2.Project.Registry.Attribute is
    Languages                   : constant Name_Type := "languages";
    Lib_Subdir                  : constant Name_Type := "lib_subdir";
    Library_Dir                 : constant Name_Type := "library_dir";
+   Library_Ali_Dir             : constant Name_Type := "library_ali_dir";
    Library_Interface           : constant Name_Type := "library_interface";
    Library_Kind                : constant Name_Type := "library_kind";
    Library_Name                : constant Name_Type := "library_name";

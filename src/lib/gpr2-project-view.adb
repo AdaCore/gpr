@@ -591,6 +591,22 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Languages;
    end Languages;
 
+   ---------------------------
+   -- Library_Ali_Directory --
+   ---------------------------
+
+   function Library_Ali_Directory
+     (Self : Object) return GPR2.Path_Name.Object
+   is
+      package A renames GPR2.Project.Registry.Attribute;
+      AV : constant GPR2.Project.Attribute.Object :=
+             (if Self.Has_Attributes (A.Library_Ali_Dir)
+              then Self.Attribute (A.Library_Ali_Dir)
+              else Self.Attribute (A.Library_Dir));
+   begin
+      return Self.Apply_Root_And_Subdirs (AV.Value.Text);
+   end Library_Ali_Directory;
+
    -----------------------
    -- Library_Directory --
    -----------------------
