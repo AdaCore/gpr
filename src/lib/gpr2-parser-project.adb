@@ -1057,11 +1057,8 @@ package body GPR2.Parser.Project is
 
       In_Pack              : Boolean := False;
       Pack_Name            : Unbounded_String;
-      Att_Name             : Unbounded_String;
-      Idx_Name             : Unbounded_String;
       Pack_Attrs           : GPR2.Project.Attribute.Set.Object;
       Pack_Vars            : GPR2.Project.Variable.Set.Object;
-      Att_Defined          : Boolean := True;
       Is_Project_Reference : Boolean := False;
       --  Is_Project_Reference is True when using: Project'<attribute>
 
@@ -1092,13 +1089,6 @@ package body GPR2.Parser.Project is
                      else "");
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
-
-         function Is_Self return Boolean is
-           (Optional_Name_Type (To_String (Pack_Name)) = Pack
-            and then Name_Type (To_String (Att_Name)) = Name
-            and then Value_Type (To_String (Idx_Name)) = Index);
-         --  Returns True if the current reference corresponds to the currently
-         --  defined attribute (self/recursive reference).
 
          Attr   : GPR2.Project.Attribute.Object :=
                     GPR2.Project.Attribute.Undefined;
@@ -1215,12 +1205,6 @@ package body GPR2.Parser.Project is
                              (String (Tree.Runtime
                               (Optional_Name_Type (Index)))), Sloc));
                   end return;
-
-               elsif Is_Self then
-                  null;
-
-               else
-                  Att_Defined := False;
                end if;
 
             elsif Pack_Name /= Null_Unbounded_String
@@ -1228,38 +1212,19 @@ package body GPR2.Parser.Project is
             then
                --  This is the current parsed package, look into Pack_Attrs
 
-               if Pack_Attrs.Contains (Name, Index) then
-                  Attr := Pack_Attrs.Element (Name, Index);
-
-               elsif Is_Self then
-                  --  A self reference, if the attribute is not found (check
-                  --  above) it means that there is no previous definition
-                  --  for this attribute. The current value is then the empty
-                  --  string but the attribute is defined.
-                  null;
-
-               else
-                  Att_Defined := False;
-               end if;
+               Attr := Pack_Attrs.Element (Name, Index);
 
             elsif Packs.Contains (Name_Type (Pack)) then
                --  Or in another package in the same project
-               if Packs (Name_Type (Pack)).Has_Attributes (Name, Index) then
-                  Attr := Packs.Element
-                    (Name_Type (Pack)).Attributes.Element (Name, Index);
-               else
-                  Att_Defined := False;
-               end if;
+
+               Attr := Packs.Element
+                 (Name_Type (Pack)).Attributes.Element (Name, Index);
             end if;
 
          else
             if View.Is_Defined then
                if Pack = "" then
-                  if View.Has_Attributes (Name, Index) then
-                     Attr := View.Attributes.Element (Name, Index);
-                  else
-                     Att_Defined := False;
-                  end if;
+                  Attr := View.Attributes.Element (Name, Index);
 
                else
                   if View.Has_Packages (Pack) then
@@ -1267,16 +1232,8 @@ package body GPR2.Parser.Project is
                         P : constant GPR2.Project.Pack.Object :=
                               View.Packages.Element (Name_Type (Pack));
                      begin
-                        if P.Has_Attributes (Name, Index) then
-                           Attr := P.Attributes.Element (Name, Index);
-
-                        else
-                           Att_Defined := False;
-                        end if;
+                        Attr := P.Attributes.Element (Name, Index);
                      end;
-
-                  else
-                     Att_Defined := False;
                   end if;
                end if;
             end if;
@@ -1906,9 +1863,6 @@ package body GPR2.Parser.Project is
             N_Str : constant Name_Type :=
                       Get_Name_Type (Name.As_Single_Tok_Node);
          begin
-            Att_Name := To_Unbounded_String (String (N_Str));
-            Idx_Name := To_Unbounded_String (String (I_Str));
-
             declare
                package A_Reg renames GPR2.Project.Registry.Attribute;
 
@@ -2002,9 +1956,6 @@ package body GPR2.Parser.Project is
                   end if;
                end if;
             end;
-
-            Att_Name := Null_Unbounded_String;
-            Idx_Name := Null_Unbounded_String;
          end Parse_Attribute_Decl;
 
          -----------------------------
@@ -2457,8 +2408,6 @@ package body GPR2.Parser.Project is
          end Visit_Child;
 
       begin
-         Att_Defined := True;
-
          if Is_Open then
             --  Handle all kind of nodes when the parsing is open
 
@@ -2515,7 +2464,7 @@ package body GPR2.Parser.Project is
         (Set : in out GPR2.Project.Attribute.Set.Object;
          A   : GPR2.Project.Attribute.Object) is
       begin
-         if Att_Defined then
+         if A.Is_Defined then
             Set.Include (A);
          else
             Undefined_Attribute_Count := Undefined_Attribute_Count + 1;
