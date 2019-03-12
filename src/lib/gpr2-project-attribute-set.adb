@@ -19,12 +19,17 @@
 with Ada.Characters.Handling;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
+with GPR2.Project.Definition;
+
 package body GPR2.Project.Attribute.Set is
 
+   package RA renames Registry.Attribute;
+
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
-     Name  : Unbounded_String;
-     Index : Unbounded_String;
-     Set   : Object;
+      Name          : Unbounded_String;
+      Index         : Unbounded_String;
+      Set           : Object;
+      With_Defaults : Boolean := False;
    end record;
 
    overriding function First
@@ -37,6 +42,12 @@ package body GPR2.Project.Attribute.Set is
      (Iter : Iterator'Class; Position : Cursor) return Boolean
      with Pre => Has_Element (Position);
    --  Returns True if the current Position is matching the Iterator
+
+   procedure Set_Defaults
+     (Self      : in out Object;
+      Pack      : Optional_Name_Type;
+      Languages : Containers.Source_Value_List);
+   --  Set defaults for the attribute set
 
    -----------
    -- Clear --
@@ -335,7 +346,8 @@ package body GPR2.Project.Attribute.Set is
    begin
       return
         (Name = No_Name or else A.Name = Name_Type (Name))
-        and then (Index = No_Value or else A.Index_Equal (Index));
+        and then (Index = No_Value or else A.Index_Equal (Index))
+        and then (Iter.With_Defaults or else not A.Is_Default);
    end Is_Matching;
 
    -------------
@@ -343,15 +355,17 @@ package body GPR2.Project.Attribute.Set is
    -------------
 
    function Iterate
-     (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value)
+     (Self          : Object;
+      Name          : Optional_Name_Type := No_Name;
+      Index         : Value_Type := No_Value;
+      With_Defaults : Boolean := False)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do
-         It.Set   := Self;
-         It.Name  := To_Unbounded_String (String (Name));
-         It.Index := To_Unbounded_String (String (Index));
+         It.Set           := Self;
+         It.Name          := To_Unbounded_String (String (Name));
+         It.Index         := To_Unbounded_String (Index);
+         It.With_Defaults := With_Defaults;
       end return;
    end Iterate;
 
@@ -423,4 +437,146 @@ package body GPR2.Project.Attribute.Set is
            Set_Attribute.Reference (Position.Set.all, Position.CA).Element);
    end Reference;
 
+   ------------------
+   -- Set_Defaults --
+   ------------------
+
+   procedure Set_Defaults
+     (Self      : in out Object;
+      Pack      : Optional_Name_Type;
+      Languages : Containers.Source_Value_List)
+   is
+      Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
+
+      procedure Each_Default (Attr : Name_Type; Def : RA.Def);
+
+      function Check_Default
+        (Name   : Name_Type;
+         Index  : Value_Type;
+         Define : RA.Def;
+         Result : out Attribute.Object) return Boolean;
+      --  Lookup for default value of the attribute
+
+      Lang : Containers.Source_Value_List;
+
+      -------------------
+      -- Check_Default --
+      -------------------
+
+      function Check_Default
+        (Name   : Name_Type;
+         Index  : Value_Type;
+         Define : RA.Def;
+         Result : out Attribute.Object) return Boolean
+      is
+         package SR renames Source_Reference;
+
+         function Check_Reference return Boolean;
+         --  Check default reference
+
+         function Create_Name return SR.Identifier.Object is
+           (SR.Identifier.Object (SR.Identifier.Create (SR.Builtin, Name)));
+
+         function Create_Index return SR.Value.Object is
+           (SR.Value.Object (SR.Value.Create (SR.Builtin, Index)));
+
+         function Create_Value return SR.Value.Object is
+           (SR.Value.Object
+              (SR.Value.Create (SR.Builtin, Define.Default.First_Element)));
+
+         ---------------------
+         -- Check_Reference --
+         ---------------------
+
+         function Check_Reference return Boolean is
+            Ref_Name : constant Name_Type :=
+                         Name_Type (Define.Default.First_Element);
+            Position : constant Cursor := Self.Find (Ref_Name, Index);
+         begin
+            if Has_Element (Position) then
+               Result := Element (Position);
+               return True;
+            end if;
+
+            return Check_Default
+              (Ref_Name, Index, RA.Get (RA.Create (Ref_Name, Pack)), Result);
+         end Check_Reference;
+
+      begin
+         if Define.Default.Is_Empty then
+            return False;
+         end if;
+
+         if Define.Default_Is_Reference then
+            return Check_Reference;
+
+         elsif Define.Value = RA.List then
+            Result := Project.Attribute.Create
+              (Name    => Create_Name,
+               Index   => Create_Index,
+               Values  => Containers.Source_Value_Type_List.To_Vector
+                 (Create_Value, 1),
+               Default => True);
+         else
+            Result := Project.Attribute.Create
+              (Create_Name, Create_Index, Create_Value, Default => True);
+         end if;
+
+         Result.Set_Case
+           (Index_Is_Case_Sensitive => Define.Index_Case_Sensitive,
+            Value_Is_Case_Sensitive => Define.Value_Case_Sensitive);
+
+         return True;
+      end Check_Default;
+
+      ------------------
+      -- Each_Default --
+      ------------------
+
+      procedure Each_Default (Attr : Name_Type; Def : RA.Def) is
+         use type RA.Index_Kind;
+
+         procedure Check_Default (Index : Value_Type);
+
+         -------------------
+         -- Check_Default --
+         -------------------
+
+         procedure Check_Default (Index : Value_Type) is
+            DA : Attribute.Object;
+         begin
+            if not Self.Contains (Attr, Index)
+              and then Check_Default (Attr, Index, Def, DA)
+            then
+               Self.Insert (DA.Rename (Attr));
+            end if;
+         end Check_Default;
+
+      begin
+         if Def.Index = RA.No then
+            Check_Default (No_Value);
+         else
+            for L of Lang loop
+               Check_Default (L.Text);
+            end loop;
+         end if;
+      end Each_Default;
+
+   begin
+      if Pack = No_Name then
+         --  Need set defaults for Languages first because another defaults
+         --  indexed by them.
+
+         Each_Default (RA.Languages, RA.Get_Default (Rules, RA.Languages));
+         Lang := Self.Languages.Values;
+
+      else
+         Lang := Languages;
+      end if;
+
+      RA.For_Each_Default (Rules, Each_Default'Access);
+   end Set_Defaults;
+
+begin
+   Definition.Set_Defaults := Set_Defaults'Access;
 end GPR2.Project.Attribute.Set;

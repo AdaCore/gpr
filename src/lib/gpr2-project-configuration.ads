@@ -121,6 +121,12 @@ package GPR2.Project.Configuration is
                     (Dependency_File_Suffix'Result'First) = '.';
    --  Returns the dependency file suffix (with the leading dot)
 
+   procedure Fix_Languages (Self : in out Object);
+   --  gprconfig could do not provide Languages attribute in generated config
+   --  project even if the languages provided in the --config parameters.
+   --  This routine set the Languages attribute according to configuration
+   --  Descriptions.
+
 private
 
    use Ada.Strings.Unbounded;

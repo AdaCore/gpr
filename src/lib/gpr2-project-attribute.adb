@@ -38,12 +38,14 @@ package body GPR2.Project.Attribute is
    ------------
 
    function Create
-     (Name  : Source_Reference.Identifier.Object;
-      Index : Source_Reference.Value.Object;
-      Value : Source_Reference.Value.Object) return Object is
+     (Name    : Source_Reference.Identifier.Object;
+      Index   : Source_Reference.Value.Object;
+      Value   : Source_Reference.Value.Object;
+      Default : Boolean := False) return Object is
    begin
       return A : Object := Create (Name, Value) do
-         A.Index := Index;
+         A.Index   := Index;
+         A.Default := Default;
       end return;
    end Create;
 
@@ -60,13 +62,15 @@ package body GPR2.Project.Attribute is
    end Create;
 
    function Create
-     (Name   : Source_Reference.Identifier.Object;
-      Index  : Source_Reference.Value.Object;
-      Values : Containers.Source_Value_List) return Object is
+     (Name    : Source_Reference.Identifier.Object;
+      Index   : Source_Reference.Value.Object;
+      Values  : Containers.Source_Value_List;
+      Default : Boolean := False) return Object is
    begin
       return A : Object := Create (Name, Values) do
-         A.Index  := Index;
-         A.At_Num := At_Num_Undefined;
+         A.Index   := Index;
+         A.At_Num  := At_Num_Undefined;
+         A.Default := Default;
       end return;
    end Create;
 
@@ -78,6 +82,20 @@ package body GPR2.Project.Attribute is
         (Name_Values.Create (Name, Value)
          with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True,
+              Default              => False,
+              At_Num               => At_Num_Undefined);
+   end Create;
+
+   function Create
+     (Name    : Source_Reference.Identifier.Object;
+      Value   : Source_Reference.Value.Object;
+      Default : Boolean) return Object is
+   begin
+      return Object'
+        (Name_Values.Create (Name, Value)
+         with Index                => Source_Reference.Value.Undefined,
+              Index_Case_Sensitive => True,
+              Default              => Default,
               At_Num               => At_Num_Undefined);
    end Create;
 
@@ -89,6 +107,20 @@ package body GPR2.Project.Attribute is
         (Name_Values.Create (Name, Values)
          with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True,
+              Default              => False,
+              At_Num               => At_Num_Undefined);
+   end Create;
+
+   function Create
+     (Name    : Source_Reference.Identifier.Object;
+      Values  : Containers.Source_Value_List;
+      Default : Boolean) return Object is
+   begin
+      return Object'
+        (Name_Values.Create (Name, Values)
+         with Index                => Source_Reference.Value.Undefined,
+              Index_Case_Sensitive => True,
+              Default              => Default,
               At_Num               => At_Num_Undefined);
    end Create;
 
@@ -175,6 +207,20 @@ package body GPR2.Project.Attribute is
       end if;
    end Index_Equal;
 
+   ------------
+   -- Rename --
+   ------------
+
+   overriding function Rename
+     (Self : in out Object; Name : Name_Type) return Object is
+   begin
+      return (Name_Values.Object (Self).Rename (Name) with
+                Default              => True,
+                Index                => Self.Index,
+                Index_Case_Sensitive => Self.Index_Case_Sensitive,
+                At_Num               => Self.At_Num);
+   end Rename;
+
    --------------
    -- Set_Case --
    --------------
@@ -184,7 +230,7 @@ package body GPR2.Project.Attribute is
       Index_Is_Case_Sensitive : Boolean;
       Value_Is_Case_Sensitive : Boolean) is
    begin
-      Name_Values.Object (Self).Set_Case (Value_Is_Case_Sensitive);
+      Self.Set_Case (Value_Is_Case_Sensitive);
       Self.Index_Case_Sensitive := Index_Is_Case_Sensitive;
    end Set_Case;
 

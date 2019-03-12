@@ -223,41 +223,37 @@ package body GPR2.Project.Tree is
       CV   : constant View.Object := Self.Conf.Corresponding_View;
       DS   : Character renames OS_Lib.Directory_Separator;
       Data : Project.Definition.Data (Has_Context => False);
+      RTD  : Attribute.Object;
    begin
       --  Check runtime path
 
-      if CV.Has_Attributes ("runtime_dir", "ada") then
+      if CV.Check_Attribute (PRA.Runtime_Dir, "ada", RTD) then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
          --  and Object_Dir for the Runtime project view.
 
-         declare
-            Runtime_Dir : constant String :=
-                            CV.Attribute ("runtime_dir", "ada").Value.Text;
-         begin
-            Data.Attrs.Insert
-              (Project.Attribute.Create
-                 (Name  =>
-                    Source_Reference.Identifier.Object
-                      (Source_Reference.Identifier.Create
-                         (Source_Reference.Builtin, PRA.Source_Dirs)),
-                  Value =>
-                    Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
-                           (Source_Reference.Builtin,
-                            Runtime_Dir & DS & "adainclude"))));
+         Data.Attrs.Insert
+           (Project.Attribute.Create
+              (Name  =>
+                   Source_Reference.Identifier.Object
+                     (Source_Reference.Identifier.Create
+                        (Source_Reference.Builtin, PRA.Source_Dirs)),
+               Value =>
+                 Source_Reference.Value.Object
+                   (Source_Reference.Value.Create
+                        (Source_Reference.Builtin,
+                         RTD.Value.Text & DS & "adainclude"))));
 
-            Data.Attrs.Insert
-              (Project.Attribute.Create
-                 (Name  =>
-                    Source_Reference.Identifier.Object
-                      (Source_Reference.Identifier.Create
-                         (Source_Reference.Builtin, PRA.Object_Dir)),
-                  Value =>
-                    Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
-                           (Source_Reference.Builtin,
-                            Runtime_Dir & DS & "adalib"))));
-         end;
+         Data.Attrs.Insert
+           (Project.Attribute.Create
+              (Name  =>
+                   Source_Reference.Identifier.Object
+                     (Source_Reference.Identifier.Create
+                        (Source_Reference.Builtin, PRA.Object_Dir)),
+               Value =>
+                 Source_Reference.Value.Object
+                   (Source_Reference.Value.Create
+                        (Source_Reference.Builtin,
+                         RTD.Value.Text & DS & "adalib"))));
 
          --  The only language supported is Ada
 
@@ -828,6 +824,7 @@ package body GPR2.Project.Tree is
 
       Root_Context  : GPR2.Context.Object := Context;
       Circularities : Boolean;
+      Def           : Definition.Ref;
 
    begin
       Self.Self := Self'Unchecked_Access;
@@ -896,9 +893,11 @@ package body GPR2.Project.Tree is
             --  is the set of external used in the project and in all
             --  imported project.
 
-            for V of Definition.Get_RO (V_Data).Imports loop
+            Def := Definition.Get (V_Data);
+
+            for V of Def.Imports loop
                for E of Definition.Get_RO (V).Externals loop
-                  if not Definition.Get_RO (V_Data).Externals.Contains (E) then
+                  if not Def.Externals.Contains (E) then
                      --  Note that if we have an aggregate project, then
                      --  we are not dependent on the external if it is
                      --  statically redefined in the aggregate project. But
@@ -907,7 +906,7 @@ package body GPR2.Project.Tree is
                      --  The externals will be removed in Set_Context when
                      --  the parsing is done.
 
-                     Definition.Get (V_Data).Externals.Append (E);
+                     Def.Externals.Append (E);
                   end if;
                end loop;
             end loop;
@@ -961,12 +960,12 @@ package body GPR2.Project.Tree is
       Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
       declare
+         Target_Attr   : Attribute.Object;
          Actual_Target : constant Name_Type :=
                            (if Target /= No_Name then Target
-                            elsif Self.Root_Project.Has_Attributes (PRA.Target)
-                            then Name_Type
-                              (Self.Root_Project.Attribute
-                                 (PRA.Target).Value.Text)
+                            elsif Self.Root_Project.Check_Attribute
+                                    (PRA.Target, Result => Target_Attr)
+                            then Name_Type (Target_Attr.Value.Text)
                             else "all");
 
          Conf_Descriptions : Project.Configuration.Description_Set
@@ -981,13 +980,11 @@ package body GPR2.Project.Tree is
                        Containers.Value_Or_Default
                          (Language_Runtimes, Name_Type (L.Text));
                RTS : constant Optional_Name_Type :=
-                          (if LRT /= No_Value
-                           then Name_Type (LRT)
-                           elsif Self.Root_Project.Has_Attributes
-                             (PRA.Runtime, "Ada")
-                           then Name_Type (Self.Root_Project.Attribute
-                             (PRA.Runtime, "Ada").Value.Text)
-                           else No_Name);
+                       Optional_Name_Type
+                         (if LRT = No_Value
+                          then Self.Root_Project.Attribute
+                                 (PRA.Runtime, "Ada").Value.Text
+                          else LRT);
 
                --  RTS should be a Value_Path (type introduced in the
                --  multi-unit patch)
@@ -1561,6 +1558,14 @@ package body GPR2.Project.Tree is
       Fill_Externals_From_Environment (Root.Context, Root.Externals);
 
       Set_Context (Self, Changed);
+
+      if Self.Conf.Is_Defined then
+         Self.Conf.Fix_Languages;
+      end if;
+
+      for V of Self.Views_Set loop
+         Definition.Set_Default_Attributes (Definition.Get (V).all);
+      end loop;
    end Set_Context;
 
    procedure Set_Context
@@ -1957,12 +1962,15 @@ package body GPR2.Project.Tree is
                end loop;
             end Check_Shared_Lib;
 
+            Attr : Attribute.Object;
+
          begin
             if View.Is_Library and then View.Is_Shared_Library then
-               if View.Has_Attributes (PRA.Library_Version) then
+               if View.Check_Attribute (PRA.Library_Version, Result => Attr)
+               then
                   declare
                      AV      : constant Source_Reference.Value.Object :=
-                                 View.Attribute (PRA.Library_Version).Value;
+                                 Attr.Value;
                      Lib_Ver : constant Value_Type := AV.Text;
                      Lib_Fn  : constant Value_Type :=
                                  Value_Type (View.Library_Filename.Name);
@@ -1990,11 +1998,10 @@ package body GPR2.Project.Tree is
 
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library
               and then Check_Object_Dir_Exists
-              and then View.Has_Attributes (PRA.Object_Dir)
+              and then View.Check_Attribute (PRA.Object_Dir, Result => Attr)
             then
                declare
-                  AV : constant Source_Reference.Value.Object :=
-                         View.Attribute (PRA.Object_Dir).Value;
+                  AV : constant Source_Reference.Value.Object := Attr.Value;
                begin
                   if not View.Object_Directory.Exists then
                      Self.Messages.Append
@@ -2069,6 +2076,7 @@ package body GPR2.Project.Tree is
    ------------
 
    function Target (Self : Object) return Name_Type is
+      TA : Attribute.Object;
    begin
       if Self.Has_Configuration
         and then Self.Conf.Target /= ""
@@ -2076,16 +2084,15 @@ package body GPR2.Project.Tree is
          return Self.Conf.Target;
 
       elsif Self.Root /= View.Undefined
-        and then Self.Root_Project.Has_Attributes (PRA.Target)
+        and then Self.Root_Project.Check_Attribute (PRA.Target, Result => TA)
       then
-         return Name_Type
-           (Self.Root_Project.Attribute (PRA.Target).Value.Text);
+         return Name_Type (TA.Value.Text);
 
       elsif Self.Has_Configuration
-        and then Self.Conf.Corresponding_View.Has_Attributes (PRA.Target)
+        and then Self.Conf.Corresponding_View.Check_Attribute
+                   (PRA.Target, Result => TA)
       then
-         return Name_Type
-           (Self.Conf.Corresponding_View.Attribute (PRA.Target).Value.Text);
+         return Name_Type (TA.Value.Text);
 
       else
          return Name_Type (System.OS_Constants.Target_Name);

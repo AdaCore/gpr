@@ -16,6 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers.Indefinite_Ordered_Maps;
+
+with GPR2.Containers;
+
 package GPR2.Project.Registry.Attribute is
 
    type Index_Kind is (No, Yes, Optional);
@@ -36,20 +40,23 @@ package GPR2.Project.Registry.Attribute is
 
    function Create
      (Name : Name_Type;
-      Pack : Optional_Name_Type := "") return Qualified_Name;
+      Pack : Optional_Name_Type := No_Name) return Qualified_Name;
    --  Returns a fully qualified name for the given attribute and package names
 
    type Allowed_In is array (Project_Kind) of Boolean with Pack;
 
    type Def is record
-      Index                : Index_Kind;
-      Others_Allowed       : Boolean;
-      Index_Case_Sensitive : Boolean;
-      Value                : Value_Kind;
-      Value_Case_Sensitive : Boolean;
-      Empty_Value          : Empty_Value_Status;
-      Read_Only            : Boolean;
-      Is_Allowed_In        : Allowed_In;
+      Index                : Index_Kind         := Optional;
+      Others_Allowed       : Boolean            := False;
+      Index_Case_Sensitive : Boolean            := False;
+      Value                : Value_Kind         := Single;
+      Value_Case_Sensitive : Boolean            := False;
+      Empty_Value          : Empty_Value_Status := Allow;
+      Read_Only            : Boolean            := False;
+      Is_Allowed_In        : Allowed_In         := (K_Abstract => True,
+                                                    others     => False);
+      Default              : Containers.Name_Value_Map;
+      Default_Is_Reference : Boolean            := False;
    end record
      with Dynamic_Predicate =>
        --  Either Index is allowed or the other parts are default
@@ -60,6 +67,10 @@ package GPR2.Project.Registry.Attribute is
        --  Must be usable somewhere
        Def.Is_Allowed_In /= (Project_Kind => False);
 
+   type Default_Rules is private;
+
+   Empty_Defaults : constant Default_Rules;
+
    function Exists (Q_Name : Qualified_Name) return Boolean;
    --  The qualified name comprise the package name and attribute name, both
    --  parts are separated by a dot which is mandatory even if the package
@@ -68,6 +79,33 @@ package GPR2.Project.Registry.Attribute is
    function Get (Q_Name : Qualified_Name) return Def
      with Pre => Exists (Q_Name);
    --  Returns the definition data for the given attribute fully qualified name
+
+   function Get_Default
+     (Rules        : Default_Rules;
+      Name         : Name_Type;
+      Index        : Value_Type;
+      Is_Reference : out Boolean;
+      Is_List      : out Boolean;
+      Has_Default  : out Boolean) return Value_Type;
+   --  Get default rules for the attribute
+
+   function Get_Default (Rules : Default_Rules; Name : Name_Type) return Def;
+   --  Return definition from default rules
+
+   function Has_Default
+     (Name : Qualified_Name; Index : Value_Type) return Boolean;
+   --  Return true if attribute has default value
+
+   function Get_Default_Rules (Pack : Optional_Name_Type) return Default_Rules;
+   --  Get default rules by package name. If package name is empty get the root
+   --  default rules.
+
+   procedure For_Each_Default
+     (Rules  : Default_Rules;
+      Action : not null access procedure
+        (Attribute : Name_Type; Definition : Def));
+   --  Call Action routine for each definition with defaults in package.
+   --  If Pack is empty, call Action for each root attribute with defaults.
 
    --  Some common attribute names
 
@@ -290,5 +328,19 @@ package GPR2.Project.Registry.Attribute is
 private
 
    type Qualified_Name is new Name_Type;
+
+   package Attribute_Definitions is new Ada.Containers.Indefinite_Ordered_Maps
+     (Qualified_Name, Def);
+
+   type Def_Access is access constant Def;
+
+   package Default_References is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Def_Access);
+   --  To keep references only to attribute definitions with default rules
+
+   type Default_Rules is access constant Default_References.Map;
+
+   Empty_Defaults : constant Default_Rules :=
+                      Default_References.Empty_Map'Unrestricted_Access;
 
 end GPR2.Project.Registry.Attribute;

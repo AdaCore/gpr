@@ -16,7 +16,14 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Project.Definition;
+
 package body GPR2.Project.Pack is
+
+   procedure Set_Default_Attributes
+     (Self      : in out Object;
+      Languages : Containers.Source_Value_List);
+   --  Set default attributes for the package
 
    ---------------
    -- Attribute --
@@ -25,9 +32,9 @@ package body GPR2.Project.Pack is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Project.Attribute.Object is
+      Index : Value_Type := No_Value) return Project.Attribute.Object is
    begin
-      return Self.Attributes.Element (Name, Index);
+      return Self.Attrs.Element (Name, Index);
    end Attribute;
 
    ----------------
@@ -36,10 +43,20 @@ package body GPR2.Project.Pack is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Project.Attribute.Set.Object is
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Project.Attribute.Set.Object
+   is
+      Default : Project.Attribute.Object;
+      Result  : Project.Attribute.Set.Object :=
+                  Self.Attrs.Filter (Name, Index);
    begin
-      return Self.Attrs.Filter (Name, Index);
+      if Name /= No_Name and then Result.Length = 0
+        and then Self.Check_Attribute (Name, Index, Default)
+      then
+         Result.Insert (Default);
+      end if;
+
+      return Result;
    end Attributes;
 
    -----------------
@@ -51,20 +68,30 @@ package body GPR2.Project.Pack is
       Language : Name_Type) return Project.Attribute.Object
    is
       Lang : constant Value_Type := Value_Type (Language);
+      Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (Registry.Attribute.Body_Suffix, Lang) then
-         return Self.Attribute (Registry.Attribute.Body_Suffix, Lang);
-
-      elsif Self.Has_Attributes
-        (Registry.Attribute.Implementation_Suffix, Lang)
+      if Self.Check_Attribute (Registry.Attribute.Body_Suffix, Lang, Attr)
       then
-         return Self.Attribute
-           (Registry.Attribute.Implementation_Suffix, Lang);
+         return Attr;
 
       else
          return Project.Attribute.Undefined;
       end if;
    end Body_Suffix;
+
+   ---------------------
+   -- Check_Attribute --
+   ---------------------
+
+   function Check_Attribute
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      Result : out Project.Attribute.Object) return Boolean is
+   begin
+      Result := Self.Attrs.Element (Name, Index);
+      return Result.Is_Defined;
+   end Check_Attribute;
 
    ------------
    -- Create --
@@ -87,8 +114,8 @@ package body GPR2.Project.Pack is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Boolean is
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Boolean is
    begin
       if Name = No_Name and then Index = No_Value then
          return not Self.Attrs.Is_Empty;
@@ -103,7 +130,7 @@ package body GPR2.Project.Pack is
 
    function Has_Variables
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean is
+      Name : Optional_Name_Type := No_Name) return Boolean is
    begin
       if Name = No_Name then
          return not Self.Vars.Is_Empty;
@@ -118,13 +145,17 @@ package body GPR2.Project.Pack is
 
    function Implementation
      (Self : Object;
-      Unit : Value_Type) return Project.Attribute.Object is
+      Unit : Value_Type) return Project.Attribute.Object
+   is
+      Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (Registry.Attribute.Body_N, Unit) then
-         return Self.Attribute (Registry.Attribute.Body_N, Unit);
+      if Self.Check_Attribute (Registry.Attribute.Body_N, Unit, Attr) then
+         return Attr;
 
-      elsif Self.Has_Attributes (Registry.Attribute.Implementation, Unit) then
-         return Self.Attribute (Registry.Attribute.Implementation, Unit);
+      elsif Self.Check_Attribute
+              (Registry.Attribute.Implementation, Unit, Attr)
+      then
+         return Attr;
 
       else
          return Project.Attribute.Undefined;
@@ -149,16 +180,28 @@ package body GPR2.Project.Pack is
       Language : Name_Type) return Project.Attribute.Object
    is
       Lang : constant Value_Type := Value_Type (Language);
+      Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes
-        (Registry.Attribute.Separate_Suffix, Lang)
+      if Self.Check_Attribute (Registry.Attribute.Separate_Suffix, Lang, Attr)
       then
-         return Self.Attribute (Registry.Attribute.Separate_Suffix, Lang);
+         return Attr;
 
       else
          return Project.Attribute.Undefined;
       end if;
    end Separate_Suffix;
+
+   ----------------------------
+   -- Set_Default_Attributes --
+   ----------------------------
+
+   procedure Set_Default_Attributes
+     (Self      : in out Object;
+      Languages : Containers.Source_Value_List) is
+   begin
+      Definition.Set_Defaults
+        (Self.Attrs, Name_Type (To_String (Self.Name)), Languages);
+   end Set_Default_Attributes;
 
    -----------------
    -- Spec_Suffix --
@@ -169,15 +212,10 @@ package body GPR2.Project.Pack is
       Language : Name_Type) return Project.Attribute.Object
    is
       Lang : constant Value_Type := Value_Type (Language);
+      Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (Registry.Attribute.Spec_Suffix, Lang) then
-         return Self.Attribute (Registry.Attribute.Spec_Suffix, Lang);
-
-      elsif Self.Has_Attributes
-        (Registry.Attribute.Specification_Suffix, Lang)
-      then
-         return Self.Attribute
-           (Registry.Attribute.Specification_Suffix, Lang);
+      if Self.Check_Attribute (Registry.Attribute.Spec_Suffix, Lang, Attr) then
+         return Attr;
 
       else
          return Project.Attribute.Undefined;
@@ -190,13 +228,16 @@ package body GPR2.Project.Pack is
 
    function Specification
      (Self : Object;
-      Unit : Value_Type) return Project.Attribute.Object is
+      Unit : Value_Type) return Project.Attribute.Object
+   is
+      Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (Registry.Attribute.Spec, Unit) then
-         return Self.Attribute (Registry.Attribute.Spec, Unit);
+      if Self.Check_Attribute (Registry.Attribute.Spec, Unit, Attr) then
+         return Attr;
 
-      elsif Self.Has_Attributes (Registry.Attribute.Specification, Unit) then
-         return Self.Attribute (Registry.Attribute.Specification, Unit);
+      elsif Self.Check_Attribute (Registry.Attribute.Specification, Unit, Attr)
+      then
+         return Attr;
 
       else
          return Project.Attribute.Undefined;
@@ -222,4 +263,6 @@ package body GPR2.Project.Pack is
       return Self.Vars;
    end Variables;
 
+begin
+   Definition.Set_Pack_Default_Attributes := Set_Default_Attributes'Access;
 end GPR2.Project.Pack;

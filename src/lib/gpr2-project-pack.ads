@@ -54,8 +54,8 @@ package GPR2.Project.Pack is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Boolean
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the package has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
@@ -63,17 +63,26 @@ package GPR2.Project.Pack is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := "";
-      Index : Value_Type := "") return Attribute.Set.Object
+      Name  : Optional_Name_Type := No_Name;
+      Index : Value_Type := No_Value) return Attribute.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all attributes defined for the package. Possibly an empty list
    --  if it does not contain attributes or if Name and Index does not match
    --  any attribute.
 
+   function Check_Attribute
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      Result : out Attribute.Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True and set Result to attribute if attribute exists or has
+   --  default value, returns False and set Result to Undefined otherwise.
+
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := "") return Project.Attribute.Object
+      Index : Value_Type := No_Value) return Project.Attribute.Object
      with Pre =>
        Self.Is_Defined
        and then Self.Has_Attributes (Name, Index)
@@ -82,7 +91,7 @@ package GPR2.Project.Pack is
 
    function Has_Variables
      (Self : Object;
-      Name : Optional_Name_Type := "") return Boolean
+      Name : Optional_Name_Type := No_Name) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the package has some variables defined. If Name is set
    --  it returns True if a variable with the given Name is defined.

@@ -106,6 +106,9 @@ package GPR2.Project.Name_Values is
       Value_Is_Case_Sensitive : Boolean);
    --  Sets values case sensitivity which is by default it is case-sensitive
 
+   function Rename (Self : in out Object; Name : Name_Type) return Object;
+   --  Returns the object with another name
+
 private
 
    use Ada.Strings.Unbounded;

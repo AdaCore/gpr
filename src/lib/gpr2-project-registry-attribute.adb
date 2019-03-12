@@ -16,21 +16,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps; use Ada;
-with Ada.Strings.Less_Case_Insensitive;
+with Ada.Characters.Handling; use Ada;
+with Ada.Strings.Fixed;
 
 with GPR2.Project.Registry.Pack;
 
 package body GPR2.Project.Registry.Attribute is
 
-   function Less_Case_Insensitive
-     (Left, Right : Qualified_Name) return Boolean is
-     (Ada.Strings.Less_Case_Insensitive (String (Left), String (Right)));
+   package Pack_Defaults is new Ada.Containers.Indefinite_Ordered_Maps
+     (Optional_Name_Type, Default_References.Map,
+      "=" => Default_References."=");
 
-   package Attribute_Definitions is new Ada.Containers.Indefinite_Ordered_Maps
-     (Qualified_Name, Def, Less_Case_Insensitive);
+   Store    : Attribute_Definitions.Map;
+   Defaults : Pack_Defaults.Map;
 
-   Store : Attribute_Definitions.Map;
+   Any_Index : constant Value_Type := (1 => ASCII.NUL);
 
    procedure Store_Insert
      (Name                 : Qualified_Name;
@@ -41,10 +41,26 @@ package body GPR2.Project.Registry.Attribute is
       Value_Case_Sensitive : Boolean;
       Empty_Value          : Empty_Value_Status := Allow;
       Read_Only            : Boolean;
-      Is_Allowed_In        : Allowed_In) with Inline;
+      Is_Allowed_In        : Allowed_In;
+      Default              : Containers.Name_Value_Map :=
+                               Containers.Name_Value_Map_Package.Empty_Map;
+      Default_Is_Reference : Boolean    := False) with Inline;
    --  Calls Store.Insert with Key => Name and Value created from other fields
 
    --  Constants for some common attribute definitions
+
+   function Create
+     (Index, Value : Value_Type) return Containers.Name_Value_Map;
+   --  Create container for attribute default value
+
+   function Create (Value : Value_Type) return Containers.Name_Value_Map is
+      (Create (Any_Index, Value));
+   --  Create container for attribute default value
+
+   function "+"
+     (Left  : Containers.Name_Value_Map;
+      Right : Containers.Name_Value_Map) return Containers.Name_Value_Map;
+   --  Concatenate 2 default values for different indexes into one container
 
    Everywhere       : constant Allowed_In := (others => True);
 
@@ -63,18 +79,44 @@ package body GPR2.Project.Registry.Attribute is
    In_Configuration : constant Allowed_In :=
                         (K_Configuration => True, others => False);
 
+   ---------
+   -- "+" --
+   ---------
+
+   function "+"
+     (Left  : Containers.Name_Value_Map;
+      Right : Containers.Name_Value_Map) return Containers.Name_Value_Map
+   is
+      Result : Containers.Name_Value_Map := Left;
+   begin
+      for C in Right.Iterate loop
+         Result.Insert (Containers.Name_Value_Map_Package.Key (C), Right (C));
+      end loop;
+
+      return Result;
+   end "+";
+
    ------------
    -- Create --
    ------------
 
    function Create
      (Name : Name_Type;
-      Pack : Optional_Name_Type := "") return Qualified_Name is
+      Pack : Optional_Name_Type := No_Name) return Qualified_Name is
    begin
       return Qualified_Name
         (if Pack = No_Name
          then Name
          else Name_Type (Pack) & '.' & Name);
+   end Create;
+
+   function Create
+     (Index, Value : Value_Type) return Containers.Name_Value_Map
+   is
+      Result : Containers.Name_Value_Map;
+   begin
+      Result.Insert (Name_Type (Index), Value);
+      return Result;
    end Create;
 
    ------------
@@ -86,6 +128,31 @@ package body GPR2.Project.Registry.Attribute is
       return Store.Contains (Q_Name);
    end Exists;
 
+   ----------------------
+   -- For_Each_Default --
+   ----------------------
+
+   procedure For_Each_Default
+     (Rules  : Default_Rules;
+      Action : not null access procedure
+        (Attribute : Name_Type; Definition : Def))
+   is
+      procedure Each_Element (C : Default_References.Cursor);
+
+      ------------------
+      -- Each_Element --
+      ------------------
+
+      procedure Each_Element (C : Default_References.Cursor) is
+      begin
+         Action
+           (Default_References.Key (C), Default_References.Element (C).all);
+      end Each_Element;
+
+   begin
+      Rules.Iterate (Each_Element'Access);
+   end For_Each_Default;
+
    ---------
    -- Get --
    ---------
@@ -94,6 +161,122 @@ package body GPR2.Project.Registry.Attribute is
    begin
       return Store (Q_Name);
    end Get;
+
+   -----------------
+   -- Get_Default --
+   -----------------
+
+   function Get_Default (Rules : Default_Rules; Name : Name_Type) return Def is
+   begin
+      return Rules.Element (Name).all;
+   end Get_Default;
+
+   function Get_Default
+     (Rules        : Default_Rules;
+      Name         : Name_Type;
+      Index        : Value_Type;
+      Is_Reference : out Boolean;
+      Is_List      : out Boolean;
+      Has_Default  : out Boolean) return Value_Type
+   is
+      use GPR2.Containers.Name_Value_Map_Package;
+      CN : constant Default_References.Cursor := Rules.Find (Name);
+      D  : Def_Access;
+      C  : Cursor;
+
+      function Index_To_Key return Value_Type is
+        (if Index = No_Value then Any_Index
+         elsif D.Index_Case_Sensitive then Index
+         else Ada.Characters.Handling.To_Lower (Index));
+      --  Convert Index to key value in defaults map
+
+   begin
+      Has_Default := False;
+
+      if not Default_References.Has_Element (CN) then
+         return "";
+      end if;
+
+      D := Default_References.Element (CN);
+
+      pragma Assert (not D.Default.Is_Empty);
+
+      Is_Reference := D.Default_Is_Reference;
+      Is_List      := D.Value = List;
+
+      C := D.Default.Find (Name_Type (Index_To_Key));
+
+      if Has_Element (C) then
+         Has_Default := True;
+         return Element (C);
+
+      elsif Index = No_Value then
+         --  Search by Any_Index already done
+         return "";
+      end if;
+
+      C := D.Default.Find (Name_Type (Any_Index));
+
+      if Has_Element (C) then
+         Has_Default := True;
+         return Element (C);
+      end if;
+
+      return "";
+   end Get_Default;
+
+   -----------------------
+   -- Get_Default_Rules --
+   -----------------------
+
+   function Get_Default_Rules
+     (Pack : Optional_Name_Type) return Default_Rules
+   is
+      CR : constant Pack_Defaults.Cursor := Defaults.Find (Pack);
+   begin
+      if Pack_Defaults.Has_Element (CR) then
+         return Defaults (CR).Element;
+      else
+         return Default_References.Empty_Map'Unrestricted_Access;
+      end if;
+   end Get_Default_Rules;
+
+   -----------------
+   -- Has_Default --
+   -----------------
+
+   function Has_Default
+     (Name : Qualified_Name; Index : Value_Type) return Boolean
+   is
+      use GPR2.Containers.Name_Value_Map_Package;
+      CN : constant Attribute_Definitions.Cursor := Store.Find (Name);
+      D  : Def;
+
+      function Index_To_Key return Value_Type is
+        (if Index = No_Value then Any_Index
+         elsif D.Index_Case_Sensitive then Index
+         else Ada.Characters.Handling.To_Lower (Index));
+      --  Convert Index to key value in defaults map
+
+   begin
+      if not Attribute_Definitions.Has_Element (CN) then
+         return False;
+      end if;
+
+      D := Attribute_Definitions.Element (CN);
+
+      if D.Default.Is_Empty then
+         return False;
+      end if;
+
+      if D.Default.Contains (Name_Type (Index_To_Key)) then
+         return True;
+      elsif Index = No_Value then
+         return False;
+      end if;
+
+      return D.Default.Contains (Name_Type (Any_Index));
+   end Has_Default;
 
    ------------------
    -- Store_Insert --
@@ -108,7 +291,38 @@ package body GPR2.Project.Registry.Attribute is
       Value_Case_Sensitive : Boolean;
       Empty_Value          : Empty_Value_Status := Allow;
       Read_Only            : Boolean;
-      Is_Allowed_In        : Allowed_In) is
+      Is_Allowed_In        : Allowed_In;
+      Default              : Containers.Name_Value_Map :=
+                               Containers.Name_Value_Map_Package.Empty_Map;
+      Default_Is_Reference : Boolean    := False)
+   is
+      procedure Index_Default;
+      --  Save definnition with default value to Defaults index
+
+      -------------------
+      -- Index_Default --
+      -------------------
+
+      procedure Index_Default is
+         Dot_At : constant Natural := Strings.Fixed.Index (String (Name), ".");
+         Pack   : constant Optional_Name_Type :=
+                    (if Dot_At = 0 then No_Name
+                     else Name_Type (Name (Name'First .. Dot_At - 1)));
+         Attr   : constant Name_Type :=
+                    Name_Type
+                      (if Dot_At = 0 then Name
+                       else Name (Dot_At + 1 .. Name'Last));
+         CP     : Pack_Defaults.Cursor := Defaults.Find (Pack);
+         OK     : Boolean;
+      begin
+         if not Pack_Defaults.Has_Element (CP) then
+            Defaults.Insert (Pack, Default_References.Empty_Map, CP, OK);
+            pragma Assert (OK);
+         end if;
+
+         Defaults (CP).Insert (Attr, Store (Name).Element);
+      end Index_Default;
+
    begin
       Store.Insert
         (Name,
@@ -119,7 +333,13 @@ package body GPR2.Project.Registry.Attribute is
               Value_Case_Sensitive => Value_Case_Sensitive,
               Empty_Value          => Empty_Value,
               Read_Only            => Read_Only,
-              Is_Allowed_In        => Is_Allowed_In));
+              Is_Allowed_In        => Is_Allowed_In,
+              Default              => Default,
+              Default_Is_Reference => Default_Is_Reference));
+
+      if not Default.Is_Empty then
+         Index_Default;
+      end if;
    end Store_Insert;
 
 begin
@@ -165,7 +385,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => False,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Default              => Create ("ada"));
 
    --  roots
    Store_Insert
@@ -198,7 +419,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("."));
 
    --  exec_dir
    Store_Insert
@@ -209,7 +431,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Default              => Create (Value_Type (Object_Dir)),
+      Default_Is_Reference => True);
 
    --  source_dirs
    Store_Insert
@@ -506,7 +730,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Is_Allowed_In        => In_Library,
+      Default              => Create (Value_Type (Library_Dir)),
+      Default_Is_Reference => True);
 
    --  library_gcc
    Store_Insert
@@ -671,7 +897,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (No_Value));
 
    --  library_builder
    Store_Insert
@@ -737,7 +964,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (".a"));
 
    --  library_partial_linker
    Store_Insert
@@ -781,7 +1009,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("lib"));
 
    --  shared_library_suffix
    Store_Insert
@@ -792,7 +1021,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (".so"));
 
    --  symbolic_link_supported
    Store_Insert
@@ -913,7 +1143,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (Value_Type (Specification_Suffix)),
+      Default_Is_Reference => True);
 
    --  naming.body_suffix
    Store_Insert
@@ -924,7 +1156,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (Value_Type (Implementation_Suffix)),
+      Default_Is_Reference => True);
 
    --  naming.specification_suffix
    Store_Insert
@@ -935,7 +1169,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("ada", ".ads") + Create ("c", ".h"));
 
    --  naming.implementation_suffix
    Store_Insert
@@ -946,7 +1181,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("ada", ".adb") + Create ("c", ".c"));
 
    --  naming.separate_suffix
    Store_Insert
@@ -957,7 +1193,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (Value_Type (Body_Suffix)),
+      Default_Is_Reference => True);
 
    --  naming.casing
    Store_Insert
@@ -1199,7 +1437,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (".o"));
 
    --  compiler.object_file_switches
    Store_Insert

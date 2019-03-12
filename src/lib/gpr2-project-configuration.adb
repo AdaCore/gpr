@@ -22,11 +22,17 @@ with Ada.Directories;
 with GNAT.OS_Lib;
 
 with GPR2.Message;
+with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Source_Reference;
+with GPR2.Project.Registry.Pack;
+with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Configuration is
+
+   package PRA renames Project.Registry.Attribute;
+   package PRP renames Project.Registry.Pack;
 
    --------------------
    -- Archive_Suffix --
@@ -34,15 +40,7 @@ package body GPR2.Project.Configuration is
 
    function Archive_Suffix (Self : Object) return Name_Type is
    begin
-      if Self.Conf.Has_Attributes
-        (Project.Registry.Attribute.Archive_Suffix)
-      then
-         return Name_Type
-           (Self.Conf.Attribute
-              (Project.Registry.Attribute.Archive_Suffix).Value.Text);
-      else
-         return ".a";
-      end if;
+      return Name_Type (Self.Conf.Attribute (PRA.Archive_Suffix).Value.Text);
    end Archive_Suffix;
 
    ------------------
@@ -219,6 +217,31 @@ package body GPR2.Project.Configuration is
       end if;
    end Dependency_File_Suffix;
 
+   -------------------
+   -- Fix_Languages --
+   -------------------
+
+   procedure Fix_Languages (Self : in out Object) is
+      Values : Containers.Source_Value_List;
+      Def    : constant Definition.Ref := Definition.Get_RW (Self.Conf);
+      package SR renames GPR2.Source_Reference;
+   begin
+      if not Self.Conf.Has_Languages then
+         for D of Self.Descriptions loop
+            Values.Append
+              (SR.Value.Object
+                 (SR.Value.Create (SR.Builtin, To_String (D.Language))));
+         end loop;
+
+         Def.Attrs.Insert
+           (Attribute.Create
+              (SR.Identifier.Object
+                 (SR.Identifier.Create
+                    (SR.Builtin, Name_Type (PRA.Languages))),
+               Values));
+      end if;
+   end Fix_Languages;
+
    ------------------
    -- Has_Messages --
    ------------------
@@ -270,13 +293,10 @@ package body GPR2.Project.Configuration is
      (Self     : Object;
       Language : Name_Type) return Name_Type is
    begin
-      if Self.Conf.Has_Attributes
-        (Project.Registry.Attribute.Object_File_Suffix)
-      then
+      if Self.Conf.Has_Packages (PRP.Compiler) then
          return Name_Type
-           (Self.Conf.Attribute
-              (Project.Registry.Attribute.Object_File_Suffix,
-               String (Language)).Value.Text);
+                  (Self.Conf.Pack (PRP.Compiler).Attribute
+                     (PRA.Object_File_Suffix, String (Language)).Value.Text);
       else
          return ".o";
       end if;

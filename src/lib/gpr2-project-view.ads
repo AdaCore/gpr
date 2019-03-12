@@ -143,11 +143,20 @@ package GPR2.Project.View is
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Boolean
+      Index : Value_Type         := No_Value) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project view has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
    --  Name and/or Index is defined.
+
+   function Check_Attribute
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      Result : out Attribute.Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True and set Result to attribute if attribute exists or has
+   --  default value, returns False and set Result to Undefined otherwise.
 
    function Attributes
      (Self  : Object;

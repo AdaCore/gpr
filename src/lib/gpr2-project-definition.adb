@@ -53,19 +53,13 @@ package body GPR2.Project.Definition is
    --  project and no configuration file loaded. We at least want to handle in
    --  this case the standard Ada and C namings.
 
-   Builtin_Languages : Project.Attribute.Object;
-   --  The default languages to use if no languages attribute specified in the
-   --  project. The default value is just "ada".
-
    function Source_Directories (Def : Data) return Project.Attribute.Object is
      (if Def.Attrs.Has_Source_Dirs
       then Def.Attrs.Source_Dirs
       else Project.Attribute.Default_Source_Dirs);
 
    function Languages (Def : Data) return Containers.Source_Value_List is
-     (if Def.Attrs.Has_Languages
-      then Def.Attrs.Languages.Values
-      else Builtin_Languages.Values);
+     (Def.Attrs.Languages.Values);
 
    --------------------
    -- Naming_Package --
@@ -104,6 +98,20 @@ package body GPR2.Project.Definition is
          return Builtin_Naming_Package;
       end if;
    end Naming_Package;
+
+   ----------------------------
+   -- Set_Default_Attributes --
+   ----------------------------
+
+   procedure Set_Default_Attributes (Def : in out Data) is
+   begin
+      Set_Defaults
+        (Def.Attrs, No_Name, Containers.Source_Value_Type_List.Empty_Vector);
+
+      for Pack of Def.Packs loop
+         Definition.Set_Pack_Default_Attributes (Pack, Def.Languages);
+      end loop;
+   end Set_Default_Attributes;
 
    --------------------
    -- Update_Sources --
@@ -704,11 +712,7 @@ package body GPR2.Project.Definition is
             return Name_Type (String'("0"));  --  Some dummy unit name
          end Compute_Unit_From_Filename;
 
-         Languages : constant Project.Attribute.Object :=
-                       (if Def.Has_Attributes (Registry.Attribute.Languages)
-                        then Def.Attrs.Element
-                          (Registry.Attribute.Languages, No_Value)
-                        else Builtin_Languages);
+         Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
          File : constant GPR2.Path_Name.Object :=
                   Path_Name.Create_File (Name_Type (Path));
@@ -1194,6 +1198,9 @@ package body GPR2.Project.Definition is
             procedure Add (A : Project.Attribute.Object);
             --  Add attribute name and values into the MD5 context
 
+            procedure Add (Attribute_Name : Name_Type);
+            --  Add attribute by into the MD5 context
+
             ---------
             -- Add --
             ---------
@@ -1206,33 +1213,25 @@ package body GPR2.Project.Definition is
                end loop;
             end Add;
 
+            procedure Add (Attribute_Name : Name_Type) is
+               Attr : constant Project.Attribute.Object :=
+                        Data.Attrs.Element (Attribute_Name);
+            begin
+               if Attr.Is_Defined then
+                  Add (Attr);
+               end if;
+            end Add;
+
          begin
             --  The signature to detect the source change is based on the
             --  attributes which are used to compute the actual source set.
 
-            if Data.Attrs.Has_Languages then
-               Add (Data.Attrs.Languages);
-            end if;
-
-            if Data.Attrs.Has_Source_Dirs then
-               Add (Data.Attrs.Source_Dirs);
-            end if;
-
-            if Data.Attrs.Has_Source_Files then
-               Add (Data.Attrs.Source_Files);
-            end if;
-
-            if Data.Attrs.Has_Excluded_Source_Files then
-               Add (Data.Attrs.Excluded_Source_Files);
-            end if;
-
-            if Data.Attrs.Has_Excluded_Source_List_File then
-               Add (Data.Attrs.Excluded_Source_List_File);
-            end if;
-
-            if Data.Attrs.Has_Source_List_File then
-               Add (Data.Attrs.Source_List_File);
-            end if;
+            Add (Registry.Attribute.Languages);
+            Add (Registry.Attribute.Source_Dirs);
+            Add (Registry.Attribute.Source_Files);
+            Add (Registry.Attribute.Excluded_Source_Files);
+            Add (Registry.Attribute.Excluded_Source_List_File);
+            Add (Registry.Attribute.Source_List_File);
 
             --  Handle also the naming definitions
 
@@ -1240,11 +1239,13 @@ package body GPR2.Project.Definition is
                Handle_Naming : declare
                   use Registry.Attribute;
 
+                  Attr   : Attribute.Object;
                   Naming : constant Project.Pack.Object :=
                              Data.Packs (Project.Registry.Pack.Naming);
                begin
-                  if Naming.Has_Attributes (Dot_Replacement) then
-                     Add (Naming.Attribute (Dot_Replacement));
+                  if Naming.Check_Attribute (Dot_Replacement, Result => Attr)
+                  then
+                     Add (Attr);
                   end if;
 
                   for Attr of Naming.Attributes (Spec_Suffix) loop
@@ -1582,7 +1583,6 @@ begin
                       (Source_Reference.Value.Create
                           (Source_Reference.Builtin, "-"))));
       Attrs    : Project.Attribute.Set.Object;
-      Langs    : Containers.Source_Value_List;
    begin
       --  Default naming package
 
@@ -1598,18 +1598,5 @@ begin
              (Source_Reference.Identifier.Create
                 (Source_Reference.Builtin, Registry.Pack.Naming)),
            Attrs, Project.Variable.Set.Set.Empty_Map);
-
-      --  Default languages attribute
-
-      Langs.Append
-        (Source_Reference.Value.Object
-           (Source_Reference.Value.Create (Source_Reference.Builtin, "ada")));
-      Builtin_Languages :=
-        Project.Attribute.Create
-          (Source_Reference.Identifier.Object
-             (Source_Reference.Identifier.Create
-                (Source_Reference.Builtin, Registry.Attribute.Languages)),
-           Langs);
-      Builtin_Languages.Set_Case (Value_Is_Case_Sensitive => False);
    end;
 end GPR2.Project.Definition;

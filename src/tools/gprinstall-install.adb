@@ -165,9 +165,6 @@ package body GPRinstall.Install is
       Windows_Target : constant Boolean :=
                          Tree.Has_Configuration
                              and then
-                         Tree.Configuration.Corresponding_View.Has_Attributes
-                           (A.Shared_Library_Suffix)
-                             and then
                          Tree.Configuration.Corresponding_View.Attribute
                            (A.Shared_Library_Suffix).Value_Equal (".dll");
       --  ??? We may also check that the Tree target name constains mingw or
@@ -1665,11 +1662,13 @@ package body GPRinstall.Install is
             -------------------------
 
             procedure Add_Library_Options (Proj : GPR2.Project.View.Object) is
+               Attr : GPR2.Project.Attribute.Object;
             begin
-               if Proj.Kind = K_Library then
-                  if Proj.Has_Attributes (A.Library_Options) then
-                     Append (Proj.Attribute (A.Library_Options));
-                  end if;
+               if Proj.Kind = K_Library
+                 and then Proj.Check_Attribute
+                            (A.Library_Options, Result => Attr)
+               then
+                  Append (Attr);
                end if;
             end Add_Library_Options;
 
@@ -2314,9 +2313,10 @@ package body GPRinstall.Install is
         (Project : GPR2.Project.View.Object) return Boolean
       is
          use type Containers.Count_Type;
+         SD : GPR2.Project.Attribute.Object;
       begin
-         return (Project.Has_Attributes (A.Source_Dirs)
-                 and then Project.Attribute (A.Source_Dirs).Count_Values > 0)
+         return (Project.Check_Attribute (A.Source_Dirs, Result => SD)
+                 and then SD.Count_Values > 0)
            or else Project.Qualifier = K_Aggregate_Library;
       end Has_Sources;
 

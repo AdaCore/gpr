@@ -140,6 +140,17 @@ package body GPR2.Project.Name_Values is
       return Name_Type (To_String (Self.Name));
    end Name;
 
+   ------------
+   -- Rename --
+   ------------
+
+   function Rename (Self : in out Object; Name : Name_Type) return Object is
+      Result : Object := Self;
+   begin
+      Result.Name := To_Unbounded_String (String (Name));
+      return Result;
+   end Rename;
+
    --------------
    -- Set_Case --
    --------------

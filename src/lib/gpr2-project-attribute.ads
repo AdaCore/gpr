@@ -39,9 +39,10 @@ package GPR2.Project.Attribute is
    --  Returns true if Self is defined
 
    function Create
-     (Name  : Source_Reference.Identifier.Object;
-      Index : Source_Reference.Value.Object;
-      Value : Source_Reference.Value.Object) return Object
+     (Name    : Source_Reference.Identifier.Object;
+      Index   : Source_Reference.Value.Object;
+      Value   : Source_Reference.Value.Object;
+      Default : Boolean := False) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = 1;
@@ -58,9 +59,10 @@ package GPR2.Project.Attribute is
    --  Creates a single-valued object with "at" number
 
    function Create
-     (Name   : Source_Reference.Identifier.Object;
-      Index  : Source_Reference.Value.Object;
-      Values : Containers.Source_Value_List) return Object
+     (Name    : Source_Reference.Identifier.Object;
+      Index   : Source_Reference.Value.Object;
+      Values  : Containers.Source_Value_List;
+      Default : Boolean := False) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
@@ -74,6 +76,15 @@ package GPR2.Project.Attribute is
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object
 
+   function Create
+     (Name    : Source_Reference.Identifier.Object;
+      Value   : Source_Reference.Value.Object;
+      Default : Boolean) return Object
+     with Post => Create'Result.Kind = Single
+                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Count_Values = 1;
+   --  Creates a single-valued object with default flag
+
    overriding function Create
      (Name   : Source_Reference.Identifier.Object;
       Values : Containers.Source_Value_List) return Object
@@ -81,6 +92,15 @@ package GPR2.Project.Attribute is
                   and then Create'Result.Name = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object
+
+   function Create
+     (Name    : Source_Reference.Identifier.Object;
+      Values  : Containers.Source_Value_List;
+      Default : Boolean) return Object
+     with Post => Create'Result.Kind = List
+                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Count_Values = Values.Length;
+   --  Creates a multi-valued object with Default flag
 
    function Has_Index (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -112,6 +132,14 @@ package GPR2.Project.Attribute is
    --  Returns a string representation. The attribute name is represented with
    --  Name_Len characters (right padding with space) except if Name_Len is 0.
 
+   function Is_Default (Self : Object) return Boolean;
+   --  Attribute did not exist in attribute set and was created from default
+   --  value.
+
+   overriding function Rename
+     (Self : in out Object; Name : Name_Type) return Object;
+   --  Returns object with another name and default attribute
+
    Default_Source_Dirs : constant Object;
 
    At_Num_Undefined : constant Natural;
@@ -121,6 +149,7 @@ private
    type Object is new Name_Values.Object with record
       Index                : Source_Reference.Value.Object;
       Index_Case_Sensitive : Boolean := True;
+      Default              : Boolean := False;
       At_Num               : Natural := 0;
    end record;
 
@@ -149,9 +178,11 @@ private
                                Containers.Source_Value_Type_List.To_Vector
                                  (Current_Dir, 1))
                               with Source_Reference.Value.Undefined,
-                            True, At_Num_Undefined);
+                            others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Is_Default (Self : Object) return Boolean is (Self.Default);
 
 end GPR2.Project.Attribute;

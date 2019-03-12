@@ -191,6 +191,20 @@ package body GPR2.Project.View is
       return "";
    end Binder_Prefix;
 
+   ---------------------
+   -- Check_Attribute --
+   ---------------------
+
+   function Check_Attribute
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      Result : out Project.Attribute.Object) return Boolean is
+   begin
+      Result := Definition.Get_RO (Self).Attrs.Element (Name, Index);
+      return Result.Is_Defined;
+   end Check_Attribute;
+
    -------------
    -- Context --
    -------------
@@ -253,16 +267,10 @@ package body GPR2.Project.View is
    --------------------------
 
    function Executable_Directory
-     (Self : Object) return GPR2.Path_Name.Object
-   is
-      package A renames GPR2.Project.Registry.Attribute;
+     (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Apply_Root_And_Subdirs
-        (if Self.Has_Attributes (A.Exec_Dir)
-         then Self.Attribute (A.Exec_Dir).Value.Text
-         elsif  Self.Has_Attributes (A.Object_Dir)
-         then Self.Attribute (A.Object_Dir).Value.Text
-         else ".");
+        (Self.Attribute (Registry.Attribute.Exec_Dir).Value.Text);
    end Executable_Directory;
 
    -----------------------
@@ -273,23 +281,24 @@ package body GPR2.Project.View is
       package A renames GPR2.Project.Registry.Attribute;
 
       Tree : constant not null access Project.Tree.Object := Self.Tree;
+      Attr : Project.Attribute.Object;
 
    begin
       if Tree.Has_Configuration
-        and then Tree.Configuration.Corresponding_View.Has_Attributes
-                   (A.Executable_Suffix)
+        and then Tree.Configuration.Corresponding_View.Check_Attribute
+                   (A.Executable_Suffix, Result => Attr)
       then
-         return Tree.Configuration.Corresponding_View.Attribute
-                  (A.Executable_Suffix).Value.Text;
+         return Attr.Value.Text;
       end if;
 
       declare
          Builder : constant Project.Pack.Object := Self.Builder;
       begin
          if Builder.Is_Defined
-           and then Builder.Has_Attributes (A.Executable_Suffix)
+           and then Builder.Check_Attribute
+                      (A.Executable_Suffix, Result => Attr)
          then
-            return Builder.Attribute (A.Executable_Suffix).Value.Text;
+            return Attr.Value.Text;
          end if;
       end;
 
@@ -312,13 +321,16 @@ package body GPR2.Project.View is
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Boolean is
+      Index : Value_Type         := No_Value) return Boolean
+   is
+      use Project.Attribute.Set;
+      Def : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
       if Name = No_Name and then Index = No_Value then
-         return not Definition.Get_RO (Self).Attrs.Is_Empty;
+         return not Def.Attrs.Is_Empty;
 
-      elsif Index = No_Value then
-         return Definition.Get_RO (Self).Attrs.Contains (Name);
+      elsif Name /= No_Name then
+         return Def.Attrs.Contains (Name, Index);
 
       else
          return not Attributes (Self, Name, Index).Is_Empty;
@@ -402,7 +414,7 @@ package body GPR2.Project.View is
 
    function Has_Languages (Self : Object) return Boolean is
    begin
-      return not Definition.Get_RO (Self).Languages.Is_Empty;
+      return Definition.Get_RO (Self).Attrs.Has_Languages;
    end Has_Languages;
 
    ---------------
@@ -410,10 +422,11 @@ package body GPR2.Project.View is
    ---------------
 
    function Has_Mains (Self : Object) return Boolean is
+      Attr : Project.Attribute.Object;
    begin
-      return Self.Has_Attributes (Project.Registry.Attribute.Main)
-        and then
-          Self.Attribute (Project.Registry.Attribute.Main).Values.Length > 0;
+      return Self.Check_Attribute
+               (Project.Registry.Attribute.Main, Result => Attr)
+             and then Attr.Values.Length > 0;
    end Has_Mains;
 
    ------------------
@@ -545,11 +558,11 @@ package body GPR2.Project.View is
    -------------------------
 
    function Is_Externally_Built (Self : Object) return Boolean is
+      Attr : Project.Attribute.Object;
    begin
-      return Self.Has_Attributes (Project.Registry.Attribute.Externally_Built)
-        and then
-          Self.Attribute
-            (Project.Registry.Attribute.Externally_Built).Value_Equal ("true");
+      return Self.Check_Attribute
+               (Project.Registry.Attribute.Externally_Built, Result => Attr)
+             and then Attr.Value_Equal ("true");
    end Is_Externally_Built;
 
    -----------------------
@@ -598,12 +611,9 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object
    is
       package A renames GPR2.Project.Registry.Attribute;
-      AV : constant GPR2.Project.Attribute.Object :=
-             (if Self.Has_Attributes (A.Library_Ali_Dir)
-              then Self.Attribute (A.Library_Ali_Dir)
-              else Self.Attribute (A.Library_Dir));
    begin
-      return Self.Apply_Root_And_Subdirs (AV.Value.Text);
+      return Self.Apply_Root_And_Subdirs
+               (Self.Attribute (A.Library_Ali_Dir).Value.Text);
    end Library_Ali_Directory;
 
    -----------------------
@@ -624,11 +634,6 @@ package body GPR2.Project.View is
 
       package A renames GPR2.Project.Registry.Attribute;
 
-      function Config_Has_Attribute (Name : Name_Type) return Boolean is
-        (Self.Tree.Has_Configuration
-         and then
-         Self.Tree.Configuration.Corresponding_View.Has_Attributes (Name));
-
       function Config return GPR2.Project.View.Object is
         (Self.Tree.Configuration.Corresponding_View);
 
@@ -638,11 +643,10 @@ package body GPR2.Project.View is
       --  Library prefix
 
       if not Self.Is_Static_Library
-        and then Config_Has_Attribute (A.Shared_Library_Prefix)
+        and then Self.Tree.Has_Configuration
       then
          Append
-           (File_Name,
-            Config.Attribute (A.Shared_Library_Prefix).Value.Text);
+           (File_Name, Config.Attribute (A.Shared_Library_Prefix).Value.Text);
       else
          Append (File_Name, "lib");
       end if;
@@ -656,10 +660,9 @@ package body GPR2.Project.View is
       if Self.Is_Static_Library then
          Append (File_Name, String (Self.Tree.Archive_Suffix));
 
-      elsif Config_Has_Attribute (A.Shared_Library_Suffix) then
+      elsif Self.Tree.Has_Configuration then
          Append
-           (File_Name,
-            Config.Attribute (A.Shared_Library_Suffix).Value.Text);
+           (File_Name, Config.Attribute (A.Shared_Library_Suffix).Value.Text);
 
       else
          Append (File_Name, ".so");
@@ -675,13 +678,12 @@ package body GPR2.Project.View is
    ------------------
 
    function Library_Kind (Self : Object) return Name_Type is
-      package A renames GPR2.Project.Registry.Attribute;
+      Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (A.Library_Kind) then
-         return Name_Type (Self.Attribute (A.Library_Kind).Value.Text);
-      else
-         return "static";
-      end if;
+      return (if Self.Check_Attribute
+                    (Registry.Attribute.Library_Kind, Result => Attr)
+              then Name_Type (Attr.Value.Text)
+              else "static");
    end Library_Kind;
 
    --------------------------------
@@ -714,13 +716,14 @@ package body GPR2.Project.View is
 
       package A renames GPR2.Project.Registry.Attribute;
 
+      LV : Project.Attribute.Object;
+
    begin
-      if Self.Has_Attributes (A.Library_Version)
+      if Self.Check_Attribute (A.Library_Version, Result => LV)
         and then not Self.Is_Static_Library
       then
          return GPR2.Path_Name.Create_File
-           (Major_Version_Name
-              (Name_Type (Self.Attribute (A.Library_Version).Value.Text)),
+           (Major_Version_Name (Name_Type (LV.Value.Text)),
             Directory => Optional_Name_Type (Self.Library_Filename.Dir_Name));
 
       else
@@ -858,14 +861,9 @@ package body GPR2.Project.View is
    ----------------------
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object is
-
-      package A renames GPR2.Project.Registry.Attribute;
-
    begin
       return Self.Apply_Root_And_Subdirs
-        (if Self.Has_Attributes (A.Object_Dir)
-         then Self.Attribute (A.Object_Dir).Value.Text
-         else ".");
+               (Self.Attribute (Registry.Attribute.Object_Dir).Value.Text);
    end Object_Directory;
 
    ----------

@@ -137,6 +137,15 @@ private package GPR2.Project.Definition is
    Strong : access function (View : Weak_Reference) return Project.View.Object;
    --  Get view from weak reference
 
+   Set_Pack_Default_Attributes : access procedure
+     (Self      : in out Pack.Object;
+      Languages : Containers.Source_Value_List);
+
+   Set_Defaults : access procedure
+     (Self      : in out Attribute.Set.Object;
+      Pack      : Optional_Name_Type;
+      Languages : Containers.Source_Value_List);
+
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------
@@ -193,5 +202,8 @@ private package GPR2.Project.Definition is
    --  Ensure that the view definition sources are up-to-date. This is needed
    --  before computing the dependencies of a source in the project tree. This
    --  routine is called where needed and is there for internal use only.
+
+   procedure Set_Default_Attributes (Def : in out Data);
+   --  Set default attributes for the project view
 
 end GPR2.Project.Definition;

@@ -108,9 +108,10 @@ package GPR2.Project.Attribute.Set is
       Position : Cursor) return Reference_Type;
 
    function Iterate
-     (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value)
+     (Self          : Object;
+      Name          : Optional_Name_Type := No_Name;
+      Index         : Value_Type := No_Value;
+      With_Defaults : Boolean := False)
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
