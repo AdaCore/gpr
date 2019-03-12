@@ -629,7 +629,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Is_Allowed_In        => In_Library,
+      Default              => Create (Value_Type (Library_Dir)),
+      Default_Is_Reference => True);
 
    --  library_ali_dir
    Store_Insert

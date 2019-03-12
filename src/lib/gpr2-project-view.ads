@@ -407,6 +407,12 @@ package GPR2.Project.View is
    --  getting the Library_Ali_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 
+   function Library_Src_Directory (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined and then Self.Is_Library;
+   --  Defines the location (absolute or relative to the project directory)
+   --  where the sources of the interface units are copied at installation
+   --  time.
+
    function Library_Standalone (Self : Object) return Standalone_Library_Kind
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the kind for the standalone library

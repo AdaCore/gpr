@@ -770,6 +770,17 @@ package body GPR2.Project.View is
       end if;
    end Library_Major_Version_Filename;
 
+   ---------------------------
+   -- Library_Src_Directory --
+   ---------------------------
+
+   function Library_Src_Directory
+     (Self : Object) return GPR2.Path_Name.Object is
+   begin
+      return Self.Apply_Root_And_Subdirs
+        (Self.Attribute (Registry.Attribute.Library_Src_Dir).Value.Text);
+   end Library_Src_Directory;
+
    ------------------------
    -- Library_Standalone --
    ------------------------

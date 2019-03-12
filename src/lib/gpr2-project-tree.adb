@@ -1822,8 +1822,9 @@ package body GPR2.Project.Tree is
          use type PRA.Value_Kind;
 
          Check_Object_Dir_Exists : Boolean := True;
-         --  To avoid error on check Object_Dir existence when attribute is not
-         --  correct.
+         Check_Exec_Dir_Exists   : Boolean := True;
+         --  To avoid error on check Object_Dir and Exec_Dir existence when
+         --  attribute is not correct.
 
          procedure Check_Def (Def : PRA.Def; A : Attribute.Object);
          --  Check if attribute definition is valid, record errors into the
@@ -1854,6 +1855,8 @@ package body GPR2.Project.Tree is
 
                if A.Name.Text = PRA.Object_Dir then
                   Check_Object_Dir_Exists := False;
+               elsif A.Name.Text = PRA.Exec_Dir then
+                  Check_Exec_Dir_Exists := False;
                end if;
             end if;
 
@@ -1960,6 +1963,63 @@ package body GPR2.Project.Tree is
             --  Check that shared library project does not have in imports
             --  static library or standard projects.
 
+            procedure Check_Directory
+              (Attr_Name     : Name_Type;
+               Human_Name    : String;
+               Get_Directory : access function
+                 (Self : Project.View.Object) return Path_Name.Object);
+            --  Check is directory exists and warn if there is try to relocate
+            --  absolute path with --relocate-build-tree gpr tool command line
+            --  parameter. Similar check for attributes with directory names.
+
+            Attr : Attribute.Object;
+
+            ---------------------
+            -- Check_Directory --
+            ---------------------
+
+            procedure Check_Directory
+              (Attr_Name     : Name_Type;
+               Human_Name    : String;
+               Get_Directory : access function
+                 (Self : Project.View.Object) return Path_Name.Object)
+            is
+            begin
+               if View.Check_Attribute (Attr_Name, Result => Attr) then
+                  declare
+                     AV : constant Source_Reference.Value.Object := Attr.Value;
+                     PN : constant Path_Name.Object := Get_Directory (View);
+                  begin
+                     if not PN.Exists then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Warning,
+                              (if Human_Name = ""
+                               then "D"
+                               else Human_Name & " d") & "irectory """
+                              & AV.Text
+                              & """ not found",
+                              Sloc => AV));
+
+                     elsif Self.Build_Path.Is_Defined
+                       and then OS_Lib.Is_Absolute_Path (AV.Text)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Warning,
+                              '"' & PN.Relative_Path
+                                      (Self.Root_Project.Path_Name).Value
+                              & """ cannot relocate absolute "
+                              & (if Human_Name = ""
+                                 then ""
+                                 else Human_Name & ' ')
+                              & "directory",
+                              Sloc => AV));
+                     end if;
+                  end;
+               end if;
+            end Check_Directory;
+
             ----------------------
             -- Check_Shared_Lib --
             ----------------------
@@ -2015,8 +2075,6 @@ package body GPR2.Project.Tree is
                end loop;
             end Check_Shared_Lib;
 
-            Attr : Attribute.Object;
-
          begin
             if View.Is_Library and then View.Is_Shared_Library then
                if View.Check_Attribute (PRA.Library_Version, Result => Attr)
@@ -2051,31 +2109,31 @@ package body GPR2.Project.Tree is
 
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library
               and then Check_Object_Dir_Exists
-              and then View.Check_Attribute (PRA.Object_Dir, Result => Attr)
             then
-               declare
-                  AV : constant Source_Reference.Value.Object := Attr.Value;
-               begin
-                  if not View.Object_Directory.Exists then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Warning,
-                           "object directory """ & AV.Text & """ not found",
-                           Sloc => AV));
-
-                  elsif Self.Build_Path.Is_Defined
-                    and then OS_Lib.Is_Absolute_Path (AV.Text)
-                  then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Warning,
-                           '"' & View.Object_Directory.Relative_Path
-                                   (Self.Root_Project.Path_Name).Value
-                           & """ cannot relocate absolute object directory",
-                           Sloc => AV));
-                  end if;
-               end;
+               Check_Directory
+                 (PRA.Object_Dir, "object",
+                  Project.View.Object_Directory'Access);
             end if;
+
+            if View.Kind = K_Standard
+              and then Check_Exec_Dir_Exists
+            then
+               Check_Directory
+                 (PRA.Exec_Dir, "exec",
+                  Project.View.Executable_Directory'Access);
+            end if;
+
+            Check_Directory
+              (PRA.Library_Dir, "library",
+               Project.View.Library_Directory'Access);
+
+            Check_Directory
+              (PRA.Library_Ali_Dir, "library ALI",
+               Project.View.Library_Ali_Directory'Access);
+
+            Check_Directory
+              (PRA.Library_Src_Dir, "",
+               Project.View.Library_Src_Directory'Access);
          end;
       end Validity_Check;
 
