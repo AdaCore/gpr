@@ -17,10 +17,9 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
+with Ada.Calendar.Formatting;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
-
-with GNAT.Calendar;
 
 with GPR2.ALI.With_Data;
 
@@ -418,13 +417,9 @@ package body GPR2.ALI.ALI_Data is
 
             T := S;
 
-            return GNAT.Calendar.Time_Of
-              (Year       => Integer'Value (String (T (1 .. 4))),
-               Month      => Integer'Value (String (T (5 .. 6))),
-               Day        => Integer'Value (String (T (7 .. 8))),
-               Hour       => Integer'Value (String (T (9 .. 10))),
-               Minute     => Integer'Value (String (T (11 .. 12))),
-               Second     => Integer'Value (String (T (13 .. 14))));
+            return Ada.Calendar.Formatting.Value
+              (T (1 .. 4) & "-" & T (5 .. 6) & "-" & T (7 .. 8) & " "
+               & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
          end Time_Stamp;
 
          Sfile  : constant String            := Get_Token;
