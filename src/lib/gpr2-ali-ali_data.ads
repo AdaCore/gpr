@@ -48,6 +48,8 @@ package GPR2.ALI.ALI_Data is
    --  Scans an ALI file and returns the resulting object, or Undefined if
    --  something went wrong.
 
+   function Is_Defined (Self : Object) return Boolean;
+
    function Dep_For
      (Self : Object; File : Simple_Name) return Dependency_Data.Object
      with Pre => Self /= Undefined;
@@ -114,6 +116,9 @@ private
                   GNAT_Version    => Null_Unbounded_String,
                   Compile_Errors  => False,
                   No_Object       => False);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Sdeps (Self : Object) return Dependency_Data.List.Object is
      (Self.Sdeps);

@@ -505,6 +505,12 @@ begin
             end if;
 
             ALI_Object := ALI_Data.Scan_ALI (ALI_File);
+
+            if not ALI_Object.Is_Defined then
+               Finish_Program (E_Errors, "unable to scan ALI file: "
+                               & ALI_File.Value);
+            end if;
+
             Processed_ALI.Append (ALI_File);
 
             declare
@@ -700,6 +706,11 @@ begin
 
                if ALI_File.Is_Defined and then ALI_File.Exists then
                   ALI_Object := ALI_Data.Scan_ALI (ALI_File);
+
+                  if not ALI_Object.Is_Defined then
+                     Finish_Program (E_Errors, "unable to scan ALI file: "
+                                     & ALI_File.Value);
+                  end if;
 
                   if Opt.Print_Object_Files then
                      if Obj_File.Is_Defined and then Obj_File.Exists then
