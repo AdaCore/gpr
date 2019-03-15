@@ -60,11 +60,11 @@ package body GPR2.Project.Source.Artifact is
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
          Object_Files.Insert
            (1, Path_Name.Create_File
-              (Src & D_Suffix,
+              (Src & O_Suffix,
                Optional_Name_Type (View.Object_Directory.Value)));
          Dependency_Files.Insert
            (1, Path_Name.Create_File
-              (Src & O_Suffix,
+              (Src & D_Suffix,
                Optional_Name_Type (View.Object_Directory.Value)));
 
       else
@@ -78,12 +78,12 @@ package body GPR2.Project.Source.Artifact is
                   Object_Files.Insert
                     (CU.Index,
                      Path_Name.Create_File
-                       (Src & Index_Suffix & D_Suffix,
+                       (Src & Index_Suffix & O_Suffix,
                         Optional_Name_Type (View.Object_Directory.Value)));
                   Dependency_Files.Insert
                     (CU.Index,
                      Path_Name.Create_File
-                       (Src & Index_Suffix & O_Suffix,
+                       (Src & Index_Suffix & D_Suffix,
                         Optional_Name_Type (View.Object_Directory.Value)));
                end;
             end if;
