@@ -18,7 +18,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Sets;
-with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
@@ -130,13 +130,13 @@ package body GPR2.Project.Definition is
           (Value_Type, Source_Reference.Object);
 
       package Attribute_List is new
-        Ada.Containers.Indefinite_Vectors
-          (Positive, Project.Attribute.Object);
+        Ada.Containers.Doubly_Linked_Lists (Project.Attribute.Object);
+      --  Element type for Source_Path_To_Attribute_List below
 
       package Source_Path_To_Attribute_List is new
         Ada.Containers.Indefinite_Ordered_Maps
           (Key_Type     => Value_Type,
-           Element_Type => Attribute_List.Vector,
+           Element_Type => Attribute_List.List,
            "="          => Attribute_List."=");
 
       package Basename_To_Sources is new
@@ -237,8 +237,8 @@ package body GPR2.Project.Definition is
          for A of Set loop
             declare
                Source          : constant Value_Type := A.Value.Text;
-               Attributes      : Attribute_List.Vector :=
-                                   Attribute_List.Empty_Vector;
+               Attributes      : Attribute_List.List :=
+                                   Attribute_List.Empty_List;
                Insert_Position : Source_Path_To_Attribute_List.Cursor;
                Is_Inserted     : Boolean;
             begin
@@ -250,7 +250,7 @@ package body GPR2.Project.Definition is
                   Inserted => Is_Inserted);
 
                if not Is_Inserted then
-                  Ada_Naming_Exceptions.Reference (Source).Append (Attributes);
+                  Ada_Naming_Exceptions.Reference (Source).Append (A);
                end if;
             end;
          end loop;
