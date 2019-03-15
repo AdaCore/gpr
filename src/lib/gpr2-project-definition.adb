@@ -865,6 +865,7 @@ package body GPR2.Project.Definition is
                            """" & String (File.Simple_Name)
                            & """ is found in several source directories",
                            Source_Dir_Ref));
+                     return;
                   else
                      Def.Sources.Insert (Project_Source);
                   end if;
@@ -971,41 +972,8 @@ package body GPR2.Project.Definition is
                   if Interface_Units.Contains (CU.Unit_Name) then
                      Interface_Units_Found.Include (CU.Unit_Name);
                      Source_Is_In_Interface := True;
-
-                     --  We do not support mixing interfaces and
-                     --  multi-unit sources.
-
-                     if Compilation_Units.Length > 1 then
-                        Tree.Append_Message
-                          (Message.Create
-                             (Message.Error,
-                              "interface units are not supported in"
-                              &  " multi-unit sources (file "
-                              &  String (File.Simple_Name)
-                              & ", unit " &  String (CU.Unit_Name)
-                              & " at " & CU.Index'Image & ")",
-                              Def.Attrs.Library_Interface));
-                     end if;
                   end if;
-
-                  --  Insert check on conflicting naming exceptions
-                  --  here => if we have an exception for this unit+kind
-                  --  and the file[+index] doesn't match.
                end loop;
-
-               if Source_Is_In_Interface and then
-                 Compilation_Units.Length > 1
-               then
-                  --  We do not support mixing interfaces and
-                  --  multi-unit sources.
-
-                  Tree.Append_Message
-                    (Message.Create
-                       (Message.Error,
-                        "interface source cannot be multi-unit (file "
-                        &  String (File.Simple_Name) & ")",
-                        Def.Attrs.Interfaces));
-               end if;
             end if;
 
             --  Final processing
