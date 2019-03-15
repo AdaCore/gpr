@@ -76,8 +76,16 @@ package GPR2.Project.Name_Values is
    --  Returns the values for the Name/Values pair object
 
    function Has_Value (Self : Object; Value : Value_Type) return Boolean
-     with Pre => Self.Kind = List;
+     with Pre => Self.Is_Defined and then Self.Kind = List;
    --  Returns true whether the list of value contains Value
+
+   function Value
+     (Self : Object; Value : Value_Type) return Source_Reference.Value.Object
+     with Pre => Self.Is_Defined
+     and then Self.Kind = List
+     and then Self.Has_Value (Value);
+   --  Returns the (source reference) value for the Name/Values pair object,
+   --  selected by its (text) value.
 
    function Value (Self : Object) return Source_Reference.Value.Object
      with Pre => Self.Is_Defined and then Self.Kind = Single;
@@ -107,7 +115,7 @@ private
       Name                 : Unbounded_String;
       Values               : Containers.Source_Value_List;
       Value_Case_Sensitive : Boolean := True;
-      V_Set                : Containers.Value_Set;  -- for fast check
+      V_Map                : Containers.Value_Source_Reference;  -- fast check
    end record;
 
    Undefined : constant Object :=

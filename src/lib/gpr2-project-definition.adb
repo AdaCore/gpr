@@ -407,18 +407,6 @@ package body GPR2.Project.Definition is
 
             else
                if Naming.Has_Attributes
-                 (Registry.Attribute.Implementation_Exceptions,
-                  String (Language))
-               then
-                  if Naming.Attribute
-                    (Registry.Attribute.Implementation_Exceptions,
-                     String (Language)).Has_Value (String (Basename))
-                  then
-                     Match := True;
-                     Kind  := S_Body;
-                  end if;
-
-               elsif Naming.Has_Attributes
                  (Registry.Attribute.Specification_Exceptions,
                   String (Language))
                then
@@ -427,7 +415,32 @@ package body GPR2.Project.Definition is
                      String (Language)).Has_Value (String (Basename))
                   then
                      Match := True;
-                     Kind  := S_Spec;
+                     Kind  := S_Body;
+                  end if;
+               end if;
+
+               if Naming.Has_Attributes
+                 (Registry.Attribute.Implementation_Exceptions,
+                  String (Language))
+               then
+                  if Naming.Attribute
+                    (Registry.Attribute.Implementation_Exceptions,
+                     String (Language)).Has_Value (String (Basename))
+                  then
+                     if Match then
+                        Tree.Append_Message
+                          (Message.Create
+                             (Message.Error,
+                              "the same file cannot be a source "
+                              & "and a template",
+                              Naming.Attribute
+                                (Registry.Attribute.Implementation_Exceptions,
+                                 String (Language)).Value
+                              (String (Basename))));
+                     else
+                        Match := True;
+                        Kind  := S_Spec;
+                     end if;
                   end if;
                end if;
             end if;

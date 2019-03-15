@@ -78,6 +78,12 @@ package GPR2.Containers is
 
    subtype Source_Value_List is Source_Value_Type_List.Vector;
 
+   package Value_Source_Reference_Package is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (Value_Type, Source_Reference.Value.Object);
+
+   subtype Value_Source_Reference is Value_Source_Reference_Package.Map;
+
    function Image (Values : Source_Value_List) return String;
    --  Returns a string representation of the list of values
 
