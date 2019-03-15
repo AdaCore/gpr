@@ -42,7 +42,6 @@ with GPR2.Source;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Source_Reference.Value;
-with GPR2.Source.Set;
 
 package body GPR2.Project.Definition is
 
@@ -121,13 +120,20 @@ package body GPR2.Project.Definition is
 
       use type Source_Reference.Object;
 
+      Source_Dir_Ref : Source_Reference.Object;
+
       package Unit_Name_To_Sloc is new
         Ada.Containers.Indefinite_Ordered_Maps
           (Name_Type, Source_Reference.Object);
+      --  Used for the Interface_Units container which will initially store all
+      --  the units from the Library_Interface attribute, as a mapping from
+      --  unit names to slocs.
 
       package Source_Path_To_Sloc is new
         Ada.Containers.Indefinite_Ordered_Maps
           (Value_Type, Source_Reference.Object);
+      --  Same as above but for the Interfaces attribute, so here we are using
+      --  Value_Type instead of Name_Type since we're dealing with filenames.
 
       package Attribute_List is new
         Ada.Containers.Doubly_Linked_Lists (Project.Attribute.Object);
@@ -138,12 +144,8 @@ package body GPR2.Project.Definition is
           (Key_Type     => Value_Type,
            Element_Type => Attribute_List.List,
            "="          => Attribute_List."=");
-
-      package Basename_To_Sources is new
-        Ada.Containers.Indefinite_Ordered_Maps
-          (Key_Type     => Value_Type,
-           Element_Type => GPR2.Source.Set.Object,
-           "="          => GPR2.Source.Set.Set."=");
+      --  Used for the Ada_Naming_Exceptions container which maps a filename to
+      --  the list of naming attributes (Body/Spec) that reference it.
 
       type Insert_Mode is (Replace, Skip, Error);
       --  Controls behavior when a duplicated unit/filename is found
@@ -187,10 +189,7 @@ package body GPR2.Project.Definition is
              or else A.Name = Registry.Attribute.Specification
              or else A.Name = Registry.Attribute.Body_N
              or else A.Name = Registry.Attribute.Implementation);
-      --  Fill the Ada_Naming_Exceptions object with the given attribute
-      --  set values
-
-      Source_Dir_Ref : Source_Reference.Object;
+      --  Fill the Ada_Naming_Exceptions object with the given attribute set.
 
       Naming : constant Project.Pack.Object := Naming_Package (Def);
       --  Package Naming for the view
@@ -316,6 +315,48 @@ package body GPR2.Project.Definition is
       -----------------
 
       procedure Handle_File (Path : GPR2.Path_Name.Full_Name) is
+         --  The implementation works as follows:
+         --    For every language L in the project:
+         --      1- Check if F matches with a naming exception (see
+         --         Check_Naming_Exceptions):
+         --           - if L is Ada, look F up the Ada_Naming_Exceptions map
+         --           - else, check the attributes Implementation_Exceptions
+         --             and Specification_Exceptions for the language L.
+         --             This was missing in the previous implementation.
+         --           - This also computes Kind for non-Ada sources.
+         --             For Ada sources we will compute a Kind for every
+         --             compilation unit later on.
+         --         If a match is found and L is Ada, then compute the
+         --         compilation units.
+         --      2- If no naming exceptions matched, check the naming scheme
+         --         for L (see Check_Naming_Scheme):
+         --           - Separate_Suffix is only checked for Ada.
+         --           - This time, Kind is computed no matter the language, as
+         --             for Ada we will assume the source is single-unit.
+         --         If a match is found and L is Ada then compute the single
+         --         compilation unit for the source. The unit name is derived
+         --         from the file name (see Compute_Unit_From_Filename):
+         --           - Validity checks on the unit name are only done here.
+         --             Should this be reverted to the previous behavior, i.e.
+         --             some checks apply to both the naming exception and
+         --             naming scheme cases???
+         --      3- If either one or the other method resulted in a match,
+         --         - update the source/unit interface containers as done in
+         --           the previous implementation (except that the unit and
+         --           source interface cases are now handled separately).
+         --         - Create the GPR2.Source object. We now have different
+         --           constructors for Ada and for other languages. This change
+         --           is just to make things more explicit. In addition to the
+         --           Compilation_Units argument, the Ada source constructor
+         --           takes a new argument Is_RTS_Source, used to handle this
+         --           special case when parsing the source.
+         --         - Create the GPR2.Project.Source. Nothing special here.
+         --           A new check is added to report duplicate project sources.
+         --           Add it to the project definition.
+         --         - For Ada, create/add the source object to the project
+         --           definition: no change from the initial code, but it is
+         --           now inside a loop over the compilation units.
+         --         - Exit.
 
          procedure Check_Naming_Exceptions
            (Basename : Value_Type;
@@ -767,10 +808,18 @@ package body GPR2.Project.Definition is
                                          Kind    => Kind,
                                          Success => Match);
 
-                        function Has_NE
+                        function Has_Conflict_NE
                           (Attr_Name : Name_Type) return Boolean;
+                        --  Search the Naming package for attributes with name
+                        --  Attr_Name and index Unit_Name, and return True if
+                        --  at least one of the matching attributes references
+                        --  a different (source,index) than the current one.
 
-                        function Has_NE
+                        ---------------------
+                        -- Has_Conflict_NE --
+                        ---------------------
+
+                        function Has_Conflict_NE
                           (Attr_Name : Name_Type) return Boolean is
                         begin
                            for A of Naming.Attributes
@@ -782,7 +831,7 @@ package body GPR2.Project.Definition is
                               end if;
                            end loop;
                            return False;
-                        end Has_NE;
+                        end Has_Conflict_NE;
 
                      begin
                         if Match then
@@ -792,15 +841,17 @@ package body GPR2.Project.Definition is
 
                            if (Kind = S_Spec
                                and then
-                                 (Has_NE (Registry.Attribute.Spec)
+                                 (Has_Conflict_NE (Registry.Attribute.Spec)
                                   or else
-                                  Has_NE (Registry.Attribute.Specification)))
+                                  Has_Conflict_NE (Registry.Attribute.
+                                                       Specification)))
                              or else
                                (Kind = S_Body
                                 and then
-                                  (Has_NE (Registry.Attribute.Body_N)
+                                  (Has_Conflict_NE (Registry.Attribute.Body_N)
                                    or else
-                                   Has_NE (Registry.Attribute.Implementation)))
+                                   Has_Conflict_NE (Registry.Attribute.
+                                                        Implementation)))
                            then
                               return;
                            end if;
@@ -946,7 +997,9 @@ package body GPR2.Project.Definition is
          ----------------
 
          procedure Add_Source (Src : Project.Source.Object) is
+            --
             --  TODO: avoid the code duplication from Handle_File
+            --
 
             Project_Source         : constant Project.Source.Object := Src;
             File                   : constant Path_Name.Object :=
