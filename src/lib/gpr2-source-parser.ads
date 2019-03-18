@@ -18,9 +18,15 @@
 
 with GPR2.Compilation_Unit.List;
 
+with Libadalang.Analysis;
+
 private package GPR2.Source.Parser is
    --  The following package provides unit information from Ada sources,
    --  using Libadalang.
+
+   use Libadalang.Analysis;
+
+   Ctx : constant Analysis_Context := Create_Context;
 
    function Parse
      (Filename : GPR2.Path_Name.Object) return Compilation_Unit.List.Object

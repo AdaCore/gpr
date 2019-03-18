@@ -23,7 +23,6 @@ with Ada.Strings.Wide_Wide_Unbounded;
 with Langkit_Support.Text;
 
 with Libadalang;
-with Libadalang.Analysis;
 with Libadalang.Common;
 
 with GNAT.Case_Util;
@@ -53,14 +52,12 @@ package body GPR2.Source.Parser is
       use Ada.Strings.Wide_Wide_Unbounded;
       use Ada.Characters.Conversions;
 
-      use Libadalang.Analysis;
       use Libadalang.Common;
 
       use Langkit_Support.Text;
 
-      Ctx    : constant Analysis_Context := Create_Context;
       A_Unit : constant Analysis_Unit    :=
-                 Get_From_File (Ctx, Filename.Value);
+                 Get_From_File (Ctx, Filename.Value, Reparse => True);
 
       function To_String (T : Unbounded_Text_Type) return String is
         (To_String (To_Wide_Wide_String (T)));
