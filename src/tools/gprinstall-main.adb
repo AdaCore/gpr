@@ -384,6 +384,12 @@ procedure GPRinstall.Main is
          Help        => "Name of the variable which identify a build)",
          Argument    => "<name>");
 
+      Define_Switch
+        (Options.Config, Options.Install_Manifest'Unrestricted_Access,
+         Long_Switch => "--no-manifest",
+         Help        => "Do not generate the manifest file",
+         Value       => False);
+
       Getopt (Options.Config);
 
       --  If preceding switch was -P, a project file name need to be

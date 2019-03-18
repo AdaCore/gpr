@@ -41,8 +41,9 @@ package GPRinstall.Options is
    --  Free P
 
    type Object is new GPRtools.Options.Object with record
-      List_Mode      : aliased Boolean := False;
-      Uninstall_Mode : aliased Boolean := False;
+      List_Mode        : aliased Boolean := False;
+      Uninstall_Mode   : aliased Boolean := False;
+      Install_Manifest : aliased Boolean := True;
 
       Project_File : GPR2.Path_Name.Object;
       --  The project to be installed

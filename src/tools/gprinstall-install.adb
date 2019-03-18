@@ -282,7 +282,8 @@ package body GPRinstall.Install is
 
       procedure Add_To_Manifest
         (Pathname       : Path_Name.Object;
-         Aggregate_Only : Boolean := False);
+         Aggregate_Only : Boolean := False)
+        with Pre => Options.Install_Manifest;
       --  Add filename to manifest
 
       function Has_Sources (Project : GPR2.Project.View.Object) return Boolean
@@ -691,11 +692,16 @@ package body GPRinstall.Install is
 
                --  Add file to manifest
 
-               Add_To_Manifest (Src_Path);
+               if Options.Install_Manifest then
+                  Add_To_Manifest (Src_Path);
+               end if;
 
                if From_Ver.Is_Defined then
                   From_Ver.Create_Sym_Link (To => Dest_Path);
-                  Add_To_Manifest (From_Ver);
+
+                  if Options.Install_Manifest then
+                     Add_To_Manifest (From_Ver);
+                  end if;
                end if;
 
             else
@@ -761,9 +767,11 @@ package body GPRinstall.Install is
 
                            if Success then
                               --  Record the debug file in the manifest
-                              Add_To_Manifest
-                                (Path_Name.Create_File
-                                   (Name_Type (Dest_Debug)));
+                              if Options.Install_Manifest then
+                                 Add_To_Manifest
+                                   (Path_Name.Create_File
+                                      (Name_Type (Dest_Debug)));
+                              end if;
 
                               --  2. strip original executable
 
@@ -809,7 +817,9 @@ package body GPRinstall.Install is
 
                --  Add file to manifest
 
-               Add_To_Manifest (Dest_Path);
+               if Options.Install_Manifest then
+                  Add_To_Manifest (Dest_Path);
+               end if;
             end if;
          end if;
       end Copy_File;
@@ -2246,7 +2256,7 @@ package body GPRinstall.Install is
 
          Write_Project;
 
-         if not Options.Dry_Run then
+         if not Options.Dry_Run and then Options.Install_Manifest then
             --  Add project file to manifest
 
             Add_To_Manifest (Path_Name.Create_File (Name_Type (Filename)));
@@ -2637,6 +2647,7 @@ package body GPRinstall.Install is
 
          if Project = Tree.Root_Project
            and then Tree.Root_Project.Qualifier = K_Aggregate
+           and then Options.Install_Manifest
          then
             Open_Check_Manifest (Agg_Manifest, Line_Agg_Manifest);
          end if;
