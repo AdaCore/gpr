@@ -2327,4 +2327,70 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere);
 
+   --  side_debug
+   Store_Insert
+     ("side_debug",
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
+   --  include_switches_via_spec
+   Store_Insert
+     ("include_switches_via_spec",
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => List,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
+   --  only_dirs_with_sources
+   Store_Insert
+     ("only_dirs_with_sources",
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
+   --  warning_message
+   Store_Insert
+     ("warning_message",
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
+   --  canonical_target
+   Store_Insert
+     ("canonical_target",
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
+   --  create_missing_dirs
+   Store_Insert
+     ("create_missing_dirs",
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
 end GPR2.Project.Registry.Attribute;
