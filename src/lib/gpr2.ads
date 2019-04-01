@@ -142,4 +142,11 @@ private
 
    Debug : Boolean := False;
 
+   function Get_File_Names_Case_Sensitive return Integer
+     with Import, Convention => C,
+     External_Name => "__gnat_get_file_names_case_sensitive";
+
+   File_Names_Case_Sensitive : constant Boolean :=
+                                 Get_File_Names_Case_Sensitive /= 0;
+
 end GPR2;

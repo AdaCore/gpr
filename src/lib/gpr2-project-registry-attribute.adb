@@ -18,13 +18,8 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps; use Ada;
 with Ada.Strings.Less_Case_Insensitive;
-with Ada.Environment_Variables;
 
 package body GPR2.Project.Registry.Attribute is
-
-   If_OS_Filename_Case_Sensitive : constant Boolean :=
-                                     Environment_Variables.Exists ("OS");
-   --  True on Windows
 
    function Less_Case_Insensitive
      (Left, Right : Qualified_Name) return Boolean is
@@ -175,7 +170,7 @@ begin
      ("roots",
       Index                => Yes,
       Others_Allowed       => False,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1066,7 +1061,7 @@ begin
      ("compiler.switches",
       Index                => Optional,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1473,7 +1468,7 @@ begin
      ("builder.switches",
       Index                => Optional,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1495,7 +1490,7 @@ begin
      ("builder.executable",
       Index                => Optional,
       Others_Allowed       => False,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => Single,
       Value_Case_Sensitive => True,
       Empty_Value          => Ignore,
@@ -1562,7 +1557,7 @@ begin
      ("binder.switches",
       Index                => Optional,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1650,7 +1645,7 @@ begin
      ("linker.leading_switches",
       Index                => Optional,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1661,7 +1656,7 @@ begin
      ("linker.switches",
       Index                => Optional,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1672,7 +1667,7 @@ begin
      ("linker.trailing_switches",
       Index                => Optional,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1837,7 +1832,7 @@ begin
      ("cross_reference.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1859,7 +1854,7 @@ begin
      ("finder.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1881,7 +1876,7 @@ begin
      ("pretty_printer.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1903,7 +1898,7 @@ begin
      ("gnatstub.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1925,7 +1920,7 @@ begin
      ("check.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1947,7 +1942,7 @@ begin
      ("eliminate.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
@@ -1969,7 +1964,7 @@ begin
      ("metrics.switches",
       Index                => Yes,
       Others_Allowed       => True,
-      Index_Case_Sensitive => If_OS_Filename_Case_Sensitive,
+      Index_Case_Sensitive => File_Names_Case_Sensitive,
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,

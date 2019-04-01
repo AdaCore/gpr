@@ -38,13 +38,6 @@ package body GPR2.Path_Name is
    function "+"
      (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-   function Get_File_Names_Case_Sensitive return Integer
-     with Import, Convention => C,
-     External_Name => "__gnat_get_file_names_case_sensitive";
-
-   File_Names_Case_Sensitive : constant Boolean :=
-                                 Get_File_Names_Case_Sensitive /= 0;
-
    function To_OS_Case (Name : Unbounded_String) return Unbounded_String is
      (if File_Names_Case_Sensitive
       then Name
