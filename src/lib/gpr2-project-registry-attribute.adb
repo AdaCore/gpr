@@ -610,6 +610,17 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere);
 
+   --  toolchain_name
+   Store_Insert
+     ("toolchain_name",
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
    --  toolchain_description
    Store_Insert
      ("toolchain_description",
