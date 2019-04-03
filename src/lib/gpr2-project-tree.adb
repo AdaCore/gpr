@@ -50,6 +50,7 @@ package body GPR2.Project.Tree is
    use type GPR2.Path_Name.Object;
 
    package PC renames Project.Configuration;
+   package PRA renames Project.Registry.Attribute;
 
    GPRls : constant OS_Lib.String_Access :=
              OS_Lib.Locate_Exec_On_Path ("gprls");
@@ -238,8 +239,7 @@ package body GPR2.Project.Tree is
                  (Name  =>
                     Source_Reference.Identifier.Object
                       (Source_Reference.Identifier.Create
-                         (Source_Reference.Builtin,
-                          Project.Registry.Attribute.Source_Dirs)),
+                         (Source_Reference.Builtin, PRA.Source_Dirs)),
                   Value =>
                     Source_Reference.Value.Object
                       (Source_Reference.Value.Create
@@ -251,8 +251,7 @@ package body GPR2.Project.Tree is
                  (Name  =>
                     Source_Reference.Identifier.Object
                       (Source_Reference.Identifier.Create
-                         (Source_Reference.Builtin,
-                          Project.Registry.Attribute.Object_Dir)),
+                         (Source_Reference.Builtin, PRA.Object_Dir)),
                   Value =>
                     Source_Reference.Value.Object
                       (Source_Reference.Value.Create
@@ -267,8 +266,7 @@ package body GPR2.Project.Tree is
               (Name  =>
                    Source_Reference.Identifier.Object
                      (Source_Reference.Identifier.Create
-                       (Source_Reference.Builtin,
-                        Project.Registry.Attribute.Languages)),
+                       (Source_Reference.Builtin, PRA.Languages)),
                Value =>
                     Source_Reference.Value.Object
                       (Source_Reference.Value.Create
@@ -279,7 +277,7 @@ package body GPR2.Project.Tree is
          Data.Kind   := K_Standard;
 
          Data.Trees.Project := Parser.Project.Create
-           (Name      => "Runtime",
+           (Name      => PRA.Runtime,
             File      => Path_Name.Create_File ("runtime.gpr"),
             Qualifier => K_Standard);
 
@@ -957,10 +955,10 @@ package body GPR2.Project.Tree is
       declare
          Actual_Target : constant Name_Type :=
                            (if Target /= No_Name then Target
-                            elsif Self.Root_Project.Has_Attributes ("Target")
+                            elsif Self.Root_Project.Has_Attributes (PRA.Target)
                             then Name_Type
                               (Self.Root_Project.Attribute
-                                 ("Target").Value.Text)
+                                 (PRA.Target).Value.Text)
                             else "all");
 
          Conf_Descriptions : Project.Configuration.Description_Set
@@ -978,9 +976,9 @@ package body GPR2.Project.Tree is
                           (if LRT /= No_Value
                            then Name_Type (LRT)
                            elsif Self.Root_Project.Has_Attributes
-                             ("Runtime", "Ada")
+                             (PRA.Runtime, "Ada")
                            then Name_Type (Self.Root_Project.Attribute
-                             ("Runtime", "Ada").Value.Text)
+                             (PRA.Runtime, "Ada").Value.Text)
                            else No_Name);
 
                --  RTS should be a Value_Path (type introduced in the
@@ -1606,9 +1604,7 @@ package body GPR2.Project.Tree is
          --  remove the dependency on the corresponding externals.
 
          if View.Qualifier = K_Aggregate then
-            for C in P_Data.Attrs.Iterate
-              (Name => Project.Registry.Attribute.External)
-            loop
+            for C in P_Data.Attrs.Iterate (Name => PRA.External) loop
                declare
                   E : constant Name_Type :=
                         Name_Type (P_Data.Attrs (C).Index.Text);
@@ -1634,9 +1630,7 @@ package body GPR2.Project.Tree is
 
             Paths.Append (View.Path_Name);
 
-            for Project of
-              P_Data.Attrs.Element (Registry.Attribute.Project_Files).Values
-            loop
+            for Project of P_Data.Attrs.Element (PRA.Project_Files).Values loop
                declare
                   Pathname : constant Path_Name.Object :=
                                Create (Name_Type (Project.Text), Paths);
@@ -1723,9 +1717,9 @@ package body GPR2.Project.Tree is
             --  And finaly also record the External definition if any into
             --  the aggregate project context.
 
-            for C in P_Data.Attrs.Iterate (Registry.Attribute.External) loop
+            for C in P_Data.Attrs.Iterate (PRA.External) loop
                declare
-                  use all type Project.Registry.Attribute.Value_Kind;
+                  use all type PRA.Value_Kind;
 
                   External : constant Attribute.Object := P_Data.Attrs (C);
                begin
@@ -1750,11 +1744,11 @@ package body GPR2.Project.Tree is
             P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
             if P_Data.Kind = K_Standard then
-               if P_Data.Attrs.Contains (Registry.Attribute.Library_Kind)
+               if P_Data.Attrs.Contains (PRA.Library_Kind)
                  or else
-                   P_Data.Attrs.Contains (Registry.Attribute.Library_Name)
+                   P_Data.Attrs.Contains (PRA.Library_Name)
                  or else
-                   P_Data.Attrs.Contains (Registry.Attribute.Library_Dir)
+                   P_Data.Attrs.Contains (PRA.Library_Dir)
                then
                   P_Data.Kind := K_Library;
                end if;
@@ -1780,16 +1774,14 @@ package body GPR2.Project.Tree is
       --------------------
 
       procedure Validity_Check (View : Project.View.Object) is
-         use type Registry.Attribute.Index_Kind;
-         use type Registry.Attribute.Value_Kind;
+         use type PRA.Index_Kind;
+         use type PRA.Value_Kind;
 
          Check_Object_Dir_Exists : Boolean := True;
          --  To avoid error on check Object_Dir existence when attribute is not
          --  correct.
 
-         procedure Check_Def
-           (Def : Registry.Attribute.Def;
-            A   : Attribute.Object);
+         procedure Check_Def (Def : PRA.Def; A : Attribute.Object);
          --  Check if attribute definition is valid, record errors into the
          --  message log facility.
 
@@ -1797,13 +1789,9 @@ package body GPR2.Project.Tree is
          -- Check_Def --
          ---------------
 
-         procedure Check_Def
-           (Def : Registry.Attribute.Def;
-            A   : Attribute.Object) is
+         procedure Check_Def (Def : PRA.Def; A : Attribute.Object) is
          begin
-            if Def.Index = Registry.Attribute.No
-              and then A.Has_Index
-            then
+            if Def.Index = PRA.No and then A.Has_Index then
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
@@ -1811,23 +1799,19 @@ package body GPR2.Project.Tree is
                      A));
             end if;
 
-            if Def.Value = Registry.Attribute.Single
-              and then A.Kind = Registry.Attribute.List
-            then
+            if Def.Value = PRA.Single and then A.Kind = PRA.List then
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
                      "attribute """ & String (A.Name) & """ cannot be a list",
                      A));
 
-               if A.Name = Registry.Attribute.Object_Dir then
+               if A.Name = PRA.Object_Dir then
                   Check_Object_Dir_Exists := False;
                end if;
             end if;
 
-            if Def.Value = Registry.Attribute.List
-              and then A.Kind = Registry.Attribute.Single
-            then
+            if Def.Value = PRA.List and then A.Kind = PRA.Single then
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
@@ -1859,12 +1843,12 @@ package body GPR2.Project.Tree is
 
                for A of P.Attributes loop
                   declare
-                     Q_Name : constant Registry.Attribute.Qualified_Name :=
-                                Registry.Attribute.Create (A.Name, P.Name);
-                     Def    : Registry.Attribute.Def;
+                     Q_Name : constant PRA.Qualified_Name :=
+                                PRA.Create (A.Name, P.Name);
+                     Def    : PRA.Def;
                   begin
-                     if Registry.Attribute.Exists (Q_Name) then
-                        Def := Registry.Attribute.Get (Q_Name);
+                     if PRA.Exists (Q_Name) then
+                        Def := PRA.Get (Q_Name);
 
                         if not Def.Is_Allowed_In (P_Kind) then
                            Self.Messages.Append
@@ -1896,10 +1880,9 @@ package body GPR2.Project.Tree is
 
          for A of P_Data.Attrs loop
             declare
-               Q_Name : constant Registry.Attribute.Qualified_Name :=
-                          Registry.Attribute.Create (A.Name);
+               Q_Name : constant PRA.Qualified_Name := PRA.Create (A.Name);
             begin
-               if not Registry.Attribute.Exists (Q_Name) then
+               if not PRA.Exists (Q_Name) then
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
@@ -1907,9 +1890,7 @@ package body GPR2.Project.Tree is
                         A));
 
                else
-                  if not Registry.Attribute.Get
-                    (Q_Name).Is_Allowed_In (P_Kind)
-                  then
+                  if not PRA.Get (Q_Name).Is_Allowed_In (P_Kind) then
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
@@ -1918,7 +1899,7 @@ package body GPR2.Project.Tree is
                            A));
                   end if;
 
-                  Check_Def (Registry.Attribute.Get (Q_Name), A);
+                  Check_Def (PRA.Get (Q_Name), A);
                end if;
             end;
          end loop;
@@ -1926,8 +1907,6 @@ package body GPR2.Project.Tree is
          --  Check Library_Version attribute format
 
          declare
-            package A renames GPR2.Project.Registry.Attribute;
-
             procedure Check_Shared_Lib (PV : Project.View.Object);
             --  Check that shared library project does not have in imports
             --  static library or standard projects.
@@ -1972,10 +1951,10 @@ package body GPR2.Project.Tree is
 
          begin
             if View.Is_Library and then View.Is_Shared_Library then
-               if View.Has_Attributes (A.Library_Version) then
+               if View.Has_Attributes (PRA.Library_Version) then
                   declare
                      AV      : constant Source_Reference.Value.Object :=
-                                 View.Attribute (A.Library_Version).Value;
+                                 View.Attribute (PRA.Library_Version).Value;
                      Lib_Ver : constant Value_Type := AV.Text;
                      Lib_Fn  : constant Value_Type :=
                                  Value_Type (View.Library_Filename.Name);
@@ -1983,7 +1962,7 @@ package body GPR2.Project.Tree is
                      if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
                        or else not Regexp.Match
                          (Lib_Ver (Lib_Ver'First + Lib_Fn'Length
-                            .. Lib_Ver'Last),
+                                   .. Lib_Ver'Last),
                           Version_Regexp)
                      then
                         Self.Messages.Append
@@ -2003,11 +1982,11 @@ package body GPR2.Project.Tree is
 
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library
               and then Check_Object_Dir_Exists
-              and then View.Has_Attributes (A.Object_Dir)
+              and then View.Has_Attributes (PRA.Object_Dir)
             then
                declare
                   AV : constant Source_Reference.Value.Object :=
-                         View.Attribute (A.Object_Dir).Value;
+                         View.Attribute (PRA.Object_Dir).Value;
                begin
                   if not View.Object_Directory.Exists then
                      Self.Messages.Append
@@ -2089,12 +2068,10 @@ package body GPR2.Project.Tree is
          return Self.Conf.Target;
 
       elsif Self.Has_Configuration
-        and then Self.Conf.Corresponding_View.Has_Attributes
-                   (Registry.Attribute.Target)
+        and then Self.Conf.Corresponding_View.Has_Attributes (PRA.Target)
       then
          return Name_Type
-           (Self.Conf.Corresponding_View.Attribute
-              (Registry.Attribute.Target).Value.Text);
+           (Self.Conf.Corresponding_View.Attribute (PRA.Target).Value.Text);
 
       else
          return Name_Type (System.OS_Constants.Target_Name);

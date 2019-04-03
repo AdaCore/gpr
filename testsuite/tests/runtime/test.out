@@ -5,7 +5,7 @@ A:   Source_Dirs -> .
 V:   RTL -> .../adainclude
 
 Config   K_CONFIGURATION
-Runtime  K_STANDARD
+runtime  K_STANDARD
 A:   languages -> ada
 A:   object_dir -> .../adalib
 A:   source_dirs -> .../adainclude
