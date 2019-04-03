@@ -638,11 +638,11 @@ package body GPR2.Project.View is
       --  Library prefix
 
       if not Self.Is_Static_Library
-        and then Config_Has_Attribute (A.Shared_Lib_Prefix)
+        and then Config_Has_Attribute (A.Shared_Library_Prefix)
       then
          Append
            (File_Name,
-            Config.Attribute (A.Shared_Lib_Prefix).Value.Text);
+            Config.Attribute (A.Shared_Library_Prefix).Value.Text);
       else
          Append (File_Name, "lib");
       end if;
@@ -656,10 +656,10 @@ package body GPR2.Project.View is
       if Self.Is_Static_Library then
          Append (File_Name, String (Self.Tree.Archive_Suffix));
 
-      elsif Config_Has_Attribute (A.Shared_Lib_Suffix) then
+      elsif Config_Has_Attribute (A.Shared_Library_Suffix) then
          Append
            (File_Name,
-            Config.Attribute (A.Shared_Lib_Suffix).Value.Text);
+            Config.Attribute (A.Shared_Library_Suffix).Value.Text);
 
       else
          Append (File_Name, ".so");

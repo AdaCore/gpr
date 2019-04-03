@@ -62,16 +62,23 @@ package body GPR2.Project.Registry.Pack is
    end Is_Allowed_In;
 
 begin
-   Store.Insert ("naming",          No_Aggregates);
-   Store.Insert ("compiler",        No_Aggregates);
-   Store.Insert ("linker",          No_Aggregates);
-   Store.Insert ("binder",          No_Aggregates);
-   Store.Insert ("install",         (K_Aggregate => False, others => True));
-   Store.Insert ("remote",          Everywhere);
-   Store.Insert ("ide",             Everywhere);
-   Store.Insert ("builder",         Everywhere);
-   Store.Insert ("gnatls",          Everywhere);
-   Store.Insert ("clean",           Everywhere);
-   Store.Insert ("cross_reference", Everywhere);
-   Store.Insert ("finder",          Everywhere);
+   Store.Insert (Naming,          No_Aggregates);
+   Store.Insert (Compiler,        No_Aggregates);
+   Store.Insert (Linker,          No_Aggregates);
+   Store.Insert (Binder,          No_Aggregates);
+   Store.Insert (Install,         (K_Aggregate => False, others => True));
+   Store.Insert (Remote,          Everywhere);
+   Store.Insert (Ide,             Everywhere);
+   Store.Insert (Builder,         Everywhere);
+   Store.Insert (Gnatls,          Everywhere);
+   Store.Insert (Clean,           Everywhere);
+   Store.Insert (Cross_Reference, Everywhere);
+   Store.Insert (Finder,          Everywhere);
+   Store.Insert (Eliminate,       Everywhere);
+   Store.Insert (Check,           Everywhere);
+   Store.Insert (Codepeer,        Everywhere);
+   Store.Insert (Gnatstub,        Everywhere);
+   Store.Insert (Metrics,         Everywhere);
+   Store.Insert (Pretty_Printer,  Everywhere);
+   Store.Insert (Stack,           Everywhere);
 end GPR2.Project.Registry.Pack;

@@ -19,6 +19,8 @@
 with Ada.Containers.Indefinite_Ordered_Maps; use Ada;
 with Ada.Strings.Less_Case_Insensitive;
 
+with GPR2.Project.Registry.Pack;
+
 package body GPR2.Project.Registry.Attribute is
 
    function Less_Case_Insensitive
@@ -123,7 +125,7 @@ package body GPR2.Project.Registry.Attribute is
 begin
    --  name
    Store_Insert
-     ("name",
+     (Create (Name),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -134,7 +136,7 @@ begin
 
    --  project_dir
    Store_Insert
-     ("project_dir",
+     (Create (Project_Dir),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -145,7 +147,7 @@ begin
 
    --  main
    Store_Insert
-     ("main",
+     (Create (Main),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -156,7 +158,7 @@ begin
 
    --  languages
    Store_Insert
-     ("languages",
+     (Create (Languages),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -167,7 +169,7 @@ begin
 
    --  roots
    Store_Insert
-     ("roots",
+     (Create (Roots),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -178,7 +180,7 @@ begin
 
    --  externally_built
    Store_Insert
-     ("externally_built",
+     (Create (Externally_Built),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -189,7 +191,7 @@ begin
 
    --  object_dir
    Store_Insert
-     ("object_dir",
+     (Create (Object_Dir),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -200,7 +202,7 @@ begin
 
    --  exec_dir
    Store_Insert
-     ("exec_dir",
+     (Create (Exec_Dir),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -211,7 +213,7 @@ begin
 
    --  source_dirs
    Store_Insert
-     ("source_dirs",
+     (Create (Source_Dirs),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -222,7 +224,7 @@ begin
 
    --  inherit_source_path
    Store_Insert
-     ("inherit_source_path",
+     (Create (Inherit_Source_Path),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -233,7 +235,7 @@ begin
 
    --  excluded_source_dirs
    Store_Insert
-     ("excluded_source_dirs",
+     (Create (Excluded_Source_Dirs),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -244,7 +246,7 @@ begin
 
    --  ignore_source_sub_dirs
    Store_Insert
-     ("ignore_source_sub_dirs",
+     (Create (Ignore_Source_Sub_Dirs),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -255,7 +257,7 @@ begin
 
    --  source_files
    Store_Insert
-     ("source_files",
+     (Create (Source_Files),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -266,7 +268,7 @@ begin
 
    --  locally_removed_files
    Store_Insert
-     ("locally_removed_files",
+     (Create (Locally_Removed_Files),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -277,7 +279,7 @@ begin
 
    --  excluded_source_files
    Store_Insert
-     ("excluded_source_files",
+     (Create (Excluded_Source_Files),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -288,7 +290,7 @@ begin
 
    --  source_list_file
    Store_Insert
-     ("source_list_file",
+     (Create (Source_List_File),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -299,7 +301,7 @@ begin
 
    --  excluded_source_list_file
    Store_Insert
-     ("excluded_source_list_file",
+     (Create (Excluded_Source_List_File),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -310,7 +312,7 @@ begin
 
    --  interfaces
    Store_Insert
-     ("interfaces",
+     (Create (Interfaces),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -321,7 +323,7 @@ begin
 
    --  project_files
    Store_Insert
-     ("project_files",
+     (Create (Project_Files),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -332,7 +334,7 @@ begin
 
    --  project_path
    Store_Insert
-     ("project_path",
+     (Create (Project_Path),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -343,7 +345,7 @@ begin
 
    --  external
    Store_Insert
-     ("external",
+     (Create (External),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => True,
@@ -354,7 +356,7 @@ begin
 
    --  library_dir
    Store_Insert
-     ("library_dir",
+     (Create (Library_Dir),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -365,7 +367,7 @@ begin
 
    --  library_name
    Store_Insert
-     ("library_name",
+     (Create (Library_Name),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -376,7 +378,7 @@ begin
 
    --  library_kind
    Store_Insert
-     ("library_kind",
+     (Create (Library_Kind),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -387,7 +389,7 @@ begin
 
    --  library_version
    Store_Insert
-     ("library_version",
+     (Create (Library_Version),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -398,7 +400,7 @@ begin
 
    --  library_interface
    Store_Insert
-     ("library_interface",
+     (Create (Library_Interface),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -409,7 +411,7 @@ begin
 
    --  library_standalone
    Store_Insert
-     ("library_standalone",
+     (Create (Library_Standalone),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -420,7 +422,7 @@ begin
 
    --  library_encapsulated_options
    Store_Insert
-     ("library_encapsulated_options",
+     (Create (Library_Encapsulated_Options),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -431,7 +433,7 @@ begin
 
    --  library_encapsulated_supported
    Store_Insert
-     ("library_encapsulated_supported",
+     (Create (Library_Encapsulated_Supported),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -442,7 +444,7 @@ begin
 
    --  library_auto_init
    Store_Insert
-     ("library_auto_init",
+     (Create (Library_Auto_Init),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -453,7 +455,7 @@ begin
 
    --  leading_library_options
    Store_Insert
-     ("leading_library_options",
+     (Create (Leading_Library_Options),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -464,7 +466,7 @@ begin
 
    --  library_options
    Store_Insert
-     ("library_options",
+     (Create (Library_Options),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -475,7 +477,7 @@ begin
 
    --  library_rpath_options
    Store_Insert
-     ("library_rpath_options",
+     (Create (Library_Rpath_Options),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -486,7 +488,7 @@ begin
 
    --  library_src_dir
    Store_Insert
-     ("library_src_dir",
+     (Create (Library_Src_Dir),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -497,7 +499,7 @@ begin
 
    --  library_ali_dir
    Store_Insert
-     ("library_ali_dir",
+     (Create (Library_Ali_Dir),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -508,7 +510,7 @@ begin
 
    --  library_gcc
    Store_Insert
-     ("library_gcc",
+     (Create (Library_Gcc),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -519,7 +521,7 @@ begin
 
    --  library_symbol_file
    Store_Insert
-     ("library_symbol_file",
+     (Create (Library_Symbol_File),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -530,7 +532,7 @@ begin
 
    --  library_symbol_policy
    Store_Insert
-     ("library_symbol_policy",
+     (Create (Library_Symbol_Policy),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -541,7 +543,7 @@ begin
 
    --  library_reference_symbol_file
    Store_Insert
-     ("library_reference_symbol_file",
+     (Create (Library_Reference_Symbol_File),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -552,7 +554,7 @@ begin
 
    --  default_language
    Store_Insert
-     ("default_language",
+     (Create (Default_Language),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -563,7 +565,7 @@ begin
 
    --  run_path_option
    Store_Insert
-     ("run_path_option",
+     (Create (Run_Path_Option),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -574,7 +576,7 @@ begin
 
    --  run_path_origin
    Store_Insert
-     ("run_path_origin",
+     (Create (Run_Path_Origin),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -585,7 +587,7 @@ begin
 
    --  separate_run_path_options
    Store_Insert
-     ("separate_run_path_options",
+     (Create (Separate_Run_Path_Options),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -596,7 +598,7 @@ begin
 
    --  toolchain_version
    Store_Insert
-     ("toolchain_version",
+     (Create (Toolchain_Version),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -607,7 +609,7 @@ begin
 
    --  toolchain_name
    Store_Insert
-     ("toolchain_name",
+     (Create (Toolchain_Name),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -618,7 +620,7 @@ begin
 
    --  toolchain_description
    Store_Insert
-     ("toolchain_description",
+     (Create (Toolchain_Description),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -629,7 +631,7 @@ begin
 
    --  object_generated
    Store_Insert
-     ("object_generated",
+     (Create (Object_Generated),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -640,7 +642,7 @@ begin
 
    --  objects_linked
    Store_Insert
-     ("objects_linked",
+     (Create (Objects_Linked),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -651,7 +653,7 @@ begin
 
    --  target
    Store_Insert
-     ("target",
+     (Create (Target),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -662,7 +664,7 @@ begin
 
    --  runtime
    Store_Insert
-     ("runtime",
+     (Create (Runtime),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -673,7 +675,7 @@ begin
 
    --  library_builder
    Store_Insert
-     ("library_builder",
+     (Create (Library_Builder),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -684,7 +686,7 @@ begin
 
    --  library_support
    Store_Insert
-     ("library_support",
+     (Create (Library_Support),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -695,7 +697,7 @@ begin
 
    --  archive_builder
    Store_Insert
-     ("archive_builder",
+     (Create (Archive_Builder),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -706,7 +708,7 @@ begin
 
    --  archive_builder_append_option
    Store_Insert
-     ("archive_builder_append_option",
+     (Create (Archive_Builder_Append_Option),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -717,7 +719,7 @@ begin
 
    --  archive_indexer
    Store_Insert
-     ("archive_indexer",
+     (Create (Archive_Indexer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -728,7 +730,7 @@ begin
 
    --  archive_suffix
    Store_Insert
-     ("archive_suffix",
+     (Create (Archive_Suffix),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -739,7 +741,7 @@ begin
 
    --  library_partial_linker
    Store_Insert
-     ("library_partial_linker",
+     (Create (Library_Partial_Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -750,7 +752,7 @@ begin
 
    --  object_lister
    Store_Insert
-     ("object_lister",
+     (Create (Object_Lister),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -761,7 +763,7 @@ begin
 
    --  object_lister_matcher
    Store_Insert
-     ("object_lister_matcher",
+     (Create (Object_Lister_Matcher),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -772,7 +774,7 @@ begin
 
    --  shared_library_prefix
    Store_Insert
-     ("shared_library_prefix",
+     (Create (Shared_Library_Prefix),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -783,7 +785,7 @@ begin
 
    --  shared_library_suffix
    Store_Insert
-     ("shared_library_suffix",
+     (Create (Shared_Library_Suffix),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -794,7 +796,7 @@ begin
 
    --  symbolic_link_supported
    Store_Insert
-     ("symbolic_link_supported",
+     (Create (Symbolic_Link_Supported),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -805,7 +807,7 @@ begin
 
    --  library_major_minor_id_supported
    Store_Insert
-     ("library_major_minor_id_supported",
+     (Create (Library_Major_Minor_Id_Supported),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -816,7 +818,7 @@ begin
 
    --  library_auto_init_supported
    Store_Insert
-     ("library_auto_init_supported",
+     (Create (Library_Auto_Init_Supported),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -827,7 +829,7 @@ begin
 
    --  shared_library_minimum_switches
    Store_Insert
-     ("shared_library_minimum_switches",
+     (Create (Shared_Library_Minimum_Switches),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -838,7 +840,7 @@ begin
 
    --  library_version_switches
    Store_Insert
-     ("library_version_switches",
+     (Create (Library_Version_Switches),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -849,7 +851,7 @@ begin
 
    --  library_install_name_option
    Store_Insert
-     ("library_install_name_option",
+     (Create (Library_Install_Name_Option),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -860,7 +862,7 @@ begin
 
    --  runtime_dir
    Store_Insert
-     ("runtime_dir",
+     (Create (Runtime_Dir),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -871,7 +873,7 @@ begin
 
    --  runtime_library_dir
    Store_Insert
-     ("runtime_library_dir",
+     (Create (Runtime_Library_Dir),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -882,7 +884,7 @@ begin
 
    --  runtime_source_dir
    Store_Insert
-     ("runtime_source_dir",
+     (Create (Runtime_Source_Dir),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -893,7 +895,7 @@ begin
 
    --  runtime_source_dirs
    Store_Insert
-     ("runtime_source_dirs",
+     (Create (Runtime_Source_Dirs),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -904,7 +906,7 @@ begin
 
    --  naming.spec_suffix
    Store_Insert
-     ("naming.spec_suffix",
+     (Create (Spec_Suffix, Pack.Naming),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -915,7 +917,7 @@ begin
 
    --  naming.body_suffix
    Store_Insert
-     ("naming.body_suffix",
+     (Create (Body_Suffix, Pack.Naming),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -926,7 +928,7 @@ begin
 
    --  naming.specification_suffix
    Store_Insert
-     ("naming.specification_suffix",
+     (Create (Specification_Suffix, Pack.Naming),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -937,7 +939,7 @@ begin
 
    --  naming.implementation_suffix
    Store_Insert
-     ("naming.implementation_suffix",
+     (Create (Implementation_Suffix, Pack.Naming),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -948,7 +950,7 @@ begin
 
    --  naming.separate_suffix
    Store_Insert
-     ("naming.separate_suffix",
+     (Create (Separate_Suffix, Pack.Naming),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -959,7 +961,7 @@ begin
 
    --  naming.casing
    Store_Insert
-     ("naming.casing",
+     (Create (Casing, Pack.Naming),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -970,7 +972,7 @@ begin
 
    --  naming.dot_replacement
    Store_Insert
-     ("naming.dot_replacement",
+     (Create (Dot_Replacement, Pack.Naming),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -981,7 +983,7 @@ begin
 
    --  naming.spec
    Store_Insert
-     ("naming.spec",
+     (Create (Spec, Pack.Naming),
       Index                => Optional,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -992,7 +994,7 @@ begin
 
    --  naming.specification
    Store_Insert
-     ("naming.specification",
+     (Create (Specification, Pack.Naming),
       Index                => Optional,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1003,7 +1005,7 @@ begin
 
    --  naming.body
    Store_Insert
-     ("naming.body",
+     (Create (Body_N, Pack.Naming),
       Index                => Optional,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1014,7 +1016,7 @@ begin
 
    --  naming.implementation
    Store_Insert
-     ("naming.implementation",
+     (Create (Implementation, Pack.Naming),
       Index                => Optional,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1025,7 +1027,7 @@ begin
 
    --  naming.specification_exceptions
    Store_Insert
-     ("naming.specification_exceptions",
+     (Create (Specification_Exceptions, Pack.Naming),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1036,7 +1038,7 @@ begin
 
    --  naming.implementation_exceptions
    Store_Insert
-     ("naming.implementation_exceptions",
+     (Create (Implementation_Exceptions, Pack.Naming),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1047,7 +1049,7 @@ begin
 
    --  compiler.default_switches
    Store_Insert
-     ("compiler.default_switches",
+     (Create (Default_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1058,7 +1060,7 @@ begin
 
    --  compiler.switches
    Store_Insert
-     ("compiler.switches",
+     (Create (Switches, Pack.Compiler),
       Index                => Optional,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1069,7 +1071,7 @@ begin
 
    --  compiler.local_configuration_pragmas
    Store_Insert
-     ("compiler.local_configuration_pragmas",
+     (Create (Local_Configuration_Pragmas, Pack.Compiler),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1080,7 +1082,7 @@ begin
 
    --  compiler.local_config_file
    Store_Insert
-     ("compiler.local_config_file",
+     (Create (Local_Config_File, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1091,7 +1093,7 @@ begin
 
    --  compiler.driver
    Store_Insert
-     ("compiler.driver",
+     (Create (Driver, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1102,7 +1104,7 @@ begin
 
    --  compiler.language_kind
    Store_Insert
-     ("compiler.language_kind",
+     (Create (Language_Kind, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1113,7 +1115,7 @@ begin
 
    --  compiler.dependency_kind
    Store_Insert
-     ("compiler.dependency_kind",
+     (Create (Dependency_Kind, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1124,7 +1126,7 @@ begin
 
    --  compiler.required_switches
    Store_Insert
-     ("compiler.required_switches",
+     (Create (Required_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1135,7 +1137,7 @@ begin
 
    --  compiler.leading_required_switches
    Store_Insert
-     ("compiler.leading_required_switches",
+     (Create (Leading_Required_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1146,7 +1148,7 @@ begin
 
    --  compiler.trailing_required_switches
    Store_Insert
-     ("compiler.trailing_required_switches",
+     (Create (Trailing_Required_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1157,7 +1159,7 @@ begin
 
    --  compiler.pic_option
    Store_Insert
-     ("compiler.pic_option",
+     (Create (Pic_Option, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1168,7 +1170,7 @@ begin
 
    --  compiler.path_syntax
    Store_Insert
-     ("compiler.path_syntax",
+     (Create (Path_Syntax, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1179,7 +1181,7 @@ begin
 
    --  compiler.source_file_switches
    Store_Insert
-     ("compiler.source_file_switches",
+     (Create (Source_File_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1190,7 +1192,7 @@ begin
 
    --  compiler.object_file_suffix
    Store_Insert
-     ("compiler.object_file_suffix",
+     (Create (Object_File_Suffix, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1201,7 +1203,7 @@ begin
 
    --  compiler.object_file_switches
    Store_Insert
-     ("compiler.object_file_switches",
+     (Create (Object_File_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1212,7 +1214,7 @@ begin
 
    --  compiler.multi_unit_switches
    Store_Insert
-     ("compiler.multi_unit_switches",
+     (Create (Multi_Unit_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1223,7 +1225,7 @@ begin
 
    --  compiler.multi_unit_object_separator
    Store_Insert
-     ("compiler.multi_unit_object_separator",
+     (Create (Multi_Unit_Object_Separator, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1234,7 +1236,7 @@ begin
 
    --  compiler.mapping_file_switches
    Store_Insert
-     ("compiler.mapping_file_switches",
+     (Create (Mapping_File_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1245,7 +1247,7 @@ begin
 
    --  compiler.mapping_spec_suffix
    Store_Insert
-     ("compiler.mapping_spec_suffix",
+     (Create (Mapping_Spec_Suffix, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1256,7 +1258,7 @@ begin
 
    --  compiler.mapping_body_suffix
    Store_Insert
-     ("compiler.mapping_body_suffix",
+     (Create (Mapping_Body_Suffix, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1267,7 +1269,7 @@ begin
 
    --  compiler.config_file_switches
    Store_Insert
-     ("compiler.config_file_switches",
+     (Create (Config_File_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1278,7 +1280,7 @@ begin
 
    --  compiler.config_body_file_name
    Store_Insert
-     ("compiler.config_body_file_name",
+     (Create (Config_Body_File_Name, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1289,7 +1291,7 @@ begin
 
    --  compiler.config_body_file_name_index
    Store_Insert
-     ("compiler.config_body_file_name_index",
+     (Create (Config_Body_File_Name_Index, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1300,7 +1302,7 @@ begin
 
    --  compiler.config_body_file_name_pattern
    Store_Insert
-     ("compiler.config_body_file_name_pattern",
+     (Create (Config_Body_File_Name_Pattern, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1311,7 +1313,7 @@ begin
 
    --  compiler.config_spec_file_name
    Store_Insert
-     ("compiler.config_spec_file_name",
+     (Create (Config_Spec_File_Name, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1322,7 +1324,7 @@ begin
 
    --  compiler.config_spec_file_name_index
    Store_Insert
-     ("compiler.config_spec_file_name_index",
+     (Create (Config_Spec_File_Name_Index, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1333,7 +1335,7 @@ begin
 
    --  compiler.config_spec_file_name_pattern
    Store_Insert
-     ("compiler.config_spec_file_name_pattern",
+     (Create (Config_Spec_File_Name_Pattern, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1344,7 +1346,7 @@ begin
 
    --  compiler.config_file_unique
    Store_Insert
-     ("compiler.config_file_unique",
+     (Create (Config_File_Unique, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1355,7 +1357,7 @@ begin
 
    --  compiler.dependency_switches
    Store_Insert
-     ("compiler.dependency_switches",
+     (Create (Dependency_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1366,7 +1368,7 @@ begin
 
    --  compiler.dependency_driver
    Store_Insert
-     ("compiler.dependency_driver",
+     (Create (Dependency_Driver, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1377,7 +1379,7 @@ begin
 
    --  compiler.include_switches
    Store_Insert
-     ("compiler.include_switches",
+     (Create (Include_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1388,7 +1390,7 @@ begin
 
    --  compiler.include_path
    Store_Insert
-     ("compiler.include_path",
+     (Create (Include_Path, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1399,7 +1401,7 @@ begin
 
    --  compiler.include_path_file
    Store_Insert
-     ("compiler.include_path_file",
+     (Create (Include_Path_File, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1410,7 +1412,7 @@ begin
 
    --  compiler.object_path_switches
    Store_Insert
-     ("compiler.object_path_switches",
+     (Create (Object_Path_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1421,7 +1423,7 @@ begin
 
    --  compiler.max_command_line_length
    Store_Insert
-     ("compiler.max_command_line_length",
+     (Create (Max_Command_Line_Length, Pack.Compiler),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1432,7 +1434,7 @@ begin
 
    --  compiler.response_file_format
    Store_Insert
-     ("compiler.response_file_format",
+     (Create (Response_File_Format, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1443,7 +1445,7 @@ begin
 
    --  compiler.response_file_switches
    Store_Insert
-     ("compiler.response_file_switches",
+     (Create (Response_File_Switches, Pack.Compiler),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1454,7 +1456,7 @@ begin
 
    --  builder.default_switches
    Store_Insert
-     ("builder.default_switches",
+     (Create (Default_Switches, Pack.Builder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1465,7 +1467,7 @@ begin
 
    --  builder.switches
    Store_Insert
-     ("builder.switches",
+     (Create (Switches, Pack.Builder),
       Index                => Optional,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1476,7 +1478,7 @@ begin
 
    --  builder.global_compilation_switches
    Store_Insert
-     ("builder.global_compilation_switches",
+     (Create (Global_Compilation_Switches, Pack.Builder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1487,7 +1489,7 @@ begin
 
    --  builder.executable
    Store_Insert
-     ("builder.executable",
+     (Create (Executable, Pack.Builder),
       Index                => Optional,
       Others_Allowed       => False,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1499,7 +1501,7 @@ begin
 
    --  builder.executable_suffix
    Store_Insert
-     ("builder.executable_suffix",
+     (Create (Executable_Suffix, Pack.Builder),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1510,7 +1512,7 @@ begin
 
    --  builder.global_configuration_pragmas
    Store_Insert
-     ("builder.global_configuration_pragmas",
+     (Create (Global_Configuration_Pragmas, Pack.Builder),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1521,7 +1523,7 @@ begin
 
    --  builder.global_config_file
    Store_Insert
-     ("builder.global_config_file",
+     (Create (Global_Config_File, Pack.Builder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1532,7 +1534,7 @@ begin
 
    --  gnatls.switches
    Store_Insert
-     ("gnatls.switches",
+     (Create (Switches, Pack.Gnatls),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1543,7 +1545,7 @@ begin
 
    --  binder.default_switches
    Store_Insert
-     ("binder.default_switches",
+     (Create (Default_Switches, Pack.Binder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1554,7 +1556,7 @@ begin
 
    --  binder.switches
    Store_Insert
-     ("binder.switches",
+     (Create (Switches, Pack.Binder),
       Index                => Optional,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1565,7 +1567,7 @@ begin
 
    --  binder.driver
    Store_Insert
-     ("binder.driver",
+     (Create (Driver, Pack.Binder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1576,7 +1578,7 @@ begin
 
    --  binder.required_switches
    Store_Insert
-     ("binder.required_switches",
+     (Create (Required_Switches, Pack.Binder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1587,7 +1589,7 @@ begin
 
    --  binder.prefix
    Store_Insert
-     ("binder.prefix",
+     (Create (Prefix, Pack.Binder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1598,7 +1600,7 @@ begin
 
    --  binder.objects_path
    Store_Insert
-     ("binder.objects_path",
+     (Create (Objects_Path, Pack.Binder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1609,7 +1611,7 @@ begin
 
    --  binder.objects_path_file
    Store_Insert
-     ("binder.objects_path_file",
+     (Create (Objects_Path_File, Pack.Binder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1620,7 +1622,7 @@ begin
 
    --  linker.required_switches
    Store_Insert
-     ("linker.required_switches",
+     (Create (Required_Switches, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1631,7 +1633,7 @@ begin
 
    --  linker.default_switches
    Store_Insert
-     ("linker.default_switches",
+     (Create (Default_Switches, Pack.Linker),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1642,7 +1644,7 @@ begin
 
    --  linker.leading_switches
    Store_Insert
-     ("linker.leading_switches",
+     (Create (Leading_Switches, Pack.Linker),
       Index                => Optional,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1653,7 +1655,7 @@ begin
 
    --  linker.switches
    Store_Insert
-     ("linker.switches",
+     (Create (Switches, Pack.Linker),
       Index                => Optional,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1664,7 +1666,7 @@ begin
 
    --  linker.trailing_switches
    Store_Insert
-     ("linker.trailing_switches",
+     (Create (Trailing_Switches, Pack.Linker),
       Index                => Optional,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1675,7 +1677,7 @@ begin
 
    --  linker.linker_options
    Store_Insert
-     ("linker.linker_options",
+     (Create (Linker_Options, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1686,7 +1688,7 @@ begin
 
    --  linker.map_file_option
    Store_Insert
-     ("linker.map_file_option",
+     (Create (Map_File_Option, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1697,7 +1699,7 @@ begin
 
    --  linker.driver
    Store_Insert
-     ("linker.driver",
+     (Create (Driver, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1708,7 +1710,7 @@ begin
 
    --  linker.max_command_line_length
    Store_Insert
-     ("linker.max_command_line_length",
+     (Create (Max_Command_Line_Length, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1719,7 +1721,7 @@ begin
 
    --  linker.response_file_format
    Store_Insert
-     ("linker.response_file_format",
+     (Create (Response_File_Format, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1730,7 +1732,7 @@ begin
 
    --  linker.response_file_switches
    Store_Insert
-     ("linker.response_file_switches",
+     (Create (Response_File_Switches, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1741,7 +1743,7 @@ begin
 
    --  linker.export_file_format
    Store_Insert
-     ("linker.export_file_format",
+     (Create (Export_File_Format, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1752,7 +1754,7 @@ begin
 
    --  linker.export_file_switch
    Store_Insert
-     ("linker.export_file_switch",
+     (Create (Export_File_Switch, Pack.Linker),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1763,7 +1765,7 @@ begin
 
    --  clean.switches
    Store_Insert
-     ("clean.switches",
+     (Create (Switches, Pack.Clean),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1774,7 +1776,7 @@ begin
 
    --  clean.source_artifact_extensions
    Store_Insert
-     ("clean.source_artifact_extensions",
+     (Create (Source_Artifact_Extensions, Pack.Clean),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1785,7 +1787,7 @@ begin
 
    --  clean.object_artifact_extensions
    Store_Insert
-     ("clean.object_artifact_extensions",
+     (Create (Object_Artifact_Extensions, Pack.Clean),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1796,7 +1798,7 @@ begin
 
    --  clean.artifacts_in_exec_dir
    Store_Insert
-     ("clean.artifacts_in_exec_dir",
+     (Create (Artifacts_In_Exec_Dir, Pack.Clean),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1807,7 +1809,7 @@ begin
 
    --  clean.artifacts_in_object_dir
    Store_Insert
-     ("clean.artifacts_in_object_dir",
+     (Create (Artifacts_In_Object_Dir, Pack.Clean),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1818,7 +1820,7 @@ begin
 
    --  cross_reference.default_switches
    Store_Insert
-     ("cross_reference.default_switches",
+     (Create (Default_Switches, Pack.Cross_Reference),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1829,7 +1831,7 @@ begin
 
    --  cross_reference.switches
    Store_Insert
-     ("cross_reference.switches",
+     (Create (Switches, Pack.Cross_Reference),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1840,7 +1842,7 @@ begin
 
    --  finder.default_switches
    Store_Insert
-     ("finder.default_switches",
+     (Create (Default_Switches, Pack.Finder),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1851,7 +1853,7 @@ begin
 
    --  finder.switches
    Store_Insert
-     ("finder.switches",
+     (Create (Switches, Pack.Finder),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1862,7 +1864,7 @@ begin
 
    --  pretty_printer.default_switches
    Store_Insert
-     ("pretty_printer.default_switches",
+     (Create (Default_Switches, Pack.Pretty_Printer),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1873,7 +1875,7 @@ begin
 
    --  pretty_printer.switches
    Store_Insert
-     ("pretty_printer.switches",
+     (Create (Switches, Pack.Pretty_Printer),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1884,7 +1886,7 @@ begin
 
    --  gnatstub.default_switches
    Store_Insert
-     ("gnatstub.default_switches",
+     (Create (Default_Switches, Pack.Gnatstub),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1895,7 +1897,7 @@ begin
 
    --  gnatstub.switches
    Store_Insert
-     ("gnatstub.switches",
+     (Create (Switches, Pack.Gnatstub),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1906,7 +1908,7 @@ begin
 
    --  check.default_switches
    Store_Insert
-     ("check.default_switches",
+     (Create (Default_Switches, Pack.Check),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1917,7 +1919,7 @@ begin
 
    --  check.switches
    Store_Insert
-     ("check.switches",
+     (Create (Switches, Pack.Check),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1928,7 +1930,7 @@ begin
 
    --  eliminate.default_switches
    Store_Insert
-     ("eliminate.default_switches",
+     (Create (Default_Switches, Pack.Eliminate),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1939,7 +1941,7 @@ begin
 
    --  eliminate.switches
    Store_Insert
-     ("eliminate.switches",
+     (Create (Switches, Pack.Eliminate),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1950,7 +1952,7 @@ begin
 
    --  metrics.default_switches
    Store_Insert
-     ("metrics.default_switches",
+     (Create (Default_Switches, Pack.Metrics),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1961,7 +1963,7 @@ begin
 
    --  metrics.switches
    Store_Insert
-     ("metrics.switches",
+     (Create (Switches, Pack.Metrics),
       Index                => Yes,
       Others_Allowed       => True,
       Index_Case_Sensitive => File_Names_Case_Sensitive,
@@ -1972,7 +1974,7 @@ begin
 
    --  ide.default_switches
    Store_Insert
-     ("ide.default_switches",
+     (Create (Default_Switches, Pack.Ide),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1983,7 +1985,7 @@ begin
 
    --  ide.remote_host
    Store_Insert
-     ("ide.remote_host",
+     (Create (Remote_Host, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -1994,7 +1996,7 @@ begin
 
    --  ide.program_host
    Store_Insert
-     ("ide.program_host",
+     (Create (Program_Host, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2005,7 +2007,7 @@ begin
 
    --  ide.communication_protocol
    Store_Insert
-     ("ide.communication_protocol",
+     (Create (Communication_Protocol, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2016,7 +2018,7 @@ begin
 
    --  ide.compiler_command
    Store_Insert
-     ("ide.compiler_command",
+     (Create (Compiler_Command, Pack.Ide),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2027,7 +2029,7 @@ begin
 
    --  ide.debugger_command
    Store_Insert
-     ("ide.debugger_command",
+     (Create (Debugger_Command, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2038,7 +2040,7 @@ begin
 
    --  ide.gnatlist
    Store_Insert
-     ("ide.gnatlist",
+     (Create (Gnatlist, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2049,7 +2051,7 @@ begin
 
    --  ide.vcs_kind
    Store_Insert
-     ("ide.vcs_kind",
+     (Create (Vcs_Kind, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2060,7 +2062,7 @@ begin
 
    --  ide.vcs_file_check
    Store_Insert
-     ("ide.vcs_file_check",
+     (Create (Vcs_File_Check, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2071,7 +2073,7 @@ begin
 
    --  ide.vcs_log_check
    Store_Insert
-     ("ide.vcs_log_check",
+     (Create (Vcs_Log_Check, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2082,7 +2084,7 @@ begin
 
    --  ide.documentation_dir
    Store_Insert
-     ("ide.documentation_dir",
+     (Create (Documentation_Dir, Pack.Ide),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2093,7 +2095,7 @@ begin
 
    --  install.prefix
    Store_Insert
-     ("install.prefix",
+     (Create (Prefix, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2104,7 +2106,7 @@ begin
 
    --  install.sources_subdir
    Store_Insert
-     ("install.sources_subdir",
+     (Create (Sources_Subdir, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2115,7 +2117,7 @@ begin
 
    --  install.exec_subdir
    Store_Insert
-     ("install.exec_subdir",
+     (Create (Exec_Subdir, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2126,7 +2128,7 @@ begin
 
    --  install.lib_subdir
    Store_Insert
-     ("install.lib_subdir",
+     (Create (Lib_Subdir, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2137,7 +2139,7 @@ begin
 
    --  install.project_subdir
    Store_Insert
-     ("install.project_subdir",
+     (Create (Project_Subdir, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2148,7 +2150,7 @@ begin
 
    --  install.active
    Store_Insert
-     ("install.active",
+     (Create (Active, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2159,7 +2161,7 @@ begin
 
    --  install.artifacts
    Store_Insert
-     ("install.artifacts",
+     (Create (Artifacts, Pack.Install),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => True,
@@ -2170,7 +2172,7 @@ begin
 
    --  install.required_artifacts
    Store_Insert
-     ("install.required_artifacts",
+     (Create (Required_Artifacts, Pack.Install),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => True,
@@ -2181,7 +2183,7 @@ begin
 
    --  install.mode
    Store_Insert
-     ("install.mode",
+     (Create (Mode, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2192,7 +2194,7 @@ begin
 
    --  install.install_name
    Store_Insert
-     ("install.install_name",
+     (Create (Install_Name, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2203,7 +2205,7 @@ begin
 
    --  remote.root_dir
    Store_Insert
-     ("remote.root_dir",
+     (Create (Root_Dir, Pack.Remote),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2214,7 +2216,7 @@ begin
 
    --  remote.excluded_patterns
    Store_Insert
-     ("remote.excluded_patterns",
+     (Create (Excluded_Patterns, Pack.Remote),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2225,7 +2227,7 @@ begin
 
    --  remote.included_patterns
    Store_Insert
-     ("remote.included_patterns",
+     (Create (Included_Patterns, Pack.Remote),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2236,7 +2238,7 @@ begin
 
    --  remote.included_artifact_patterns
    Store_Insert
-     ("remote.included_artifact_patterns",
+     (Create (Included_Artifact_Patterns, Pack.Remote),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2247,7 +2249,7 @@ begin
 
    --  stack.switches
    Store_Insert
-     ("stack.switches",
+     (Create (Switches, Pack.Stack),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2258,7 +2260,7 @@ begin
 
    --  codepeer.output_directory
    Store_Insert
-     ("codepeer.output_directory",
+     (Create (Output_Directory, Pack.Codepeer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2269,7 +2271,7 @@ begin
 
    --  codepeer.database_directory
    Store_Insert
-     ("codepeer.database_directory",
+     (Create (Database_Directory, Pack.Codepeer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2280,7 +2282,7 @@ begin
 
    --  codepeer.message_patterns
    Store_Insert
-     ("codepeer.message_patterns",
+     (Create (Message_Patterns, Pack.Codepeer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2291,7 +2293,7 @@ begin
 
    --  codepeer.additional_patterns
    Store_Insert
-     ("codepeer.additional_patterns",
+     (Create (Additional_Patterns, Pack.Codepeer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2302,7 +2304,7 @@ begin
 
    --  codepeer.switches
    Store_Insert
-     ("codepeer.switches",
+     (Create (Switches, Pack.Codepeer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2313,7 +2315,7 @@ begin
 
    --  codepeer.excluded_source_files
    Store_Insert
-     ("codepeer.excluded_source_files",
+     (Create (Excluded_Source_Files, Pack.Codepeer),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2324,7 +2326,7 @@ begin
 
    --  origin_project
    Store_Insert
-     ("origin_project",
+     (Create (Origin_Project),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2335,7 +2337,7 @@ begin
 
    --  side_debug
    Store_Insert
-     ("side_debug",
+     (Create (Side_Debug),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2346,7 +2348,7 @@ begin
 
    --  include_switches_via_spec
    Store_Insert
-     ("include_switches_via_spec",
+     (Create (Include_Switches_Via_Spec),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2357,7 +2359,7 @@ begin
 
    --  only_dirs_with_sources
    Store_Insert
-     ("only_dirs_with_sources",
+     (Create (Only_Dirs_With_Sources),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2368,7 +2370,7 @@ begin
 
    --  warning_message
    Store_Insert
-     ("warning_message",
+     (Create (Warning_Message),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2379,7 +2381,7 @@ begin
 
    --  canonical_target
    Store_Insert
-     ("canonical_target",
+     (Create (Canonical_Target),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
@@ -2390,7 +2392,7 @@ begin
 
    --  create_missing_dirs
    Store_Insert
-     ("create_missing_dirs",
+     (Create (Create_Missing_Dirs),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,

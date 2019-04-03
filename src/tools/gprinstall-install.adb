@@ -166,10 +166,10 @@ package body GPRinstall.Install is
                          Tree.Has_Configuration
                              and then
                          Tree.Configuration.Corresponding_View.Has_Attributes
-                           (A.Shared_Lib_Suffix)
+                           (A.Shared_Library_Suffix)
                              and then
                          Tree.Configuration.Corresponding_View.Attribute
-                           (A.Shared_Lib_Suffix).Value_Equal (".dll");
+                           (A.Shared_Library_Suffix).Value_Equal (".dll");
       --  ??? We may also check that the Tree target name constains mingw or
       --  windows.
 

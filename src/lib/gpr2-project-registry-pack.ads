@@ -29,12 +29,24 @@ package GPR2.Project.Registry.Pack is
 
    --  Some common package names
 
-   Binder   : constant Name_Type := "binder";
-   Builder  : constant Name_Type := "builder";
-   Compiler : constant Name_Type := "compiler";
-   Install  : constant Name_Type := "install";
-   Linker   : constant Name_Type := "linker";
-   Naming   : constant Name_Type := "naming";
-   Remote   : constant Name_Type := "remote";
+   Binder          : constant Name_Type := "binder";
+   Builder         : constant Name_Type := "builder";
+   Check           : constant Name_Type := "check";
+   Clean           : constant Name_Type := "clean";
+   Codepeer        : constant Name_Type := "codepeer";
+   Compiler        : constant Name_Type := "compiler";
+   Cross_Reference : constant Name_Type := "cross_reference";
+   Eliminate       : constant Name_Type := "eliminate";
+   Finder          : constant Name_Type := "finder";
+   Gnatls          : constant Name_Type := "gnatls";
+   Gnatstub        : constant Name_Type := "gnatstub";
+   Ide             : constant Name_Type := "ide";
+   Install         : constant Name_Type := "install";
+   Linker          : constant Name_Type := "linker";
+   Metrics         : constant Name_Type := "metrics";
+   Naming          : constant Name_Type := "naming";
+   Pretty_Printer  : constant Name_Type := "pretty_printer";
+   Remote          : constant Name_Type := "remote";
+   Stack           : constant Name_Type := "stack";
 
 end GPR2.Project.Registry.Pack;

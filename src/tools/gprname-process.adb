@@ -40,6 +40,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Pack;
 with GPR2.Project.Pretty_Printer;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
@@ -77,6 +78,8 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    use GPRname.Options;
 
    use Langkit_Support.Text;
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    package Language_Sources_Map is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Type,
@@ -274,19 +277,19 @@ begin
       Target   : constant Name_Type :=
                    (if Opt.Target /= No_String
                     then Optional_Name_Type (Opt.Target)
-                    elsif Tree.Root_Project.Has_Attributes ("Target") then
+                    elsif Tree.Root_Project.Has_Attributes (PRA.Target) then
                        Name_Type
-                      (Tree.Root_Project.Attribute ("Target").Value.Text)
+                      (Tree.Root_Project.Attribute (PRA.Target).Value.Text)
                     else "all");
 
       Runtime  : constant Optional_Name_Type :=
                    (if Opt.RTS /= No_String
                     then Optional_Name_Type (Opt.RTS)
                     elsif Tree.Root_Project.Has_Attributes
-                      ("Runtime", "Ada") then
+                      (PRA.Runtime, "Ada") then
                        Name_Type
                       (Tree.Root_Project.Attribute
-                         ("Runtime", "Ada").Value.Text)
+                         (PRA.Runtime, "Ada").Value.Text)
                     else No_Name);
 
       --  Name/Path of the compiler: see IDE.Compiler_Command, and GPR.Conf
