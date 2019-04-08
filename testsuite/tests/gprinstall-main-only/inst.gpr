@@ -1,0 +1,11 @@
+project Inst is
+   for Main use ("adactl"); -- , "ptree", "pfni");
+
+   package Install is
+      for mode use "usage";
+      for install_name use "AdaControl";
+--      for artifacts ("share/gps/plug-ins") use ("GPS/*");
+--      for artifacts ("share/gprconfig") use ("GPS/adacontrol.xml");
+      for artifacts ("share/doc/gps/html") use ("doc/*.html");
+   end Install;
+end Inst;

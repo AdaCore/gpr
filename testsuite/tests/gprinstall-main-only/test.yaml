@@ -1,0 +1,3 @@
+description:
+    check gprinstall with only a main (no sources)
+driver: python_script
