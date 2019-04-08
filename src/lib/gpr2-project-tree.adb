@@ -2067,7 +2067,9 @@ package body GPR2.Project.Tree is
       then
          return Self.Conf.Target;
 
-      elsif Self.Root_Project.Has_Attributes (PRA.Target) then
+      elsif Self.Root /= View.Undefined
+        and then Self.Root_Project.Has_Attributes (PRA.Target)
+      then
          return Name_Type
            (Self.Root_Project.Attribute (PRA.Target).Value.Text);
 
