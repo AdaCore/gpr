@@ -25,6 +25,7 @@ with GNAT.Command_Line;
 with GNAT.Strings;
 
 with GNATCOLL.Traces;
+with GNATCOLL.Tribooleans;
 
 with GPR.Util;
 with GPR.Version;
@@ -37,12 +38,15 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
+with GPR2.Unit.Set; use GPR2.Unit.Set;
 
 procedure GPRdump is
 
    use Ada;
    use Ada.Exceptions;
    use Ada.Strings.Unbounded;
+
+   use GNATCOLL.Tribooleans;
 
    use GPR2;
 
@@ -58,6 +62,8 @@ procedure GPRdump is
    Display_Sources     : aliased Boolean := False;
    Display_All_Sources : aliased Boolean := False;
    Display_Artifacts   : aliased Boolean := False;
+   Display_Units       : aliased Boolean := False;
+   All_Projects        : aliased Boolean := False;
    Source              : aliased GNAT.Strings.String_Access;
    Project_Path        : Unbounded_String;
    Project_Tree        : GPR2.Project.Tree.Object;
@@ -129,8 +135,18 @@ procedure GPRdump is
          Help => "display sources");
 
       Define_Switch
+        (Config, Display_Units'Access,
+         "-u", Long_Switch => "--units",
+         Help => "display units");
+
+      Define_Switch
+        (Config, All_Projects'Access,
+         "-r", Long_Switch => "--recoursive",
+         Help => "All none external projects recoursively");
+
+      Define_Switch
         (Config, Display_Artifacts'Access,
-         "-r", Long_Switch => "--artifacts",
+         Long_Switch => "--artifacts",
          Help => "display artifacts");
 
       Define_Switch
@@ -191,6 +207,12 @@ procedure GPRdump is
             begin
                if Display_Sources or Display_All_Sources then
                   Text_IO.Put_Line (S.Source.Path_Name.Value);
+                  if Display_Units and then S.Source.Has_Units then
+                     for U of S.Source.Compilation_Units loop
+                        Text_IO.Put_Line (ASCII.HT & String (U.Unit_Name));
+                     end loop;
+                  end if;
+
                end if;
 
                if Display_Artifacts then
@@ -200,6 +222,18 @@ procedure GPRdump is
                end if;
             end;
          end loop;
+
+         if Display_Units then
+            for U of View.Units loop
+               Text_IO.Put_Line
+                 (String (U.Name) & ' '
+                  & (if U.Has_Spec then U.Spec.Source.Path_Name.Value else "-")
+                  & ' '
+                  & (if U.Has_Body then U.Main_Body.Source.Path_Name.Value
+                     else "-")
+                 );
+            end loop;
+         end if;
       end if;
    end Sources;
 
@@ -217,8 +251,19 @@ begin
    begin
       Project_Tree.Load (Pathname, Context);
 
-      if Display_Sources or Display_All_Sources or Display_Artifacts then
-         Sources (Project_Tree.Root_Project);
+      if Display_Sources or else Display_All_Sources or else Display_Artifacts
+        or else Display_Units
+      then
+         for V in Project_Tree.Iterate
+           (Kind   => (Project.I_Recursive  => All_Projects,
+                       Project.I_Imported   => All_Projects,
+                       Project.I_Aggregated => All_Projects, others => True),
+            Status => (Project.S_Externally_Built => False),
+            Filter => (Project.F_Abstract | Project.F_Aggregate => False,
+                       others => True))
+         loop
+            Sources (Project.Tree.Element (V));
+         end loop;
       end if;
 
       if Source /= null and then Source.all /= "" then
