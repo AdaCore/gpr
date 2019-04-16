@@ -1090,8 +1090,7 @@ package body GPR2.Parser.Project is
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
 
-         Attr   : GPR2.Project.Attribute.Object :=
-                    GPR2.Project.Attribute.Undefined;
+         Attr   : GPR2.Project.Attribute.Object;
          Result : Item_Values;
 
       begin
@@ -1152,8 +1151,12 @@ package body GPR2.Parser.Project is
             --  stable.
 
             if Pack = "" then
-               if Attrs.Contains (Name, Index) then
-                  Attr := Attrs.Element (Name, Index);
+               Attr := Attrs.Element (Name, Index);
+
+               if Attr.Is_Defined then
+                  --  Found, no need other conditions
+
+                  null;
 
                --  Special cases for some built-in references
 
