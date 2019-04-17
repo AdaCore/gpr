@@ -1421,6 +1421,7 @@ package body GPRinstall.Install is
 
             V    : String_Vector.Vector;
             Line : Unbounded_String;
+            Attr : GPR2.Project.Attribute.Object;
          begin
             V.Append ("      when """ & Options.Build_Name.all & """ =>");
 
@@ -1478,16 +1479,14 @@ package body GPRinstall.Install is
                Line := Line & """;";
                V.Append (-Line);
 
-               if Project.Has_Attributes (A.Standalone_Library)
-                 and then
-                   Project.Attribute (A.Standalone_Library).Value.Text /= "no"
-               then
+               Attr := Project.Attribute (A.Library_Standalone);
+
+               if not Attr.Is_Default and then Attr.Value.Text /= "no" then
                   if not Project.Is_Static_Library then
-                     Line := +"         for Library_Standalone use """;
-                     Line := Line & Characters.Handling.To_Lower
-                       (Project.Attribute (A.Standalone_Library).Value.Text);
-                     Line := Line & """;";
-                     V.Append (-Line);
+                     V.Append
+                       ("         for Library_Standalone use """
+                        & Characters.Handling.To_Lower (Attr.Value.Text)
+                        & """;");
                   end if;
 
                   --  And then generates the interfaces

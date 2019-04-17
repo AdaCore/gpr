@@ -309,7 +309,6 @@ package GPR2.Project.Registry.Attribute is
    Specification_Exceptions    : constant Name_Type :=
                                    "specification_exceptions";
    Specification_Suffix        : constant Name_Type := "specification_suffix";
-   Standalone_Library          : constant Name_Type := "standalone_library";
    Symbolic_Link_Supported     : constant Name_Type :=
                                    "symbolic_link_supported";
    Switches                    : constant Name_Type := "switches";

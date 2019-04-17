@@ -746,19 +746,9 @@ package body GPR2.Project.View is
                           (Project.Registry.Attribute.Library_Interface);
    begin
       if Has_Interface then
-         if Self.Has_Attributes
-           (Project.Registry.Attribute.Library_Standalone)
-         then
-            return Standalone_Library_Kind'Value
-              (Self.Attribute
-                 (Project.Registry.Attribute.Library_Standalone).Value.Text);
-
-         else
-            --  By default, if there is no attribute Library_Standalone we are
-            --  building a standard standalone library.
-            return Standard;
-         end if;
-
+         return Standalone_Library_Kind'Value
+           (Self.Attribute
+              (Project.Registry.Attribute.Library_Standalone).Value.Text);
       else
          --  No interface, that is not a standalone library
          return No;
