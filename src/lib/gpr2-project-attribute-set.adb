@@ -119,18 +119,70 @@ package body GPR2.Project.Attribute.Set is
    begin
       if Name = No_Name and then Index = No_Value then
          return Self;
+      end if;
 
-      else
-         declare
-            Result : Object;
-         begin
+      declare
+         Result : Object;
+      begin
+         if Name = No_Name then
             for C in Self.Iterate (Name, Index) loop
                Result.Insert (Element (C));
             end loop;
 
             return Result;
+         end if;
+
+         --  If Name is defined we can use fast search for the attributes
+
+         declare
+            C : constant Set.Cursor := Self.Attributes.Find (Name);
+         begin
+            if not Set.Has_Element (C) then
+               --  Result is empty here
+
+               return Result;
+            end if;
+
+            declare
+               Item : constant Set_Attribute.Map := Set.Element (C);
+               CI   : Set_Attribute.Cursor;
+               LI   : constant Value_Type :=
+                        Ada.Characters.Handling.To_Lower (Index);
+            begin
+               if Index = No_Value then
+                  --  All indexes
+
+                  Result.Attributes.Insert (Name, Item);
+                  Result.Length := Item.Length;
+                  return Result;
+               end if;
+
+               --  Specific index only
+
+               CI := Item.Find (Index);
+
+               if Set_Attribute.Has_Element (CI) and then LI = Index then
+                  Result.Insert (Set_Attribute.Element (CI));
+                  return Result;
+               end if;
+
+               CI := Item.Find (LI);
+
+               if Set_Attribute.Has_Element (CI) then
+                  declare
+                     E : constant Attribute.Object :=
+                           Set_Attribute.Element (CI);
+                  begin
+                     if not E.Index_Case_Sensitive then
+                        Result.Insert (E);
+                     end if;
+                  end;
+               end if;
+            end;
          end;
-      end if;
+
+         return Result;
+      end;
    end Filter;
 
    ----------
