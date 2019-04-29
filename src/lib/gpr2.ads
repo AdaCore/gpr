@@ -126,6 +126,8 @@ package GPR2 is
 
    type Word is mod 2 ** 32;
 
+   File_Names_Case_Sensitive : constant Boolean;
+
 private
 
    No_Name  : constant Optional_Name_Type := "";

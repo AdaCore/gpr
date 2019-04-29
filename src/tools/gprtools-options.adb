@@ -19,7 +19,6 @@
 with Ada.Characters.Handling;
 
 with GNATCOLL.Utils;
-with GNATCOLL.OS.Constants;
 
 package body GPRtools.Options is
 
@@ -62,11 +61,7 @@ package body GPRtools.Options is
       Mains   :    out GPR2.Containers.Value_Set)
    is
       use GNATCOLL;
-      use GNATCOLL.OS;
       use GPR2.Path_Name;
-
-      File_Name_Case_Sensitive : constant Boolean :=
-                                   Constants.Default_Casing_Policy = Sensitive;
    begin
       Read_Arguments : loop
          declare
@@ -75,7 +70,7 @@ package body GPRtools.Options is
             exit Read_Arguments when Arg = "";
 
             if Utils.Ends_With
-              ((if File_Name_Case_Sensitive
+              ((if GPR2.File_Names_Case_Sensitive
                 then Arg
                 else Ada.Characters.Handling.To_Lower (Arg)),
                ".gpr")
