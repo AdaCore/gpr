@@ -1,0 +1,47 @@
+main.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Main
+    kind         = S_BODY
+    withed units = { Ada.Exceptions Ada.Text_IO GPR2 GPR2.Context GPR2.Project.Tree GPR2.Project.Source GPR2.Project.Source.Artifact GPR2.Project.Source.Set GPR2.Source Pkg1 Pkg2 }
+    object file  = main.ali
+pkg1.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg1
+    kind         = S_BODY
+    object file  = pkg1.ali
+sub.adb
+  single-unit          = FALSE
+  has naming exception = TRUE
+  - compilation unit at 1
+    unit name    = Sep
+    kind         = S_SEPARATE
+    separate from Pkg1
+  - compilation unit at 2
+    unit name    = Sep
+    kind         = S_SEPARATE
+    separate from Pkg2
+pkg2.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg2
+    kind         = S_BODY
+    object file  = pkg2.ali
+pkg1.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg1
+    kind         = S_SPEC
+    object file  = pkg1.ali
+pkg2.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg2
+    kind         = S_SPEC
+    object file  = pkg2.ali
