@@ -4,7 +4,9 @@ import sys
 import string
 
 from gnatpython import fileutils
+from gnatpython.arch import Arch
 from gnatpython.ex import Run, STDOUT
+from gnatpython.fileutils import mkdir, cd
 from gnatpython.testsuite.driver import TestDriver
 
 
@@ -42,6 +44,126 @@ def catch_test_errors(func):
         except TestError as exc:
             self.set_failure(exc.message)
     return wrapper
+
+
+# create_fake_ada_compiler routine copied from gprbuild-internal testsuite
+# support code.
+
+def create_fake_ada_compiler(comp_dir, comp_target, gnat_version,
+                             gcc_version, comp_is_cross=False,
+                             runtimes=["native", "sjlj"],
+                             create_symlink=False,
+                             create_ada_object_path=False):
+    """
+       Create directory defined by the comp_dir parameter and put fake Ada
+       compiler directory tree there. If comp_is_cross is true, the compiler
+       tools 'gnatmake', 'gcc', and 'gnatls' will be prefixed by the
+       comp_target. If create_symlink is true, the first runtime from the
+       runtimes will be made available as default through an 'adalib' symbolic
+       link.
+       If create_ada_object_path is true, that file will be created to simulate
+       a Windows install.
+    """
+
+    if comp_is_cross:
+        comp_prefix = comp_target + '-'
+    else:
+        comp_prefix = ""
+
+    arch = Arch()
+    comp_dict = {'comp_target': comp_target,
+                 'gnat_version': gnat_version,
+                 'gcc_version': gcc_version,
+                 'comp_prefix': comp_prefix,
+                 'exeext': arch.os.exeext}
+
+    mkdir(os.path.join(comp_dir, 'bin'))
+    gnatls_adb = open(os.path.join(comp_dir, 'bin', 'gnatls.adb'), 'w')
+    gnatls_adb.write("""
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Command_Line; use Ada.Command_Line;
+procedure gnatls is
+begin
+   if Argument_Count >= 1 and Argument (1) = "-v" then
+        Put_Line ("GNATLS Pro %(gnat_version)s (20190507-89)");
+   else
+         Put ("Running gnatls");
+         for J in 1 .. Argument_Count loop
+             Put (" " & Argument (J));
+         end loop;
+   end if;
+end gnatls;
+""" % comp_dict)
+    gnatls_adb.close()
+
+    gcc_adb = open(os.path.join(comp_dir, 'bin', 'gcc.adb'), 'w')
+    gcc_adb.write("""
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Command_Line; use Ada.Command_Line;
+procedure gcc is
+begin
+   if Argument_Count >= 1 and then Argument (1) = "-v" then
+        Put_Line ("gcc version %(gcc_version)s 20131008 for GNAT Pro");
+   elsif Argument_Count >= 1 and then Argument (1) = "--version" then
+        Put_Line ("gcc (GCC) %(gcc_version)s");
+   elsif Argument_Count >= 1 and then Argument (1) = "-dumpmachine" then
+        Put_Line ("%(comp_target)s");
+   else
+         Put ("Running gcc");
+         for J in 1 .. Argument_Count loop
+             Put (" " & Argument (J));
+         end loop;
+   end if;
+end gcc;
+""" % comp_dict)
+    gcc_adb.close()
+
+    gnatmake_adb = open(os.path.join(comp_dir, 'bin', 'gnatmake.adb'), 'w')
+    gnatmake_adb.write("""
+with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Command_Line; use Ada.Command_Line;
+procedure gnatmake is
+begin
+         Put ("Running gcc");
+         for J in 1 .. Argument_Count loop
+             Put (" " & Argument (J));
+         end loop;
+end gnatmake;
+""")
+    gnatmake_adb.close()
+
+    cd(os.path.join(comp_dir, 'bin'))
+
+    for tool in ['gnatmake', 'gcc', 'gnatls']:
+        comp_dict['bin'] = tool
+        Run(['gnatmake', tool + '.adb', '-o',
+             '%(comp_prefix)s%(bin)s%(exeext)s' % comp_dict])
+
+    if comp_target == "dotnet":
+        for dir in ("adalib", "adainclude"):
+            mkdir(os.path.join(comp_dir, 'lib', 'dotgnat', dir))
+    else:
+        for runtime in runtimes:
+            for dir in ("adalib", "adainclude"):
+                mkdir(os.path.join(comp_dir, 'lib', 'gcc', comp_target,
+                                   gcc_version, 'rts-%s' % runtime, dir))
+
+    libdir = os.path.join(comp_dir, 'lib', 'gcc', comp_target, gcc_version)
+
+    # On Unix systems, we have a symbolic link for the default
+    # runtime. gprconfig should automatically detect these are
+    # the same two runtimes and only list "native".
+
+    if create_symlink:
+        os.symlink(
+            os.path.join('rts-%s' % runtimes[0], 'adalib'),
+            os.path.join(libdir, 'adalib'))
+
+    # Simulate windows system, with an ada_object_path file
+
+    if create_ada_object_path:
+        with open(os.path.join(libdir, 'ada_object_path'), 'w') as ada_obj:
+            ada_obj.write("rts-%s/adalib" % runtimes[0])
 
 
 class BaseDriver(TestDriver):

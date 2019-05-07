@@ -2,8 +2,9 @@ import os
 import os.path
 
 from testsuite_support.base_driver import (
-    BaseDriver, catch_test_errors, SetupError,
+    BaseDriver, catch_test_errors, create_fake_ada_compiler, SetupError
 )
+from gnatpython.env import Env
 
 
 class BuildAndRunDriver(BaseDriver):
@@ -45,9 +46,19 @@ class BuildAndRunDriver(BaseDriver):
 
         self.project_file = project_file
         self.main_program = main
+        self.fake_ada_target = self.test_env.get('fake_ada_target', None)
 
     @catch_test_errors
     def run(self):
+        # If we are requested to run with a fake toolchain, set it up now
+        if self.fake_ada_target:
+            fake_dir = self.working_dir('fake-ada')
+            create_fake_ada_compiler(
+               comp_dir=fake_dir, comp_target=self.fake_ada_target,
+               gnat_version="21.0w", gcc_version="8.4.3", runtimes=["rtp"],
+               comp_is_cross=True)
+            Env().add_path(os.path.join(fake_dir, 'bin'))
+
         # Build the program and run it
         self.run_and_check(['gprbuild', '-g1', '-q', '-p',
                             '-P', self.project_file, '-bargs', '-Es'])
