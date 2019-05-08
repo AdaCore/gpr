@@ -48,7 +48,8 @@ package body GPR2.Path_Name is
    Root_Path : constant GNAT.Regexp.Regexp :=
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
-   Keep_Temporary_Directory : Unbounded_String;
+   Temp_Directory : Object;
+   --  The name of the temporary directory, computed once at elaboration time
 
    --  From old GPR
 
@@ -252,8 +253,8 @@ package body GPR2.Path_Name is
       function Check_Directory (Name : String) return Boolean is
       begin
          if OS_Lib.Is_Directory (Name) then
-            Keep_Temporary_Directory :=
-              To_Unbounded_String (OS_Lib.Normalize_Pathname (Name));
+            Temp_Directory :=
+              Create_Directory (Name_Type (OS_Lib.Normalize_Pathname (Name)));
             return True;
          end if;
 
@@ -376,8 +377,7 @@ package body GPR2.Path_Name is
 
    function Temporary_Directory return Object is
    begin
-      return Create_Directory
-               (Name_Type (To_String (Keep_Temporary_Directory)));
+      return Temp_Directory;
    end Temporary_Directory;
 
    -----------
