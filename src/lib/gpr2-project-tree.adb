@@ -840,6 +840,14 @@ package body GPR2.Project.Tree is
 
          Self.Conf := Config;
 
+         if Config.Has_Messages then
+            for M of Config.Log_Messages loop
+               Self.Messages.Append (M);
+            end loop;
+
+            raise Project_Error with "configuration project has errors";
+         end if;
+
          Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
          declare

@@ -477,14 +477,6 @@ begin
       Config := Project.Configuration.Load
         (Config_File, Name_Type (To_String (Target)));
 
-      if Config.Log_Messages.Has_Error then
-         Util.Output_Messages
-           (Config.Log_Messages, Options.Verbosity, Full_Path_Name_For_Brief);
-         Util.Fail_Program
-           ("Config file """ & String (Config_File.Simple_Name)
-            & """ parse error");
-      end if;
-
       Project_Tree.Load
         (Project_Path, Context, Config, Options.Build_Path,
          Optional_Name_Type (To_String (Subdirs)),
