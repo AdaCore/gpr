@@ -99,7 +99,7 @@ procedure GPRclean is
 
    procedure Exclude_File (Name : String) is
       use GNAT.OS_Lib;
-      Success : Boolean;
+      Success : Boolean := False;
    begin
       if Dry_Run then
          if Is_Regular_File (Name) then
@@ -414,13 +414,14 @@ procedure GPRclean is
    --------------------
 
    procedure Value_Callback (Switch, Value : String) is
-      Idx : Natural;
 
       function Normalize_Value return String is
         (if Value /= "" and then Value (Value'First) = '='
          then Value (Value'First + 1 .. Value'Last) else Value);
       --  Remove leading '=' symbol from value for options like
       --  --config=file.cgrp
+
+      Idx : Natural := 0;
 
    begin
       if Switch = "-P" then
@@ -465,6 +466,7 @@ procedure GPRclean is
 begin
    GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprclean");
+
    Parse_Command_Line;
 
    if Options.Version then

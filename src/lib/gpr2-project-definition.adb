@@ -189,7 +189,7 @@ package body GPR2.Project.Definition is
              or else A.Name = Registry.Attribute.Specification
              or else A.Name = Registry.Attribute.Body_N
              or else A.Name = Registry.Attribute.Implementation);
-      --  Fill the Ada_Naming_Exceptions object with the given attribute set.
+      --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
       Naming : constant Project.Pack.Object := Naming_Package (Def);
       --  Package Naming for the view
@@ -242,6 +242,7 @@ package body GPR2.Project.Definition is
                Is_Inserted     : Boolean;
             begin
                Attributes.Append (A);
+
                Ada_Naming_Exceptions.Insert
                  (Key      => Source,
                   New_Item => Attributes,
@@ -366,8 +367,8 @@ package body GPR2.Project.Definition is
          --  Try to match a file using its Basename and the project's
          --  naming exceptions for Language.
          --  If Language is Ada, use the attributes "for Body|Spec ... ".
-         --  For other languages, use the attributes "for (Implementation|
-         --    Specification)_Exceptions ...".
+         --  For other languages, use the attributes:
+         --    for (Implementation|Specification)_Exceptions ...".
          --  If success, set Match to True and Kind to the appropriate value.
 
          procedure Check_Naming_Scheme
@@ -476,7 +477,7 @@ package body GPR2.Project.Definition is
 
          begin
             Match := False;
-            Kind  := S_Spec;  --  Dummy value
+            Kind  := S_Spec;
 
             Check_Spec : declare
                Spec_Suffix : constant Project.Attribute.Object :=
@@ -725,27 +726,20 @@ package body GPR2.Project.Definition is
          function Naming_Exception_Equal
            (A : Attribute.Object;
             B : Value_Type;
-            I : Natural) return Boolean;
-
-         function Naming_Exception_Equal
-           (A : Attribute.Object;
-            B : Value_Type;
             I : Natural) return Boolean
          is (A.Value.Text = B
              and then
-               ((A.Has_At_Num
-                 and then A.At_Num = I)
-                or else
-                  (not A.Has_At_Num
-                   and then I = 1)));
+               ((A.Has_At_Num and then A.At_Num = I)
+                  or else
+                (not A.Has_At_Num and then I = 1)));
 
       begin
          --  Stop here if it's one of the excluded sources, or it's not in the
          --  included sources if those are given explicitely.
 
-         if Excluded_Sources.Contains (Basename) or else
-           not (Included_Sources.Is_Empty or else
-                Included_Sources.Contains (Basename))
+         if Excluded_Sources.Contains (Basename)
+           or else not (Included_Sources.Is_Empty
+                        or else Included_Sources.Contains (Basename))
          then
             return;
          end if;
@@ -758,10 +752,11 @@ package body GPR2.Project.Definition is
             begin
                --  First, try naming exceptions
 
-               Check_Naming_Exceptions (Basename => Basename,
-                                        Language => Language,
-                                        Match    => Match,
-                                        Kind     => Kind);
+               Check_Naming_Exceptions
+                 (Basename => Basename,
+                  Language => Language,
+                  Match    => Match,
+                  Kind     => Kind);
 
                if Match then
                   --  Got some naming exceptions for the source
@@ -806,10 +801,11 @@ package body GPR2.Project.Definition is
                else
                   --  If no naming exception matched, try with naming scheme
 
-                  Check_Naming_Scheme (Basename => Basename,
-                                       Language => Language,
-                                       Match    => Match,
-                                       Kind     => Kind);
+                  Check_Naming_Scheme
+                    (Basename => Basename,
+                     Language => Language,
+                     Match    => Match,
+                     Kind     => Kind);
 
                   if Match and then Language_Is_Ada then
                      --  For Ada, create a single compilation unit
@@ -838,11 +834,13 @@ package body GPR2.Project.Definition is
                            for A of Naming.Attributes
                              (Attr_Name, Value_Type (Unit_Name))
                            loop
-                              if not Naming_Exception_Equal (A, Basename, 1)
+                              if
+                                not Naming_Exception_Equal (A, Basename, 1)
                               then
                                  return True;
                               end if;
                            end loop;
+
                            return False;
                         end Has_Conflict_NE;
 
@@ -887,7 +885,6 @@ package body GPR2.Project.Definition is
                if Match then
                   Source_Is_In_Interface :=
                     Interface_Sources.Contains (Basename);
-
                   --  Different Source constructors for Ada and other
                   --  languages. Also some additional checks for Ada.
 
@@ -1022,12 +1019,10 @@ package body GPR2.Project.Definition is
             Language               : constant Name_Type := Src.Source.Language;
             Language_Is_Ada        : constant Boolean := Language = "Ada";
             Compilation_Units      : Compilation_Unit.List.Object;
-            Source_Is_In_Interface : Boolean;
+            Source_Is_In_Interface : Boolean :=
+                                       Interface_Sources.Contains (Basename);
 
          begin
-            Source_Is_In_Interface :=
-              Interface_Sources.Contains (Basename);
-
             --  Different Source constructors for Ada and other
             --  languages. Also some additional checks for Ada.
 
@@ -1118,7 +1113,6 @@ package body GPR2.Project.Definition is
             C := Def.Sources.Find (Source);
 
             if Project.Source.Set.Has_Element (C) then
-
                case Mode is
                   when Replace =>
                      Def.Sources.Replace (Source);

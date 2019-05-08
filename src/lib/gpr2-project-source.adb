@@ -51,8 +51,7 @@ package body GPR2.Project.Source is
       Has_Naming_Exception : Boolean) return Object is
    begin
       return Object'
-        (Source, Definition.Weak (View), Is_Interface,
-         Has_Naming_Exception);
+        (Source, Definition.Weak (View), Is_Interface, Has_Naming_Exception);
    end Create;
 
    ------------------

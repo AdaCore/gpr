@@ -1008,7 +1008,6 @@ package body GPRinstall.Install is
                      if Copy (Object)
                        and then Src.Compilation_Units.Element
                          (1).Kind /= S_Separate
---                       and then Sid.Compilable = Yes
                      then
                         Copy_File
                           (From => Atf.Object_Code,

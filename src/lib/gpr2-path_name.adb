@@ -84,7 +84,8 @@ package body GPR2.Path_Name is
      (OS_Lib.Normalize_Pathname
         ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
           then ""
-          else Ensure_Directory (String (Directory))) & String (Name)));
+          else Ensure_Directory (String (Directory)))
+         & String (Name)));
 
    -------------------
    -- Common_Prefix --
@@ -292,6 +293,7 @@ package body GPR2.Path_Name is
             then
                return;
             end if;
+
          when '/' =>
             if Check_Directory ("/tmp")
               or else Check_Directory ("/var/tmp")
@@ -299,6 +301,7 @@ package body GPR2.Path_Name is
             then
                return;
             end if;
+
          when others =>
             raise Program_Error with
               "Unsupported directory separator " & OS_Lib.Directory_Separator;
@@ -311,7 +314,7 @@ package body GPR2.Path_Name is
 
    function Exists (Self : Object) return Boolean is
    begin
-      return Ada.Directories.Exists (To_String (Self.Value));
+      return Directories.Exists (To_String (Self.Value));
    end Exists;
 
    -------------------

@@ -178,6 +178,7 @@ package body GPR2.Source is
                Result := Result & Kind_Type'Image (CU.Kind)
                  & "|" & Handling.To_Lower (String (CU.Unit_Name));
             end loop;
+
             return To_String (Result);
          end;
       else
