@@ -1018,9 +1018,10 @@ package body GPRinstall.Install is
                      --  against the spec file).
 
                      if Copy (Dependency)
+                       and then Is_Ada (Source)
+                       and then Src.Has_Units
                        and then Src.Compilation_Units.Element
                          (1).Kind /= S_Separate
-                       and then Is_Ada (Source)
                      then
                         declare
                            Proj : GPR2.Project.View.Object;
