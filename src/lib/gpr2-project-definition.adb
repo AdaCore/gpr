@@ -216,6 +216,7 @@ package body GPR2.Project.Definition is
 
       Interface_Units       : Unit_Name_To_Sloc.Map;
       Interface_Units_Found : Name_Set;
+      Interface_Found       : Boolean := False;
       Interface_Sources     : Source_Path_To_Sloc.Map;
 
       Tree              : constant not null access Project.Tree.Object :=
@@ -913,11 +914,20 @@ package body GPR2.Project.Definition is
                      Interface_Sources.Exclude (Basename);
                   end if;
 
-                  Project_Source := Project.Source.Create
-                    (Source               => Source,
-                     View                 => View,
-                     Is_Interface         => Source_Is_In_Interface,
-                     Has_Naming_Exception => Has_Naming_Exception);
+                  declare
+                     Is_Interface : constant Boolean :=
+                                      Source_Is_In_Interface
+                                          or else
+                                            (not Interface_Found
+                                             and then View.Kind in K_Library
+                                             and then Source.Kind = S_Spec);
+                  begin
+                     Project_Source := Project.Source.Create
+                       (Source               => Source,
+                        View                 => View,
+                        Is_Interface         => Is_Interface,
+                        Has_Naming_Exception => Has_Naming_Exception);
+                  end;
 
                   if Def.Sources.Contains (Project_Source) then
                      Tree.Append_Message
@@ -1317,6 +1327,8 @@ package body GPR2.Project.Definition is
       --  which contains unit names.
 
       if Def.Attrs.Has_Library_Interface then
+         Interface_Found := True;
+
          for Unit of Def.Attrs.Library_Interface.Values loop
             if Interface_Units.Contains (Name_Type (Unit.Text)) then
                Tree.Append_Message
@@ -1335,6 +1347,8 @@ package body GPR2.Project.Definition is
       --  And then for Interfaces which contains filenames
 
       if Def.Attrs.Has_Interfaces then
+         Interface_Found := True;
+
          for Source of Def.Attrs.Interfaces.Values loop
             if Interface_Sources.Contains (Source.Text) then
                Tree.Append_Message
