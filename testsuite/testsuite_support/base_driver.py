@@ -6,7 +6,7 @@ import string
 from gnatpython import fileutils
 from gnatpython.arch import Arch
 from gnatpython.ex import Run, STDOUT
-from gnatpython.fileutils import mkdir, cd
+from gnatpython.fileutils import mkdir
 from gnatpython.testsuite.driver import TestDriver
 
 
@@ -132,12 +132,16 @@ end gnatmake;
 """)
     gnatmake_adb.close()
 
-    cd(os.path.join(comp_dir, 'bin'))
-
     for tool in ['gnatmake', 'gcc', 'gnatls']:
         comp_dict['bin'] = tool
-        Run(['gnatmake', tool + '.adb', '-o',
-             '%(comp_prefix)s%(bin)s%(exeext)s' % comp_dict])
+
+        # Do not run gnatmake in the same directory with the fake tools sources
+        # to avoid using just created fake tools in the build process.
+
+        Run(['gnatmake', os.path.join('bin', tool + '.adb'), '-o',
+             os.path.join('bin',
+                          '%(comp_prefix)s%(bin)s%(exeext)s' % comp_dict)],
+            cwd=comp_dir)
 
     if comp_target == "dotnet":
         for dir in ("adalib", "adainclude"):
