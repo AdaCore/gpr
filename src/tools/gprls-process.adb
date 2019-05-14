@@ -430,13 +430,13 @@ begin
          --    For each 'U' section related to <unit>:
          --
          --    - if it is the first one, then:
-         --      - call Recurs_On_Sources_For_Unit on <unit>,
+         --      - call Recurse_On_Sources_For_Unit on <unit>,
          --      - if it is a body, i.e. the line looks like "U <unit>%b [...]"
          --        then loop over the 'D' lines and add to Closures any subunit
          --        of <unit>.
          --
          --    - for every 'W' (also including 'Z') line of the section, call
-         --      Recurs_On_Sources_For_Unit on the "withed" unit.
+         --      Recurse_On_Sources_For_Unit on the "withed" unit.
 
          ---------------------
          -- Compute_Closure --
@@ -444,12 +444,12 @@ begin
 
          procedure Compute_Closure (Source : Project.Source.Object) is
 
-            procedure Recurs_On_Sources_For_Unit (Unit : Name_Type);
+            procedure Recurse_On_Sources_For_Unit (Unit : Name_Type);
             --  Calls Compute_Closure on every source defining Unit.
             --  If All_Projects is False, nothing is done for sources that do
             --  not belong to the root project.
 
-            procedure Recurs_On_Sources_For_Unit (Unit : Name_Type) is
+            procedure Recurse_On_Sources_For_Unit (Unit : Name_Type) is
                Unit_Obj : GPR2.Unit.Object;
 
             begin
@@ -477,7 +477,7 @@ begin
                for B of Unit_Obj.Separates loop
                   Compute_Closure (B);
                end loop;
-            end Recurs_On_Sources_For_Unit;
+            end Recurse_On_Sources_For_Unit;
 
             ALI_File   : Path_Name.Object;
             ALI_Object : ALI_Data.Object;
@@ -533,7 +533,7 @@ begin
                for U_Sec of ALI_Object.Units loop
                   if First then
                      First := False;
-                     Recurs_On_Sources_For_Unit
+                     Recurse_On_Sources_For_Unit
                        (U_Sec.Uname);
 
                      --  For a body, check if there are subunits and add the
@@ -542,14 +542,14 @@ begin
                      if U_Sec.Utype in Is_Body | Is_Body_Only then
                         for Dep of ALI_Object.Sdeps loop
                            if Is_Subunit_Of (Dep.Unit_Name, U_Sec.Uname) then
-                              Recurs_On_Sources_For_Unit (Dep.Unit_Name);
+                              Recurse_On_Sources_For_Unit (Dep.Unit_Name);
                            end if;
                         end loop;
                      end if;
                   end if;
 
                   for W of U_Sec.Withs loop
-                     Recurs_On_Sources_For_Unit (W.Uname);
+                     Recurse_On_Sources_For_Unit (W.Uname);
                   end loop;
                end loop;
             end;
