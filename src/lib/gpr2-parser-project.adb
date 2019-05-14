@@ -266,7 +266,7 @@ package body GPR2.Parser.Project is
       use Ada.Strings.Wide_Wide_Unbounded;
 
       function Parse_Stage_1 (Unit : Analysis_Unit) return Object;
-      --  Analyse project, record all externals variables and imports
+      --  Analyze project, record all externals variables and imports
 
       -------------------
       -- Parse_Stage_1 --

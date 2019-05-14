@@ -68,7 +68,7 @@ package body GPR2.Project.Source is
         with Inline, Pre => Unit.Is_Defined;
       --  Insert Unit into Deps (result of this routine)
 
-      procedure To_Analyse (Src : GPR2.Project.Source.Object);
+      procedure To_Analyze (Src : GPR2.Project.Source.Object);
       --  Record Src's withed units to be analysed (insert into Buf)
 
       ------------
@@ -129,10 +129,10 @@ package body GPR2.Project.Source is
       --  The resulting source set
 
       ----------------
-      -- To_Analyse --
+      -- To_Analyze --
       ----------------
 
-      procedure To_Analyse (Src : GPR2.Project.Source.Object) is
+      procedure To_Analyze (Src : GPR2.Project.Source.Object) is
       begin
          if Src.Is_Defined then
             for CU of Src.Source.Compilation_Units loop
@@ -143,7 +143,7 @@ package body GPR2.Project.Source is
                end loop;
             end loop;
          end if;
-      end To_Analyse;
+      end To_Analyze;
 
    begin
       --  First we need to ensure that all views are up-to-date regarding the
@@ -155,7 +155,7 @@ package body GPR2.Project.Source is
 
       if Mode in Unit | Closure then
          if Self.Source.Has_Single_Unit and then Self.Has_Other_Part then
-            To_Analyse (Self.Other_Part);
+            To_Analyze (Self.Other_Part);
          end if;
       end if;
 
@@ -203,10 +203,10 @@ package body GPR2.Project.Source is
                         --  bodies.
 
                         if Mode = Closure then
-                           To_Analyse (SU.Spec);
-                           To_Analyse (SU.Main_Body);
+                           To_Analyze (SU.Spec);
+                           To_Analyze (SU.Main_Body);
                            for Sep of SU.Separates loop
-                              To_Analyse (Sep);
+                              To_Analyze (Sep);
                            end loop;
                         end if;
 
