@@ -2401,4 +2401,15 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere);
 
+   --  install_project
+   Store_Insert
+     (Create (Install_Project, Pack.Install),
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => False,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
 end GPR2.Project.Registry.Attribute;
