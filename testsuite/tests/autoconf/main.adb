@@ -25,6 +25,8 @@ with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
+with System.OS_Constants;
+
 procedure Main is
 
    use Ada;
@@ -35,6 +37,7 @@ procedure Main is
    Project_Tree : Project.Tree.Object;
    Ctx          : Context.Object := Context.Empty;
    RTS          : Name_Value_Map := Name_Value_Map_Package.Empty_Map;
+   This_Target  : constant String := System.OS_Constants.Target_Name;
 
    procedure Print_Config_Info;
 
@@ -55,9 +58,12 @@ procedure Main is
                             (Name_Type (Config_View.Attribute
                                           (Name  => "Runtime_Dir",
                                            Index => "Ada").Value.Text));
+      Target : constant String := Config_View.Attribute ("Target").Value.Text;
    begin
       Text_IO.Put_Line ("target = "
-                        & Config_View.Attribute ("Target").Value.Text);
+                        & (if Target = This_Target
+                           then "this-target"
+                           else Target));
       Text_IO.Put_Line ("compiler driver = "
                         & String (Compiler_Driver.Base_Name));
 
@@ -83,6 +89,7 @@ begin
 
    RTS.Insert ("Ada", "rtp");
    Ctx.Insert ("VSB_DIR", ".");
+   Ctx.Insert ("target", This_Target);
 
    Project_Tree.Load_Autoconf
      (Filename          => Project.Create ("projects/a.gpr"),

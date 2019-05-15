@@ -3,7 +3,7 @@ with "b.gpr";
 project A is
    for Languages use ("Ada");
 
-   for Target use "x86_64-linux";
+   for Target use external ("target");
 
    for Runtime ("Ada") use "zfp";
    for Runtime ("C++") use "rts_cpp/";
