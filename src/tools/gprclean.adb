@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
@@ -33,7 +34,9 @@ with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
+with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -76,9 +79,10 @@ procedure GPRclean is
    Remain_Useful               : aliased Boolean := False;
    No_Project                  : aliased Boolean := False;
    Unchecked_Shared_Lib_Import : aliased Boolean := False;
-   Dummy                       : aliased Boolean := False;
    Debug_Mode                  : aliased Boolean := False;
    Full_Path_Name_For_Brief    : aliased Boolean := False;
+   Remove_Empty_Dirs           : aliased Boolean := False;
+   Dummy                       : aliased Boolean := False;
    --  For not working backward compartible switches
 
    Mains         : GPR2.Containers.Value_Set;
@@ -202,6 +206,11 @@ procedure GPRclean is
         (Config, Full_Path_Name_For_Brief'Access,
          Switch => "-F",
          Help   => "Full project path name in brief log messages");
+
+      Define_Switch
+        (Config, Remove_Empty_Dirs'Access,
+         Switch => "-p",
+         Help   => "Remove empty build directories");
 
       Getopt (Config);
 
@@ -407,6 +416,88 @@ procedure GPRclean is
             end if;
          end if;
       end;
+
+      if Remove_Empty_Dirs then
+         declare
+            use Ada.Directories;
+
+            Attr : Project.Attribute.Object;
+
+            procedure Delete_Dir (Dir : String);
+
+            procedure Delete_If_Not_Project (Dir : Path_Name.Object);
+            --  Delete the directory if it is not the directory where the
+            --  project is resided.
+
+            procedure Delete_Dir (Dir : String) is
+               Search : Search_Type;
+            begin
+               if Kind (Dir) = Directory then
+                  Delete_Directory (Dir);
+               end if;
+            exception
+               when Use_Error =>
+                  if not Options.Quiet then
+                     Start_Search (Search, Dir, "");
+                     Text_IO.Put_Line
+                       ("warning: Directory """ & Dir
+                        & """ could not be removed"
+                        & (if More_Entries (Search)
+                           then " because it is not empty"
+                           else "") & '.');
+                  end if;
+            end Delete_Dir;
+
+            procedure Delete_If_Not_Project (Dir : Path_Name.Object) is
+            begin
+               if Dir.Value /= View.Path_Name.Dir_Name then
+                  declare
+                     Dir_Name : constant String := Dir.Value;
+                  begin
+                     Delete_Dir (Dir_Name);
+
+                     if Subdirs /= Null_Unbounded_String
+                       and then String (Dir.Simple_Name) = Subdirs
+                     then
+                        --  If subdirs is defined try to remove the parent one
+
+                        pragma Assert
+                          (Dir_Name (Dir_Name'Last - Length (Subdirs)) =
+                             GNAT.OS_Lib.Directory_Separator);
+
+                        Delete_Dir
+                          (Dir_Name (Dir_Name'First
+                           .. Dir_Name'Last - Length (Subdirs) - 1));
+                     end if;
+                  end;
+               end if;
+            end Delete_If_Not_Project;
+
+         begin
+            if View.Kind in K_Standard | K_Library | K_Aggregate_Library then
+               Delete_If_Not_Project (View.Object_Directory);
+
+               if View.Executable_Directory /= View.Object_Directory then
+                  Delete_If_Not_Project (View.Executable_Directory);
+               end if;
+            end if;
+
+            if View.Is_Library then
+               Delete_If_Not_Project (View.Library_Directory);
+
+               if View.Library_Directory /= View.Library_Ali_Directory then
+                  Delete_If_Not_Project (View.Library_Ali_Directory);
+               end if;
+
+               if View.Check_Attribute
+                 (Project.Registry.Attribute.Library_Src_Dir, Result => Attr)
+               then
+                  Delete_If_Not_Project
+                    (Path_Name.Create_Directory (Name_Type (Attr.Value.Text)));
+               end if;
+            end if;
+         end;
+      end if;
    end Sources;
 
    --------------------
