@@ -17,11 +17,13 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
-with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Ada.Strings.Unbounded;
 
 with GPR2.Project.Definition;
 
 package body GPR2.Project.Attribute.Set is
+
+   use Ada.Strings.Unbounded;
 
    package RA renames Registry.Attribute;
 
@@ -500,10 +502,12 @@ package body GPR2.Project.Attribute.Set is
             if Has_Element (Position) then
                Result := Element (Position);
                return True;
-            end if;
 
-            return Check_Default
-              (Ref_Name, Index, RA.Get (RA.Create (Ref_Name, Pack)), Result);
+            else
+               return Check_Default
+                 (Ref_Name, Index,
+                  RA.Get (RA.Create (Ref_Name, Pack)), Result);
+            end if;
          end Check_Reference;
 
       begin
@@ -521,6 +525,7 @@ package body GPR2.Project.Attribute.Set is
                Values  => Containers.Source_Value_Type_List.To_Vector
                  (Create_Value, 1),
                Default => True);
+
          else
             Result := Project.Attribute.Create
               (Create_Name, Create_Index, Create_Value, Default => True);

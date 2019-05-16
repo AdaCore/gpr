@@ -104,6 +104,7 @@ package body GPR2.Project.Definition is
    ----------------------------
 
    procedure Set_Default_Attributes (Def : in out Data) is
+
       Lang_Set  : Containers.Source_Value_Set;
       Languages : Containers.Source_Value_List;
 
@@ -118,8 +119,10 @@ package body GPR2.Project.Definition is
          for A of D.Aggregated loop
             if A.Kind in Aggregate_Kind then
                Agg_Languages (Get_RW (A).all);
+
             else
                Set_Default_Attributes (Get_RW (A).all);
+
                for L of A.Languages loop
                   Lang_Set.Include (L);
                end loop;
@@ -130,6 +133,7 @@ package body GPR2.Project.Definition is
    begin
       if Def.Kind in Aggregate_Kind then
          Agg_Languages (Def);
+
          for L of Lang_Set loop
             Languages.Append (L);
          end loop;
@@ -257,11 +261,10 @@ package body GPR2.Project.Definition is
       Interface_Found       : Boolean := False;
       Interface_Sources     : Source_Path_To_Sloc.Map;
 
-      Tree              : constant not null access Project.Tree.Object :=
-                            Def.Tree;
-
-      Message_Count     : constant Containers.Count_Type :=
-                            Tree.Log_Messages.Count;
+      Tree                  : constant not null access Project.Tree.Object :=
+                                Def.Tree;
+      Message_Count         : constant Containers.Count_Type :=
+                                Tree.Log_Messages.Count;
 
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
 

@@ -1293,7 +1293,6 @@ package body GPR2.Project.Tree is
                                     Data.Trees.Project.Imports.Element
                                       (Project.Path_Name).Is_Limited;
                   begin
-
                      if Recursive_Load.Filename = Project.Path_Name then
                         --  We are importing the root-project
 
@@ -1558,6 +1557,8 @@ package body GPR2.Project.Tree is
       Fill_Externals_From_Environment (Root.Context, Root.Externals);
 
       Set_Context (Self, Changed);
+
+      --  ??? this is temporary and need to be fixed in GPRconfig
 
       if Self.Conf.Is_Defined then
          Self.Conf.Fix_Languages;

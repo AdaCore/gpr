@@ -205,6 +205,7 @@ package body GPR2.Project.Source is
                         if Mode = Closure then
                            To_Analyze (SU.Spec);
                            To_Analyze (SU.Main_Body);
+
                            for Sep of SU.Separates loop
                               To_Analyze (Sep);
                            end loop;

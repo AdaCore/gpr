@@ -107,10 +107,10 @@ package body GPR2.Project.View is
    function Apply_Root_And_Subdirs
      (Self : Object; Dir : Value_Type) return GPR2.Path_Name.Object
    is
-      Result   : GPR2.Path_Name.Object;
       Subdirs  : constant Optional_Name_Type := Self.Tree.Subdirs;
       Dir_Name : constant Name_Type :=
                    (if Dir = "" then "." else Name_Type (Dir));
+      Result   : GPR2.Path_Name.Object;
    begin
       if OS_Lib.Is_Absolute_Path (Dir) then
          Result := GPR2.Path_Name.Create_Directory (Dir_Name);
@@ -853,7 +853,7 @@ package body GPR2.Project.View is
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Apply_Root_And_Subdirs
-               (Self.Attribute (Registry.Attribute.Object_Dir).Value.Text);
+        (Self.Attribute (Registry.Attribute.Object_Dir).Value.Text);
    end Object_Directory;
 
    ----------
