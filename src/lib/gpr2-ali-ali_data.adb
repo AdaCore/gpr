@@ -430,12 +430,17 @@ package body GPR2.ALI.ALI_Data is
          --  Unit_Name, Unit_Kind
 
          declare
-            Kind   : Kind_Type;
-            Name   : constant String := Get_Token;
-            Suffix : constant String :=
-                       (if Name'Length > 2
-                        then Name (Name'Last - 1 .. Name'Last)
-                        else "");
+            Kind_Len : constant array (Kind_Type) of Natural :=
+              (S_Spec | S_Body => 2,
+               S_Separate      => 0);
+            --  Length of suffix denoting dependency kind
+
+            Kind     : Kind_Type;
+            Name     : constant String := Get_Token;
+            Suffix   : constant String :=
+                         (if Name'Length > 2
+                          then Name (Name'Last - 1 .. Name'Last)
+                          else "");
          begin
             if Suffix = "%s" then
                Kind := S_Spec;
@@ -451,7 +456,8 @@ package body GPR2.ALI.ALI_Data is
               (Sfile     => Simple_Name (Sfile),
                Stamp     => Stamp,
                Checksum  => Chksum,
-               Unit_Name => Name_Type (Name (Name'First .. Name'Last - 2)),
+               Unit_Name =>
+                 Name_Type (Name (Name'First .. Name'Last - Kind_Len (Kind))),
                Unit_Kind => Kind);
          end;
 
