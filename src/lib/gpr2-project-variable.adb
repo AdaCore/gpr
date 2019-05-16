@@ -35,7 +35,7 @@ package body GPR2.Project.Variable is
       use GPR2.Project.Registry.Attribute;
       use all type GPR2.Project.Name_Values.Object;
 
-      Name   : constant String := String (Self.Name);
+      Name   : constant String := String (Self.Name.Text);
       Result : Unbounded_String := To_Unbounded_String (Name);
    begin
       if Name_Len > 0 and then Name'Length < Name_Len then

@@ -18,8 +18,11 @@
 
 with Ada.Characters.Handling;
 with Ada.Strings.Equal_Case_Insensitive;
+with Ada.Strings.Unbounded;
 
 package body GPR2.Project.Name_Values is
+
+   use Ada.Strings.Unbounded;
 
    function Build_Map
      (Values         : Containers.Source_Value_List;
@@ -74,8 +77,7 @@ package body GPR2.Project.Name_Values is
       return Object'
         (Sloc
          with Single,
-              To_Unbounded_String (String (Name.Text)),
-              Values, True, Build_Map (Values, True));
+              Name, Values, True, Build_Map (Values, True));
    end Create;
 
    function Create
@@ -85,8 +87,7 @@ package body GPR2.Project.Name_Values is
       return Object'
         (Source_Reference.Object (Name)
          with List,
-         To_Unbounded_String (String (Name.Text)),
-         Values, True, Build_Map (Values, True));
+         Name, Values, True, Build_Map (Values, True));
    end Create;
 
    ---------------
@@ -107,7 +108,8 @@ package body GPR2.Project.Name_Values is
    -----------
 
    function Image (Self : Object; Name_Len : Natural := 0) return String is
-      Result : Unbounded_String := Self.Name;
+      Result : Unbounded_String :=
+                 To_Unbounded_String (String (Self.Name.Text));
    begin
       if Name_Len > 0 and then Length (Result) < Name_Len then
          Append (Result, (Name_Len - Integer (Length (Result))) * ' ');
@@ -135,19 +137,22 @@ package body GPR2.Project.Name_Values is
    -- Name --
    ----------
 
-   function Name (Self : Object) return Name_Type is
+   function Name (Self : Object) return Source_Reference.Identifier.Object is
    begin
-      return Name_Type (To_String (Self.Name));
+      return Self.Name;
    end Name;
 
    ------------
    -- Rename --
    ------------
 
-   function Rename (Self : in out Object; Name : Name_Type) return Object is
+   function Rename
+     (Self : in out Object;
+      Name : Source_Reference.Identifier.Object) return Object
+   is
       Result : Object := Self;
    begin
-      Result.Name := To_Unbounded_String (String (Name));
+      Result.Name := Name;
       return Result;
    end Rename;
 

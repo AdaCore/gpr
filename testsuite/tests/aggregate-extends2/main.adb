@@ -53,7 +53,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & String (Att.Name));
+      Text_IO.Put ("   " & String (Att.Name.Text));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -69,7 +69,7 @@ procedure Main is
 
    procedure Display (Var : Project.Variable.Object) is
    begin
-      Text_IO.Put ("   " & String (Var.Name) & " =");
+      Text_IO.Put ("   " & String (Var.Name.Text) & " =");
       for V of Var.Values loop
          Text_IO.Put (" " & V.Text);
       end loop;

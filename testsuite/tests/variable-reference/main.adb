@@ -41,7 +41,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & String (Att.Name));
+      Text_IO.Put ("   " & String (Att.Name.Text));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");

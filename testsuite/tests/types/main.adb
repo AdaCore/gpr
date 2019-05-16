@@ -45,7 +45,7 @@ procedure Main is
       Text_IO.Put_Line ("All good, no message.");
 
       for T of Prj.Root_Project.Types loop
-         Text_IO.Put ("Type : " & String (T.Name) & " -");
+         Text_IO.Put ("Type : " & String (T.Name.Text) & " -");
 
          for V of T.Values loop
             Text_IO.Put (' ' & V.Text);

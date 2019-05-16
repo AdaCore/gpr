@@ -51,7 +51,7 @@ procedure Main is
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate (With_Defaults => True) loop
                Attr := Attribute.Set.Element (A);
-               Text_IO.Put ("A:   " & String (Attr.Name));
+               Text_IO.Put ("A:   " & String (Attr.Name.Text));
                Text_IO.Put (" " & (if Attr.Is_Default then '~' else '-') & ">");
 
                for V of Attribute.Set.Element (A).Values loop
@@ -61,7 +61,8 @@ procedure Main is
             end loop;
 
             for A in Prj.Attributes.Filter ("Object_Dir").Iterate loop
-               Text_IO.Put ("A2:  " & String (Attribute.Set.Element (A).Name));
+               Text_IO.Put
+                 ("A2:  " & String (Attribute.Set.Element (A).Name.Text));
                Text_IO.Put (" ->");
 
                for V of Attribute.Set.Element (A).Values loop
@@ -71,7 +72,7 @@ procedure Main is
             end loop;
 
             for A of Prj.Attributes.Filter ("Object_Dir") loop
-               Text_IO.Put_Line ("A3:  " & String (A.Name));
+               Text_IO.Put_Line ("A3:  " & String (A.Name.Text));
             end loop;
 
          end if;

@@ -32,7 +32,7 @@ package body GPR2.Project.Typ is
    is
       use Ada.Strings.Unbounded;
 
-      Name   : constant String := String (Self.Name);
+      Name   : constant String := String (Self.Name.Text);
       Result : Unbounded_String := To_Unbounded_String ("type ");
    begin
       Append (Result, Name);

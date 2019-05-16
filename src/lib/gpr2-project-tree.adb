@@ -1808,7 +1808,8 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute """ & String (A.Name) & """ cannot have index",
+                     "attribute """ & String (A.Name.Text)
+                     & """ cannot have index",
                      A));
             end if;
 
@@ -1816,10 +1817,11 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute """ & String (A.Name) & """ cannot be a list",
+                     "attribute """ & String (A.Name.Text)
+                     & """ cannot be a list",
                      A));
 
-               if A.Name = PRA.Object_Dir then
+               if A.Name.Text = PRA.Object_Dir then
                   Check_Object_Dir_Exists := False;
                end if;
             end if;
@@ -1828,7 +1830,8 @@ package body GPR2.Project.Tree is
                Self.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute """ & String (A.Name) & """ must be a list",
+                     "attribute """ & String (A.Name.Text)
+                     & """ must be a list",
                      A.Value));
             end if;
          end Check_Def;
@@ -1857,7 +1860,7 @@ package body GPR2.Project.Tree is
                for A of P.Attributes loop
                   declare
                      Q_Name : constant PRA.Qualified_Name :=
-                                PRA.Create (A.Name, P.Name);
+                                PRA.Create (A.Name.Text, P.Name);
                      Def    : PRA.Def;
                   begin
                      if PRA.Exists (Q_Name) then
@@ -1867,7 +1870,7 @@ package body GPR2.Project.Tree is
                            Self.Messages.Append
                              (Message.Create
                                 (Message.Error,
-                                 "attribute """ & String (A.Name)
+                                 "attribute """ & String (A.Name.Text)
                                  & """ cannot be used in package "
                                  & String (P.Name),
                                  A));
@@ -1879,7 +1882,7 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "attribute """ & String (A.Name)
+                              "attribute """ & String (A.Name.Text)
                               & """ not supported in package "
                               & String (P.Name),
                               A));
@@ -1893,13 +1896,15 @@ package body GPR2.Project.Tree is
 
          for A of P_Data.Attrs loop
             declare
-               Q_Name : constant PRA.Qualified_Name := PRA.Create (A.Name);
+               Q_Name : constant PRA.Qualified_Name :=
+                          PRA.Create (A.Name.Text);
             begin
                if not PRA.Exists (Q_Name) then
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "unrecognized attribute """ & String (A.Name) & '"',
+                        "unrecognized attribute """ & String (A.Name.Text)
+                        & '"',
                         A));
 
                else
@@ -1907,7 +1912,7 @@ package body GPR2.Project.Tree is
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
-                           "attribute """ & String (A.Name)
+                           "attribute """ & String (A.Name.Text)
                            & """ cannot be used in " & Image (P_Kind),
                            A));
                   end if;

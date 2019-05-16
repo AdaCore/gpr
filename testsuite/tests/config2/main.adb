@@ -43,7 +43,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & String (Att.Name));
+      Text_IO.Put ("   " & String (Att.Name.Text));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -68,7 +68,8 @@ procedure Main is
       if Full then
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate loop
-               Text_IO.Put ("A:   " & String (Attribute.Set.Element (A).Name));
+               Text_IO.Put
+                 ("A:   " & String (Attribute.Set.Element (A).Name.Text));
                Text_IO.Put (" ->");
 
                for V of Element (A).Values loop

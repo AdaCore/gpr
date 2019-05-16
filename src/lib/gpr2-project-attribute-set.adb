@@ -94,7 +94,7 @@ package body GPR2.Project.Attribute.Set is
      (Self      : Object;
       Attribute : Project.Attribute.Object) return Boolean is
    begin
-      return Self.Contains (Attribute.Name, Attribute.Index.Text);
+      return Self.Contains (Attribute.Name.Text, Attribute.Index.Text);
    end Contains;
 
    -------------
@@ -268,7 +268,8 @@ package body GPR2.Project.Attribute.Set is
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      Position : constant Set.Cursor := Self.Attributes.Find (Attribute.Name);
+      Position : constant Set.Cursor :=
+                   Self.Attributes.Find (Attribute.Name.Text);
       Present  : Boolean := False;
    begin
       if Set.Has_Element (Position) then
@@ -286,7 +287,7 @@ package body GPR2.Project.Attribute.Set is
          begin
             Present := A.Contains (Attribute.Index.Text);
             A.Include (Attribute.Case_Aware_Index, Attribute);
-            Self.Attributes.Insert (Attribute.Name, A);
+            Self.Attributes.Insert (Attribute.Name.Text, A);
          end;
       end if;
 
@@ -302,7 +303,8 @@ package body GPR2.Project.Attribute.Set is
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      Position : constant Set.Cursor := Self.Attributes.Find (Attribute.Name);
+      Position : constant Set.Cursor :=
+                   Self.Attributes.Find (Attribute.Name.Text);
    begin
       if Set.Has_Element (Position) then
          declare
@@ -317,7 +319,7 @@ package body GPR2.Project.Attribute.Set is
             A : Set_Attribute.Map;
          begin
             A.Insert (Attribute.Case_Aware_Index, Attribute);
-            Self.Attributes.Insert (Attribute.Name, A);
+            Self.Attributes.Insert (Attribute.Name.Text, A);
          end;
       end if;
 
@@ -346,7 +348,7 @@ package body GPR2.Project.Attribute.Set is
       Index : constant Value_Type := To_String (Iter.Index);
    begin
       return
-        (Name = No_Name or else A.Name = Name_Type (Name))
+        (Name = No_Name or else A.Name.Text = Name_Type (Name))
         and then (Index = No_Value or else A.Index_Equal (Index))
         and then (Iter.With_Defaults or else not A.Is_Default);
    end Is_Matching;
@@ -550,7 +552,11 @@ package body GPR2.Project.Attribute.Set is
             if not Self.Contains (Attr, Index)
               and then Check_Default (Attr, Index, Def, DA)
             then
-               Self.Insert (DA.Rename (Attr));
+               Self.Insert
+                 (DA.Rename
+                    (Source_Reference.Identifier.Object
+                         (Source_Reference.Identifier.Create
+                              (Source_Reference.Builtin, Attr))));
             end if;
          end Check_Default;
 

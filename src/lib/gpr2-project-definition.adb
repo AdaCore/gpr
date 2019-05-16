@@ -223,10 +223,10 @@ package body GPR2.Project.Definition is
       procedure Fill_Ada_Naming_Exceptions (Set : Project.Attribute.Set.Object)
         with Pre =>
           (for all A of Set =>
-             A.Name = Registry.Attribute.Spec
-             or else A.Name = Registry.Attribute.Specification
-             or else A.Name = Registry.Attribute.Body_N
-             or else A.Name = Registry.Attribute.Implementation);
+             A.Name.Text = Registry.Attribute.Spec
+             or else A.Name.Text = Registry.Attribute.Specification
+             or else A.Name.Text = Registry.Attribute.Body_N
+             or else A.Name.Text = Registry.Attribute.Implementation);
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
       Naming : constant Project.Pack.Object := Naming_Package (Def);
@@ -814,8 +814,8 @@ package body GPR2.Project.Definition is
                                       else 1);
 
                         begin
-                           Kind := (if Exc.Name = Spec
-                                    or else Exc.Name = Specification
+                           Kind := (if Exc.Name.Text = Spec
+                                    or else Exc.Name.Text = Specification
                                     then S_Spec
                                     else S_Body);
                            --  May actually be a Separate, we cannot know until
@@ -1237,7 +1237,7 @@ package body GPR2.Project.Definition is
 
             procedure Add (A : Project.Attribute.Object) is
             begin
-               MD5.Update (C, String (A.Name) & "/");
+               MD5.Update (C, String (A.Name.Text) & "/");
                for Value of A.Values loop
                   MD5.Update (C, Value.Text);
                end loop;

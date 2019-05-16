@@ -25,8 +25,6 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Project.Name_Values is
 
    use type Containers.Count_Type;
@@ -45,7 +43,7 @@ package GPR2.Project.Name_Values is
      (Name  : Source_Reference.Identifier.Object;
       Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Create a single-valued object
 
@@ -53,7 +51,7 @@ package GPR2.Project.Name_Values is
      (Name   : Source_Reference.Identifier.Object;
       Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Create a multi-valued object
 
@@ -61,7 +59,7 @@ package GPR2.Project.Name_Values is
      with Pre => Object (Self).Is_Defined;
    --  Returns the Kind for the Name/Values pair object
 
-   function Name (Self : Object) return Name_Type
+   function Name (Self : Object) return Source_Reference.Identifier.Object
      with Pre => Self.Is_Defined;
    --  Returns the name of the Name/Value pair object
 
@@ -106,16 +104,16 @@ package GPR2.Project.Name_Values is
       Value_Is_Case_Sensitive : Boolean);
    --  Sets values case sensitivity which is by default it is case-sensitive
 
-   function Rename (Self : in out Object; Name : Name_Type) return Object;
+   function Rename
+     (Self : in out Object;
+      Name : Source_Reference.Identifier.Object) return Object;
    --  Returns the object with another name
 
 private
 
-   use Ada.Strings.Unbounded;
-
    type Object is new Source_Reference.Object with record
       Kind                 : Registry.Attribute.Value_Kind := List;
-      Name                 : Unbounded_String;
+      Name                 : Source_Reference.Identifier.Object;
       Values               : Containers.Source_Value_List;
       Value_Case_Sensitive : Boolean := True;
       V_Map                : Containers.Value_Source_Reference;  -- fast check

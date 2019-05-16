@@ -153,7 +153,7 @@ package body GPR2.Project.Attribute is
       use GPR2.Project.Registry.Attribute;
       use all type GPR2.Project.Name_Values.Object;
 
-      Name   : constant String := String (Self.Name);
+      Name   : constant String := String (Self.Name.Text);
       Result : Unbounded_String := To_Unbounded_String ("for ");
    begin
       Append (Result, Name);
@@ -212,7 +212,8 @@ package body GPR2.Project.Attribute is
    ------------
 
    overriding function Rename
-     (Self : in out Object; Name : Name_Type) return Object is
+     (Self : in out Object;
+      Name : Source_Reference.Identifier.Object) return Object is
    begin
       return (Name_Values.Object (Self).Rename (Name) with
                 Default              => True,

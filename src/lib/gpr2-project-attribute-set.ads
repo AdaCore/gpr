@@ -60,13 +60,14 @@ package GPR2.Project.Attribute.Set is
 
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
-     with Pre  => not Self.Contains (Attribute.Name, Attribute.Index.Text),
-          Post => Self.Contains (Attribute.Name, Attribute.Index.Text);
+     with Pre  =>
+            not Self.Contains (Attribute.Name.Text, Attribute.Index.Text),
+          Post => Self.Contains (Attribute.Name.Text, Attribute.Index.Text);
    --  Inserts Attribute into the set
 
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
-     with Post => Self.Contains (Attribute.Name, Attribute.Index.Text);
+     with Post => Self.Contains (Attribute.Name.Text, Attribute.Index.Text);
    --  Inserts or replaces an Attribute into the set
 
    --  Iterator

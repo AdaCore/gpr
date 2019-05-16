@@ -2430,9 +2430,9 @@ package body GPR2.Parser.Project is
             end if;
 
             if In_Pack then
-               Pack_Vars.Include (V.Name, V);
+               Pack_Vars.Include (V.Name.Text, V);
             else
-               Vars.Include (V.Name, V);
+               Vars.Include (V.Name.Text, V);
             end if;
          end Parse_Variable_Decl;
 

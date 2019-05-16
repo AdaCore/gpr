@@ -44,7 +44,7 @@ package GPR2.Project.Attribute is
       Value   : Source_Reference.Value.Object;
       Default : Boolean := False) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object
 
@@ -54,7 +54,7 @@ package GPR2.Project.Attribute is
       Value  : Source_Reference.Value.Object;
       At_Num : Natural) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object with "at" number
 
@@ -64,7 +64,7 @@ package GPR2.Project.Attribute is
       Values  : Containers.Source_Value_List;
       Default : Boolean := False) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object
 
@@ -72,7 +72,7 @@ package GPR2.Project.Attribute is
      (Name  : Source_Reference.Identifier.Object;
       Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object
 
@@ -81,7 +81,7 @@ package GPR2.Project.Attribute is
       Value   : Source_Reference.Value.Object;
       Default : Boolean) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object with default flag
 
@@ -89,7 +89,7 @@ package GPR2.Project.Attribute is
      (Name   : Source_Reference.Identifier.Object;
       Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object
 
@@ -98,7 +98,7 @@ package GPR2.Project.Attribute is
       Values  : Containers.Source_Value_List;
       Default : Boolean) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name = Name.Text
+                  and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object with Default flag
 
@@ -137,7 +137,8 @@ package GPR2.Project.Attribute is
    --  value.
 
    overriding function Rename
-     (Self : in out Object; Name : Name_Type) return Object;
+     (Self : in out Object;
+      Name : Source_Reference.Identifier.Object) return Object;
    --  Returns object with another name and default attribute
 
    Default_Source_Dirs : constant Object;

@@ -99,7 +99,7 @@ package body GPR2.Compilation.Slave is
                for V of Project.Variables loop
                   if V.Kind = Single then
                      Set.Include
-                       (String (V.Name) & "=" & String (V.Value.Text));
+                       (String (V.Name.Text) & "=" & String (V.Value.Text));
                   end if;
                end loop;
             end if;

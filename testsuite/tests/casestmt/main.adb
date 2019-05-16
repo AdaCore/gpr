@@ -47,7 +47,8 @@ procedure Main is
       if Full then
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate loop
-               Text_IO.Put ("   " & String (Attribute.Set.Element (A).Name));
+               Text_IO.Put
+                 ("   " & String (Attribute.Set.Element (A).Name.Text));
                Text_IO.Put (" ->");
 
                for V of Attribute.Set.Element (A).Values loop
