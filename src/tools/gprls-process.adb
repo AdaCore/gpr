@@ -533,8 +533,7 @@ begin
                for U_Sec of ALI_Object.Units loop
                   if First then
                      First := False;
-                     Recurse_On_Sources_For_Unit
-                       (U_Sec.Uname);
+                     Recurse_On_Sources_For_Unit (U_Sec.Uname);
 
                      --  For a body, check if there are subunits and add the
                      --  corresponding sources to Closures.
