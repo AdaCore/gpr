@@ -45,6 +45,7 @@ package body GPR2.Project.Attribute.Set is
 
    procedure Set_Defaults
      (Self      : in out Object;
+      Kind      : Project_Kind;
       Pack      : Optional_Name_Type;
       Languages : Containers.Source_Value_List);
    --  Set defaults for the attribute set
@@ -443,6 +444,7 @@ package body GPR2.Project.Attribute.Set is
 
    procedure Set_Defaults
      (Self      : in out Object;
+      Kind      : Project_Kind;
       Pack      : Optional_Name_Type;
       Languages : Containers.Source_Value_List)
    is
@@ -553,8 +555,12 @@ package body GPR2.Project.Attribute.Set is
          end Check_Default;
 
       begin
-         if Def.Index = RA.No then
+         if not Def.Is_Allowed_In (Kind) then
+            return;
+
+         elsif Def.Index = RA.No then
             Check_Default (No_Value);
+
          else
             for L of Lang loop
                Check_Default (L.Text);

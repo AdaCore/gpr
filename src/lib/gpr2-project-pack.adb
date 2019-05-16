@@ -22,6 +22,7 @@ package body GPR2.Project.Pack is
 
    procedure Set_Default_Attributes
      (Self      : in out Object;
+      Kind      : Project_Kind;
       Languages : Containers.Source_Value_List);
    --  Set default attributes for the package
 
@@ -197,10 +198,11 @@ package body GPR2.Project.Pack is
 
    procedure Set_Default_Attributes
      (Self      : in out Object;
+      Kind      : Project_Kind;
       Languages : Containers.Source_Value_List) is
    begin
       Definition.Set_Defaults
-        (Self.Attrs, Name_Type (To_String (Self.Name)), Languages);
+        (Self.Attrs, Kind, Name_Type (To_String (Self.Name)), Languages);
    end Set_Default_Attributes;
 
    -----------------

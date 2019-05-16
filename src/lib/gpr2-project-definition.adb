@@ -106,10 +106,12 @@ package body GPR2.Project.Definition is
    procedure Set_Default_Attributes (Def : in out Data) is
    begin
       Set_Defaults
-        (Def.Attrs, No_Name, Containers.Source_Value_Type_List.Empty_Vector);
+        (Def.Attrs, Def.Kind, No_Name,
+         Containers.Source_Value_Type_List.Empty_Vector);
 
       for Pack of Def.Packs loop
-         Definition.Set_Pack_Default_Attributes (Pack, Def.Languages);
+         Definition.Set_Pack_Default_Attributes
+           (Pack, Def.Kind, Def.Languages);
       end loop;
    end Set_Default_Attributes;
 

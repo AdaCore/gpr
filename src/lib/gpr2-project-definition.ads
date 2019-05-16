@@ -139,10 +139,12 @@ private package GPR2.Project.Definition is
 
    Set_Pack_Default_Attributes : access procedure
      (Self      : in out Pack.Object;
+      Kind      : Project_Kind;
       Languages : Containers.Source_Value_List);
 
    Set_Defaults : access procedure
      (Self      : in out Attribute.Set.Object;
+      Kind      : Project_Kind;
       Pack      : Optional_Name_Type;
       Languages : Containers.Source_Value_List);
 

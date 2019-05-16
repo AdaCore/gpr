@@ -41,6 +41,7 @@ procedure Main is
    procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
+      Attr : Attribute.Object;
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
@@ -48,9 +49,10 @@ procedure Main is
 
       if Full then
          if Prj.Has_Attributes then
-            for A in Prj.Attributes.Iterate loop
-               Text_IO.Put ("A:   " & String (Attribute.Set.Element (A).Name));
-               Text_IO.Put (" ->");
+            for A in Prj.Attributes.Iterate (With_Defaults => True) loop
+               Attr := Attribute.Set.Element (A);
+               Text_IO.Put ("A:   " & String (Attr.Name));
+               Text_IO.Put (" " & (if Attr.Is_Default then '~' else '-') & ">");
 
                for V of Attribute.Set.Element (A).Values loop
                   Text_IO.Put (" " & V.Text);

@@ -1,5 +1,11 @@
 Demo     K_STANDARD
+A:   archive_suffix ~> .a
+A:   exec_dir ~> 
+A:   languages ~> ada
 A:   Object_Dir -> 
+A:   runtime ~> 
+A:   shared_library_prefix ~> lib
+A:   shared_library_suffix ~> .so
 A2:  Object_Dir -> 
 A3:  Object_Dir
 V:   Dir -> 
