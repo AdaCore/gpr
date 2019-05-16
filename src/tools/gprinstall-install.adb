@@ -54,6 +54,7 @@ with GPR2.Source;
 package body GPRinstall.Install is
 
    use Ada;
+   use Ada.Characters.Handling;
    use Ada.Strings.Unbounded;
    use Ada.Text_IO;
 
@@ -446,8 +447,6 @@ package body GPRinstall.Install is
       begin
          if Project.Has_Packages (P.Install) then
             declare
-               use Ada.Characters.Handling;
-
                Pck : constant GPR2.Project.Pack.Object :=
                        Project.Packages.Element (P.Install);
             begin
@@ -1481,12 +1480,13 @@ package body GPRinstall.Install is
 
                Attr := Project.Attribute (A.Library_Standalone);
 
-               if not Attr.Is_Default and then Attr.Value.Text /= "no" then
+               if not Attr.Is_Default
+                 and then To_Lower (Attr.Value.Text) /= "no"
+               then
                   if not Project.Is_Static_Library then
                      V.Append
                        ("         for Library_Standalone use """
-                        & Characters.Handling.To_Lower (Attr.Value.Text)
-                        & """;");
+                        & To_Lower (Attr.Value.Text) & """;");
                   end if;
 
                   --  And then generates the interfaces
@@ -1532,7 +1532,6 @@ package body GPRinstall.Install is
          --------------------
 
          function Get_Build_Line (Vars, Default : String) return String is
-            use Ada.Characters.Handling;
             use Strings.Fixed;
             Variables : String_Split.Slice_Set;
             Line      : Unbounded_String;
@@ -1772,7 +1771,7 @@ package body GPRinstall.Install is
             --  Contains the final result returned
 
             function Is_Language_Active (Lang : String) return Boolean
-              is (Languages.Contains (Characters.Handling.To_Lower (Lang)));
+              is (Languages.Contains (To_Lower (Lang)));
             --  Returns True if Lang is active in the installed project
 
             ----------------
@@ -2329,16 +2328,7 @@ package body GPRinstall.Install is
          if Project.Has_Packages (P.Install) then
             for V of Project.Pack (P.Install).Attributes loop
                if V.Name = A.Active then
-                  declare
-                     Val : constant String :=
-                             Characters.Handling.To_Lower (V.Value.Text);
-                  begin
-                     if Val = "false" then
-                        return False;
-                     else
-                        return True;
-                     end if;
-                  end;
+                  return To_Lower (V.Value.Text) /= "false";
                end if;
             end loop;
          end if;
