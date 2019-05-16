@@ -19,6 +19,8 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GNAT.OS_Lib;
+
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
@@ -47,9 +49,11 @@ exception
          declare
             use Ada.Strings;
             use Ada.Strings.Fixed;
+            DS  : Character renames GNAT.OS_Lib.Directory_Separator;
             M   : constant Message.Object := Log.Element (C);
             Mes : constant String := M.Format;
-            L   : constant Natural := Fixed.Index (Mes, "/aggregate-dup-src/");
+            L   : constant Natural :=
+                    Fixed.Index (Mes, DS & "aggregate-dup-src" & DS);
          begin
             if L /= 0 then
                Text_IO.Put_Line
