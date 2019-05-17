@@ -1978,12 +1978,29 @@ package body GPR2.Project.Tree is
                            P_Data.Trees.Project.Imports.Element
                              (Imp.Path_Name)));
 
-                  elsif Imp.Is_Static_Library then
+                  elsif Imp.Is_Static_Library
+                    and then (not PV.Is_Library
+                              or else PV.Library_Standalone /= Encapsulated)
+                  then
                      Self.Messages.Append
                        (Message.Create
                           (Message.Error,
                            "shared library project """ & String (View.Name)
                            & """ cannot import static library project """
+                           & String (Imp.Name) & '"',
+                           P_Data.Trees.Project.Imports.Element
+                             (Imp.Path_Name)));
+
+                  elsif Imp.Is_Shared_Library
+                    and then PV.Is_Library
+                    and then PV.Library_Standalone = Encapsulated
+                  then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "encapsulated library project """
+                           & String (View.Name)
+                           & """ cannot import shared library project """
                            & String (Imp.Name) & '"',
                            P_Data.Trees.Project.Imports.Element
                              (Imp.Path_Name)));
