@@ -1,0 +1,2 @@
+description: Check C only project loading
+driver: python_script

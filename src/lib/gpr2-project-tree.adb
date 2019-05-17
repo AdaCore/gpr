@@ -983,7 +983,7 @@ package body GPR2.Project.Tree is
                        Optional_Name_Type
                          (if LRT = No_Value
                           then Self.Root_Project.Attribute
-                                 (PRA.Runtime, "Ada").Value.Text
+                                 (PRA.Runtime, L.Text).Value.Text
                           else LRT);
 
                --  RTS should be a Value_Path (type introduced in the
