@@ -569,7 +569,7 @@ package body GPR2.Project.Attribute.Set is
       end Each_Default;
 
    begin
-      if Pack = No_Name then
+      if Languages.Is_Empty then
          --  Need set defaults for Languages first because another defaults
          --  indexed by them.
 
