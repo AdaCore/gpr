@@ -43,12 +43,18 @@ package GPR2.Project.Source is
      (Source               : GPR2.Source.Object;
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean) return Object
+      Has_Naming_Exception : Boolean;
+      Extending_View       : Project.View.Object := Project.View.Undefined)
+      return Object
      with Pre => Source.Is_Defined and then View.Is_Defined;
-   --  Constructor for Object
+   --  Constructor for Object. View is where the source is defined (found from
+   --  View Source_Dirs) and Extending_View is the optional view from which the
+   --  project source is extended. That is, if Extending_View is defined then
+   --  this source is comming from an extended project for View.
 
    function View (Self : Object) return Project.View.Object
-     with Pre => Self.Is_Defined;
+     with Pre  => Self.Is_Defined,
+          Post => View'Result.Is_Defined;
    --  The view the source is in
 
    function Source (Self : Object) return GPR2.Source.Object;
@@ -61,6 +67,14 @@ package GPR2.Project.Source is
    function Has_Naming_Exception (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
+
+   function Has_Extending_View (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Self has an extending view defined
+
+   function Extending_View (Self : Object) return Project.View.Object
+     with Pre => Self.Is_Defined and then Self.Has_Extending_View;
+   --  Returns the extending view
 
    function Is_Main (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.View.Has_Mains;
@@ -111,6 +125,7 @@ private
    type Object is tagged record
       Source               : GPR2.Source.Object;
       View                 : Project.Weak_Reference;
+      Extending_View       : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
       --  valgrind detected mess in memory deallocations at the process exit.
