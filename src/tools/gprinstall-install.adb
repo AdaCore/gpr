@@ -2311,13 +2311,9 @@ package body GPRinstall.Install is
       -----------------
 
       function Has_Sources
-        (Project : GPR2.Project.View.Object) return Boolean
-      is
-         use type Containers.Count_Type;
-         SD : GPR2.Project.Attribute.Object;
+        (Project : GPR2.Project.View.Object) return Boolean is
       begin
-         return (Project.Check_Attribute (A.Source_Dirs, Result => SD)
-                 and then SD.Count_Values > 0)
+         return Project.Has_Sources
            or else Project.Qualifier = K_Aggregate_Library;
       end Has_Sources;
 
