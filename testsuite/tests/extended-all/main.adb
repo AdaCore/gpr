@@ -40,8 +40,8 @@ procedure Main is
       Put (String (Prj.Name) & " ");
       Set_Col (10);
       Put_Line (Prj.Qualifier'Img);
-      Put_Line ("Has Extended: " & Boolean'Image (Prj.Has_Extended));
-      Put_Line ("Is Extended all: " & Boolean'Image (Prj.Is_Extended_All));
+      Put_Line ("Has Extended: " & Boolean'Image (Prj.Is_Extending));
+      Put_Line ("Is Extended all: " & Boolean'Image (Prj.Is_Extending_All));
    end Display;
 
    Prj : Project.Tree.Object;

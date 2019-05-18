@@ -66,6 +66,7 @@ private package GPR2.Project.Definition is
       Trees             : Tree;
 
       --  Actual values for the view
+      Extending         : View.Object;
       Extended          : View.Object;
       Aggregate         : View.Object;
       Imports           : Project_View_Store.Map;

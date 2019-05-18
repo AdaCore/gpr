@@ -91,17 +91,21 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Has_Imports;
    --  Returns all imported project views
 
-   function Has_Extended (Self : Object) return Boolean
+   function Is_Extending (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if the project is extending another project
 
-   function Extended (Self : Object) return Object
-     with Pre => Self.Is_Defined and then Self.Has_Extended;
-   --  Returns the extended project
-
-   function Is_Extended_All (Self : Object) return Boolean
+   function Is_Extending_All (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if the project is extending all another project
+
+   function Extended (Self : Object) return Object
+     with Pre => Self.Is_Defined and then Self.Is_Extending;
+   --  Returns the extended project
+
+   function Is_Extended (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the view is extended by another project
 
    function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;

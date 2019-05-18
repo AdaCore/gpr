@@ -1103,9 +1103,9 @@ package body GPR2.Project.Tree is
       --  Returns the Data definition for the given project
 
       function Internal
-        (Filename  : Path_Name.Object;
-         Status    : Relation_Status;
-         Aggregate : View.Object) return View.Object;
+        (Filename : Path_Name.Object;
+         Status   : Relation_Status;
+         Parent   : View.Object) return View.Object;
 
       procedure Add_Paths_Messages;
       --  Add into Messages the path of the detected circularity
@@ -1150,9 +1150,9 @@ package body GPR2.Project.Tree is
       --------------
 
       function Internal
-        (Filename  : Path_Name.Object;
-         Status    : Relation_Status;
-         Aggregate : View.Object) return View.Object
+        (Filename : Path_Name.Object;
+         Status   : Relation_Status;
+         Parent   : View.Object) return View.Object
       is
          View : Project.View.Object :=
                   Self.Get (Filename, Context_View, Status);
@@ -1169,7 +1169,11 @@ package body GPR2.Project.Tree is
                   return View;
                end if;
 
-               Data.Aggregate := Aggregate;
+               if Status = Extended then
+                  Data.Extending := Parent;
+               else
+                  Data.Aggregate := Parent;
+               end if;
 
                --  Let's setup the full external environment for project
 
@@ -1265,8 +1269,8 @@ package body GPR2.Project.Tree is
                         Data.Extended :=
                           Internal
                             (Path_Name,
-                             Status    => Imported,
-                             Aggregate => Project.View.Undefined);
+                             Status    => Extended,
+                             Parent    => View);
 
                         Pop;
 
@@ -1364,7 +1368,7 @@ package body GPR2.Project.Tree is
                            Internal
                              (Project.Path_Name,
                               Status    => Imported,
-                              Aggregate => GPR2.Project.View.Undefined));
+                              Parent    => GPR2.Project.View.Undefined));
 
                         Pop;
                      end if;

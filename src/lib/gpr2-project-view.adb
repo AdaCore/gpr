@@ -390,15 +390,6 @@ package body GPR2.Project.View is
       return Recursive_Has_Context (Self);
    end Has_Context;
 
-   ------------------
-   -- Has_Extended --
-   ------------------
-
-   function Has_Extended (Self : Object) return Boolean is
-   begin
-      return Definition.Get_RO (Self).Extended.Is_Defined;
-   end Has_Extended;
-
    -----------------
    -- Has_Imports --
    -----------------
@@ -423,10 +414,15 @@ package body GPR2.Project.View is
 
    function Has_Mains (Self : Object) return Boolean is
       Attr : Project.Attribute.Object;
+
+      function For_Prj (View : Object) return Boolean is
+        (View.Check_Attribute
+           (Project.Registry.Attribute.Main, Result => Attr)
+         and then Attr.Values.Length > 0);
+
    begin
-      return Self.Check_Attribute
-               (Project.Registry.Attribute.Main, Result => Attr)
-             and then Attr.Values.Length > 0;
+      return For_Prj (Self)
+        or else (Self.Is_Extending and then For_Prj (Self.Extended));
    end Has_Mains;
 
    ------------------
@@ -544,14 +540,32 @@ package body GPR2.Project.View is
         and then Ref.Aggregate.Kind = K_Aggregate_Library;
    end Is_Aggregated_In_Library;
 
-   ---------------------
-   -- Is_Extended_All --
-   ---------------------
+   -----------------
+   -- Is_Extended --
+   -----------------
 
-   function Is_Extended_All (Self : Object) return Boolean is
+   function Is_Extended (Self : Object) return Boolean is
+   begin
+      return Definition.Get_RO (Self).Extending.Is_Defined;
+   end Is_Extended;
+
+   ------------------
+   -- Is_Extending --
+   ------------------
+
+   function Is_Extending (Self : Object) return Boolean is
+   begin
+      return Definition.Get_RO (Self).Extended.Is_Defined;
+   end Is_Extending;
+
+   ----------------------
+   -- Is_Extending_All --
+   ----------------------
+
+   function Is_Extending_All (Self : Object) return Boolean is
    begin
       return Definition.Get_RO (Self).Trees.Project.Is_Extended_All;
-   end Is_Extended_All;
+   end Is_Extending_All;
 
    -------------------------
    -- Is_Externally_Built --
@@ -820,11 +834,25 @@ package body GPR2.Project.View is
             Optional_Name_Type (Self.Executable_Directory.Dir_Name));
       end Create;
 
+      Attr : Project.Attribute.Object;
+
    begin
       return Set : GPR2.Path_Name.Set.Object do
-         for Main of Self.Attribute (A.Main).Values loop
-            Set.Append (Mains.Create (Main.Text));
-         end loop;
+         if Self.Check_Attribute (A.Main, Result => Attr) then
+            for Main of Attr.Values loop
+               Set.Append (Mains.Create (Main.Text));
+            end loop;
+         end if;
+
+         --  Add also mains from extended project if defined
+
+         if Self.Is_Extending
+           and then Self.Extended.Check_Attribute (A.Main, Result => Attr)
+         then
+            for Main of Attr.Values loop
+               Set.Append (Mains.Create (Main.Text));
+            end loop;
+         end if;
       end return;
    end Mains;
 

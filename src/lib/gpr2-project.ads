@@ -76,7 +76,7 @@ package GPR2.Project is
 
 private
 
-   type Relation_Status is (Root, Imported, Aggregated);
+   type Relation_Status is (Root, Imported, Extended, Aggregated);
 
    type Definition_Base (Has_Context : Boolean) is abstract tagged record
       Id                : Natural := 0;

@@ -1084,10 +1084,6 @@ package body GPRinstall.Install is
             --  Install the project and the extended projects if any
 
             Copy_Project_Sources (Project);
-
-            if Project.Has_Extended then
-               Copy_Project_Sources (Project.Extended);
-            end if;
          end if;
 
          --  Copy library
