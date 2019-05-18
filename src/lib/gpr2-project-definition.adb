@@ -1503,10 +1503,23 @@ package body GPR2.Project.Definition is
       end if;
 
       --  Finally get the sources from the extended project if defined. We
-      --  only add the sources not already defined in the current set.
+      --  only add the sources not already defined in the current set. And
+      --  more importantly we record this sources with the extended view.
 
       if Def.Extended.Is_Defined then
-         Insert (Def.Extended.Sources, Skip, Source_Reference.Undefined);
+         declare
+            E_Set : Project.Source.Set.Object;
+         begin
+            for P of Def.Extended.Sources loop
+               E_Set.Insert
+                 (Project.Source.Create
+                    (P.Source, P.View,
+                     P.Is_Interface, P.Has_Naming_Exception,
+                     Extending_View => View));
+            end loop;
+
+            Insert (E_Set, Skip, Source_Reference.Undefined);
+         end;
       end if;
 
       --  And update the interface units bookkeeping

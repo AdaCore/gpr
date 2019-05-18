@@ -35,7 +35,11 @@ package body GPR2.Project.Source.Artifact is
    is
       Src  : constant Name_Type := Source.Source.Path_Name.Base_Name;
       Lang : constant Name_Type := Source.Source.Language;
-      View : constant Project.View.Object := Definition.Strong (Source.View);
+      View : constant Project.View.Object :=
+               (Definition.Strong
+                  (if Source.Has_Extending_View
+                   then Source.Extending_View
+                   else Source.View));
       Tree : constant access Project.Tree.Object := View.Tree;
 
       O_Suffix : constant Name_Type := Tree.Object_Suffix (Lang);
@@ -115,7 +119,10 @@ package body GPR2.Project.Source.Artifact is
    function List (Self : Object) return Path_Name.Set.Object is
       Source : constant GPR2.Source.Object := Self.Source.Source;
       View   : constant Project.View.Object :=
-                 Definition.Strong (Self.Source.View);
+                 Definition.Strong
+                   (if Self.Source.Has_Extending_View
+                    then Self.Source.Extending_View
+                    else Self.Source.View);
       Result : Path_Name.Set.Object;
    begin
       if Self.Has_Object_Code then
