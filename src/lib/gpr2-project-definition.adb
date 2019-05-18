@@ -268,6 +268,10 @@ package body GPR2.Project.Definition is
 
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
 
+      Visited_Dirs          : Containers.Value_Type_Set.Set;
+      --  List of already visited directories to avoid looking twice at the
+      --  same one.
+
       --------------------------------
       -- Fill_Ada_Naming_Exceptions --
       --------------------------------
@@ -319,38 +323,42 @@ package body GPR2.Project.Definition is
          Dir_Search   : Directories.Search_Type;
          Dir_Entry    : Directories.Directory_Entry_Type;
       begin
-         begin
-            Directories.Start_Search (Dir_Search, Dir_Name, "*");
-         exception
-            when Ada.IO_Exceptions.Name_Error =>
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     """" & Dir_Name & """ is not a valid directory",
-                     Source_Dir_Ref));
-         end;
+         if not Visited_Dirs.Contains (Dir) then
+            Visited_Dirs.Insert (Dir);
 
-         while Directories.More_Entries (Dir_Search) loop
-            Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
+            begin
+               Directories.Start_Search (Dir_Search, Dir_Name, "*");
+            exception
+               when Ada.IO_Exceptions.Name_Error =>
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        """" & Dir_Name & """ is not a valid directory",
+                        Source_Dir_Ref));
+            end;
 
-            if Directories.Kind (Dir_Entry) = Ordinary_File then
-               Handle_File (Directories.Full_Name (Dir_Entry));
+            while Directories.More_Entries (Dir_Search) loop
+               Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
 
-            elsif Directories.Kind (Dir_Entry) = Directory
-              and then Is_Recursive
-            then
-               Handle_Sub_Directory : declare
-                  New_Dir : constant String :=
-                              Directories.Simple_Name (Dir_Entry);
-               begin
-                  if New_Dir not in "." | ".." then
-                     Handle_Directory (Directories.Full_Name (Dir_Entry));
-                  end if;
-               end Handle_Sub_Directory;
-            end if;
-         end loop;
+               if Directories.Kind (Dir_Entry) = Ordinary_File then
+                  Handle_File (Directories.Full_Name (Dir_Entry));
 
-         Directories.End_Search (Dir_Search);
+               elsif Directories.Kind (Dir_Entry) = Directory
+                 and then Is_Recursive
+               then
+                  Handle_Sub_Directory : declare
+                     New_Dir : constant String :=
+                                 Directories.Simple_Name (Dir_Entry);
+                  begin
+                     if New_Dir not in "." | ".." then
+                        Handle_Directory (Directories.Full_Name (Dir_Entry));
+                     end if;
+                  end Handle_Sub_Directory;
+               end if;
+            end loop;
+
+            Directories.End_Search (Dir_Search);
+         end if;
       end Handle_Directory;
 
       -----------------
