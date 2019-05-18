@@ -566,7 +566,7 @@ package body GPR2.Project.Attribute.Set is
          end Check_Default;
 
       begin
-         if not Def.Is_Allowed_In (Kind) then
+         if not Def.Has_Default_In (Kind) then
             return;
 
          elsif Def.Index = RA.No then

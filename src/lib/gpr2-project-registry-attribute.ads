@@ -57,6 +57,7 @@ package GPR2.Project.Registry.Attribute is
                                                     others     => False);
       Default              : Containers.Name_Value_Map;
       Default_Is_Reference : Boolean            := False;
+      Has_Default_In       : Allowed_In         := (others => False);
    end record
      with Dynamic_Predicate =>
        --  Either Index is allowed or the other parts are default

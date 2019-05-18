@@ -32,6 +32,29 @@ package body GPR2.Project.Registry.Attribute is
 
    Any_Index : constant Value_Type := (1 => ASCII.NUL);
 
+   Everywhere       : constant Allowed_In := (others => True);
+
+   Nowhere          : constant Allowed_In := (others => False);
+
+   In_Library       : constant Allowed_In :=
+                        (K_Library | K_Aggregate_Library => True,
+                         others                          => False);
+
+   In_Aggregates    : constant Allowed_In :=
+                        (Aggregate_Kind => True,
+                         others         => False);
+
+   No_Aggregates    : constant Allowed_In :=
+                        (Aggregate_Kind => False,
+                         others         => True);
+
+   In_Configuration : constant Allowed_In :=
+                        (K_Configuration => True, others => False);
+
+   No_Aggregates_Abstract : constant Allowed_In :=
+                        (Aggregate_Kind | K_Abstract => False,
+                         others         => True);
+
    procedure Store_Insert
      (Name                 : Qualified_Name;
       Index                : Index_Kind;
@@ -44,7 +67,8 @@ package body GPR2.Project.Registry.Attribute is
       Is_Allowed_In        : Allowed_In;
       Default              : Containers.Name_Value_Map :=
                                Containers.Name_Value_Map_Package.Empty_Map;
-      Default_Is_Reference : Boolean    := False) with Inline;
+      Default_Is_Reference : Boolean    := False;
+      Has_Default_In       : Allowed_In := Nowhere);
    --  Calls Store.Insert with Key => Name and Value created from other fields
 
    --  Constants for some common attribute definitions
@@ -61,23 +85,6 @@ package body GPR2.Project.Registry.Attribute is
      (Left  : Containers.Name_Value_Map;
       Right : Containers.Name_Value_Map) return Containers.Name_Value_Map;
    --  Concatenate 2 default values for different indexes into one container
-
-   Everywhere       : constant Allowed_In := (others => True);
-
-   In_Library       : constant Allowed_In :=
-                        (K_Library | K_Aggregate_Library => True,
-                         others                          => False);
-
-   In_Aggregates    : constant Allowed_In :=
-                        (Aggregate_Kind => True,
-                         others         => False);
-
-   No_Aggregates    : constant Allowed_In :=
-                        (Aggregate_Kind => False,
-                         others         => True);
-
-   In_Configuration : constant Allowed_In :=
-                        (K_Configuration => True, others => False);
 
    ---------
    -- "+" --
@@ -135,7 +142,7 @@ package body GPR2.Project.Registry.Attribute is
    procedure For_Each_Default
      (Rules  : Default_Rules;
       Action : not null access procedure
-        (Attribute : Name_Type; Definition : Def))
+                 (Attribute : Name_Type; Definition : Def))
    is
       procedure Each_Element (C : Default_References.Cursor);
 
@@ -146,7 +153,8 @@ package body GPR2.Project.Registry.Attribute is
       procedure Each_Element (C : Default_References.Cursor) is
       begin
          Action
-           (Default_References.Key (C), Default_References.Element (C).all);
+           (Default_References.Key (C),
+            Default_References.Element (C).all);
       end Each_Element;
 
    begin
@@ -180,14 +188,15 @@ package body GPR2.Project.Registry.Attribute is
       Has_Default  : out Boolean) return Value_Type
    is
       use GPR2.Containers.Name_Value_Map_Package;
+
       CN : constant Default_References.Cursor := Rules.Find (Name);
       D  : Def_Access;
       C  : Cursor;
 
       function Index_To_Key return Value_Type is
-        (if Index = No_Value then Any_Index
+        (if Index = No_Value          then Any_Index
          elsif D.Index_Case_Sensitive then Index
-         else Ada.Characters.Handling.To_Lower (Index));
+         else Characters.Handling.To_Lower (Index));
       --  Convert Index to key value in defaults map
 
    begin
@@ -294,7 +303,8 @@ package body GPR2.Project.Registry.Attribute is
       Is_Allowed_In        : Allowed_In;
       Default              : Containers.Name_Value_Map :=
                                Containers.Name_Value_Map_Package.Empty_Map;
-      Default_Is_Reference : Boolean    := False)
+      Default_Is_Reference : Boolean    := False;
+      Has_Default_In       : Allowed_In := Nowhere)
    is
       procedure Index_Default;
       --  Save definnition with default value to Defaults index
@@ -304,13 +314,16 @@ package body GPR2.Project.Registry.Attribute is
       -------------------
 
       procedure Index_Default is
-         Dot_At : constant Natural := Strings.Fixed.Index (String (Name), ".");
+         Dot_At : constant Natural :=
+                    Strings.Fixed.Index (String (Name), ".");
          Pack   : constant Optional_Name_Type :=
-                    (if Dot_At = 0 then No_Name
+                    (if Dot_At = 0
+                     then No_Name
                      else Name_Type (Name (Name'First .. Dot_At - 1)));
          Attr   : constant Name_Type :=
                     Name_Type
-                      (if Dot_At = 0 then Name
+                      (if Dot_At = 0
+                       then Name
                        else Name (Dot_At + 1 .. Name'Last));
          CP     : Pack_Defaults.Cursor := Defaults.Find (Pack);
          OK     : Boolean;
@@ -335,7 +348,10 @@ package body GPR2.Project.Registry.Attribute is
               Read_Only            => Read_Only,
               Is_Allowed_In        => Is_Allowed_In,
               Default              => Default,
-              Default_Is_Reference => Default_Is_Reference));
+              Default_Is_Reference => Default_Is_Reference,
+              Has_Default_In       => (if Has_Default_In = Nowhere
+                                       then Is_Allowed_In
+                                       else Has_Default_In)));
 
       if not Default.Is_Empty then
          Index_Default;
@@ -444,7 +460,9 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Default              => Create ("."),
+      Has_Default_In       => No_Aggregates_Abstract);
 
    --  inherit_source_path
    Store_Insert
