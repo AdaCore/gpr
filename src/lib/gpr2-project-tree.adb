@@ -934,9 +934,10 @@ package body GPR2.Project.Tree is
       Language_Runtimes : GPR2.Containers.Name_Value_Map :=
                             GPR2.Containers.Name_Value_Map_Package.Empty_Map)
    is
-      Nb_Languages : Natural;
-      Descr_Index  : Natural := 0;
-      Conf         : Project.Configuration.Object;
+      Languages   : Containers.Source_Value_Set;
+      Descr_Index : Natural := 0;
+      Conf        : Project.Configuration.Object;
+      View        : Project.View.Object;
 
    begin
       Self.Load
@@ -945,19 +946,36 @@ package body GPR2.Project.Tree is
          Subdirs          => Subdirs,
          Check_Shared_Lib => Check_Shared_Lib);
 
-      if not Self.Root_Project.Has_Languages then
-         pragma Assert (Self.Root_Project.Attributes.Has_Languages);
+      for C in Self.Iterate
+        (Filter => (F_Aggregate | F_Aggregate_Library => False,
+                    others => True),
+         Status => (S_Externally_Built => False))
+      loop
+         View := Element (C);
 
+         if View.Languages.Length = 0 then
+            Self.Append_Message
+              (Message.Create
+                 (Level   => Message.Warning,
+                  Message => "no language for the project "
+                             & String (View.Name),
+                  Sloc    => View.Attributes.Languages));
+         end if;
+
+         for L of View.Languages loop
+            Languages.Include (L);
+         end loop;
+      end loop;
+
+      if Languages.Length = 0 then
          Self.Append_Message
            (Message.Create
               (Level   => Message.Warning,
-               Message => "no language for the project:"
-               & " configuration skipped",
+               Message => "no language for the projects tree: "
+                          & "configuration skipped",
                Sloc    => Self.Root_Project.Attributes.Languages));
          return;
       end if;
-
-      Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
       declare
          Tmp_Attr      : Attribute.Object;
@@ -969,10 +987,10 @@ package body GPR2.Project.Tree is
                             else "all");
 
          Conf_Descriptions : Project.Configuration.Description_Set
-                               (1 .. Nb_Languages);
+                               (1 .. Positive (Languages.Length));
 
       begin
-         for L of Self.Root_Project.Languages loop
+         for L of Languages loop
             Descr_Index := Descr_Index + 1;
 
             declare

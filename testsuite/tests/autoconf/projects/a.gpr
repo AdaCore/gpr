@@ -6,5 +6,5 @@ project A is
    for Target use external ("target");
 
    for Runtime ("Ada") use "zfp";
-   for Runtime ("C++") use "rts_cpp/";
+   for Runtime ("C") use "rts_cpp/";
 end A;
