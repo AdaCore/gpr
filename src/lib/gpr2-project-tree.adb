@@ -960,12 +960,12 @@ package body GPR2.Project.Tree is
       Nb_Languages := Natural (Self.Root_Project.Languages.Length);
 
       declare
-         Target_Attr   : Attribute.Object;
+         Tmp_Attr      : Attribute.Object;
          Actual_Target : constant Name_Type :=
                            (if Target /= No_Name then Target
                             elsif Self.Root_Project.Check_Attribute
-                                    (PRA.Target, Result => Target_Attr)
-                            then Name_Type (Target_Attr.Value.Text)
+                                    (PRA.Target, Result => Tmp_Attr)
+                            then Name_Type (Tmp_Attr.Value.Text)
                             else "all");
 
          Conf_Descriptions : Project.Configuration.Description_Set
@@ -982,8 +982,9 @@ package body GPR2.Project.Tree is
                RTS : constant Optional_Name_Type :=
                        Optional_Name_Type
                          (if LRT = No_Value
-                          then Self.Root_Project.Attribute
-                                 (PRA.Runtime, L.Text).Value.Text
+                            and then Self.Root_Project.Check_Attribute
+                                       (PRA.Runtime, L.Text, Tmp_Attr)
+                          then Tmp_Attr.Value.Text
                           else LRT);
 
                --  RTS should be a Value_Path (type introduced in the

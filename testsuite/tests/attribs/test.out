@@ -3,7 +3,6 @@ A:   archive_suffix ~> .a
 A:   exec_dir ~> 
 A:   languages ~> ada
 A:   Object_Dir -> 
-A:   runtime ~> 
 A:   shared_library_prefix ~> lib
 A:   shared_library_suffix ~> .so
 A:   source_dirs ~> .

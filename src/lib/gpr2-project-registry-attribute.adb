@@ -916,8 +916,7 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create (No_Value));
+      Is_Allowed_In        => Everywhere);
 
    --  library_builder
    Store_Insert

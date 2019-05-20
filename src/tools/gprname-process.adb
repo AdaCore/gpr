@@ -274,21 +274,23 @@ begin
       --  Find the right values for Target, Runtime, Path, and Name,
       --  either from the command-line or the main project's attributes.
 
-      Target_Attr : Attribute.Object;
-      Target      : constant Name_Type :=
-                      Optional_Name_Type
-                        (if Opt.Target /= No_String then Opt.Target
-                         elsif Tree.Root_Project.Check_Attribute
-                                 (PRA.Target, Result => Target_Attr)
-                         then Target_Attr.Value.Text
-                         else "all");
+      Tmp_Attr : Attribute.Object;
+      Target   : constant Name_Type :=
+                   Optional_Name_Type
+                     (if Opt.Target /= No_String then Opt.Target
+                      elsif Tree.Root_Project.Check_Attribute
+                              (PRA.Target, Result => Tmp_Attr)
+                      then Tmp_Attr.Value.Text
+                      else "all");
 
       Runtime : constant Optional_Name_Type :=
                   Optional_Name_Type
                     (if Opt.RTS /= No_String
                      then Opt.RTS
-                     else Tree.Root_Project.Attribute
-                            (PRA.Runtime, "Ada").Value.Text);
+                     elsif Tree.Root_Project.Check_Attribute
+                             (PRA.Runtime, "Ada", Result => Tmp_Attr)
+                     then Tmp_Attr.Value.Text
+                     else No_Value);
 
       --  Name/Path of the compiler: see IDE.Compiler_Command, and GPR.Conf
       --  (Get_Or_Create_Configuration_File.Get_Config_Switches)
