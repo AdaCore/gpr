@@ -1332,9 +1332,8 @@ package body GPR2.Project.Definition is
 
       Current_Signature : MD5.Binary_Message_Digest;
 
-      Root              : constant GPR2.Path_Name.Full_Name :=
-                            Directories.Containing_Directory
-                              (Def.Trees.Project.Path_Name.Value);
+      Root              : constant GPR2.Path_Name.Full_Name := Def.Path.Value;
+
    begin
       --  Check if up-to-date using signature for source_dirs, source_files...
       --  An abstract or aggregate project has no sources.

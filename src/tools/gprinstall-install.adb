@@ -1218,7 +1218,7 @@ package body GPRinstall.Install is
                                Name_Type (To_String (E.Filename));
             begin
                Copy_Artifacts
-                 (Path_Name.Compose (Project.Path_Name, Filename),
+                 (Path_Name.Compose (Project.Dir_Name, Filename),
                   Path_Name.Create_Directory
                     (Destination,
                      Optional_Name_Type (Prefix_Dir.V.all)),

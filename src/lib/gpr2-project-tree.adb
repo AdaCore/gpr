@@ -88,14 +88,15 @@ package body GPR2.Project.Tree is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Recursive_Load
-     (Self          : Object;
-      Filename      : Path_Name.Object;
-      Context_View  : View.Object;
-      Status        : Relation_Status;
-      Root_Context  : out GPR2.Context.Object;
-      Messages      : out Log.Object;
-      Circularities : out Boolean;
-      Starting_From : View.Object := View.Undefined) return View.Object
+     (Self             : Object;
+      Filename         : Path_Name.Object;
+      Context_View     : View.Object;
+      Status           : Relation_Status;
+      Root_Context     : out GPR2.Context.Object;
+      Messages         : out Log.Object;
+      Circularities    : out Boolean;
+      Starting_From    : View.Object := View.Undefined;
+      Implicit_Project : Boolean := False) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
         then Starting_From.Qualifier in Aggregate_Kind);
@@ -271,6 +272,8 @@ package body GPR2.Project.Tree is
          Data.Tree   := Self.Self;
          Data.Status := Root;
          Data.Kind   := K_Standard;
+         Data.Path   := Path_Name.Create_Directory
+                          (Name_Type (RTD.Value.Text));
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => PRA.Runtime,
@@ -672,7 +675,8 @@ package body GPR2.Project.Tree is
       Config           : PC.Object          := PC.Undefined;
       Build_Path       : Path_Name.Object   := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type := No_Name;
-      Check_Shared_Lib : Boolean            := True)
+      Check_Shared_Lib : Boolean            := True;
+      Implicit_Project : Boolean            := False)
    is
       use Ada.Strings.Unbounded;
 
@@ -883,7 +887,7 @@ package body GPR2.Project.Tree is
 
       Self.Root := Recursive_Load
         (Self, Filename, View.Undefined, Root, Root_Context, Self.Messages,
-         Circularities);
+         Circularities, Implicit_Project => Implicit_Project);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -930,6 +934,7 @@ package body GPR2.Project.Tree is
       Build_Path        : Path_Name.Object   := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type := No_Name;
       Check_Shared_Lib  : Boolean            := True;
+      Implicit_Project  : Boolean            := False;
       Target            : Optional_Name_Type := No_Name;
       Language_Runtimes : GPR2.Containers.Name_Value_Map :=
                             GPR2.Containers.Name_Value_Map_Package.Empty_Map)
@@ -944,7 +949,8 @@ package body GPR2.Project.Tree is
         (Filename, Context,
          Build_Path       => Build_Path,
          Subdirs          => Subdirs,
-         Check_Shared_Lib => Check_Shared_Lib);
+         Check_Shared_Lib => Check_Shared_Lib,
+         Implicit_Project => Implicit_Project);
 
       for C in Self.Iterate
         (Filter => (F_Aggregate | F_Aggregate_Library => False,
@@ -1025,7 +1031,8 @@ package body GPR2.Project.Tree is
          Self.Load
            (Filename, Context, Conf, Build_Path,
             Subdirs          => Subdirs,
-            Check_Shared_Lib => Check_Shared_Lib);
+            Check_Shared_Lib => Check_Shared_Lib,
+            Implicit_Project => Implicit_Project);
       end;
    end Load_Autoconf;
 
@@ -1107,15 +1114,15 @@ package body GPR2.Project.Tree is
    --------------------
 
    function Recursive_Load
-     (Self          : Object;
-      Filename      : Path_Name.Object;
-      Context_View  : View.Object;
-      Status        : Relation_Status;
-      Root_Context  : out GPR2.Context.Object;
-      Messages      : out Log.Object;
-      Circularities : out Boolean;
-      Starting_From : View.Object := View.Undefined) return View.Object
-
+     (Self             : Object;
+      Filename         : Path_Name.Object;
+      Context_View     : View.Object;
+      Status           : Relation_Status;
+      Root_Context     : out GPR2.Context.Object;
+      Messages         : out Log.Object;
+      Circularities    : out Boolean;
+      Starting_From    : View.Object := View.Undefined;
+      Implicit_Project : Boolean := False) return View.Object
    is
 
       function Load (Filename : Path_Name.Object) return Definition.Data;
@@ -1187,6 +1194,12 @@ package body GPR2.Project.Tree is
                then
                   return View;
                end if;
+
+               Data.Path := Path_Name.Create_Directory
+                 (Name_Type
+                    (if Implicit_Project
+                     then Ada.Directories.Current_Directory
+                     else Filename.Dir_Name));
 
                if Status = Extended then
                   Data.Extending := Parent;

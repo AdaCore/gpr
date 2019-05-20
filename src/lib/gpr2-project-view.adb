@@ -117,8 +117,8 @@ package body GPR2.Project.View is
 
       elsif Self.Tree.Build_Path.Is_Defined then
          Result := GPR2.Path_Name.Create_Directory
-           (Self.Path_Name.Relative_Path
-              (Self.Tree.Root_Project.Path_Name).Name,
+           (Self.Dir_Name.Relative_Path
+              (Self.Tree.Root_Project.Dir_Name).Name,
             Name_Type (Self.Tree.Build_Path.Value));
 
          Result := GPR2.Path_Name.Create_Directory
@@ -126,7 +126,7 @@ package body GPR2.Project.View is
 
       else
          Result := GPR2.Path_Name.Create_Directory
-           (Dir_Name, Name_Type (Self.Path_Name.Dir_Name));
+           (Dir_Name, Name_Type (Self.Dir_Name.Value));
       end if;
 
       if Subdirs = No_Name then

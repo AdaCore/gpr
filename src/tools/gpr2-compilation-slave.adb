@@ -255,13 +255,11 @@ package body GPR2.Compilation.Slave is
    function Remote_Root_Directory
      (Project : GPR2.Project.View.Object) return String
    is
-      use Ada.Directories;
       use GNAT.OS_Lib;
 
       package Attrs renames GPR2.Project.Registry.Attribute;
 
-      Root_Dir : constant String :=
-                   (Containing_Directory (Project.Path_Name.Value));
+      Root_Dir : constant String := Project.Dir_Name.Value;
    begin
       if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
          declare

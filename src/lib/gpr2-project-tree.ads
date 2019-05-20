@@ -61,9 +61,16 @@ package GPR2.Project.Tree is
       Config           : Configuration.Object := Configuration.Undefined;
       Build_Path       : Path_Name.Object     := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type   := No_Name;
-      Check_Shared_Lib : Boolean              := True)
+      Check_Shared_Lib : Boolean              := True;
+      Implicit_Project : Boolean              := False)
      with Pre => Filename.Is_Defined;
    --  Loads a root project
+   --  If Implicit_Project is True, the main project file being parsed is
+   --  deemed to be in the current working directory, even if it is not the
+   --  case. Implicit_Project is set to True when a gpr tool is invoked without
+   --  a project file and is using an implicit project file that is virtually
+   --  in the current working directory, but is physically in another
+   --  directory.
 
    procedure Load_Configuration
      (Self     : in out Object;
@@ -78,6 +85,7 @@ package GPR2.Project.Tree is
       Build_Path        : Path_Name.Object   := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type := No_Name;
       Check_Shared_Lib  : Boolean            := True;
+      Implicit_Project  : Boolean            := False;
       Target            : Optional_Name_Type := No_Name;
       Language_Runtimes : GPR2.Containers.Name_Value_Map :=
                             GPR2.Containers.Name_Value_Map_Package.Empty_Map)
@@ -90,6 +98,12 @@ package GPR2.Project.Tree is
    --  instead of any attribute Runtime (Lang) declared in the root project.
    --  Typically this is useful to enforce precedence of the command-line
    --  options --target and --RTS[:lang].
+   --  If Implicit_Project is True, the main project file being parsed is
+   --  deemed to be in the current working directory, even if it is not the
+   --  case. Implicit_Project is set to True when a gpr tool is invoked without
+   --  a project file and is using an implicit project file that is virtually
+   --  in the current working directory, but is physically in another
+   --  directory.
 
    procedure Unload (Self : in out Object);
    --  Unloads the tree and free all associated objects (projects, sources,

@@ -59,6 +59,10 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Full pathname of the corresponding project file
 
+   function Dir_Name (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Full directory name of the corresponding project file
+
    function Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined;
    --  The name of the project
@@ -450,5 +454,8 @@ private
 
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
+
+   function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
+     (Self.Get.Path);
 
 end GPR2.Project.View;

@@ -87,6 +87,7 @@ procedure GPRclean is
 
    Mains         : GPR2.Containers.Value_Set;
    Arg_Mains     : Boolean;
+   Implicit_Proj : Boolean := False;
    Project_Path  : Path_Name.Object;
    Project_Tree  : Project.Tree.Object;
    Context       : GPR2.Context.Object;
@@ -229,7 +230,11 @@ procedure GPRclean is
       Arg_Mains := not Mains.Is_Empty;
 
       if not Project_Path.Is_Defined then
-         Project_Path := Project.Look_For_Default_Project;
+         Project_Path := GPRtools.Util.Look_For_Default_Project;
+
+         Implicit_Proj := Project_Path.Is_Defined
+           and then Project_Path.Dir_Name /= Ada.Directories.Current_Directory;
+
       elsif No_Project then
          raise Usage_Error with
            "cannot specify --no-project with a project file";
@@ -240,7 +245,11 @@ procedure GPRclean is
          raise Usage_Error with "Can't determine project file to work with";
       end if;
 
-      Options.Clean_Build_Path (Project_Path);
+      Options.Clean_Build_Path
+        (if Implicit_Proj
+         then Path_Name.Create_Directory
+                (Name_Type (Ada.Directories.Current_Directory))
+         else Project_Path);
    end Parse_Command_Line;
 
    -----------------
@@ -450,7 +459,7 @@ procedure GPRclean is
 
             procedure Delete_If_Not_Project (Dir : Path_Name.Object) is
             begin
-               if Dir.Value /= View.Path_Name.Dir_Name then
+               if Dir.Value /= View.Dir_Name.Value then
                   declare
                      Dir_Name : constant String := Dir.Value;
                   begin
@@ -571,13 +580,15 @@ begin
       Project_Tree.Load
         (Project_Path, Context, Config, Options.Build_Path,
          Optional_Name_Type (To_String (Subdirs)),
-         Check_Shared_Lib => not Unchecked_Shared_Lib_Import);
+         Check_Shared_Lib => not Unchecked_Shared_Lib_Import,
+         Implicit_Project => Implicit_Proj);
 
    else
       Project_Tree.Load_Autoconf
         (Project_Path, Context, Options.Build_Path,
          Optional_Name_Type (To_String (Subdirs)),
-         Check_Shared_Lib => not Unchecked_Shared_Lib_Import);
+         Check_Shared_Lib => not Unchecked_Shared_Lib_Import,
+         Implicit_Project => Implicit_Proj);
    end if;
 
    if Project_Tree.Root_Project.Is_Library and then Arg_Mains then

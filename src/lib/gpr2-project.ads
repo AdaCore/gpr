@@ -80,6 +80,7 @@ private
 
    type Definition_Base (Has_Context : Boolean) is abstract tagged record
       Id                : Natural := 0;
+      Path              : Path_Name.Object;
       Externals         : Containers.Name_List;
       --  List of externals directly or indirectly visible
       Signature         : Context.Binary_Signature :=

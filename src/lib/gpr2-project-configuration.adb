@@ -57,6 +57,8 @@ package body GPR2.Project.Configuration is
       Data.Status        := Root;
       Data.Kind          := K_Configuration;
       Data.Tree          := Tree;
+      Data.Path          := Path_Name.Create_Directory
+                              (Name_Type (Self.Project.Path_Name.Dir_Name));
       Self.Conf          := Definition.Register (Data);
    end Bind_To_Tree;
 
