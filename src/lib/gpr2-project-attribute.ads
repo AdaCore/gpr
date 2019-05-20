@@ -141,8 +141,6 @@ package GPR2.Project.Attribute is
       Name : Source_Reference.Identifier.Object) return Object;
    --  Returns object with another name and default attribute
 
-   Default_Source_Dirs : constant Object;
-
    At_Num_Undefined : constant Natural;
 
 private
@@ -164,22 +162,6 @@ private
    --  otherwise.
 
    Undefined : constant Object := (Name_Values.Undefined with others => <>);
-
-   Current_Dir : constant Source_Reference.Value.Object :=
-                   Source_Reference.Value.Object
-                     (Source_Reference.Value.Create
-                        (Source_Reference.Builtin, "."));
-
-   Default_Source_Dirs : constant Object :=
-                           (Name_Values.Create
-                             (Source_Reference.Identifier.Object
-                                (Source_Reference.Identifier.Create
-                                   (Source_Reference.Builtin,
-                                    Project.Registry.Attribute.Source_Dirs)),
-                               Containers.Source_Value_Type_List.To_Vector
-                                 (Current_Dir, 1))
-                              with Source_Reference.Value.Undefined,
-                            others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

@@ -190,11 +190,6 @@ private package GPR2.Project.Definition is
    --  content of the Languages attribute as if not defined it returns the
    --  default language Ada.
 
-   function Source_Directories (Def : Data) return Project.Attribute.Object;
-   --  Returns the sources dirs for the project view. This is only defined for
-   --  project having sources. If not defined in the project itself, the view
-   --  does have the project directory as source dir.
-
    function Naming_Package (Def : Data) return Project.Pack.Object;
    --  Returns the Naming package for the current view. This is either
    --  the view Naming package, the project's tree Naming package from the

@@ -988,7 +988,7 @@ package body GPR2.Project.View is
    function Source_Directories
      (Self : Object) return Project.Attribute.Object is
    begin
-      return Definition.Get_RO (Self).Source_Directories;
+      return Definition.Get_RO (Self).Attrs.Source_Dirs;
    end Source_Directories;
 
    -------------

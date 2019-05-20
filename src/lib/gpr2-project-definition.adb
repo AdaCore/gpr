@@ -53,11 +53,6 @@ package body GPR2.Project.Definition is
    --  project and no configuration file loaded. We at least want to handle in
    --  this case the standard Ada and C namings.
 
-   function Source_Directories (Def : Data) return Project.Attribute.Object is
-     (if Def.Attrs.Has_Source_Dirs
-      then Def.Attrs.Source_Dirs
-      else Project.Attribute.Default_Source_Dirs);
-
    function Languages (Def : Data) return Containers.Source_Value_List is
      (Def.Attrs.Languages.Values);
 
