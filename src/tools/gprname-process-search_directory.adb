@@ -86,10 +86,25 @@ is
    Last      : Natural;
    Dir       : Directory_Operations.Dir_Type;
    File      : GPR2.Path_Name.Object;
+   Processed : Boolean := False;
 
 begin
+   if Processed_Dirs.Contains (Dir_Path) then
+      Put_Line
+        ("directory " & Dir_Path.Value & " already searched. skipping...",
+         Low);
+
+      if Recursively then
+         Processed := True;
+      else
+         return;
+      end if;
+
+   else
+      Processed_Dirs.Insert (Dir_Path);
+   end if;
+
    Put_Line ("entering directory: " & Dir_Path.Value, Low);
-   Processed_Dirs.Insert (Dir_Path);
 
    begin
       Directory_Operations.Open (Dir, Dir_Path.Value);
@@ -112,7 +127,7 @@ begin
 
       Put_Line ("  checking file: " & String (File.Name), Low);
 
-      if OS_Lib.Is_Regular_File (File.Value) then
+      if OS_Lib.Is_Regular_File (File.Value) and then not Processed then
          --  Regular file: check if it matches any naming schemes for Ada or
          --  other languages. Get additional info for Ada source files.
 
@@ -337,30 +352,15 @@ begin
         and then Str (1 .. Last) /= "."
         and then Str (1 .. Last) /= ".."
       then
-         --  Directory: recurse into it if it has not already been processed
-
-         declare
-            Subdir_Path : constant Path_Name.Object :=
-                            Path_Name.Create_Directory
-                              (Name_Type (File.Value));
-
-         begin
-            if not Processed_Dirs.Contains (Subdir_Path) then
-               Search_Directory
-                 (Subdir_Path,
-                  Sect,
-                  Processed_Dirs,
-                  True,
-                  Compiler_Path,
-                  Compiler_Args,
-                  Lang_Sources_Map,
-                  Source_Basenames);
-            else
-               Put_Line
-                 ("directory " & Subdir_Path.Value
-                  & " already searched. skipping...", Low);
-            end if;
-         end;
+         Search_Directory
+           (Path_Name.Create_Directory (Name_Type (File.Value)),
+            Sect,
+            Processed_Dirs,
+            True,
+            Compiler_Path,
+            Compiler_Args,
+            Lang_Sources_Map,
+            Source_Basenames);
       end if;
    end loop;
 

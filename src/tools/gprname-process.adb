@@ -42,7 +42,7 @@ with GPR2.Project.Pack;
 with GPR2.Project.Pretty_Printer;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
-with GPR2.Project.View.Set;
+with GPR2.Project.View;
 with GPR2.Source_Reference;
 
 with GPRname.Common;
@@ -538,7 +538,6 @@ begin
       ------------------
 
       function Rewrite_Main (N : GPR_Node'Class) return Visit_Status is
-         use GPR2.Project.View.Set.Set;
       begin
          case Kind (N) is
 
