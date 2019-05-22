@@ -137,7 +137,7 @@ package GPR2.Project.Attribute is
    --  value.
 
    overriding function Rename
-     (Self : in out Object;
+     (Self : Object;
       Name : Source_Reference.Identifier.Object) return Object;
    --  Returns object with another name and default attribute
 

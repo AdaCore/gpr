@@ -47,10 +47,9 @@ package body GPR2.Project.Attribute.Set is
    --  Returns True if the current Position is matching the Iterator
 
    procedure Set_Defaults
-     (Self      : in out Object;
-      Kind      : Project_Kind;
-      Pack      : Optional_Name_Type;
-      Languages : Containers.Source_Value_List);
+     (Self : in out Object;
+      Kind : Project_Kind;
+      Pack : Optional_Name_Type);
    --  Set defaults for the attribute set
 
    -----------
@@ -226,6 +225,10 @@ package body GPR2.Project.Attribute.Set is
               or else Result.Set.First_Element.Index_Case_Sensitive
             then Index
             else Characters.Handling.To_Lower (Index));
+
+         if not Set_Attribute.Has_Element (Result.CA) then
+            Result.CA := Result.Set.Find (Any_Index);
+         end if;
       end if;
 
       return Result;
@@ -448,96 +451,15 @@ package body GPR2.Project.Attribute.Set is
    ------------------
 
    procedure Set_Defaults
-     (Self      : in out Object;
-      Kind      : Project_Kind;
-      Pack      : Optional_Name_Type;
-      Languages : Containers.Source_Value_List)
+     (Self : in out Object;
+      Kind : Project_Kind;
+      Pack : Optional_Name_Type)
    is
+      package SR renames Source_Reference;
+
       Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
 
       procedure Each_Default (Attr : Name_Type; Def : RA.Def);
-
-      function Check_Default
-        (Name   : Name_Type;
-         Index  : Value_Type;
-         Define : RA.Def;
-         Result : out Attribute.Object) return Boolean;
-      --  Lookup for default value of the attribute
-
-      Lang : Containers.Source_Value_List;
-
-      -------------------
-      -- Check_Default --
-      -------------------
-
-      function Check_Default
-        (Name   : Name_Type;
-         Index  : Value_Type;
-         Define : RA.Def;
-         Result : out Attribute.Object) return Boolean
-      is
-         package SR renames Source_Reference;
-
-         function Check_Reference return Boolean;
-         --  Check default reference
-
-         function Create_Name return SR.Identifier.Object is
-           (SR.Identifier.Object (SR.Identifier.Create (SR.Builtin, Name)));
-
-         function Create_Index return SR.Value.Object is
-           (SR.Value.Object (SR.Value.Create (SR.Builtin, Index)));
-
-         function Create_Value return SR.Value.Object is
-           (SR.Value.Object
-              (SR.Value.Create (SR.Builtin, Define.Default.First_Element)));
-
-         ---------------------
-         -- Check_Reference --
-         ---------------------
-
-         function Check_Reference return Boolean is
-            Ref_Name : constant Name_Type :=
-                         Name_Type (Define.Default.First_Element);
-            Position : constant Cursor := Self.Find (Ref_Name, Index);
-         begin
-            if Has_Element (Position) then
-               Result := Element (Position);
-               return True;
-
-            else
-               return Check_Default
-                 (Ref_Name, Index,
-                  RA.Get (RA.Create (Ref_Name, Pack)), Result);
-            end if;
-         end Check_Reference;
-
-      begin
-         if Define.Default.Is_Empty then
-            return False;
-         end if;
-
-         if Define.Default_Is_Reference then
-            return Check_Reference;
-
-         elsif Define.Value = RA.List then
-            Result := Project.Attribute.Create
-              (Name    => Create_Name,
-               Index   => Create_Index,
-               Values  => Containers.Source_Value_Type_List.To_Vector
-                 (Create_Value, 1),
-               Default => True);
-
-         else
-            Result := Project.Attribute.Create
-              (Create_Name, Create_Index, Create_Value, Default => True);
-         end if;
-
-         Result.Set_Case
-           (Index_Is_Case_Sensitive => Define.Index_Case_Sensitive,
-            Value_Is_Case_Sensitive => Define.Value_Case_Sensitive);
-
-         return True;
-      end Check_Default;
 
       ------------------
       -- Each_Default --
@@ -546,52 +468,115 @@ package body GPR2.Project.Attribute.Set is
       procedure Each_Default (Attr : Name_Type; Def : RA.Def) is
          use type RA.Index_Kind;
 
-         procedure Check_Default (Index : Value_Type);
+         procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map);
 
-         -------------------
-         -- Check_Default --
-         -------------------
+         function Attr_Id return SR.Identifier.Object is
+           (SR.Identifier.Object (SR.Identifier.Create (SR.Builtin, Attr)));
 
-         procedure Check_Default (Index : Value_Type) is
-            DA : Attribute.Object;
+         function Create_Attribute
+           (Index : Value_Type;
+            Value : SR.Value.Object) return Attribute.Object;
+
+         ----------------------
+         -- Create_Attribute --
+         ----------------------
+
+         function Create_Attribute
+           (Index : Value_Type;
+            Value : SR.Value.Object) return Attribute.Object
+         is
+            Result : Attribute.Object;
+
+            function Create_Index return SR.Value.Object is
+              (if Def.Index = RA.No then SR.Value.Undefined
+               else SR.Value.Object (SR.Value.Create (SR.Builtin, Index)));
+
          begin
-            if not Self.Contains (Attr, Index)
-              and then Check_Default (Attr, Index, Def, DA)
-            then
-               Self.Insert
-                 (DA.Rename
-                    (Source_Reference.Identifier.Object
-                         (Source_Reference.Identifier.Create
-                              (Source_Reference.Builtin, Attr))));
+            if Def.Value = List then
+               Result := Project.Attribute.Create
+                 (Name    => Attr_Id,
+                  Index   => Create_Index,
+                  Values  => Containers.Source_Value_Type_List.To_Vector
+                    (Value, 1),
+                  Default => True);
+
+            else
+               Result := Project.Attribute.Create
+                 (Attr_Id, Create_Index, Value, Default => True);
             end if;
-         end Check_Default;
+
+            Result.Set_Case
+              (Index_Is_Case_Sensitive => Def.Index_Case_Sensitive,
+               Value_Is_Case_Sensitive => Def.Value_Case_Sensitive);
+
+            return Result;
+         end Create_Attribute;
+
+         ------------
+         -- Gather --
+         ------------
+
+         procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map) is
+            package VSR renames Containers.Value_Source_Reference_Package;
+         begin
+            if Def.Index = RA.No and then not Attrs.Is_Empty then
+               --  Attribute already exists
+
+               pragma Assert
+                 (Attrs.Length = 1, "Attribute map length" & Attrs.Length'Img);
+
+               return;
+
+            elsif Def.Default_Is_Reference then
+               declare
+                  Ref_Name : constant Name_Type :=
+                               Name_Type (Def.Default.First_Element.Text);
+                  CS : constant Set.Cursor := Self.Attributes.Find (Ref_Name);
+               begin
+                  if Set.Has_Element (CS) then
+                     for CA in Set.Element (CS).Iterate loop
+                        if not Attrs.Contains (Set_Attribute.Key (CA)) then
+                           Attrs.Insert
+                             (Set_Attribute.Key (CA),
+                              Set_Attribute.Element (CA).Rename (Attr_Id));
+                        end if;
+                     end loop;
+                  end if;
+
+                  Gather (RA.Get (RA.Create (Ref_Name, Pack)), Attrs);
+               end;
+
+            elsif not Def.Default.Is_Empty then
+               for D in Def.Default.Iterate loop
+                  if not Attrs.Contains (VSR.Key (D)) then
+                     Attrs.Insert
+                       (VSR.Key (D),
+                        Create_Attribute (VSR.Key (D), VSR.Element (D)));
+                  end if;
+               end loop;
+            end if;
+         end Gather;
 
       begin
-         if not Def.Has_Default_In (Kind) then
-            return;
+         if Def.Has_Default_In (Kind) then
+            declare
+               CM : constant Set.Cursor := Self.Attributes.Find (Attr);
+               AM : Set_Attribute.Map;
+            begin
+               if Set.Has_Element (CM) then
+                  Gather (Def, Self.Attributes (CM));
+               else
+                  Gather (Def, AM);
 
-         elsif Def.Index = RA.No then
-            Check_Default (No_Value);
-
-         else
-            for L of Lang loop
-               Check_Default (L.Text);
-            end loop;
+                  if not AM.Is_Empty then
+                     Self.Attributes.Insert (Attr, AM);
+                  end if;
+               end if;
+            end;
          end if;
       end Each_Default;
 
    begin
-      if Languages.Is_Empty then
-         --  Need set defaults for Languages first because another defaults
-         --  indexed by them.
-
-         Each_Default (RA.Languages, RA.Get_Default (Rules, RA.Languages));
-         Lang := Self.Languages.Values;
-
-      else
-         Lang := Languages;
-      end if;
-
       RA.For_Each_Default (Rules, Each_Default'Access);
    end Set_Defaults;
 

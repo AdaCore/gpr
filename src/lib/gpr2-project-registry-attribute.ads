@@ -45,6 +45,8 @@ package GPR2.Project.Registry.Attribute is
 
    type Allowed_In is array (Project_Kind) of Boolean with Pack;
 
+   package VSR renames Containers.Value_Source_Reference_Package;
+
    type Def is record
       Index                : Index_Kind         := Optional;
       Others_Allowed       : Boolean            := False;
@@ -55,7 +57,7 @@ package GPR2.Project.Registry.Attribute is
       Read_Only            : Boolean            := False;
       Is_Allowed_In        : Allowed_In         := (K_Abstract => True,
                                                     others     => False);
-      Default              : Containers.Name_Value_Map;
+      Default              : VSR.Map;
       Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := (others => False);
    end record
@@ -70,8 +72,6 @@ package GPR2.Project.Registry.Attribute is
 
    type Default_Rules is private;
 
-   Empty_Defaults : constant Default_Rules;
-
    function Exists (Q_Name : Qualified_Name) return Boolean;
    --  The qualified name comprise the package name and attribute name, both
    --  parts are separated by a dot which is mandatory even if the package
@@ -80,22 +80,6 @@ package GPR2.Project.Registry.Attribute is
    function Get (Q_Name : Qualified_Name) return Def
      with Pre => Exists (Q_Name);
    --  Returns the definition data for the given attribute fully qualified name
-
-   function Get_Default
-     (Rules        : Default_Rules;
-      Name         : Name_Type;
-      Index        : Value_Type;
-      Is_Reference : out Boolean;
-      Is_List      : out Boolean;
-      Has_Default  : out Boolean) return Value_Type;
-   --  Get default rules for the attribute
-
-   function Get_Default (Rules : Default_Rules; Name : Name_Type) return Def;
-   --  Return definition from default rules
-
-   function Has_Default
-     (Name : Qualified_Name; Index : Value_Type) return Boolean;
-   --  Return true if attribute has default value
 
    function Get_Default_Rules (Pack : Optional_Name_Type) return Default_Rules;
    --  Get default rules by package name. If package name is empty get the root
@@ -339,8 +323,5 @@ private
    --  To keep references only to attribute definitions with default rules
 
    type Default_Rules is access constant Default_References.Map;
-
-   Empty_Defaults : constant Default_Rules :=
-                      Default_References.Empty_Map'Unrestricted_Access;
 
 end GPR2.Project.Registry.Attribute;

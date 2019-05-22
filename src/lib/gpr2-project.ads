@@ -114,4 +114,7 @@ private
 
    Default_Status : constant Status_Control := (others => Indeterminate);
 
+   Any_Index : constant Value_Type := (1 => ASCII.NUL);
+   --  Internal index declaring that it is fit for any index request
+
 end GPR2.Project;

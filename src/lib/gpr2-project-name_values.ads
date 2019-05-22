@@ -105,7 +105,7 @@ package GPR2.Project.Name_Values is
    --  Sets values case sensitivity which is by default it is case-sensitive
 
    function Rename
-     (Self : in out Object;
+     (Self : Object;
       Name : Source_Reference.Identifier.Object) return Object;
    --  Returns the object with another name
 

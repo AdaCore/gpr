@@ -147,7 +147,7 @@ package body GPR2.Project.Name_Values is
    ------------
 
    function Rename
-     (Self : in out Object;
+     (Self : Object;
       Name : Source_Reference.Identifier.Object) return Object
    is
       Result : Object := Self;

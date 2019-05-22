@@ -99,47 +99,11 @@ package body GPR2.Project.Definition is
    ----------------------------
 
    procedure Set_Default_Attributes (Def : in out Data) is
-
-      Lang_Set  : Containers.Source_Value_Set;
-      Languages : Containers.Source_Value_List;
-
-      procedure Agg_Languages (D : in out Data);
-
-      -------------------
-      -- Agg_Languages --
-      -------------------
-
-      procedure Agg_Languages (D : in out Data) is
-      begin
-         for A of D.Aggregated loop
-            if A.Kind in Aggregate_Kind then
-               Agg_Languages (Get_RW (A).all);
-
-            else
-               Set_Default_Attributes (Get_RW (A).all);
-
-               for L of A.Languages loop
-                  Lang_Set.Include (L);
-               end loop;
-            end if;
-         end loop;
-      end Agg_Languages;
-
    begin
-      if Def.Kind in Aggregate_Kind then
-         Agg_Languages (Def);
-
-         for L of Lang_Set loop
-            Languages.Append (L);
-         end loop;
-      end if;
-
-      Set_Defaults (Def.Attrs, Def.Kind, No_Name, Languages);
+      Set_Defaults (Def.Attrs, Def.Kind, No_Name);
 
       for Pack of Def.Packs loop
-         Definition.Set_Pack_Default_Attributes
-           (Pack, Def.Kind,
-            (if Def.Kind in Aggregate_Kind then Languages else Def.Languages));
+         Definition.Set_Pack_Default_Attributes (Pack, Def.Kind);
       end loop;
    end Set_Default_Attributes;
 

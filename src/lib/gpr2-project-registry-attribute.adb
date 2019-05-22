@@ -16,10 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling; use Ada;
 with Ada.Strings.Fixed;
 
 with GPR2.Project.Registry.Pack;
+with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Registry.Attribute is
 
@@ -29,8 +29,6 @@ package body GPR2.Project.Registry.Attribute is
 
    Store    : Attribute_Definitions.Map;
    Defaults : Pack_Defaults.Map;
-
-   Any_Index : constant Value_Type := (1 => ASCII.NUL);
 
    Everywhere       : constant Allowed_In := (others => True);
 
@@ -65,39 +63,32 @@ package body GPR2.Project.Registry.Attribute is
       Empty_Value          : Empty_Value_Status := Allow;
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In;
-      Default              : Containers.Name_Value_Map :=
-                               Containers.Name_Value_Map_Package.Empty_Map;
+      Default              : VSR.Map    := VSR.Empty_Map;
       Default_Is_Reference : Boolean    := False;
       Has_Default_In       : Allowed_In := Nowhere);
    --  Calls Store.Insert with Key => Name and Value created from other fields
 
    --  Constants for some common attribute definitions
 
-   function Create
-     (Index, Value : Value_Type) return Containers.Name_Value_Map;
+   function Create (Index, Value : Value_Type) return VSR.Map;
    --  Create container for attribute default value
 
-   function Create (Value : Value_Type) return Containers.Name_Value_Map is
-      (Create (Any_Index, Value));
+   function Create (Value : Value_Type) return VSR.Map is
+     (Create (Any_Index, Value));
    --  Create container for attribute default value
 
-   function "+"
-     (Left  : Containers.Name_Value_Map;
-      Right : Containers.Name_Value_Map) return Containers.Name_Value_Map;
+   function "+" (Left, Right : VSR.Map) return VSR.Map;
    --  Concatenate 2 default values for different indexes into one container
 
    ---------
    -- "+" --
    ---------
 
-   function "+"
-     (Left  : Containers.Name_Value_Map;
-      Right : Containers.Name_Value_Map) return Containers.Name_Value_Map
-   is
-      Result : Containers.Name_Value_Map := Left;
+   function "+" (Left, Right : VSR.Map) return VSR.Map is
+      Result : VSR.Map := Left;
    begin
       for C in Right.Iterate loop
-         Result.Insert (Containers.Name_Value_Map_Package.Key (C), Right (C));
+         Result.Insert (VSR.Key (C), Right (C));
       end loop;
 
       return Result;
@@ -117,12 +108,14 @@ package body GPR2.Project.Registry.Attribute is
          else Name_Type (Pack) & '.' & Name);
    end Create;
 
-   function Create
-     (Index, Value : Value_Type) return Containers.Name_Value_Map
-   is
-      Result : Containers.Name_Value_Map;
+   function Create (Index, Value : Value_Type) return VSR.Map is
+      Result : VSR.Map;
    begin
-      Result.Insert (Name_Type (Index), Value);
+      Result.Insert
+        (Index,
+         Source_Reference.Value.Object
+           (Source_Reference.Value.Create (Source_Reference.Builtin, Value)));
+
       return Result;
    end Create;
 
@@ -170,70 +163,6 @@ package body GPR2.Project.Registry.Attribute is
       return Store (Q_Name);
    end Get;
 
-   -----------------
-   -- Get_Default --
-   -----------------
-
-   function Get_Default (Rules : Default_Rules; Name : Name_Type) return Def is
-   begin
-      return Rules.Element (Name).all;
-   end Get_Default;
-
-   function Get_Default
-     (Rules        : Default_Rules;
-      Name         : Name_Type;
-      Index        : Value_Type;
-      Is_Reference : out Boolean;
-      Is_List      : out Boolean;
-      Has_Default  : out Boolean) return Value_Type
-   is
-      use GPR2.Containers.Name_Value_Map_Package;
-
-      CN : constant Default_References.Cursor := Rules.Find (Name);
-      D  : Def_Access;
-      C  : Cursor;
-
-      function Index_To_Key return Value_Type is
-        (if Index = No_Value          then Any_Index
-         elsif D.Index_Case_Sensitive then Index
-         else Characters.Handling.To_Lower (Index));
-      --  Convert Index to key value in defaults map
-
-   begin
-      Has_Default := False;
-
-      if not Default_References.Has_Element (CN) then
-         return "";
-      end if;
-
-      D := Default_References.Element (CN);
-
-      pragma Assert (not D.Default.Is_Empty);
-
-      Is_Reference := D.Default_Is_Reference;
-      Is_List      := D.Value = List;
-
-      C := D.Default.Find (Name_Type (Index_To_Key));
-
-      if Has_Element (C) then
-         Has_Default := True;
-         return Element (C);
-
-      elsif Index = No_Value then
-         --  Search by Any_Index already done
-         return "";
-      end if;
-
-      C := D.Default.Find (Name_Type (Any_Index));
-
-      if Has_Element (C) then
-         Has_Default := True;
-         return Element (C);
-      end if;
-
-      return "";
-   end Get_Default;
-
    -----------------------
    -- Get_Default_Rules --
    -----------------------
@@ -250,43 +179,6 @@ package body GPR2.Project.Registry.Attribute is
       end if;
    end Get_Default_Rules;
 
-   -----------------
-   -- Has_Default --
-   -----------------
-
-   function Has_Default
-     (Name : Qualified_Name; Index : Value_Type) return Boolean
-   is
-      use GPR2.Containers.Name_Value_Map_Package;
-      CN : constant Attribute_Definitions.Cursor := Store.Find (Name);
-      D  : Def;
-
-      function Index_To_Key return Value_Type is
-        (if Index = No_Value then Any_Index
-         elsif D.Index_Case_Sensitive then Index
-         else Ada.Characters.Handling.To_Lower (Index));
-      --  Convert Index to key value in defaults map
-
-   begin
-      if not Attribute_Definitions.Has_Element (CN) then
-         return False;
-      end if;
-
-      D := Attribute_Definitions.Element (CN);
-
-      if D.Default.Is_Empty then
-         return False;
-      end if;
-
-      if D.Default.Contains (Name_Type (Index_To_Key)) then
-         return True;
-      elsif Index = No_Value then
-         return False;
-      end if;
-
-      return D.Default.Contains (Name_Type (Any_Index));
-   end Has_Default;
-
    ------------------
    -- Store_Insert --
    ------------------
@@ -301,8 +193,7 @@ package body GPR2.Project.Registry.Attribute is
       Empty_Value          : Empty_Value_Status := Allow;
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In;
-      Default              : Containers.Name_Value_Map :=
-                               Containers.Name_Value_Map_Package.Empty_Map;
+      Default              : VSR.Map    := VSR.Empty_Map;
       Default_Is_Reference : Boolean    := False;
       Has_Default_In       : Allowed_In := Nowhere)
    is
@@ -315,7 +206,7 @@ package body GPR2.Project.Registry.Attribute is
 
       procedure Index_Default is
          Dot_At : constant Natural :=
-                    Strings.Fixed.Index (String (Name), ".");
+                    Ada.Strings.Fixed.Index (String (Name), ".");
          Pack   : constant Optional_Name_Type :=
                     (if Dot_At = 0
                      then No_Name
