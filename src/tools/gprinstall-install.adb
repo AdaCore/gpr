@@ -1585,31 +1585,26 @@ package body GPRinstall.Install is
             procedure For_Project (Project : GPR2.Project.View.Object) is
                package A renames GPR2.Project.Registry.Attribute;
                package P renames GPR2.Project.Registry.Pack;
+               Attr : GPR2.Project.Attribute.Object;
             begin
-               for Lang of Project.Languages loop
-                  if Project.Tree.Has_Configuration then
-                     declare
-                        C : constant GPR2.Project.View.Object :=
-                              Project.Tree.Configuration.Corresponding_View;
-                     begin
-                        if C.Has_Packages (P.Compiler) then
-                           declare
-                              Compiler : constant GPR2.Project.Pack.Object :=
-                                           C.Packages.Element (P.Compiler);
-                           begin
-                              if Compiler.Has_Attributes
-                                (A.Driver, Lang.Text)
-                                and then
-                                 Compiler.Attribute
-                                   (A.Driver, Lang.Text).Value.Text /= ""
-                              then
-                                 Langs.Include (Lang.Text);
-                              end if;
-                           end;
-                        end if;
-                     end;
-                  end if;
-               end loop;
+               if Project.Has_Languages then
+                  for Lang of Project.Languages loop
+                     if Project.Tree.Has_Configuration then
+                        declare
+                           C : constant GPR2.Project.View.Object :=
+                                 Project.Tree.Configuration.Corresponding_View;
+                        begin
+                           if C.Has_Packages (P.Compiler)
+                             and then C.Pack (P.Compiler).Check_Attribute
+                                        (A.Driver, Lang.Text, Attr)
+                             and then Attr.Value.Text /= ""
+                           then
+                              Langs.Include (Lang.Text);
+                           end if;
+                        end;
+                     end if;
+                  end loop;
+               end if;
             end For_Project;
 
          begin

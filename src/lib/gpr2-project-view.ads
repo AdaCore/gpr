@@ -251,17 +251,18 @@ package GPR2.Project.View is
    --  Sources
 
    function Has_Languages (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined;
-   --  Returns true if the project view has some languages defined.
-   --  The case where it returns false is a project declaring an empty
-   --  Language attribute.
+     with Pre => Self.Is_Defined;
+   --  Returns true if the project view has languages attribute defined or has
+   --  default Languages attribute value. The case where it returns false is a
+   --  project prohibited to have the Language attribute, aggregate for
+   --  example.
 
    function Languages (Self : Object) return Containers.Source_Value_List
-     with Pre  => Self.Is_Defined,
-          Post => Languages'Result.Length > 0;
+     with Pre => Self.Is_Defined and then Self.Has_Languages;
    --  Returns the languages used on this project, this is not necessary the
    --  content of the Languages attribute as if not defined it returns the
-   --  default language Ada.
+   --  default language Ada. But the languages attribute can be set to the
+   --  empty list (no language defined).
 
    function Source_Directories (Self : Object) return Project.Attribute.Object
      with Pre => Self.Is_Defined
