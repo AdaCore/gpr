@@ -1038,7 +1038,7 @@ package body GPR2.Parser.Project is
       --  The case-values to match against the case-item. Each time a case
       --  statement is enterred the value for the case is prepended into this
       --  vector. The first value is then removed when exiting from the case
-      --  statement.
+      --  statement. This is to support nested case statements.
 
       Is_Open     : Boolean := True;
       --  Is_Open is a parsing barrier, it is True when parsing can be
@@ -2022,9 +2022,14 @@ package body GPR2.Parser.Project is
                declare
                   Childs : constant Case_Item_List := F_Items (Node);
                begin
-                  for C in 1 .. Children_Count (Childs) loop
+                  Check_Case_Item : for C in 1 .. Children_Count (Childs) loop
                      Visit_Child (Child (GPR_Node (Childs), C));
-                  end loop;
+
+                     --  Exit this look as soon as a case item has matched.
+                     --  We do not want an other clause to match if an open
+                     --  case-item has already been found and handled.
+                     exit Check_Case_Item when Is_Open;
+                  end loop Check_Case_Item;
                end;
 
                --  Then remove the case value
