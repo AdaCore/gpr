@@ -1626,9 +1626,6 @@ begin
                           Registry.Attribute.Dot_Replacement)),
                     (Source_Reference.Value.Object
                       (Source_Reference.Value.Create
-                         (Source_Reference.Builtin, ""))),
-                    (Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
                           (Source_Reference.Builtin, "-"))));
       Attrs    : Project.Attribute.Set.Object;
    begin
