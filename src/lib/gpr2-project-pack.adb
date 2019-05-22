@@ -47,9 +47,9 @@ package body GPR2.Project.Pack is
       Name  : Optional_Name_Type := No_Name;
       Index : Value_Type := No_Value) return Project.Attribute.Set.Object
    is
-      Default : Project.Attribute.Object;
       Result  : Project.Attribute.Set.Object :=
                   Self.Attrs.Filter (Name, Index);
+      Default : Project.Attribute.Object;
    begin
       if Name /= No_Name and then Result.Length = 0
         and then Self.Check_Attribute (Name, Index, Default)
@@ -71,10 +71,8 @@ package body GPR2.Project.Pack is
       Lang : constant Value_Type := Value_Type (Language);
       Attr : Project.Attribute.Object;
    begin
-      if Self.Check_Attribute (Registry.Attribute.Body_Suffix, Lang, Attr)
-      then
+      if Self.Check_Attribute (Registry.Attribute.Body_Suffix, Lang, Attr) then
          return Attr;
-
       else
          return Project.Attribute.Undefined;
       end if;
@@ -101,8 +99,7 @@ package body GPR2.Project.Pack is
    function Create
      (Name       : Source_Reference.Identifier.Object;
       Attributes : Project.Attribute.Set.Object;
-      Variables  : Project.Variable.Set.Object) return Object
-   is
+      Variables  : Project.Variable.Set.Object) return Object is
    begin
       return Object'
         (Source_Reference.Object (Name)
@@ -183,10 +180,10 @@ package body GPR2.Project.Pack is
       Lang : constant Value_Type := Value_Type (Language);
       Attr : Project.Attribute.Object;
    begin
-      if Self.Check_Attribute (Registry.Attribute.Separate_Suffix, Lang, Attr)
+      if Self.Check_Attribute
+        (Registry.Attribute.Separate_Suffix, Lang, Attr)
       then
          return Attr;
-
       else
          return Project.Attribute.Undefined;
       end if;
@@ -218,7 +215,6 @@ package body GPR2.Project.Pack is
    begin
       if Self.Check_Attribute (Registry.Attribute.Spec_Suffix, Lang, Attr) then
          return Attr;
-
       else
          return Project.Attribute.Undefined;
       end if;
@@ -237,7 +233,8 @@ package body GPR2.Project.Pack is
       if Self.Check_Attribute (Registry.Attribute.Spec, Unit, Attr) then
          return Attr;
 
-      elsif Self.Check_Attribute (Registry.Attribute.Specification, Unit, Attr)
+      elsif Self.Check_Attribute
+        (Registry.Attribute.Specification, Unit, Attr)
       then
          return Attr;
 

@@ -23,6 +23,7 @@ with GPR2.Project.Definition;
 
 package body GPR2.Project.Attribute.Set is
 
+   use Ada;
    use Ada.Strings.Unbounded;
 
    package RA renames Registry.Attribute;
@@ -224,7 +225,7 @@ package body GPR2.Project.Attribute.Set is
               or else Result.Set.Is_Empty
               or else Result.Set.First_Element.Index_Case_Sensitive
             then Index
-            else Ada.Characters.Handling.To_Lower (Index));
+            else Characters.Handling.To_Lower (Index));
       end if;
 
       return Result;
@@ -236,7 +237,7 @@ package body GPR2.Project.Attribute.Set is
 
    overriding function First (Iter : Iterator) return Cursor is
       Position : Cursor :=
-                   (Iter.Set.Attributes.First,
+                   (CM  => Iter.Set.Attributes.First,
                     CA  => Set_Attribute.No_Element,
                     Set => null);
    begin
