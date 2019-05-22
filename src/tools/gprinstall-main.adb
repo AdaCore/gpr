@@ -549,7 +549,9 @@ procedure GPRinstall.Main is
          Options.Target_Name := new String'("all");
       end if;
 
-      Options.Clean_Build_Path (Options.Project_File);
+      if Options.Project_File.Is_Defined then
+         Options.Clean_Build_Path (Options.Project_File);
+      end if;
    end Parse_Command_Line;
 
    Config  : Project.Configuration.Object;
