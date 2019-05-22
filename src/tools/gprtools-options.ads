@@ -51,7 +51,7 @@ package GPRtools.Options is
 
    procedure Clean_Build_Path
      (Self : in out Object; Project : GPR2.Path_Name.Object)
-     with Pre => Project.Is_Defined,
+     with Pre  => Project.Is_Defined,
           Post => Self.Build_Path.Is_Defined;
    --  If Self.Build_Path is not defined, set it to the Project directory and
    --  return. If Self.Root_Path is not defined, Self.Build_Path is kept as is,
