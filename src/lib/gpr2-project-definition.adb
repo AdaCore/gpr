@@ -138,7 +138,8 @@ package body GPR2.Project.Definition is
 
       for Pack of Def.Packs loop
          Definition.Set_Pack_Default_Attributes
-           (Pack, Def.Kind, Def.Languages);
+           (Pack, Def.Kind,
+            (if Def.Kind in Aggregate_Kind then Languages else Def.Languages));
       end loop;
    end Set_Default_Attributes;
 
