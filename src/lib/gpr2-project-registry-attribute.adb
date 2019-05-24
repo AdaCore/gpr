@@ -2594,7 +2594,7 @@ begin
 
    --  side_debug
    Store_Insert
-     (Create (Side_Debug),
+     (Create (Side_Debug, Pack.Install),
       Index                => No,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
