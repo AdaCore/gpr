@@ -1594,12 +1594,6 @@ package body GPR2.Project.Tree is
 
       Set_Context (Self, Changed);
 
-      --  ??? this is temporary and need to be fixed in GPRconfig
-
-      if Self.Conf.Is_Defined then
-         Self.Conf.Fix_Languages;
-      end if;
-
       for V of Self.Views_Set loop
          Definition.Set_Default_Attributes (Definition.Get (V).all);
       end loop;

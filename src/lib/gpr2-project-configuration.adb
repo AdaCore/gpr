@@ -219,31 +219,6 @@ package body GPR2.Project.Configuration is
       end if;
    end Dependency_File_Suffix;
 
-   -------------------
-   -- Fix_Languages --
-   -------------------
-
-   procedure Fix_Languages (Self : in out Object) is
-      Values : Containers.Source_Value_List;
-      Def    : constant Definition.Ref := Definition.Get_RW (Self.Conf);
-      package SR renames GPR2.Source_Reference;
-   begin
-      if not Self.Conf.Has_Languages then
-         for D of Self.Descriptions loop
-            Values.Append
-              (SR.Value.Object
-                 (SR.Value.Create (SR.Builtin, To_String (D.Language))));
-         end loop;
-
-         Def.Attrs.Insert
-           (Attribute.Create
-              (SR.Identifier.Object
-                 (SR.Identifier.Create
-                    (SR.Builtin, Name_Type (PRA.Languages))),
-               Values));
-      end if;
-   end Fix_Languages;
-
    ------------------
    -- Has_Messages --
    ------------------
