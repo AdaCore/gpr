@@ -307,15 +307,17 @@ package GPR2.Project.View is
 
    --  Units
 
-   function Units (Self        : Object;
-                   Need_Update : Boolean := True) return GPR2.Unit.Set.Object
+   function Units
+     (Self        : Object;
+      Need_Update : Boolean := True) return GPR2.Unit.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the units for the view, note that this routine ensure that
    --  the current sources and units are up-to-date by calling Update_Sources.
 
-   function Unit (Self         : Object;
-                  Name         : Name_Type;
-                  Need_Update  : Boolean := True) return GPR2.Unit.Object
+   function Unit
+     (Self         : Object;
+      Name         : Name_Type;
+      Need_Update  : Boolean := True) return GPR2.Unit.Object
      with Pre => Self.Is_Defined;
 
    function Is_Externally_Built (Self : Object) return Boolean
