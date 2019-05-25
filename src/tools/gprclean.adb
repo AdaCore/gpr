@@ -340,6 +340,7 @@ procedure GPRclean is
             --  To disable cleanup if main files list exists and the main file
             --  is not from list.
             In_Mains : Boolean := False;
+            Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
          begin
             if Options.Verbose then
                Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value);
@@ -350,10 +351,8 @@ procedure GPRclean is
                Mains.Delete (String (S.Source.Path_Name.Simple_Name));
             end if;
 
-            if (Has_Mains and then S.Is_Main) or else In_Mains then
-               if Has_Mains and then S.Is_Main and then Arg_Mains
-                 and then not In_Mains
-               then
+            if Is_Main or else In_Mains then
+               if Is_Main and then Arg_Mains and then not In_Mains then
                   Cleanup := False;
                else
                   Binder_Artifacts
@@ -462,6 +461,8 @@ procedure GPRclean is
                if Dir.Value /= View.Dir_Name.Value then
                   declare
                      Dir_Name : constant String := Dir.Value;
+                     DS       : Character renames
+                                  GNAT.OS_Lib.Directory_Separator;
                   begin
                      Delete_Dir (Dir_Name);
 
@@ -471,8 +472,11 @@ procedure GPRclean is
                         --  If subdirs is defined try to remove the parent one
 
                         pragma Assert
-                          (Dir_Name (Dir_Name'Last - Length (Subdirs)) =
-                             GNAT.OS_Lib.Directory_Separator);
+                          (Dir_Name
+                             (Dir_Name'Last - Length (Subdirs)
+                              - Boolean'Pos (Dir_Name (Dir_Name'Last) = DS))
+                           = DS,
+                           Dir_Name);
 
                         Delete_Dir
                           (Dir_Name (Dir_Name'First
