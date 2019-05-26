@@ -149,6 +149,16 @@ package body GPR2.Project.Definition is
       --  Used for the Ada_Naming_Exceptions container which maps a filename to
       --  the list of naming attributes (Body/Spec) that reference it.
 
+      procedure Register_Units
+        (Source            : Project.Source.Object;
+         Compilation_Units : Compilation_Unit.List.Object)
+        with Pre => Source.Source.Language = "Ada";
+      --  Registers units for the given project source. Note that we need to
+      --  pass the Compilation_Units and not to use the one registered with the
+      --  source as the later could have been updated by a real parser based on
+      --  Libadalang for example. And in this case the units name could be non
+      --  matching. This is true for the initial call in Handle_File.
+
       type Insert_Mode is (Replace, Skip, Error);
       --  Controls behavior when a duplicated unit/filename is found
       --
@@ -753,7 +763,7 @@ package body GPR2.Project.Definition is
          for L of Languages.Values loop
             declare
                Language        : constant Name_Type := Name_Type (L.Text);
-               Language_Is_Ada : constant Boolean := (Language = "Ada");
+               Language_Is_Ada : constant Boolean := Language = "Ada";
 
             begin
                --  First, try naming exceptions
@@ -949,49 +959,7 @@ package body GPR2.Project.Definition is
                   --  For Ada, register the Unit object into the view
 
                   if Language_Is_Ada then
-                     declare
-                        U_Def : Unit.Object;
-
-                        procedure Register_Src (Kind : Kind_Type);
-                        --  Register Project_Source into U_Def, according to
-                        --  its kind.
-
-                        ------------------
-                        -- Register_Src --
-                        ------------------
-
-                        procedure Register_Src (Kind : Kind_Type) is
-                        begin
-                           if Kind = S_Spec then
-                              U_Def.Update_Spec (Project_Source);
-                           elsif Kind = S_Body then
-                              U_Def.Update_Body (Project_Source);
-                           else
-                              U_Def.Update_Separates (Project_Source);
-                           end if;
-                        end Register_Src;
-
-                     begin
-                        for CU of Compilation_Units loop
-                           Def.Tree.Record_View
-                             (View   => View,
-                              Source => File.Value,
-                              Unit   => CU.Unit_Name);
-
-                           if Def.Units.Contains (CU.Unit_Name) then
-                              U_Def := Def.Units.Element (CU.Unit_Name);
-
-                              Register_Src (CU.Kind);
-
-                              Def.Units.Replace (CU.Unit_Name, U_Def);
-
-                           else
-                              Register_Src (CU.Kind);
-
-                              Def.Units.Insert (CU.Unit_Name, U_Def);
-                           end if;
-                        end loop;
-                     end;
+                     Register_Units (Project_Source, Compilation_Units);
                   end if;
 
                   --  Exit the languages loop
@@ -1063,49 +1031,7 @@ package body GPR2.Project.Definition is
             --  For Ada, register the Unit object into the view
 
             if Language_Is_Ada then
-               declare
-                  U_Def : Unit.Object;
-
-                  procedure Register_Src (Kind : Kind_Type);
-                  --  Register Project_Source into U_Def, according to
-                  --  its kind.
-
-                  ------------------
-                  -- Register_Src --
-                  ------------------
-
-                  procedure Register_Src (Kind : Kind_Type) is
-                  begin
-                     if Kind = S_Spec then
-                        U_Def.Update_Spec (Project_Source);
-                     elsif Kind = S_Body then
-                        U_Def.Update_Body (Project_Source);
-                     else
-                        U_Def.Update_Separates (Project_Source);
-                     end if;
-                  end Register_Src;
-
-               begin
-                  for CU of Compilation_Units loop
-                     Def.Tree.Record_View
-                       (View   => View,
-                        Source => File.Value,
-                        Unit   => CU.Unit_Name);
-
-                     if Def.Units.Contains (CU.Unit_Name) then
-                        U_Def := Def.Units.Element (CU.Unit_Name);
-
-                        Register_Src (CU.Kind);
-
-                        Def.Units.Replace (CU.Unit_Name, U_Def);
-
-                     else
-                        Register_Src (CU.Kind);
-
-                        Def.Units.Insert (CU.Unit_Name, U_Def);
-                     end if;
-                  end loop;
-               end;
+               Register_Units (Project_Source, Compilation_Units);
             end if;
          end Add_Source;
 
@@ -1179,6 +1105,67 @@ package body GPR2.Project.Definition is
 
          Text_IO.Close (F);
       end Read_File;
+
+      --------------------
+      -- Register_Units --
+      --------------------
+
+      procedure Register_Units
+        (Source            : Project.Source.Object;
+         Compilation_Units : Compilation_Unit.List.Object)
+      is
+
+         File  : constant Path_Name.Object := Source.Source.Path_Name;
+         U_Def : Unit.Object;
+
+         procedure Register_Src (Kind : Kind_Type);
+         --  Register Project_Source into U_Def, according to
+         --  its kind.
+
+         ------------------
+         -- Register_Src --
+         ------------------
+
+         procedure Register_Src (Kind : Kind_Type) is
+         begin
+            if Kind = S_Spec then
+               U_Def.Update_Spec (Source);
+            elsif Kind = S_Body then
+               U_Def.Update_Body (Source);
+            else
+               U_Def.Update_Separates (Source);
+            end if;
+         end Register_Src;
+
+      begin
+         for CU of Compilation_Units loop
+            Def.Tree.Record_View
+              (View   => View,
+               Source => File.Value,
+               Unit   =>
+                 Name_Type
+                   (Characters.Handling.To_Lower (String (CU.Unit_Name))));
+
+            if Def.Units.Contains (CU.Unit_Name) then
+               U_Def := Def.Units.Element (CU.Unit_Name);
+
+               Register_Src (CU.Kind);
+
+               Def.Units.Replace
+                 (Name_Type
+                    (Characters.Handling.To_Lower
+                         (String (CU.Unit_Name))), U_Def);
+
+            else
+               Register_Src (CU.Kind);
+
+                  Def.Units.Insert
+                    (Name_Type
+                         (Characters.Handling.To_Lower
+                              (String (CU.Unit_Name))), U_Def);
+            end if;
+         end loop;
+      end Register_Units;
 
       ---------------
       -- Signature --
