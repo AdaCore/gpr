@@ -422,7 +422,7 @@ package body GPR2.Project.View is
 
    begin
       return For_Prj (Self)
-        or else (Self.Is_Extending and then For_Prj (Self.Extended));
+        or else (Self.Is_Extending and then Self.Extended.Has_Mains);
    end Has_Mains;
 
    ------------------
@@ -578,6 +578,22 @@ package body GPR2.Project.View is
                (Project.Registry.Attribute.Externally_Built, Result => Attr)
              and then Attr.Value_Equal ("true");
    end Is_Externally_Built;
+
+   -------------
+   -- Is_Main --
+   -------------
+
+   function Is_Main
+     (Self : Object; Source : Project.Source.Object) return Boolean
+   is
+      Path  : constant GPR2.Path_Name.Object := Source.Source.Path_Name;
+      Mains : Project.Attribute.Object;
+   begin
+      return (Self.Check_Attribute (Registry.Attribute.Main, Result => Mains)
+          and then (Mains.Has_Value (Value_Type (Path.Base_Name))
+                    or else Mains.Has_Value (Value_Type (Path.Simple_Name))))
+        or else (Self.Is_Extending and then Self.Extended.Is_Main (Source));
+   end Is_Main;
 
    -----------------------
    -- Is_Shared_Library --

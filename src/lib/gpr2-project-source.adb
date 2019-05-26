@@ -20,7 +20,6 @@ with GPR2.Compilation_Unit;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
-with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -264,13 +263,8 @@ package body GPR2.Project.Source is
    -------------
 
    function Is_Main (Self : Object) return Boolean is
-      Path  : constant Path_Name.Object := Self.Source.Path_Name;
-      View  : constant Project.View.Object := Definition.Strong (Self.View);
-      Mains : constant Attribute.Object :=
-                View.Attribute (Registry.Attribute.Main);
    begin
-      return Mains.Has_Value (Value_Type (Path.Base_Name))
-        or else Mains.Has_Value (Value_Type (Path.Simple_Name));
+      return Definition.Strong (Self.View).Is_Main (Self);
    end Is_Main;
 
    ----------------

@@ -111,6 +111,11 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the view is extended by another project
 
+   function Is_Main
+     (Self : Object; Source : Project.Source.Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the source is the main unit of the view
+
    function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
 
