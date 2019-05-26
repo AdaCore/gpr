@@ -279,16 +279,16 @@ package body GPR2.Source is
    procedure Update (Self : Object) is
       use type Calendar.Time;
 
-      S        : Registry.Data := Registry.Shared.Get (Self);
       Filename : constant String := Self.Pathname.Value;
+      S        : Registry.Data := Registry.Shared.Get (Self);
    begin
       pragma Assert (Directories.Exists (Filename));
 
       declare
-         New_TS  : constant Calendar.Time :=
-                     Directories.Modification_Time (Filename);
+         New_TS      : constant Calendar.Time :=
+                         Directories.Modification_Time (Filename);
 
-         Updated      : Boolean := False;
+         Updated     : Boolean := False;
 
          New_CU_List : Compilation_Unit.List.Object;
          New_CU_Map  : Compilation_Unit.Map.Object;
