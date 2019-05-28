@@ -458,7 +458,7 @@ procedure GPRclean is
 
             procedure Delete_If_Not_Project (Dir : Path_Name.Object) is
             begin
-               if Dir.Value /= View.Dir_Name.Value then
+               if Dir.Value /= View.Dir_Name.Value and then Dir.Exists then
                   declare
                      Dir_Name : constant String := Dir.Value;
                      DS       : Character renames
