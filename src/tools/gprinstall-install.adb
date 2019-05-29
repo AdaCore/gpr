@@ -880,7 +880,9 @@ package body GPRinstall.Install is
                     (Path_Name.Create_File
                        ("*", Optional_Name_Type (Fullname)),
                      Path_Name.Compose
-                       (Dest_Dir, Name_Type (Directories.Simple_Name (E))),
+                       (Dest_Dir,
+                        Name_Type (Directories.Simple_Name (E)),
+                        Directory => True),
                      Required);
 
                elsif Kind (E) = Ordinary_File then
