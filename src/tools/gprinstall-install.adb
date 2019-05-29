@@ -2617,9 +2617,9 @@ package body GPRinstall.Install is
       --  Skip non active project and externally built ones
 
       Is_Project_To_Install := Active
+        and then not Project.Is_Externally_Built
         and then (Bring_Sources (Project)
-                  or else Project.Has_Attributes (A.Main)
-                  or else Project.Is_Externally_Built);
+                  or else Project.Has_Attributes (A.Main));
 
       --  If we have an aggregate project we just install separately all
       --  aggregated projects.
