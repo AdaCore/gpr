@@ -18,7 +18,6 @@
 
 with Ada.Directories;
 with Ada.Exceptions;
-with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
@@ -29,7 +28,6 @@ with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.Utils;
 
-with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
@@ -43,11 +41,10 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
 with GPR2.Source_Reference;
-with GPRtools.Options;
+with GPRclean.Options;
 with GPRtools.Util;
-with GPR2.Version;
 
-procedure GPRclean is
+procedure GPRclean.Main is
 
    use Ada;
    use Ada.Exceptions;
@@ -62,41 +59,12 @@ procedure GPRclean is
    procedure Sources (View : Project.View.Object);
    --  Display view sources
 
-   procedure Parse_Command_Line;
-   --  Parse command line parameters
-
    procedure Exclude_File (Name : String);
    --  Remove file if exists
 
-   procedure Value_Callback (Switch, Value : String);
-   --  Accept string swithces
-
-   procedure Set_Project (Path : String);
-   --  Set project pathname, raise exception if already done
-
-   Dry_Run                     : aliased Boolean := False;
-   All_Projects                : aliased Boolean := False;
-   Remain_Useful               : aliased Boolean := False;
-   No_Project                  : aliased Boolean := False;
-   Unchecked_Shared_Lib_Import : aliased Boolean := False;
-   Debug_Mode                  : aliased Boolean := False;
-   Full_Path_Name_For_Brief    : aliased Boolean := False;
-   Remove_Empty_Dirs           : aliased Boolean := False;
-   Dummy                       : aliased Boolean := False;
-   --  For not working backward compartible switches
-
-   Mains         : GPR2.Containers.Value_Set;
-   Arg_Mains     : Boolean;
-   Implicit_Proj : Boolean := False;
-   Project_Path  : Path_Name.Object;
-   Project_Tree  : Project.Tree.Object;
-   Context       : GPR2.Context.Object;
-   Config_File   : Path_Name.Object;
-   Config        : Project.Configuration.Object;
-   Remove_Config : Boolean := False;
-   Target        : Unbounded_String := To_Unbounded_String ("all");
-   Options       : GPRtools.Options.Object; -- Common options for all tools
-   Subdirs       : Unbounded_String;
+   Project_Tree : Project.Tree.Object;
+   Config       : Project.Configuration.Object;
+   Options      : GPRclean.Options.Object;
 
    ------------------
    -- Exclude_File --
@@ -106,7 +74,7 @@ procedure GPRclean is
       use GNAT.OS_Lib;
       Success : Boolean := False;
    begin
-      if Dry_Run then
+      if Options.Dry_Run then
          if Is_Regular_File (Name) then
             Text_IO.Put_Line (Name);
 
@@ -125,147 +93,6 @@ procedure GPRclean is
          end if;
       end if;
    end Exclude_File;
-
-   ------------------------
-   -- Parse_Command_Line --
-   ------------------------
-
-   procedure Parse_Command_Line is
-      use GNAT.Command_Line;
-
-      Config : Command_Line_Configuration renames Options.Config;
-
-   begin
-      GPRtools.Options.Setup (Options);
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access, "-P:",
-         Help => "Project file");
-
-      Define_Switch
-        (Config, No_Project'Access,
-         Long_Switch => "--no-project",
-         Help        => "Do not use project file");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--target:",
-         Help => "Specify a target for cross platforms");
-
-      Define_Switch
-        (Config, All_Projects'Access, "-r",
-         Help => "Clean all projects recursively");
-
-      Define_Switch
-        (Options.Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--subdirs:",
-         Help        => "Real obj/lib/exec dirs are subdirs",
-         Argument    => "<dir>");
-
-      Define_Switch
-        (Config, Dry_Run'Access, "-n",
-         Help => "Nothing to do: only list files to delete");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access, "-X:",
-         Help => "Specify an external reference for Project Files");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--config:",
-         Help => "Specify the configuration project file name");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--autoconf:",
-         Help => "Specify generated config project file name");
-
-      Define_Switch
-        (Config, Remain_Useful'Access, "-c",
-         Help => "Only delete compiler generated files");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         "-aP:",
-         Help => "Add directory ARG to project search path");
-
-      Define_Switch
-        (Config, Dummy'Access, "-eL",
-         Help => "For backwards compatibility, has no effect");
-
-      Define_Switch
-        (Config, Unchecked_Shared_Lib_Import'Access,
-         Long_Switch => "--unchecked-shared-lib-imports",
-         Help => "Shared lib projects may import any project");
-
-      Define_Switch
-        (Config, Debug_Mode'Access,
-         Switch => "-d",
-         Help   => "Debug mode");
-
-      Define_Switch
-        (Config, Full_Path_Name_For_Brief'Access,
-         Switch => "-F",
-         Help   => "Full project path name in brief log messages");
-
-      Define_Switch
-        (Config, Remove_Empty_Dirs'Access,
-         Switch => "-p",
-         Help   => "Remove empty build directories");
-
-      Getopt (Config);
-
-      GPR2.Set_Debug (Debug_Mode);
-
-      if Options.Version then
-         GPR2.Version.Display
-           ("GPRCLEAN", "2018", Version_String => GPR2.Version.Long_Value);
-         return;
-      end if;
-
-      --  Now read arguments
-
-      GPRtools.Options.Read_Remaining_Arguments (Project_Path, Mains);
-
-      Arg_Mains := not Mains.Is_Empty;
-
-      if not Project_Path.Is_Defined then
-         Project_Path := GPRtools.Util.Look_For_Default_Project;
-
-         Implicit_Proj := Project_Path.Is_Defined
-           and then Project_Path.Dir_Name /= Ada.Directories.Current_Directory;
-
-      elsif No_Project then
-         raise Usage_Error with
-           "cannot specify --no-project with a project file";
-      end if;
-
-      if not Project_Path.Is_Defined then
-         Display_Help (Config);
-         raise Usage_Error with "Can't determine project file to work with";
-      end if;
-
-      Options.Clean_Build_Path
-        (if Implicit_Proj
-         then Path_Name.Create_Directory
-                (Name_Type (Ada.Directories.Current_Directory))
-         else Project_Path);
-   end Parse_Command_Line;
-
-   -----------------
-   -- Set_Project --
-   -----------------
-
-   procedure Set_Project (Path : String) is
-   begin
-      if not Project_Path.Is_Defined then
-         Project_Path := Project.Create (Optional_Name_Type (Path));
-
-      else
-         raise Usage_Error with
-           '"' & Path & """, project already """ & Project_Path.Value & '"';
-      end if;
-   end Set_Project;
 
    -------------
    -- Sources --
@@ -346,13 +173,15 @@ procedure GPRclean is
                Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value);
             end if;
 
-            if Mains.Contains (String (S.Source.Path_Name.Simple_Name)) then
+            if Options.Mains.Contains
+                 (String (S.Source.Path_Name.Simple_Name))
+            then
                In_Mains := True;
-               Mains.Delete (String (S.Source.Path_Name.Simple_Name));
+               Options.Mains.Delete (String (S.Source.Path_Name.Simple_Name));
             end if;
 
             if Is_Main or else In_Mains then
-               if Is_Main and then Arg_Mains and then not In_Mains then
+               if Is_Main and then Options.Arg_Mains and then not In_Mains then
                   Cleanup := False;
                else
                   Binder_Artifacts
@@ -366,7 +195,9 @@ procedure GPRclean is
                   Exclude_File (F.Value);
                end loop;
 
-               if not Remain_Useful and then Arg_Mains and then In_Mains then
+               if not Options.Remain_Useful and then Options.Arg_Mains
+                 and then In_Mains
+               then
                   --  When we took main procedure filename from Main project
                   --  attributes, the executable file name included into
                   --  atrifacts list above. This case is when main procedure
@@ -381,13 +212,15 @@ procedure GPRclean is
          end;
       end loop;
 
-      if Arg_Mains and then not Mains.Is_Empty then
+      if Options.Arg_Mains and then not Options.Mains.Is_Empty then
          GPRtools.Util.Fail_Program
-           ('"' & Mains.First_Element
+           ('"' & Options.Mains.First_Element
             & """ was not found in the sources of any project");
       end if;
 
-      if not Remain_Useful and then View.Has_Mains and then not Arg_Mains then
+      if not Options.Remain_Useful and then View.Has_Mains
+        and then not Options.Arg_Mains
+      then
          for M of View.Mains loop
             Exclude_File (M.Value);
          end loop;
@@ -401,7 +234,7 @@ procedure GPRclean is
          Exclude_File (Obj_Dir.Compose (GI_DB & "-shm").Value);
          Exclude_File (Obj_Dir.Compose (GI_DB & "-wal").Value);
 
-         if Has_Mains or else Arg_Mains then
+         if Has_Mains or else Options.Arg_Mains then
             declare
                Main_Lib : constant Value_Type :=
                             Obj_Dir.Compose
@@ -416,7 +249,7 @@ procedure GPRclean is
             if View.Is_Aggregated_In_Library then
                Binder_Artifacts (View.Aggregate.Library_Name & Lexch);
             else
-               if not Remain_Useful then
+               if not Options.Remain_Useful then
                   Exclude_File (View.Library_Filename.Value);
                end if;
 
@@ -425,7 +258,7 @@ procedure GPRclean is
          end if;
       end;
 
-      if Remove_Empty_Dirs then
+      if Options.Remove_Empty_Dirs then
          declare
             use Ada.Directories;
 
@@ -466,21 +299,21 @@ procedure GPRclean is
                   begin
                      Delete_Dir (Dir_Name);
 
-                     if Subdirs /= Null_Unbounded_String
-                       and then String (Dir.Simple_Name) = Subdirs
+                     if Options.Subdirs /= Null_Unbounded_String
+                       and then String (Dir.Simple_Name) = Options.Subdirs
                      then
                         --  If subdirs is defined try to remove the parent one
 
                         pragma Assert
                           (Dir_Name
-                             (Dir_Name'Last - Length (Subdirs)
+                             (Dir_Name'Last - Length (Options.Subdirs)
                               - Boolean'Pos (Dir_Name (Dir_Name'Last) = DS))
                            = DS,
                            Dir_Name);
 
                         Delete_Dir
                           (Dir_Name (Dir_Name'First
-                           .. Dir_Name'Last - Length (Subdirs) - 1));
+                           .. Dir_Name'Last - Length (Options.Subdirs) - 1));
                      end if;
                   end;
                end if;
@@ -513,107 +346,53 @@ procedure GPRclean is
       end if;
    end Sources;
 
-   --------------------
-   -- Value_Callback --
-   --------------------
-
-   procedure Value_Callback (Switch, Value : String) is
-
-      function Normalize_Value return String is
-        (if Value /= "" and then Value (Value'First) = '='
-         then Value (Value'First + 1 .. Value'Last) else Value);
-      --  Remove leading '=' symbol from value for options like
-      --  --config=file.cgrp
-
-      Idx : Natural := 0;
-
-   begin
-      if Switch = "-P" then
-         Set_Project (Value);
-
-      elsif Switch = "-X" then
-         Idx := Ada.Strings.Fixed.Index (Value, "=");
-
-         if Idx = 0 then
-            raise Usage_Error with
-              "Can't split '" & Value & "' to name and value";
-         end if;
-
-         Context.Insert
-           (Name_Type (Value (Value'First .. Idx - 1)),
-            Value (Idx + 1 .. Value'Last));
-
-      elsif Switch = "--config" then
-         Config_File := Path_Name.Create_File (Name_Type (Normalize_Value));
-
-      elsif Switch = "--autoconf" then
-         --  --autoconf option for gprbuild mean that the file have to be
-         --  generated if absent. The gprclean have to remove all gprbuild
-         --  generated files.
-
-         Remove_Config := True;
-
-         Config_File := Path_Name.Create_File (Name_Type (Normalize_Value));
-
-      elsif Switch = "--target" then
-         Target := To_Unbounded_String (Normalize_Value);
-
-      elsif Switch = "-aP" then
-         Project_Tree.Register_Project_Search_Path
-           (Path_Name.Create_Directory (Name_Type (Value)));
-
-      elsif Switch = "--subdirs" then
-         Subdirs := To_Unbounded_String (Normalize_Value);
-      end if;
-   end Value_Callback;
-
 begin
    GNATCOLL.Traces.Parse_Config_File;
    GPRtools.Util.Set_Program_Name ("gprclean");
 
-   Parse_Command_Line;
+   Options.Parse_Command_Line (Project_Tree);
 
    if Options.Version then
       return;
    end if;
 
-   if Config_File.Is_Defined then
+   if Options.Config_File.Is_Defined then
       Config := Project.Configuration.Load
-        (Config_File, Name_Type (To_String (Target)));
+        (Options.Config_File, Name_Type (To_String (Options.Target)));
 
       Project_Tree.Load
-        (Project_Path, Context, Config, Options.Build_Path,
-         Optional_Name_Type (To_String (Subdirs)),
-         Check_Shared_Lib => not Unchecked_Shared_Lib_Import,
-         Implicit_Project => Implicit_Proj);
+        (Options.Project_Path, Options.Context, Config, Options.Build_Path,
+         Optional_Name_Type (To_String (Options.Subdirs)),
+         Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
+         Implicit_Project => Options.Implicit_Proj);
 
    else
       Project_Tree.Load_Autoconf
-        (Project_Path, Context, Options.Build_Path,
-         Optional_Name_Type (To_String (Subdirs)),
-         Check_Shared_Lib => not Unchecked_Shared_Lib_Import,
-         Implicit_Project => Implicit_Proj);
+        (Options.Project_Path, Options.Context, Options.Build_Path,
+         Optional_Name_Type (To_String (Options.Subdirs)),
+         Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
+         Implicit_Project => Options.Implicit_Proj);
    end if;
 
-   if Project_Tree.Root_Project.Is_Library and then Arg_Mains then
+   if Project_Tree.Root_Project.Is_Library and then Options.Arg_Mains then
       Project_Tree.Log_Messages.Append
         (GPR2.Message.Create
            (GPR2.Message.Error,
             "main cannot be a source of a library project: """
-            & Mains.First_Element & '"',
-            GPR2.Source_Reference.Create (Project_Path.Value, 0, 0)));
+            & Options.Mains.First_Element & '"',
+            GPR2.Source_Reference.Create (Options.Project_Path.Value, 0, 0)));
 
       Util.Output_Messages
         (Project_Tree.Log_Messages.all, Options.Verbosity,
-         Full_Path_Name_For_Brief);
+         Options.Full_Path_Name_For_Brief);
 
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
 
    for V in Project_Tree.Iterate
-     (Kind   => (Project.I_Recursive  => All_Projects,
-                 Project.I_Imported   => All_Projects,
-                 Project.I_Aggregated => All_Projects, others => True),
+     (Kind   => (Project.I_Recursive  => Options.All_Projects,
+                 Project.I_Imported   => Options.All_Projects,
+                 Project.I_Aggregated => Options.All_Projects, others => True),
       Status => (Project.S_Externally_Built => False),
       Filter => (Project.F_Abstract | Project.F_Aggregate => False,
                  others => True))
@@ -621,13 +400,13 @@ begin
       Sources (Project.Tree.Element (V));
    end loop;
 
-   if Remove_Config then
-      Exclude_File (Config_File.Value);
+   if Options.Remove_Config then
+      Exclude_File (Options.Config_File.Value);
    end if;
 
    Util.Output_Messages
      (Project_Tree.Log_Messages.all, Options.Verbosity,
-      Full_Path_Name_For_Brief);
+      Options.Full_Path_Name_For_Brief);
 
 exception
    when E : GNAT.Command_Line.Exit_From_Command_Line
@@ -638,9 +417,9 @@ exception
 
    when Project_Error =>
       GPRtools.Util.Project_Processing_Failed
-        (Project_Tree, Options.Verbosity, Full_Path_Name_For_Brief);
+        (Project_Tree, Options.Verbosity, Options.Full_Path_Name_For_Brief);
 
    when E : others =>
       GPRtools.Util.Fail_Program
         ("cannot parse project: " & Exception_Information (E));
-end GPRclean;
+end GPRclean.Main;
