@@ -325,19 +325,21 @@ package body GPRinstall.Install is
             function N (Str : String) return String
               is (OS_Lib.Normalize_Pathname (Str, Case_Sensitive => False));
 
-            Man_Path : constant Path_Name.Object :=
-                         Path_Name.Create_File
-                           (Name_Type (N (Name (Man))));
-
             MD5  : constant String := String (Pathname.Content_MD5);
             File : constant String := String (Pathname.Simple_Name);
          begin
             if not Aggregate_Only and then Is_Open (Man) then
-               Put_Line
-                 (Man,
-                  MD5 & ' '
-                  & String (Pathname.Relative_Path (To => Man_Path).Name)
-                  & File);
+               declare
+                  Man_Path : constant Path_Name.Object :=
+                               Path_Name.Create_File
+                                 (Name_Type (N (Name (Man))));
+               begin
+                  Put_Line
+                    (Man,
+                     MD5 & ' '
+                     & String (Pathname.Relative_Path (To => Man_Path).Name)
+                     & File);
+               end;
             end if;
 
             if Is_Open (Agg_Manifest) then
