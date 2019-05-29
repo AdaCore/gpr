@@ -97,7 +97,10 @@ package GPR2.Path_Name is
    function Temporary_Directory return Object;
    --  Returns the current temporary directory
 
-   function Compose (Self : Object; Name : Name_Type) return Object
+   function Compose
+     (Self      : Object;
+      Name      : Name_Type;
+      Directory : Boolean := False) return Object
      with Pre  => Self.Is_Defined,
           Post => Compose'Result.Is_Defined;
    --  Returns Name as sub-directory of Self : Self & '/' & Name
