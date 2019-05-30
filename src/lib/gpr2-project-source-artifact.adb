@@ -60,35 +60,41 @@ package body GPR2.Project.Source.Artifact is
                          (Src & S_Suffix,
                           Optional_Name_Type (View.Object_Directory.Value));
 
+      Art_Dir      : constant Path_Name.Object :=
+                       (if View.Kind in K_Aggregate_Library | K_Library
+                        then View.Library_Directory
+                        else View.Object_Directory);
+
    begin
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
          Object_Files.Insert
            (1, Path_Name.Create_File
               (Src & O_Suffix,
-               Optional_Name_Type (View.Object_Directory.Value)));
+               Optional_Name_Type (Art_Dir.Value)));
          Dependency_Files.Insert
            (1, Path_Name.Create_File
               (Src & D_Suffix,
-               Optional_Name_Type (View.Object_Directory.Value)));
+               Optional_Name_Type (Art_Dir.Value)));
 
       else
          for CU of Source.Source.Compilation_Units loop
             if CU.Kind = S_Body then
                declare
                   use Ada.Strings;
-                  Index_Suffix : constant Name_Type := "~" & Name_Type
-                    (Fixed.Trim (CU.Index'Image, Left));
+                  Index_Suffix : constant Name_Type :=
+                                   "~" & Name_Type
+                                     (Fixed.Trim (CU.Index'Image, Left));
                begin
                   Object_Files.Insert
                     (CU.Index,
                      Path_Name.Create_File
                        (Src & Index_Suffix & O_Suffix,
-                        Optional_Name_Type (View.Object_Directory.Value)));
+                        Optional_Name_Type (Art_Dir.Value)));
                   Dependency_Files.Insert
                     (CU.Index,
                      Path_Name.Create_File
                        (Src & Index_Suffix & D_Suffix,
-                        Optional_Name_Type (View.Object_Directory.Value)));
+                        Optional_Name_Type (Art_Dir.Value)));
                end;
             end if;
          end loop;

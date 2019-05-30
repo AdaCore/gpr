@@ -5,14 +5,14 @@ Project: Demo1
 
 Project: Demo2
  > file3.c
- > obj/file3.o
- > obj/file3.d
+ > lib/file3.o
+ > lib/file3.d
 
  > src/file3.h
- > obj/file3.o
- > obj/file3.d
+ > lib/file3.o
+ > lib/file3.d
 
  > main.adb
- > obj/main.o
- > obj/main.ali
+ > lib/main.o
+ > lib/main.ali
 
