@@ -2616,12 +2616,13 @@ package body GPRinstall.Install is
          Install_Name.V := new String'(String (Project.Path_Name.Base_Name));
       end if;
 
-      --  Skip non active project and externally built ones
+      --  Skip non-active project, note that externally built project must be
+      --  installed.
 
       Is_Project_To_Install := Active
-        and then not Project.Is_Externally_Built
         and then (Bring_Sources (Project)
-                  or else Project.Has_Attributes (A.Main));
+                  or else Project.Has_Attributes (A.Main)
+                  or else Project.Is_Externally_Built);
 
       --  If we have an aggregate project we just install separately all
       --  aggregated projects.
