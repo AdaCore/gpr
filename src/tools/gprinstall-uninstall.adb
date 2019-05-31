@@ -142,12 +142,7 @@ package body GPRinstall.Uninstall is
          then
             declare
                F_Name   : constant String := Buffer (Name_Range'First .. Last);
-               Pathname : constant String :=
-                            (if Exists (Dir & F_Name)
-                             then Dir & F_Name
-                             else Options.Global_Prefix_Dir.V.all & F_Name);
-               --  For upward compatibility we fallback into previous location
-
+               Pathname : constant String := Dir & F_Name;
                Path     : constant Path_Name.Object :=
                             Path_Name.Create_File (Name_Type (Pathname));
 
