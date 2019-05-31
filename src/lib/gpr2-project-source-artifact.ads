@@ -50,7 +50,8 @@ package GPR2.Project.Source.Artifact is
    function Object_Code
      (Self : Object; Index : Natural := 1) return Path_Name.Object
      with Pre => Self.Is_Defined;
-   --  The target-dependent code (generally .o or .obj)
+   --  The target-dependent code (generally .o or .obj). Note that the first
+   --  one (Index = 1) is the one to be used by the installer.
 
    function Has_Dependency
      (Self : Object; Index : Natural := 1) return Boolean

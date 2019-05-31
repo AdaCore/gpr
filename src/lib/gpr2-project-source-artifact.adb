@@ -65,16 +65,33 @@ package body GPR2.Project.Source.Artifact is
                         then View.Library_Directory
                         else View.Object_Directory);
 
+      Idx          : Positive := 1;
+
    begin
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
+         if View.Kind in K_Aggregate_Library | K_Library then
+            Object_Files.Insert
+              (Idx, Path_Name.Create_File
+                 (Src & O_Suffix,
+                  Optional_Name_Type (View.Library_Directory.Value)));
+
+            Dependency_Files.Insert
+              (1, Path_Name.Create_File
+                 (Src & D_Suffix,
+                  Optional_Name_Type (View.Library_Directory.Value)));
+
+            Idx := Idx + 1;
+         end if;
+
          Object_Files.Insert
-           (1, Path_Name.Create_File
+           (Idx, Path_Name.Create_File
               (Src & O_Suffix,
-               Optional_Name_Type (Art_Dir.Value)));
+               Optional_Name_Type (View.Object_Directory.Value)));
+
          Dependency_Files.Insert
-           (1, Path_Name.Create_File
+           (Idx, Path_Name.Create_File
               (Src & D_Suffix,
-               Optional_Name_Type (Art_Dir.Value)));
+               Optional_Name_Type (View.Object_Directory.Value)));
 
       else
          for CU of Source.Source.Compilation_Units loop
@@ -95,9 +112,38 @@ package body GPR2.Project.Source.Artifact is
                      Path_Name.Create_File
                        (Src & Index_Suffix & D_Suffix,
                         Optional_Name_Type (Art_Dir.Value)));
+
+                  Idx := Idx + 1;
                end;
             end if;
          end loop;
+
+         --  Adds secondary object code if needed
+
+         if View.Kind in K_Aggregate_Library | K_Library then
+            for CU of Source.Source.Compilation_Units loop
+               if CU.Kind = S_Body then
+                  declare
+                     use Ada.Strings;
+                     Index_Suffix : constant Name_Type :=
+                                      "~" & Name_Type
+                                        (Fixed.Trim (CU.Index'Image, Left));
+                  begin
+                     Object_Files.Insert
+                       (Idx,
+                        Path_Name.Create_File
+                          (Src & Index_Suffix & O_Suffix,
+                           Optional_Name_Type (View.Object_Directory.Value)));
+                     Dependency_Files.Insert
+                       (Idx,
+                        Path_Name.Create_File
+                          (Src & Index_Suffix & D_Suffix,
+                           Optional_Name_Type (View.Object_Directory.Value)));
+                     Idx := Idx + 1;
+                  end;
+               end if;
+            end loop;
+         end if;
       end if;
 
       return Artifact.Object'
