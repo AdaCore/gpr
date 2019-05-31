@@ -161,8 +161,8 @@ procedure GPRclean.Main is
 
       for C in View.Sources.Iterate (Project.Source.Set.S_Compilable) loop
          declare
-            S : constant Project.Source.Object :=
-                  Project.Source.Set.Element (C);
+            S       : constant Project.Source.Object :=
+                        Project.Source.Set.Element (C);
             Cleanup : Boolean := True;
             --  To disable cleanup if main files list exists and the main file
             --  is not from list.
@@ -270,10 +270,15 @@ procedure GPRclean.Main is
             --  Delete the directory if it is not the directory where the
             --  project is resided.
 
+            ----------------
+            -- Delete_Dir --
+            ----------------
+
             procedure Delete_Dir (Dir : String) is
                Search : Search_Type;
             begin
                if Kind (Dir) = Directory then
+
                   Delete_Directory (Dir);
                end if;
             exception
@@ -288,6 +293,10 @@ procedure GPRclean.Main is
                            else "") & '.');
                   end if;
             end Delete_Dir;
+
+            ---------------------------
+            -- Delete_If_Not_Project --
+            ---------------------------
 
             procedure Delete_If_Not_Project (Dir : Path_Name.Object) is
             begin
