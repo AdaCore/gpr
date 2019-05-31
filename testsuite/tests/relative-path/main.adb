@@ -33,6 +33,10 @@ procedure Main is
           Path_Name.Create_File ("/dira/toto");
    P4 : constant Path_Name.Object :=
           Path_Name.Create_Directory ("/dira/dirb/dirc");
+   P5 : constant Path_Name.Object :=
+          Path_Name.Create_Directory ("/dir1/dir2/toto");
+   P6 : constant Path_Name.Object :=
+          Path_Name.Create_File ("/dir1/dir2/toto/file");
    C1 : constant Path_Name.Object := Path_Name.Create_File ("project.gpr");
    C2 : constant Path_Name.Object := Path_Name.Create_File ("subdir/one.gpr");
 
@@ -46,4 +50,5 @@ begin
    Text_IO.Put_Line ("7: " & String (Path_Name.Relative_Path (P4, P4).Name));
    Text_IO.Put_Line ("8: " & String (C2.Relative_Path(C1).Name));
    Text_IO.Put_Line ("9: " & String (C1.Relative_Path(C2).Name));
+   Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5).Name));
 end Main;

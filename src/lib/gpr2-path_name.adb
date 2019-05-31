@@ -379,7 +379,9 @@ package body GPR2.Path_Name is
 
       return Create_Directory
         (Name_Type (String'(N * "../")
-         & (if Pi = P'Last and then N = 0 then "." else P (Pi + 1 .. P'Last))),
+         & (if Pi = P'Last and then N = 0
+           then "./"
+           else P (Pi + 1 .. P'Last))),
          Optional_Name_Type (To_Path));
    end Relative_Path;
 
