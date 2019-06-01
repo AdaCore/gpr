@@ -1433,8 +1433,7 @@ package body GPR2.Project.Definition is
                              (Source               => P.Source,
                               View                 => P.View,
                               Is_Interface         => Is_Interface,
-                              Has_Naming_Exception => P.Has_Naming_Exception,
-                              Aggregating_View     => View));
+                              Has_Naming_Exception => P.Has_Naming_Exception));
                      end;
                   end loop;
 

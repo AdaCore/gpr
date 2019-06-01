@@ -44,8 +44,7 @@ package GPR2.Project.Source is
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean;
-      Extending_View       : Project.View.Object := Project.View.Undefined;
-      Aggregating_View     : Project.View.Object := Project.View.Undefined)
+      Extending_View       : Project.View.Object := Project.View.Undefined)
       return Object
      with Pre => Source.Is_Defined and then View.Is_Defined;
    --  Constructor for Object. View is where the source is defined (found from
@@ -79,10 +78,12 @@ package GPR2.Project.Source is
 
    function Has_Aggregating_View (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True if Self has an aggregating view defined
+   --  Returns True if Self has an aggregating view defined, that is source
+   --  is part of an aggregate library.
 
    function Aggregating_View (Self : Object) return Project.View.Object
-     with Pre => Self.Is_Defined and then Self.Has_Aggregating_View;
+     with Pre  => Self.Is_Defined and then Self.Has_Aggregating_View,
+          Post => Aggregating_View'Result.Kind = K_Aggregate_Library;
    --  Returns the aggregating view
 
    function Is_Main (Self : Object) return Boolean
@@ -135,7 +136,6 @@ private
       Source               : GPR2.Source.Object;
       View                 : Project.Weak_Reference;
       Extending_View       : Project.Weak_Reference;
-      Aggregating_View     : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
       --  valgrind detected mess in memory deallocations at the process exit.

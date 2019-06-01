@@ -36,7 +36,7 @@ package body GPR2.Project.Source is
 
    function Aggregating_View (Self : Object) return Project.View.Object is
    begin
-      return Definition.Strong (Self.Aggregating_View);
+      return Definition.Strong (Self.View).Aggregate;
    end Aggregating_View;
 
    ---------------
@@ -57,15 +57,13 @@ package body GPR2.Project.Source is
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean;
-      Extending_View       : Project.View.Object := Project.View.Undefined;
-      Aggregating_View     : Project.View.Object := Project.View.Undefined)
+      Extending_View       : Project.View.Object := Project.View.Undefined)
       return Object is
    begin
       return Object'
         (Source,
          Definition.Weak (View),
          Definition.Weak (Extending_View),
-         Definition.Weak (Aggregating_View),
          Is_Interface, Has_Naming_Exception);
    end Create;
 
@@ -257,7 +255,9 @@ package body GPR2.Project.Source is
 
    function Has_Aggregating_View (Self : Object) return Boolean is
    begin
-      return Definition.Strong (Self.Aggregating_View).Is_Defined;
+      return Definition.Strong (Self.View).Is_Aggregated
+        and then
+          Definition.Strong (Self.View).Aggregate.Kind = K_Aggregate_Library;
    end Has_Aggregating_View;
 
    ------------------------
