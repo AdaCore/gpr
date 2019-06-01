@@ -1421,14 +1421,42 @@ package body GPR2.Project.Definition is
                DA : constant Const_Ref := Get_RO (Agg);
             begin
                declare
-                  A_Set : Project.Source.Set.Object;
+                  In_Interface : Boolean := False;
+                  A_Set        : Project.Source.Set.Object;
                begin
                   for P of Agg.Sources loop
-                     A_Set.Insert
-                       (Project.Source.Create
-                          (P.Source, P.View,
-                           P.Is_Interface, P.Has_Naming_Exception,
-                           Aggregating_View => View));
+                     In_Interface :=
+                       Interface_Sources.Contains
+                         (String (P.Source.Path_Name.Base_Name));
+
+                     if P.Source.Has_Units then
+                        for CU of P.Source.Compilation_Units loop
+                           if Interface_Units.Contains (CU.Unit_Name) then
+                              Interface_Units_Found.Include (CU.Unit_Name);
+                              In_Interface := True;
+                           end if;
+                        end loop;
+                     end if;
+
+                     declare
+                        Is_Interface : constant Boolean :=
+                                         In_Interface
+                                             or else
+                                         (not Interface_Found
+                                          and then P.Source.Kind = S_Spec);
+                     begin
+                        --  An aggregate library project does not allow naming
+                        --  exception. So the source naming exception status is
+                        --  the one from the aggregated project.
+
+                        A_Set.Insert
+                          (Project.Source.Create
+                             (Source               => P.Source,
+                              View                 => P.View,
+                              Is_Interface         => Is_Interface,
+                              Has_Naming_Exception => P.Has_Naming_Exception,
+                              Aggregating_View     => View));
+                     end;
                   end loop;
 
                   Insert
