@@ -178,9 +178,13 @@ package body GPR2.Project.Source.Artifact is
       Result : Path_Name.Set.Object;
    begin
       if Self.Has_Object_Code then
+         --  Object themselves
+
          for O of Self.Object_Files loop
             Result.Append (O);
          end loop;
+
+         --  The generated artefacts
 
          declare
             Name : constant Name_Type := Source.Path_Name.Simple_Name;
@@ -205,6 +209,8 @@ package body GPR2.Project.Source.Artifact is
             Append_File (Source.Path_Name.Base_Name & ".adt");
          end;
       end if;
+
+      --  Append the dependencies
 
       if Self.Has_Dependency then
          for D of Self.Dependency_Files loop
@@ -238,6 +244,8 @@ package body GPR2.Project.Source.Artifact is
             end if;
          end loop;
       end if;
+
+      --  Append preprocessed sources
 
       if Self.Has_Preprocessed_Source then
          Result.Append (Self.Preprocessed_Source);
