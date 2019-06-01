@@ -450,7 +450,7 @@ private
      (Left.Get.Id < Right.Get.Id);
 
    function Is_Library (Self : Object) return Boolean is
-      (Self.Kind in K_Library | K_Aggregate_Library);
+     (Self.Kind in K_Library | K_Aggregate_Library);
 
    function Library_Name (Self : Object) return Name_Type is
      (Name_Type
