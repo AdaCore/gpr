@@ -30,6 +30,15 @@ with GPR2.Unit;
 
 package body GPR2.Project.Source is
 
+   ----------------------
+   -- Aggregating_View --
+   ----------------------
+
+   function Aggregating_View (Self : Object) return Project.View.Object is
+   begin
+      return Definition.Strong (Self.Aggregating_View);
+   end Aggregating_View;
+
    ---------------
    -- Artifacts --
    ---------------
@@ -48,11 +57,15 @@ package body GPR2.Project.Source is
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean;
-      Extending_View       : Project.View.Object := Project.View.Undefined)
+      Extending_View       : Project.View.Object := Project.View.Undefined;
+      Aggregating_View     : Project.View.Object := Project.View.Undefined)
       return Object is
    begin
       return Object'
-        (Source, Definition.Weak (View), Definition.Weak (Extending_View),
+        (Source,
+         Definition.Weak (View),
+         Definition.Weak (Extending_View),
+         Definition.Weak (Aggregating_View),
          Is_Interface, Has_Naming_Exception);
    end Create;
 
@@ -237,6 +250,15 @@ package body GPR2.Project.Source is
    begin
       return Definition.Strong (Self.Extending_View);
    end Extending_View;
+
+   --------------------------
+   -- Has_Aggregating_View --
+   --------------------------
+
+   function Has_Aggregating_View (Self : Object) return Boolean is
+   begin
+      return Definition.Strong (Self.Aggregating_View).Is_Defined;
+   end Has_Aggregating_View;
 
    ------------------------
    -- Has_Extending_View --
