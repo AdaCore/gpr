@@ -933,13 +933,6 @@ package body GPRinstall.Install is
               (Source : GPR2.Project.Source.Object) return Boolean with Inline;
             --  Returns True if Source is an Ada source
 
-            function Is_Part_Of_Aggregate_Lib
-              (Aggregate_Lib_Project : GPR2.Project.View.Object;
-               Source                : GPR2.Project.Source.Object)
-               return Boolean;
-            --  Returns True if Sid is part of the aggregate lib project. That
-            --  is, Source project is one of the aggregated projects.
-
             ------------
             -- Is_Ada --
             ------------
@@ -949,24 +942,6 @@ package body GPRinstall.Install is
             begin
                return Source.Source.Language = "ada";
             end Is_Ada;
-
-            ------------------------------
-            -- Is_Part_Of_Aggregate_Lib --
-            ------------------------------
-
-            function Is_Part_Of_Aggregate_Lib
-              (Aggregate_Lib_Project : GPR2.Project.View.Object;
-               Source                : GPR2.Project.Source.Object)
-               return Boolean is
-            begin
-               for V of Aggregate_Lib_Project.Aggregated loop
-                  if V = Source.View then
-                     return True;
-                  end if;
-               end loop;
-
-               return False;
-            end Is_Part_Of_Aggregate_Lib;
 
             Src : GPR2.Source.Object;
             Atf : GPR2.Project.Source.Artifact.Object;
@@ -979,12 +954,9 @@ package body GPRinstall.Install is
                Src := Source.Source;
                Atf := Source.Artifacts;
 
-               if (Project.Qualifier /= K_Aggregate_Library
-                   or else (Is_Part_Of_Aggregate_Lib (Project, Source)
-                            and then Is_Install_Active (Source.View)))
-                 and then (Project.Kind /= K_Library
-                           or else Project.Library_Standalone = No
-                           or else Source.Is_Interface)
+               if not Project.Is_Library
+                 or else Project.Library_Standalone = No
+                 or else Source.Is_Interface
                then
                   if Options.All_Sources or else Source.Is_Interface then
                      Copy_Source (Source);
@@ -1443,7 +1415,7 @@ package body GPRinstall.Install is
 
             --  Project objects and/or library
 
-            if Project.Kind = K_Library then
+            if Project.Is_Library then
                Line := +"         for Library_Dir use """;
             else
                Line := +"         for Object_Dir use """;
@@ -1458,7 +1430,7 @@ package body GPRinstall.Install is
 
             V.Append (-Line);
 
-            if Project.Kind = K_Library then
+            if Project.Is_Library then
                --  If ALI are in a different location, set the corresponding
                --  attribute.
 
@@ -2118,7 +2090,7 @@ package body GPRinstall.Install is
 
             --  Project name
 
-            if Project.Kind = K_Library then
+            if Project.Is_Library then
                Line := +"library ";
             else
                if Has_Sources (Project) then
@@ -2133,7 +2105,7 @@ package body GPRinstall.Install is
             Line := Line & " is";
             Content.Append (-Line);
 
-            if Has_Sources (Project) or else Project.Kind = K_Library then
+            if Has_Sources (Project) or else Project.Is_Library then
                --  BUILD variable
 
                Content.Append
@@ -2185,7 +2157,7 @@ package body GPRinstall.Install is
 
                --  Library Name
 
-               if Project.Kind = K_Library then
+               if Project.Is_Library then
                   Content.Append
                     ("   for Library_Name use """
                      & String (Project.Library_Name)
@@ -2689,7 +2661,7 @@ package body GPRinstall.Install is
                             and then Project.Qualifier /= K_Aggregate_Library
                             and then Project.Kind /= K_Library,
             Dependency => For_Dev and then not Project.Has_Mains,
-            Library    => Project.Kind = K_Library
+            Library    => Project.Is_Library
                             and then
                               (not Project.Is_Static_Library or else For_Dev),
             Executable => Project.Has_Mains);
