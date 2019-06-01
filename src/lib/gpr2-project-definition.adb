@@ -725,12 +725,11 @@ package body GPR2.Project.Definition is
 
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
-         File : constant GPR2.Path_Name.Object :=
-                  Path_Name.Create_File (Name_Type (Path));
+         File      : constant GPR2.Path_Name.Object :=
+                       Path_Name.Create_File (Name_Type (Path));
+         Basename  : constant Value_Type := Value_Type (File.Simple_Name);
 
-         Basename : constant Value_Type := Value_Type (File.Simple_Name);
-
-         Match : Boolean := False;
+         Match                  : Boolean := False;
 
          Source_Is_In_Interface : Boolean;
          Has_Naming_Exception   : Boolean := False;
@@ -952,6 +951,7 @@ package body GPR2.Project.Definition is
                            & """ is found in several source directories",
                            Source_Dir_Ref));
                      return;
+
                   else
                      Def.Sources.Insert (Project_Source);
                   end if;

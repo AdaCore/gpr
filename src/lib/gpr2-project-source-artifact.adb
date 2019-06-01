@@ -40,10 +40,9 @@ package body GPR2.Project.Source.Artifact is
                   (if Source.Has_Extending_View
                    then Source.Extending_View
                    else Source.View));
-      Tree : constant access Project.Tree.Object := View.Tree;
 
-      O_Suffix : constant Name_Type := Tree.Object_Suffix (Lang);
-      D_Suffix : constant Name_Type := Tree.Dependency_Suffix (Lang);
+      O_Suffix : constant Name_Type := View.Tree.Object_Suffix (Lang);
+      D_Suffix : constant Name_Type := View.Tree.Dependency_Suffix (Lang);
       P_Suffix : constant Name_Type := ".prep";
       S_Suffix : constant Name_Type := ".cswi";
 
