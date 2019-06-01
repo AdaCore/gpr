@@ -1126,7 +1126,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("-"));
 
    --  naming.spec
    Store_Insert

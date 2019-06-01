@@ -63,28 +63,7 @@ package body GPR2.Project.Definition is
    function Naming_Package (Def : Data) return Project.Pack.Object is
    begin
       if Def.Has_Packages (Registry.Pack.Naming) then
-         declare
-            Naming : constant Project.Pack.Object :=
-                       Def.Packs (Registry.Pack.Naming);
-            Result : Project.Attribute.Set.Object :=
-                       Builtin_Naming_Package.Attributes;
-         begin
-            --  Result is built-in package attributes, now we want to replace
-            --  the attribute as defined in the project.
-
-            for A of Naming.Attributes loop
-               Result.Include (A);
-            end loop;
-
-            return Project.Pack.Create
-              (Name       =>
-                 Source_Reference.Identifier.Object
-                   (Source_Reference.Identifier.Create
-                      (Source_Reference.Object (Naming),
-                       Registry.Pack.Naming)),
-               Attributes => Result,
-               Variables  => Project.Variable.Set.Set.Empty_Map);
-         end;
+         return Def.Packs (Registry.Pack.Naming);
 
       elsif Def.Tree.Has_Configuration then
          return Def.Tree.Configuration.Corresponding_View.Naming_Package;
@@ -1569,72 +1548,13 @@ package body GPR2.Project.Definition is
 begin
    --  Setup the default/built-in naming package
 
-   declare
-      function Create
-        (Name : Name_Type; Index, Value : Value_Type)
-         return Project.Attribute.Object;
-      --  Create attribute Name for the Naming package
+   Builtin_Naming_Package :=
+     Project.Pack.Create
+       (Source_Reference.Identifier.Object
+          (Source_Reference.Identifier.Create
+             (Source_Reference.Builtin, Registry.Pack.Naming)),
+        Project.Attribute.Set.Empty_Set,
+        Project.Variable.Set.Set.Empty_Map);
 
-      ------------
-      -- Create --
-      ------------
-
-      function Create
-        (Name : Name_Type; Index, Value : Value_Type)
-         return Project.Attribute.Object
-      is
-         A   : Project.Attribute.Object :=
-                 Project.Attribute.Create
-                   (Source_Reference.Identifier.Object
-                      (Source_Reference.Identifier.Create
-                         (Source_Reference.Builtin, Name)),
-                    (Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
-                         (Source_Reference.Builtin, Index))),
-                    (Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
-                         (Source_Reference.Builtin, Value))));
-         Def : constant Project.Registry.Attribute.Def :=
-                 Project.Registry.Attribute.Get
-                   (Project.Registry.Attribute.Create
-                      (Name, Registry.Pack.Naming));
-      begin
-         A.Set_Case (Def.Index_Case_Sensitive, Def.Value_Case_Sensitive);
-         return A;
-      end Create;
-
-      Ada_Spec : constant Project.Attribute.Object :=
-                   Create (Registry.Attribute.Spec_Suffix, "ada", ".ads");
-      Ada_Body : constant  Project.Attribute.Object :=
-                   Create (Registry.Attribute.Body_Suffix, "ada", ".adb");
-      C_Spec   : constant Project.Attribute.Object :=
-                   Create (Registry.Attribute.Spec_Suffix, "c", ".h");
-      C_Body   : constant Project.Attribute.Object :=
-                   Create (Registry.Attribute.Body_Suffix, "c", ".c");
-      Dot_Repl : constant Project.Attribute.Object :=
-                 Project.Attribute.Create
-                   (Source_Reference.Identifier.Object
-                      (Source_Reference.Identifier.Create
-                         (Source_Reference.Builtin,
-                          Registry.Attribute.Dot_Replacement)),
-                    (Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
-                          (Source_Reference.Builtin, "-"))));
-      Attrs    : Project.Attribute.Set.Object;
-   begin
-      --  Default naming package
-
-      Attrs.Insert (Ada_Spec);
-      Attrs.Insert (Ada_Body);
-      Attrs.Insert (C_Spec);
-      Attrs.Insert (C_Body);
-      Attrs.Insert (Dot_Repl);
-
-      Builtin_Naming_Package :=
-        Project.Pack.Create
-          (Source_Reference.Identifier.Object
-             (Source_Reference.Identifier.Create
-                (Source_Reference.Builtin, Registry.Pack.Naming)),
-           Attrs, Project.Variable.Set.Set.Empty_Map);
-   end;
+   Definition.Set_Pack_Default_Attributes (Builtin_Naming_Package, K_Standard);
 end GPR2.Project.Definition;

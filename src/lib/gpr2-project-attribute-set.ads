@@ -30,6 +30,8 @@ package GPR2.Project.Attribute.Set is
 
    subtype Attribute_Set is Object;
 
+   Empty_Set : constant Object;
+
    function Length (Self : Object) return Containers.Count_Type;
 
    function Is_Empty (Self : Object) return Boolean;
@@ -190,6 +192,8 @@ private
       Attributes : Set.Map;
       Length     : Containers.Count_Type := 0;
    end record;
+
+   Empty_Set : constant Object := (others => <>);
 
    function Has_Languages (Self : Object) return Boolean is
      (Self.Contains (Registry.Attribute.Languages));
