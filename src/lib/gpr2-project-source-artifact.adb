@@ -39,6 +39,8 @@ package body GPR2.Project.Source.Artifact is
                (Definition.Strong
                   (if Source.Has_Extending_View
                    then Source.Extending_View
+                   elsif Source.Has_Aggregating_View
+                   then Source.Aggregating_View
                    else Source.View));
 
       O_Suffix : constant Name_Type := View.Tree.Object_Suffix (Lang);
@@ -170,10 +172,12 @@ package body GPR2.Project.Source.Artifact is
    function List (Self : Object) return Path_Name.Set.Object is
       Source : constant GPR2.Source.Object := Self.Source.Source;
       View   : constant Project.View.Object :=
-                 Definition.Strong
-                   (if Self.Source.Has_Extending_View
-                    then Self.Source.Extending_View
-                    else Self.Source.View);
+                 (Definition.Strong
+                    (if Self.Source.Has_Extending_View
+                     then Self.Source.Extending_View
+                     elsif Self.Source.Has_Aggregating_View
+                     then Self.Source.Aggregating_View
+                     else Self.Source.View));
       Result : Path_Name.Set.Object;
    begin
       if Self.Has_Object_Code then

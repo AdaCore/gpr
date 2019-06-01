@@ -1420,12 +1420,25 @@ package body GPR2.Project.Definition is
             declare
                DA : constant Const_Ref := Get_RO (Agg);
             begin
-               Insert
-                 (Agg.Sources, Error,
-                  (if DA.Attrs.Has_Source_Dirs
-                   then DA.Attrs.Source_Dirs
-                   else Source_Reference.Create
-                     (DA.Trees.Project.Path_Name.Value, 0, 0)));
+               declare
+                  A_Set : Project.Source.Set.Object;
+               begin
+                  for P of Agg.Sources loop
+                     A_Set.Insert
+                       (Project.Source.Create
+                          (P.Source, P.View,
+                           P.Is_Interface, P.Has_Naming_Exception,
+                           Aggregating_View => View));
+                  end loop;
+
+                  Insert
+                    (A_Set,
+                     Error,
+                     (if DA.Attrs.Has_Source_Dirs
+                      then DA.Attrs.Source_Dirs
+                      else Source_Reference.Create
+                        (DA.Trees.Project.Path_Name.Value, 0, 0)));
+               end;
             end;
          end loop;
 
