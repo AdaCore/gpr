@@ -314,6 +314,15 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Extended;
    end Extended;
 
+   ---------------
+   -- Extending --
+   ---------------
+
+   function Extending (Self : Object) return Object is
+   begin
+      return Definition.Get_RO (Self).Extending;
+   end Extending;
+
    --------------------
    -- Has_Attributes --
    --------------------

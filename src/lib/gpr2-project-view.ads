@@ -111,6 +111,11 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the view is extended by another project
 
+   function Extending (Self : Object) return Object
+     with Pre  => Self.Is_Defined and then Self.Is_Extended,
+          Post => Extending'Result.Is_Extending;
+   --  Return the extending view
+
    function Is_Main
      (Self : Object; Source : Project.Source.Object) return Boolean
      with Pre => Self.Is_Defined;
