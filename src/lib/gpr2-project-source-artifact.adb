@@ -37,7 +37,7 @@ package body GPR2.Project.Source.Artifact is
       Lang : constant Name_Type := Source.Source.Language;
       View : constant Project.View.Object :=
                (if Source.Has_Extending_View
-                then Definition.Strong (Source.Extending_View)
+                then Source.Extending_View
                 elsif Source.Has_Aggregating_View
                 then Source.Aggregating_View
                 else Definition.Strong (Source.View));
@@ -172,7 +172,7 @@ package body GPR2.Project.Source.Artifact is
       Source : constant GPR2.Source.Object := Self.Source.Source;
       View   : constant Project.View.Object :=
                  (if Self.Source.Has_Extending_View
-                  then Definition.Strong (Self.Source.Extending_View)
+                  then Self.Source.Extending_View
                   elsif Self.Source.Has_Aggregating_View
                   then Self.Source.Aggregating_View
                   else Definition.Strong (Self.Source.View));

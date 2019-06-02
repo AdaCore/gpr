@@ -56,14 +56,11 @@ package body GPR2.Project.Source is
      (Source               : GPR2.Source.Object;
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean;
-      Extending_View       : Project.View.Object := Project.View.Undefined)
+      Has_Naming_Exception : Boolean)
       return Object is
    begin
       return Object'
-        (Source,
-         Definition.Weak (View),
-         Definition.Weak (Extending_View),
+        (Source, Definition.Weak (View),
          Is_Interface, Has_Naming_Exception);
    end Create;
 
@@ -246,7 +243,7 @@ package body GPR2.Project.Source is
 
    function Extending_View (Self : Object) return Project.View.Object is
    begin
-      return Definition.Strong (Self.Extending_View);
+      return Definition.Strong (Self.View).Extending;
    end Extending_View;
 
    --------------------------
@@ -266,7 +263,7 @@ package body GPR2.Project.Source is
 
    function Has_Extending_View (Self : Object) return Boolean is
    begin
-      return Definition.Strong (Self.Extending_View).Is_Defined;
+      return Definition.Strong (Self.View).Is_Extended;
    end Has_Extending_View;
 
    --------------------
