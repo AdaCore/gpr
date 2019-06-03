@@ -56,49 +56,21 @@ procedure GPRclean.Main is
    use GPRtools;
    use GPR2.Path_Name;
 
-   procedure Sources (View : Project.View.Object);
-   --  Display view sources
+   procedure Clean (View : Project.View.Object);
+   --  Clean given View
 
-   procedure Exclude_File (Name : String);
+   procedure Delete_File (Name : String);
    --  Remove file if exists
 
    Project_Tree : Project.Tree.Object;
    Config       : Project.Configuration.Object;
    Options      : GPRclean.Options.Object;
 
-   ------------------
-   -- Exclude_File --
-   ------------------
+   -----------
+   -- Clean --
+   -----------
 
-   procedure Exclude_File (Name : String) is
-      use GNAT.OS_Lib;
-      Success : Boolean := False;
-   begin
-      if Options.Dry_Run then
-         if Is_Regular_File (Name) then
-            Text_IO.Put_Line (Name);
-
-         elsif Options.Verbose then
-            Text_IO.Put_Line ("absent: " & Name);
-         end if;
-
-      else
-         Delete_File (Name, Success);
-
-         if not Options.Quiet and then Success then
-            Text_IO.Put_Line ('"' & Name & """ has been deleted");
-
-         elsif Options.Verbose and then not Success then
-            Text_IO.Put_Line ('"' & Name & """ absent");
-         end if;
-      end if;
-   end Exclude_File;
-
-   -------------
-   -- Sources --
-   -------------
-
-   procedure Sources (View : Project.View.Object) is
+   procedure Clean (View : Project.View.Object) is
       Obj_Dir : constant Path_Name.Object := View.Object_Directory;
       Tree    : constant access Project.Tree.Object := View.Tree;
 
@@ -142,12 +114,12 @@ procedure GPRclean.Main is
                   if Line (Line'First) = '[' then
                      Generated := Starts_With (Line, "[GENERATED ");
                   elsif Generated then
-                     Exclude_File (Obj_Dir.Compose (Name_Type (Line)).Value);
+                     Delete_File (Obj_Dir.Compose (Name_Type (Line)).Value);
                   end if;
                end;
             end loop;
 
-            Exclude_File (BF);
+            Delete_File (BF);
             Close (File);
          end if;
       end Binder_Artifacts;
@@ -192,7 +164,7 @@ procedure GPRclean.Main is
 
             if Cleanup then
                for F of S.Artifacts.List loop
-                  Exclude_File (F.Value);
+                  Delete_File (F.Value);
                end loop;
 
                if not Options.Remain_Useful and then Options.Arg_Mains
@@ -204,7 +176,7 @@ procedure GPRclean.Main is
                   --  filename defined in command line and we have to remove
                   --  the executable file separetely.
 
-                  Exclude_File
+                  Delete_File
                     (String (S.Source.Path_Name.Base_Name)
                      & View.Executable_Suffix);
                end if;
@@ -222,7 +194,7 @@ procedure GPRclean.Main is
         and then not Options.Arg_Mains
       then
          for M of View.Mains loop
-            Exclude_File (M.Value);
+            Delete_File (M.Value);
          end loop;
       end if;
 
@@ -230,9 +202,9 @@ procedure GPRclean.Main is
          Lexch : constant Name_Type := ".lexch";
          GI_DB : constant Name_Type := "gnatinspect.db";
       begin
-         Exclude_File (Obj_Dir.Compose (GI_DB).Value);
-         Exclude_File (Obj_Dir.Compose (GI_DB & "-shm").Value);
-         Exclude_File (Obj_Dir.Compose (GI_DB & "-wal").Value);
+         Delete_File (Obj_Dir.Compose (GI_DB).Value);
+         Delete_File (Obj_Dir.Compose (GI_DB & "-shm").Value);
+         Delete_File (Obj_Dir.Compose (GI_DB & "-wal").Value);
 
          if Has_Mains or else Options.Arg_Mains then
             declare
@@ -240,8 +212,8 @@ procedure GPRclean.Main is
                             Obj_Dir.Compose
                               ("lib" & View.Path_Name.Base_Name).Value;
             begin
-               Exclude_File (Main_Lib & String (Tree.Archive_Suffix));
-               Exclude_File (Main_Lib & ".deps");
+               Delete_File (Main_Lib & String (Tree.Archive_Suffix));
+               Delete_File (Main_Lib & ".deps");
             end;
          end if;
 
@@ -250,13 +222,15 @@ procedure GPRclean.Main is
                Binder_Artifacts (View.Aggregate.Library_Name & Lexch);
             else
                if not Options.Remain_Useful then
-                  Exclude_File (View.Library_Filename.Value);
+                  Delete_File (View.Library_Filename.Value);
                end if;
 
                Binder_Artifacts (View.Library_Name & Lexch);
             end if;
          end if;
       end;
+
+      --  Removes empty directories
 
       if Options.Remove_Empty_Dirs then
          declare
@@ -265,6 +239,7 @@ procedure GPRclean.Main is
             Attr : Project.Attribute.Object;
 
             procedure Delete_Dir (Dir : String);
+            --  Delete directory if a directory
 
             procedure Delete_If_Not_Project (Dir : Path_Name.Object);
             --  Delete the directory if it is not the directory where the
@@ -275,23 +250,25 @@ procedure GPRclean.Main is
             ----------------
 
             procedure Delete_Dir (Dir : String) is
-               Search : Search_Type;
             begin
                if Kind (Dir) = Directory then
-
                   Delete_Directory (Dir);
                end if;
             exception
                when Use_Error =>
-                  if not Options.Quiet then
-                     Start_Search (Search, Dir, "");
-                     Text_IO.Put_Line
-                       ("warning: Directory """ & Dir
-                        & """ could not be removed"
-                        & (if More_Entries (Search)
-                           then " because it is not empty"
-                           else "") & '.');
-                  end if;
+                  declare
+                     Search : Search_Type;
+                  begin
+                     if not Options.Quiet then
+                        Start_Search (Search, Dir, "");
+                        Text_IO.Put_Line
+                          ("warning: Directory """ & Dir
+                           & """ could not be removed"
+                           & (if More_Entries (Search)
+                             then " because it is not empty"
+                             else "") & '.');
+                     end if;
+                  end;
             end Delete_Dir;
 
             ---------------------------
@@ -353,7 +330,35 @@ procedure GPRclean.Main is
             end if;
          end;
       end if;
-   end Sources;
+   end Clean;
+
+   -----------------
+   -- Delete_File --
+   -----------------
+
+   procedure Delete_File (Name : String) is
+      use GNAT.OS_Lib;
+      Success : Boolean := False;
+   begin
+      if Options.Dry_Run then
+         if Is_Regular_File (Name) then
+            Text_IO.Put_Line (Name);
+
+         elsif Options.Verbose then
+            Text_IO.Put_Line ("absent: " & Name);
+         end if;
+
+      else
+         Delete_File (Name, Success);
+
+         if not Options.Quiet and then Success then
+            Text_IO.Put_Line ('"' & Name & """ has been deleted");
+
+         elsif Options.Verbose and then not Success then
+            Text_IO.Put_Line ('"' & Name & """ absent");
+         end if;
+      end if;
+   end Delete_File;
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
@@ -398,6 +403,8 @@ begin
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
 
+   --  Iterate on all view, and clean them
+
    for V in Project_Tree.Iterate
      (Kind   => (Project.I_Recursive  => Options.All_Projects,
                  Project.I_Imported   => Options.All_Projects,
@@ -406,11 +413,11 @@ begin
       Filter => (Project.F_Abstract | Project.F_Aggregate => False,
                  others => True))
    loop
-      Sources (Project.Tree.Element (V));
+      Clean (Project.Tree.Element (V));
    end loop;
 
    if Options.Remove_Config then
-      Exclude_File (Options.Config_File.Value);
+      Delete_File (Options.Config_File.Value);
    end if;
 
    Util.Output_Messages
