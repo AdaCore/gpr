@@ -69,7 +69,7 @@ package body GPR2.Project.Source.Artifact is
 
    begin
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
-         if View.Kind in K_Aggregate_Library | K_Library then
+         if View.Is_Library then
             Object_Files.Insert
               (Idx, Path_Name.Create_File
                  (Src & O_Suffix,
@@ -120,7 +120,7 @@ package body GPR2.Project.Source.Artifact is
 
          --  Adds secondary object code if needed
 
-         if View.Kind in K_Aggregate_Library | K_Library then
+         if View.Is_Library then
             for CU of Source.Source.Compilation_Units loop
                if CU.Kind = S_Body then
                   declare
