@@ -33,17 +33,17 @@ package body GPR2.Project.Source.Artifact is
    function Create
      (Source : Project.Source.Object) return Artifact.Object
    is
-      Src  : constant Name_Type := Source.Source.Path_Name.Base_Name;
-      Lang : constant Name_Type := Source.Source.Language;
-      View : constant Project.View.Object :=
-               (if Source.Has_Extending_View
-                then Source.Extending_View
-                elsif Source.Has_Aggregating_View
-                then Source.Aggregating_View
-                else Definition.Strong (Source.View));
+      Src    : constant Name_Type := Source.Source.Path_Name.Base_Name;
+      Lang   : constant Name_Type := Source.Source.Language;
+      S_View : constant Project.View.Object :=
+                 Definition.Strong (Source.View);
+      O_View : constant Project.View.Object :=
+                 (if Source.Has_Extending_View
+                  then Source.Extending_View
+                  else Definition.Strong (Source.View));
 
-      O_Suffix : constant Name_Type := View.Tree.Object_Suffix (Lang);
-      D_Suffix : constant Name_Type := View.Tree.Dependency_Suffix (Lang);
+      O_Suffix : constant Name_Type := S_View.Tree.Object_Suffix (Lang);
+      D_Suffix : constant Name_Type := S_View.Tree.Dependency_Suffix (Lang);
       P_Suffix : constant Name_Type := ".prep";
       S_Suffix : constant Name_Type := ".cswi";
 
@@ -53,45 +53,48 @@ package body GPR2.Project.Source.Artifact is
       Preprocessed : constant Path_Name.Object :=
                        Path_Name.Create_File
                          (Src & P_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
+                          Optional_Name_Type (O_View.Object_Directory.Value));
 
       Switches     : constant Path_Name.Object :=
                        Path_Name.Create_File
                          (Src & S_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
-
-      Art_Dir      : constant Path_Name.Object :=
-                       (if View.Kind in K_Aggregate_Library | K_Library
-                        then View.Library_Directory
-                        else View.Object_Directory);
+                          Optional_Name_Type (O_View.Object_Directory.Value));
 
       Idx          : Positive := 1;
 
    begin
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
-         if View.Is_Library then
-            Object_Files.Insert
-              (Idx, Path_Name.Create_File
-                 (Src & O_Suffix,
-                  Optional_Name_Type (View.Library_Directory.Value)));
-
-            Dependency_Files.Insert
-              (1, Path_Name.Create_File
-                 (Src & D_Suffix,
-                  Optional_Name_Type (View.Library_Directory.Value)));
-
-            Idx := Idx + 1;
-         end if;
-
          Object_Files.Insert
            (Idx, Path_Name.Create_File
               (Src & O_Suffix,
-               Optional_Name_Type (View.Object_Directory.Value)));
+               Optional_Name_Type (O_View.Object_Directory.Value)));
+
+         if S_View.Is_Library and then Lang = "Ada" then
+            Dependency_Files.Insert
+              (1, Path_Name.Create_File
+                 (Src & D_Suffix,
+                  Optional_Name_Type (S_View.Library_Directory.Value)));
+
+            --  For aggregated library the .ali is also copied into the
+            --  aggregate library directory.
+
+            Idx := Idx + 1;
+
+         end if;
+
+         if Source.Has_Aggregating_View then
+            Dependency_Files.Insert
+              (Idx, Path_Name.Create_File
+                 (Src & D_Suffix,
+                  Optional_Name_Type
+                    (Source.Aggregating_View.Library_Directory.Value)));
+            Idx := Idx + 1;
+         end if;
 
          Dependency_Files.Insert
            (Idx, Path_Name.Create_File
               (Src & D_Suffix,
-               Optional_Name_Type (View.Object_Directory.Value)));
+               Optional_Name_Type (S_View.Object_Directory.Value)));
 
       else
          for CU of Source.Source.Compilation_Units loop
@@ -106,12 +109,12 @@ package body GPR2.Project.Source.Artifact is
                     (CU.Index,
                      Path_Name.Create_File
                        (Src & Index_Suffix & O_Suffix,
-                        Optional_Name_Type (Art_Dir.Value)));
+                        Optional_Name_Type (S_View.Object_Directory.Value)));
                   Dependency_Files.Insert
                     (CU.Index,
                      Path_Name.Create_File
                        (Src & Index_Suffix & D_Suffix,
-                        Optional_Name_Type (Art_Dir.Value)));
+                        Optional_Name_Type (S_View.Object_Directory.Value)));
 
                   Idx := Idx + 1;
                end;
@@ -120,7 +123,7 @@ package body GPR2.Project.Source.Artifact is
 
          --  Adds secondary object code if needed
 
-         if View.Is_Library then
+         if S_View.Is_Library then
             for CU of Source.Source.Compilation_Units loop
                if CU.Kind = S_Body then
                   declare
@@ -129,16 +132,12 @@ package body GPR2.Project.Source.Artifact is
                                       "~" & Name_Type
                                         (Fixed.Trim (CU.Index'Image, Left));
                   begin
-                     Object_Files.Insert
-                       (Idx,
-                        Path_Name.Create_File
-                          (Src & Index_Suffix & O_Suffix,
-                           Optional_Name_Type (View.Object_Directory.Value)));
                      Dependency_Files.Insert
                        (Idx,
                         Path_Name.Create_File
                           (Src & Index_Suffix & D_Suffix,
-                           Optional_Name_Type (View.Object_Directory.Value)));
+                           Optional_Name_Type
+                             (O_View.Object_Directory.Value)));
                      Idx := Idx + 1;
                   end;
                end if;
@@ -170,11 +169,9 @@ package body GPR2.Project.Source.Artifact is
 
    function List (Self : Object) return Path_Name.Set.Object is
       Source : constant GPR2.Source.Object := Self.Source.Source;
-      View   : constant Project.View.Object :=
+      O_View : constant Project.View.Object :=
                  (if Self.Source.Has_Extending_View
                   then Self.Source.Extending_View
-                  elsif Self.Source.Has_Aggregating_View
-                  then Self.Source.Aggregating_View
                   else Definition.Strong (Self.Source.View));
       Result : Path_Name.Set.Object;
    begin
@@ -190,7 +187,7 @@ package body GPR2.Project.Source.Artifact is
          declare
             Name : constant Name_Type := Source.Path_Name.Simple_Name;
             Dir  : constant Optional_Name_Type :=
-                     Optional_Name_Type (View.Object_Directory.Value);
+                     Optional_Name_Type (O_View.Object_Directory.Value);
 
             procedure Append_File (Name : Name_Type);
             --  Append full filename constructed from Name and Dir to result
@@ -216,33 +213,6 @@ package body GPR2.Project.Source.Artifact is
       if Self.Has_Dependency then
          for D of Self.Dependency_Files loop
             Result.Append (D);
-
-            --  Library project has the same ALI files in object and library
-            --  directories.
-
-            if View.Is_Library and then Source.Language = "Ada" then
-               Result.Append
-                 (Path_Name.Create_File
-                    (D.Simple_Name,
-                     Optional_Name_Type (View.Library_Directory.Value)));
-            end if;
-
-            --  Dependency files must be placed into the Library_Directory of
-            --  the aggregate library.
-
-            if View.Is_Aggregated then
-               declare
-                  Aggregate : constant Project.View.Object := View.Aggregate;
-               begin
-                  if Aggregate.Kind = K_Aggregate_Library then
-                     Result.Append
-                       (Path_Name.Create_File
-                          (D.Simple_Name,
-                           Optional_Name_Type
-                             (Aggregate.Library_Directory.Value)));
-                  end if;
-               end;
-            end if;
          end loop;
       end if;
 
