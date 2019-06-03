@@ -62,11 +62,13 @@ package body GPR2.Log is
    -- Append --
    ------------
 
-   procedure Append
-     (Self    : in out Object;
-      Message : GPR2.Message.Object) is
+   procedure Append (Self : in out Object; Message : GPR2.Message.Object) is
+      Index : constant String := Message.Format;
    begin
-      Self.Store.Append (Message);
+      if not Self.Index.Contains (Index) then
+         Self.Store.Append (Message);
+         Self.Index.Insert (Index);
+      end if;
    end Append;
 
    -----------
@@ -76,6 +78,7 @@ package body GPR2.Log is
    procedure Clear (Self : in out Object) is
    begin
       Self.Store.Clear;
+      Self.Index.Clear;
    end Clear;
 
    ------------------------

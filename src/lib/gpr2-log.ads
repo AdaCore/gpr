@@ -37,11 +37,14 @@ package GPR2.Log is
           Default_Iterator  => Iterate,
           Iterator_Element  => Message.Object;
 
-   procedure Append
-     (Self    : in out Object;
-      Message : GPR2.Message.Object)
-     with Post => Self.Count'Old + 1 = Self.Count;
-   --  Insert a log message into the object
+   function Contains
+     (Self : Object; Message : GPR2.Message.Object) return Boolean;
+
+   procedure Append (Self : in out Object; Message : GPR2.Message.Object)
+     with Post =>
+       Self.Count'Old + (if Self.Contains (Message)'Old then 0 else 1)
+         = Self.Count;
+   --  Insert a log message only if not already present
 
    function Count (Self : Object) return Containers.Count_Type
      with Post =>
@@ -126,6 +129,7 @@ private
 
    type Object is tagged record
       Store : aliased Message_Set.Vector;
+      Index : Containers.Value_Set;
    end record;
 
    type Cursor is record
@@ -138,6 +142,11 @@ private
 
    type Reference_Type
      (Message : not null access GPR2.Message.Object) is null record;
+
+   function Contains
+     (Self : Object; Message : GPR2.Message.Object) return Boolean
+   is
+     (Self.Index.Contains (Message.Format));
 
    function Has_Error (Self : Object) return Boolean is
      (Self.Has_Element
