@@ -1145,8 +1145,8 @@ package body GPRinstall.Install is
 
                   if Project.Has_Library_Version
                     and then
-                      Project.Library_Filename
-                        /= Project.Library_Version_Filename
+                      Project.Library_Filename.Name
+                        /= Project.Library_Version_Filename.Name
                   then
                      if Is_Windows_Host then
                         Copy_File
