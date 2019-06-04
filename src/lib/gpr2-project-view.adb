@@ -683,6 +683,7 @@ package body GPR2.Project.View is
 
       if not Self.Is_Static_Library
         and then Self.Tree.Has_Configuration
+        and then Config.Has_Attributes (A.Shared_Library_Prefix)
       then
          Append
            (File_Name, Config.Attribute (A.Shared_Library_Prefix).Value.Text);
@@ -699,7 +700,9 @@ package body GPR2.Project.View is
       if Self.Is_Static_Library then
          Append (File_Name, String (Self.Tree.Archive_Suffix));
 
-      elsif Self.Tree.Has_Configuration then
+      elsif Self.Tree.Has_Configuration
+        and then Config.Has_Attributes (A.Shared_Library_Suffix)
+      then
          Append
            (File_Name, Config.Attribute (A.Shared_Library_Suffix).Value.Text);
 
