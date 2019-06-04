@@ -751,9 +751,9 @@ package body GPR2.Project.View is
             end if;
          end loop;
 
-         --  inpossible if project view was validated just after parse
+         --  Impossible if project view was validated just after parse
 
-         raise Program_Error;
+         raise Program_Error with "cannot get major version";
       end Major_Version_Name;
 
       LV : constant Project.Attribute.Object :=
