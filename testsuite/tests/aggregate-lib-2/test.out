@@ -12,7 +12,6 @@ Demo     K_AGGREGATE_LIBRARY
        > b-obj/pckb.ads.stdout
        > b-obj/pckb.ads.stderr
        > b-obj/pckb.adt
-       > b-lib/pckb.ali
        > agg-lib/pckb.ali
        > b-obj/pckb.ali
        > b-obj/pckb.prep
@@ -31,7 +30,6 @@ B        K_LIBRARY
        > b-obj/pckb.ads.stdout
        > b-obj/pckb.ads.stderr
        > b-obj/pckb.adt
-       > b-lib/pckb.ali
        > agg-lib/pckb.ali
        > b-obj/pckb.ali
        > b-obj/pckb.prep

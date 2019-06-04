@@ -69,18 +69,8 @@ package body GPR2.Project.Source.Artifact is
               (Src & O_Suffix,
                Optional_Name_Type (O_View.Object_Directory.Value)));
 
-         if S_View.Is_Library and then Lang = "Ada" then
-            Dependency_Files.Insert
-              (1, Path_Name.Create_File
-                 (Src & D_Suffix,
-                  Optional_Name_Type (S_View.Library_Directory.Value)));
-
-            --  For aggregated library the .ali is also copied into the
-            --  aggregate library directory.
-
-            Idx := Idx + 1;
-
-         end if;
+         --  For aggregated library the .ali is also copied into the
+         --  aggregate library directory.
 
          if Source.Has_Aggregating_View then
             Dependency_Files.Insert
@@ -88,6 +78,13 @@ package body GPR2.Project.Source.Artifact is
                  (Src & D_Suffix,
                   Optional_Name_Type
                     (Source.Aggregating_View.Library_Directory.Value)));
+            Idx := Idx + 1;
+
+         elsif S_View.Is_Library and then Lang = "Ada" then
+            Dependency_Files.Insert
+              (1, Path_Name.Create_File
+                 (Src & D_Suffix,
+                  Optional_Name_Type (S_View.Library_Directory.Value)));
             Idx := Idx + 1;
          end if;
 
