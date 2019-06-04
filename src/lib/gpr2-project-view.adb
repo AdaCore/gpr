@@ -756,21 +756,13 @@ package body GPR2.Project.View is
          raise Program_Error;
       end Major_Version_Name;
 
-      package A renames GPR2.Project.Registry.Attribute;
-
-      LV : Project.Attribute.Object;
+      LV : constant Project.Attribute.Object :=
+             Self.Attribute (GPR2.Project.Registry.Attribute.Library_Version);
 
    begin
-      if Self.Check_Attribute (A.Library_Version, Result => LV)
-        and then not Self.Is_Static_Library
-      then
-         return GPR2.Path_Name.Create_File
-           (Major_Version_Name (Name_Type (LV.Value.Text)),
-            Directory => Optional_Name_Type (Self.Library_Filename.Dir_Name));
-
-      else
-         return GPR2.Path_Name.Undefined;
-      end if;
+      return GPR2.Path_Name.Create_File
+        (Major_Version_Name (Name_Type (LV.Value.Text)),
+         Directory => Optional_Name_Type (Self.Library_Filename.Dir_Name));
    end Library_Major_Version_Filename;
 
    ---------------------------

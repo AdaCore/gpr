@@ -378,7 +378,9 @@ package GPR2.Project.View is
 
    function Library_Major_Version_Filename
      (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Is_Library;
+     with Pre => Self.Is_Defined
+                 and then Self.Is_Library and then not Self.Is_Static_Library
+                 and then Self.Has_Library_Version;
    --  Returns the library major name if it exists. That is, if the project
    --  Library_Version exists and is set to libxyz.so.1.2 for example then the
    --  returned value is libxyz.so.1. If no major version is computable an
