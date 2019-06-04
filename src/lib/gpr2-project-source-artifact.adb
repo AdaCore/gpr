@@ -84,14 +84,14 @@ package body GPR2.Project.Source.Artifact is
             Dependency_Files.Insert
               (1, Path_Name.Create_File
                  (Src & D_Suffix,
-                  Optional_Name_Type (S_View.Library_Directory.Value)));
+                  Optional_Name_Type (O_View.Library_Directory.Value)));
             Idx := Idx + 1;
          end if;
 
          Dependency_Files.Insert
            (Idx, Path_Name.Create_File
               (Src & D_Suffix,
-               Optional_Name_Type (S_View.Object_Directory.Value)));
+               Optional_Name_Type (O_View.Object_Directory.Value)));
 
       else
          for CU of Source.Source.Compilation_Units loop
@@ -106,12 +106,13 @@ package body GPR2.Project.Source.Artifact is
                     (CU.Index,
                      Path_Name.Create_File
                        (Src & Index_Suffix & O_Suffix,
-                        Optional_Name_Type (S_View.Object_Directory.Value)));
+                        Optional_Name_Type (O_View.Object_Directory.Value)));
+
                   Dependency_Files.Insert
                     (CU.Index,
                      Path_Name.Create_File
                        (Src & Index_Suffix & D_Suffix,
-                        Optional_Name_Type (S_View.Object_Directory.Value)));
+                        Optional_Name_Type (O_View.Object_Directory.Value)));
 
                   Idx := Idx + 1;
                end;

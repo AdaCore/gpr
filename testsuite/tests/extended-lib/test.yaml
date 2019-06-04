@@ -1,0 +1,5 @@
+description:
+    Test for extended libraries sources and artifacts
+driver: build_and_run
+project_file: extlib
+main: main
