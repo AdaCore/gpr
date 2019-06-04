@@ -2077,7 +2077,8 @@ package body GPR2.Project.Tree is
 
          begin
             if View.Is_Library and then View.Is_Shared_Library then
-               if View.Check_Attribute (PRA.Library_Version, Result => Attr)
+               if
+                 View.Check_Attribute (PRA.Library_Version, Result => Attr)
                then
                   declare
                      AV      : constant Source_Reference.Value.Object :=
