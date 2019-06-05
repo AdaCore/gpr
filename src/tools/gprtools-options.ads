@@ -65,4 +65,9 @@ package GPRtools.Options is
    function Verbosity (Self : Object) return Verbosity_Level is
      (if Self.Verbose then Verbose elsif Self.Quiet then Quiet else Regular);
 
+   procedure Append (Self : in out Object; Next : Object);
+   --  Append options values from Next to Self. Could be used to concatenate
+   --  additional switches from GPR tools related project packages with command
+   --  line taken switches.
+
 end GPRtools.Options;

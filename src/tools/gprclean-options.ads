@@ -26,9 +26,12 @@ with GPR2.Project.Tree;
 
 with GPRtools.Options;
 
+with GNAT.Command_Line;
+
 package GPRclean.Options is
 
    use Ada.Strings.Unbounded;
+   use GNAT.Command_Line;
    use GPR2;
 
    type Object is new GPRtools.Options.Object with record
@@ -40,8 +43,6 @@ package GPRclean.Options is
       Debug_Mode                  : aliased Boolean := False;
       Full_Path_Name_For_Brief    : aliased Boolean := False;
       Remove_Empty_Dirs           : aliased Boolean := False;
-      Dummy                       : aliased Boolean := False;
-      --  For not working backward compartible switches
 
       Mains         : GPR2.Containers.Value_Set;
       Arg_Mains     : Boolean;
@@ -55,6 +56,13 @@ package GPRclean.Options is
    end record;
 
    procedure Parse_Command_Line
-     (Options : out Object; Project_Tree : in out Project.Tree.Object);
+     (Options      : in out Object;
+      Project_Tree : in out Project.Tree.Object;
+      Parser       : Opt_Parser := Command_Line_Parser);
+
+   overriding procedure Append (Self : in out Object; Next : Object);
+   --  Append options values from Next to Self. Could be used to concatenate
+   --  additional switches from Clean project package with command line taken
+   --  switches.
 
 end GPRclean.Options;

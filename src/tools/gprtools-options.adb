@@ -22,6 +22,16 @@ with GNATCOLL.Utils;
 
 package body GPRtools.Options is
 
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append (Self : in out Object; Next : Object) is
+   begin
+      Self.Quiet   := Self.Quiet   or else Next.Quiet;
+      Self.Verbose := Self.Verbose or else Next.Verbose;
+   end Append;
+
    ----------------------
    -- Clean_Build_Path --
    ----------------------

@@ -28,6 +28,7 @@ with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.Utils;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
@@ -35,6 +36,7 @@ with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -56,15 +58,22 @@ procedure GPRclean.Main is
    use GPRtools;
    use GPR2.Path_Name;
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
+
    procedure Clean (View : Project.View.Object);
    --  Clean given View
-
-   procedure Delete_File (Name : String);
-   --  Remove file if exists
 
    Project_Tree : Project.Tree.Object;
    Config       : Project.Configuration.Object;
    Options      : GPRclean.Options.Object;
+
+   procedure Delete_File
+     (Name : Path_Name.Full_Name; Opts : GPRclean.Options.Object);
+   --  Remove file if exists.
+   --  Opts parameter need because the command line options is used inside of
+   --  this routine and could be different for different projects because of
+   --  Switches attribute in project package Clean.
 
    -----------
    -- Clean --
@@ -73,16 +82,22 @@ procedure GPRclean.Main is
    procedure Clean (View : Project.View.Object) is
       Obj_Dir : constant Path_Name.Object := View.Object_Directory;
       Tree    : constant access Project.Tree.Object := View.Tree;
+      Opts    : GPRclean.Options.Object;
 
       pragma Warnings (Off);
 
       function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
       --  ??? work around a strange visibility issue
 
+      pragma Warnings (On);
+
       procedure Binder_Artifacts
         (Name     : Name_Type;
          Language : Optional_Name_Type := No_Name);
       --  Add binder artefacts for the name
+
+      procedure Delete_File (Name : Path_Name.Full_Name);
+      --  Delete file with specific for this project options
 
       ----------------------
       -- Binder_Artifacts --
@@ -124,10 +139,62 @@ procedure GPRclean.Main is
          end if;
       end Binder_Artifacts;
 
+      -----------------
+      -- Delete_File --
+      -----------------
+
+      procedure Delete_File (Name : Path_Name.Full_Name) is
+      begin
+         Main.Delete_File (Name, Opts);
+      end Delete_File;
+
       Has_Mains : constant Boolean := View.Has_Mains;
+      Attr      : Project.Attribute.Object;
 
    begin
-      if Options.Verbose then
+      --  Check for additional switches in Clean package
+
+      if View.Has_Packages (PRP.Clean)
+        and then View.Pack (PRP.Clean).Check_Attribute
+                   (PRA.Switches, Result => Attr)
+      then
+         declare
+            use GNAT.Command_Line;
+
+            List : constant GPR2.Containers.Source_Value_List :=  Attr.Values;
+            Args : aliased GNAT.OS_Lib.Argument_List :=
+                     (List.First_Index .. List.Last_Index => null);
+            OP   : Opt_Parser;
+         begin
+            for J in Args'Range loop
+               Args (J) := new String'(List (J).Text);
+            end loop;
+
+            Initialize_Option_Scan (OP, Args'Unchecked_Access);
+            GPRclean.Options.Parse_Command_Line (Opts, Project_Tree, OP);
+
+            for J in Args'Range loop
+               GNAT.OS_Lib.Free (Args (J));
+            end loop;
+
+         exception
+            when E : GNAT.Command_Line.Exit_From_Command_Line
+               | GNAT.Command_Line.Invalid_Switch
+               | GNAT.Command_Line.Invalid_Parameter
+               | GPRtools.Usage_Error
+               =>
+               Text_IO.Put_Line
+                 (Text_IO.Current_Error,
+                  "gprclean: " & Exception_Message (E) & " in package Clean");
+         end;
+
+         Opts.Append (Options);
+
+      else
+         Opts := Options;
+      end if;
+
+      if Opts.Verbose then
          Text_IO.Put_Line ("Cleaning project: """ & String (View.Name) & '"');
       end if;
 
@@ -141,19 +208,19 @@ procedure GPRclean.Main is
             In_Mains : Boolean := False;
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
          begin
-            if Options.Verbose then
+            if Opts.Verbose then
                Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value);
             end if;
 
-            if Options.Mains.Contains
+            if Opts.Mains.Contains
                  (String (S.Source.Path_Name.Simple_Name))
             then
                In_Mains := True;
-               Options.Mains.Delete (String (S.Source.Path_Name.Simple_Name));
+               Opts.Mains.Delete (String (S.Source.Path_Name.Simple_Name));
             end if;
 
             if Is_Main or else In_Mains then
-               if Is_Main and then Options.Arg_Mains and then not In_Mains then
+               if Is_Main and then Opts.Arg_Mains and then not In_Mains then
                   Cleanup := False;
                else
                   Binder_Artifacts
@@ -167,31 +234,33 @@ procedure GPRclean.Main is
                   Delete_File (F.Value);
                end loop;
 
-               if not Options.Remain_Useful and then Options.Arg_Mains
+               if not Opts.Remain_Useful and then Opts.Arg_Mains
                  and then In_Mains
                then
                   --  When we took main procedure filename from Main project
                   --  attributes, the executable file name included into
-                  --  atrifacts list above. This case is when main procedure
+                  --  View.Mains below. This case is when main procedure
                   --  filename defined in command line and we have to remove
                   --  the executable file separetely.
 
                   Delete_File
-                    (String (S.Source.Path_Name.Base_Name)
-                     & View.Executable_Suffix);
+                    (Path_Name.Create_File
+                       (S.Source.Path_Name.Base_Name
+                        & Optional_Name_Type (View.Executable_Suffix),
+                        Name_Type (View.Executable_Directory.Value)).Value);
                end if;
             end if;
          end;
       end loop;
 
-      if Options.Arg_Mains and then not Options.Mains.Is_Empty then
+      if Opts.Arg_Mains and then not Opts.Mains.Is_Empty then
          GPRtools.Util.Fail_Program
-           ('"' & Options.Mains.First_Element
+           ('"' & Opts.Mains.First_Element
             & """ was not found in the sources of any project");
       end if;
 
-      if not Options.Remain_Useful and then View.Has_Mains
-        and then not Options.Arg_Mains
+      if not Opts.Remain_Useful and then View.Has_Mains
+        and then not Opts.Arg_Mains
       then
          for M of View.Mains loop
             Delete_File (M.Value);
@@ -206,7 +275,7 @@ procedure GPRclean.Main is
          Delete_File (Obj_Dir.Compose (GI_DB & "-shm").Value);
          Delete_File (Obj_Dir.Compose (GI_DB & "-wal").Value);
 
-         if Has_Mains or else Options.Arg_Mains then
+         if Has_Mains or else Opts.Arg_Mains then
             declare
                Main_Lib : constant Value_Type :=
                             Obj_Dir.Compose
@@ -221,7 +290,7 @@ procedure GPRclean.Main is
             if View.Is_Aggregated_In_Library then
                Binder_Artifacts (View.Aggregate.Library_Name & Lexch);
             else
-               if not Options.Remain_Useful then
+               if not Opts.Remain_Useful then
                   Delete_File (View.Library_Filename.Value);
                end if;
 
@@ -232,7 +301,7 @@ procedure GPRclean.Main is
 
       --  Removes empty directories
 
-      if Options.Remove_Empty_Dirs then
+      if Opts.Remove_Empty_Dirs then
          declare
             use Ada.Directories;
 
@@ -259,7 +328,7 @@ procedure GPRclean.Main is
                   declare
                      Search : Search_Type;
                   begin
-                     if not Options.Quiet then
+                     if not Opts.Quiet then
                         Start_Search (Search, Dir, "");
                         Text_IO.Put_Line
                           ("warning: Directory """ & Dir
@@ -285,21 +354,21 @@ procedure GPRclean.Main is
                   begin
                      Delete_Dir (Dir_Name);
 
-                     if Options.Subdirs /= Null_Unbounded_String
-                       and then String (Dir.Simple_Name) = Options.Subdirs
+                     if Opts.Subdirs /= Null_Unbounded_String
+                       and then String (Dir.Simple_Name) = Opts.Subdirs
                      then
                         --  If subdirs is defined try to remove the parent one
 
                         pragma Assert
                           (Dir_Name
-                             (Dir_Name'Last - Length (Options.Subdirs)
+                             (Dir_Name'Last - Length (Opts.Subdirs)
                               - Boolean'Pos (Dir_Name (Dir_Name'Last) = DS))
                            = DS,
                            Dir_Name);
 
                         Delete_Dir
                           (Dir_Name (Dir_Name'First
-                           .. Dir_Name'Last - Length (Options.Subdirs) - 1));
+                           .. Dir_Name'Last - Length (Opts.Subdirs) - 1));
                      end if;
                   end;
                end if;
@@ -336,25 +405,27 @@ procedure GPRclean.Main is
    -- Delete_File --
    -----------------
 
-   procedure Delete_File (Name : String) is
+   procedure Delete_File
+     (Name : Path_Name.Full_Name; Opts : GPRclean.Options.Object)
+   is
       use GNAT.OS_Lib;
       Success : Boolean := False;
    begin
-      if Options.Dry_Run then
+      if Opts.Dry_Run then
          if Is_Regular_File (Name) then
             Text_IO.Put_Line (Name);
 
-         elsif Options.Verbose then
+         elsif Opts.Verbose then
             Text_IO.Put_Line ("absent: " & Name);
          end if;
 
       else
          Delete_File (Name, Success);
 
-         if not Options.Quiet and then Success then
+         if not Opts.Quiet and then Success then
             Text_IO.Put_Line ('"' & Name & """ has been deleted");
 
-         elsif Options.Verbose and then not Success then
+         elsif Opts.Verbose and then not Success then
             Text_IO.Put_Line ('"' & Name & """ absent");
          end if;
       end if;
@@ -417,7 +488,7 @@ begin
    end loop;
 
    if Options.Remove_Config then
-      Delete_File (Options.Config_File.Value);
+      Delete_File (Options.Config_File.Value, Options);
    end if;
 
    Util.Output_Messages

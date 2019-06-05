@@ -22,22 +22,55 @@ with Ada.Strings.Fixed;
 with GPR2.Version;
 with GPRtools.Util;
 
-with GNAT.Command_Line;
-
 package body GPRclean.Options is
 
    Dummy : aliased Boolean;
    --  Just to support obsolete options
+
+   ------------
+   -- Append --
+   ------------
+
+   overriding procedure Append (Self : in out Object; Next : Object) is
+      package GTO renames GPRtools.Options;
+
+      procedure Add (Left : in out Boolean; Right : Boolean) with Inline;
+      --  Logically add Right to Left
+
+      ---------
+      -- Add --
+      ---------
+
+      procedure Add (Left : in out Boolean; Right : Boolean) is
+      begin
+         Left := Left or else Right;
+      end Add;
+
+   begin
+      GTO.Append (GTO.Object (Self), GTO.Object (Next));
+
+      Add (Self.Dry_Run,                     Next.Dry_Run);
+      Add (Self.All_Projects,                Next.All_Projects);
+      Add (Self.Remain_Useful,               Next.Remain_Useful);
+      Add (Self.No_Project,                  Next.No_Project);
+      Add (Self.Debug_Mode,                  Next.Debug_Mode);
+      Add (Self.Full_Path_Name_For_Brief,    Next.Full_Path_Name_For_Brief);
+      Add (Self.Remove_Empty_Dirs,           Next.Remove_Empty_Dirs);
+      Add (Self.Unchecked_Shared_Lib_Import, Next.Unchecked_Shared_Lib_Import);
+
+      Self.Mains.Union (Next.Mains);
+      Self.Arg_Mains := not Self.Mains.Is_Empty;
+   end Append;
 
    ------------------------
    -- Parse_Command_Line --
    ------------------------
 
    procedure Parse_Command_Line
-     (Options : out Object; Project_Tree : in out Project.Tree.Object)
+     (Options      : in out Object;
+      Project_Tree : in out Project.Tree.Object;
+      Parser       : Opt_Parser := Command_Line_Parser)
    is
-      use GNAT.Command_Line;
-
       Config : Command_Line_Configuration renames Options.Config;
 
       procedure Value_Callback (Switch, Value : String);
@@ -196,7 +229,8 @@ package body GPRclean.Options is
          Switch => "-p",
          Help   => "Remove empty build directories");
 
-      Getopt (Config);
+      Getopt
+        (Config, Parser => Parser, Quiet => Parser /= Command_Line_Parser);
 
       GPR2.Set_Debug (Options.Debug_Mode);
 
