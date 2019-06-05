@@ -973,6 +973,7 @@ package body GPRinstall.Install is
                   --  Objects / Deps
 
                   if not Options.Sources_Only
+                    and then Source.Is_Compilable
                     and then
                       (not Source.Has_Other_Part
                        or else Src.Compilation_Units.Element
