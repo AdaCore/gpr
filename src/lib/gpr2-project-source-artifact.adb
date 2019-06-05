@@ -77,14 +77,14 @@ package body GPR2.Project.Source.Artifact is
               (Idx, Path_Name.Create_File
                  (Src & D_Suffix,
                   Optional_Name_Type
-                    (Source.Aggregating_View.Library_Directory.Value)));
+                    (Source.Aggregating_View.Library_Ali_Directory.Value)));
             Idx := Idx + 1;
 
          elsif S_View.Is_Library and then Lang = "Ada" then
             Dependency_Files.Insert
               (1, Path_Name.Create_File
                  (Src & D_Suffix,
-                  Optional_Name_Type (O_View.Library_Directory.Value)));
+                  Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
             Idx := Idx + 1;
          end if;
 

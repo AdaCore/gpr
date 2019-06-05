@@ -1,0 +1,5 @@
+description:
+    Test for aggregate libraries sources and artifacts
+driver: build_and_run
+project_file: aggp3
+main: main

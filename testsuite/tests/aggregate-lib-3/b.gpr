@@ -1,0 +1,6 @@
+library project B is
+   for Source_Dirs use ("b-src");
+   for Object_Dir  use "b-obj";
+   for Library_Name use "b";
+   for Library_Dir use "b-lib";
+end B;
