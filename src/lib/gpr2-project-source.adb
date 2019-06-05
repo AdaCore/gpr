@@ -20,6 +20,7 @@ with GPR2.Compilation_Unit;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
+with GPR2.Project.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -56,12 +57,13 @@ package body GPR2.Project.Source is
      (Source               : GPR2.Source.Object;
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean)
+      Has_Naming_Exception : Boolean;
+      Is_Compilable        : Boolean)
       return Object is
    begin
       return Object'
         (Source, Definition.Weak (View),
-         Is_Interface, Has_Naming_Exception);
+         Is_Interface, Has_Naming_Exception, Is_Compilable);
    end Create;
 
    ------------------
@@ -276,6 +278,15 @@ package body GPR2.Project.Source is
         and then Self.Source.Has_Single_Unit
         and then Self.Source.Other_Part.Is_Defined;
    end Has_Other_Part;
+
+   -------------------
+   -- Is_Compilable --
+   -------------------
+
+   function Is_Compilable (Self : Object) return Boolean is
+   begin
+      return Self.Is_Compilable;
+   end Is_Compilable;
 
    -------------
    -- Is_Main --

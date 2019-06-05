@@ -43,7 +43,8 @@ package GPR2.Project.Source is
      (Source               : GPR2.Source.Object;
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean)
+      Has_Naming_Exception : Boolean;
+      Is_Compilable        : Boolean)
       return Object
      with Pre => Source.Is_Defined and then View.Is_Defined;
    --  Constructor for Object. View is where the source is defined (found from
@@ -55,6 +56,11 @@ package GPR2.Project.Source is
      with Pre  => Self.Is_Defined,
           Post => View'Result.Is_Defined;
    --  The view the source is in
+
+   function Is_Compilable (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the source is compilable, meaning that a compiler is
+   --  defined for this language.
 
    function Source (Self : Object) return GPR2.Source.Object;
    --  The source object
@@ -140,6 +146,7 @@ private
 
       Is_Interface         : Boolean := False;
       Has_Naming_Exception : Boolean := False;
+      Is_Compilable        : Boolean := False;
    end record;
 
    Undefined : constant Object := (others => <>);

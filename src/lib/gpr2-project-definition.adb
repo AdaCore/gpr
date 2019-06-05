@@ -101,7 +101,8 @@ package body GPR2.Project.Definition is
 
       use type Source_Reference.Object;
 
-      Source_Dir_Ref : Source_Reference.Object;
+      package Name_Boolean_Map is new Ada.Containers.Indefinite_Ordered_Maps
+        (Name_Type, Boolean);
 
       package Unit_Name_To_Sloc is new
         Ada.Containers.Indefinite_Ordered_Maps
@@ -182,6 +183,11 @@ package body GPR2.Project.Definition is
              or else A.Name.Text = Registry.Attribute.Implementation);
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
+      function Is_Compilable (Language : Name_Type) return Boolean;
+      --  Check whether the language is compilable on the current View. This
+      --  includes information provided by the Tree (Driver attribute). Note
+      --  that this routine caches the result into a map.
+
       Naming : constant Project.Pack.Object := Naming_Package (Def);
       --  Package Naming for the view
 
@@ -202,6 +208,8 @@ package body GPR2.Project.Definition is
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
 
+      Source_Dir_Ref    : Source_Reference.Object;
+
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
 
@@ -209,6 +217,7 @@ package body GPR2.Project.Definition is
       Interface_Units_Found : Name_Set;
       Interface_Found       : Boolean := False;
       Interface_Sources     : Source_Path_To_Sloc.Map;
+      Language_Compilable   : Name_Boolean_Map.Map;
 
       Tree                  : constant not null access Project.Tree.Object :=
                                 Def.Tree;
@@ -919,7 +928,8 @@ package body GPR2.Project.Definition is
                        (Source               => Source,
                         View                 => View,
                         Is_Interface         => Is_Interface,
-                        Has_Naming_Exception => Has_Naming_Exception);
+                        Has_Naming_Exception => Has_Naming_Exception,
+                        Is_Compilable        => Is_Compilable (Language));
                   end;
 
                   if Def.Sources.Contains (Project_Source) then
@@ -1062,6 +1072,64 @@ package body GPR2.Project.Definition is
             end if;
          end loop;
       end Insert;
+
+      -------------------
+      -- Is_Compilable --
+      -------------------
+
+      function Is_Compilable (Language : Name_Type) return Boolean is
+
+         function Check_View (View : Project.View.Object) return Boolean
+           with Pre => View.Is_Defined;
+         --  Check if View has a driver for the source language
+
+         ----------------
+         -- Check_View --
+         ----------------
+
+         function Check_View (View : Project.View.Object) return Boolean is
+            package PRA renames Project.Registry.Attribute;
+            package PRP renames Project.Registry.Pack;
+
+            Pck : Project.Pack.Object;
+            Att : Project.Attribute.Object;
+         begin
+            if View.Has_Packages (PRP.Compiler) then
+               Pck := View.Pack (PRP.Compiler);
+
+               if Pck.Check_Attribute
+                 (PRA.Driver, Value_Type (Language), Att)
+               then
+                  return Att.Value.Text /= "";
+               end if;
+            end if;
+
+            return False;
+         end Check_View;
+
+         Res : Boolean := Check_View (View);
+
+      begin
+         if Language_Compilable.Contains (Language) then
+            Res := Language_Compilable (Language);
+
+         else
+            Res := Check_View (View);
+
+            if not Res and then View.Tree.Has_Configuration then
+               declare
+                  C_View : constant Project.View.Object :=
+                             View.Tree.Configuration.Corresponding_View;
+               begin
+                  Res := Check_View (C_View);
+               end;
+
+               Language_Compilable.Insert (Language, Res);
+            end if;
+         end if;
+
+         return Res;
+      end Is_Compilable;
 
       ---------------
       -- Read_File --
@@ -1433,7 +1501,8 @@ package body GPR2.Project.Definition is
                              (Source               => P.Source,
                               View                 => P.View,
                               Is_Interface         => Is_Interface,
-                              Has_Naming_Exception => P.Has_Naming_Exception));
+                              Has_Naming_Exception => P.Has_Naming_Exception,
+                              Is_Compilable        => P.Is_Compilable));
                      end;
                   end loop;
 
