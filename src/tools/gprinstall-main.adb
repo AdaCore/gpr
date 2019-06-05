@@ -647,6 +647,10 @@ exception
       end if;
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 
+   when E : Constraint_Error =>
+      Text_IO.Put_Line ("gprinstall: " & Exception_Message (E));
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+
    when E : others =>
       Text_IO.Put_Line ("error: " & Exception_Information (E));
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
