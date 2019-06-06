@@ -40,6 +40,8 @@ procedure Main is
    C1 : constant Path_Name.Object := Path_Name.Create_File ("project.gpr");
    C2 : constant Path_Name.Object := Path_Name.Create_File ("subdir/one.gpr");
 
+   PV : Path_Name.Object;
+
 begin
    Text_IO.Put_Line ("1: " & String (Path_Name.Relative_Path (P1, P2).Name));
    Text_IO.Put_Line ("2: " & String (Path_Name.Relative_Path (P3, P2).Name));
@@ -53,4 +55,16 @@ begin
    Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5).Name));
    Text_IO.Put_Line ("B: " & P5.Containing_Directory.Value);
    Text_IO.Put_Line ("C: " & P5.Containing_Directory.Value);
+   PV := C2.Change_Extension ("");
+   Text_IO.Put_Line ("B: " & String (PV.Name));
+   PV := C2.Change_Extension (".");
+   Text_IO.Put_Line ("C: " & String (PV.Name));
+   PV := PV.Change_Extension ("a");
+   Text_IO.Put_Line ("D: " & String (PV.Name));
+   PV := PV.Change_Extension ("bcd");
+   Text_IO.Put_Line ("E: " & String (PV.Name));
+   PV := PV.Change_Extension ("ef");
+   Text_IO.Put_Line ("F: " & String (PV.Name));
+   PV := PV.Change_Extension ("ef");
+   Text_IO.Put_Line ("G: " & String (PV.Name));
 end Main;

@@ -10,3 +10,9 @@
 A: ./
 B: /dir1/dir2
 C: /dir1/dir2
+B: subdir/one
+C: subdir/one
+D: subdir/one.a
+E: subdir/one.bcd
+F: subdir/one.ef
+G: subdir/one.ef

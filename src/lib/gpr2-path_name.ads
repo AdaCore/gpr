@@ -146,6 +146,13 @@ package GPR2.Path_Name is
    --  If filenames is case insensitive converts path name to lowercase,
    --  returns the same value othervise.
 
+   function Change_Extension
+     (Self : Object; Extension : Value_Type) return Object
+     with Pre => Self.Is_Defined and then not Self.Is_Directory;
+   --  Return file object with another extension (possibly empty, which means
+   --  removing current extension if any).
+   --  First dot in the Extension is ignored.
+
 private
 
    use Ada.Strings.Unbounded;

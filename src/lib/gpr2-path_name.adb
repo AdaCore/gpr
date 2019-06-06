@@ -46,7 +46,9 @@ package body GPR2.Path_Name is
       else Characters.Handling.To_Lower (Name));
 
    function To_OS_Case (Name : Unbounded_String) return Unbounded_String is
-     (+To_OS_Case (To_String (Name)));
+     (if File_Names_Case_Sensitive
+      then Name
+      else +Characters.Handling.To_Lower (To_String (Name)));
    --  If filenames is case insensitive converts path name to lowercase,
    --  returns the same value othervise.
 
@@ -147,6 +149,68 @@ package body GPR2.Path_Name is
          end;
       end if;
    end Base_Name;
+
+   ----------------------
+   -- Change_Extension --
+   ----------------------
+
+   function Change_Extension
+     (Self : Object; Extension : Value_Type) return Object
+   is
+      Result  : Object;
+      Old_Ext : constant Value_Type :=
+                  Directories.Extension (To_String (Self.Value));
+      New_Ext : constant Value_Type :=
+                  (if Extension /= ""
+                     and then Extension (Extension'First) = '.'
+                   then Extension (Extension'First + 1 .. Extension'Last)
+                   else Extension);
+
+      procedure Replace_Extension
+        (Path : in out Unbounded_String; New_Ext : Value_Type);
+      --  Replaces the file extension in Path to the New_Ext
+
+      -----------------------
+      -- Replace_Extension --
+      -----------------------
+
+      procedure Replace_Extension
+        (Path : in out Unbounded_String; New_Ext : Value_Type)
+      is
+         Low  :  constant Positive := Length (Path) - Old_Ext'Length +
+                   (if Old_Ext = "" then 1 else 0);
+         Suff : constant Value_Type :=
+                   (if New_Ext = "" then "" else '.' & New_Ext);
+      begin
+         Replace_Slice (Path, Low, Length (Path), Suff);
+      end Replace_Extension;
+
+   begin
+      if New_Ext = Old_Ext then
+         return Self;
+      end if;
+
+      Result := Self;
+
+      pragma Assert (Directories.Extension (To_String (Self.As_Is)) = Old_Ext);
+      pragma Assert
+        (Directories.Extension (To_String (Self.Comparing))
+         = To_OS_Case (Old_Ext));
+
+      Replace_Extension (Result.Value,     New_Ext);
+      Replace_Extension (Result.As_Is,     New_Ext);
+      Replace_Extension (Result.Comparing, To_OS_Case (New_Ext));
+
+      pragma Assert
+        (Directories.Extension (To_String (Result.As_Is)) = New_Ext);
+      pragma Assert
+        (Directories.Extension (To_String (Result.Value)) = New_Ext);
+      pragma Assert
+        (Directories.Extension (To_String (Result.Comparing))
+         = To_OS_Case (New_Ext));
+
+      return Result;
+   end Change_Extension;
 
    -------------------
    -- Common_Prefix --
