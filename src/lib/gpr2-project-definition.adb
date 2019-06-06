@@ -930,7 +930,7 @@ package body GPR2.Project.Definition is
                   if Def.Sources.Contains (Project_Source) then
                      Tree.Append_Message
                        (Message.Create
-                          (Message.Error,
+                          (Message.Warning,
                            """" & String (File.Simple_Name)
                            & """ is found in several source directories",
                            Source_Dir_Ref));
