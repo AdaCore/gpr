@@ -4,7 +4,7 @@ BEFORE: Has unread Message: TRUE
 ERROR
  3
  25
-unit '1pck' not valid, should start with a letter
+unit '1pck' not valid, should start with a letter or an underscore
 AFTER: Has unread Message: FALSE
 
 Project: Demo2

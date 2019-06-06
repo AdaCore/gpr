@@ -543,6 +543,7 @@ package body GPR2.Project.Definition is
             Success : out Boolean) return Name_Type
          is
             use Ada.Strings;
+            use Ada.Strings.Maps;
             use Ada.Strings.Unbounded;
 
             Result : Unbounded_String :=
@@ -645,12 +646,14 @@ package body GPR2.Project.Definition is
 
             --  Must start with a letter
 
-            if not Characters.Handling.Is_Letter (Element (Result, 1)) then
+            if not Is_In
+              (Element (Result, 1), Constants.Letter_Set or To_Set ("_"))
+            then
                Tree.Append_Message
                  (Message.Create
                     (Message.Error,
-                     "unit '" & To_String (Result)
-                     & "' not valid, should start with a letter",
+                     "unit '" & To_String (Result)  & "' not valid,"
+                     & " should start with a letter or an underscore",
                      Source_Dir_Ref));
                goto Invalid;
             end if;
