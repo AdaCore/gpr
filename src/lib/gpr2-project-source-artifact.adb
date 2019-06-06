@@ -52,7 +52,7 @@ package body GPR2.Project.Source.Artifact is
 
       Preprocessed : constant Path_Name.Object :=
                        Path_Name.Create_File
-                         (Src & P_Suffix,
+                         (Source.Source.Path_Name.Simple_Name & P_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
       Switches     : constant Path_Name.Object :=
