@@ -406,7 +406,9 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Kind_Type) is
+            Kind     : out Kind_Type)
+         is
+            Attr : Attribute.Object;
          begin
             Match := False;
             Kind  := S_Spec;  --  Dummy value
@@ -415,41 +417,31 @@ package body GPR2.Project.Definition is
                Match := Ada_Naming_Exceptions.Contains (Basename);
 
             else
-               if Naming.Has_Attributes
-                 (Registry.Attribute.Specification_Exceptions,
-                  String (Language))
-               then
-                  if Naming.Attribute
+               if Naming.Check_Attribute
                     (Registry.Attribute.Specification_Exceptions,
-                     String (Language)).Has_Value (String (Basename))
-                  then
-                     Match := True;
-                     Kind  := S_Body;
-                  end if;
+                     String (Language),
+                     Result => Attr)
+                 and then Attr.Has_Value (Basename)
+               then
+                  Match := True;
+                  Kind  := S_Body;
                end if;
 
-               if Naming.Has_Attributes
-                 (Registry.Attribute.Implementation_Exceptions,
-                  String (Language))
-               then
-                  if Naming.Attribute
+               if Naming.Check_Attribute
                     (Registry.Attribute.Implementation_Exceptions,
-                     String (Language)).Has_Value (String (Basename))
-                  then
-                     if Match then
-                        Tree.Append_Message
-                          (Message.Create
-                             (Message.Error,
-                              "the same file cannot be a source "
-                              & "and a template",
-                              Naming.Attribute
-                                (Registry.Attribute.Implementation_Exceptions,
-                                 String (Language)).Value
-                              (String (Basename))));
-                     else
-                        Match := True;
-                        Kind  := S_Spec;
-                     end if;
+                     String (Language),
+                     Result => Attr)
+                 and then Attr.Has_Value (Basename)
+               then
+                  if Match then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "the same file cannot be a source and a template",
+                           Attr.Value (Basename)));
+                  else
+                     Match := True;
+                     Kind  := S_Spec;
                   end if;
                end if;
             end if;
