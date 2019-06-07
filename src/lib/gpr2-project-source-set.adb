@@ -255,4 +255,13 @@ package body GPR2.Project.Source.Set is
       Self.S.Replace (Source);
    end Replace;
 
+   -----------
+   -- Union --
+   -----------
+
+   procedure Union (Self : in out Object; Sources : Object) is
+   begin
+      Self.S.Union (Sources.S);
+   end Union;
+
 end GPR2.Project.Source.Set;

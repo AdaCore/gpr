@@ -42,6 +42,10 @@ package GPR2.Project.Source.Set is
    procedure Insert (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source.Is_Defined;
 
+   procedure Union (Self : in out Object; Sources : Object);
+   --  Inserts into Self the elements of Source that are not equivalent to some
+   --  element already in Self.
+
    function Contains
      (Self : Object; Source : Project.Source.Object) return Boolean
      with Pre => Source.Is_Defined;
