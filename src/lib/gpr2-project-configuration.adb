@@ -212,7 +212,7 @@ package body GPR2.Project.Configuration is
    begin
       --  ??? there is no attribute in the configuration file for this, so we
       --  end up having hard coded value for Ada and all other languages.
-      if Language = "ada" then
+      if Language = "Ada" then
          return ".ali";
       else
          return ".d";

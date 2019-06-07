@@ -281,7 +281,7 @@ package body GPR2.Source is
    procedure Update (Self : Object) is
       use type Calendar.Time;
 
-      Filename : constant String := Self.Pathname.Value;
+      Filename : constant GPR2.Path_Name.Full_Name := Self.Pathname.Value;
       S        : Registry.Data := Registry.Shared.Get (Self);
    begin
       pragma Assert (Directories.Exists (Filename));

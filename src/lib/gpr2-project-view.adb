@@ -1116,9 +1116,10 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Unit (Self        : Object;
-                  Name        : Name_Type;
-                  Need_Update : Boolean := True) return GPR2.Unit.Object is
+   function Unit
+     (Self        : Object;
+      Name        : Name_Type;
+      Need_Update : Boolean := True) return GPR2.Unit.Object is
    begin
       if Need_Update then
          Self.Update_Sources;

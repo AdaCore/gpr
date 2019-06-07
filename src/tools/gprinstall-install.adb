@@ -33,7 +33,7 @@ with GNAT.String_Split;
 
 with GNATCOLL.OS.Constants;
 
-with GPR2.Compilation_Unit;
+with GPR2.Compilation_Unit.List;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Name_Values;
@@ -945,6 +945,7 @@ package body GPRinstall.Install is
 
             Src : GPR2.Source.Object;
             Atf : GPR2.Project.Source.Artifact.Object;
+            CUs : GPR2.Compilation_Unit.List.Object;
 
          begin
             for Source of Project.Sources loop
@@ -953,6 +954,7 @@ package body GPRinstall.Install is
 
                Src := Source.Source;
                Atf := Source.Artifacts;
+               CUs := Src.Compilation_Units;
 
                if not Project.Is_Library
                  or else Project.Library_Standalone = No
@@ -965,7 +967,7 @@ package body GPRinstall.Install is
                      --  When a naming exception is present for a body which
                      --  is not installed we must exclude the Naming from the
                      --  generated project.
-                     for CU of Src.Compilation_Units loop
+                     for CU of CUs loop
                         Excluded_Naming.Include (String (CU.Unit_Name));
                      end loop;
                   end if;
@@ -976,8 +978,7 @@ package body GPRinstall.Install is
                     and then Source.Is_Compilable
                     and then
                       (not Source.Has_Other_Part
-                       or else Src.Compilation_Units.Element
-                         (1).Kind /= GPR2.S_Spec)
+                       or else CUs (1).Kind /= GPR2.S_Spec)
                   then
                      if Copy (Object)
                        and then Src.Compilation_Units.Element
@@ -994,8 +995,7 @@ package body GPRinstall.Install is
                      if Copy (Dependency)
                        and then Is_Ada (Source)
                        and then Src.Has_Units
-                       and then Src.Compilation_Units.Element
-                         (1).Kind /= S_Separate
+                       and then CUs (1).Kind /= S_Separate
                      then
                         declare
                            Proj : GPR2.Project.View.Object;

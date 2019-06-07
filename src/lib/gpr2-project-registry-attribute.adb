@@ -293,7 +293,7 @@ begin
       Value_Case_Sensitive => False,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create ("ada"));
+      Default              => Create ("Ada"));
 
    --  roots
    Store_Insert

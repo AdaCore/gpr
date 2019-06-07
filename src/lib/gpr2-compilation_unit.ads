@@ -50,9 +50,9 @@
 --       (Unit_Name => Proc, Index => 2, Kind => S_Separate,
 --        Withed_Units => {Bar}, Is_Sep_From => A) }
 
-private with Ada.Strings.Unbounded;
-
 with GPR2.Source_Reference.Identifier.Set;
+
+private with Ada.Strings.Unbounded;
 
 package GPR2.Compilation_Unit is
 
@@ -86,7 +86,7 @@ package GPR2.Compilation_Unit is
 
    function Is_Separate (Self : Object) return Boolean
      with Pre => Self /= Undefined;
-   --  Returns True if Self is a separate.
+   --  Returns True if Self is a separate
 
    function Is_Separate_From (Self : Object) return Name_Type
      with Pre => Self /= Undefined and then Self.Is_Separate;
