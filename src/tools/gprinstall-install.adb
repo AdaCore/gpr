@@ -960,7 +960,10 @@ package body GPRinstall.Install is
                  or else Project.Library_Standalone = No
                  or else Source.Is_Interface
                then
-                  if Options.All_Sources or else Source.Is_Interface then
+                  if Options.All_Sources
+                    or else Source.Is_Interface
+                    or else Src.Is_Generic
+                  then
                      Copy_Source (Source);
 
                   elsif Source.Has_Naming_Exception then
