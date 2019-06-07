@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
-with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Directories;
 with Ada.IO_Exceptions;
@@ -146,8 +145,7 @@ package body GPR2.Project.Definition is
       --  Skip    : the new source is ignored
       --  Error   : an error is raised
 
-      package Source_Set is
-        new Ada.Containers.Indefinite_Ordered_Sets (Value_Type);
+      package Source_Set renames Containers.Value_Type_Set;
 
       procedure Handle_Directory (Dir : GPR2.Path_Name.Full_Name);
       --  Handle the specified directory, that is read all files in Dir and
