@@ -789,7 +789,8 @@ package body GPR2.Project.Definition is
                                  Kind         => Kind,
                                  Withed_Units =>
                                    Source_Reference.Identifier.Set.Empty_Set,
-                                 Is_Sep_From  => ""));
+                                 Is_Sep_From  => "",
+                                 Is_Generic   => False));
                         end;
                      end loop;
                   end if;
@@ -870,7 +871,8 @@ package body GPR2.Project.Definition is
                                  Kind         => Kind,
                                  Withed_Units =>
                                    Source_Reference.Identifier.Set.Empty_Set,
-                                 Is_Sep_From  => ""));
+                                 Is_Sep_From  => "",
+                                 Is_Generic   => False));
                         end if;
                      end;
                   end if;

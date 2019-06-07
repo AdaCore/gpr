@@ -170,6 +170,30 @@ package body GPR2.Source is
       return Registry.Shared.Get (Self).Is_Ada_Source;
    end Has_Units;
 
+   ----------------
+   -- Is_Generic --
+   ----------------
+
+   function Is_Generic
+     (Self : Object; Index : Natural := 1) return Boolean is
+   begin
+      if Self.Kind (Index) = S_Spec then
+         Update (Self);
+         return Registry.Shared.Get (Self).CU_Map (Index).Is_Generic;
+
+      elsif Self.Has_Other_Part then
+         declare
+            OP : constant Object := Self.Other_Part;
+         begin
+            Update (OP);
+            return Registry.Shared.Get (OP).CU_Map (Index).Is_Generic;
+         end;
+
+      else
+         return False;
+      end if;
+   end Is_Generic;
+
    ---------
    -- Key --
    ---------
@@ -332,7 +356,8 @@ package body GPR2.Source is
                      Withed_Units => CU.Withed_Units,
                      Is_Sep_From  => (if CU.Is_Separate
                                       then CU.Is_Separate_From
-                                      else No_Name));
+                                      else No_Name),
+                     Is_Generic   => CU.Is_Generic);
 
                   New_CU_Map.Insert (New_CU.Index, New_CU);
                end;

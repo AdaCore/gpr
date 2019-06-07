@@ -106,6 +106,10 @@ package GPR2.Source is
                  and then Self.Has_Compilation_Unit_At (Index);
    --  Returns the unit name for the source Self at Index (default = 1)
 
+   function Is_Generic
+     (Self : Object; Index : Natural := 1) return Boolean;
+   --  Returns True if Self is a generic unit
+
    function With_Clauses
      (Self  : Object;
       Index : Natural := 1) return Source_Reference.Identifier.Set.Object

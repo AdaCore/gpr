@@ -112,15 +112,16 @@ package body GPR2.Source.Parser is
                      end case;
                   end Process_Defining_Name;
 
+                  U_Prelude  : constant Ada_Node_List :=
+                                 Node.As_Compilation_Unit.F_Prelude;
+                  U_Body     : constant Ada_Node :=
+                                 Node.As_Compilation_Unit.F_Body;
+
                   U_Name        : Unbounded_String;
                   U_Kind        : Kind_Type;
                   U_Withed      : Source_Reference.Identifier.Set.Object;
                   U_Is_Sep_From : Unbounded_String;
-
-                  U_Prelude : constant Ada_Node_List :=
-                                Node.As_Compilation_Unit.F_Prelude;
-                  U_Body    : constant Ada_Node :=
-                                Node.As_Compilation_Unit.F_Body;
+                  U_Is_Generic  : Boolean := False;
 
                begin
                   if U_Prelude.Is_Null or else U_Body.Is_Null then
@@ -142,6 +143,7 @@ package body GPR2.Source.Parser is
                         else
                            U_Name := U_Name & (+".") & (+To_String (UN));
                         end if;
+
                         Is_First_Iteration := False;
                      end loop;
                   exception
@@ -174,6 +176,13 @@ package body GPR2.Source.Parser is
                         case Node.As_Compilation_Unit.P_Unit_Kind is
                            when Analysis_Unit_Kind'(Unit_Specification) =>
                               U_Kind := S_Spec;
+
+                              if U_Body.As_Library_Item.F_Item.Kind
+                                = Ada_Generic_Package_Decl
+                              then
+                                 U_Is_Generic := True;
+                              end if;
+
                            when Analysis_Unit_Kind'(Unit_Body)          =>
                               U_Kind := S_Body;
                         end case;
@@ -216,7 +225,8 @@ package body GPR2.Source.Parser is
                         Index        => Index,
                         Kind         => U_Kind,
                         Withed_Units => U_Withed,
-                        Is_Sep_From  => Optional_Name_Type (-U_Is_Sep_From)));
+                        Is_Sep_From  => Optional_Name_Type (-U_Is_Sep_From),
+                        Is_Generic   => U_Is_Generic));
                end;
 
                return Over;

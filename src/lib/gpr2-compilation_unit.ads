@@ -65,7 +65,8 @@ package GPR2.Compilation_Unit is
       Index        : Positive;
       Kind         : Kind_Type;
       Withed_Units : Source_Reference.Identifier.Set.Object;
-      Is_Sep_From  : Optional_Name_Type) return Object;
+      Is_Sep_From  : Optional_Name_Type;
+      Is_Generic   : Boolean) return Object;
 
    function Unit_Name (Self : Object) return Name_Type
      with Pre => Self /= Undefined;
@@ -93,6 +94,10 @@ package GPR2.Compilation_Unit is
    --  If this compilation unit is a separate, returns its parent unit, else
    --  returns an empty string.
 
+   function Is_Generic (Self : Object) return Boolean
+     with Pre => Self /= Undefined;
+   --  Returns True if Self is a generic unit
+
 private
 
    use Ada.Strings.Unbounded;
@@ -103,9 +108,11 @@ private
       Kind         : Kind_Type;
       Withed_Units : Source_Reference.Identifier.Set.Object;
       Is_Sep_From  : Unbounded_String;
+      Is_Generic   : Boolean;
    end record
      with Dynamic_Predicate =>
-       Length (Is_Sep_From) = 0 or else Kind = S_Separate;
+       (Length (Is_Sep_From) = 0 or else Kind = S_Separate)
+       and then (if Is_Generic then Kind = S_Spec);
    --  Note that in GPR2 we have a distinction between sources, that may
    --  define either the spec or body/ies for a unit - those definitions are
    --  represented as Compil_Unit records, and the unit itself which
@@ -116,19 +123,22 @@ private
                          Index        => 0,
                          Kind         => S_Spec,
                          Withed_Units => <>,
-                         Is_Sep_From  => <>);
+                         Is_Sep_From  => <>,
+                         Is_Generic   => False);
 
    function Create
      (Unit_Name    : Name_Type;
       Index        : Positive;
       Kind         : Kind_Type;
       Withed_Units : Source_Reference.Identifier.Set.Object;
-      Is_Sep_From  : Optional_Name_Type) return Object is
+      Is_Sep_From  : Optional_Name_Type;
+      Is_Generic   : Boolean) return Object is
      (Object'(Unit_Name    => To_Unbounded_String (String (Unit_Name)),
               Index        => Index,
               Kind         => Kind,
               Withed_Units => Withed_Units,
-              Is_Sep_From  => To_Unbounded_String (String (Is_Sep_From))));
+              Is_Sep_From  => To_Unbounded_String (String (Is_Sep_From)),
+              Is_Generic   => Is_Generic));
 
    function Unit_Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.Unit_Name)));
@@ -149,5 +159,8 @@ private
      (Self : Object) return Source_Reference.Identifier.Set.Object
    is
      (Self.Withed_Units);
+
+   function Is_Generic (Self : Object) return Boolean is
+      (Self.Is_Generic);
 
 end GPR2.Compilation_Unit;
