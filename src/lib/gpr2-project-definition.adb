@@ -252,7 +252,7 @@ package body GPR2.Project.Definition is
                   Inserted => Is_Inserted);
 
                if not Is_Inserted then
-                  Ada_Naming_Exceptions.Reference (Source).Append (A);
+                  Ada_Naming_Exceptions (Insert_Position).Append (A);
                end if;
             end;
          end loop;
