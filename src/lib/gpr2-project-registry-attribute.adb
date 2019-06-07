@@ -419,7 +419,9 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Default              => Create (Value_Type (Locally_Removed_Files)),
+      Default_Is_Reference => True);
 
    --  source_list_file
    Store_Insert
