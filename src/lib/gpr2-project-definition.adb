@@ -216,6 +216,10 @@ package body GPR2.Project.Definition is
       Interface_Found       : Boolean := False;
       Interface_Sources     : Source_Path_To_Sloc.Map;
       Language_Compilable   : Name_Boolean_Map.Map;
+      Src_Dir_Set           : Source.Set.Object;
+      --  Sources from one directory defined in one item of the Source_Dirs
+      --  attribute. Need to avoid source duplications in Source_Dirs items
+      --  containing '*' character.
 
       Tree                  : constant not null access Project.Tree.Object :=
                                 Def.Tree;
@@ -927,18 +931,53 @@ package body GPR2.Project.Definition is
                         Is_Compilable        => Is_Compilable (Language));
                   end;
 
-                  if Def.Sources.Contains (Project_Source) then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Warning,
-                           """" & String (File.Simple_Name)
-                           & """ is found in several source directories",
-                           Source_Dir_Ref));
-                     return;
+                  --  Check source duplication and insert if possible or
+                  --  replace if necessary.
 
-                  else
-                     Def.Sources.Insert (Project_Source);
-                  end if;
+                  declare
+                     CS : constant Project.Source.Set.Cursor :=
+                            Src_Dir_Set.Find (Project_Source);
+                  begin
+                     if Project.Source.Set.Has_Element (CS) then
+                        if Src_Dir_Set (CS).Has_Naming_Exception
+                          < Project_Source.Has_Naming_Exception
+                        then
+                           --  We are here only when
+                           --  Src_Dir_Set (CS).Has_Naming_Exception is False
+                           --  and Project_Source.Has_Naming_Exception is True.
+                           --  Module with naming exception has priority after
+                           --  default naming. Replace the old source with the
+                           --  new one.
+
+                           Src_Dir_Set.Replace (Project_Source);
+
+                        elsif Src_Dir_Set (CS).Has_Naming_Exception
+                          = Project_Source.Has_Naming_Exception
+                        then
+                           --  We are here when duplicated sources have naming
+                           --  exception or does not have it both.
+
+                           Tree.Append_Message
+                             (Message.Create
+                                (Message.Error,
+                                 '"' & String (File.Simple_Name) & '"'
+                                 & " is found in several source directories",
+                                 Source_Dir_Ref));
+                           return;
+
+                        else
+                           --  Remains condition when old source has naming
+                           --  exception but new one does not have it. We don't
+                           --  need to do anything because of more priority
+                           --  source already in its place.
+
+                           return;
+                        end if;
+
+                     else
+                        Src_Dir_Set.Insert (Project_Source);
+                     end if;
+                  end;
 
                   --  For Ada, register the Unit object into the view
 
@@ -1527,6 +1566,9 @@ package body GPR2.Project.Definition is
                   Handle_Directory
                     (Root & OS_Lib.Directory_Separator & Dir.Text);
                end if;
+
+               Def.Sources.Union (Src_Dir_Set);
+               Src_Dir_Set.Clear;
             end loop;
          end Populate_Sources;
       end if;
