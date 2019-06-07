@@ -141,6 +141,15 @@ package body GPR2.Source is
       return Registry.Shared.Get (Self).CU_Map.Contains (Index);
    end Has_Compilation_Unit_At;
 
+   --------------------
+   -- Has_Other_Part --
+   --------------------
+
+   function Has_Other_Part (Self : Object) return Boolean is
+   begin
+      return Registry.Shared.Get (Self).Other_Part /= GPR2.Path_Name.Undefined;
+   end Has_Other_Part;
+
    ---------------------
    -- Has_Single_Unit --
    ---------------------
@@ -215,15 +224,8 @@ package body GPR2.Source is
    ----------------
 
    function Other_Part (Self : Object) return Object is
-      Other_Part : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
    begin
-      Other_Part := Registry.Shared.Get (Self).Other_Part;
-
-      if Other_Part = GPR2.Path_Name.Undefined then
-         return Undefined;
-      else
-         return Object'(Pathname => Other_Part);
-      end if;
+      return Object'(Pathname => Registry.Shared.Get (Self).Other_Part);
    end Other_Part;
 
    ---------------

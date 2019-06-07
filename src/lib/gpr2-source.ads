@@ -133,9 +133,12 @@ package GPR2.Source is
                  or else Self.Has_Compilation_Unit_At (Index));
    --  Returns the kind for the source Self
 
+   function Has_Other_Part (Self : Object) return Boolean;
+   --  Returns True if Self has an other part
+
    function Other_Part (Self : Object) return Object
-     with Pre => Self /= Undefined;
-   --  Returns the other part for the source Self.
+     with Pre => Self /= Undefined and then Self.Has_Other_Part;
+   --  Returns the other part for the source Self
 
    procedure Set_Other_Part (Self : Object; Other_Part : Object)
      with Pre => Self.Is_Defined and then Other_Part.Is_Defined;

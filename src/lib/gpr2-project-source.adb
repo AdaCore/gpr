@@ -276,7 +276,7 @@ package body GPR2.Project.Source is
    begin
       return Self.Source.Has_Units
         and then Self.Source.Has_Single_Unit
-        and then Self.Source.Other_Part.Is_Defined;
+        and then Self.Source.Has_Other_Part;
    end Has_Other_Part;
 
    -------------------
