@@ -5,14 +5,14 @@ A        K_STANDARD
        > e-obj/pcka.ads.stderr
        > e-obj/pcka.adt
        > e-obj/pcka.ali
-       > e-obj/pcka.prep
+       > e-obj/pcka.ads.prep
     > a-src/repl.ads
        > e-obj/repl.o
        > e-obj/repl.ads.stdout
        > e-obj/repl.ads.stderr
        > e-obj/repl.adt
        > e-obj/repl.ali
-       > e-obj/repl.prep
+       > e-obj/repl.ads.prep
 Demo     K_LIBRARY
     > src/code.ads
        > e-obj/code.o
@@ -21,7 +21,7 @@ Demo     K_LIBRARY
        > e-obj/code.adt
        > e-lib/code.ali
        > e-obj/code.ali
-       > e-obj/code.prep
+       > e-obj/code.ads.prep
     > src/repl.ads
        > e-obj/repl.o
        > e-obj/repl.ads.stdout
@@ -29,11 +29,11 @@ Demo     K_LIBRARY
        > e-obj/repl.adt
        > e-lib/repl.ali
        > e-obj/repl.ali
-       > e-obj/repl.prep
+       > e-obj/repl.ads.prep
     > a-src/pcka.ads
        > e-obj/pcka.o
        > e-obj/pcka.ads.stdout
        > e-obj/pcka.ads.stderr
        > e-obj/pcka.adt
        > e-obj/pcka.ali
-       > e-obj/pcka.prep
+       > e-obj/pcka.ads.prep
