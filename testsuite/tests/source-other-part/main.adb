@@ -57,12 +57,11 @@ procedure Main is
       for Source of View.Sources loop
          declare
             S : constant GPR2.Source.Object := Source.Source;
-            O : constant GPR2.Source.Object := S.Other_Part;
          begin
             Text_IO.Put_Line
               (Filter_Filename (S.Path_Name.Value)
                & " -> "
-               & (if O.Is_Defined
+               & (if S.Has_Other_Part
                   then Filter_Filename (S.Other_Part.Path_Name.Value)
                   else "undefined"));
 
