@@ -104,11 +104,11 @@ private
 
    type Object is tagged record
       Unit_Name    : Unbounded_String;
-      Index        : Natural;
-      Kind         : Kind_Type;
+      Index        : Natural   := 0;
+      Kind         : Kind_Type := S_Spec;
       Withed_Units : Source_Reference.Identifier.Set.Object;
       Is_Sep_From  : Unbounded_String;
-      Is_Generic   : Boolean;
+      Is_Generic   : Boolean   := False;
    end record
      with Dynamic_Predicate =>
        (Length (Is_Sep_From) = 0 or else Kind = S_Separate)
@@ -118,13 +118,7 @@ private
    --  represented as Compil_Unit records, and the unit itself which
    --  is just a name (the Unit_Name).
 
-   Undefined : constant Object :=
-                 Object'(Unit_Name    => Null_Unbounded_String,
-                         Index        => 0,
-                         Kind         => S_Spec,
-                         Withed_Units => <>,
-                         Is_Sep_From  => <>,
-                         Is_Generic   => False);
+   Undefined : constant Object := (others => <>);
 
    function Create
      (Unit_Name    : Name_Type;
