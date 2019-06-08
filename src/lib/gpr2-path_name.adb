@@ -326,6 +326,32 @@ package body GPR2.Path_Name is
       return Directories.Exists (To_String (Self.Value));
    end Exists;
 
+   ----------
+   -- Name --
+   ----------
+
+   function Name
+     (Self      : Object;
+      Extension : Boolean := True) return Name_Type
+   is
+      Name : constant String := To_String (Self.As_Is);
+      Ext : Natural;
+   begin
+      if Extension then
+         return Name_Type (Name);
+      else
+         Ext := Strings.Fixed.Index (Name, ".", Going => Strings.Backward);
+
+         if Ext = 0 then
+            Ext := Name'Last;
+         else
+            Ext := Ext - 1;
+         end if;
+
+         return Name_Type (Name (Name'First .. Ext));
+      end if;
+   end Name;
+
    -------------------
    -- Relative_Path --
    -------------------

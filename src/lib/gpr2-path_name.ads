@@ -73,9 +73,12 @@ package GPR2.Path_Name is
    subtype Full_Name is String
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
 
-   function Name (Self : Object) return Name_Type
+   function Name (Self : Object; Extension : Boolean := True) return Name_Type
      with Pre => Self.Is_Defined;
-   --  Returns the original, untouched name used to create the object
+   --  Returns the original, untouched name used to create the object. If
+   --  Extension is set to False then the final extension is removed. Note that
+   --  this is not the base-name as the leading directory information is not
+   --  removed.
 
    function Value (Self : Object) return Full_Name
      with Pre => Self.Is_Defined;
@@ -166,9 +169,6 @@ private
 
    function Simple_Name (Self : Object) return GPR2.Simple_Name is
      (GPR2.Simple_Name (Ada.Directories.Simple_Name (To_String (Self.As_Is))));
-
-   function Name (Self : Object) return Name_Type is
-     (Name_Type (To_String (Self.As_Is)));
 
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name
