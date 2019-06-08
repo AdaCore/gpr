@@ -954,12 +954,15 @@ package body GPRinstall.Install is
 
                Src := Source.Source;
                Atf := Source.Artifacts;
-               CUs := Src.Compilation_Units;
 
                if not Project.Is_Library
                  or else Project.Library_Standalone = No
                  or else Source.Is_Interface
                then
+                  if Src.Has_Units then
+                     CUs := Src.Compilation_Units;
+                  end if;
+
                   if Options.All_Sources
                     or else Source.Is_Interface
                     or else Src.Is_Generic
