@@ -228,7 +228,9 @@ package body GPR2.Project.Tree is
    begin
       --  Check runtime path
 
-      if CV.Check_Attribute (PRA.Runtime_Dir, "ada", RTD) then
+      if CV.Check_Attribute (PRA.Runtime_Dir, "ada", RTD)
+        and then RTD.Value.Text /= ""
+      then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
          --  and Object_Dir for the Runtime project view.
 
