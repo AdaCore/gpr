@@ -428,7 +428,7 @@ package body GPR2.Project.Definition is
                  and then Attr.Has_Value (Basename)
                then
                   Match := True;
-                  Kind  := S_Body;
+                  Kind  := S_Spec;
                end if;
 
                if Naming.Check_Attribute
@@ -445,7 +445,7 @@ package body GPR2.Project.Definition is
                            Attr.Value (Basename)));
                   else
                      Match := True;
-                     Kind  := S_Spec;
+                     Kind  := S_Body;
                   end if;
                end if;
             end if;
