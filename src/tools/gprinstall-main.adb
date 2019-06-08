@@ -591,7 +591,7 @@ begin
       if Options.Uninstall_Mode then
          if Options.Global_Install_Name.Default then
             Uninstall.Process
-              (Directories.Base_Name (String (Options.Project_File.Name)),
+              (String (Options.Project_File.Name (Extension => False)),
                Options);
          else
             Uninstall.Process (Options.Global_Install_Name.V.all, Options);
