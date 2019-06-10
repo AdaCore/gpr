@@ -164,10 +164,7 @@ package GPR2.Project.Pack is
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
          (if not Specification'Result.Is_Defined
-          then
-            not Self.Has_Attributes (Registry.Attribute.Spec)
-              and then
-            not Self.Has_Attributes (Registry.Attribute.Specification));
+          then not Self.Has_Attributes (Registry.Attribute.Spec));
    --  Handles Spec, Specification, this is only defined for the Ada language
 
    function Implementation
@@ -177,10 +174,7 @@ package GPR2.Project.Pack is
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
        Post =>
          (if not Implementation'Result.Is_Defined
-          then
-            not Self.Has_Attributes (Registry.Attribute.Body_N)
-              and then
-            not Self.Has_Attributes (Registry.Attribute.Implementation));
+          then not Self.Has_Attributes (Registry.Attribute.Body_N));
    --  Handles Body, Implementation, this is only defined for the Ada language
 
 private

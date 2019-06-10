@@ -148,11 +148,6 @@ package body GPR2.Project.Pack is
       if Self.Check_Attribute (Registry.Attribute.Body_N, Unit, Attr) then
          return Attr;
 
-      elsif Self.Check_Attribute
-              (Registry.Attribute.Implementation, Unit, Attr)
-      then
-         return Attr;
-
       else
          return Project.Attribute.Undefined;
       end if;
@@ -227,11 +222,6 @@ package body GPR2.Project.Pack is
       Attr : Project.Attribute.Object;
    begin
       if Self.Check_Attribute (Registry.Attribute.Spec, Unit, Attr) then
-         return Attr;
-
-      elsif Self.Check_Attribute
-        (Registry.Attribute.Specification, Unit, Attr)
-      then
          return Attr;
 
       else

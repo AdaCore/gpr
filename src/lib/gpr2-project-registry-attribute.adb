@@ -1142,7 +1142,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (Value_Type (Specification)),
+      Default_Is_Reference => True);
 
    --  naming.specification
    Store_Insert
@@ -1164,7 +1166,9 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create (Value_Type (Implementation)),
+      Default_Is_Reference => True);
 
    --  naming.implementation
    Store_Insert

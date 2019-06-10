@@ -178,10 +178,7 @@ package body GPR2.Project.Definition is
       procedure Fill_Ada_Naming_Exceptions (Set : Project.Attribute.Set.Object)
         with Pre =>
           (for all A of Set =>
-             A.Name.Text = PRA.Spec
-             or else A.Name.Text = PRA.Specification
-             or else A.Name.Text = PRA.Body_N
-             or else A.Name.Text = PRA.Implementation);
+             A.Name.Text = PRA.Spec or else A.Name.Text = PRA.Body_N);
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
       function Is_Compilable (Language : Name_Type) return Boolean;
@@ -780,7 +777,6 @@ package body GPR2.Project.Definition is
 
                         begin
                            Kind := (if Exc.Name.Text = PRA.Spec
-                                    or else Exc.Name.Text = PRA.Specification
                                     then S_Spec
                                     else S_Body);
                            --  May actually be a Separate, we cannot know until
@@ -852,16 +848,10 @@ package body GPR2.Project.Definition is
                            --  In this case we skip this source.
 
                            if (Kind = S_Spec
-                               and then
-                                 (Has_Conflict_NE (PRA.Spec)
-                                  or else
-                                  Has_Conflict_NE (PRA.Specification)))
+                               and then Has_Conflict_NE (PRA.Spec))
                              or else
                                (Kind = S_Body
-                                and then
-                                  (Has_Conflict_NE (PRA.Body_N)
-                                   or else
-                                   Has_Conflict_NE (PRA.Implementation)))
+                                and then Has_Conflict_NE (PRA.Body_N))
                            then
                               return;
                            end if;
@@ -1330,14 +1320,6 @@ package body GPR2.Project.Definition is
                   for Attr of Naming.Attributes (PRA.Body_N) loop
                      Add (Attr);
                   end loop;
-
-                  for Attr of Naming.Attributes (PRA.Specification) loop
-                     Add (Attr);
-                  end loop;
-
-                  for Attr of Naming.Attributes (PRA.Implementation) loop
-                     Add (Attr);
-                  end loop;
                end Handle_Naming;
             end if;
          end Handle;
@@ -1378,9 +1360,7 @@ package body GPR2.Project.Definition is
       --  Setup the naming exceptions look-up table if needed
 
       Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Spec));
-      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Specification));
       Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Body_N));
-      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Implementation));
 
       --  Record units being set as interfaces, first for Library_Interface
       --  which contains unit names.
