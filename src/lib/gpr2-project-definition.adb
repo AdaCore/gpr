@@ -131,6 +131,12 @@ package body GPR2.Project.Definition is
       --  Used for the Ada_Naming_Exceptions container which maps a filename to
       --  the list of naming attributes (Body/Spec) that reference it.
 
+      package Naming_Exceptions_Usage is new
+        Ada.Containers.Indefinite_Ordered_Maps
+          (Key_Type     => Value_Type,
+           Element_Type => Source_Reference.Value.Object,
+           "="          => Source_Reference.Value."=");
+
       procedure Register_Units
         (Source            : Project.Source.Object;
          Compilation_Units : Compilation_Unit.List.Object)
@@ -181,6 +187,13 @@ package body GPR2.Project.Definition is
              A.Name.Text = PRA.Spec or else A.Name.Text = PRA.Body_N);
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
+      procedure Fill_Other_Naming_Exceptions
+        (Set : Project.Attribute.Set.Object)
+        with Pre =>
+          (for all A of Set =>
+             A.Name.Text = PRA.Specification_Exceptions
+             or else A.Name.Text = PRA.Implementation_Exceptions);
+
       function Is_Compilable (Language : Name_Type) return Boolean;
       --  Check whether the language is compilable on the current View. This
       --  includes information provided by the Tree (Driver attribute). Note
@@ -226,10 +239,18 @@ package body GPR2.Project.Definition is
                                 Tree.Log_Messages.Count;
 
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
+      Ada_Except_Usage      : Naming_Exceptions_Usage.Map;
+      Other_Except_Usage    : Naming_Exceptions_Usage.Map;
 
       Visited_Dirs          : Containers.Value_Type_Set.Set;
       --  List of already visited directories to avoid looking twice at the
       --  same one.
+
+      function Ada_Use_Index (Attr : Attribute.Object) return Value_Type is
+        (Attr.Index.Text & Characters.Handling.To_Upper (Attr.Name.Text (1)));
+      --  Index created from Body or Spec attribute index i.e. Ada unit name
+      --  and first character of the attribute name i.e. B or S. It is used to
+      --  distinct body naming exception from spec naming exception.
 
       --------------------------------
       -- Fill_Ada_Naming_Exceptions --
@@ -257,9 +278,37 @@ package body GPR2.Project.Definition is
                if not Is_Inserted then
                   Ada_Naming_Exceptions (Insert_Position).Append (A);
                end if;
+
+               Ada_Except_Usage.Insert (Ada_Use_Index (A), A.Value);
             end;
          end loop;
       end Fill_Ada_Naming_Exceptions;
+
+      ----------------------------------
+      -- Fill_Other_Naming_Exceptions --
+      ----------------------------------
+
+      procedure Fill_Other_Naming_Exceptions
+        (Set : Project.Attribute.Set.Object)
+      is
+         CE : Naming_Exceptions_Usage.Cursor;
+         OK : Boolean;
+      begin
+         for A of Set loop
+            for V of A.Values loop
+               Other_Except_Usage.Insert (V.Text, V, CE, OK);
+
+               if not OK then
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        "File """ & V.Text
+                        & """ specified in naming exception more than once",
+                        V));
+               end if;
+            end loop;
+         end loop;
+      end Fill_Other_Naming_Exceptions;
 
       ----------------------
       -- Handle_Directory --
@@ -426,25 +475,19 @@ package body GPR2.Project.Definition is
                then
                   Match := True;
                   Kind  := S_Spec;
-               end if;
 
-               if Naming.Check_Attribute
+               elsif Naming.Check_Attribute
                     (PRA.Implementation_Exceptions,
                      String (Language),
                      Result => Attr)
                  and then Attr.Has_Value (Basename)
                then
-                  if Match then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "the same file cannot be a specification and an"
-                           & " implementation",
-                           Attr.Value (Basename)));
-                  else
-                     Match := True;
-                     Kind  := S_Body;
-                  end if;
+                  Match := True;
+                  Kind  := S_Body;
+               end if;
+
+               if Match then
+                  Other_Except_Usage.Delete (Basename);
                end if;
             end if;
          end Check_Naming_Exceptions;
@@ -782,6 +825,8 @@ package body GPR2.Project.Definition is
                                     else S_Body);
                            --  May actually be a Separate, we cannot know until
                            --  we parse the file.
+
+                           Ada_Except_Usage.Delete (Ada_Use_Index (Exc));
 
                            Compilation_Units.Append
                              (Compilation_Unit.Create
@@ -1363,6 +1408,11 @@ package body GPR2.Project.Definition is
       Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Spec));
       Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Body_N));
 
+      Fill_Other_Naming_Exceptions
+        (Naming.Attributes (PRA.Specification_Exceptions));
+      Fill_Other_Naming_Exceptions
+        (Naming.Attributes (PRA.Implementation_Exceptions));
+
       --  Record units being set as interfaces, first for Library_Interface
       --  which contains unit names.
 
@@ -1540,6 +1590,32 @@ package body GPR2.Project.Definition is
                Src_Dir_Set.Clear;
             end loop;
          end Populate_Sources;
+
+         for C in Ada_Except_Usage.Iterate loop
+            declare
+               Key : constant Value_Type := Naming_Exceptions_Usage.Key (C);
+            begin
+               pragma Assert (Key (Key'Last) in 'B' | 'S', Key);
+
+               Tree.Append_Message
+                 (Message.Create
+                    (Message.Error,
+                     "source file """
+                     & Naming_Exceptions_Usage.Element (C).Text
+                     & """ for unit """ & Key (Key'First .. Key'Last - 1)
+                     --  Last character in Key is 'B' - Body or 'S' - Spec
+                     & """ not found",
+                     Naming_Exceptions_Usage.Element (C)));
+            end;
+         end loop;
+
+         for V of Other_Except_Usage loop
+            Tree.Append_Message
+              (Message.Create
+                 (Message.Error,
+                  "source file """ & V.Text & """ not found",
+                  V));
+         end loop;
       end if;
 
       --  Finally get the sources from the extended project if defined. We

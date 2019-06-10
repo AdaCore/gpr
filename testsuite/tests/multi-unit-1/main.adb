@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GPR2;
@@ -75,7 +76,9 @@ begin
    end loop;
 
 exception
-   when others =>
+   when E : others =>
+      Text_IO.Put_Line (Exceptions.Exception_Information (E));
+
       for M of Tree.Log_Messages.all loop
          Text_IO.Put_Line (M.Format);
       end loop;
