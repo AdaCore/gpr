@@ -67,13 +67,8 @@ package body GPR2.Project.Pack is
       Language : Name_Type) return Project.Attribute.Object
    is
       Lang : constant Value_Type := Value_Type (Language);
-      Attr : Project.Attribute.Object;
    begin
-      if Self.Check_Attribute (Registry.Attribute.Body_Suffix, Lang, Attr) then
-         return Attr;
-      else
-         return Project.Attribute.Undefined;
-      end if;
+      return Self.Attribute (Registry.Attribute.Body_Suffix, Lang);
    end Body_Suffix;
 
    ---------------------
@@ -141,16 +136,9 @@ package body GPR2.Project.Pack is
 
    function Implementation
      (Self : Object;
-      Unit : Value_Type) return Project.Attribute.Object
-   is
-      Attr : Project.Attribute.Object;
+      Unit : Value_Type) return Project.Attribute.Object is
    begin
-      if Self.Check_Attribute (Registry.Attribute.Body_N, Unit, Attr) then
-         return Attr;
-
-      else
-         return Project.Attribute.Undefined;
-      end if;
+      return Self.Attribute (Registry.Attribute.Body_N, Unit);
    end Implementation;
 
    ----------
@@ -171,15 +159,8 @@ package body GPR2.Project.Pack is
       Language : Name_Type) return Project.Attribute.Object
    is
       Lang : constant Value_Type := Value_Type (Language);
-      Attr : Project.Attribute.Object;
    begin
-      if Self.Check_Attribute
-        (Registry.Attribute.Separate_Suffix, Lang, Attr)
-      then
-         return Attr;
-      else
-         return Project.Attribute.Undefined;
-      end if;
+      return Self.Attribute (Registry.Attribute.Separate_Suffix, Lang);
    end Separate_Suffix;
 
    ----------------------------
@@ -202,13 +183,8 @@ package body GPR2.Project.Pack is
       Language : Name_Type) return Project.Attribute.Object
    is
       Lang : constant Value_Type := Value_Type (Language);
-      Attr : Project.Attribute.Object;
    begin
-      if Self.Check_Attribute (Registry.Attribute.Spec_Suffix, Lang, Attr) then
-         return Attr;
-      else
-         return Project.Attribute.Undefined;
-      end if;
+      return Self.Attribute (Registry.Attribute.Spec_Suffix, Lang);
    end Spec_Suffix;
 
    -------------------
@@ -217,16 +193,9 @@ package body GPR2.Project.Pack is
 
    function Specification
      (Self : Object;
-      Unit : Value_Type) return Project.Attribute.Object
-   is
-      Attr : Project.Attribute.Object;
+      Unit : Value_Type) return Project.Attribute.Object is
    begin
-      if Self.Check_Attribute (Registry.Attribute.Spec, Unit, Attr) then
-         return Attr;
-
-      else
-         return Project.Attribute.Undefined;
-      end if;
+      return Self.Attribute (Registry.Attribute.Spec, Unit);
    end Specification;
 
    --------------

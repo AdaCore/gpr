@@ -481,45 +481,45 @@ package body GPR2.Project.Definition is
             Match := False;
             Kind  := S_Spec;
 
-            Check_Spec : declare
-               Spec_Suffix : constant Project.Attribute.Object :=
-                               Naming.Spec_Suffix (Language);
-            begin
-               if Spec_Suffix.Is_Defined
-                 and then Ends_With (Basename, Spec_Suffix.Value.Text)
-               then
-                  Match := True;
-                  Kind  := S_Spec;
-                  return;
-               end if;
-            end Check_Spec;
+            if Naming.Has_Spec_Suffix (Language) then
+               Check_Spec : declare
+                  Spec_Suffix : constant Project.Attribute.Object :=
+                                  Naming.Spec_Suffix (Language);
+               begin
+                  if Ends_With (Basename, Spec_Suffix.Value.Text) then
+                     Match := True;
+                     Kind  := S_Spec;
+                     return;
+                  end if;
+               end Check_Spec;
+            end if;
 
-            Check_Body : declare
-               Body_Suffix : constant Project.Attribute.Object :=
-                               Naming.Body_Suffix (Language);
-            begin
-               if Body_Suffix.Is_Defined
-                 and then Ends_With (Basename, Body_Suffix.Value.Text)
-               then
-                  Match := True;
-                  Kind  := S_Body;
-                  --  May be actually a Separate, we cannot know until
-                  --  we parse the file.
+            if Naming.Has_Body_Suffix (Language) then
+               Check_Body : declare
+                  Body_Suffix : constant Project.Attribute.Object :=
+                                  Naming.Body_Suffix (Language);
+               begin
+                  if Ends_With (Basename, Body_Suffix.Value.Text) then
+                     Match := True;
+                     Kind  := S_Body;
+                     --  May be actually a Separate, we cannot know until
+                     --  we parse the file.
 
-                  return;
-               end if;
-            end Check_Body;
+                     return;
+                  end if;
+               end Check_Body;
+            end if;
 
             --  Separate_Suffix is only valid for Ada
 
-            if Language = "Ada" then
+            if Language = "Ada"
+              and then Naming.Has_Separate_Suffix (Language)
+            then
                Check_Separate : declare
                   Sep_Suffix : constant Project.Attribute.Object :=
                                  Naming.Separate_Suffix (Language);
                begin
-                  if Sep_Suffix.Is_Defined
-                    and then Ends_With (Basename, Sep_Suffix.Value.Text)
-                  then
+                  if Ends_With (Basename, Sep_Suffix.Value.Text) then
                      Match := True;
                      Kind  := S_Separate;
                   end if;

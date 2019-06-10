@@ -111,70 +111,81 @@ package GPR2.Project.Pack is
    --  To ease the use of some attributes (some have synonyms for example)
    --  below are direct access to them.
 
+   function Has_Spec_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Boolean
+     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+   --  Returns True is package naming Self contains a Spec_Suffix attribute
+
    function Spec_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
-       Post =>
-         (if not Spec_Suffix'Result.Is_Defined
-          then
-            not Self.Has_Attributes
-                  (Registry.Attribute.Spec_Suffix,
-                   Value_Type (Language))
-              and then
-            not Self.Has_Attributes
-                  (Registry.Attribute.Specification_Suffix,
-                   Value_Type (Language)));
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+               and then Self.Has_Spec_Suffix (Language),
+       Post => Spec_Suffix'Result.Is_Defined;
    --  Handles Spec_Suffix and Specification_Suffix
+
+   function Has_Body_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Boolean
+     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+   --  Returns True is package naming Self contains a Body_Suffix attribute
 
    function Body_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
-       Post =>
-         (if not Body_Suffix'Result.Is_Defined
-          then
-            not Self.Has_Attributes
-                  (Registry.Attribute.Body_Suffix,
-                   Value_Type (Language))
-              and then
-            not Self.Has_Attributes
-                  (Registry.Attribute.Implementation_Suffix,
-                   Value_Type (Language)));
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+               and then Self.Has_Body_Suffix (Language),
+       Post => Body_Suffix'Result.Is_Defined;
    --  Handles Body_Suffix and Implementation_Suffix
+
+   function Has_Separate_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Boolean
+     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+   --  Returns True is package naming Self contains a Separate_Suffix attribute
 
    function Separate_Suffix
      (Self     : Object;
       Language : Name_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
-       Post =>
-         (not Separate_Suffix'Result.Is_Defined
-          xor Self.Has_Attributes
-            (Registry.Attribute.Separate_Suffix,
-             Value_Type (Language)));
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+               and then Self.Has_Separate_Suffix (Language),
+       Post => Separate_Suffix'Result.Is_Defined;
    --  Handles Separate_Suffix
+
+   function Has_Specification
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+   --  Return True if package Naming Self has an attribute Specification or
+   --  Spec defined for the given unit.
 
    function Specification
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
-       Post =>
-         (if not Specification'Result.Is_Defined
-          then not Self.Has_Attributes (Registry.Attribute.Spec));
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+               and then Self.Has_Specification (Unit),
+       Post => Specification'Result.Is_Defined;
    --  Handles Spec, Specification, this is only defined for the Ada language
+
+   function Has_Implementation
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+   --  Return True if package Naming Self has an attribute Implementation or
+   --  Body defined for the given unit.
 
    function Implementation
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming),
-       Post =>
-         (if not Implementation'Result.Is_Defined
-          then not Self.Has_Attributes (Registry.Attribute.Body_N));
+       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+               and then Self.Has_Implementation (Unit),
+       Post => Implementation'Result.Is_Defined;
    --  Handles Body, Implementation, this is only defined for the Ada language
 
 private
@@ -186,6 +197,39 @@ private
       Attrs : Project.Attribute.Set.Object;
       Vars  : Project.Variable.Set.Object;
    end record;
+
+   function Has_Separate_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Boolean
+   is
+     (Self.Has_Attributes
+        (Registry.Attribute.Separate_Suffix, Value_Type (Language)));
+
+   function Has_Spec_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Boolean
+   is
+     (Self.Has_Attributes
+        (Registry.Attribute.Spec_Suffix, Value_Type (Language)));
+
+   function Has_Body_Suffix
+     (Self     : Object;
+      Language : Name_Type) return Boolean
+   is
+     (Self.Has_Attributes
+        (Registry.Attribute.Body_Suffix, Value_Type (Language)));
+
+   function Has_Implementation
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+   is
+     (Self.Has_Attributes (Registry.Attribute.Body_N, Unit));
+
+   function Has_Specification
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+   is
+     (Self.Has_Attributes (Registry.Attribute.Spec, Unit));
 
    Undefined : constant Object :=
                  Object'(Source_Reference.Undefined with others => <>);
