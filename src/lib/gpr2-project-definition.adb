@@ -438,7 +438,8 @@ package body GPR2.Project.Definition is
                      Tree.Append_Message
                        (Message.Create
                           (Message.Error,
-                           "the same file cannot be a source and a template",
+                           "the same file cannot be a specification and an"
+                           & " implementation",
                            Attr.Value (Basename)));
                   else
                      Match := True;
