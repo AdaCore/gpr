@@ -47,6 +47,9 @@ package body GPR2.Project.Definition is
    use Ada;
    use GNAT;
 
+   package PRA renames Project.Registry.Attribute;
+   package PRP renames Project.Registry.Pack;
+
    Builtin_Naming_Package : Project.Pack.Object;
    --  The default naming package to use if no Naming package specified in the
    --  project and no configuration file loaded. We at least want to handle in
@@ -61,8 +64,8 @@ package body GPR2.Project.Definition is
 
    function Naming_Package (Def : Data) return Project.Pack.Object is
    begin
-      if Def.Has_Packages (Registry.Pack.Naming) then
-         return Def.Packs (Registry.Pack.Naming);
+      if Def.Has_Packages (PRP.Naming) then
+         return Def.Packs (PRP.Naming);
 
       elsif Def.Tree.Has_Configuration then
          return Def.Tree.Configuration.Corresponding_View.Naming_Package;
@@ -175,10 +178,10 @@ package body GPR2.Project.Definition is
       procedure Fill_Ada_Naming_Exceptions (Set : Project.Attribute.Set.Object)
         with Pre =>
           (for all A of Set =>
-             A.Name.Text = Registry.Attribute.Spec
-             or else A.Name.Text = Registry.Attribute.Specification
-             or else A.Name.Text = Registry.Attribute.Body_N
-             or else A.Name.Text = Registry.Attribute.Implementation);
+             A.Name.Text = PRA.Spec
+             or else A.Name.Text = PRA.Specification
+             or else A.Name.Text = PRA.Body_N
+             or else A.Name.Text = PRA.Implementation);
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
       function Is_Compilable (Language : Name_Type) return Boolean;
@@ -190,8 +193,7 @@ package body GPR2.Project.Definition is
       --  Package Naming for the view
 
       Dot_Repl : constant String :=
-                   Naming.Attribute
-                     (Registry.Attribute.Dot_Replacement).Value.Text;
+                   Naming.Attribute (PRA.Dot_Replacement).Value.Text;
       --  Get Dot_Replacement value
 
       Is_Standard_GNAT_Naming : constant  Boolean :=
@@ -420,7 +422,7 @@ package body GPR2.Project.Definition is
 
             else
                if Naming.Check_Attribute
-                    (Registry.Attribute.Specification_Exceptions,
+                    (PRA.Specification_Exceptions,
                      String (Language),
                      Result => Attr)
                  and then Attr.Has_Value (Basename)
@@ -430,7 +432,7 @@ package body GPR2.Project.Definition is
                end if;
 
                if Naming.Check_Attribute
-                    (Registry.Attribute.Implementation_Exceptions,
+                    (PRA.Implementation_Exceptions,
                      String (Language),
                      Result => Attr)
                  and then Attr.Has_Value (Basename)
@@ -768,8 +770,6 @@ package body GPR2.Project.Definition is
 
                      for Exc of Ada_Naming_Exceptions (Basename) loop
                         declare
-                           use Registry.Attribute;
-
                            Unit_Name : constant Name_Type :=
                                          Name_Type (Exc.Index.Text);
 
@@ -779,8 +779,8 @@ package body GPR2.Project.Definition is
                                       else 1);
 
                         begin
-                           Kind := (if Exc.Name.Text = Spec
-                                    or else Exc.Name.Text = Specification
+                           Kind := (if Exc.Name.Text = PRA.Spec
+                                    or else Exc.Name.Text = PRA.Specification
                                     then S_Spec
                                     else S_Body);
                            --  May actually be a Separate, we cannot know until
@@ -853,17 +853,15 @@ package body GPR2.Project.Definition is
 
                            if (Kind = S_Spec
                                and then
-                                 (Has_Conflict_NE (Registry.Attribute.Spec)
+                                 (Has_Conflict_NE (PRA.Spec)
                                   or else
-                                  Has_Conflict_NE (Registry.Attribute.
-                                                       Specification)))
+                                  Has_Conflict_NE (PRA.Specification)))
                              or else
                                (Kind = S_Body
                                 and then
-                                  (Has_Conflict_NE (Registry.Attribute.Body_N)
+                                  (Has_Conflict_NE (PRA.Body_N)
                                    or else
-                                   Has_Conflict_NE (Registry.Attribute.
-                                                        Implementation)))
+                                   Has_Conflict_NE (PRA.Implementation)))
                            then
                               return;
                            end if;
@@ -1122,9 +1120,6 @@ package body GPR2.Project.Definition is
          ----------------
 
          function Check_View (View : Project.View.Object) return Boolean is
-            package PRA renames Project.Registry.Attribute;
-            package PRP renames Project.Registry.Pack;
-
             Pck : Project.Pack.Object;
             Att : Project.Attribute.Object;
          begin
@@ -1295,53 +1290,52 @@ package body GPR2.Project.Definition is
             --  The signature to detect the source change is based on the
             --  attributes which are used to compute the actual source set.
 
-            Add (Registry.Attribute.Languages);
-            Add (Registry.Attribute.Source_Dirs);
-            Add (Registry.Attribute.Source_Files);
-            Add (Registry.Attribute.Excluded_Source_Files);
-            Add (Registry.Attribute.Excluded_Source_List_File);
-            Add (Registry.Attribute.Source_List_File);
+            Add (PRA.Languages);
+            Add (PRA.Source_Dirs);
+            Add (PRA.Source_Files);
+            Add (PRA.Excluded_Source_Files);
+            Add (PRA.Excluded_Source_List_File);
+            Add (PRA.Source_List_File);
 
             --  Handle also the naming definitions
 
-            if Data.Packs.Contains (Project.Registry.Pack.Naming) then
+            if Data.Packs.Contains (PRP.Naming) then
                Handle_Naming : declare
-                  use Registry.Attribute;
-
                   Attr   : Attribute.Object;
                   Naming : constant Project.Pack.Object :=
-                             Data.Packs (Project.Registry.Pack.Naming);
+                             Data.Packs (PRP.Naming);
                begin
-                  if Naming.Check_Attribute (Dot_Replacement, Result => Attr)
+                  if Naming.Check_Attribute
+                       (PRA.Dot_Replacement, Result => Attr)
                   then
                      Add (Attr);
                   end if;
 
-                  for Attr of Naming.Attributes (Spec_Suffix) loop
+                  for Attr of Naming.Attributes (PRA.Spec_Suffix) loop
                      Add (Attr);
                   end loop;
 
-                  for Attr of Naming.Attributes (Body_Suffix) loop
+                  for Attr of Naming.Attributes (PRA.Body_Suffix) loop
                      Add (Attr);
                   end loop;
 
-                  for Attr of Naming.Attributes (Separate_Suffix) loop
+                  for Attr of Naming.Attributes (PRA.Separate_Suffix) loop
                      Add (Attr);
                   end loop;
 
-                  for Attr of Naming.Attributes (Spec) loop
+                  for Attr of Naming.Attributes (PRA.Spec) loop
                      Add (Attr);
                   end loop;
 
-                  for Attr of Naming.Attributes (Body_N) loop
+                  for Attr of Naming.Attributes (PRA.Body_N) loop
                      Add (Attr);
                   end loop;
 
-                  for Attr of Naming.Attributes (Specification) loop
+                  for Attr of Naming.Attributes (PRA.Specification) loop
                      Add (Attr);
                   end loop;
 
-                  for Attr of Naming.Attributes (Implementation) loop
+                  for Attr of Naming.Attributes (PRA.Implementation) loop
                      Add (Attr);
                   end loop;
                end Handle_Naming;
@@ -1383,14 +1377,10 @@ package body GPR2.Project.Definition is
 
       --  Setup the naming exceptions look-up table if needed
 
-      Fill_Ada_Naming_Exceptions
-        (Naming.Attributes (Registry.Attribute.Spec));
-      Fill_Ada_Naming_Exceptions
-        (Naming.Attributes (Registry.Attribute.Specification));
-      Fill_Ada_Naming_Exceptions
-        (Naming.Attributes (Registry.Attribute.Body_N));
-      Fill_Ada_Naming_Exceptions
-        (Naming.Attributes (Registry.Attribute.Implementation));
+      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Spec));
+      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Specification));
+      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Body_N));
+      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Implementation));
 
       --  Record units being set as interfaces, first for Library_Interface
       --  which contains unit names.
@@ -1455,8 +1445,7 @@ package body GPR2.Project.Definition is
             File : constant GPR2.Path_Name.Full_Name :=
                      Directories.Compose
                        (Root,
-                        Def.Attrs.Element
-                          (Registry.Attribute.Excluded_Source_List_File)
+                        Def.Attrs.Element (PRA.Excluded_Source_List_File)
                         .Value.Text);
          begin
             Read_File (File, Excluded_Sources);
@@ -1478,8 +1467,7 @@ package body GPR2.Project.Definition is
             File : constant GPR2.Path_Name.Full_Name :=
                      Directories.Compose
                        (Root,
-                        Def.Attrs.Element
-                          (Registry.Attribute.Source_List_File).Value.Text);
+                        Def.Attrs.Element (PRA.Source_List_File).Value.Text);
          begin
             Read_File (File, Included_Sources);
          end;
@@ -1644,7 +1632,7 @@ begin
      Project.Pack.Create
        (Source_Reference.Identifier.Object
           (Source_Reference.Identifier.Create
-             (Source_Reference.Builtin, Registry.Pack.Naming)),
+             (Source_Reference.Builtin, PRP.Naming)),
         Project.Attribute.Set.Empty_Set,
         Project.Variable.Set.Set.Empty_Map);
 
