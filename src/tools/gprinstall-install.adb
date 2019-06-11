@@ -2442,7 +2442,7 @@ package body GPRinstall.Install is
       function Project_Dir return Path_Name.Object is
          P_Dir : constant Name_Type := Name_Type (Project_Subdir.V.all);
       begin
-         if OS_Lib.Is_Absolute_Path (Project_Subdir.V.all) then
+         if OS_Lib.Is_Absolute_Path (String (P_Dir)) then
             return Path_Name.Create_Directory (P_Dir);
          else
             return Path_Name.Create_Directory
