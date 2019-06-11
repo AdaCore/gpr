@@ -208,8 +208,10 @@ package body GPR2.Source is
             Result : Unbounded_String;
          begin
             for CU of Data.CU_List loop
-               Result := Result & Kind_Type'Image (CU.Kind)
-                 & "|" & Handling.To_Lower (String (CU.Unit_Name));
+               Append
+                 (Result,
+                  Kind_Type'Image (CU.Kind) & "|"
+                  & Handling.To_Lower (String (CU.Unit_Name)));
             end loop;
 
             return To_String (Result);
