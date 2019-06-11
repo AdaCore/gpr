@@ -94,9 +94,8 @@ procedure GPRinstall.Main is
       use GNAT.Command_Line;
 
       procedure Set_Param
-        (P      : in out GPRinstall.Options.Param;
-         Value  : String;
-         Is_Dir : Boolean := True);
+        (P     : in out GPRinstall.Options.Param;
+         Value : String);
       --  Set P with value for option Name
 
       procedure Set_Build_Var (Swicth, Value : String);
@@ -162,19 +161,10 @@ procedure GPRinstall.Main is
       ---------------
 
       procedure Set_Param
-        (P      : in out GPRinstall.Options.Param;
-         Value  : String;
-         Is_Dir : Boolean := True)
-      is
-         Path : Path_Name.Object;
+        (P     : in out GPRinstall.Options.Param;
+         Value : String) is
       begin
-         if Is_Dir then
-            Path := Path_Name.Create_Directory (Name_Type (Value));
-         else
-            Path := Path_Name.Create_File (Name_Type (Value));
-         end if;
-
-         P := (new String'(Path.Value), False);
+         P := (new String'(Value), False);
       end Set_Param;
 
       -----------------
@@ -407,8 +397,7 @@ procedure GPRinstall.Main is
          Options.Mode.all := Characters.Handling.To_Lower (Options.Mode.all);
 
          if Options.Mode.all in "dev" | "usage" then
-            Set_Param
-              (Options.Global_Install_Mode, Options.Mode.all, Is_Dir => False);
+            Set_Param (Options.Global_Install_Mode, Options.Mode.all);
 
          else
             raise Usage_Error with "mode value must be dev or usage";

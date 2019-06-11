@@ -307,6 +307,11 @@ package body GPRinstall.Install is
 
       function For_Dev return Boolean is (Install_Mode.V.all = "dev");
 
+      function Build_Subdir
+        (Subdir     : Param;
+         Build_Name : Boolean := True) return Path_Name.Object;
+      --  Return a path-name for a subdir
+
       ---------------------
       -- Add_To_Manifest --
       ---------------------
@@ -364,29 +369,9 @@ package body GPRinstall.Install is
       -------------
 
       function ALI_Dir
-        (Build_Name : Boolean := True) return Path_Name.Object
-      is
-         Install_Name_Dir : constant Name_Type :=
-                              (if Install_Name.Default
-                               then "."
-                               else Name_Type (Install_Name.V.all));
+        (Build_Name : Boolean := True) return Path_Name.Object is
       begin
-         if OS_Lib.Is_Absolute_Path (ALI_Subdir.V.all) then
-            return Path_Name.Create_Directory
-              (Install_Name_Dir, Optional_Name_Type (ALI_Subdir.V.all));
-
-         elsif not ALI_Subdir.Default or else not Build_Name then
-            return Path_Name.Create_Directory
-              (Install_Name_Dir,
-               Optional_Name_Type (Prefix_Dir.V.all & ALI_Subdir.V.all));
-
-         else
-            return Path_Name.Create_Directory
-              (Dir_Name,
-               Optional_Name_Type
-                 (Prefix_Dir.V.all & ALI_Subdir.V.all
-                  & String (Install_Name_Dir)));
-         end if;
+         return Build_Subdir (ALI_Subdir, Build_Name);
       end ALI_Dir;
 
       -------------------
@@ -409,6 +394,45 @@ package body GPRinstall.Install is
 
          return False;
       end Bring_Sources;
+
+      ------------------
+      -- Build_Subdir --
+      ------------------
+
+      function Build_Subdir
+        (Subdir     : Param;
+         Build_Name : Boolean := True) return Path_Name.Object
+      is
+         Install_Name_Dir : constant Name_Type :=
+                              (if Install_Name.Default
+                               then "."
+                               else Name_Type (Install_Name.V.all));
+      begin
+         if OS_Lib.Is_Absolute_Path (Subdir.V.all) then
+            return Path_Name.Create_Directory
+              (Install_Name_Dir, Optional_Name_Type (Subdir.V.all));
+
+         elsif not Lib_Subdir.Default or else not Build_Name then
+            return Path_Name.Create_Directory
+              (Install_Name_Dir,
+               Optional_Name_Type
+                 (Path_Name.Create_Directory
+                      (Name_Type (Subdir.V.all),
+                       Optional_Name_Type (Prefix_Dir.V.all)).Value));
+
+         else
+            return Path_Name.Create_Directory
+              (Dir_Name,
+               Optional_Name_Type
+                 (Path_Name.Create_Directory
+                      (Install_Name_Dir,
+                       Optional_Name_Type
+                         (Path_Name.Create_Directory
+                            (Name_Type (Subdir.V.all),
+                             Optional_Name_Type (Prefix_Dir.V.all)).Value))
+                  .Value));
+         end if;
+      end Build_Subdir;
 
       ---------------------------
       -- Check_Install_Package --
@@ -2317,29 +2341,9 @@ package body GPRinstall.Install is
       -------------
 
       function Lib_Dir
-        (Build_Name : Boolean := True) return Path_Name.Object
-      is
-         Install_Name_Dir : constant Name_Type :=
-                              (if Install_Name.Default
-                               then "."
-                               else Name_Type (Install_Name.V.all));
+        (Build_Name : Boolean := True) return Path_Name.Object is
       begin
-         if OS_Lib.Is_Absolute_Path (Lib_Subdir.V.all) then
-            return Path_Name.Create_Directory
-              (Install_Name_Dir, Optional_Name_Type (Lib_Subdir.V.all));
-
-         elsif not Lib_Subdir.Default or else not Build_Name then
-            return Path_Name.Create_Directory
-              (Install_Name_Dir,
-               Optional_Name_Type (Prefix_Dir.V.all & Lib_Subdir.V.all));
-
-         else
-            return Path_Name.Create_Directory
-              (Dir_Name,
-               Optional_Name_Type
-                 (Prefix_Dir.V.all & Lib_Subdir.V.all
-                  & String (Install_Name_Dir)));
-         end if;
+         return Build_Subdir (Lib_Subdir, Build_Name);
       end Lib_Dir;
 
       ------------------
@@ -2550,29 +2554,9 @@ package body GPRinstall.Install is
       -----------------
 
       function Sources_Dir
-        (Build_Name : Boolean := True) return Path_Name.Object
-      is
-         Install_Name_Dir : constant Name_Type :=
-                              (if Install_Name.Default
-                               then "."
-                               else Name_Type (Install_Name.V.all));
+        (Build_Name : Boolean := True) return Path_Name.Object is
       begin
-         if OS_Lib.Is_Absolute_Path (Sources_Subdir.V.all) then
-            return Path_Name.Create_Directory
-              (Install_Name_Dir,
-               Optional_Name_Type (Sources_Subdir.V.all));
-
-         elsif not Sources_Subdir.Default or else not Build_Name then
-            return Path_Name.Create_Directory
-              (Install_Name_Dir,
-               Optional_Name_Type (Prefix_Dir.V.all & Sources_Subdir.V.all));
-
-         else
-            return Path_Name.Create_Directory
-              (Dir_Name,
-               Optional_Name_Type (Prefix_Dir.V.all & Sources_Subdir.V.all
-                 & String (Install_Name_Dir)));
-         end if;
+         return Build_Subdir (Sources_Subdir, Build_Name);
       end Sources_Dir;
 
       Is_Project_To_Install : Boolean;
