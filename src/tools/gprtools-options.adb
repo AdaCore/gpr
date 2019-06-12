@@ -16,11 +16,19 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Task_Attributes;
 with Ada.Characters.Handling;
 
 with GNATCOLL.Utils;
 
 package body GPRtools.Options is
+
+   type Object_Class is access all Object'Class;
+
+   package TLS is new Ada.Task_Attributes (Object_Class, null);
+
+   procedure Value_Callback (Switch, Value : String);
+   --  Used for the command-line options parsing
 
    ------------
    -- Append --
@@ -104,38 +112,10 @@ package body GPRtools.Options is
    -- Setup --
    -----------
 
-   procedure Setup (Self : in out Object) is
-
-      procedure Value_Callback (Switch, Value : String);
-
-      --------------------
-      -- Value_Callback --
-      --------------------
-
-      procedure Value_Callback (Switch, Value : String) is
-
-         function Normalize_Value (Default : String := "") return String is
-           (if Value in "" | "=" then Default
-            elsif Value (Value'First) = '='
-            then Value (Value'First + 1 .. Value'Last)
-            else Value);
-         --  Remove leading '=' symbol from value for options like
-         --  --config=file.cgrp
-
-      begin
-         if Switch = "--relocate-build-tree" then
-            Self.Build_Path :=
-              GPR2.Path_Name.Create_Directory
-                (GPR2.Name_Type (Normalize_Value (".")));
-
-         elsif Switch = "--root-dir" then
-            Self.Root_Path :=
-              GPR2.Path_Name.Create_Directory
-                (GPR2.Name_Type (Normalize_Value));
-         end if;
-      end Value_Callback;
-
+   procedure Setup (Self : aliased in out Object'Class) is
    begin
+      TLS.Set_Value (Self'Unchecked_Access);
+
       Define_Switch
         (Self.Config, Self.Help'Access,
          "-h", Long_Switch => "--help",
@@ -168,5 +148,34 @@ package body GPRtools.Options is
          Help        => "Root obj/lib/exec dirs are current-directory or dir",
          Argument    => "<dir>");
    end Setup;
+
+   --------------------
+   -- Value_Callback --
+   --------------------
+
+   procedure Value_Callback (Switch, Value : String) is
+
+      Self : constant not null access Object'Class := TLS.Reference.all;
+
+      function Normalize_Value (Default : String := "") return String is
+        (if Value in "" | "=" then Default
+         elsif Value (Value'First) = '='
+         then Value (Value'First + 1 .. Value'Last)
+         else Value);
+      --  Remove leading '=' symbol from value for options like
+      --  --config=file.cgrp
+
+   begin
+      if Switch = "--relocate-build-tree" then
+         Self.Build_Path :=
+           GPR2.Path_Name.Create_Directory
+             (GPR2.Name_Type (Normalize_Value (".")));
+
+      elsif Switch = "--root-dir" then
+         Self.Root_Path :=
+           GPR2.Path_Name.Create_Directory
+             (GPR2.Name_Type (Normalize_Value));
+      end if;
+   end Value_Callback;
 
 end GPRtools.Options;

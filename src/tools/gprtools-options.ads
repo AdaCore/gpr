@@ -40,7 +40,7 @@ package GPRtools.Options is
       Build_Path : GPR2.Path_Name.Object;
    end record;
 
-   procedure Setup (Self : in out Object);
+   procedure Setup (Self : aliased in out Object'Class);
    --  Setup command line parsing options
 
    procedure Read_Remaining_Arguments
