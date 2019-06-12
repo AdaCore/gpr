@@ -41,12 +41,14 @@ package body GPRinstall.Options is
    -----------------
 
    function Project_Dir (Self : Object) return String is
+      use GPR2;
    begin
       if OS_Lib.Is_Absolute_Path (Self.Global_Project_Subdir.V.all) then
          return Self.Global_Project_Subdir.V.all;
       else
-         return Self.Global_Prefix_Dir.V.all
-                & Self.Global_Project_Subdir.V.all;
+         return Path_Name.Create_Directory
+           (Name_Type (Self.Global_Project_Subdir.V.all),
+            Optional_Name_Type (Self.Global_Prefix_Dir.V.all)).Value;
       end if;
    end Project_Dir;
 
