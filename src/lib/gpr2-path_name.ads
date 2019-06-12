@@ -146,7 +146,7 @@ private
       Is_Dir    : Boolean := False;
       As_Is     : Unbounded_String;
       Value     : Unbounded_String; -- the normalized path-name
-      Comparing : Unbounded_String; -- normalized path-name for comparision
+      Comparing : Unbounded_String; -- normalized path-name for comparison
       Base_Name : Unbounded_String;
       Dir_Name  : Unbounded_String;
    end record;
