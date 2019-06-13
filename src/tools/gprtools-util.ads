@@ -22,6 +22,8 @@ with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
+with GPRtools.Options;
+
 package GPRtools.Util is
 
    type Exit_Code_Type is
@@ -36,9 +38,7 @@ package GPRtools.Util is
    procedure Set_Program_Name (Name : String);
 
    procedure Output_Messages
-     (Log            : GPR2.Log.Object;
-      Verbosity      : Verbosity_Level;
-      Full_Path_Name : Boolean);
+     (Log : GPR2.Log.Object; Options : GPRtools.Options.Object'Class);
    --  Output errors and if Verbose is True other messages from log
 
    -------------------------
@@ -49,9 +49,8 @@ package GPRtools.Util is
    --  Terminate program with a message and a fatal status code.
 
    procedure Project_Processing_Failed
-     (Tree           : GPR2.Project.Tree.Object;
-      Verbosity      : Verbosity_Level;
-      Full_Path_Name : Boolean);
+     (Tree    : GPR2.Project.Tree.Object;
+      Options : GPRtools.Options.Object'Class);
    --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.

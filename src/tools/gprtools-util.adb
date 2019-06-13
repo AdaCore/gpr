@@ -215,16 +215,14 @@ package body GPRtools.Util is
    ---------------------
 
    procedure Output_Messages
-     (Log            : GPR2.Log.Object;
-      Verbosity      : Verbosity_Level;
-      Full_Path_Name : Boolean)
+     (Log : GPR2.Log.Object; Options : GPRtools.Options.Object'Class)
    is
       use Ada.Text_IO;
       Displayed : GPR2.Containers.Value_Set;
    begin
       for C in Log.Iterate
-        (Information => Verbosity = Verbose,
-         Warning     => Verbosity > Quiet,
+        (Information => Options.Verbosity = Verbose,
+         Warning     => Options.Warnings,
          Error       => True,
          Read        => True,
          Unread      => True)
@@ -234,7 +232,8 @@ package body GPRtools.Util is
 
             Msg      : constant GPR2.Log.Constant_Reference_Type :=
                          Log.Constant_Reference (C);
-            Text     : constant String := Msg.Format (Full_Path_Name);
+            Text     : constant String :=
+                         Msg.Format (Options.Full_Path_Name_For_Brief);
             Dummy    : GPR2.Containers.Value_Type_Set.Cursor;
             Inserted : Boolean;
          begin
@@ -257,11 +256,10 @@ package body GPRtools.Util is
    -------------------------------
 
    procedure Project_Processing_Failed
-     (Tree           : GPR2.Project.Tree.Object;
-      Verbosity      : Verbosity_Level;
-      Full_Path_Name : Boolean) is
+     (Tree    : GPR2.Project.Tree.Object;
+      Options : GPRtools.Options.Object'Class) is
    begin
-      Output_Messages (Tree.Log_Messages.all, Verbosity, Full_Path_Name);
+      Output_Messages (Tree.Log_Messages.all, Options);
       Fail_Program
         ('"' & String (Tree.Root_Project.Path_Name.Simple_Name)
          & """ processing failed");

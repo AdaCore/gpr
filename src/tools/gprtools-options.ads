@@ -32,12 +32,12 @@ package GPRtools.Options is
       --  Set by switch -h: usage will be displayed after all command line
       --  switches have been scanned.
 
-      Version : aliased Boolean := False;
-      Quiet   : aliased Boolean := False;
-      Verbose : aliased Boolean := False;
-
-      Root_Path  : GPR2.Path_Name.Object;
-      Build_Path : GPR2.Path_Name.Object;
+      Full_Path_Name_For_Brief : aliased Boolean := False;
+      Version                  : aliased Boolean := False;
+      Warnings                 : aliased Boolean := True;
+      Verbosity                : Verbosity_Level := Regular;
+      Root_Path                : GPR2.Path_Name.Object;
+      Build_Path               : GPR2.Path_Name.Object;
    end record;
 
    procedure Setup (Self : aliased in out Object'Class);
@@ -62,8 +62,8 @@ package GPRtools.Options is
    --  directory and Root is five/six, then the resulting build directory is
    --  /one/two/three plus five/six, i.e /one/two/three/five/six.
 
-   function Verbosity (Self : Object) return Verbosity_Level is
-     (if Self.Verbose then Verbose elsif Self.Quiet then Quiet else Regular);
+   function Verbose (Self : Object) return Boolean is
+     (Self.Verbosity = Verbose);
 
    procedure Append (Self : in out Object; Next : Object);
    --  Append options values from Next to Self. Could be used to concatenate

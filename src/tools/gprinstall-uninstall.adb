@@ -24,6 +24,7 @@ with GNAT.MD5; use GNAT.MD5;
 with GNAT.OS_Lib;
 
 with GPR2.Path_Name;
+with GPRtools;
 
 package body GPRinstall.Uninstall is
 
@@ -42,6 +43,7 @@ package body GPRinstall.Uninstall is
       Options      : in out GPRinstall.Options.Object)
    is
       use GNAT;
+      use GPRtools;
 
       procedure Delete_File (Position : File_Set.Cursor);
       --  Delete file pointed to by Position, do nothing if the file is not
@@ -119,12 +121,12 @@ package body GPRinstall.Uninstall is
       --  Check if manifest for this project exists
 
       if not Exists (Name) then
-         if not Options.Quiet then
+         if Options.Verbosity > Quiet then
             raise Constraint_Error with "Manifest " & Name & " not found.";
          end if;
       end if;
 
-      if not Options.Quiet then
+      if Options.Verbosity > Quiet then
          Text_IO.Put_Line ("Uninstall project " & Install_Name);
       end if;
 
@@ -198,7 +200,7 @@ package body GPRinstall.Uninstall is
          Do_Delete (Name);
 
       else
-         if not Options.Quiet then
+         if Options.Verbosity > Quiet then
             Text_IO.Put_Line ("Following files have been changed:");
 
             declare

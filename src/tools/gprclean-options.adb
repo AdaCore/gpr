@@ -220,11 +220,6 @@ package body GPRclean.Options is
          Help   => "Debug mode");
 
       Define_Switch
-        (Config, Options.Full_Path_Name_For_Brief'Access,
-         Switch => "-F",
-         Help   => "Full project path name in brief log messages");
-
-      Define_Switch
         (Config, Options.Remove_Empty_Dirs'Access,
          Switch => "-p",
          Help   => "Remove empty build directories");

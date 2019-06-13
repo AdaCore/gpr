@@ -50,6 +50,7 @@ pragma Unreferenced (GPR2.Project.Source.Set);
 --  Needed as a Vew.Set is used
 with GPR2.Version;
 with GPR2.Source;
+with GPRtools;
 
 package body GPRinstall.Install is
 
@@ -134,6 +135,8 @@ package body GPRinstall.Install is
       Project : GPR2.Project.View.Object;
       Options : GPRinstall.Options.Object)
    is
+      use GPRtools;
+
       use type OS_Lib.String_Access;
       use type GPR2.Path_Name.Object;
       use type GPR2.Project.View.Object;
@@ -2613,7 +2616,7 @@ package body GPRinstall.Install is
       if not Installed.Contains (Project) then
          Installed.Insert (Project);
 
-         if not Options.Quiet then
+         if Options.Verbosity > Quiet then
             if Is_Project_To_Install then
                Put ("Install");
             elsif Options.Verbose then

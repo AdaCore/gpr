@@ -36,8 +36,7 @@ package body GPRtools.Options is
 
    procedure Append (Self : in out Object; Next : Object) is
    begin
-      Self.Quiet   := Self.Quiet   or else Next.Quiet;
-      Self.Verbose := Self.Verbose or else Next.Verbose;
+      Self.Verbosity := Verbosity_Level'Max (Self.Verbosity, Next.Verbosity);
    end Append;
 
    ----------------------
@@ -127,14 +126,28 @@ package body GPRtools.Options is
          Help        => "Display version and exit");
 
       Define_Switch
-        (Self.Config, Self.Verbose'Access,
+        (Self.Config, Value_Callback'Unrestricted_Access,
          "-v", "--verbose",
          Help => "Verbose output");
 
       Define_Switch
-        (Self.Config, Self.Quiet'Access,
+        (Self.Config, Value_Callback'Unrestricted_Access,
          "-q", "--quiet",
          Help => "Be quiet/terse");
+
+      --  The code below should be uncommented when we will be able to give a
+      --  name for the hiding warnings switch.
+      --
+      --  Define_Switch
+      --    (Self.Config, Self.Warnings'Unrestricted_Access,
+      --     Switch => "-ws",
+      --     Help   => "Suppress all warnings",
+      --     Value  => False);
+
+      Define_Switch
+        (Self.Config, Self.Full_Path_Name_For_Brief'Access,
+         Switch => "-F",
+         Help   => "Full project path name in brief log messages");
 
       Define_Switch
         (Self.Config, Value_Callback'Unrestricted_Access,
@@ -175,6 +188,14 @@ package body GPRtools.Options is
          Self.Root_Path :=
            GPR2.Path_Name.Create_Directory
              (GPR2.Name_Type (Normalize_Value));
+
+      elsif Switch = "-q" or else Switch = "--quiet" then
+         if Self.Verbosity = Regular then
+            Self.Verbosity := Quiet;
+         end if;
+
+      elsif Switch = "-v" or else Switch = "--verbose" then
+         Self.Verbosity := Verbose;
       end if;
    end Value_Callback;
 

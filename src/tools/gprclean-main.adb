@@ -307,7 +307,7 @@ procedure GPRclean.Main is
 
             Attr : Project.Attribute.Object;
 
-            procedure Delete_Dir (Dir : String);
+            procedure Delete_Dir (Dir : Value_Not_Empty);
             --  Delete directory if a directory
 
             procedure Delete_If_Not_Project (Dir : Path_Name.Object);
@@ -318,7 +318,7 @@ procedure GPRclean.Main is
             -- Delete_Dir --
             ----------------
 
-            procedure Delete_Dir (Dir : String) is
+            procedure Delete_Dir (Dir : Value_Not_Empty) is
             begin
                if Kind (Dir) = Directory then
                   Delete_Directory (Dir);
@@ -328,7 +328,7 @@ procedure GPRclean.Main is
                   declare
                      Search : Search_Type;
                   begin
-                     if not Opts.Quiet then
+                     if Opts.Warnings then
                         Start_Search (Search, Dir, "");
                         Text_IO.Put_Line
                           ("warning: Directory """ & Dir
@@ -420,10 +420,10 @@ procedure GPRclean.Main is
       else
          Delete_File (Name, Success);
 
-         if not Opts.Quiet and then Success then
+         if Opts.Verbosity > Quiet and then Success then
             Text_IO.Put_Line ('"' & Name & """ has been deleted");
 
-         elsif Opts.Verbose and then not Success then
+         elsif Opts.Verbosity >= Verbose and then not Success then
             Text_IO.Put_Line ('"' & Name & """ absent");
          end if;
       end if;
@@ -465,9 +465,7 @@ begin
             & Options.Mains.First_Element & '"',
             GPR2.Source_Reference.Create (Options.Project_Path.Value, 0, 0)));
 
-      Util.Output_Messages
-        (Project_Tree.Log_Messages.all, Options.Verbosity,
-         Options.Full_Path_Name_For_Brief);
+      Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
 
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
@@ -489,9 +487,7 @@ begin
       Delete_File (Options.Config_File.Value, Options);
    end if;
 
-   Util.Output_Messages
-     (Project_Tree.Log_Messages.all, Options.Verbosity,
-      Options.Full_Path_Name_For_Brief);
+   Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
 
 exception
    when E : GNAT.Command_Line.Exit_From_Command_Line
@@ -501,8 +497,7 @@ exception
       GPRtools.Util.Fail_Program (Exception_Message (E));
 
    when Project_Error =>
-      GPRtools.Util.Project_Processing_Failed
-        (Project_Tree, Options.Verbosity, Options.Full_Path_Name_For_Brief);
+      GPRtools.Util.Project_Processing_Failed (Project_Tree, Options);
 
    when E : others =>
       GPRtools.Util.Fail_Program
