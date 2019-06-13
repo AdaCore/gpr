@@ -28,7 +28,6 @@
 
 with GNAT.MD5;
 
-private with Ada.Directories;
 private with Ada.Strings.Unbounded;
 
 package GPR2.Path_Name is
@@ -138,6 +137,10 @@ package GPR2.Path_Name is
          = Common_Prefix'Result.Value);
    --  Returns the longest common prefix for Self and Path
 
+   function Containing_Directory (Self : Object) return Object
+     with Pre  => Self.Is_Defined;
+   --  Returns the containing directory of the directory information of Self
+
 private
 
    use Ada.Strings.Unbounded;
@@ -166,9 +169,6 @@ private
 
    function Base_Name (Self : Object) return GPR2.Simple_Name is
      (GPR2.Simple_Name (To_String (Self.Base_Name)));
-
-   function Simple_Name (Self : Object) return GPR2.Simple_Name is
-     (GPR2.Simple_Name (Ada.Directories.Simple_Name (To_String (Self.As_Is))));
 
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name

@@ -51,4 +51,6 @@ begin
    Text_IO.Put_Line ("8: " & String (C2.Relative_Path(C1).Name));
    Text_IO.Put_Line ("9: " & String (C1.Relative_Path(C2).Name));
    Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5).Name));
+   Text_IO.Put_Line ("B: " & P5.Containing_Directory.Value);
+   Text_IO.Put_Line ("C: " & P5.Containing_Directory.Value);
 end Main;

@@ -366,9 +366,7 @@ procedure GPRclean.Main is
                            = DS,
                            Dir_Name);
 
-                        Delete_Dir
-                          (Dir_Name (Dir_Name'First
-                           .. Dir_Name'Last - Length (Opts.Subdirs) - 1));
+                        Delete_If_Not_Project (Dir.Containing_Directory);
                      end if;
                   end;
                end if;

@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
+with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Streams.Stream_IO;
 
@@ -66,6 +67,12 @@ package body GPR2.Path_Name is
       then "."
       else Directories.Base_Name (Path));
    --  Base_Name for / is '.'
+
+   function Remove_Last_DS (Path : String) return String is
+     (if Path'Length > 0
+        and then Path (Path'Last) in OS_Lib.Directory_Separator | '/' | '\'
+      then Path (Path'First .. Path'Last - 1)
+      else Path);
 
    function Containing_Directory (Path : String) return String is
      (if Match (Path, Root_Path)
@@ -134,6 +141,17 @@ package body GPR2.Path_Name is
          return Create_File (Filename);
       end if;
    end Compose;
+
+   --------------------------
+   -- Containing_Directory --
+   --------------------------
+
+   function Containing_Directory (Self : Object) return Object is
+   begin
+      return Create_Directory
+        (Name_Type
+           (Containing_Directory (Remove_Last_DS (Dir_Name (Self)))));
+   end Containing_Directory;
 
    -----------------
    -- Content_MD5 --
@@ -410,6 +428,16 @@ package body GPR2.Path_Name is
            else P (Pi + 1 .. P'Last))),
          Optional_Name_Type (To_Path));
    end Relative_Path;
+
+   -----------------
+   -- Simple_Name --
+   -----------------
+
+   function Simple_Name (Self : Object) return GPR2.Simple_Name is
+   begin
+      return GPR2.Simple_Name
+        (Directories.Simple_Name (Remove_Last_DS (To_String (Self.As_Is))));
+   end Simple_Name;
 
    -------------------------
    -- Temporary_Directory --
