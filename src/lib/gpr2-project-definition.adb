@@ -759,7 +759,7 @@ package body GPR2.Project.Definition is
 
          Match                  : Boolean := False;
 
-         Source_Is_In_Interface : Boolean;
+         Source_Is_In_Interface : Boolean := False;
          Has_Naming_Exception   : Boolean := False;
          Compilation_Units      : Compilation_Unit.List.Object;  --  For Ada
          Kind                   : Kind_Type;
