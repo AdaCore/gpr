@@ -209,7 +209,9 @@ procedure GPRdump is
                   Text_IO.Put_Line (S.Source.Path_Name.Value);
                   if Display_Units and then S.Source.Has_Units then
                      for U of S.Source.Compilation_Units loop
-                        Text_IO.Put_Line (ASCII.HT & String (U.Unit_Name));
+                        Text_IO.Put_Line
+                          (ASCII.HT & String (U.Unit_Name)
+                           & ASCII.HT & U.Kind'Img);
                      end loop;
                   end if;
 
