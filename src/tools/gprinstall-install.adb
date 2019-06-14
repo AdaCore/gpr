@@ -67,7 +67,7 @@ package body GPRinstall.Install is
    package String_Vector is
      new Containers.Indefinite_Vectors (Positive, String);
 
-   package Seen_Set is new Containers.Indefinite_Ordered_Sets (String);
+   package Seen_Set is new Containers.Indefinite_Ordered_Sets (Name_Type);
 
    subtype Message_Digest is GNAT.MD5.Message_Digest;
 
@@ -1000,8 +1000,9 @@ package body GPRinstall.Install is
                      --  When a naming exception is present for a body which
                      --  is not installed we must exclude the Naming from the
                      --  generated project.
+
                      for CU of CUs loop
-                        Excluded_Naming.Include (String (CU.Unit_Name));
+                        Excluded_Naming.Include (CU.Unit_Name);
                      end loop;
                   end if;
 
@@ -1035,7 +1036,7 @@ package body GPRinstall.Install is
                            Ssrc : GPR2.Project.Source.Object;
                         begin
                            if not Source.Has_Other_Part
-                             or else Source.Has_Naming_Exception
+                             or else not Source.Has_Naming_Exception
                              or else Options.All_Sources
                            then
                               Ssrc := Source;
@@ -1682,7 +1683,7 @@ package body GPRinstall.Install is
             begin
                for V of Attribute.Values loop
                   Opts.Append (V.Text);
-                  Seen.Include (V.Text);
+                  Seen.Include (Name_Type (V.Text));
                end loop;
             end Append;
 
@@ -1789,7 +1790,9 @@ package body GPRinstall.Install is
                for Att of Pck.Attributes loop
                   if Att.Has_Index then
                      if (Att.Name.Text /= A.Body_N
-                         or else not Excluded_Naming.Contains (Att.Index.Text))
+                         or else not
+                           Excluded_Naming.Contains
+                             (Name_Type (Att.Index.Text)))
                        and then
                          ((Att.Name.Text /= A.Spec_Suffix
                            and then Att.Name.Text /= A.Body_Suffix
@@ -1799,9 +1802,9 @@ package body GPRinstall.Install is
                         declare
                            Decl : constant String := Att.Image;
                         begin
-                           if not Seen.Contains (Decl) then
+                           if not Seen.Contains (Name_Type (Decl)) then
                               V.Append ("            " & Decl);
-                              Seen.Include (Decl);
+                              Seen.Include (Name_Type (Decl));
                            end if;
                         end;
                      end if;
