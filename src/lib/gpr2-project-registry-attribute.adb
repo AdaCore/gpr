@@ -2294,6 +2294,17 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere);
 
+   --  install.lib_subdir
+   Store_Insert
+     (Create (ALI_Subdir, Pack.Install),
+      Index                => No,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere);
+
    --  install.project_subdir
    Store_Insert
      (Create (Project_Subdir, Pack.Install),
