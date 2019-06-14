@@ -990,7 +990,7 @@ package body GPRinstall.Install is
                   end if;
 
                   if Options.All_Sources
-                    or else Source.Is_Interface
+                    or else (Source.Is_Interface and then Src.Kind = S_Spec)
                     or else Src.Is_Generic
                   then
                      Copy_Source (Source);
