@@ -57,7 +57,7 @@ package body GPR2.Project.Tree is
    --  Check for GPRls executable
 
    Version_Regexp : constant Regexp.Regexp :=
-                      Regexp.Compile (".[0-9]+.[0-9]+");
+                      Regexp.Compile (".[0-9]+(.[0-9]+)?");
 
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
