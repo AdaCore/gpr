@@ -138,7 +138,8 @@ package GPR2.Path_Name is
    --  Returns the longest common prefix for Self and Path
 
    function Containing_Directory (Self : Object) return Object
-     with Pre  => Self.Is_Defined;
+     with Pre  => Self.Is_Defined,
+          Post => Containing_Directory'Result.Is_Defined;
    --  Returns the containing directory of the directory information of Self
 
 private
