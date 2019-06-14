@@ -412,7 +412,7 @@ package body GPRinstall.Install is
             return Path_Name.Create_Directory
               (Install_Name_Dir, Optional_Name_Type (Subdir.V.all));
 
-         elsif not Lib_Subdir.Default or else not Build_Name then
+         elsif not Subdir.Default or else not Build_Name then
             return Path_Name.Create_Directory
               (Install_Name_Dir,
                Optional_Name_Type
