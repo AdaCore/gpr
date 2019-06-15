@@ -18,7 +18,6 @@
 
 with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Sets;
-with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Vectors;
 with Ada.Directories;
 with Ada.Strings.Equal_Case_Insensitive;
@@ -34,6 +33,7 @@ with GNAT.String_Split;
 with GNATCOLL.OS.Constants;
 
 with GPR2.Compilation_Unit.List;
+with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Name_Values;
@@ -64,10 +64,9 @@ package body GPRinstall.Install is
 
    use type GNATCOLL.OS.OS_Type;
 
-   package String_Vector is
-     new Containers.Indefinite_Vectors (Positive, String);
+   package String_Vector renames GPR2.Containers.Value_Type_List;
 
-   package Seen_Set is new Containers.Indefinite_Ordered_Sets (Name_Type);
+   package Seen_Set renames GPR2.Containers.Name_Type_Set;
 
    subtype Message_Digest is GNAT.MD5.Message_Digest;
 
@@ -212,7 +211,7 @@ package body GPRinstall.Install is
       end record;
 
       package Artifacts_Set is
-        new Containers.Vectors (Positive, Artifacts_Data);
+        new Ada.Containers.Vectors (Positive, Artifacts_Data);
 
       Artifacts : Artifacts_Set.Vector;
 
@@ -1244,7 +1243,7 @@ package body GPRinstall.Install is
 
       procedure Create_Project (Project : GPR2.Project.View.Object) is
 
-         package Lang_Set is new Containers.Indefinite_Ordered_Sets
+         package Lang_Set is new Ada.Containers.Indefinite_Ordered_Sets
            (String,
             Strings.Less_Case_Insensitive, Strings.Equal_Case_Insensitive);
 
@@ -2042,7 +2041,7 @@ package body GPRinstall.Install is
 
                      Count_And_Delete : declare
 
-                        use type Containers.Count_Type;
+                        use type Ada.Containers.Count_Type;
 
                         function End_When (L : String) return Boolean;
                         --  Return True if L is the end of a when alternative
@@ -2065,7 +2064,7 @@ package body GPRinstall.Install is
                                    and then L (P .. P + 8) = "end case;"));
                         end End_When;
 
-                        N : Containers.Count_Type := 0;
+                        N : Ada.Containers.Count_Type := 0;
                         P : String_Vector.Cursor := Pos;
                      begin
                         --  The number of line to delete are from Pos to the
