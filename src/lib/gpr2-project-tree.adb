@@ -1984,8 +1984,7 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Name_Type;
                Human_Name    : String;
                Get_Directory : access function
-                 (Self : Project.View.Object) return Path_Name.Object)
-            is
+                 (Self : Project.View.Object) return Path_Name.Object) is
             begin
                if View.Check_Attribute (Attr_Name, Result => Attr) then
                   declare
