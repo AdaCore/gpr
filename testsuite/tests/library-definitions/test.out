@@ -1,7 +1,7 @@
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : lib
-                  : /lib/
+                  : /lib
 Library Filename : libabc.so
                  : /lib/libabc.so
 Library Version Filename : libabc.so.1.2
@@ -12,7 +12,7 @@ Library_Standalone : NO
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : lib
-                  : /lib/
+                  : /lib
 Library Filename : libabc.so
                  : /lib/libabc.so
 Library Version Filename : libabc.so.1.4
@@ -23,7 +23,7 @@ Library_Standalone : NO
 Demo     K_LIBRARY
 Library_Name : abc
 Library_Directory : release
-                  : /lib/release/
+                  : /lib/release
 Library Filename : libabc.so
                  : /lib/release/libabc.so
 Library Version Filename : libabc.so.1.4

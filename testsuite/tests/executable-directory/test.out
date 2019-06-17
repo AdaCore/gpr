@@ -1,10 +1,10 @@
 Demo1    K_STANDARD
-executable-directory/
+executable-directory
 Demo2    K_STANDARD
-executable-directory/obj/
+executable-directory/obj
 Demo3    K_STANDARD
-executable-directory/exec/
+executable-directory/exec
 Demo4    K_STANDARD
-executable-directory/exec4/
+executable-directory/exec4
 Demo1    K_STANDARD
-executable-directory/experiment/
+executable-directory/experiment

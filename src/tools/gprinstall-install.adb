@@ -1248,7 +1248,7 @@ package body GPRinstall.Install is
             Strings.Less_Case_Insensitive, Strings.Equal_Case_Insensitive);
 
          Filename : constant String :=
-                      Project_Dir.Value
+                      Project_Dir.Dir_Name
                       & String (Project.Path_Name.Base_Name) & ".gpr";
 
          GPRinstall_Tag : constant String :=

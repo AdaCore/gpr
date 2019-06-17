@@ -454,7 +454,11 @@ package body GPR2.Path_Name is
 
    function Value (Self : Object) return Full_Name is
    begin
-      return To_String (Self.Value);
+      if Self.Is_Dir then
+         return Remove_Last_DS (To_String (Self.Value));
+      else
+         return To_String (Self.Value);
+      end if;
    end Value;
 
 begin
