@@ -1172,7 +1172,7 @@ package body GPR2.Project.Definition is
             return False;
          end Check_View;
 
-         Res : Boolean := Check_View (View);
+         Res : Boolean;
 
       begin
          if Language_Compilable.Contains (Language) then
@@ -1182,15 +1182,10 @@ package body GPR2.Project.Definition is
             Res := Check_View (View);
 
             if not Res and then View.Tree.Has_Configuration then
-               declare
-                  C_View : constant Project.View.Object :=
-                             View.Tree.Configuration.Corresponding_View;
-               begin
-                  Res := Check_View (C_View);
-               end;
-
-               Language_Compilable.Insert (Language, Res);
+               Res := Check_View (View.Tree.Configuration.Corresponding_View);
             end if;
+
+            Language_Compilable.Insert (Language, Res);
          end if;
 
          return Res;
