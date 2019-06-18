@@ -82,7 +82,7 @@ package body GPR2.Project.Source.Artifact is
 
          elsif S_View.Is_Library and then Lang = "Ada" then
             Dependency_Files.Insert
-              (1, Path_Name.Create_File
+              (Idx, Path_Name.Create_File
                  (Src & D_Suffix,
                   Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
             Idx := Idx + 1;
@@ -92,6 +92,7 @@ package body GPR2.Project.Source.Artifact is
            (Idx, Path_Name.Create_File
               (Src & D_Suffix,
                Optional_Name_Type (O_View.Object_Directory.Value)));
+         Idx := Idx + 1;
 
       else
          for CU of Source.Source.Compilation_Units loop
@@ -113,8 +114,6 @@ package body GPR2.Project.Source.Artifact is
                      Path_Name.Create_File
                        (Src & Index_Suffix & D_Suffix,
                         Optional_Name_Type (O_View.Object_Directory.Value)));
-
-                  Idx := Idx + 1;
                end;
             end if;
          end loop;
