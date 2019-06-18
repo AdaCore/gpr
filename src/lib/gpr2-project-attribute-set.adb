@@ -48,7 +48,7 @@ package body GPR2.Project.Attribute.Set is
 
    procedure Set_Defaults
      (Self : in out Object;
-      Kind : Project_Kind;
+      VDD  : Definition.Data;
       Pack : Optional_Name_Type);
    --  Set defaults for the attribute set
 
@@ -448,10 +448,14 @@ package body GPR2.Project.Attribute.Set is
 
    procedure Set_Defaults
      (Self : in out Object;
-      Kind : Project_Kind;
+      VDD  : Definition.Data;
       Pack : Optional_Name_Type)
    is
       package SR renames Source_Reference;
+
+      Proj_SR : constant SR.Object :=
+                  SR.Object
+                    (SR.Create (VDD.Trees.Project.Path_Name.Value, 0, 0));
 
       Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
 
@@ -467,7 +471,7 @@ package body GPR2.Project.Attribute.Set is
          procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map);
 
          function Attr_Id return SR.Identifier.Object is
-           (SR.Identifier.Object (SR.Identifier.Create (SR.Builtin, Attr)));
+           (SR.Identifier.Object (SR.Identifier.Create (Proj_SR, Attr)));
 
          function Create_Attribute
            (Index : Value_Type;
@@ -485,7 +489,7 @@ package body GPR2.Project.Attribute.Set is
 
             function Create_Index return SR.Value.Object is
               (if Def.Index = RA.No then SR.Value.Undefined
-               else SR.Value.Object (SR.Value.Create (SR.Builtin, Index)));
+               else SR.Value.Object (SR.Value.Create (Proj_SR, Index)));
 
          begin
             if Def.Value = List then
@@ -513,7 +517,7 @@ package body GPR2.Project.Attribute.Set is
          ------------
 
          procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map) is
-            package VSR renames Containers.Value_Source_Reference_Package;
+            package VSR renames Containers.Name_Value_Map_Package;
          begin
             if Def.Index = RA.No and then not Attrs.Is_Empty then
                --  Attribute already exists
@@ -526,7 +530,7 @@ package body GPR2.Project.Attribute.Set is
             elsif Def.Default_Is_Reference then
                declare
                   Ref_Name : constant Name_Type :=
-                               Name_Type (Def.Default.First_Element.Text);
+                               Name_Type (Def.Default.First_Element);
                   CS : constant Set.Cursor := Self.Attributes.Find (Ref_Name);
                begin
                   if Set.Has_Element (CS) then
@@ -544,17 +548,20 @@ package body GPR2.Project.Attribute.Set is
 
             elsif not Def.Default.Is_Empty then
                for D in Def.Default.Iterate loop
-                  if not Attrs.Contains (VSR.Key (D)) then
+                  if not Attrs.Contains (Value_Type (VSR.Key (D))) then
                      Attrs.Insert
-                       (VSR.Key (D),
-                        Create_Attribute (VSR.Key (D), VSR.Element (D)));
+                       (Value_Type (VSR.Key (D)),
+                        Create_Attribute
+                          (Value_Type (VSR.Key (D)),
+                           SR.Value.Object
+                             (SR.Value.Create (Proj_SR, VSR.Element (D)))));
                   end if;
                end loop;
             end if;
          end Gather;
 
       begin
-         if Def.Has_Default_In (Kind) then
+         if Def.Has_Default_In (VDD.Kind) then
             declare
                CM : constant Set.Cursor := Self.Attributes.Find (Attr);
                AM : Set_Attribute.Map;

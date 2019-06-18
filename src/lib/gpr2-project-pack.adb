@@ -21,7 +21,7 @@ with GPR2.Project.Definition;
 package body GPR2.Project.Pack is
 
    procedure Set_Default_Attributes
-     (Self : in out Object; Kind : Project_Kind);
+     (Self : in out Object; VDD : Definition.Data);
    --  Set default attributes for the package
 
    ---------------
@@ -168,10 +168,10 @@ package body GPR2.Project.Pack is
    ----------------------------
 
    procedure Set_Default_Attributes
-     (Self : in out Object; Kind : Project_Kind) is
+     (Self : in out Object; VDD : Definition.Data) is
    begin
       Definition.Set_Defaults
-        (Self.Attrs, Kind, Name_Type (To_String (Self.Name)));
+        (Self.Attrs, VDD, Name_Type (To_String (Self.Name)));
    end Set_Default_Attributes;
 
    -----------------

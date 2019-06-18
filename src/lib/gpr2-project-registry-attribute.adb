@@ -19,7 +19,6 @@
 with Ada.Strings.Fixed;
 
 with GPR2.Project.Registry.Pack;
-with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Registry.Attribute is
 
@@ -111,10 +110,7 @@ package body GPR2.Project.Registry.Attribute is
    function Create (Index, Value : Value_Type) return VSR.Map is
       Result : VSR.Map;
    begin
-      Result.Insert
-        (Index,
-         Source_Reference.Value.Object
-           (Source_Reference.Value.Create (Source_Reference.Builtin, Value)));
+      Result.Insert (Name_Type (Index), Value);
 
       return Result;
    end Create;

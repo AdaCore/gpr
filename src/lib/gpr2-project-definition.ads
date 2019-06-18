@@ -139,11 +139,11 @@ private package GPR2.Project.Definition is
    --  Get view from weak reference
 
    Set_Pack_Default_Attributes : access procedure
-     (Self : in out Pack.Object; Kind : Project_Kind);
+     (Self : in out Pack.Object; VDD : Definition.Data);
 
    Set_Defaults : access procedure
      (Self : in out Attribute.Set.Object;
-      Kind : Project_Kind;
+      VDD  : Data;
       Pack : Optional_Name_Type);
 
    -----------------------------------------------------------------------

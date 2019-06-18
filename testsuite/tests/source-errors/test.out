@@ -5,6 +5,9 @@ ERROR
  3
  25
 unit '1pck' not valid, should start with a letter or an underscore
+> /source-errors/demo1.gpr
+WARNING
+there are no sources of language "Ada" in this project
 AFTER: Has unread Message: FALSE
 
 Project: Demo2

@@ -45,7 +45,7 @@ package GPR2.Project.Registry.Attribute is
 
    type Allowed_In is array (Project_Kind) of Boolean with Pack;
 
-   package VSR renames Containers.Value_Source_Reference_Package;
+   package VSR renames Containers.Name_Value_Map_Package;
 
    type Def is record
       Index                : Index_Kind         := Optional;

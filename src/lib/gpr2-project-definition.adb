@@ -71,7 +71,9 @@ package body GPR2.Project.Definition is
          return Def.Tree.Configuration.Corresponding_View.Naming_Package;
 
       else
-         return Builtin_Naming_Package;
+         return Result : Project.Pack.Object := Builtin_Naming_Package do
+            Definition.Set_Pack_Default_Attributes (Result, Def);
+         end return;
       end if;
    end Naming_Package;
 
@@ -81,10 +83,10 @@ package body GPR2.Project.Definition is
 
    procedure Set_Default_Attributes (Def : in out Data) is
    begin
-      Set_Defaults (Def.Attrs, Def.Kind, No_Name);
+      Set_Defaults (Def.Attrs, Def, No_Name);
 
       for Pack of Def.Packs loop
-         Definition.Set_Pack_Default_Attributes (Pack, Def.Kind);
+         Definition.Set_Pack_Default_Attributes (Pack, Def);
       end loop;
    end Set_Default_Attributes;
 
@@ -232,6 +234,8 @@ package body GPR2.Project.Definition is
       --  Sources from one directory defined in one item of the Source_Dirs
       --  attribute. Need to avoid source duplications in Source_Dirs items
       --  containing '*' character.
+      Has_Src_In_Lang       : Name_Set;
+      --  Insert record there if the language has a source
 
       Tree                  : constant not null access Project.Tree.Object :=
                                 Def.Tree;
@@ -245,6 +249,9 @@ package body GPR2.Project.Definition is
       Visited_Dirs          : Containers.Value_Type_Set.Set;
       --  List of already visited directories to avoid looking twice at the
       --  same one.
+
+      procedure Mark_Language (Lang : Name_Type);
+      --  Mark that language exists in sources
 
       function Ada_Use_Index (Attr : Attribute.Object) return Value_Type is
         (Attr.Index.Text & Characters.Handling.To_Upper (Attr.Name.Text (1)));
@@ -919,6 +926,8 @@ package body GPR2.Project.Definition is
                --  Got a match from either naming exception or scheme
 
                if Match then
+                  Mark_Language (Language);
+
                   Source_Is_In_Interface :=
                     Interface_Sources.Contains (Basename);
                   --  Different Source constructors for Ada and other
@@ -1063,6 +1072,8 @@ package body GPR2.Project.Definition is
                                        Interface_Sources.Contains (Basename);
 
          begin
+            Mark_Language (Language);
+
             --  Different Source constructors for Ada and other
             --  languages. Also some additional checks for Ada.
 
@@ -1190,6 +1201,17 @@ package body GPR2.Project.Definition is
 
          return Res;
       end Is_Compilable;
+
+      -------------------
+      -- Mark_Language --
+      -------------------
+
+      procedure Mark_Language (Lang : Name_Type) is
+         CL : Name_Type_Set.Cursor;
+         OK : Boolean;
+      begin
+         Has_Src_In_Lang.Insert (Lang, CL, OK);
+      end Mark_Language;
 
       ---------------
       -- Read_File --
@@ -1566,25 +1588,22 @@ package body GPR2.Project.Definition is
          end loop;
 
       else
-         Populate_Sources : begin
-            --  Handle Source_Dirs
+         --  Handle Source_Dirs
 
-            for Dir of View.Source_Directories.Values loop
-               --  Keep reference for error messages
+         for Dir of View.Source_Directories.Values loop
+            --  Keep reference for error messages
 
-               Source_Dir_Ref := Source_Reference.Object (Dir);
+            Source_Dir_Ref := Source_Reference.Object (Dir);
 
-               if OS_Lib.Is_Absolute_Path (Dir.Text) then
-                  Handle_Directory (Dir.Text);
-               else
-                  Handle_Directory
-                    (Root & OS_Lib.Directory_Separator & Dir.Text);
-               end if;
+            if OS_Lib.Is_Absolute_Path (Dir.Text) then
+               Handle_Directory (Dir.Text);
+            else
+               Handle_Directory (Root & OS_Lib.Directory_Separator & Dir.Text);
+            end if;
 
-               Def.Sources.Union (Src_Dir_Set);
-               Src_Dir_Set.Clear;
-            end loop;
-         end Populate_Sources;
+            Def.Sources.Union (Src_Dir_Set);
+            Src_Dir_Set.Clear;
+         end loop;
 
          for C in Ada_Except_Usage.Iterate loop
             declare
@@ -1618,6 +1637,19 @@ package body GPR2.Project.Definition is
 
       if Def.Extended.Is_Defined then
          Insert (Def.Extended.Sources, Skip, Source_Reference.Undefined);
+      end if;
+
+      if Def.Attrs.Languages.Is_Defined and then Def.Kind /= K_Abstract then
+         for L of Def.Languages loop
+            if not Has_Src_In_Lang.Contains (Name_Type (L.Text)) then
+               Tree.Append_Message
+                 (Message.Create
+                    (Message.Warning,
+                     "there are no sources of language """ & L.Text
+                     & """ in this project",
+                     L));
+            end if;
+         end loop;
       end if;
 
       --  And update the interface units bookkeeping
@@ -1687,6 +1719,4 @@ begin
              (Source_Reference.Builtin, PRP.Naming)),
         Project.Attribute.Set.Empty_Set,
         Project.Variable.Set.Set.Empty_Map);
-
-   Definition.Set_Pack_Default_Attributes (Builtin_Naming_Package, K_Standard);
 end GPR2.Project.Definition;
