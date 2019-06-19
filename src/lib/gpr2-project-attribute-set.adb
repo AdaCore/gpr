@@ -313,12 +313,8 @@ package body GPR2.Project.Attribute.Set is
                    Self.Attributes.Find (Attribute.Name.Text);
    begin
       if Set.Has_Element (Position) then
-         declare
-            A : Set_Attribute.Map := Set.Element (Position);
-         begin
-            A.Insert (Attribute.Case_Aware_Index, Attribute);
-            Self.Attributes.Replace_Element (Position, A);
-         end;
+         Self.Attributes (Position).Insert
+           (Attribute.Case_Aware_Index, Attribute);
 
       else
          declare
