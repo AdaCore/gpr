@@ -429,6 +429,13 @@ package GPR2.Project.View is
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Object_Dir attribute
 
+   function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object
+     with Pre =>
+       Self.Is_Defined
+       and then Self.Kind not in K_Configuration | K_Abstract;
+   --  Returns source subdirectory in object directory if parameter Src_Subdir
+   --  is defined on Tree.Load call.
+
    function Executable_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined

@@ -61,6 +61,7 @@ package GPR2.Project.Tree is
       Config           : Configuration.Object := Configuration.Undefined;
       Build_Path       : Path_Name.Object     := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type   := No_Name;
+      Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
       Implicit_Project : Boolean              := False)
      with Pre => Filename.Is_Defined;
@@ -84,6 +85,7 @@ package GPR2.Project.Tree is
       Context           : GPR2.Context.Object;
       Build_Path        : Path_Name.Object   := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type := No_Name;
+      Src_Subdirs       : Optional_Name_Type := No_Name;
       Check_Shared_Lib  : Boolean            := True;
       Implicit_Project  : Boolean            := False;
       Target            : Optional_Name_Type := No_Name;
@@ -307,6 +309,11 @@ package GPR2.Project.Tree is
    --  each project, the actual {executable,object,library} directories are
    --  {<exec>,<obj>,<lib>}/<sub>.
 
+   function Src_Subdirs (Tree : Object) return Optional_Name_Type;
+   --  Returns the src_subdirs parameter <sub> of the project tree such that,
+   --  for each project, the actual source directories list will be prepended
+   --  with {object_dir}/<sub>.
+
    function Build_Path (Tree : Object) return Path_Name.Object
      with Pre => Tree.Is_Defined;
    --  Path to build tree
@@ -331,6 +338,7 @@ private
       Search_Paths     : Path_Name.Set.Object;
       Build_Path       : Path_Name.Object;
       Subdirs          : Ada.Strings.Unbounded.Unbounded_String;
+      Src_Subdirs      : Ada.Strings.Unbounded.Unbounded_String;
       Check_Shared_Lib : Boolean := True;
       Views            : aliased View_Maps.Map;
       Views_Set        : View.Set.Object; -- All projects in registration order
@@ -380,6 +388,9 @@ private
 
    function Subdirs (Tree : Object) return Optional_Name_Type is
      (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));
+
+   function Src_Subdirs (Tree : Object) return Optional_Name_Type is
+     (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Src_Subdirs)));
 
    function Build_Path (Tree : Object) return Path_Name.Object is
      (Tree.Build_Path);

@@ -64,6 +64,12 @@ procedure GPRclean.Main is
    procedure Clean (View : Project.View.Object);
    --  Clean given View
 
+   function To_Optional_Name
+     (Item : Unbounded_String) return Optional_Name_Type
+   is
+     (Optional_Name_Type (To_String (Item)));
+   --  Convert Unboounded_String to Optional_Name_Type
+
    Project_Tree : Project.Tree.Object;
    Config       : Project.Configuration.Object;
    Options      : GPRclean.Options.Object;
@@ -299,6 +305,25 @@ procedure GPRclean.Main is
          end if;
       end;
 
+      if Options.Src_Subdirs /= Null_Unbounded_String
+        and then View.Kind in K_Standard | K_Library | K_Aggregate_Library
+      then
+         declare
+            use Ada.Directories;
+            Search : Search_Type;
+            File   : Directory_Entry_Type;
+         begin
+            Start_Search
+              (Search, View.Source_Subdirectory.Value, "",
+               Filter => (Ordinary_File => True, others => False));
+
+            while More_Entries (Search) loop
+               Get_Next_Entry (Search, File);
+               Delete_File (Ada.Directories.Full_Name (File));
+            end loop;
+         end;
+      end if;
+
       --  Removes empty directories
 
       if Opts.Remove_Empty_Dirs then
@@ -374,9 +399,13 @@ procedure GPRclean.Main is
 
          begin
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library then
-               Delete_If_Not_Project (View.Object_Directory);
+               if Options.Src_Subdirs /= Null_Unbounded_String then
+                  Delete_If_Not_Project (View.Source_Subdirectory);
+               end if;
 
-               if View.Executable_Directory /= View.Object_Directory then
+               Delete_If_Not_Project (Obj_Dir);
+
+               if View.Executable_Directory /= Obj_Dir then
                   Delete_If_Not_Project (View.Executable_Directory);
                end if;
             end if;
@@ -445,14 +474,16 @@ begin
 
       Project_Tree.Load
         (Options.Project_Path, Options.Context, Config, Options.Build_Path,
-         Optional_Name_Type (To_String (Options.Subdirs)),
+         Subdirs          => To_Optional_Name (Options.Subdirs),
+         Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
          Implicit_Project => Options.Implicit_Proj);
 
    else
       Project_Tree.Load_Autoconf
         (Options.Project_Path, Options.Context, Options.Build_Path,
-         Optional_Name_Type (To_String (Options.Subdirs)),
+         Subdirs          => To_Optional_Name (Options.Subdirs),
+         Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
          Implicit_Project => Options.Implicit_Proj);
    end if;

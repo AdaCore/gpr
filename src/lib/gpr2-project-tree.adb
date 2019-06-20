@@ -677,6 +677,7 @@ package body GPR2.Project.Tree is
       Config           : PC.Object          := PC.Undefined;
       Build_Path       : Path_Name.Object   := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type := No_Name;
+      Src_Subdirs      : Optional_Name_Type := No_Name;
       Check_Shared_Lib : Boolean            := True;
       Implicit_Project : Boolean            := False)
    is
@@ -881,6 +882,7 @@ package body GPR2.Project.Tree is
 
       Self.Build_Path       := Build_Path;
       Self.Subdirs          := To_Unbounded_String (String (Subdirs));
+      Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
       Self.Check_Shared_Lib := Check_Shared_Lib;
 
       --  Now we can initialize the project search paths
@@ -935,6 +937,7 @@ package body GPR2.Project.Tree is
       Context           : GPR2.Context.Object;
       Build_Path        : Path_Name.Object   := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type := No_Name;
+      Src_Subdirs       : Optional_Name_Type := No_Name;
       Check_Shared_Lib  : Boolean            := True;
       Implicit_Project  : Boolean            := False;
       Target            : Optional_Name_Type := No_Name;
@@ -951,6 +954,7 @@ package body GPR2.Project.Tree is
         (Filename, Context,
          Build_Path       => Build_Path,
          Subdirs          => Subdirs,
+         Src_Subdirs      => Src_Subdirs,
          Check_Shared_Lib => Check_Shared_Lib,
          Implicit_Project => Implicit_Project);
 
@@ -1033,6 +1037,7 @@ package body GPR2.Project.Tree is
          Self.Load
            (Filename, Context, Conf, Build_Path,
             Subdirs          => Subdirs,
+            Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
             Implicit_Project => Implicit_Project);
       end;
@@ -1584,7 +1589,9 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      use Ada.Strings.Unbounded;
+      Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
+      Src_Subdirs : constant String         := To_String (Self.Src_Subdirs);
    begin
       --  Register the root context for this project tree
 
@@ -1598,6 +1605,25 @@ package body GPR2.Project.Tree is
 
       for V of Self.Views_Set loop
          Definition.Set_Default_Attributes (Definition.Get (V).all);
+
+         if Src_Subdirs /= ""
+           and then V.Kind not in K_Configuration | K_Abstract
+         then
+            declare
+               Def : constant Definition.Ref := Definition.Get (V);
+               CS  : constant Attribute.Set.Cursor :=
+                       Def.Attrs.Find (PRA.Source_Dirs);
+               SD  : constant Attribute.Object    := Def.Attrs (CS);
+               SV  : Containers.Source_Value_List := SD.Values;
+            begin
+               SV.Prepend
+                 (Source_Reference.Value.Object
+                    (Source_Reference.Value.Create
+                       (Source_Reference.Object (SD),
+                        V.Source_Subdirectory.Value)));
+               Def.Attrs (CS) := Attribute.Create (SD.Name, SV);
+            end;
+         end if;
       end loop;
    end Set_Context;
 
@@ -2240,6 +2266,7 @@ package body GPR2.Project.Tree is
       Self.Runtime          := Undefined.Runtime;
       Self.Build_Path       := Undefined.Build_Path;
       Self.Subdirs          := Undefined.Subdirs;
+      Self.Src_Subdirs      := Undefined.Src_Subdirs;
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
 
       Self.Units.Clear;

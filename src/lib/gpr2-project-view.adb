@@ -1026,6 +1026,16 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Attrs.Source_Dirs;
    end Source_Directories;
 
+   -------------------------
+   -- Source_Subdirectory --
+   -------------------------
+
+   function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object is
+   begin
+      return Self.Object_Directory.Compose
+        (Self.Tree.Src_Subdirs, Directory => True);
+   end Source_Subdirectory;
+
    -------------
    -- Sources --
    -------------

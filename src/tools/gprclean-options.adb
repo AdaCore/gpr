@@ -148,6 +148,9 @@ package body GPRclean.Options is
 
          elsif Switch = "--subdirs" then
             Options.Subdirs := To_Unbounded_String (Normalize_Value);
+
+         elsif Switch = "--src-subdirs" then
+            Options.Src_Subdirs := To_Unbounded_String (Normalize_Value);
          end if;
       end Value_Callback;
 
@@ -176,6 +179,13 @@ package body GPRclean.Options is
         (Options.Config, Value_Callback'Unrestricted_Access,
          Long_Switch => "--subdirs:",
          Help        => "Real obj/lib/exec dirs are subdirs",
+         Argument    => "<dir>");
+
+      Define_Switch
+        (Options.Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--src-subdirs:",
+         Help        => "Prepend <obj>/dir to the list of source dirs for each"
+                        & " project",
          Argument    => "<dir>");
 
       Define_Switch
