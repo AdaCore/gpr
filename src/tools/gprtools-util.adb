@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
@@ -270,8 +271,19 @@ package body GPRtools.Util is
    ----------------------
 
    procedure Set_Program_Name (Name : String) is
+      use Ada.Environment_Variables;
+      GPR_Tool : constant String := "GPR_TOOL";
    begin
       Keep_Program_Name := To_Unbounded_String (Name);
+
+      if Value (GPR_Tool, Default => "") = "" then
+         Set
+           (GPR_Tool,
+            (if Name in "gprclean" | "gprbuild" | "gprls" | "gprname"
+                 | "gprinstall" | "gprdump"
+             then "gprbuild"
+             else Name));
+      end if;
    end Set_Program_Name;
 
 end GPRtools.Util;

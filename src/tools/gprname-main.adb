@@ -23,6 +23,7 @@ with GPRname.Process;
 with GPR2.Interrupt_Handler;
 
 with GPRtools.Sigint;
+with GPRtools.Util;
 
 procedure GPRname.Main is
 
@@ -32,6 +33,8 @@ begin
    --  Install the Ctrl-C handler
 
    GPR2.Interrupt_Handler.Install_Sigint (GPRtools.Sigint.Handler'Access);
+
+   GPRtools.Util.Set_Program_Name ("gprname");
 
    --  Parse arguments
 

@@ -39,6 +39,7 @@ with GPR2.Version;
 
 with GPRtools.Options;
 with GPRtools.Sigint;
+with GPRtools.Util;
 
 with GPRinstall.DB;
 with GPRinstall.Install;
@@ -547,7 +548,9 @@ procedure GPRinstall.Main is
    Options : GPRinstall.Options.Object;
 
 begin
-   --  First initialize and read the command line arguments
+   GPRtools.Util.Set_Program_Name ("gprinstall");
+
+   --  Initialize and read the command line arguments
 
    Parse_Command_Line (Options);
 

@@ -40,6 +40,8 @@ with GPR2.Project.View;
 with GPR2.Source;
 with GPR2.Unit.Set; use GPR2.Unit.Set;
 
+with GPRtools.Util;
+
 procedure GPRdump is
 
    use Ada;
@@ -241,6 +243,7 @@ procedure GPRdump is
 
 begin
    GNATCOLL.Traces.Parse_Config_File;
+   GPRtools.Util.Set_Program_Name ("gprdump");
    Parse_Command_Line;
 
    declare
