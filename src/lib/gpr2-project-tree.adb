@@ -1283,49 +1283,6 @@ package body GPR2.Project.Tree is
                end Push;
 
             begin
-               --  Load the extended project if any
-
-               if Data.Trees.Project.Has_Extended then
-                  declare
-                     Paths     : constant Path_Name.Set.Object :=
-                                   GPR2.Project.Search_Paths
-                                     (Filename, Self.Search_Paths);
-
-                     Path_Name : constant GPR2.Path_Name.Object :=
-                                   Create
-                                     ((if Data.Trees.Project.Extended.
-                                        Path_Name.Exists
-                                      then Name_Type (Data.Trees.Project.
-                                          Extended.Path_Name.Value)
-                                      else Data.Trees.Project.Extended.
-                                        Path_Name.Name),
-                                      Paths);
-
-                  begin
-                     if Path_Name.Exists then
-                        Push (Path_Name, Data.Trees.Project.Extended, True);
-
-                        Data.Extended :=
-                          Internal
-                            (Path_Name,
-                             Status    => Extended,
-                             Parent    => View);
-
-                        Pop;
-
-                     else
-                        Add_Paths_Messages;
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Message => "extended project file "
-                              & String (Path_Name.Name)
-                              & " not found",
-                              Sloc    => Data.Trees.Project.Extended));
-                     end if;
-                  end;
-               end if;
-
                --  Now load all imported projects. If we are parsing the root
                --  project or an aggregate project then the context view become
                --  this project.
@@ -1413,6 +1370,49 @@ package body GPR2.Project.Tree is
                      end if;
                   end;
                end loop;
+
+               --  Load the extended project if any
+
+               if Data.Trees.Project.Has_Extended then
+                  declare
+                     Paths     : constant Path_Name.Set.Object :=
+                                   GPR2.Project.Search_Paths
+                                     (Filename, Self.Search_Paths);
+
+                     Path_Name : constant GPR2.Path_Name.Object :=
+                                   Create
+                                     ((if Data.Trees.Project.Extended.
+                                        Path_Name.Exists
+                                      then Name_Type (Data.Trees.Project.
+                                          Extended.Path_Name.Value)
+                                      else Data.Trees.Project.Extended.
+                                        Path_Name.Name),
+                                      Paths);
+
+                  begin
+                     if Path_Name.Exists then
+                        Push (Path_Name, Data.Trees.Project.Extended, True);
+
+                        Data.Extended :=
+                          Internal
+                            (Path_Name,
+                             Status    => Extended,
+                             Parent    => View);
+
+                        Pop;
+
+                     else
+                        Add_Paths_Messages;
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Message => "extended project file "
+                              & String (Path_Name.Name)
+                              & " not found",
+                              Sloc    => Data.Trees.Project.Extended));
+                     end if;
+                  end;
+               end if;
             end;
          end if;
 
