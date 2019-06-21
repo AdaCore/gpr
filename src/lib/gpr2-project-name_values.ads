@@ -109,6 +109,11 @@ package GPR2.Project.Name_Values is
       Name : Source_Reference.Identifier.Object) return Object;
    --  Returns the object with another name
 
+   procedure Append
+     (Self : in out Object; Item : Source_Reference.Value.Object)
+     with Pre => Item.Is_Defined and then Self.Kind = List;
+   --  Append one item to the list values of the object
+
 private
 
    type Object is new Source_Reference.Object with record

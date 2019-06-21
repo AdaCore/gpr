@@ -29,6 +29,21 @@ package body GPR2.Project.Name_Values is
       Case_Sensitive : Boolean) return Containers.Value_Source_Reference;
    --  Returns a set with the value in values
 
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append
+     (Self : in out Object; Item : Source_Reference.Value.Object) is
+   begin
+      Self.Values.Append (Item);
+      Self.V_Map.Include
+        ((if Self.Value_Case_Sensitive
+          then Item.Text
+          else Ada.Characters.Handling.To_Lower (Item.Text)),
+         Item);
+   end Append;
+
    ---------------
    -- Build_Set --
    ---------------

@@ -82,7 +82,63 @@ package body GPR2.Project.Definition is
    ----------------------------
 
    procedure Set_Default_Attributes (Def : in out Data) is
+
+      procedure Inherite_Attribute (Name : Name_Type);
+      --  Take attribute from extended project and put it inot current one
+      --  if it exists in extended and is not defined in the current one.
+
+      procedure Union_Attribute (Name : Name_Type);
+      --  Union attribute values to the current project from the extended one
+
+      ------------------------
+      -- Inherite_Attribute --
+      ------------------------
+
+      procedure Inherite_Attribute (Name : Name_Type) is
+         Attr : Attribute.Object;
+      begin
+         if not Def.Attrs.Contains (Name)
+           and then Def.Extended.Check_Attribute (Name, Result => Attr)
+         then
+            Def.Attrs.Insert (Attr);
+         end if;
+      end Inherite_Attribute;
+
+      ---------------------
+      -- Union_Attribute --
+      ---------------------
+
+      procedure Union_Attribute (Name : Name_Type) is
+         Parent : Attribute.Object;
+         CT     : constant Attribute.Set.Cursor := Def.Attrs.Find (Name);
+      begin
+         if Def.Extended.Check_Attribute (Name, Result => Parent) then
+            if Attribute.Set.Has_Element (CT) then
+               for V of Parent.Values loop
+                  if not Def.Attrs (CT).Has_Value (V.Text) then
+                     Def.Attrs (CT).Append (V);
+                  end if;
+               end loop;
+            else
+               Def.Attrs.Insert (Parent);
+            end if;
+         end if;
+      end Union_Attribute;
+
    begin
+      if Def.Extended.Is_Defined then
+         Union_Attribute (PRA.Languages);
+
+         case Def.Kind is
+            when K_Library | K_Aggregate_Library =>
+               Inherite_Attribute (PRA.Library_Name);
+            when K_Standard =>
+               Inherite_Attribute (PRA.Main);
+            when others =>
+               null;
+         end case;
+      end if;
+
       Set_Defaults (Def.Attrs, Def, No_Name);
 
       for Pack of Def.Packs loop

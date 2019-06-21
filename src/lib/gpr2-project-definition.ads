@@ -199,6 +199,6 @@ private package GPR2.Project.Definition is
    --  routine is called where needed and is there for internal use only.
 
    procedure Set_Default_Attributes (Def : in out Data);
-   --  Set default attributes for the project view
+   --  Set default and inherited attributes for the project view
 
 end GPR2.Project.Definition;
