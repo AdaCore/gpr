@@ -18,9 +18,43 @@
 
 with Ada.Strings.Unbounded;
 
-with GPR2.Project.Registry.Attribute;
-
 package body GPR2.Project.Variable is
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create
+     (Name  : Source_Reference.Identifier.Object;
+      Value : Source_Reference.Value.Object;
+      Typ   : Project.Typ.Object) return Object is
+   begin
+      return Object'(Name_Values.Create (Name, Value) with Typ => Typ);
+   end Create;
+
+   function Create
+     (Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List;
+      Typ    : Project.Typ.Object) return Object is
+   begin
+      return Object'(Name_Values.Create (Name, Values) with Typ => Typ);
+   end Create;
+
+   overriding function Create
+     (Name  : Source_Reference.Identifier.Object;
+      Value : Source_Reference.Value.Object) return Object is
+   begin
+      return Object'
+        (Name_Values.Create (Name, Value) with Project.Typ.Undefined);
+   end Create;
+
+   overriding function Create
+     (Name   : Source_Reference.Identifier.Object;
+      Values : Containers.Source_Value_List) return Object is
+   begin
+      return Object'
+        (Name_Values.Create (Name, Values) with Project.Typ.Undefined);
+   end Create;
 
    -----------
    -- Image --
@@ -40,6 +74,11 @@ package body GPR2.Project.Variable is
    begin
       if Name_Len > 0 and then Name'Length < Name_Len then
          Append (Result, (Name_Len - Name'Length) * ' ');
+      end if;
+
+      if Self.Has_Type then
+         Append (Result, " : ");
+         Append (Result, String (Self.Typ.Name.Text));
       end if;
 
       Append (Result, " := ");
@@ -71,5 +110,17 @@ package body GPR2.Project.Variable is
 
       return To_String (Result);
    end Image;
+
+   ------------
+   -- Rename --
+   ------------
+
+   overriding function Rename
+     (Self : Object;
+      Name : Source_Reference.Identifier.Object) return Object is
+   begin
+      return Object'
+        (Name_Values.Rename (Name_Values.Object (Self), Name) with Self.Typ);
+   end Rename;
 
 end GPR2.Project.Variable;
