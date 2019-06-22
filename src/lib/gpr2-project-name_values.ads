@@ -94,7 +94,8 @@ package GPR2.Project.Name_Values is
    --  Returns True if the attribute's value is equal to Value taking into
    --  account the case-sensitivity of the value.
 
-   function Image (Self : Object; Name_Len : Natural := 0) return String;
+   function Image (Self : Object; Name_Len : Natural := 0) return String
+     with Pre => Self.Is_Defined;
    --  Returns a string representation. Name_Len represents the length in
    --  character than the Name should take, so possibly some space padding
    --  are added.
@@ -106,12 +107,14 @@ package GPR2.Project.Name_Values is
 
    function Rename
      (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object;
+      Name : Source_Reference.Identifier.Object) return Object
+     with Pre => Self.Is_Defined;
    --  Returns the object with another name
 
    procedure Append
      (Self : in out Object; Item : Source_Reference.Value.Object)
-     with Pre => Item.Is_Defined and then Self.Kind = List;
+     with Pre => Self.Is_Defined
+                 and then Item.Is_Defined and then Self.Kind = List;
    --  Append one item to the list values of the object
 
 private

@@ -30,7 +30,8 @@ package GPR2.Project.Variable is
    --  Returns true if Self is defined
 
    overriding function Image
-     (Self : Object; Name_Len : Natural := 0) return String;
+     (Self : Object; Name_Len : Natural := 0) return String
+     with Pre => Self.Is_Defined;
    --  Returns a string representation
 
 private

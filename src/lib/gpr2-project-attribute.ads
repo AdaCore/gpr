@@ -128,17 +128,20 @@ package GPR2.Project.Attribute is
    --  By default both are case-sensitive.
 
    overriding function Image
-     (Self : Object; Name_Len : Natural := 0) return String;
+     (Self : Object; Name_Len : Natural := 0) return String
+     with Pre => Self.Is_Defined;
    --  Returns a string representation. The attribute name is represented with
    --  Name_Len characters (right padding with space) except if Name_Len is 0.
 
-   function Is_Default (Self : Object) return Boolean;
+   function Is_Default (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
    --  Attribute did not exist in attribute set and was created from default
    --  value.
 
    overriding function Rename
      (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object;
+      Name : Source_Reference.Identifier.Object) return Object
+     with Pre => Self.Is_Defined;
    --  Returns object with another name and default attribute
 
    At_Num_Undefined : constant Natural;
