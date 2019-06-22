@@ -2298,11 +2298,12 @@ package body GPR2.Parser.Project is
             --  Use function instead of constant because Sloc need only in case
             --  of error logging and no more than once.
 
-            Name    : constant Identifier := F_Var_Name (Node);
-            Expr    : constant Term_List := F_Expr (Node);
-            Values  : constant Item_Values := Get_Term_List (Expr);
-            V_Type  : constant Type_Reference := F_Var_Type (Node);
-            V       : GPR2.Project.Variable.Object;
+            Name     : constant Identifier := F_Var_Name (Node);
+            Expr     : constant Term_List := F_Expr (Node);
+            Values   : constant Item_Values := Get_Term_List (Expr);
+            V_Type   : constant Type_Reference := F_Var_Type (Node);
+            V        : GPR2.Project.Variable.Object;
+            Type_Def : GPR2.Project.Typ.Object;
          begin
             if not V_Type.Is_Null then
                declare
@@ -2315,8 +2316,6 @@ package body GPR2.Parser.Project is
                                  (if Type_N2.Is_Null
                                   then Single_Tok_Node (Type_N1)
                                   else Single_Tok_Node (Type_N2));
-                  Type_Def : GPR2.Project.Typ.Object :=
-                               GPR2.Project.Typ.Undefined;
                begin
                   if not Type_N2.Is_Null then
                      --  We have a project prefix for the type name
@@ -2412,7 +2411,6 @@ package body GPR2.Parser.Project is
                            Message =>
                              "unknown string type '" & String (T_Name) & '''));
                   end if;
-
                end;
             end if;
 
@@ -2423,15 +2421,17 @@ package body GPR2.Parser.Project is
                       (Self.File,
                        Sloc_Range (Name),
                        Get_Name_Type (Single_Tok_Node (Name))),
-                  Value => Values.Values.First_Element);
+                  Value => Values.Values.First_Element,
+                  Typ   => Type_Def);
             else
                V := GPR2.Project.Variable.Create
-                 (Name =>
+                 (Name   =>
                     Get_Identifier_Reference
                       (Self.File,
                        Sloc_Range (Name),
                        Get_Name_Type (Single_Tok_Node (Name))),
-                  Values => Values.Values);
+                  Values => Values.Values,
+                  Typ    => Type_Def);
             end if;
 
             if In_Pack then
