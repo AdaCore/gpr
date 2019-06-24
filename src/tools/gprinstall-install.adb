@@ -1783,32 +1783,40 @@ package body GPRinstall.Install is
             ----------------
 
             procedure Naming_For (Pck : GPR2.Project.Pack.Object) is
+               Found : Boolean := False;
             begin
-               --  Check all associative attributes
+               if Pck.Has_Attributes then
+                  --  Check all associative attributes
 
-               for Att of Pck.Attributes loop
-                  if Att.Has_Index then
-                     if (Att.Name.Text /= A.Body_N
-                         or else not
-                           Excluded_Naming.Contains
-                             (Name_Type (Att.Index.Text)))
-                       and then
-                         ((Att.Name.Text /= A.Spec_Suffix
-                           and then Att.Name.Text /= A.Body_Suffix
-                           and then Att.Name.Text /= A.Separate_Suffix)
-                          or else Is_Language_Active (Att.Index.Text))
-                     then
-                        declare
-                           Decl : constant String := Att.Image;
-                        begin
-                           if not Seen.Contains (Name_Type (Decl)) then
-                              V.Append ("            " & Decl);
-                              Seen.Include (Name_Type (Decl));
-                           end if;
-                        end;
+                  for Att of Pck.Attributes loop
+                     if Att.Has_Index then
+                        if (Att.Name.Text /= A.Body_N
+                            or else not
+                              Excluded_Naming.Contains
+                                (Name_Type (Att.Index.Text)))
+                          and then
+                            ((Att.Name.Text /= A.Spec_Suffix
+                              and then Att.Name.Text /= A.Body_Suffix
+                              and then Att.Name.Text /= A.Separate_Suffix)
+                             or else Is_Language_Active (Att.Index.Text))
+                        then
+                           declare
+                              Decl : constant String := Att.Image;
+                           begin
+                              if not Seen.Contains (Name_Type (Decl)) then
+                                 V.Append ("            " & Decl);
+                                 Seen.Include (Name_Type (Decl));
+                                 Found := True;
+                              end if;
+                           end;
+                        end if;
                      end if;
-                  end if;
-               end loop;
+                  end loop;
+               end if;
+
+               if not Found then
+                  V.Append ("            null;");
+               end if;
             end Naming_For;
 
          begin
