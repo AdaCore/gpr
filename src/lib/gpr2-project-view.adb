@@ -1061,6 +1061,8 @@ package body GPR2.Project.View is
                for S of Data.Sources loop
                   declare
                      Unit_Is_Interface : constant Boolean :=
+                                           S.Source.Has_Units
+                                               and then
                                            S.Source.Has_Single_Unit
                                                and then Data.Units.Contains
                                                  (S.Source.Unit_Name)
