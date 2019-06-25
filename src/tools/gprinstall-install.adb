@@ -1487,10 +1487,7 @@ package body GPRinstall.Install is
 
                Attr := Project.Attribute (A.Library_Standalone);
 
-               if not Attr.Is_Default
-                 and then Characters.Handling.To_Lower
-                            (Attr.Value.Text) /= "no"
-               then
+               if Characters.Handling.To_Lower (Attr.Value.Text) /= "no" then
                   if not Project.Is_Static_Library then
                      V.Append
                        ("         for Library_Standalone use """
