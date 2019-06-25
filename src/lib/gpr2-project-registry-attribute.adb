@@ -549,8 +549,7 @@ begin
       Value                => Single,
       Value_Case_Sensitive => False,
       Read_Only            => False,
-      Is_Allowed_In        => In_Library,
-      Default              => Create ("standard"));
+      Is_Allowed_In        => In_Library);
 
    --  library_encapsulated_options
    Store_Insert

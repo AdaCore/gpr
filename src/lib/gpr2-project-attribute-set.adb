@@ -469,9 +469,31 @@ package body GPR2.Project.Attribute.Set is
    is
       package SR renames Source_Reference;
 
-      Proj_SR : constant SR.Object :=
-                  SR.Object
-                    (SR.Create (VDD.Trees.Project.Path_Name.Value, 0, 0));
+      Project_SRef        : constant SR.Object :=
+                              SR.Object
+                                (SR.Create
+                                   (VDD.Trees.Project.Path_Name.Value, 0, 0));
+
+      Standalone          : constant Source_Reference.Identifier.Object :=
+                              Source_Reference.Identifier.Object
+                                (Source_Reference.Identifier.Create
+                                   (Project_SRef, RA.Library_Standalone));
+
+      Standalone_Standard : constant Project.Attribute.Object :=
+                              Project.Attribute.Create
+                                (Standalone,
+                                 Source_Reference.Value.Object
+                                   (Source_Reference.Value.Create
+                                      (Project_SRef, "Standard")),
+                                 Default => True);
+
+      Standalone_No       : constant Project.Attribute.Object :=
+                              Project.Attribute.Create
+                                (Standalone,
+                                 Source_Reference.Value.Object
+                                   (Source_Reference.Value.Create
+                                      (Project_SRef, "No")),
+                                 Default => True);
 
       Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
 
@@ -487,7 +509,7 @@ package body GPR2.Project.Attribute.Set is
          procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map);
 
          function Attr_Id return SR.Identifier.Object is
-           (SR.Identifier.Object (SR.Identifier.Create (Proj_SR, Attr)));
+           (SR.Identifier.Object (SR.Identifier.Create (Project_SRef, Attr)));
 
          function Create_Attribute
            (Index : Value_Type;
@@ -505,7 +527,7 @@ package body GPR2.Project.Attribute.Set is
 
             function Create_Index return SR.Value.Object is
               (if Def.Index = RA.No then SR.Value.Undefined
-               else SR.Value.Object (SR.Value.Create (Proj_SR, Index)));
+               else SR.Value.Object (SR.Value.Create (Project_SRef, Index)));
 
          begin
             if Def.Value = List then
@@ -570,7 +592,8 @@ package body GPR2.Project.Attribute.Set is
                         Create_Attribute
                           (Value_Type (VSR.Key (D)),
                            SR.Value.Object
-                             (SR.Value.Create (Proj_SR, VSR.Element (D)))));
+                             (SR.Value.Create (Project_SRef,
+                              VSR.Element (D)))));
                   end if;
                end loop;
             end if;
@@ -597,6 +620,25 @@ package body GPR2.Project.Attribute.Set is
 
    begin
       RA.For_Each_Default (Rules, Each_Default'Access);
+
+      --  Check for Library_Standalone special case has it has different
+      --  default value in library project:
+      --
+      --  "standard" when Interface or Library_Interface is defined
+      --  "no"       all other cases.
+
+      if Pack = No_Name
+        and then VDD.Kind in K_Library | K_Aggregate_Library
+        and then not VDD.Attrs.Contains (RA.Library_Standalone)
+      then
+         if VDD.Attrs.Has_Interfaces
+           or else VDD.Attrs.Has_Library_Interface
+         then
+            Self.Insert (Standalone_Standard);
+         else
+            Self.Insert (Standalone_No);
+         end if;
+      end if;
    end Set_Defaults;
 
 begin
