@@ -158,7 +158,8 @@ package body GPR2.Project.Attribute.Set is
             end if;
 
             declare
-               Item : constant Set_Attribute.Map := Set.Element (C);
+               Item : constant Set.Constant_Reference_Type :=
+                        Self.Attributes (C);
                CI   : Set_Attribute.Cursor;
                LI   : constant Value_Type :=
                         Ada.Characters.Handling.To_Lower (Index);
