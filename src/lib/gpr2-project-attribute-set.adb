@@ -176,20 +176,28 @@ package body GPR2.Project.Attribute.Set is
 
                CI := Item.Find (Index);
 
-               if Set_Attribute.Has_Element (CI) and then LI = Index then
-                  Result.Insert (Set_Attribute.Element (CI));
-                  return Result;
+               if Set_Attribute.Has_Element (CI) then
+                  declare
+                     E : constant Set_Attribute.Constant_Reference_Type :=
+                           Item (CI);
+                  begin
+                     if E.Index_Case_Sensitive or else Index = LI then
+                        Result.Insert (E);
+                        return Result;
+                     end if;
+                  end;
                end if;
 
                CI := Item.Find (LI);
 
                if Set_Attribute.Has_Element (CI) then
                   declare
-                     E : constant Attribute.Object :=
-                           Set_Attribute.Element (CI);
+                     E : constant Set_Attribute.Constant_Reference_Type :=
+                           Item (CI);
                   begin
                      if not E.Index_Case_Sensitive then
                         Result.Insert (E);
+                        return Result;
                      end if;
                   end;
                end if;
