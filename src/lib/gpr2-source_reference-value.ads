@@ -22,4 +22,62 @@
 with GPR2.Source_Reference.Text_Value;
 
 package GPR2.Source_Reference.Value is
-  new GPR2.Source_Reference.Text_Value (Value_Type);
+
+   package Text_Values is new GPR2.Source_Reference.Text_Value (Value_Type);
+
+   type Object is new Text_Values.Object with private;
+
+   Undefined : constant Object;
+
+   function Create
+     (Filename     : Path_Name.Full_Name;
+      Line, Column : Natural;
+      Text         : Value_Type;
+      At_Num       : Natural := 0) return Object'Class;
+
+   function Create
+     (Sloc   : GPR2.Source_Reference.Object;
+      Text   : Value_Type;
+      At_Num : Natural := 0) return Text_Values.Object'Class;
+
+   function Has_At_Num (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+
+   function At_Num (Self : Object) return Positive
+     with Pre => Self.Is_Defined and then Self.Has_At_Num;
+
+private
+
+   type Object is new Text_Values.Object with record
+      At_Num : Natural := 0;
+   end record;
+
+   Undefined : constant Object := (Text_Values.Undefined with others => <>);
+
+   function Create
+     (Filename     : Path_Name.Full_Name;
+      Line, Column : Natural;
+      Text         : Value_Type;
+      At_Num       : Natural := 0) return Object'Class
+   is
+     (Object'
+        (Text_Values.Object
+           (Text_Values.Create (Filename, Line, Column, Text)) with
+            At_Num => At_Num));
+
+   function Create
+     (Sloc   : GPR2.Source_Reference.Object;
+      Text   : Value_Type;
+      At_Num : Natural := 0) return Text_Values.Object'Class
+   is
+     (Object'
+        (Text_Values.Object
+           (Text_Values.Create (Sloc, Text)) with At_Num => At_Num));
+
+   function Has_At_Num (Self : Object) return Boolean is
+     (Self.At_Num > 0);
+
+   function At_Num (Self : Object) return Positive is
+     (Self.At_Num);
+
+end GPR2.Source_Reference.Value;

@@ -25,15 +25,6 @@ package body GPR2.Project.Attribute is
    use Ada.Strings.Unbounded;
 
    ------------
-   -- At_Num --
-   ------------
-
-   function At_Num (Self : Object) return Positive is
-   begin
-      return Self.At_Num;
-   end At_Num;
-
-   ------------
    -- Create --
    ------------
 
@@ -41,7 +32,7 @@ package body GPR2.Project.Attribute is
      (Name    : Source_Reference.Identifier.Object;
       Index   : Source_Reference.Value.Object;
       Value   : Source_Reference.Value.Object;
-      Default : Boolean := False) return Object is
+      Default : Boolean) return Object is
    begin
       return A : Object := Create (Name, Value) do
          A.Index   := Index;
@@ -52,12 +43,10 @@ package body GPR2.Project.Attribute is
    function Create
      (Name   : Source_Reference.Identifier.Object;
       Index  : Source_Reference.Value.Object;
-      Value  : Source_Reference.Value.Object;
-      At_Num : Natural) return Object is
+      Value  : Source_Reference.Value.Object) return Object is
    begin
       return A : Object := Create (Name, Value) do
-         A.Index  := Index;
-         A.At_Num := At_Num;
+         A.Index := Index;
       end return;
    end Create;
 
@@ -69,7 +58,6 @@ package body GPR2.Project.Attribute is
    begin
       return A : Object := Create (Name, Values) do
          A.Index   := Index;
-         A.At_Num  := At_Num_Undefined;
          A.Default := Default;
       end return;
    end Create;
@@ -82,8 +70,7 @@ package body GPR2.Project.Attribute is
         (Name_Values.Create (Name, Value)
          with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True,
-              Default              => False,
-              At_Num               => At_Num_Undefined);
+              Default              => False);
    end Create;
 
    function Create
@@ -95,8 +82,7 @@ package body GPR2.Project.Attribute is
         (Name_Values.Create (Name, Value)
          with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True,
-              Default              => Default,
-              At_Num               => At_Num_Undefined);
+              Default              => Default);
    end Create;
 
    overriding function Create
@@ -107,8 +93,7 @@ package body GPR2.Project.Attribute is
         (Name_Values.Create (Name, Values)
          with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True,
-              Default              => False,
-              At_Num               => At_Num_Undefined);
+              Default              => False);
    end Create;
 
    function Create
@@ -120,18 +105,8 @@ package body GPR2.Project.Attribute is
         (Name_Values.Create (Name, Values)
          with Index                => Source_Reference.Value.Undefined,
               Index_Case_Sensitive => True,
-              Default              => Default,
-              At_Num               => At_Num_Undefined);
+              Default              => Default);
    end Create;
-
-   ----------------
-   -- Has_At_Num --
-   ----------------
-
-   function Has_At_Num (Self : Object) return Boolean is
-   begin
-      return Self.At_Num /= At_Num_Undefined;
-   end Has_At_Num;
 
    ---------------
    -- Has_Index --
@@ -172,8 +147,8 @@ package body GPR2.Project.Attribute is
          when Single =>
             Append (Result, '"' & Self.Value.Text & '"');
 
-            if Self.Has_At_Num then
-               Append (Result, " at" & Integer'Image (Self.At_Num));
+            if Self.Value.Has_At_Num then
+               Append (Result, " at" & Integer'Image (Self.Value.At_Num));
             end if;
 
          when List =>
@@ -218,8 +193,7 @@ package body GPR2.Project.Attribute is
       return (Name_Values.Object (Self).Rename (Name) with
                 Default              => True,
                 Index                => Self.Index,
-                Index_Case_Sensitive => Self.Index_Case_Sensitive,
-                At_Num               => Self.At_Num);
+                Index_Case_Sensitive => Self.Index_Case_Sensitive);
    end Rename;
 
    --------------

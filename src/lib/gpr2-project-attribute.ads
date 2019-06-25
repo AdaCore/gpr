@@ -42,7 +42,7 @@ package GPR2.Project.Attribute is
      (Name    : Source_Reference.Identifier.Object;
       Index   : Source_Reference.Value.Object;
       Value   : Source_Reference.Value.Object;
-      Default : Boolean := False) return Object
+      Default : Boolean) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
@@ -51,8 +51,7 @@ package GPR2.Project.Attribute is
    function Create
      (Name   : Source_Reference.Identifier.Object;
       Index  : Source_Reference.Value.Object;
-      Value  : Source_Reference.Value.Object;
-      At_Num : Natural) return Object
+      Value  : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
@@ -120,12 +119,6 @@ package GPR2.Project.Attribute is
    --  with default value from the set when the default value defined for any
    --  index.
 
-   function Has_At_Num (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Kind = Single;
-
-   function At_Num (Self : Object) return Positive
-     with Pre => Self.Is_Defined and then Self.Has_At_Num;
-
    procedure Set_Case
      (Self                    : in out Object;
       Index_Is_Case_Sensitive : Boolean;
@@ -150,18 +143,13 @@ package GPR2.Project.Attribute is
      with Pre => Self.Is_Defined;
    --  Returns object with another name and default attribute
 
-   At_Num_Undefined : constant Natural;
-
 private
 
    type Object is new Name_Values.Object with record
       Index                : Source_Reference.Value.Object;
       Index_Case_Sensitive : Boolean := True;
       Default              : Boolean := False;
-      At_Num               : Natural := 0;
    end record;
-
-   At_Num_Undefined : constant Natural := 0;
 
    function Case_Aware_Index (Self : Object) return Value_Type is
      (if Self.Index_Case_Sensitive

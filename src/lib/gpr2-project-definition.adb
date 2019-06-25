@@ -835,9 +835,9 @@ package body GPR2.Project.Definition is
             I : Natural) return Boolean
          is (A.Value.Text = B
              and then
-               ((A.Has_At_Num and then A.At_Num = I)
+               ((A.Value.Has_At_Num and then A.Value.At_Num = I)
                   or else
-                (not A.Has_At_Num and then I = 1)));
+                (not A.Value.Has_At_Num and then I = 1)));
 
       begin
          --  Stop here if it's one of the excluded sources, or it's not in the
@@ -878,8 +878,8 @@ package body GPR2.Project.Definition is
                                          Name_Type (Exc.Index.Text);
 
                            Index : constant Natural :=
-                                     (if Exc.Has_At_Num
-                                      then Exc.At_Num
+                                     (if Exc.Value.Has_At_Num
+                                      then Exc.Value.At_Num
                                       else 1);
 
                         begin

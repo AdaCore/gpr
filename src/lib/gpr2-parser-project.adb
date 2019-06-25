@@ -75,19 +75,20 @@ package body GPR2.Parser.Project is
    function Get_Value_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range;
-      Value     : Value_Type)
-      return Source_Reference.Value.Object
+      Value     : Value_Type;
+      At_Num    : Natural := 0) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
        (Source_Reference.Value.Create
-         (Get_Source_Reference (Path_Name, Slr), Value)));
+         (Get_Source_Reference (Path_Name, Slr), Value, At_Num)));
 
    function Get_Value_Reference
-     (Value : Value_Type;
-      Sloc  : Source_Reference.Object) return Source_Reference.Value.Object
+     (Value  : Value_Type;
+      Sloc   : Source_Reference.Object;
+      At_Num : Natural := 0) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
-       (Source_Reference.Value.Create (Sloc, Value)));
+       (Source_Reference.Value.Create (Sloc, Value, At_Num)));
 
    function Get_Identifier_Reference
      (Path_Name  : GPR2.Path_Name.Object;
@@ -1501,11 +1502,14 @@ package body GPR2.Parser.Project is
             ----------------------
 
             procedure Handle_String_At (Node : String_Literal_At) is
+               At_Lit : constant Num_Literal := Node.F_At_Lit;
             begin
                Record_Value
                  (Get_Value_Reference
                     (Unquote (Value_Type (To_UTF8 (Node.F_Str_Lit.Text))),
-                     Get_Source_Reference (Self.File, Sloc_Range (Node))));
+                     Get_Source_Reference (Self.File, Sloc_Range (Node)),
+                     At_Num => (if At_Lit = No_GPR_Node then 0
+                                else Positive'Wide_Wide_Value (At_Lit.Text))));
                Status := Over;
                --  Stop here to avoid parsing into the String_Literal child
             end Handle_String_At;
@@ -1876,14 +1880,6 @@ package body GPR2.Parser.Project is
          procedure Parse_Attribute_Decl (Node : Attribute_Decl) is
             Name  : constant Identifier := F_Attr_Name (Node);
             Index : constant GPR_Node := F_Attr_Index (Node);
-            I_Str : constant Value_Type :=
-                      (if Present (Index)
-                       then
-                          (if Kind (Index) = GPR_Others_Designator
-                           then "others"
-                           else Value_Type (Get_Name_Type
-                             (Index.As_String_Literal_At.F_Str_Lit)))
-                       else "");
             Expr  : constant Term_List := F_Expr (Node);
             N_Str : constant Name_Type :=
                       Get_Name_Type (Name.As_Single_Tok_Node);
@@ -1897,40 +1893,50 @@ package body GPR2.Parser.Project is
                                 Optional_Name_Type (To_String (Pack_Name)));
 
                Values   : constant Item_Values := Get_Term_List (Expr);
-               At_Lit   : GPR_Node := No_GPR_Node;
                A        : GPR2.Project.Attribute.Object;
                Is_Valid : Boolean := True;
                --  Set to False if the attribute definition is invalid
 
+               function Create_Index return Source_Reference.Value.Object;
+               --  Create index with "at" part if exists
+
+               ------------------
+               -- Create_Index --
+               ------------------
+
+               function Create_Index return Source_Reference.Value.Object is
+                  Str_Lit : String_Literal_At;
+                  At_Lit  : Num_Literal;
+               begin
+                  if Index.Kind = GPR_Others_Designator then
+                     return Get_Value_Reference
+                       (Self.Path_Name, Sloc_Range (Index), "others");
+                  end if;
+
+                  Str_Lit := Index.As_String_Literal_At;
+                  At_Lit  := Str_Lit.F_At_Lit;
+
+                  return Get_Value_Reference
+                    (Self.Path_Name, Sloc_Range (Index),
+                     Value_Type (Get_Name_Type (Str_Lit.F_Str_Lit)),
+                     At_Num => (if At_Lit = No_GPR_Node then 0
+                                else Positive'Wide_Wide_Value (At_Lit.Text)));
+               end Create_Index;
+
                I_Sloc    : constant Source_Reference.Value.Object :=
                              (if Present (Index)
-                              then Get_Value_Reference
-                                    (Self.Path_Name, Sloc_Range (Index), I_Str)
+                              then Create_Index
                               else Source_Reference.Value.Undefined);
 
             begin
                if Values.Single then
                   pragma Assert (Expr.Children_Count >= 1);
 
-                  if Kind (Expr.Child (1)) = GPR_String_Literal_At then
-                     At_Lit := GPR_Node
-                       (Expr.Child (1).As_String_Literal_At.F_At_Lit);
-                  end if;
-
-                  if At_Lit /= No_GPR_Node then
-                     A := GPR2.Project.Attribute.Create
-                       (Name   => Get_Identifier_Reference
-                                    (Self.Path_Name, Sloc_Range (Name), N_Str),
-                        Index  => I_Sloc,
-                        Value  => Values.Values.First_Element,
-                        At_Num => Integer'Value (To_UTF8 (At_Lit.Text)));
-                  else
-                     A := GPR2.Project.Attribute.Create
-                       (Name  => Get_Identifier_Reference
-                                   (Self.Path_Name, Sloc_Range (Name), N_Str),
-                        Index => I_Sloc,
-                        Value => Values.Values.First_Element);
-                  end if;
+                  A := GPR2.Project.Attribute.Create
+                    (Name  => Get_Identifier_Reference
+                       (Self.Path_Name, Sloc_Range (Name), N_Str),
+                     Index => I_Sloc,
+                     Value => Values.Values.First_Element);
 
                else
                   A := GPR2.Project.Attribute.Create
