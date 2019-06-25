@@ -201,6 +201,13 @@ package body GPR2.Project.Attribute.Set is
                      end if;
                   end;
                end if;
+
+               CI := Item.Find (Any_Index);
+
+               if Set_Attribute.Has_Element (CI) then
+                  Result.Insert (Item (CI));
+                  return Result;
+               end if;
             end;
          end;
 

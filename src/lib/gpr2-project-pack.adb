@@ -43,19 +43,9 @@ package body GPR2.Project.Pack is
    function Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Project.Attribute.Set.Object
-   is
-      Result  : Project.Attribute.Set.Object :=
-                  Self.Attrs.Filter (Name, Index);
-      Default : Project.Attribute.Object;
+      Index : Value_Type := No_Value) return Project.Attribute.Set.Object is
    begin
-      if Name /= No_Name and then Result.Length = 0
-        and then Self.Check_Attribute (Name, Index, Default)
-      then
-         Result.Insert (Default);
-      end if;
-
-      return Result;
+      return Self.Attrs.Filter (Name, Index);
    end Attributes;
 
    -----------------
