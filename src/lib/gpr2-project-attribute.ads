@@ -114,6 +114,12 @@ package GPR2.Project.Attribute is
    --  Returns True if the attribute's index is equal to Value taking into
    --  account the case-sensitivity of the index.
 
+   function Is_Any_Index (Self : Object) return Boolean;
+   --  Returns True if the attribute can be returned from the set for any
+   --  index in a request. Main case to use such attributes is to get attribute
+   --  with default value from the set when the default value defined for any
+   --  index.
+
    function Has_At_Num (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Kind = Single;
 
@@ -165,6 +171,9 @@ private
    --  otherwise.
 
    Undefined : constant Object := (Name_Values.Undefined with others => <>);
+
+   function Is_Any_Index (Self : Object) return Boolean is
+     (Self.Index_Equal (Any_Index));
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

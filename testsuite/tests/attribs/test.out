@@ -9,3 +9,7 @@ A:   source_dirs ~> .
 A2:  Object_Dir -> 
 A3:  Object_Dir
 V:   Dir -> 
+Compiler
+A:   object_file_suffix () ~> .o
+A:   Switches [Capital.adb] -> -g -gnata
+A:   Switches [Capital.adb] -> -g -gnata

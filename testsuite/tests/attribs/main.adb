@@ -21,6 +21,8 @@ with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Name_Values;
+with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Variable.Set;
 with GPR2.Context;
 
@@ -41,7 +43,37 @@ procedure Main is
    procedure Display (Prj : Project.View.Object; Full : Boolean := True) is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
-      Attr : Attribute.Object;
+
+      procedure Put_Attributes (Attrs : Attribute.Set.Object);
+
+      --------------------
+      -- Put_Attributes --
+      --------------------
+
+      procedure Put_Attributes (Attrs : Attribute.Set.Object) is
+         Attr : Attribute.Object;
+      begin
+         for A in Attrs.Iterate (With_Defaults => True) loop
+            Attr := Attribute.Set.Element (A);
+            Text_IO.Put ("A:   " & String (Attr.Name.Text));
+
+            if Attr.Has_Index then
+               if Attr.Is_Any_Index then
+                  Text_IO.Put (" ()");
+               else
+                  Text_IO.Put (" [" & String (Attr.Index.Text)  & ']');
+               end if;
+            end if;
+
+            Text_IO.Put (" " & (if Attr.Is_Default then '~' else '-') & ">");
+
+            for V of Attribute.Set.Element (A).Values loop
+               Text_IO.Put (" " & V.Text);
+            end loop;
+            Text_IO.New_Line;
+         end loop;
+      end Put_Attributes;
+
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
@@ -49,16 +81,7 @@ procedure Main is
 
       if Full then
          if Prj.Has_Attributes then
-            for A in Prj.Attributes.Iterate (With_Defaults => True) loop
-               Attr := Attribute.Set.Element (A);
-               Text_IO.Put ("A:   " & String (Attr.Name.Text));
-               Text_IO.Put (" " & (if Attr.Is_Default then '~' else '-') & ">");
-
-               for V of Attribute.Set.Element (A).Values loop
-                  Text_IO.Put (" " & V.Text);
-               end loop;
-               Text_IO.New_Line;
-            end loop;
+            Put_Attributes (Prj.Attributes);
 
             for A in Prj.Attributes.Filter ("Object_Dir").Iterate loop
                Text_IO.Put
@@ -93,7 +116,22 @@ procedure Main is
                Text_IO.New_Line;
             end loop;
          end if;
+
+         if Prj.Has_Packages then
+            for P of Prj.Packages loop
+               Text_IO.Put_Line (String (P.Name));
+               if P.Has_Attributes then
+                  Put_Attributes (P.Attributes);
+               end if;
+               if P.Name = Registry.Pack.Compiler then
+                  Put_Attributes
+                    (P.Attributes
+                      (Registry.Attribute.Switches, "Capital.adb"));
+               end if;
+            end loop;
+         end if;
       end if;
+
    end Display;
 
    Prj : Project.Tree.Object;
