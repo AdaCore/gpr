@@ -603,9 +603,9 @@ package body GPR2.ALI.ALI_Data is
                      U_Flags (Init_Scalars) := True;
 
                   elsif C1 = 'N' and then C2 = 'E' then
-                     --  No_Elab
+                     --  No_Elab_Code
 
-                     U_Flags (No_Elab) := True;
+                     U_Flags (No_Elab_Code) := True;
 
                   elsif C1 = 'P' then
                      --  Preelab, Pure, Unit_Kind
@@ -615,7 +615,7 @@ package body GPR2.ALI.ALI_Data is
                      elsif C2 = 'U' then
                         U_Flags (Pure) := True;
                      elsif C2 = 'K' then
-                        U.Set_Unit_Kind ('p');
+                        U.Set_Kind (Kind_Package);
                      end if;
 
                   elsif C1 = 'R' then
@@ -635,7 +635,7 @@ package body GPR2.ALI.ALI_Data is
                      if C2 = 'P' then
                         U_Flags (Shared_Passive) := True;
                      elsif C2 = 'U' then
-                        U.Set_Unit_Kind ('s');
+                        U.Set_Kind (Kind_Subprogram);
                      end if;
                   end if;
                end if;

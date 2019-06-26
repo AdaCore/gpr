@@ -88,8 +88,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    procedure Display_Paths is
    begin
       Text_IO.New_Line;
-      Version.Display
-        ("GPRLS", "2018", Version_String => Version.Long_Value);
+      Version.Display ("GPRLS", "2018", Version_String => Version.Long_Value);
 
       declare
          Src_Path : Path_Name.Set.Object;
@@ -142,6 +141,8 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          for P of Tree.Project_Search_Paths loop
             Text_IO.Put_Line ("   " & P.Value);
          end loop;
+
+         Text_IO.New_Line;
       end;
    end Display_Paths;
 
@@ -692,11 +693,14 @@ begin
 
          for S of Sources loop
             declare
+               use GPR2.ALI.Unit_Data;
+
                ALI_File     : Path_Name.Object;
                ALI_Object   : ALI_Data.Object;
                Obj_File     : Path_Name.Object;
                U_Sec_Source : Project.Source.Object;
                Dep_Source   : Project.Source.Object;
+               U_Flags      : Flag_Array;
 
             begin
                ALI_File := S.Artifacts.Dependency;
@@ -724,9 +728,31 @@ begin
                            Text_IO.Put_Line ("   " & String (U_Sec.Uname));
 
                         elsif Opt.Verbosity = Low then
-                           null;
-                           --  TODO: print detailed information.
-                           --  (see the legacy Gprls.Output_Unit)
+                           Text_IO.Put_Line ("   Unit =>");
+                           Text_IO.Put ("     Name   => ");
+                           Text_IO.Put (String (U_Sec.Uname));
+                           Text_IO.New_Line;
+
+                           Text_IO.Put_Line
+                             ("     Kind   => "
+                              & (case U_Sec.Kind is
+                                   when Kind_Package => "package",
+                                   when Kind_Subprogram => "subprogram")
+                              & ' '
+                              & (case U_Sec.Utype is
+                                   when Is_Spec | Is_Spec_Only => "spec",
+                                   when others                 => "body"));
+
+                           U_Flags := U_Sec.Flags;
+                           if U_Flags /= Flag_Array'(others => False) then
+                              Text_IO.Put ("     Flags  =>");
+                              for Flag in U_Flags'Range loop
+                                 if U_Flags (Flag) then
+                                    Text_IO.Put (' ' & Image (Flag));
+                                 end if;
+                              end loop;
+                              Text_IO.New_Line;
+                           end if;
                         end if;
                      end if;
 
@@ -744,6 +770,8 @@ begin
                      end if;
 
                      --  In non-verbose mode, only print the first U section
+                     --  (i.e. for a body, do not go on to show the
+                     --  dependencies of the corresponding spec).
 
                      if Opt.Verbosity = None then
                         exit;

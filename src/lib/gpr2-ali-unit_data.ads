@@ -30,6 +30,33 @@ package GPR2.ALI.Unit_Data is
    --  If only a spec appears, then it is marked as Is_Spec_Only, and if only
    --  a body appears, then it is marked Is_Body_Only).
 
+   type Unit_Kind is (Kind_Package, Kind_Subprogram);
+   --  Indicates whether a library unit is a package or a subprogram
+
+   type Flag is
+     (Preelab,
+      No_Elab_Code,
+      Pure,
+      Dynamic_Elab,
+      Elaborate_Body,
+      Has_RACW,
+      Remote_Types,
+      Shared_Passive,
+      RCI,
+      Predefined,
+      Is_Generic,
+      Init_Scalars,
+      SAL_Interface,
+      Body_Needed_For_SAL,
+      Elaborate_Body_Desirable);
+   --  Flags that can appear on a unit line
+
+   function Image (F : Flag) return String;
+   --  Return string image of F (with nice mixed casing)
+
+   type Flag_Array is array (Flag) of Boolean with Pack;
+   --  Set of flags applying to a given unit
+
    type Object is tagged private;
 
    function Create
@@ -50,34 +77,21 @@ package GPR2.ALI.Unit_Data is
    function Withs (Self : Object) return With_Data.List.Object;
    --  Returns the list of With_Data objects for Self
 
+   function Flags (Self : Object) return Flag_Array;
+   --  Returns the flags for Self
+
+   function Kind (Self : Object) return Unit_Kind;
+   --  Returns the unit kind for Self
+
    procedure Add_With (Self : in out Object; W : With_Data.Object);
    --  Add the With_Data object W to Self
-
-   type Flag is
-     (Preelab,
-      No_Elab,
-      Pure,
-      Dynamic_Elab,
-      Elaborate_Body,
-      Has_RACW,
-      Remote_Types,
-      Shared_Passive,
-      RCI,
-      Predefined,
-      Is_Generic,
-      Init_Scalars,
-      SAL_Interface,
-      Body_Needed_For_SAL,
-      Elaborate_Body_Desirable);
-
-   type Flag_Array is array (Flag) of Boolean with Pack;
 
    Default_Flags : constant Flag_Array;
 
    procedure Set_Flags (Self : in out Object; Flags : Flag_Array);
    --  Sets the boolean flags for Self to the given Flags
 
-   procedure Set_Unit_Kind (Self : in out Object; Kind : Character);
+   procedure Set_Kind (Self : in out Object; Kind : Unit_Kind);
    --  Sets the Unit_Kind for Self
 
    procedure Set_Utype (Self : in out Object; Utype : Unit_Type);
@@ -100,12 +114,10 @@ private
       --  Withs for this file
 
       Flags : Flag_Array;
-      --  Boolean parameters used by gprls in "very verbose" mode
+      --  Unit flags
 
-      Unit_Kind : Character;
-      --  Indicates the nature of the unit. 'p' for Packages and 's' for
-      --  subprograms. This is part of the parameters too.
-
+      Kind  : Unit_Kind;
+      --  Indicates the nature of the unit
    end record;
 
    Default_Flags : constant Flag_Array := (others => False);
@@ -119,7 +131,7 @@ private
               Utype     => Utype,
               Withs     => With_Data.List.Empty_List,
               Flags     => Default_Flags,
-              Unit_Kind => 'p'));
+              Kind      => Kind_Package));
 
    function Sfile (Self : Object) return Simple_Name is
      (Simple_Name (-Self.Sfile));
@@ -132,5 +144,11 @@ private
 
    function Withs (Self : Object) return With_Data.List.Object is
      (Self.Withs);
+
+   function Flags (Self : Object) return Flag_Array is
+     (Self.Flags);
+
+   function Kind (Self : Object) return Unit_Kind is
+     (Self.Kind);
 
 end GPR2.ALI.Unit_Data;
