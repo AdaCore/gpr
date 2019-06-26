@@ -70,6 +70,7 @@ exception
       | GNAT.Command_Line.Invalid_Parameter
       =>
       Text_IO.Put_Line ("Usage: ...");
+      --  ??? TBD: create Usage message
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 
    when E : Options.Usage_Error =>
