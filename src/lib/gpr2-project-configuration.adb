@@ -104,6 +104,8 @@ package body GPR2.Project.Configuration is
       --  which could be reviewed from scratch.
 
       use Ada;
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
       use GNAT;
 
       function Process_Id return String is
@@ -116,9 +118,6 @@ package body GPR2.Project.Configuration is
       --  directory.
 
       Key : constant String := Config_File_Key'Img;
-
-      use Ada.Strings;
-      use Ada.Strings.Fixed;
 
       Conf_Filename : constant String :=
                         (if not Path_Name.Temporary_Directory.Is_Defined
