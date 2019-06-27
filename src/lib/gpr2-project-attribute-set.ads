@@ -37,9 +37,10 @@ package GPR2.Project.Attribute.Set is
    function Is_Empty (Self : Object) return Boolean;
 
    function Contains
-     (Self  : Object;
-      Name  : Name_Type;
-      Index : Value_Type := No_Value) return Boolean;
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0) return Boolean;
    --  Checks whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
@@ -52,24 +53,24 @@ package GPR2.Project.Attribute.Set is
    --  Removes all elements from Self
 
    function Element
-     (Self  : Object;
-      Name  : Name_Type;
-      Index : Value_Type := No_Value) return Attribute.Object
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0) return Attribute.Object
      with Post =>
-       (if Self.Contains (Name, Index)
+       (if Self.Contains (Name, Index, At_Num)
         then Element'Result.Is_Defined
         else not Element'Result.Is_Defined);
 
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
-     with Pre  =>
-            not Self.Contains (Attribute.Name.Text, Attribute.Index.Text),
-          Post => Self.Contains (Attribute.Name.Text, Attribute.Index.Text);
+     with Pre  => not Self.Contains (Attribute),
+          Post => Self.Contains (Attribute);
    --  Inserts Attribute into the set
 
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
-     with Post => Self.Contains (Attribute.Name.Text, Attribute.Index.Text);
+     with Post => Self.Contains (Attribute);
    --  Inserts or replaces an Attribute into the set
 
    --  Iterator
@@ -85,9 +86,10 @@ package GPR2.Project.Attribute.Set is
         else not Element'Result.Is_Defined);
 
    function Find
-     (Self  : Object;
-      Name  : Name_Type;
-      Index : Value_Type := No_Value) return Cursor;
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0) return Cursor;
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -113,14 +115,16 @@ package GPR2.Project.Attribute.Set is
    function Iterate
      (Self          : Object;
       Name          : Optional_Name_Type := No_Name;
-      Index         : Value_Type := No_Value;
-      With_Defaults : Boolean := False)
+      Index         : Value_Type         := No_Value;
+      At_Num        : Natural            := 0;
+      With_Defaults : Boolean            := False)
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
-     (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Object
+     (Self   : Object;
+      Name   : Optional_Name_Type := No_Name;
+      Index  : Value_Type         := No_Value;
+      At_Num : Natural            := 0) return Object
      with Post => (if Name = No_Name and then Index = No_Value
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
@@ -162,8 +166,8 @@ private
    --        attributes. The map key is the index for the attributes.
 
    package Set_Attribute is new Ada.Containers.Indefinite_Ordered_Maps
-     (Value_Type, Attribute.Object);
-   --  The key in this set is the attribute index
+     (Value_At_Num, Attribute.Object);
+   --  The key in this set is the attribute index and 'at' part
 
    package Set is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, Set_Attribute.Map, "<", Set_Attribute."=");

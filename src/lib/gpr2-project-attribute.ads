@@ -148,16 +148,30 @@ package GPR2.Project.Attribute is
 
 private
 
+   type Value_At_Num (Length : Natural) is record
+      Value  : Value_Type (1 .. Length);
+      At_Num : Natural := 0;
+   end record;
+
+   function "<" (Left, Right : Value_At_Num) return Boolean is
+     (Left.Value < Right.Value
+      or else (Left.Value = Right.Value and then Left.At_Num < Right.At_Num));
+
+   function Create (Value : Value_Type; At_Num : Natural) return Value_At_Num
+   is ((Length => Value'Length, Value => Value, At_Num => At_Num));
+
    type Object is new Name_Values.Object with record
       Index                : Source_Reference.Value.Object;
       Index_Case_Sensitive : Boolean := True;
       Default              : Boolean := False;
    end record;
 
-   function Case_Aware_Index (Self : Object) return Value_Type is
-     (if Self.Index_Case_Sensitive
-      then Self.Index.Text
-      else Ada.Characters.Handling.To_Lower (Self.Index.Text));
+   function Case_Aware_Index (Self : Object) return Value_At_Num is
+     (Create
+        ((if Self.Index_Case_Sensitive
+          then Self.Index.Text
+          else Ada.Characters.Handling.To_Lower (Self.Index.Text)),
+         At_Num_Or (Self.Index, 0)));
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 

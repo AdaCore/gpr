@@ -23,6 +23,8 @@ with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
 
+private with GPR2.Source_Reference.Value;
+
 package GPR2.Project is
 
    use GNATCOLL.Tribooleans;
@@ -116,5 +118,13 @@ private
 
    Any_Index : constant Value_Type := (1 => ASCII.NUL);
    --  Internal index declaring that it is fit for any index request
+
+   function At_Num_Or
+     (Value : Source_Reference.Value.Object; Default : Natural) return Natural
+   is
+     (if Value.Is_Defined and then Value.Has_At_Num
+      then Value.At_Num
+      else Default);
+   --  Returns At_Num if defined or Default if not defined
 
 end GPR2.Project;

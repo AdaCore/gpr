@@ -833,11 +833,7 @@ package body GPR2.Project.Definition is
            (A : Attribute.Object;
             B : Value_Type;
             I : Natural) return Boolean
-         is (A.Value.Text = B
-             and then
-               ((A.Value.Has_At_Num and then A.Value.At_Num = I)
-                  or else
-                (not A.Value.Has_At_Num and then I = 1)));
+         is (A.Value.Text = B and then At_Num_Or (A.Value, 1) = I);
 
       begin
          --  Stop here if it's one of the excluded sources, or it's not in the
@@ -878,9 +874,7 @@ package body GPR2.Project.Definition is
                                          Name_Type (Exc.Index.Text);
 
                            Index : constant Natural :=
-                                     (if Exc.Value.Has_At_Num
-                                      then Exc.Value.At_Num
-                                      else 1);
+                                     At_Num_Or (Exc.Value, 1);
 
                         begin
                            Kind := (if Exc.Name.Text = PRA.Spec
@@ -1229,7 +1223,7 @@ package body GPR2.Project.Definition is
                Pck := View.Pack (PRP.Compiler);
 
                if Pck.Check_Attribute
-                 (PRA.Driver, Value_Type (Language), Att)
+                 (PRA.Driver, Value_Type (Language), Result => Att)
                then
                   return Att.Value.Text /= "";
                end if;

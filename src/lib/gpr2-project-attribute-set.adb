@@ -31,6 +31,7 @@ package body GPR2.Project.Attribute.Set is
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
       Name          : Unbounded_String;
       Index         : Unbounded_String;
+      At_Num        : Natural := 0;
       Set           : Object;
       With_Defaults : Boolean := False;
    end record;
@@ -85,9 +86,10 @@ package body GPR2.Project.Attribute.Set is
    function Contains
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := No_Value) return Boolean
+      Index : Value_Type := No_Value;
+      At_Num : Natural   := 0) return Boolean
    is
-      Position : constant Cursor := Self.Find (Name, Index);
+      Position : constant Cursor := Self.Find (Name, Index, At_Num);
    begin
       return Has_Element (Position);
    end Contains;
@@ -96,7 +98,9 @@ package body GPR2.Project.Attribute.Set is
      (Self      : Object;
       Attribute : Project.Attribute.Object) return Boolean is
    begin
-      return Self.Contains (Attribute.Name.Text, Attribute.Index.Text);
+      return Self.Contains
+        (Attribute.Name.Text, Attribute.Index.Text,
+         At_Num_Or (Attribute.Index, 0));
    end Contains;
 
    -------------
@@ -109,11 +113,12 @@ package body GPR2.Project.Attribute.Set is
    end Element;
 
    function Element
-     (Self  : Object;
-      Name  : Name_Type;
-      Index : Value_Type := No_Value) return Attribute.Object
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0) return Attribute.Object
    is
-      Position : constant Cursor := Self.Find (Name, Index);
+      Position : constant Cursor := Self.Find (Name, Index, At_Num);
    begin
       if Set_Attribute.Has_Element (Position.CA) then
          return Element (Position);
@@ -127,9 +132,10 @@ package body GPR2.Project.Attribute.Set is
    ------------
 
    function Filter
-     (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Object is
+     (Self   : Object;
+      Name   : Optional_Name_Type := No_Name;
+      Index  : Value_Type         := No_Value;
+      At_Num : Natural            := 0) return Object is
    begin
       if Name = No_Name and then Index = No_Value then
          return Self;
@@ -139,7 +145,7 @@ package body GPR2.Project.Attribute.Set is
          Result : Object;
       begin
          if Name = No_Name then
-            for C in Self.Iterate (Name, Index) loop
+            for C in Self.Iterate (Name, Index, At_Num) loop
                Result.Insert (Element (C));
             end loop;
 
@@ -174,7 +180,7 @@ package body GPR2.Project.Attribute.Set is
 
                --  Specific index only
 
-               CI := Item.Find (Index);
+               CI := Item.Find (Create (Index, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   declare
@@ -188,7 +194,7 @@ package body GPR2.Project.Attribute.Set is
                   end;
                end if;
 
-               CI := Item.Find (LI);
+               CI := Item.Find (Create (LI, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   declare
@@ -202,7 +208,7 @@ package body GPR2.Project.Attribute.Set is
                   end;
                end if;
 
-               CI := Item.Find (Any_Index);
+               CI := Item.Find (Create (Any_Index, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   Result.Insert (Item (CI));
@@ -220,9 +226,10 @@ package body GPR2.Project.Attribute.Set is
    ----------
 
    function Find
-     (Self  : Object;
-      Name  : Name_Type;
-      Index : Value_Type := No_Value) return Cursor
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0) return Cursor
    is
       Result : Cursor :=
                  (CM  => Self.Attributes.Find (Name),
@@ -236,14 +243,16 @@ package body GPR2.Project.Attribute.Set is
          --  is case sensitive or not.
 
          Result.CA := Result.Set.Find
-           (if Index = No_Value
-              or else Result.Set.Is_Empty
-              or else Result.Set.First_Element.Index_Case_Sensitive
-            then Index
-            else Characters.Handling.To_Lower (Index));
+           (Create
+              ((if Index = No_Value
+                  or else Result.Set.Is_Empty
+                  or else Result.Set.First_Element.Index_Case_Sensitive
+                then Index
+                else Characters.Handling.To_Lower (Index)),
+               At_Num));
 
          if not Set_Attribute.Has_Element (Result.CA) then
-            Result.CA := Result.Set.Find (Any_Index);
+            Result.CA := Result.Set.Find (Create (Any_Index, 0));
          end if;
       end if;
 
@@ -293,12 +302,22 @@ package body GPR2.Project.Attribute.Set is
       Position : constant Set.Cursor :=
                    Self.Attributes.Find (Attribute.Name.Text);
       Present  : Boolean := False;
+
+      function To_Value_At_Num
+        (Item : Source_Reference.Value.Object) return Value_At_Num
+      is
+        (if Item.Is_Defined
+         then Create (Item.Text, At_Num_Or (Item, 0))
+         else (0, "", 0));
+      --  Returns value as string together with 'at' part or empty if not
+      --  defined.
+
    begin
       if Set.Has_Element (Position) then
          declare
             A : Set_Attribute.Map := Set.Element (Position);
          begin
-            Present := A.Contains (Attribute.Index.Text);
+            Present := A.Contains (To_Value_At_Num (Attribute.Index));
             A.Include  (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Replace_Element (Position, A);
          end;
@@ -307,7 +326,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map;
          begin
-            Present := A.Contains (Attribute.Index.Text);
+            Present := A.Contains (To_Value_At_Num (Attribute.Index));
             A.Include (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Insert (Attribute.Name.Text, A);
          end;
@@ -378,14 +397,16 @@ package body GPR2.Project.Attribute.Set is
    function Iterate
      (Self          : Object;
       Name          : Optional_Name_Type := No_Name;
-      Index         : Value_Type := No_Value;
-      With_Defaults : Boolean := False)
+      Index         : Value_Type         := No_Value;
+      At_Num        : Natural            := 0;
+      With_Defaults : Boolean            := False)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do
          It.Set           := Self;
          It.Name          := To_Unbounded_String (String (Name));
          It.Index         := To_Unbounded_String (Index);
+         It.At_Num        := At_Num;
          It.With_Defaults := With_Defaults;
       end return;
    end Iterate;
@@ -586,9 +607,11 @@ package body GPR2.Project.Attribute.Set is
 
             elsif not Def.Default.Is_Empty then
                for D in Def.Default.Iterate loop
-                  if not Attrs.Contains (Value_Type (VSR.Key (D))) then
+                  if not Attrs.Contains
+                    (Create (Value_Type (VSR.Key (D)), 0))
+                  then
                      Attrs.Insert
-                       (Value_Type (VSR.Key (D)),
+                       (Create (Value_Type (VSR.Key (D)), 0),
                         Create_Attribute
                           (Value_Type (VSR.Key (D)),
                            SR.Value.Object

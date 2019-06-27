@@ -199,9 +199,10 @@ package body GPR2.Project.View is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0;
       Result : out Project.Attribute.Object) return Boolean is
    begin
-      Result := Definition.Get_RO (Self).Attrs.Element (Name, Index);
+      Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Num);
       return Result.Is_Defined;
    end Check_Attribute;
 
@@ -829,7 +830,9 @@ package body GPR2.Project.View is
 
       Builder : constant GPR2.Project.Pack.Object := Self.Builder;
 
-      function Create (Source : Value_Not_Empty) return GPR2.Path_Name.Object;
+      function Create
+        (Source : Value_Not_Empty;
+         At_Num : Natural) return GPR2.Path_Name.Object;
       --  Returns the full pathname of the main executable for the givem main
 
       ------------
@@ -837,36 +840,33 @@ package body GPR2.Project.View is
       ------------
 
       function Create
-        (Source : Value_Not_Empty) return GPR2.Path_Name.Object
+        (Source : Value_Not_Empty;
+         At_Num : Natural) return GPR2.Path_Name.Object
       is
          Attr : GPR2.Project.Attribute.Object;
+         BN   : constant Value_Not_Empty := Directories.Base_Name (Source);
+
+         function Create_Path
+           (Name : Value_Not_Empty) return GPR2.Path_Name.Object
+         is
+           (GPR2.Path_Name.Create_File
+              (Name_Type (Name & Self.Executable_Suffix),
+               Optional_Name_Type (Self.Executable_Directory.Dir_Name)));
+
       begin
-         if Builder.Is_Defined then
-            if Builder.Has_Attributes (A.Executable, Source) then
-               Attr := Builder.Attribute (A.Executable, Source);
-
-            else
-               --  Not found but an extension is present, check without
-
-               declare
-                  BN : constant Value_Type := Directories.Base_Name (Source);
-               begin
-                  if Source /= BN
-                    and then Builder.Has_Attributes (A.Executable, BN)
-                  then
-                     Attr := Builder.Attribute (A.Executable, BN);
-                  end if;
-               end;
-            end if;
+         if Builder.Is_Defined
+           and then
+             (Builder.Check_Attribute (A.Executable, Source, At_Num, Attr)
+              or else
+                (Source /= BN
+                 and then Builder.Check_Attribute
+                            (A.Executable, BN, At_Num, Attr)))
+           and then At_Num = At_Num_Or (Attr.Index, 0)
+         then
+            return Create_Path (Attr.Value.Text);
+         else
+            return Create_Path (BN);
          end if;
-
-         return GPR2.Path_Name.Create_File
-           (Name_Type
-              ((if Attr.Is_Defined
-                then Attr.Value.Text
-                else Ada.Directories.Base_Name (String (Source)))
-               & Self.Executable_Suffix),
-            Optional_Name_Type (Self.Executable_Directory.Dir_Name));
       end Create;
 
       Attr : Project.Attribute.Object;
@@ -875,7 +875,7 @@ package body GPR2.Project.View is
       return Set : GPR2.Path_Name.Set.Object do
          if Self.Check_Attribute (A.Main, Result => Attr) then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text));
+               Set.Append (Mains.Create (Main.Text, At_Num_Or (Main, 0)));
             end loop;
          end if;
 
@@ -885,7 +885,7 @@ package body GPR2.Project.View is
            and then Self.Extended.Check_Attribute (A.Main, Result => Attr)
          then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text));
+               Set.Append (Mains.Create (Main.Text, At_Num_Or (Main, 0)));
             end loop;
          end if;
       end return;

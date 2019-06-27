@@ -1603,7 +1603,7 @@ package body GPRinstall.Install is
                         begin
                            if C.Has_Packages (P.Compiler)
                              and then C.Pack (P.Compiler).Check_Attribute
-                                        (A.Driver, Lang.Text, Attr)
+                                        (A.Driver, Lang.Text, Result => Attr)
                              and then Attr.Value.Text /= ""
                            then
                               Langs.Include (Lang.Text);

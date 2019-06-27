@@ -74,6 +74,7 @@ package GPR2.Project.Pack is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Value_Type := No_Value;
+      At_Num : Natural    := 0;
       Result : out Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True and set Result to attribute if attribute exists or has

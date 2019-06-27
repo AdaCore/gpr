@@ -228,7 +228,7 @@ package body GPR2.Project.Tree is
    begin
       --  Check runtime path
 
-      if CV.Check_Attribute (PRA.Runtime_Dir, "ada", RTD)
+      if CV.Check_Attribute (PRA.Runtime_Dir, "ada", Result => RTD)
         and then RTD.Value.Text /= ""
       then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
@@ -1013,7 +1013,8 @@ package body GPR2.Project.Tree is
                        Optional_Name_Type
                          (if LRT = No_Value
                             and then Self.Root_Project.Check_Attribute
-                                       (PRA.Runtime, L.Text, Tmp_Attr)
+                                       (PRA.Runtime, L.Text,
+                                        Result => Tmp_Attr)
                           then Tmp_Attr.Value.Text
                           else LRT);
 
