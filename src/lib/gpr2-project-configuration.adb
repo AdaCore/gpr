@@ -119,6 +119,14 @@ package body GPR2.Project.Configuration is
 
       Key : constant String := Config_File_Key'Img;
 
+      Out_Filename  : constant String :=
+                        (if not Path_Name.Temporary_Directory.Is_Defined
+                         then ""
+                         else Path_Name.Compose
+                           (Path_Name.Temporary_Directory,
+                            Name_Type
+                              (Process_Id & "-gpr2_tmp_out.tmp")).Value);
+
       Conf_Filename : constant String :=
                         (if not Path_Name.Temporary_Directory.Is_Defined
                          then ""
@@ -133,6 +141,7 @@ package body GPR2.Project.Configuration is
       Args      : OS_Lib.Argument_List (1 .. Settings'Length +
                                         (if Debug then 6 else 5));
       Success   : Boolean := False;
+      Ret_Code  : Integer := 0;
 
       Result    : Object;
    begin
@@ -160,7 +169,7 @@ package body GPR2.Project.Configuration is
 
       --  Execute external GPRconfig tool
 
-      OS_Lib.Spawn (GPRconfig.all, Args, Success);
+      OS_Lib.Spawn (GPRconfig.all, Args, Out_Filename, Success, Ret_Code);
 
       --  Free arguments
 
@@ -192,8 +201,14 @@ package body GPR2.Project.Configuration is
                Sloc => Source_Reference.Create (Project.Value, 1, 1)));
       end if;
 
-      if Directories.Exists (Conf_Filename) and then not Debug then
-         Directories.Delete_File (Conf_Filename);
+      if not Debug then
+         if Directories.Exists (Conf_Filename) then
+            Directories.Delete_File (Conf_Filename);
+         end if;
+
+         if Directories.Exists (Out_Filename) then
+            Directories.Delete_File (Out_Filename);
+         end if;
       end if;
 
       return Result;
