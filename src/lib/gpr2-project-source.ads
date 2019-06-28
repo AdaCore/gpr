@@ -127,11 +127,11 @@ package GPR2.Project.Source is
    --
 
    function Has_Other_Part (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if an other part exists for this project source
 
    function Other_Part (Self : Object) return Object
-     with Pre => Self /= Undefined and then Self.Has_Other_Part,
+     with Pre => Self.Is_Defined and then Self.Has_Other_Part,
           Post => Other_Part'Result.Is_Defined;
    --  Returns the other part for this project source
 

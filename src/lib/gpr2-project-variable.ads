@@ -92,19 +92,16 @@ package GPR2.Project.Variable is
 
 private
 
-   use type Project.Typ.Object;
-
    type Object is new Name_Values.Object with record
-      Typ : Project.Typ.Object := Project.Typ.Undefined;
+      Typ : Project.Typ.Object;
    end record;
 
    function Has_Type (Self : Object) return Boolean is
-      (Self.Typ /= Project.Typ.Undefined);
+     (Self.Typ.Is_Defined);
 
    function Typ (Self : Object) return Project.Typ.Object is  (Self.Typ);
 
-   Undefined : constant Object :=
-                 (Name_Values.Undefined with Typ => Project.Typ.Undefined);
+   Undefined : constant Object := (Name_Values.Undefined with Typ => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

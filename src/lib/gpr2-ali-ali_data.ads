@@ -52,19 +52,19 @@ package GPR2.ALI.ALI_Data is
 
    function Dep_For
      (Self : Object; File : Simple_Name) return Dependency_Data.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the Dependency_Data object for File in Self
 
    function Units (Self : Object) return Unit_Data.List.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the list of Unit_Data objects in Self
 
    function Sdeps (Self : Object) return Dependency_Data.List.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the list of Dependency_Data objects in Self
 
    procedure Print_ALI (Self : Object)
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Debug util
 
 private

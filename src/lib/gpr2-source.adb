@@ -147,7 +147,7 @@ package body GPR2.Source is
 
    function Has_Other_Part (Self : Object) return Boolean is
    begin
-      return Registry.Shared.Get (Self).Other_Part /= GPR2.Path_Name.Undefined;
+      return Registry.Shared.Get (Self).Other_Part.Is_Defined;
    end Has_Other_Part;
 
    ---------------------

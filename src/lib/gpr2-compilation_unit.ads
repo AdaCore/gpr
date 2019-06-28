@@ -68,34 +68,37 @@ package GPR2.Compilation_Unit is
       Is_Sep_From  : Optional_Name_Type;
       Is_Generic   : Boolean) return Object;
 
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns True if Self is defined
+
    function Unit_Name (Self : Object) return Name_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the unit name for this compilation unit
 
    function Index (Self : Object) return Positive
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the source index for this compilation unit
 
    function Kind (Self : Object) return Kind_Type
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the kind for this compilation unit
 
    function Withed_Units
      (Self : Object) return Source_Reference.Identifier.Set.Object
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns the set of withed units for this compilation unit
 
    function Is_Separate (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if Self is a separate
 
    function Is_Separate_From (Self : Object) return Name_Type
-     with Pre => Self /= Undefined and then Self.Is_Separate;
+     with Pre => Self.Is_Defined and then Self.Is_Separate;
    --  If this compilation unit is a separate, returns its parent unit, else
    --  returns an empty string.
 
    function Is_Generic (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if Self is a generic unit
 
 private
@@ -139,6 +142,9 @@ private
 
    function Index (Self : Object) return Positive is
      (Self.Index);
+
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
 
    function Is_Separate (Self : Object) return Boolean is
      (Self.Kind = S_Separate);

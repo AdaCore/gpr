@@ -78,7 +78,7 @@ package GPR2.Source is
    --  Releases source object if not referenced anymore
 
    function Has_Units (Self : Object) return Boolean
-     with Pre => Self /= Undefined;
+     with Pre => Self.Is_Defined;
    --  Returns True if source is unit-based (i.e. Ada)
 
    --
@@ -86,23 +86,23 @@ package GPR2.Source is
    --
 
    function Has_Single_Unit (Self : Object) return Boolean
-     with Pre => Self /= Undefined and then Self.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns True if Self has only one compilation unit
 
    function Compilation_Units
      (Self : Object) return Compilation_Unit.List.Object
-     with Pre => Self /= Undefined and then Self.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns the compilation units for Self
 
    type Unit_Index is new Positive;
 
    function Has_Compilation_Unit_At
      (Self : Object; Index : Natural) return Boolean
-     with Pre => Self /= Undefined and then Self.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns True if Self has a compilation unit at Index
 
    function Unit_Name (Self : Object; Index : Natural := 1) return Name_Type
-     with Pre => Self /= Undefined and then Self.Has_Units
+     with Pre => Self.Is_Defined and then Self.Has_Units
                  and then Self.Has_Compilation_Unit_At (Index);
    --  Returns the unit name for the source Self at Index (default = 1)
 
@@ -121,7 +121,7 @@ package GPR2.Source is
    function With_Clauses
      (Self : Object;
       Unit : Name_Type) return Source_Reference.Identifier.Set.Object
-     with Pre => Self /= Undefined and then Self.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns the dependencies in Self associated with all the compilation
    --  units for Unit. The result may be empty.
 
@@ -132,7 +132,7 @@ package GPR2.Source is
 
    function Kind (Self : Object; Index : Natural := 1) return Kind_Type
      with Pre =>
-       Self /= Undefined
+       Self.Is_Defined
        and then (not Self.Has_Units
                  or else Self.Has_Compilation_Unit_At (Index));
    --  Returns the kind for the source Self
@@ -141,7 +141,7 @@ package GPR2.Source is
    --  Returns True if Self has an other part
 
    function Other_Part (Self : Object) return Object
-     with Pre => Self /= Undefined and then Self.Has_Other_Part;
+     with Pre => Self.Is_Defined and then Self.Has_Other_Part;
    --  Returns the other part for the source Self
 
    procedure Set_Other_Part (Self : Object; Other_Part : Object)
@@ -153,11 +153,10 @@ package GPR2.Source is
 private
 
    type Object is tagged record
-      Pathname : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+      Pathname : GPR2.Path_Name.Object;
    end record;
 
-   Undefined : constant Object :=
-                 Object'(Pathname => GPR2.Path_Name.Undefined);
+   Undefined : constant Object := Object'(Pathname => <>);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
