@@ -109,11 +109,13 @@ package GPR2.Project.Attribute is
      with Inline, Pre => Self.Is_Defined;
    --  Returns the attribute's index value
 
-   function Index_Equal (Self : Object; Value : Value_Type) return Boolean;
+   function Index_Equal (Self : Object; Value : Value_Type) return Boolean
+     with Pre => Self.Is_Defined and then Self.Has_Index;
    --  Returns True if the attribute's index is equal to Value taking into
    --  account the case-sensitivity of the index.
 
-   function Is_Any_Index (Self : Object) return Boolean;
+   function Is_Any_Index (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Has_Index;
    --  Returns True if the attribute can be returned from the set for any
    --  index in a request. Main case to use such attributes is to get attribute
    --  with default value from the set when the default value defined for any
@@ -122,7 +124,8 @@ package GPR2.Project.Attribute is
    procedure Set_Case
      (Self                    : in out Object;
       Index_Is_Case_Sensitive : Boolean;
-      Value_Is_Case_Sensitive : Boolean);
+      Value_Is_Case_Sensitive : Boolean)
+     with Pre => Self.Is_Defined;
    --  Sets attribute case sensitivity for the index and the value.
    --  By default both are case-sensitive.
 
