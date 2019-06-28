@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Fixed;
-
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
 
@@ -25,6 +23,21 @@ package body GPR2.Project.Source.Artifact is
 
    function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
    --  ??? work around a strange visibility issue
+
+   function At_Suffix (At_Num : Positive) return Name_Type;
+   --  Returns 'at' index from attribute value or index prefixed with '~'
+   --  character to use in filenames.
+
+   ---------------
+   -- At_Suffix --
+   ---------------
+
+   function At_Suffix (At_Num : Positive) return Name_Type is
+      Result : String :=  At_Num'Img;
+   begin
+      Result (Result'First) := '~';
+      return Name_Type (Result);
+   end At_Suffix;
 
    ------------
    -- Create --
@@ -98,10 +111,7 @@ package body GPR2.Project.Source.Artifact is
          for CU of Source.Source.Compilation_Units loop
             if CU.Kind = S_Body then
                declare
-                  use Ada.Strings;
-                  Index_Suffix : constant Name_Type :=
-                                   "~" & Name_Type
-                                     (Fixed.Trim (CU.Index'Image, Left));
+                  Index_Suffix : constant Name_Type := At_Suffix (CU.Index);
                begin
                   Object_Files.Insert
                     (CU.Index,
@@ -123,20 +133,13 @@ package body GPR2.Project.Source.Artifact is
          if S_View.Is_Library then
             for CU of Source.Source.Compilation_Units loop
                if CU.Kind = S_Body then
-                  declare
-                     use Ada.Strings;
-                     Index_Suffix : constant Name_Type :=
-                                      "~" & Name_Type
-                                        (Fixed.Trim (CU.Index'Image, Left));
-                  begin
-                     Dependency_Files.Insert
-                       (Idx,
-                        Path_Name.Create_File
-                          (Src & Index_Suffix & D_Suffix,
-                           Optional_Name_Type
-                             (O_View.Object_Directory.Value)));
-                     Idx := Idx + 1;
-                  end;
+                  Dependency_Files.Insert
+                    (Idx,
+                     Path_Name.Create_File
+                       (Src & At_Suffix (CU.Index) & D_Suffix,
+                        Optional_Name_Type
+                          (O_View.Object_Directory.Value)));
+                  Idx := Idx + 1;
                end if;
             end loop;
          end if;
@@ -172,7 +175,7 @@ package body GPR2.Project.Source.Artifact is
                   else Definition.Strong (Self.Source.View));
       Result : Path_Name.Set.Object;
    begin
-      if Self.Has_Object_Code then
+      if not Self.Object_Files.Is_Empty then
          --  Object themselves
 
          for O of Self.Object_Files loop
@@ -208,11 +211,9 @@ package body GPR2.Project.Source.Artifact is
 
       --  Append the dependencies
 
-      if Self.Has_Dependency then
-         for D of Self.Dependency_Files loop
-            Result.Append (D);
-         end loop;
-      end if;
+      for D of Self.Dependency_Files loop
+         Result.Append (D);
+      end loop;
 
       --  Append preprocessed sources
 

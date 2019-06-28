@@ -180,25 +180,28 @@ package body GPR2.Project.Source.Set is
             when S_Compilable =>
                if Source.Source.Has_Units then
                   for CU of Source.Source.Compilation_Units loop
-                     if not
-                       ((Source.Source.Has_Single_Unit and then
-                             not Source.Has_Other_Part
+                     if (Source.Source.Has_Single_Unit
+                         and then not Source.Has_Other_Part
                          and then CU.Kind /= GPR2.S_Separate
                          and then Source.Source.Language = "Ada")
                         --  The condition above is about Ada package specs
                         --  without a body, which have to be compilable.
-                        or else CU.Kind = GPR2.S_Body)
+                        or else CU.Kind = GPR2.S_Body
                      then
-                        return False;
+                        --  At least one compilable unit
+                        return True;
                      end if;
                   end loop;
+
+                  return False;
+
                else
                   return Source.Source.Kind = GPR2.S_Body;
                end if;
 
             when S_Spec     =>
                if Source.Source.Has_Units then
-                  return (for all CU of Source.Source.Compilation_Units =>
+                  return (for some CU of Source.Source.Compilation_Units =>
                             CU.Kind = GPR2.S_Spec);
                else
                   return Source.Source.Kind = GPR2.S_Spec;
@@ -206,7 +209,7 @@ package body GPR2.Project.Source.Set is
 
             when S_Body     =>
                if Source.Source.Has_Units then
-                  return (for all CU of Source.Source.Compilation_Units =>
+                  return (for some CU of Source.Source.Compilation_Units =>
                             CU.Kind = GPR2.S_Body);
                else
                   return Source.Source.Kind = GPR2.S_Body;
@@ -214,18 +217,16 @@ package body GPR2.Project.Source.Set is
 
             when S_Separate =>
                if Source.Source.Has_Units then
-                  return (for all CU of Source.Source.Compilation_Units =>
+                  return (for some CU of Source.Source.Compilation_Units =>
                             CU.Kind = GPR2.S_Separate);
                else
-                  return False;
+                  return Source.Source.Kind = GPR2.S_Separate;
                end if;
 
             when others     =>
                return True;
          end case;
       end if;
-
-      return True;
    end Match_Filter;
 
    ----------

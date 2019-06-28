@@ -86,6 +86,8 @@ procedure GPRclean.Main is
    -----------
 
    procedure Clean (View : Project.View.Object) is
+      use GNATCOLL.Utils;
+
       Obj_Dir : constant Path_Name.Object := View.Object_Directory;
       Tree    : constant access Project.Tree.Object := View.Tree;
       Opts    : GPRclean.Options.Object;
@@ -129,7 +131,6 @@ procedure GPRclean.Main is
 
             while not End_Of_File (File) loop
                declare
-                  use GNATCOLL.Utils;
                   Line : constant String := Get_Line (File);
                begin
                   if Line (Line'First) = '[' then
@@ -208,6 +209,7 @@ procedure GPRclean.Main is
          declare
             S       : constant Project.Source.Object :=
                         Project.Source.Set.Element (C);
+            Bexch   : constant Name_Type := ".bexch";
             Cleanup : Boolean := True;
             --  To disable cleanup if main files list exists and the main file
             --  is not from list.
@@ -229,9 +231,22 @@ procedure GPRclean.Main is
                if Is_Main and then Opts.Arg_Mains and then not In_Mains then
                   Cleanup := False;
                else
-                  Binder_Artifacts
-                    (S.Source.Path_Name.Base_Name & ".bexch",
-                     Language => S.Source.Language);
+                  if S.Source.Language = "Ada"
+                    and then not S.Source.Has_Single_Unit
+                  then
+                     for CU of S.Source.Compilation_Units loop
+                        if CU.Kind = S_Body then
+                           Binder_Artifacts
+                             (S.Source.Path_Name.Base_Name
+                              & Name_Type ('~' & Image (CU.Index, 1)) & Bexch,
+                              Language => S.Source.Language);
+                        end if;
+                     end loop;
+                  else
+                     Binder_Artifacts
+                       (S.Source.Path_Name.Base_Name & Bexch,
+                        Language => S.Source.Language);
+                  end if;
                end if;
             end if;
 
