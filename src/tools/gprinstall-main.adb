@@ -176,7 +176,11 @@ procedure GPRinstall.Main is
          pragma Unreferenced (Switch);
       begin
          Options.Project_File := Path_Name.Create_File
-           (Name_Type (Value),
+           (Name_Type
+              (Value
+               & (if Directories.Extension (Value) = ""
+                 then ".gpr"
+                 else "")),
             Optional_Name_Type (Directories.Current_Directory));
       end Set_Project;
 
