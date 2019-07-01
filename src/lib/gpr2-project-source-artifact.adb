@@ -202,6 +202,7 @@ package body GPR2.Project.Source.Artifact is
             Append_File (Name & ".stdout");
             Append_File (Name & ".stderr");
             Append_File (Source.Path_Name.Base_Name & ".adt");
+            Append_File (Source.Path_Name.Base_Name & ".ci");
          end;
       end if;
 

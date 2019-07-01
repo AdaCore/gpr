@@ -4,6 +4,7 @@ Demo     K_AGGREGATE_LIBRARY
        > a-obj/pcka.ads.stdout
        > a-obj/pcka.ads.stderr
        > a-obj/pcka.adt
+       > a-obj/pcka.ci
        > agg-lib/pcka.ali
        > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
@@ -12,6 +13,7 @@ Demo     K_AGGREGATE_LIBRARY
        > b-obj/pckb.ads.stdout
        > b-obj/pckb.ads.stderr
        > b-obj/pckb.adt
+       > b-obj/pckb.ci
        > agg-lib/pckb.ali
        > b-obj/pckb.ali
        > b-obj/pckb.ads.prep
@@ -21,6 +23,7 @@ A        K_STANDARD
        > a-obj/pcka.ads.stdout
        > a-obj/pcka.ads.stderr
        > a-obj/pcka.adt
+       > a-obj/pcka.ci
        > agg-lib/pcka.ali
        > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
@@ -30,6 +33,7 @@ B        K_LIBRARY
        > b-obj/pckb.ads.stdout
        > b-obj/pckb.ads.stderr
        > b-obj/pckb.adt
+       > b-obj/pckb.ci
        > agg-lib/pckb.ali
        > b-obj/pckb.ali
        > b-obj/pckb.ads.prep
