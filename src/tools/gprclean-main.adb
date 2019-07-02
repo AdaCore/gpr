@@ -504,9 +504,8 @@ begin
    --  Iterate on all view, and clean them
 
    for V in Project_Tree.Iterate
-     (Kind   => (Project.I_Recursive  => Options.All_Projects,
-                 Project.I_Imported   => Options.All_Projects,
-                 Project.I_Aggregated => Options.All_Projects, others => True),
+     (Kind   => (Project.I_Recursive => Options.All_Projects,
+                 Project.I_Imported  => Options.All_Projects, others => True),
       Status => (Project.S_Externally_Built => False),
       Filter => (Project.F_Abstract | Project.F_Aggregate => False,
                  others => True))
