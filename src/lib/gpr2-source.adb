@@ -166,7 +166,6 @@ package body GPR2.Source is
 
    function Has_Units (Self : Object) return Boolean is
    begin
-      Update (Self);
       return Registry.Shared.Get (Self).Is_Ada_Source;
    end Has_Units;
 
