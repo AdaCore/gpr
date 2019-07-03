@@ -502,6 +502,20 @@ begin
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
          Target           => Name_Type (To_String (Options.Target)),
          Implicit_Project => Options.Implicit_Proj);
+
+      if Project_Tree.Configuration.Log_Messages.Has_Element
+           (Warning     => True,
+            Information => False,
+            Error       => False)
+      then
+         Project_Tree.Log_Messages.Append
+           (GPR2.Message.Create
+              (GPR2.Message.Warning,
+               "Cleaning may be incomplete, as there were problems during"
+               & " auto-configuration",
+               Source_Reference.Create (Options.Project_Path.Value, 0, 0),
+               Raw => True));
+      end if;
    end if;
 
    if Project_Tree.Root_Project.Is_Library and then Options.Arg_Mains then
@@ -510,7 +524,7 @@ begin
            (GPR2.Message.Error,
             "main cannot be a source of a library project: """
             & Options.Mains.First_Element & '"',
-            GPR2.Source_Reference.Create (Options.Project_Path.Value, 0, 0)));
+            Source_Reference.Create (Options.Project_Path.Value, 0, 0)));
 
       Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
 

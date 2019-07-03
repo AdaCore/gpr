@@ -16,10 +16,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Fixed;
-
 with Ada.Directories;
+with Ada.Strings.Fixed;
+with Ada.Text_IO;
+
 with GNAT.OS_Lib;
+with GNATCOLL.Utils;
 
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -108,6 +110,10 @@ package body GPR2.Project.Configuration is
       use Ada.Strings.Fixed;
       use GNAT;
 
+      procedure Load_Messages;
+      --  Load messages from saved gprconfig output file to result
+      --  configuration object.
+
       function Process_Id return String is
         (Strings.Fixed.Trim
            (Integer'Image (OS_Lib.Pid_To_Integer (OS_Lib.Current_Process_Id)),
@@ -142,8 +148,36 @@ package body GPR2.Project.Configuration is
                                         (if Debug then 6 else 5));
       Success   : Boolean := False;
       Ret_Code  : Integer := 0;
-
       Result    : Object;
+
+      -------------------
+      -- Load_Messages --
+      -------------------
+
+      procedure Load_Messages is
+         File_Out : Text_IO.File_Type;
+      begin
+         Text_IO.Open (File_Out, Text_IO.In_File, Out_Filename);
+
+         while not Text_IO.End_Of_File (File_Out) loop
+            declare
+               use GNATCOLL.Utils;
+               Line : constant String := Text_IO.Get_Line (File_Out);
+            begin
+               Result.Messages.Append
+                 (Message.Create
+                    ((if Starts_With (Line, "gprconfig: ")
+                     then Message.Warning
+                     else Message.Information),
+                     Line,
+                     Sloc => Source_Reference.Create (Project.Value, 0, 0),
+                     Raw  => True));
+            end;
+         end loop;
+
+         Text_IO.Close (File_Out);
+      end Load_Messages;
+
    begin
       --  Build parameters
 
@@ -193,12 +227,16 @@ package body GPR2.Project.Configuration is
             Result.Descriptions.Append (S);
          end loop;
 
+         Load_Messages;
+
       else
+         Load_Messages;
+
          Result.Messages.Append
            (Message.Create
               (Message.Error,
                "cannot create configuration file, fail to execute gprconfig",
-               Sloc => Source_Reference.Create (Project.Value, 1, 1)));
+               Sloc => Source_Reference.Create (Project.Value, 0, 0)));
       end if;
 
       if not Debug then

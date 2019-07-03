@@ -844,11 +844,11 @@ package body GPR2.Project.Tree is
 
          Self.Conf := Config;
 
-         if Config.Has_Messages then
-            for M of Config.Log_Messages loop
-               Self.Messages.Append (M);
-            end loop;
+         for M of Config.Log_Messages loop
+            Self.Messages.Append (M);
+         end loop;
 
+         if Self.Messages.Has_Error then
             raise Project_Error with "configuration project has errors";
          end if;
 

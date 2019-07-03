@@ -44,6 +44,9 @@ package GPR2.Project.Configuration is
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this configuration
 
+   function Has_Error (Self : Object) return Boolean;
+   --  Returns whether error messages are present for this configuration
+
    function Log_Messages (Self : Object) return Log.Object
      with Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
    --  Returns the Logs, this contains information, warning and error messages
@@ -152,6 +155,9 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Has_Error (Self : Object) return Boolean is
+      (Self.Messages.Has_Error);
 
    Default_Description : constant Description_Set (1 .. 1) :=
                            (1 => (Language => To_Unbounded_String ("ada"),
