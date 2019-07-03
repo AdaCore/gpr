@@ -485,6 +485,7 @@ begin
          Subdirs          => To_Optional_Name (Options.Subdirs),
          Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
+         Target           => Name_Type (To_String (Options.Target)),
          Implicit_Project => Options.Implicit_Proj);
    end if;
 
