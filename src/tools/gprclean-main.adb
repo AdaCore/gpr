@@ -141,8 +141,8 @@ procedure GPRclean.Main is
                end;
             end loop;
 
-            Delete_File (BF);
             Close (File);
+            Delete_File (BF);
          end if;
       end Binder_Artifacts;
 
