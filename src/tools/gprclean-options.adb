@@ -225,11 +225,6 @@ package body GPRclean.Options is
          Help => "Shared lib projects may import any project");
 
       Define_Switch
-        (Config, Options.Debug_Mode'Access,
-         Switch => "-d",
-         Help   => "Debug mode");
-
-      Define_Switch
         (Config, Options.Remove_Empty_Dirs'Access,
          Switch => "-p",
          Help   => "Remove empty build directories");

@@ -40,7 +40,6 @@ package GPRclean.Options is
       Remain_Useful               : aliased Boolean := False;
       No_Project                  : aliased Boolean := False;
       Unchecked_Shared_Lib_Import : aliased Boolean := False;
-      Debug_Mode                  : aliased Boolean := False;
       Remove_Empty_Dirs           : aliased Boolean := False;
 
       Mains         : GPR2.Containers.Value_Set;

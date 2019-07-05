@@ -160,6 +160,11 @@ package body GPRtools.Options is
          Long_Switch => "--relocate-build-tree?",
          Help        => "Root obj/lib/exec dirs are current-directory or dir",
          Argument    => "<dir>");
+
+      Define_Switch
+        (Self.Config, Self.Debug_Mode'Access,
+         Long_Switch => "--debug",
+         Help        => "Debug mode");
    end Setup;
 
    --------------------

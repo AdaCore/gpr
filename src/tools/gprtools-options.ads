@@ -35,6 +35,7 @@ package GPRtools.Options is
       Full_Path_Name_For_Brief : aliased Boolean := False;
       Version                  : aliased Boolean := False;
       Warnings                 : aliased Boolean := True;
+      Debug_Mode               : aliased Boolean := False;
       Verbosity                : Verbosity_Level := Regular;
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;
