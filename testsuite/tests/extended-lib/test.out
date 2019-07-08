@@ -1,4 +1,12 @@
 A        K_STANDARD
+    > a-src/repl.adb
+       > e-obj/repl.o
+       > e-obj/repl.adb.stdout
+       > e-obj/repl.adb.stderr
+       > e-obj/repl.adt
+       > e-obj/repl.ci
+       > e-obj/repl.ali
+       > e-obj/repl.adb.prep
     > a-src/pcka.ads
        > e-obj/pcka.o
        > e-obj/pcka.ads.stdout
@@ -25,6 +33,23 @@ Demo     K_LIBRARY
        > e-lib/code.ali
        > e-obj/code.ali
        > e-obj/code.ads.prep
+    > src/repl.adb
+       > e-obj/repl.o
+       > e-obj/repl.adb.stdout
+       > e-obj/repl.adb.stderr
+       > e-obj/repl.adt
+       > e-obj/repl.ci
+       > e-lib/repl.ali
+       > e-obj/repl.ali
+       > e-obj/repl.adb.prep
+    > a-src/pcka.ads
+       > e-obj/pcka.o
+       > e-obj/pcka.ads.stdout
+       > e-obj/pcka.ads.stderr
+       > e-obj/pcka.adt
+       > e-obj/pcka.ci
+       > e-obj/pcka.ali
+       > e-obj/pcka.ads.prep
     > src/repl.ads
        > e-obj/repl.o
        > e-obj/repl.ads.stdout
@@ -34,11 +59,3 @@ Demo     K_LIBRARY
        > e-lib/repl.ali
        > e-obj/repl.ali
        > e-obj/repl.ads.prep
-    > a-src/pcka.ads
-       > e-obj/pcka.o
-       > e-obj/pcka.ads.stdout
-       > e-obj/pcka.ads.stderr
-       > e-obj/pcka.adt
-       > e-obj/pcka.ci
-       > e-obj/pcka.ali
-       > e-obj/pcka.ads.prep
