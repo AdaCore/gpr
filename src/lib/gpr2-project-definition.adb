@@ -1116,7 +1116,6 @@ package body GPR2.Project.Definition is
             --  TODO: avoid the code duplication from Handle_File
             --
 
-            Project_Source         : constant Project.Source.Object := Src;
             File                   : constant Path_Name.Object :=
                                        Src.Source.Path_Name;
             Basename               : constant Value_Type :=
@@ -1150,12 +1149,12 @@ package body GPR2.Project.Definition is
                Interface_Sources.Exclude (Basename);
             end if;
 
-            Def.Sources.Insert (Project_Source);
+            Def.Sources.Insert (Src);
 
             --  For Ada, register the Unit object into the view
 
             if Language_Is_Ada then
-               Register_Units (Project_Source, Compilation_Units);
+               Register_Units (Src, Compilation_Units);
             end if;
          end Add_Source;
 
