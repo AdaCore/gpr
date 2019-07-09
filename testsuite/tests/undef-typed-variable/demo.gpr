@@ -1,0 +1,4 @@
+project P is
+   type T is ("one");
+   A : T := External ("BLA");
+end P;

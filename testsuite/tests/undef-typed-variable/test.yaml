@@ -1,0 +1,5 @@
+description:
+    Check for an undef typed variable
+driver: build_and_run
+project_file: undef_typed_variable
+main: main

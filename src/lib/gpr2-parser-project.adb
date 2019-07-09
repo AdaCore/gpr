@@ -2381,21 +2381,27 @@ package body GPR2.Parser.Project is
                      if Values.Single then
                         --  Check that the value is part of the type
 
-                        if not To_Set (Type_Def.Values).Contains
-                          (Values.Values.First_Element.Text)
-                        then
-                           Tree.Log_Messages.Append
-                             (Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    => Sloc,
-                                 Message =>
-                                   "value '"
-                                   & String (Values.Values.First_Element.Text)
-                                   & "' is illegal for typed string '"
-                                   & String
-                                       (Get_Name_Type
-                                         (Single_Tok_Node (Name))) & '''));
-                        end if;
+                        declare
+                           Value : constant Value_Type :=
+                                     Values.Values.First_Element.Text;
+                        begin
+                           if Value /= ""
+                             and then
+                               not To_Set (Type_Def.Values).Contains (Value)
+                           then
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    => Sloc,
+                                    Message =>
+                                      "value '"
+                                    & String (Value)
+                                    & "' is illegal for typed string '"
+                                    & String
+                                      (Get_Name_Type
+                                           (Single_Tok_Node (Name))) & '''));
+                           end if;
+                        end;
 
                      else
                         Tree.Log_Messages.Append

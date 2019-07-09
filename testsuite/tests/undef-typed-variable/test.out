@@ -1,0 +1,2 @@
+Messages found:
+demo.gpr:3:23: undefined external reference "BLA"
