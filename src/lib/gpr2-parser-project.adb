@@ -1172,28 +1172,6 @@ package body GPR2.Parser.Project is
                              (Characters.Handling.To_Lower
                                 (String (Tree.Target)), Sloc));
                      end return;
-
-                  elsif Name = GPR2.Project.Registry.Attribute.Project_Dir then
-                     --  Project'Project_Dir
-
-                     return R : Item_Values do
-                        R.Single := True;
-                        R.Values.Append
-                          (Get_Value_Reference
-                             (Characters.Handling.To_Lower
-                                (String (Self.File.Name)), Sloc));
-                     end return;
-
-                  elsif Name = GPR2.Project.Registry.Attribute.Name then
-                     --  Project'Name
-
-                     return R : Item_Values do
-                        R.Single := True;
-                        R.Values.Append
-                          (Get_Value_Reference
-                             (Characters.Handling.To_Lower
-                                (To_String (Self.Name)), Sloc));
-                     end return;
                   end if;
 
                elsif Index /= ""
@@ -2563,6 +2541,36 @@ package body GPR2.Parser.Project is
       Attrs.Clear;
       Vars.Clear;
       Packs.Clear;
+
+      --  Insert intrinsic attributes Name and Project_Dir
+
+      declare
+         package PRA renames GPR2.Project.Registry.Attribute;
+         use Characters.Handling;
+         Sloc : constant Source_Reference.Object :=
+                  Source_Reference.Object
+                    (Source_Reference.Create (Self.File.Value, 0, 0));
+
+         function Create_Name
+           (Name : Name_Type) return Source_Reference.Identifier.Object
+         is
+           (Source_Reference.Identifier.Object
+              (Source_Reference.Identifier.Create (Sloc, Name)));
+
+      begin
+         Attrs.Insert
+           (GPR2.Project.Attribute.Create
+              (Name    => Create_Name (PRA.Name),
+               Value   => Get_Value_Reference
+                            (To_Lower (To_String (Self.Name)), Sloc),
+               Default => True));
+
+         Attrs.Insert
+           (GPR2.Project.Attribute.Create
+              (Name    => Create_Name (PRA.Project_Dir),
+               Value   => Get_Value_Reference (Self.File.Dir_Name, Sloc),
+               Default => True));
+      end;
 
       Types := Self.Types;
 

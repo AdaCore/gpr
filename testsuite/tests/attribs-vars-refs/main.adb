@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Text_IO;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
@@ -82,7 +83,18 @@ procedure Main is
                Text_IO.Put (" ->");
 
                if Element (V).Kind = Single then
-                  Text_IO.Put (" " & Element (V).Value.Text);
+                  declare
+                     Value : constant Value_Type := Element (V).Value.Text;
+                     function No_Last_Slash (Dir : String) return String is
+                       (if Dir'Length > 0 and then Dir (Dir'Last) in '\' | '/'
+                        then Dir (Dir'First .. Dir'Last - 1) else Dir);
+                  begin
+                     Text_IO.Put
+                       (" "
+                        & (if No_Last_Slash (Value)
+                              = No_Last_Slash (Directories.Current_Directory)
+                           then "{Current_Directory}" else Value));
+                  end;
 
                else
                   for Val of Element (V).Values loop

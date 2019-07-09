@@ -8,6 +8,10 @@ project Demo is
    Dir3 : Me := "one";
    Var1 := shared.other_src;
    Drs  := ("here", "there");
+   Demo_Name := Project'Name;
+   Demo_Proj_Dir := Project'Project_Dir;
+   Shared_Name := Shared'Name;
+   Shared_Proj_Dir := Shared'Project_Dir;
 
    for Source_Dirs use (".", Dir1, Dir2) & Drs;
    for Object_Dir use shared'Object_Dir;

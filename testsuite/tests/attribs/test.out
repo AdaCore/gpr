@@ -2,7 +2,9 @@ Demo     K_STANDARD
 A:   archive_suffix ~> .a
 A:   exec_dir ~> 
 A:   languages ~> Ada
+A:   name ~> demo
 A:   Object_Dir -> 
+A:   project_dir ~> {Current_Directory}
 A:   shared_library_prefix ~> lib
 A:   shared_library_suffix ~> .so
 A:   source_dirs ~> .
