@@ -210,7 +210,11 @@ package body GPR2.Source is
                Append
                  (Result,
                   Kind_Type'Image (CU.Kind) & "|"
-                  & Handling.To_Lower (String (CU.Unit_Name)));
+                  & Handling.To_Lower
+                      ((if CU.Is_Separate
+                        then String (CU.Separate_From) & '-'
+                        else "")
+                       & String (CU.Unit_Name)));
             end loop;
 
             return To_String (Result);
@@ -355,8 +359,8 @@ package body GPR2.Source is
                      Index        => CU.Index,
                      Kind         => Kind,
                      Withed_Units => CU.Withed_Units,
-                     Is_Sep_From  => (if CU.Is_Separate
-                                      then CU.Is_Separate_From
+                     Sep_From     => (if CU.Is_Separate
+                                      then CU.Separate_From
                                       else No_Name),
                      Is_Generic   => CU.Is_Generic);
 

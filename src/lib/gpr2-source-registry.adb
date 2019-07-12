@@ -76,7 +76,7 @@ package body GPR2.Source.Registry is
                      end loop;
                      if CU.Is_Separate then
                         Put_Line ("      sep from = "
-                                  & String (CU.Is_Separate_From));
+                                  & String (CU.Separate_From));
                      end if;
                   end loop;
                end if;

@@ -120,7 +120,7 @@ package body GPR2.Source.Parser is
                   U_Name        : Unbounded_String;
                   U_Kind        : Kind_Type;
                   U_Withed      : Source_Reference.Identifier.Set.Object;
-                  U_Is_Sep_From : Unbounded_String;
+                  U_Sep_From    : Unbounded_String;
                   U_Is_Generic  : Boolean := False;
 
                begin
@@ -189,13 +189,13 @@ package body GPR2.Source.Parser is
 
                      when Ada_Subunit =>
                         U_Kind := S_Separate;
-                        U_Is_Sep_From := Process_Defining_Name
-                          (U_Body.As_Subunit.F_Name);
+                        U_Sep_From := Process_Defining_Name
+                                        (U_Body.As_Subunit.F_Name);
 
                         pragma Assert
-                          (Length (U_Name) > Length (U_Is_Sep_From) + 1);
+                          (Length (U_Name) > Length (U_Sep_From) + 1);
 
-                        Delete (U_Name, 1, Length (U_Is_Sep_From) + 1);
+                        Delete (U_Name, 1, Length (U_Sep_From) + 1);
 
                      when others =>
                         pragma Assert (False);
@@ -221,11 +221,11 @@ package body GPR2.Source.Parser is
 
                   Found.Append
                     (Compilation_Unit.Create
-                       (Unit_Name    => Name_Type (-(U_Name)),
+                       (Unit_Name    => Name_Type (-U_Name),
                         Index        => Index,
                         Kind         => U_Kind,
                         Withed_Units => U_Withed,
-                        Is_Sep_From  => Optional_Name_Type (-U_Is_Sep_From),
+                        Sep_From     => Optional_Name_Type (-U_Sep_From),
                         Is_Generic   => U_Is_Generic));
                end;
 

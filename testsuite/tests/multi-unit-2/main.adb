@@ -61,7 +61,7 @@ begin
 
             if CU.Is_Separate then
                Text_IO.Put_Line ("    separate from "
-                                 & String (CU.Is_Separate_From));
+                                 & String (CU.Separate_From));
             end if;
 
             if not CU.Withed_Units.Is_Empty then

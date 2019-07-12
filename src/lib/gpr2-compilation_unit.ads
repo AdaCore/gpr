@@ -65,7 +65,7 @@ package GPR2.Compilation_Unit is
       Index        : Positive;
       Kind         : Kind_Type;
       Withed_Units : Source_Reference.Identifier.Set.Object;
-      Is_Sep_From  : Optional_Name_Type;
+      Sep_From     : Optional_Name_Type;
       Is_Generic   : Boolean) return Object;
 
    function Is_Defined (Self : Object) return Boolean;
@@ -92,7 +92,7 @@ package GPR2.Compilation_Unit is
      with Pre => Self.Is_Defined;
    --  Returns True if Self is a separate
 
-   function Is_Separate_From (Self : Object) return Name_Type
+   function Separate_From (Self : Object) return Name_Type
      with Pre => Self.Is_Defined and then Self.Is_Separate;
    --  If this compilation unit is a separate, returns its parent unit, else
    --  returns an empty string.
@@ -110,11 +110,11 @@ private
       Index        : Natural   := 0;
       Kind         : Kind_Type := S_Spec;
       Withed_Units : Source_Reference.Identifier.Set.Object;
-      Is_Sep_From  : Unbounded_String;
+      Sep_From     : Unbounded_String;
       Is_Generic   : Boolean   := False;
    end record
      with Dynamic_Predicate =>
-       (Length (Is_Sep_From) = 0 or else Kind = S_Separate)
+       (Length (Sep_From) = 0 or else Kind = S_Separate)
        and then (if Is_Generic then Kind = S_Spec);
    --  Note that in GPR2 we have a distinction between sources, that may
    --  define either the spec or body/ies for a unit - those definitions are
@@ -128,13 +128,13 @@ private
       Index        : Positive;
       Kind         : Kind_Type;
       Withed_Units : Source_Reference.Identifier.Set.Object;
-      Is_Sep_From  : Optional_Name_Type;
+      Sep_From     : Optional_Name_Type;
       Is_Generic   : Boolean) return Object is
      (Object'(Unit_Name    => To_Unbounded_String (String (Unit_Name)),
               Index        => Index,
               Kind         => Kind,
               Withed_Units => Withed_Units,
-              Is_Sep_From  => To_Unbounded_String (String (Is_Sep_From)),
+              Sep_From     => To_Unbounded_String (String (Sep_From)),
               Is_Generic   => Is_Generic));
 
    function Unit_Name (Self : Object) return Name_Type is
@@ -149,8 +149,8 @@ private
    function Is_Separate (Self : Object) return Boolean is
      (Self.Kind = S_Separate);
 
-   function Is_Separate_From (Self : Object) return Name_Type is
-     (Name_Type (To_String (Self.Is_Sep_From)));
+   function Separate_From (Self : Object) return Name_Type is
+     (Name_Type (To_String (Self.Sep_From)));
 
    function Kind (Self : Object) return Kind_Type is
      (Self.Kind);
