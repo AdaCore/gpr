@@ -1017,10 +1017,6 @@ package body GPR2.Project.Tree is
                                         Result => Tmp_Attr)
                           then Tmp_Attr.Value.Text
                           else LRT);
-
-               --  RTS should be a Value_Path (type introduced in the
-               --  multi-unit patch)
-
             begin
                Conf_Descriptions (Descr_Index) :=
                  Project.Configuration.Create

@@ -567,19 +567,14 @@ begin
 
       --  Check command line arguments. These will be overridden when looking
       --  for the configuration file.
-
-      --  ??? we need to handle --autoconf
+      --
+      --  If configuration project is specified then load it, otherwise we will
+      --  conduct an autoconf setup.
 
       if Options.Config_Project.all /= "" then
          Config := Project.Configuration.Load
            (Path_Name.Create_File (Name_Type (Options.Config_Project.all)),
             Target => Name_Type (Options.Target_Name.all));
-
-      else
-         Config := Project.Configuration.Create
-           (Project.Configuration.Default_Description,
-            Target  => Name_Type (Options.Target_Name.all),
-            Project => Options.Project_File);
       end if;
 
       --  Then, parse the user's project and the configuration file. Apply the
@@ -599,19 +594,27 @@ begin
          DB.List (Options);
 
       else
-         Tree.Load
-           (Options.Project_File, Context, Config, Options.Build_Path,
-            (if Options.Subdirs = null
-             then ""
-             else Optional_Name_Type (Options.Subdirs.all)));
+         if Config.Is_Defined then
+            Tree.Load
+              (Options.Project_File, Context, Config, Options.Build_Path,
+               (if Options.Subdirs = null
+                then ""
+                else Optional_Name_Type (Options.Subdirs.all)));
+         else
+            --  No configuration, go with auto-configuration
+
+            Tree.Load_Autoconf
+              (Options.Project_File, Context, Options.Build_Path,
+               (if Options.Subdirs = null
+                then ""
+                else Optional_Name_Type (Options.Subdirs.all)));
+         end if;
 
          if Options.Verbose then
             for M of Tree.Log_Messages.all loop
                Text_IO.Put_Line (M.Format);
             end loop;
          end if;
-
-         --  ??? handle configuration after loading project to get languages
 
          Install.Process (Tree, Options);
       end if;
