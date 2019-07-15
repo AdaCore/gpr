@@ -158,7 +158,7 @@ package body GPR2.ALI.ALI_Data is
          function Is_Sep (C : Character) return Boolean is
          begin
             return Character'Pos (C) in 32 | 9  --  Space/Tab
-              or else C in ASCII.LF | ASCII.EOT;
+              or else C in ASCII.CR | ASCII.LF | ASCII.EOT;
          end Is_Sep;
 
          ---------------
