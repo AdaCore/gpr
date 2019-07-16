@@ -1297,8 +1297,7 @@ package body GPR2.Project.Definition is
          U_Def : Unit.Object;
 
          procedure Register_Src (Kind : Kind_Type);
-         --  Register Project_Source into U_Def, according to
-         --  its kind.
+         --  Register Project_Source into U_Def, according to its kind
 
          ------------------
          -- Register_Src --
@@ -1317,31 +1316,27 @@ package body GPR2.Project.Definition is
 
       begin
          for CU of Compilation_Units loop
-            Def.Tree.Record_View
-              (View   => View,
-               Source => File.Value,
-               Unit   =>
-                 Name_Type
-                   (Characters.Handling.To_Lower (String (CU.Unit_Name))));
+            declare
+               Unit_Name : constant Name_Type := CU.Unit_Name;
+            begin
+               Def.Tree.Record_View
+                 (View   => View,
+                  Source => File.Value,
+                  Unit   => Unit_Name);
 
-            if Def.Units.Contains (CU.Unit_Name) then
-               U_Def := Def.Units.Element (CU.Unit_Name);
+               if Def.Units.Contains (Unit_Name) then
+                  U_Def := Def.Units.Element (Unit_Name);
 
-               Register_Src (CU.Kind);
+                  Register_Src (CU.Kind);
 
-               Def.Units.Replace
-                 (Name_Type
-                    (Characters.Handling.To_Lower
-                         (String (CU.Unit_Name))), U_Def);
+                  Def.Units.Replace (Unit_Name, U_Def);
 
-            else
-               Register_Src (CU.Kind);
+               else
+                  Register_Src (CU.Kind);
 
-                  Def.Units.Insert
-                    (Name_Type
-                         (Characters.Handling.To_Lower
-                              (String (CU.Unit_Name))), U_Def);
-            end if;
+                  Def.Units.Insert (Unit_Name, U_Def);
+               end if;
+            end;
          end loop;
       end Register_Units;
 
