@@ -320,6 +320,23 @@ package body GPR2.Project.Source is
       Self.Source.Release;
    end Release;
 
+   -------------------
+   -- Separate_From --
+   -------------------
+
+   function Separate_From (Self : Object) return Object is
+      Unit_Name : constant Name_Type :=
+                    Self.Source.Compilation_Units.Element (1).Separate_From;
+      Unit      : constant GPR2.Unit.Object :=
+                    View (Self).Unit (Unit_Name);
+   begin
+      if Unit.Has_Spec then
+         return Unit.Spec;
+      else
+         return Unit.Main_Body;
+      end if;
+   end Separate_From;
+
    ------------
    -- Source --
    ------------

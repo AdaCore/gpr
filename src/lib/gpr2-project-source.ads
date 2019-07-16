@@ -135,6 +135,10 @@ package GPR2.Project.Source is
           Post => Other_Part'Result.Is_Defined;
    --  Returns the other part for this project source
 
+   function Separate_From (Self : Object) return Object
+     with Pre => Self.Is_Defined and then Self.Source.Kind = S_Separate;
+   --  Returns the separate for Self
+
 private
 
    type Object is tagged record
