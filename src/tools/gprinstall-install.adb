@@ -1509,17 +1509,17 @@ package body GPRinstall.Install is
                        of Project.Sources (Filter => K_Interface_Only)
                      loop
                         if Source.Source.Has_Units then
-                           if not First then
-                              Append (Line, ", ");
-                           else
-                              First := False;
-                           end if;
-
                            for CU of Source.Source.Compilation_Units loop
-                              Append (Line, """");
-                              Append (Line,
-                                      String (CU.Unit_Name));
-                              Append (Line, """");
+                              if CU.Kind = S_Spec then
+                                 if not First then
+                                    Append (Line, ", ");
+                                 end if;
+
+                                 Append (Line, """");
+                                 Append (Line, String (CU.Unit_Name));
+                                 Append (Line, """");
+                                 First := False;
+                              end if;
                            end loop;
                         end if;
                      end loop;
