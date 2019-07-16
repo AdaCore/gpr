@@ -94,8 +94,7 @@ package GPR2.Compilation_Unit is
 
    function Separate_From (Self : Object) return Name_Type
      with Pre => Self.Is_Defined and then Self.Is_Separate;
-   --  If this compilation unit is a separate, returns its parent unit, else
-   --  returns an empty string.
+   --  Returns the parent unit name for Self separate unit
 
    function Is_Generic (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
