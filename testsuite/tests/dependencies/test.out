@@ -1,65 +1,5 @@
 Project: Demo
 
- > src/abc.adb   unit: Abc
-..... DIRECT
-..... UNIT
-..... CLOSURE
-
- > src/api.adb   unit: Api
-..... DIRECT
-..... UNIT
-..... CLOSURE
-
- > src/api-call.adb   unit: Call
-..... DIRECT
-..... UNIT
-..... CLOSURE
-
- > src/call.adb   unit: Call
-..... DIRECT
-   > src/tst.adb
-   > src/tst.ads
-..... UNIT
-   > src/tst.adb
-   > src/tst.ads
-..... CLOSURE
-   > src/abc.adb
-   > src/api.adb
-   > src/call.adb
-   > src/tst.adb
-   > src/abc.ads
-   > src/abc-plop.ads
-   > src/api.ads
-   > src/tst.ads
-
- > src/tst.adb   unit: Tst
-..... DIRECT
-   > src/api.adb
-   > src/call.adb
-   > src/abc-plop.ads
-   > src/api.ads
-..... UNIT
-   > src/abc.adb
-   > src/api.adb
-   > src/call.adb
-   > src/abc.ads
-   > src/abc-plop.ads
-   > src/api.ads
-..... CLOSURE
-   > src/abc.adb
-   > src/api.adb
-   > src/call.adb
-   > src/tst.adb
-   > src/abc.ads
-   > src/abc-plop.ads
-   > src/api.ads
-   > src/tst.ads
-
- > src/abc.ads   unit: Abc
-..... DIRECT
-..... UNIT
-..... CLOSURE
-
  > src/abc-plop.ads   unit: Abc.Plop
 ..... DIRECT
    > src/api.adb
@@ -71,6 +11,26 @@ Project: Demo
    > src/api.adb
    > src/api.ads
 
+ > src/abc.adb   unit: Abc
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/abc.ads   unit: Abc
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/api-call.adb   unit: Call
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
+ > src/api.adb   unit: Api
+..... DIRECT
+..... UNIT
+..... CLOSURE
+
  > src/api.ads   unit: Api
 ..... DIRECT
 api.ads:1:1: warning: withed unit Toto not found
@@ -78,25 +38,65 @@ api.ads:3:1: warning: withed unit titi not found
 ..... UNIT
 ..... CLOSURE
 
+ > src/call.adb   unit: Call
+..... DIRECT
+   > src/tst.adb
+   > src/tst.ads
+..... UNIT
+   > src/tst.adb
+   > src/tst.ads
+..... CLOSURE
+   > src/abc-plop.ads
+   > src/abc.adb
+   > src/abc.ads
+   > src/api.adb
+   > src/api.ads
+   > src/call.adb
+   > src/tst.adb
+   > src/tst.ads
+
+ > src/tst.adb   unit: Tst
+..... DIRECT
+   > src/abc-plop.ads
+   > src/api.adb
+   > src/api.ads
+   > src/call.adb
+..... UNIT
+   > src/abc-plop.ads
+   > src/abc.adb
+   > src/abc.ads
+   > src/api.adb
+   > src/api.ads
+   > src/call.adb
+..... CLOSURE
+   > src/abc-plop.ads
+   > src/abc.adb
+   > src/abc.ads
+   > src/api.adb
+   > src/api.ads
+   > src/call.adb
+   > src/tst.adb
+   > src/tst.ads
+
  > src/tst.ads   unit: Tst
 ..... DIRECT
    > src/abc.adb
-   > src/api.adb
    > src/abc.ads
+   > src/api.adb
    > src/api.ads
 ..... UNIT
-   > src/abc.adb
-   > src/api.adb
-   > src/call.adb
-   > src/abc.ads
    > src/abc-plop.ads
-   > src/api.ads
-..... CLOSURE
    > src/abc.adb
+   > src/abc.ads
    > src/api.adb
+   > src/api.ads
+   > src/call.adb
+..... CLOSURE
+   > src/abc-plop.ads
+   > src/abc.adb
+   > src/abc.ads
+   > src/api.adb
+   > src/api.ads
    > src/call.adb
    > src/tst.adb
-   > src/abc.ads
-   > src/abc-plop.ads
-   > src/api.ads
    > src/tst.ads

@@ -1,20 +1,20 @@
 Project: Demo
 
- > src/abc.adb   unit: Abc
-
- > src/api.adb   unit: Api
-
- > src/api-call.adb   unit: Call
-
- > src/tst.adb   unit: Tst
-   ABC.Plop
-
- > src/abc.ads   unit: Abc
-
  > src/abc-plop.ads   unit: Abc.Plop
    API
 
+ > src/abc.adb   unit: Abc
+
+ > src/abc.ads   unit: Abc
+
+ > src/api-call.adb   unit: Call
+
+ > src/api.adb   unit: Api
+
  > src/api.ads   unit: Api
+
+ > src/tst.adb   unit: Tst
+   ABC.Plop
 
  > src/tst.ads   unit: Tst
    API

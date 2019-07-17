@@ -71,7 +71,11 @@ package GPR2.Source is
       Is_RTS_Source     : Boolean) return Object
      with Pre  => Filename.Is_Defined and then not Compilation_Units.Is_Empty,
           Post => Create_Ada'Result.Is_Defined;
-   --  Constructor for an Ada source object
+   --  Constructor for an Ada source object.
+   --  Information in Compilation_Units parameter came from filenames and
+   --  project information only. It can be different from function
+   --  Compilation_Units call results because Separate Ada units can be
+   --  determined only on parsing source files.
 
    procedure Release (Self : in out Object)
      with Pre => Self.Is_Defined;

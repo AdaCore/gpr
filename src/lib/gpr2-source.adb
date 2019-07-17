@@ -107,9 +107,17 @@ package body GPR2.Source is
       Is_RTS_Source     : Boolean) return Object
    is
       CU_Map : Compilation_Unit.Map.Object;
+      Key    : Unbounded_String;
    begin
       for CU of Compilation_Units loop
+         pragma Assert (not CU.Is_Separate);
+
          CU_Map.Insert (CU.Index, CU);
+
+         Append
+           (Key,
+            Ada.Characters.Handling.To_Lower (String (CU.Unit_Name))
+            & (if CU.Kind = S_Spec then 'S' else 'B'));
       end loop;
 
       return Result : Object do
@@ -118,12 +126,13 @@ package body GPR2.Source is
               (Is_Ada_Source => True,
                Path_Name     => Filename,
                Timestamp     => Directories.Modification_Time (Filename.Value),
-               Language      => To_Unbounded_String (String'("Ada")),
+               Language      => To_Unbounded_String ("Ada"),
                Other_Part    => GPR2.Path_Name.Undefined,
                Parsed        => False,
                Is_RTS_Source => Is_RTS_Source,
                Cu_List       => Compilation_Units,
                CU_Map        => CU_Map,
+               Ada_Key       => Key,
                Ref_Count     => 1));
 
          Result.Pathname := Filename;
@@ -197,27 +206,12 @@ package body GPR2.Source is
    ---------
 
    function Key (Self : Object) return Value_Type is
-      use Ada.Characters;
       Data : constant Registry.Data := Registry.Shared.Get (Self);
    begin
       if Data.Is_Ada_Source then
          --  In this case, the relevant information is unit name + unit kind
-         declare
-            Result : Unbounded_String;
-         begin
-            for CU of Data.CU_List loop
-               Append
-                 (Result,
-                  Kind_Type'Image (CU.Kind) & "|"
-                  & Handling.To_Lower
-                      ((if CU.Is_Separate
-                        then String (CU.Separate_From) & '-'
-                        else "")
-                       & String (CU.Unit_Name)));
-            end loop;
+         return To_String (Data.Ada_Key);
 
-            return To_String (Result);
-         end;
       else
          --  Not unit based: just use the full path
          return Data.Path_Name.Value;

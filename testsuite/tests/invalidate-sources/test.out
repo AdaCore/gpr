@@ -1,10 +1,10 @@
 Project: Demo
 ----------
- > src/api.adb        language: Ada   Kind: S_BODY         unit: Api
  > src/api-call.adb   language: Ada   Kind: S_SEPARATE     unit: Call
+ > src/api.adb        language: Ada   Kind: S_BODY         unit: Api
  > src/api.ads        language: Ada   Kind: S_SPEC         unit: Api
 ----------
  > src/api.adb        language: Ada   Kind: S_BODY         unit: Api
- > src/newapi.adb     language: Ada   Kind: S_BODY         unit: Newapi
  > src/api.ads        language: Ada   Kind: S_SPEC         unit: Api
+ > src/newapi.adb     language: Ada   Kind: S_BODY         unit: Newapi
  > src/newapi.ads     language: Ada   Kind: S_SPEC         unit: Newapi

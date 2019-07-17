@@ -13,6 +13,13 @@ pkg.adb
     unit name    = Pkg
     kind         = S_BODY
     object file  = pkg.ali
+pkg.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_SPEC
+    object file  = pkg.ali
 sep.adb
   single-unit          = FALSE
   has naming exception = TRUE
@@ -26,13 +33,6 @@ sep.adb
     kind         = S_SEPARATE
     separate from U
     withed units = { GNAT.Regexp }
-pkg.ads
-  single-unit          = TRUE
-  has naming exception = FALSE
-  - compilation unit at 1
-    unit name    = Pkg
-    kind         = S_SPEC
-    object file  = pkg.ali
 u.adb
   single-unit          = FALSE
   has naming exception = TRUE

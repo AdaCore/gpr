@@ -3,9 +3,9 @@ Project: Demo1
 Project: Demo2
  > src1/file3.c       language: c      Kind: S_BODY
  > src2/file3.h       language: c      Kind: S_SPEC
- > src2/file.ab       language: Ada    Kind: S_BODY   unit: File
  > src1/demo1.gpr     language: Ada    Kind: S_SPEC   unit: Demo1
  > src1/demo2.gpr     language: Ada    Kind: S_SPEC   unit: Demo2
+ > src2/file.ab       language: Ada    Kind: S_BODY   unit: File
  > src2/file.gpr      language: Ada    Kind: S_SPEC   unit: File
  > src1/first.gpr     language: Ada    Kind: S_SPEC   unit: First
  > src1/source1.gpr   language: Ada    Kind: S_SPEC   unit: Source1

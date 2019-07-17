@@ -2,8 +2,8 @@ Project: Demo
 
 ---------- ALL
  > src/api.adb        language: Ada   Kind: S_BODY         unit: Api
- > src/pck.adb        language: Ada   Kind: S_BODY         unit: Pck
  > src/api.ads        language: Ada   Kind: S_SPEC         unit: Api
+ > src/pck.adb        language: Ada   Kind: S_BODY         unit: Pck
  > src/pck.ads        language: Ada   Kind: S_SPEC         unit: Pck
 
 ---------- INTERFACE ONLY

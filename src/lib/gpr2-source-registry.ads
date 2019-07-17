@@ -39,6 +39,7 @@ private package GPR2.Source.Registry is
             Is_RTS_Source : Boolean := False;
             CU_List       : Compilation_Unit.List.Object;
             CU_Map        : Compilation_Unit.Map.Object;
+            Ada_Key       : Unbounded_String;
 
          when False =>
             Kind : Kind_Type;
