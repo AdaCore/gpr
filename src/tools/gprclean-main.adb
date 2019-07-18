@@ -550,8 +550,10 @@ begin
    Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
 
 exception
-   when E : GNAT.Command_Line.Exit_From_Command_Line
-      | GNAT.Command_Line.Invalid_Switch
+   when GNAT.Command_Line.Exit_From_Command_Line =>
+      null;
+
+   when E : GNAT.Command_Line.Invalid_Switch
       | GNAT.Command_Line.Invalid_Parameter
       | GPRtools.Usage_Error =>
       GPRtools.Util.Fail_Program (Exception_Message (E));
