@@ -253,7 +253,8 @@ package body GPRclean.Options is
       Options.Arg_Mains := not Options.Mains.Is_Empty;
 
       if not Options.Project_Path.Is_Defined then
-         Options.Project_Path := GPRtools.Util.Look_For_Default_Project;
+         Options.Project_Path :=
+           GPRtools.Util.Look_For_Default_Project (Options.Quiet);
 
          Options.Implicit_Proj := Options.Project_Path.Is_Defined
            and then Options.Project_Path.Dir_Name

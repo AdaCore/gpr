@@ -107,7 +107,9 @@ package body GPRtools.Util is
    -- Look_For_Default_Project --
    ------------------------------
 
-   function Look_For_Default_Project return GPR2.Path_Name.Object is
+   function Look_For_Default_Project
+     (Quiet : Boolean) return GPR2.Path_Name.Object
+   is
 
       function Executable_Prefix_Path return String;
 
@@ -201,14 +203,16 @@ package body GPRtools.Util is
            (Optional_Name_Type
               (Executable_Prefix_Path & "/share/gpr/_default.gpr"));
 
-         if Result.Exists then
-            return Result;
-         else
+         if not Result.Exists then
             return Path_Name.Undefined;
          end if;
-      else
-         return Result;
       end if;
+
+      if not Quiet then
+         Text_IO.Put_Line ("using project file " & Result.Value);
+      end if;
+
+      return Result;
    end Look_For_Default_Project;
 
    ---------------------

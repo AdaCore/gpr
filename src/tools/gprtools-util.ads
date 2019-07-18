@@ -55,7 +55,8 @@ package GPRtools.Util is
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.
 
-   function Look_For_Default_Project return GPR2.Path_Name.Object;
+   function Look_For_Default_Project
+     (Quiet : Boolean) return GPR2.Path_Name.Object;
    --  Calls GPR2.Project.Look_For_Default_Project, and if the result is
    --  Undefined then look for _default.gpr using the location of the current
    --  executable.
