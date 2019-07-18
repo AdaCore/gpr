@@ -33,8 +33,7 @@ package body GPR2.Source is
      with Inline, Pre => Self.Is_Defined;
    --  Returns the key for Self, this is used to compare a source object
 
-   procedure Update (Self : Object)
-     with Inline;
+   procedure Update (Self : Object);
    --  Run the parser on the given source and register information in the
    --  registry.
 
