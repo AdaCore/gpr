@@ -57,6 +57,7 @@ begin
    if Opt.Version_Needed then
       Version.Display
         ("GPRLS", "2018", Version_String => Version.Long_Value);
+      Version.Display_Free_Software;
       return;
    end if;
 

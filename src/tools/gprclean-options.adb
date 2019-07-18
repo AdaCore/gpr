@@ -234,10 +234,15 @@ package body GPRclean.Options is
 
       GPR2.Set_Debug (Options.Debug_Mode);
 
-      if Options.Version then
+      if Options.Version or else Options.Verbose then
          GPR2.Version.Display
            ("GPRCLEAN", "2018", Version_String => GPR2.Version.Long_Value);
-         return;
+
+         if Options.Version then
+            GPR2.Version.Display_Free_Software;
+            return;
+         end if;
+
       end if;
 
       --  Now read arguments

@@ -65,19 +65,6 @@ procedure GPRinstall.Main is
    procedure Parse_Command_Line (Options : in out GPRinstall.Options.Object);
    --  Process one gprinstall command line arguments
 
-   procedure Copyright;
-   --  Output the Copyright notice
-
-   ---------------
-   -- Copyright --
-   ---------------
-
-   procedure Copyright is
-   begin
-      Version.Display
-        ("GPRINSTALL", "2018", Version_String => Version.Long_Value);
-   end Copyright;
-
    ------------------------
    -- Parse_Command_Line --
    ------------------------
@@ -482,13 +469,14 @@ procedure GPRinstall.Main is
            GPRinstall.Options.Dup (Options.Global_Lib_Subdir);
       end if;
 
-      if Options.Verbose then
-         Copyright;
-      end if;
+      if Options.Version or else Options.Verbose then
+         Version.Display
+           ("GPRINSTALL", "2018", Version_String => Version.Long_Value);
 
-      if Options.Version then
-         Copyright;
-         return;
+         if Options.Version then
+            Version.Display_Free_Software;
+            return;
+         end if;
       end if;
 
       if Options.Build_Name.all /= "default"

@@ -20,6 +20,8 @@ with Ada.Text_IO;
 
 package body GPR2.Version is
 
+   use Ada.Text_IO;
+
    -------------
    -- Display --
    -------------
@@ -27,19 +29,22 @@ package body GPR2.Version is
    procedure Display
      (Tool_Name      : String;
       Initial_Year   : String;
-      Version_String : String)
-   is
-      use Ada.Text_IO;
+      Version_String : String) is
    begin
       Put_Line (Tool_Name & " " & Version_String);
-
-      Put ("Copyright (C) ");
-      Put (Initial_Year);
-      Put ('-');
-      Put (Current_Year);
-      Put (", ");
-      Put (Copyright_Holder);
-      New_Line;
+      Put_Line
+        ("Copyright (C) " & Initial_Year & '-' & Current_Year & ", "
+         & Copyright_Holder);
    end Display;
+
+   ---------------------------
+   -- Display_Free_Software --
+   ---------------------------
+
+   procedure Display_Free_Software is
+   begin
+      Put_Line (Free_Software);
+      New_Line;
+   end Display_Free_Software;
 
 end GPR2.Version;

@@ -73,4 +73,7 @@ package GPR2.Version is
       Version_String : String);
    --  Display version of a tool when switch --version is used
 
+   procedure Display_Free_Software;
+   --  Display Free Software disclaimer.
+
 end GPR2.Version;
