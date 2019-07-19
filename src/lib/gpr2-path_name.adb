@@ -46,6 +46,13 @@ package body GPR2.Path_Name is
    --  If filernames is case insensitive converts path name to lowercase,
    --  returns the same value othervise.
 
+   function To_OS_Case (C : Character) return Character is
+     (if File_Names_Case_Sensitive
+      then C
+      else Characters.Handling.To_Lower (C));
+   --  If filenames is case insensitive converts char to lowercase,
+   --  returns the same value othervise.
+
    Root_Path : constant GNAT.Regexp.Regexp :=
                  Compile ("/+|[A-Z]:\\+", Case_Sensitive => False);
 
@@ -106,7 +113,7 @@ package body GPR2.Path_Name is
    begin
       while I1 <= P1'Last
         and then I2 <= P2'Last
-        and then P1 (I1) = P2 (I2)
+        and then To_OS_Case (P1 (I1)) = To_OS_Case (P2 (I2))
       loop
          I1 := I1 + 1;
          I2 := I2 + 1;
@@ -402,7 +409,9 @@ package body GPR2.Path_Name is
 
       Pi := 1;
 
-      while Pi < P'Last and then Pi < T'Last and then P (Pi) = T (Pi) loop
+      while Pi < P'Last
+        and then Pi < T'Last
+        and then To_OS_Case (P (Pi)) = To_OS_Case (T (Pi)) loop
          Pi := Pi + 1;
       end loop;
 
