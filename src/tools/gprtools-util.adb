@@ -20,7 +20,6 @@ with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
-with GNAT.Case_Util;
 with GNAT.OS_Lib;
 
 with GPR2.Containers;
@@ -108,107 +107,13 @@ package body GPRtools.Util is
    ------------------------------
 
    function Look_For_Default_Project
-     (Quiet : Boolean) return GPR2.Path_Name.Object
+     (Quiet : Boolean; Implicit_Only : Boolean) return GPR2.Path_Name.Object
    is
-
-      function Executable_Prefix_Path return String;
-
-      ----------------------------
-      -- Executable_Prefix_Path --
-      ----------------------------
-
-      function Executable_Prefix_Path return String is
-         use GNAT.OS_Lib;
-
-         --  Exec_Name : constant String := Ada.Command_Line.Command_Name;
-         Exec_Name : constant String := "gnat";
-
-         function Get_Install_Dir (S : String) return String;
-         --  S is the executable name preceded by the absolute or relative
-         --  path, e.g. "c:\usr\bin\gcc.exe". Returns the absolute directory
-         --  where "bin" lies (in the example "C:\usr").
-         --  If the executable is not in a "bin" directory, returns "".
-
-         ---------------------
-         -- Get_Install_Dir --
-         ---------------------
-
-         function Get_Install_Dir (S : String) return String is
-            use GNAT.Case_Util;
-
-            Exec      : String  :=
-                          Normalize_Pathname (S, Resolve_Links => True);
-            Path_Last : Integer := 0;
-
-         begin
-            for J in reverse Exec'Range loop
-               if Exec (J) = Directory_Separator then
-                  Path_Last := J - 1;
-                  exit;
-               end if;
-            end loop;
-
-            if Path_Last >= Exec'First + 2 then
-               To_Lower (Exec (Path_Last - 2 .. Path_Last));
-            end if;
-
-            if Path_Last < Exec'First + 2
-              or else Exec (Path_Last - 2 .. Path_Last) /= "bin"
-              or else (Path_Last - 3 >= Exec'First
-                       and then Exec (Path_Last - 3) /= Directory_Separator)
-            then
-               return "";
-            end if;
-
-            return (Exec (Exec'First .. Path_Last - 4)) & Directory_Separator;
-         end Get_Install_Dir;
-
-      begin
-         --  First determine if a path prefix was placed in front of the
-         --  executable name.
-
-         for J in reverse Exec_Name'Range loop
-            if Exec_Name (J) = Directory_Separator then
-               return Get_Install_Dir (Exec_Name);
-            end if;
-         end loop;
-
-         --  If we get here, the user has typed the executable name with no
-         --  directory prefix.
-
-         declare
-            Path : GNAT.OS_Lib.String_Access :=
-                     Locate_Exec_On_Path (Exec_Name);
-         begin
-            if Path = null then
-               return "";
-            else
-               declare
-                  Dir : constant String := Get_Install_Dir (Path.all);
-               begin
-                  Free (Path);
-                  return Dir;
-               end;
-            end if;
-         end;
-      end Executable_Prefix_Path;
-
       Result : GPR2.Path_Name.Object;
-
    begin
-      Result := GPR2.Project.Look_For_Default_Project;
+      Result := GPR2.Project.Look_For_Default_Project (Implicit_Only);
 
-      if not Result.Is_Defined then
-         Result := Path_Name.Create_File
-           (Optional_Name_Type
-              (Executable_Prefix_Path & "/share/gpr/_default.gpr"));
-
-         if not Result.Exists then
-            return Path_Name.Undefined;
-         end if;
-      end if;
-
-      if not Quiet then
+      if not Quiet and then Result.Is_Defined then
          Text_IO.Put_Line ("using project file " & Result.Value);
       end if;
 

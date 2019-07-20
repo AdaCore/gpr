@@ -73,6 +73,9 @@ package body GPRclean.Options is
    is
       Config : Command_Line_Configuration renames Options.Config;
 
+      Additional : constant Boolean := Parser /= Command_Line_Parser;
+      --  Parsed from package Clean attribute Switches
+
       procedure Value_Callback (Switch, Value : String);
       --  Accept string swithces
 
@@ -229,10 +232,14 @@ package body GPRclean.Options is
          Switch => "-p",
          Help   => "Remove empty build directories");
 
-      Getopt
-        (Config, Parser => Parser, Quiet => Parser /= Command_Line_Parser);
+      Getopt (Config, Parser => Parser, Quiet => Additional);
 
       GPR2.Set_Debug (Options.Debug_Mode);
+
+      if Additional then
+         --  Next options should be parsed only from command line
+         return;
+      end if;
 
       if Options.Version or else Options.Verbose then
          GPR2.Version.Display
@@ -254,21 +261,23 @@ package body GPRclean.Options is
 
       if not Options.Project_Path.Is_Defined then
          Options.Project_Path :=
-           GPRtools.Util.Look_For_Default_Project (Options.Quiet);
+           GPRtools.Util.Look_For_Default_Project
+             (Quiet         => Options.Quiet,
+              Implicit_Only => Options.No_Project);
 
          Options.Implicit_Proj := Options.Project_Path.Is_Defined
            and then Options.Project_Path.Dir_Name
-                    /= Ada.Directories.Current_Directory;
+             /= Ada.Directories.Current_Directory;
 
-      elsif Options.No_Project then
+         if not Options.Project_Path.Is_Defined then
+            Display_Help (Config);
+            raise GPRtools.Usage_Error with
+              "Can't determine project file to work with";
+         end if;
+
+      elsif Options.No_Project  then
          raise GPRtools.Usage_Error with
            "cannot specify --no-project with a project file";
-      end if;
-
-      if not Options.Project_Path.Is_Defined then
-         Display_Help (Config);
-         raise GPRtools.Usage_Error with
-           "Can't determine project file to work with";
       end if;
 
       Options.Clean_Build_Path

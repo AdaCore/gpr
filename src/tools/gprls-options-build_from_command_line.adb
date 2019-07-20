@@ -359,9 +359,9 @@ begin
          Self.Only_Display_Paths := True;
       end if;
 
-      Self.Project_File := Look_For_Default_Project (Self.Verbose_Parsing = 0);
-      --  TODO: should also look for _default.gpr (location derived from the
-      --  knowledge base directory, see GPR).
+      Self.Project_File :=
+        Look_For_Default_Project
+          (Self.Verbose_Parsing = 0, Implicit_Only => False);
 
       if not Self.Project_File.Is_Defined then
          Finish_Program

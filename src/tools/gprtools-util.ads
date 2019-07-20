@@ -56,10 +56,9 @@ package GPRtools.Util is
    --  end if not Quiet.
 
    function Look_For_Default_Project
-     (Quiet : Boolean) return GPR2.Path_Name.Object;
-   --  Calls GPR2.Project.Look_For_Default_Project, and if the result is
-   --  Undefined then look for _default.gpr using the location of the current
-   --  executable.
+     (Quiet : Boolean; Implicit_Only : Boolean) return GPR2.Path_Name.Object;
+   --  Calls GPR2.Project.Look_For_Default_Project and print returned project
+   --  if not Quiet.
 
    procedure Finish_Program
      (Exit_Code : Exit_Code_Type := E_Success;

@@ -72,9 +72,13 @@ package GPR2.Project is
           Post => not Search_Paths'Result.Is_Empty;
    --  Returns the project search path for the given project and the give tree
 
-   function Look_For_Default_Project return Path_Name.Object;
-   --  Look for default project in the current directory, return Undefined if
-   --  not found.
+   function Look_For_Default_Project
+     (Implicit_Only : Boolean) return Path_Name.Object;
+   --  If Implicit_Only is False then look for default project in the current
+   --  directory, if not found then look for _default.gpr using the location of
+   --  the current executable, returns Undefined if not found.
+   --  If Implicit_Only is False then look only for _default.gpr using the
+   --  location of the current executable, returns Undefined if not found.
 
 private
 
