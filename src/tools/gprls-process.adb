@@ -255,7 +255,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
 
       Finish_Program (E_Errors,
                       "unable to process project file " &
-                        String (Tree.Root_Project.Path_Name.Simple_Name));
+                        String (Opt.Project_File.Name));
    end Show_Tree_Load_Errors;
 
 begin
