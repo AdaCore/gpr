@@ -32,6 +32,7 @@ with GPR2.Project.View.Set;
 limited with GPR2.Unit;
 
 private with Ada.Containers.Vectors;
+with GPR2.Project.Registry.Attribute;
 
 package GPR2.Project.Tree is
 
@@ -50,6 +51,10 @@ package GPR2.Project.Tree is
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
+
+   function Is_Windows_Target (Tree : Object) return Boolean
+     with Pre => Tree.Is_Defined;
+   --  Returns true if tree's target is window
 
    function "=" (Left, Right : Object) return Boolean;
    --  Returns True if Left and Right are the same tree
@@ -367,6 +372,15 @@ private
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Is_Windows_Target (Tree : Object) return Boolean is
+   (Tree.Has_Configuration
+        and then
+          Tree.Configuration.Corresponding_View.Attribute
+      (GPR2.Project.Registry.Attribute.Shared_Library_Suffix).Value_Equal
+        (".dll"));
+      --  ??? We may also check that the Tree target name constains mingw or
+      --  windows.
 
    function Archive_Suffix (Self : Object) return Name_Type is
      (if Self.Has_Configuration

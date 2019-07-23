@@ -164,13 +164,7 @@ package body GPRinstall.Install is
       Strip        : constant OS_Lib.String_Access :=
                        OS_Lib.Locate_Exec_On_Path (Strip_Exec);
 
-      Windows_Target : constant Boolean :=
-                         Tree.Has_Configuration
-                             and then
-                         Tree.Configuration.Corresponding_View.Attribute
-                           (A.Shared_Library_Suffix).Value_Equal (".dll");
-      --  ??? We may also check that the Tree target name constains mingw or
-      --  windows.
+      Windows_Target : constant Boolean := Tree.Is_Windows_Target;
 
       --  Local values for the given project, these are initially set with the
       --  default values. It is updated using the Install package found in the

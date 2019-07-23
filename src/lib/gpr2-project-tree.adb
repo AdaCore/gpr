@@ -26,7 +26,6 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
-with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source;
 with GPR2.Source_Reference.Identifier;
@@ -2101,8 +2100,9 @@ package body GPR2.Project.Tree is
 
          begin
             if View.Is_Library and then View.Is_Shared_Library then
-               if
-                 View.Check_Attribute (PRA.Library_Version, Result => Attr)
+               if View.Check_Attribute (PRA.Library_Version, Result => Attr)
+                 and then not View.Tree.Is_Windows_Target
+                 --  Library_Version attribute has no effect on Windows
                then
                   declare
                      AV      : constant Source_Reference.Value.Object :=
