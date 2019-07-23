@@ -74,7 +74,7 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
+   Project.Tree.Load_Autoconf (Prj, Create ("demo.gpr"), Ctx);
 
    for P of Prj loop
       Display (P);
