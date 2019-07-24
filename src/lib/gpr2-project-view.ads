@@ -25,7 +25,7 @@
 
 with GPR2.Containers;
 with GPR2.Context;
-with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Registry.Attribute;
@@ -447,12 +447,28 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns executable suffix for this project
 
-   function Binder_Prefix
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
+   function Object_Artifact_Extensions
+     (Self : Object; Language : Name_Type) return Containers.Value_Set
      with Pre => Self.Is_Defined;
-   --  Prefix to be used for the binder exchange file name for the language.
-   --  Used to have different binder exchange file names when binding different
-   --  languages.
+   --  Returns set of object artefacts extensions for the cleanup
+
+   function Source_Artifact_Extensions
+     (Self : Object; Language : Name_Type) return Containers.Value_Set
+     with Pre => Self.Is_Defined;
+   --  Returns set of source artefacts extensions for the cleanup
+
+   function Binder_Artifacts
+     (Self     : Object;
+      Name     : Name_Type;
+      Language : Optional_Name_Type := No_Name)
+      return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined
+       and then (not Self.Is_Library
+                 or else Self.Library_Name = Name
+                 or else (Self.Is_Aggregated_In_Library
+                          and then Self.Aggregate.Library_Name = Name));
+   --  Returns binder artifact files from main procedure name for standard
+   --  project or from library name for library project.
 
    procedure Release (Self : in out Object);
    --  Releases the project view and release all associated memory
@@ -461,8 +477,27 @@ private
 
    type Object is new Definition_References.Ref with null record;
 
+   function Clean_Attribute_List
+     (Self     : Object;
+      Name     : Name_Type;
+      Language : Name_Type) return Containers.Value_Set;
+   --  Returns union of the attribute lists of the Clean packages from the
+   --  configuration view, extending view if it exists and Self view.
+
    Undefined : constant Object :=
                  Object'(Definition_References.Null_Ref with null record);
+
+   function Object_Artifact_Extensions
+     (Self : Object; Language : Name_Type) return Containers.Value_Set
+   is
+     (Self.Clean_Attribute_List
+        (Registry.Attribute.Object_Artifact_Extensions, Language));
+
+   function Source_Artifact_Extensions
+     (Self : Object; Language : Name_Type) return Containers.Value_Set
+   is
+     (Self.Clean_Attribute_List
+        (Registry.Attribute.Source_Artifact_Extensions, Language));
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

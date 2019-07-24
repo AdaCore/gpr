@@ -18,6 +18,7 @@
 
 with Ada.Directories;
 with Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
@@ -32,12 +33,17 @@ with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
 
+with GNATCOLL.Utils;
+
 package body GPR2.Project.View is
 
    use Ada;
    use Ada.Strings.Unbounded;
 
    use GNAT;
+
+   package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
 
    function Get_Ref (View : Object) return Definition.Ref is
       (View.Get.Element);
@@ -77,6 +83,13 @@ package body GPR2.Project.View is
       else Project.Pack.Undefined);
    --  Returns package Builder for the current project of Undefined is does not
    --  exists.
+
+   function Binder_Prefix
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     with Pre => Self.Is_Defined;
+   --  Prefix to be used for the binder exchange file name for the language.
+   --  Used to have different binder exchange file names when binding different
+   --  languages.
 
    ---------------
    -- Aggregate --
@@ -161,6 +174,95 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Attrs.Filter (Name, Index);
    end Attributes;
 
+   ----------------------
+   -- Binder_Artifacts --
+   ----------------------
+
+   function Binder_Artifacts
+     (Self     : Object;
+      Name     : Name_Type;
+      Language : Optional_Name_Type := No_Name)
+      return GPR2.Path_Name.Set.Object
+   is
+      use Ada.Text_IO;
+      use GNATCOLL.Utils;
+
+      function "&"
+        (Left, Right : Optional_Name_Type) return Optional_Name_Type
+      is
+        (GPR2."&" (Left, Right));
+      --  Workaround for strange visibility bug
+
+      Result  : GPR2.Path_Name.Set.Object;
+      Obj_Dir : constant GPR2.Path_Name.Object := Self.Object_Directory;
+      BP      : constant Optional_Name_Type :=
+                  (if Language = No_Name then No_Name
+                   else Self.Binder_Prefix (Language));
+      BF      : constant GPR2.Path_Name.Object :=
+                  Obj_Dir.Compose
+                    (BP & Name
+                     & (if Self.Is_Library then ".lexch" else ".bexch"));
+
+      File    : File_Type;
+      Obj_Ext : constant Optional_Name_Type :=
+                  (if Language = No_Name then No_Name
+                   else Self.Tree.Object_Suffix (Language));
+
+      Generated : Boolean := False;
+      Gen_Src   : Boolean := False;
+
+   begin
+      if GNAT.OS_Lib.Is_Regular_File (BF.Value) then
+         Open (File, Mode => In_File, Name => BF.Value);
+
+         while not End_Of_File (File) loop
+            declare
+               Line : constant String := Get_Line (File);
+            begin
+               if Line (Line'First) = '[' then
+                  Generated := Starts_With (Line, "[GENERATED ");
+                  if Generated then
+                     Gen_Src := Line = "[GENERATED SOURCE FILES]";
+                  end if;
+
+               elsif Generated then
+                  Result.Append (Obj_Dir.Compose (Name_Type (Line)));
+
+                  if Gen_Src then
+                     for A of Self.Naming_Package.Attributes (PRA.Body_Suffix)
+                     loop
+                        if Ends_With (Line, A.Value.Text) then
+                           for E of Self.Source_Artifact_Extensions
+                                      (Language => Name_Type (A.Index.Text))
+                           loop
+                              Result.Append
+                                (Obj_Dir.Compose (Name_Type (Line & E)));
+                           end loop;
+                        end if;
+                     end loop;
+
+                  elsif Obj_Ext /= ""
+                    and then Ends_With (Line, String (Obj_Ext))
+                  then
+                     for E of Self.Object_Artifact_Extensions (Language) loop
+                        Result.Append
+                          (Obj_Dir.Compose
+                             (Name_Type
+                                (Line (Line'First
+                                       .. Line'Last - Obj_Ext'Length) & E)));
+                     end loop;
+                  end if;
+               end if;
+            end;
+         end loop;
+
+         Close (File);
+         Result.Append (BF);
+      end if;
+
+      return Result;
+   end Binder_Artifacts;
+
    -------------------
    -- Binder_Prefix --
    -------------------
@@ -205,6 +307,50 @@ package body GPR2.Project.View is
       Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Num);
       return Result.Is_Defined;
    end Check_Attribute;
+
+   --------------------------
+   -- Clean_Attribute_List --
+   --------------------------
+
+   function Clean_Attribute_List
+     (Self     : Object;
+      Name     : Name_Type;
+      Language : Name_Type) return Containers.Value_Set
+   is
+      Result : Containers.Value_Set;
+
+      procedure Exts_Set_Include (View : Project.View.Object);
+      --  Include attribute values from package Clean of the View into Exts
+
+      ----------------------
+      -- Exts_Set_Include --
+      ----------------------
+
+      procedure Exts_Set_Include (View : Project.View.Object) is
+         AV : Project.Attribute.Object;
+      begin
+         if View.Has_Packages (PRP.Clean)
+           and then View.Pack (PRP.Clean).Check_Attribute
+                      (Name, Value_Type (Language), Result => AV)
+         then
+            for V of AV.Values loop
+               Result.Include (V.Text);
+            end loop;
+         end if;
+      end Exts_Set_Include;
+
+   begin
+      if Self.Is_Extended then
+         Result := Self.Extending.Clean_Attribute_List (Name, Language);
+
+      elsif Self.Tree.Has_Configuration then
+         Exts_Set_Include (Self.Tree.Configuration.Corresponding_View);
+      end if;
+
+      Exts_Set_Include (Self);
+
+      return Result;
+   end Clean_Attribute_List;
 
    -------------
    -- Context --

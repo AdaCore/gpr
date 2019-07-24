@@ -16,13 +16,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Containers;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
-
-with GPR2.Project.Registry.Attribute;
-with GPR2.Project.Registry.Pack;
 
 package body GPR2.Project.Source.Artifact is
 
@@ -173,10 +169,7 @@ package body GPR2.Project.Source.Artifact is
    ----------
 
    function List (Self : Object) return Path_Name.Set.Object is
-      package PRA renames GPR2.Project.Registry.Attribute;
-      package PRP renames GPR2.Project.Registry.Pack;
-
-      Lang   : constant Value_Type := Value_Type (Self.Source.Source.Language);
+      Lang   : constant Name_Type := Self.Source.Source.Language;
       Source : constant GPR2.Source.Object := Self.Source.Source;
       C_View : constant Project.View.Object :=
                  Definition.Strong (Self.Source.View);
@@ -185,61 +178,26 @@ package body GPR2.Project.Source.Artifact is
                   then Self.Source.Extending_View
                   else C_View);
       Result : Path_Name.Set.Object;
-      O_Exts : Containers.Value_Set;
-      S_Exts : Containers.Value_Set;
+      Name   : constant Name_Type := Source.Path_Name.Simple_Name;
+      O_Dir  : constant Optional_Name_Type :=
+                 Optional_Name_Type (O_View.Object_Directory.Value);
 
-      procedure Exts_Set_Include
-        (View : Project.View.Object;
-         Attr : Name_Type;
-         Exts : in out Containers.Value_Set);
-      --  Include attribute values from package Clean of the View into Exts
-
-      procedure View_Append (View : Project.View.Object);
-      --  Call Exts_Set_Include routine 2 times to append
-      --  PRA.Object_Artifact_Extensions attribute value to O_Exts and
-      --  PRA.Source_Artifact_Extensions to S_Exts.
-
-      ----------------------
-      -- Exts_Set_Include --
-      ----------------------
-
-      procedure Exts_Set_Include
-        (View : Project.View.Object;
-         Attr : Name_Type;
-         Exts : in out Containers.Value_Set)
-      is
-         AV : Project.Attribute.Object;
-      begin
-         if View.Has_Packages (PRP.Clean)
-           and then View.Pack (PRP.Clean).Check_Attribute
-                      (Attr, Lang, Result => AV)
-         then
-            for V of AV.Values loop
-               Exts.Include (V.Text);
-            end loop;
-         end if;
-      end Exts_Set_Include;
+      procedure Append_File (Name : Name_Type);
+      --  Append full filename constructed from Name and Object_Dir to result
 
       -----------------
-      -- View_Append --
+      -- Append_File --
       -----------------
 
-      procedure View_Append (View : Project.View.Object) is
+      procedure Append_File (Name : Name_Type) is
       begin
-         Exts_Set_Include (View, PRA.Object_Artifact_Extensions, O_Exts);
-         Exts_Set_Include (View, PRA.Source_Artifact_Extensions, S_Exts);
-      end View_Append;
+         Result.Append (Path_Name.Create_File (Name, O_Dir));
+      end Append_File;
 
    begin
-      if C_View.Tree.Has_Configuration then
-         View_Append (C_View.Tree.Configuration.Corresponding_View);
-      end if;
-
-      if Self.Source.Has_Extending_View then
-         View_Append (O_View);
-      end if;
-
-      View_Append (C_View);
+      for E of C_View.Source_Artifact_Extensions (Lang) loop
+         Append_File (Name & Name_Type (E));
+      end loop;
 
       if not Self.Object_Files.Is_Empty then
          --  Object themselves
@@ -250,35 +208,13 @@ package body GPR2.Project.Source.Artifact is
 
          --  The generated artefacts
 
-         declare
-            Name : constant Name_Type := Source.Path_Name.Simple_Name;
-            Dir  : constant Optional_Name_Type :=
-                     Optional_Name_Type (O_View.Object_Directory.Value);
+         Append_File (Name & ".stdout");
+         Append_File (Name & ".stderr");
 
-            procedure Append_File (Name : Name_Type);
-            --  Append full filename constructed from Name and Dir to result
-
-            -----------------
-            -- Append_File --
-            -----------------
-
-            procedure Append_File (Name : Name_Type) is
-            begin
-               Result.Append (Path_Name.Create_File (Name, Dir));
-            end Append_File;
-
-         begin
-            Append_File (Name & ".stdout");
-            Append_File (Name & ".stderr");
-            for E of S_Exts loop
-               Append_File (Name & Name_Type (E));
-            end loop;
-
-            Append_File (Source.Path_Name.Base_Name & ".adt");
-            for E of O_Exts loop
-               Append_File (Source.Path_Name.Base_Name & Name_Type (E));
-            end loop;
-         end;
+         Append_File (Source.Path_Name.Base_Name & ".adt");
+         for E of C_View.Object_Artifact_Extensions (Lang) loop
+            Append_File (Source.Path_Name.Base_Name & Name_Type (E));
+         end loop;
       end if;
 
       --  Append the dependencies

@@ -1,10 +1,10 @@
 Demo     K_AGGREGATE_LIBRARY
    pcka
+       > a-obj/pcka.ads.dg
+       > a-obj/pcka.ads.rep
        > a-obj/pcka.o
        > a-obj/pcka.ads.stdout
        > a-obj/pcka.ads.stderr
-       > a-obj/pcka.ads.dg
-       > a-obj/pcka.ads.rep
        > a-obj/pcka.adt
        > a-obj/pcka.ci
        > a-obj/pcka.gcno
@@ -14,11 +14,11 @@ Demo     K_AGGREGATE_LIBRARY
        > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
    pckb
+       > b-obj/pckb.ads.dg
+       > b-obj/pckb.ads.rep
        > b-obj/pckb.o
        > b-obj/pckb.ads.stdout
        > b-obj/pckb.ads.stderr
-       > b-obj/pckb.ads.dg
-       > b-obj/pckb.ads.rep
        > b-obj/pckb.adt
        > b-obj/pckb.ci
        > b-obj/pckb.gcno
@@ -29,11 +29,11 @@ Demo     K_AGGREGATE_LIBRARY
        > b-obj/pckb.ads.prep
 A        K_STANDARD
    pcka
+       > a-obj/pcka.ads.dg
+       > a-obj/pcka.ads.rep
        > a-obj/pcka.o
        > a-obj/pcka.ads.stdout
        > a-obj/pcka.ads.stderr
-       > a-obj/pcka.ads.dg
-       > a-obj/pcka.ads.rep
        > a-obj/pcka.adt
        > a-obj/pcka.ci
        > a-obj/pcka.gcno
@@ -44,11 +44,11 @@ A        K_STANDARD
        > a-obj/pcka.ads.prep
 B        K_LIBRARY
    pckb
+       > b-obj/pckb.ads.dg
+       > b-obj/pckb.ads.rep
        > b-obj/pckb.o
        > b-obj/pckb.ads.stdout
        > b-obj/pckb.ads.stderr
-       > b-obj/pckb.ads.dg
-       > b-obj/pckb.ads.rep
        > b-obj/pckb.adt
        > b-obj/pckb.ci
        > b-obj/pckb.gcno

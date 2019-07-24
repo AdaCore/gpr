@@ -1,10 +1,10 @@
 A        K_STANDARD
     > a-src/pcka.ads
+       > e-obj/pcka.ads.dg
+       > e-obj/pcka.ads.rep
        > e-obj/pcka.o
        > e-obj/pcka.ads.stdout
        > e-obj/pcka.ads.stderr
-       > e-obj/pcka.ads.dg
-       > e-obj/pcka.ads.rep
        > e-obj/pcka.adt
        > e-obj/pcka.ci
        > e-obj/pcka.gcno
@@ -13,11 +13,11 @@ A        K_STANDARD
        > e-obj/pcka.ali
        > e-obj/pcka.ads.prep
     > a-src/repl.adb
+       > e-obj/repl.adb.dg
+       > e-obj/repl.adb.rep
        > e-obj/repl.o
        > e-obj/repl.adb.stdout
        > e-obj/repl.adb.stderr
-       > e-obj/repl.adb.dg
-       > e-obj/repl.adb.rep
        > e-obj/repl.adt
        > e-obj/repl.ci
        > e-obj/repl.gcno
@@ -26,11 +26,11 @@ A        K_STANDARD
        > e-obj/repl.ali
        > e-obj/repl.adb.prep
     > a-src/repl.ads
+       > e-obj/repl.ads.dg
+       > e-obj/repl.ads.rep
        > e-obj/repl.o
        > e-obj/repl.ads.stdout
        > e-obj/repl.ads.stderr
-       > e-obj/repl.ads.dg
-       > e-obj/repl.ads.rep
        > e-obj/repl.adt
        > e-obj/repl.ci
        > e-obj/repl.gcno
@@ -40,11 +40,11 @@ A        K_STANDARD
        > e-obj/repl.ads.prep
 Demo     K_LIBRARY
     > src/code.ads
+       > e-obj/code.ads.dg
+       > e-obj/code.ads.rep
        > e-obj/code.o
        > e-obj/code.ads.stdout
        > e-obj/code.ads.stderr
-       > e-obj/code.ads.dg
-       > e-obj/code.ads.rep
        > e-obj/code.adt
        > e-obj/code.ci
        > e-obj/code.gcno
@@ -54,11 +54,11 @@ Demo     K_LIBRARY
        > e-obj/code.ali
        > e-obj/code.ads.prep
     > a-src/pcka.ads
+       > e-obj/pcka.ads.dg
+       > e-obj/pcka.ads.rep
        > e-obj/pcka.o
        > e-obj/pcka.ads.stdout
        > e-obj/pcka.ads.stderr
-       > e-obj/pcka.ads.dg
-       > e-obj/pcka.ads.rep
        > e-obj/pcka.adt
        > e-obj/pcka.ci
        > e-obj/pcka.gcno
@@ -67,11 +67,11 @@ Demo     K_LIBRARY
        > e-obj/pcka.ali
        > e-obj/pcka.ads.prep
     > src/repl.adb
+       > e-obj/repl.adb.dg
+       > e-obj/repl.adb.rep
        > e-obj/repl.o
        > e-obj/repl.adb.stdout
        > e-obj/repl.adb.stderr
-       > e-obj/repl.adb.dg
-       > e-obj/repl.adb.rep
        > e-obj/repl.adt
        > e-obj/repl.ci
        > e-obj/repl.gcno
@@ -81,11 +81,11 @@ Demo     K_LIBRARY
        > e-obj/repl.ali
        > e-obj/repl.adb.prep
     > src/repl.ads
+       > e-obj/repl.ads.dg
+       > e-obj/repl.ads.rep
        > e-obj/repl.o
        > e-obj/repl.ads.stdout
        > e-obj/repl.ads.stderr
-       > e-obj/repl.ads.dg
-       > e-obj/repl.ads.rep
        > e-obj/repl.adt
        > e-obj/repl.ci
        > e-obj/repl.gcno

@@ -126,37 +126,11 @@ procedure GPRclean.Main is
 
       procedure Binder_Artifacts
         (Name     : Name_Type;
-         Language : Optional_Name_Type := No_Name)
-      is
-         use Ada.Text_IO;
-
-         BF        : constant Path_Name.Full_Name :=
-                       Obj_Dir.Compose
-                         ((if Language = No_Name
-                           then No_Name
-                           else View.Binder_Prefix (Language)) & Name).Value;
-         File      : File_Type;
-         Generated : Boolean := False;
-
+         Language : Optional_Name_Type := No_Name) is
       begin
-         if GNAT.OS_Lib.Is_Regular_File (BF) then
-            Open (File, Mode => In_File, Name => BF);
-
-            while not End_Of_File (File) loop
-               declare
-                  Line : constant String := Get_Line (File);
-               begin
-                  if Line (Line'First) = '[' then
-                     Generated := Starts_With (Line, "[GENERATED ");
-                  elsif Generated then
-                     Delete_File (Obj_Dir.Compose (Name_Type (Line)).Value);
-                  end if;
-               end;
-            end loop;
-
-            Close (File);
-            Delete_File (BF);
-         end if;
+         for F of View.Binder_Artifacts (Name, Language) loop
+            Delete_File (F.Value);
+         end loop;
       end Binder_Artifacts;
 
       -----------------
@@ -320,11 +294,10 @@ procedure GPRclean.Main is
          end if;
       end if;
 
-      for C in View.Sources.Iterate (Project.Source.Set.S_Compilable) loop
+      for C in View.Sources.Iterate loop
          declare
             S       : constant Project.Source.Object :=
                         Project.Source.Set.Element (C);
-            Bexch   : constant Name_Type := ".bexch";
             Cleanup : Boolean := True;
             --  To disable cleanup if main files list exists and the main file
             --  is not from list.
@@ -353,14 +326,14 @@ procedure GPRclean.Main is
                         if CU.Kind = S_Body then
                            Binder_Artifacts
                              (S.Source.Path_Name.Base_Name
-                              & Name_Type ('~' & Image (CU.Index, 1)) & Bexch,
+                              & Name_Type ('~' & Image (CU.Index, 1)),
                               Language => S.Source.Language);
                         end if;
                      end loop;
 
                   else
                      Binder_Artifacts
-                       (S.Source.Path_Name.Base_Name & Bexch,
+                       (S.Source.Path_Name.Base_Name,
                         Language => S.Source.Language);
                   end if;
                end if;
@@ -406,7 +379,6 @@ procedure GPRclean.Main is
       end if;
 
       declare
-         Lexch : constant Name_Type := ".lexch";
          GI_DB : constant Name_Type := "gnatinspect.db";
       begin
          Delete_File (Obj_Dir.Compose (GI_DB).Value);
@@ -426,13 +398,13 @@ procedure GPRclean.Main is
 
          if View.Is_Library then
             if View.Is_Aggregated_In_Library then
-               Binder_Artifacts (View.Aggregate.Library_Name & Lexch);
+               Binder_Artifacts (View.Aggregate.Library_Name);
             else
                if not Opts.Remain_Useful then
                   Delete_File (View.Library_Filename.Value);
                end if;
 
-               Binder_Artifacts (View.Library_Name & Lexch);
+               Binder_Artifacts (View.Library_Name);
             end if;
          end if;
       end;
