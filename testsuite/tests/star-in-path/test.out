@@ -1,0 +1,4 @@
+C1.Simple_Name: *.css
+C2.Simple_Name: README
+C1.Base_Name: *
+C2.Base_Name: README

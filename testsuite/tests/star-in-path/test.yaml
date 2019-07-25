@@ -1,0 +1,5 @@
+description:
+    Test '*' character support in Project_Path package
+driver: build_and_run
+project_file: star_char_in_path
+main: main

@@ -18,6 +18,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories;
+with Ada.Directories.Hierarchical_File_Names;
 with Ada.Environment_Variables;
 with Ada.Streams.Stream_IO;
 
@@ -59,21 +60,22 @@ package body GPR2.Path_Name is
    Temp_Directory : Object;
    --  The name of the temporary directory, computed once at elaboration time
 
+   Dir_Seps : constant Ada.Strings.Maps.Character_Set :=
+                Strings.Maps.To_Set ("/\");
+   --  UNIX and DOS style directory separators
+
    --  From old GPR
 
    procedure Determine_Temporary_Directory;
    --  Determine temporary directory
 
+   function Base_Name (Path : String) return String;
+   --  Base_Name for / is '.'
+
    function Ensure_Directory (Path : String) return String is
      (if Path (Path'Last) = OS_Lib.Directory_Separator
       then Path
       else Path & OS_Lib.Directory_Separator);
-
-   function Base_Name (Path : String) return String is
-     (if Match (Path, Root_Path)
-      then "."
-      else Directories.Base_Name (Path));
-   --  Base_Name for / is '.'
 
    function Remove_Last_DS (Path : String) return String is
      (if Path'Length > 0
@@ -81,11 +83,15 @@ package body GPR2.Path_Name is
       then Path (Path'First .. Path'Last - 1)
       else Path);
 
-   function Containing_Directory (Path : String) return String is
-     (if Match (Path, Root_Path)
-      then Path
-      else Directories.Containing_Directory (Path));
-   --  Containing directroy for / is '/'
+   function Simple_Name (Path : String) return String;
+   --  Returns the simple name portion of the file name specified by Name.
+   --  This is Ada.Directories.Simple_Name implementation with
+   --  valid path name check removed to allow '*' chars.
+
+   function Containing_Directory (Path : String) return String;
+   --  Containing directory for / is '/'
+   --  This is Ada.Directories.Containing_Directory implementation with
+   --  valid path name check removed to allow '*' chars.
 
    -------------------
    -- Make_Absolute --
@@ -100,6 +106,44 @@ package body GPR2.Path_Name is
           then ""
           else Ensure_Directory (String (Directory)))
          & String (Name)));
+
+   ---------------
+   -- Base_Name --
+   ---------------
+
+   function Base_Name (Path : String) return String is
+   begin
+      if Match (Path, Root_Path) then
+         return ".";
+      else
+         --  Ada.Directories.Base_Name cannot be used here as
+         --  Path can contain '*' character that will be rejected on windows
+         --  by Ada.Directories.Validity.Is_Valid_Path_Name check.
+         --  The following code is Ada.Directories.Base_Name implementation
+         --  calling a Simple_Name version allowing '*' chars in Path.
+         declare
+
+            Simple : constant String := Simple_Name (Path);
+            --  Simple'First is guaranteed to be 1
+
+         begin
+            --  Look for the last dot in the file name and
+            --  return the part of the file name preceding this last dot.
+            --  If the first dot is the first character of the file name,
+            --  the base name is the empty string.
+
+            for Pos in reverse Simple'Range loop
+               if Simple (Pos) = '.' then
+                  return Simple (Simple'First .. Pos - 1);
+               end if;
+            end loop;
+
+            --  If there is no dot, return the complete file name
+
+            return Simple;
+         end;
+      end if;
+   end Base_Name;
 
    -------------------
    -- Common_Prefix --
@@ -152,6 +196,65 @@ package body GPR2.Path_Name is
    --------------------------
    -- Containing_Directory --
    --------------------------
+
+   function Containing_Directory (Path : String) return String is
+   begin
+      if Match (Path, Root_Path) then
+         return Path;
+      else
+         --  Ada.Directories.Containing_Directory cannot be used here as
+         --  Path can contain '*' character that will be rejected on windows
+         --  by Ada.Directories.Validity.Is_Valid_Path_Name check.
+         declare
+            use Ada.Directories.Hierarchical_File_Names;
+
+            Last_DS : constant Natural :=
+                        Strings.Fixed.Index
+                          (Path, Dir_Seps, Going => Strings.Backward);
+
+         begin
+            --  If Path indicates a root directory, raise Use_Error, because
+            --  it has no containing directory.
+
+            if Is_Parent_Directory_Name (Path)
+              or else Is_Current_Directory_Name (Path)
+              or else Is_Root_Directory_Name (Path)
+            then
+               raise Ada.Directories.Use_Error with
+                 "directory """ & Path & """ has no containing directory";
+
+            elsif Last_DS = 0 then
+               --  There is no directory separator, so return ".", representing
+               --  the current working directory.
+
+               return ".";
+
+            else
+               declare
+                  Last   : Positive := Last_DS - Path'First + 1;
+                  Result : String (1 .. Last);
+
+               begin
+                  Result := Path (Path'First .. Last_DS);
+
+                  --  Remove any trailing directory separator, except as the
+                  --  first character or the first character following a drive
+                  --  number on Windows.
+
+                  while Last > 1 loop
+                     exit when Is_Root_Directory_Name (Result (1 .. Last))
+                       or else (Result (Last) /= OS_Lib.Directory_Separator
+                                and then Result (Last) /= '/');
+
+                     Last := Last - 1;
+                  end loop;
+
+                  return Result (1 .. Last);
+               end;
+            end if;
+         end;
+      end if;
+   end Containing_Directory;
 
    function Containing_Directory (Self : Object) return Object is
    begin
@@ -443,9 +546,72 @@ package body GPR2.Path_Name is
    -----------------
 
    function Simple_Name (Self : Object) return GPR2.Simple_Name is
+
    begin
+      --  Ada.Directories.Simple_Name cannot be used here as
+      --  Path can contain '*' character that will be rejected on windows
+      --  by Ada.Directories.Validity.Is_Valid_Path_Name check.
       return GPR2.Simple_Name
-        (Directories.Simple_Name (Remove_Last_DS (To_String (Self.As_Is))));
+        (Simple_Name (Remove_Last_DS (To_String (Self.As_Is))));
+   end Simple_Name;
+
+   function Simple_Name (Path : String) return String is
+
+      use Ada.Directories.Hierarchical_File_Names;
+
+      Cut_Start : Natural :=
+                    Strings.Fixed.Index
+                      (Path, Dir_Seps, Going => Strings.Backward);
+
+      --  Cut_End points to the last simple name character
+
+      Cut_End   : Natural := Path'Last;
+
+   begin
+      --  Root directories are considered simple
+
+      if Is_Root_Directory_Name (Path) then
+         return Path;
+      end if;
+
+      --  Handle trailing directory separators
+
+      if Cut_Start = Path'Last then
+         Cut_End   := Path'Last - 1;
+         Cut_Start := Strings.Fixed.Index
+           (Path (Path'First .. Path'Last - 1),
+            Dir_Seps, Going => Strings.Backward);
+      end if;
+
+      --  Cut_Start points to the first simple name character
+
+      Cut_Start := (if Cut_Start = 0 then Path'First else Cut_Start + 1);
+
+      Check_For_Standard_Dirs : declare
+         BN : constant String := Path (Cut_Start .. Cut_End);
+
+         Has_Drive_Letter : constant Boolean :=
+                              OS_Lib.Path_Separator /= ':';
+         --  If Path separator is not ':' then we are on a DOS based OS
+         --  where this character is used as a drive letter separator.
+
+      begin
+         if BN = "." or else BN = ".." then
+            return BN;
+
+         elsif Has_Drive_Letter
+           and then BN'Length > 2
+           and then Characters.Handling.Is_Letter (BN (BN'First))
+           and then BN (BN'First + 1) = ':'
+         then
+            --  We have a DOS drive letter prefix, remove it
+
+            return BN (BN'First + 2 .. BN'Last);
+
+         else
+            return BN;
+         end if;
+      end Check_For_Standard_Dirs;
    end Simple_Name;
 
    -------------------------
