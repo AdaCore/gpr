@@ -253,22 +253,27 @@ procedure GPRclean.Main is
          if not View.Is_Library then
             if View.Has_Imports then
                for Import of View.Imports (True) loop
-                  declare
-                     Link_Opt : constant Path_Name.Object :=
-                                  Linker_Options (View,
-                                                  Import.Library_Name);
-                     Partial  : constant Path_Name.Object :=
-                                  Partial_Path (View,
-                                                Import.Library_Name, 0);
-                  begin
-                     if Link_Opt.Exists then
-                        Delete_File (Link_Opt.Value);
-                     end if;
+                  if Import.Is_Defined
+                    and then Import.Is_Library
+                    and then Import.Is_Library_Standalone
+                  then
+                     declare
+                        Link_Opt : constant Path_Name.Object :=
+                                     Linker_Options (View,
+                                                     Import.Library_Name);
+                        Partial  : constant Path_Name.Object :=
+                                     Partial_Path (View,
+                                                   Import.Library_Name, 0);
+                     begin
+                        if Link_Opt.Exists then
+                           Delete_File (Link_Opt.Value);
+                        end if;
 
-                     if Partial.Exists then
-                        Delete_File (Partial.Value);
-                     end if;
-                  end;
+                        if Partial.Exists then
+                           Delete_File (Partial.Value);
+                        end if;
+                     end;
+                  end if;
                end loop;
             end if;
 
