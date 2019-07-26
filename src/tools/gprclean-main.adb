@@ -28,6 +28,8 @@ with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.Utils;
 
+with GPR.Util;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
@@ -107,6 +109,17 @@ procedure GPRclean.Main is
       procedure Delete_File (Name : Path_Name.Full_Name);
       --  Delete file with specific for this project options
 
+      function Partial_Path
+        (View         : Project.View.Object;
+         Library_Name : Name_Type;
+         Number       : Natural) return Path_Name.Object;
+      --  return partially linked object
+
+      function Linker_Options
+        (View        : Project.View.Object;
+         Library_Name : Name_Type) return Path_Name.Object;
+      --  return linker options path
+
       ----------------------
       -- Binder_Artifacts --
       ----------------------
@@ -158,6 +171,35 @@ procedure GPRclean.Main is
       Has_Mains : constant Boolean := View.Has_Mains;
       Attr      : Project.Attribute.Object;
 
+      --------------------
+      -- Linker_Options --
+      --------------------
+
+      function Linker_Options
+        (View         : Project.View.Object;
+         Library_Name : Name_Type) return Path_Name.Object is
+      begin
+         return View.Object_Directory.Compose
+           (Library_Name & ".linker_options");
+      end Linker_Options;
+
+      ------------------
+      -- Partial_Path --
+      ------------------
+
+      function Partial_Path
+        (View         : Project.View.Object;
+         Library_Name : Name_Type;
+         Number       : Natural) return Path_Name.Object
+      is
+         use GPR.Util;
+      begin
+         return View.Object_Directory.Compose
+           (Name_Type (Partial_Name (String (Library_Name),
+                                     Number,
+                                     String (View.Tree.Object_Suffix))));
+      end Partial_Path;
+
    begin
       --  Check for additional switches in Clean package
 
@@ -203,6 +245,74 @@ procedure GPRclean.Main is
 
       if Opts.Verbose then
          Text_IO.Put_Line ("Cleaning project: """ & String (View.Name) & '"');
+      end if;
+
+      if View.Object_Directory.Is_Defined
+        and then View.Object_Directory.Is_Directory
+      then
+         if not View.Is_Library then
+            if View.Has_Imports then
+               for Import of View.Imports (True) loop
+                  declare
+                     Link_Opt : constant Path_Name.Object :=
+                                  Linker_Options (View,
+                                                  Import.Library_Name);
+                     Partial  : constant Path_Name.Object :=
+                                  Partial_Path (View,
+                                                Import.Library_Name, 0);
+                  begin
+                     if Link_Opt.Exists then
+                        Delete_File (Link_Opt.Value);
+                     end if;
+                     if Partial.Exists then
+                        Delete_File (Partial.Value);
+                     end if;
+                  end;
+               end loop;
+            end if;
+
+         else
+            --  For a library project, clean the partially link objects, if
+            --  there are some.
+            declare
+               use GPR2.Project;
+
+               Partial_Number : Natural := 0;
+            begin
+               loop
+                  declare
+                     Partial : constant Path_Name.Object :=
+                                 Partial_Path (View,
+                                               View.Library_Name,
+                                               Partial_Number);
+                  begin
+                     if Partial.Exists then
+                        Delete_File (Partial.Value);
+                        Partial_Number := Partial_Number + 1;
+                     else
+                        exit;
+                     end if;
+                  end;
+               end loop;
+
+               --  For a static SAL, clean the .linker_options file which
+               --  exists if the latest build was done in "keep temp files"
+               --  mode.
+
+               if View.Library_Standalone  /= No
+                 and then View.Is_Static_Library
+               then
+                  declare
+                     Link_Opt : constant Path_Name.Object :=
+                                  Linker_Options (View, View.Library_Name);
+                  begin
+                     if Link_Opt.Exists then
+                        Delete_File (Link_Opt.Value);
+                     end if;
+                  end;
+               end if;
+            end;
+         end if;
       end if;
 
       for C in View.Sources.Iterate (Project.Source.Set.S_Compilable) loop
