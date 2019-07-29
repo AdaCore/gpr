@@ -1990,8 +1990,9 @@ package body GPR2.Project.Tree is
             procedure Check_Directory
               (Attr_Name     : Name_Type;
                Human_Name    : String;
-               Get_Directory : access function
-                 (Self : Project.View.Object) return Path_Name.Object);
+               Get_Directory : not null access function
+                                 (Self : Project.View.Object)
+               return Path_Name.Object);
             --  Check is directory exists and warn if there is try to relocate
             --  absolute path with --relocate-build-tree gpr tool command line
             --  parameter. Similar check for attributes with directory names.
@@ -2005,8 +2006,9 @@ package body GPR2.Project.Tree is
             procedure Check_Directory
               (Attr_Name     : Name_Type;
                Human_Name    : String;
-               Get_Directory : access function
-                 (Self : Project.View.Object) return Path_Name.Object) is
+               Get_Directory : not null access function
+                                 (Self : Project.View.Object)
+               return Path_Name.Object) is
             begin
                if View.Check_Attribute (Attr_Name, Result => Attr) then
                   declare
