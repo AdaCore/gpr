@@ -1,3 +1,4 @@
 project lib1 is
    for library_name use "name";
+   for library_dir use "obj";
 end lib1;

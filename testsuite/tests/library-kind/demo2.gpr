@@ -1,7 +1,6 @@
 
-with "lib1";
-with "lib4";
-with "lib5";
+with "lib2";
+with "lib3";
 
 abstract project Demo is
    for Source_Dirs use ();

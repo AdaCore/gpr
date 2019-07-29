@@ -20,17 +20,19 @@ with Ada.Directories;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GPR2.Context;
+with GPR2.Message;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Variable.Set;
-with GPR2.Context;
 
 procedure Main is
 
    use Ada;
    use GPR2;
    use GPR2.Project;
+   use type GPR2.Message.Level_Value;
 
    procedure Display (Prj : Project.View.Object);
 
@@ -58,23 +60,29 @@ begin
       Display (P);
    end loop;
 
+   Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
+
+   --  Iterator
+
 exception
    when GPR2.Project_Error =>
       if Prj.Has_Messages then
          Text_IO.Put_Line ("Messages found:");
 
          for M of Prj.Log_Messages.all loop
-            declare
-               Mes : constant String := M.Format;
-               L   : constant Natural :=
-                       Strings.Fixed.Index (Mes, "/demo");
-            begin
-               if L /= 0 then
-                  Text_IO.Put_Line (Mes (L .. Mes'Last));
-               else
-                  Text_IO.Put_Line (Mes);
-               end if;
-            end;
+            if M.Level = Message.Error then
+               declare
+                  Mes : constant String := M.Format;
+                  L   : constant Natural :=
+                          Strings.Fixed.Index (Mes, "/demo");
+               begin
+                  if L /= 0 then
+                     Text_IO.Put_Line (Mes (L .. Mes'Last));
+                  else
+                     Text_IO.Put_Line (Mes);
+                  end if;
+               end;
+            end if;
          end loop;
       end if;
 end Main;

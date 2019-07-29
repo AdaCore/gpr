@@ -1812,10 +1812,10 @@ package body GPR2.Project.Tree is
             P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
             if P_Data.Kind = K_Standard then
-               if P_Data.Attrs.Contains (PRA.Library_Kind)
-                 or else
-                   P_Data.Attrs.Contains (PRA.Library_Name)
-                 or else
+               if P_Data.Attrs.Contains (PRA.Library_Name)
+                 and then
+                   P_Data.Attrs.Element (PRA.Library_Name).Value.Text /= ""
+                 and then
                    P_Data.Attrs.Contains (PRA.Library_Dir)
                then
                   P_Data.Kind := K_Library;
@@ -2150,9 +2150,11 @@ package body GPR2.Project.Tree is
                   Project.View.Executable_Directory'Access);
             end if;
 
-            Check_Directory
-              (PRA.Library_Dir, "library",
-               Project.View.Library_Directory'Access);
+            if View.Is_Library then
+               Check_Directory
+                 (PRA.Library_Dir, "library",
+                  Project.View.Library_Directory'Access);
+            end if;
 
             Check_Directory
               (PRA.Library_Ali_Dir, "library ALI",
