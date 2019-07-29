@@ -278,7 +278,7 @@ package body GPR2.Project.View is
    -- Executable_Suffix --
    -----------------------
 
-   function Executable_Suffix (Self : Object) return String is
+   function Executable_Suffix (Self : Object) return Optional_Name_Type is
       package A renames GPR2.Project.Registry.Attribute;
 
       Tree : constant not null access Project.Tree.Object := Self.Tree;
@@ -289,7 +289,7 @@ package body GPR2.Project.View is
         and then Tree.Configuration.Corresponding_View.Check_Attribute
                    (A.Executable_Suffix, Result => Attr)
       then
-         return Attr.Value.Text;
+         return Optional_Name_Type (Attr.Value.Text);
       end if;
 
       declare
@@ -299,11 +299,11 @@ package body GPR2.Project.View is
            and then Builder.Check_Attribute
                       (A.Executable_Suffix, Result => Attr)
          then
-            return Attr.Value.Text;
+            return Optional_Name_Type (Attr.Value.Text);
          end if;
       end;
 
-      return OS_Lib.Get_Executable_Suffix.all;
+      return Optional_Name_Type (OS_Lib.Get_Executable_Suffix.all);
    end Executable_Suffix;
 
    --------------
@@ -850,7 +850,7 @@ package body GPR2.Project.View is
            (Name : Value_Not_Empty) return GPR2.Path_Name.Object
          is
            (GPR2.Path_Name.Create_File
-              (Name_Type (Name & Self.Executable_Suffix),
+              (Name_Type (Name & String (Self.Executable_Suffix)),
                Optional_Name_Type (Self.Executable_Directory.Dir_Name)));
 
       begin
