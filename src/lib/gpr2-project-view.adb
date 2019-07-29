@@ -151,6 +151,58 @@ package body GPR2.Project.View is
    end Apply_Root_And_Subdirs;
 
    ---------------
+   -- Artifacts --
+   ---------------
+
+   function Artifacts (Self : Object) return GPR2.Path_Name.Set.Object is
+      Result : GPR2.Path_Name.Set.Object;
+
+      procedure Result_Append
+        (Dir : GPR2.Path_Name.Object; Attr : Name_Type);
+      --  Append files created from directory name and filenames from list of
+      --  attributes.
+
+      -------------------
+      -- Result_Append --
+      -------------------
+
+      procedure Result_Append
+        (Dir : GPR2.Path_Name.Object; Attr : Name_Type)
+      is
+         use Ada.Directories;
+         Item : Directory_Entry_Type;
+         Find : Search_Type;
+      begin
+         if not Exists (Dir.Value) then
+            return;
+         end if;
+
+         for Name of Self.Clean_Attribute_List (Attr, No_Name) loop
+            Start_Search
+              (Search    => Find,
+               Directory => Dir.Value,
+               Pattern   => Name,
+               Filter    => (Ordinary_File => True, others => False));
+
+            while More_Entries (Find) loop
+               Get_Next_Entry (Find, Item);
+
+               Result.Append
+                 (GPR2.Path_Name.Create_File (Name_Type (Full_Name (Item))));
+            end loop;
+         end loop;
+      end Result_Append;
+
+   begin
+      Result_Append (Self.Object_Directory, PRA.Artifacts_In_Object_Dir);
+      if Self.Kind = K_Standard then
+         Result_Append (Self.Executable_Directory, PRA.Artifacts_In_Exec_Dir);
+      end if;
+
+      return Result;
+   end Artifacts;
+
+   ---------------
    -- Attribute --
    ---------------
 
@@ -315,7 +367,7 @@ package body GPR2.Project.View is
    function Clean_Attribute_List
      (Self     : Object;
       Name     : Name_Type;
-      Language : Name_Type) return Containers.Value_Set
+      Language : Optional_Name_Type) return Containers.Value_Set
    is
       Result : Containers.Value_Set;
 

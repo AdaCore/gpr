@@ -470,6 +470,11 @@ package GPR2.Project.View is
    --  Returns binder artifact files from main procedure name for standard
    --  project or from library name for library project.
 
+   function Artifacts (Self : Object) return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns artifact files taken from Artifacts_In_Object_Dir and
+   --  Artifacts_In_Exec_Dir attributes.
+
    procedure Release (Self : in out Object);
    --  Releases the project view and release all associated memory
 
@@ -480,7 +485,7 @@ private
    function Clean_Attribute_List
      (Self     : Object;
       Name     : Name_Type;
-      Language : Name_Type) return Containers.Value_Set;
+      Language : Optional_Name_Type) return Containers.Value_Set;
    --  Returns union of the attribute lists of the Clean packages from the
    --  configuration view, extending view if it exists and Self view.
 

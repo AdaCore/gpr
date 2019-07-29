@@ -378,36 +378,32 @@ procedure GPRclean.Main is
          end loop;
       end if;
 
-      declare
-         GI_DB : constant Name_Type := "gnatinspect.db";
-      begin
-         Delete_File (Obj_Dir.Compose (GI_DB).Value);
-         Delete_File (Obj_Dir.Compose (GI_DB & "-shm").Value);
-         Delete_File (Obj_Dir.Compose (GI_DB & "-wal").Value);
+      for A of View.Artifacts loop
+         Delete_File (A.Value);
+      end loop;
 
-         if Has_Mains or else Opts.Arg_Mains then
-            declare
-               Main_Lib : constant Value_Type :=
-                            Obj_Dir.Compose
-                              ("lib" & View.Path_Name.Base_Name).Value;
-            begin
-               Delete_File (Main_Lib & String (Tree.Archive_Suffix));
-               Delete_File (Main_Lib & ".deps");
-            end;
-         end if;
+      if Has_Mains or else Opts.Arg_Mains then
+         declare
+            Main_Lib : constant Value_Type :=
+                         Obj_Dir.Compose
+                           ("lib" & View.Path_Name.Base_Name).Value;
+         begin
+            Delete_File (Main_Lib & String (Tree.Archive_Suffix));
+            Delete_File (Main_Lib & ".deps");
+         end;
+      end if;
 
-         if View.Is_Library then
-            if View.Is_Aggregated_In_Library then
-               Binder_Artifacts (View.Aggregate.Library_Name);
-            else
-               if not Opts.Remain_Useful then
-                  Delete_File (View.Library_Filename.Value);
-               end if;
-
-               Binder_Artifacts (View.Library_Name);
+      if View.Is_Library then
+         if View.Is_Aggregated_In_Library then
+            Binder_Artifacts (View.Aggregate.Library_Name);
+         else
+            if not Opts.Remain_Useful then
+               Delete_File (View.Library_Filename.Value);
             end if;
+
+            Binder_Artifacts (View.Library_Name);
          end if;
-      end;
+      end if;
 
       if Options.Src_Subdirs /= Null_Unbounded_String
         and then View.Kind in K_Standard | K_Library | K_Aggregate_Library
