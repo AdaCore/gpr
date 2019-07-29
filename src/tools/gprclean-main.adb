@@ -264,6 +264,7 @@ procedure GPRclean.Main is
                      if Link_Opt.Exists then
                         Delete_File (Link_Opt.Value);
                      end if;
+
                      if Partial.Exists then
                         Delete_File (Partial.Value);
                      end if;
@@ -299,7 +300,7 @@ procedure GPRclean.Main is
                --  exists if the latest build was done in "keep temp files"
                --  mode.
 
-               if View.Library_Standalone  /= No
+               if View.Library_Standalone /= No
                  and then View.Is_Static_Library
                then
                   declare
@@ -352,6 +353,7 @@ procedure GPRclean.Main is
                               Language => S.Source.Language);
                         end if;
                      end loop;
+
                   else
                      Binder_Artifacts
                        (S.Source.Path_Name.Base_Name & Bexch,
@@ -390,7 +392,8 @@ procedure GPRclean.Main is
             & """ was not found in the sources of any project");
       end if;
 
-      if not Opts.Remain_Useful and then View.Has_Mains
+      if not Opts.Remain_Useful
+        and then View.Has_Mains
         and then not Opts.Arg_Mains
       then
          for M of View.Mains loop
