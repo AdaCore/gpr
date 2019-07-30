@@ -1967,9 +1967,10 @@ package body GPR2.Project.Tree is
 
                else
                   if not PRA.Get (Q_Name).Is_Allowed_In (P_Kind) then
+                     --  for backward compatibility, emit warnings
                      Self.Messages.Append
                        (Message.Create
-                          (Message.Error,
+                          (Message.Warning,
                            "attribute """ & String (A.Name.Text)
                            & """ cannot be used in " & Image (P_Kind),
                            A));
