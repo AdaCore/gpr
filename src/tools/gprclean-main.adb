@@ -356,7 +356,7 @@ procedure GPRclean.Main is
                   Delete_File
                     (Path_Name.Create_File
                        (S.Source.Path_Name.Base_Name
-                        & Optional_Name_Type (View.Executable_Suffix),
+                        & View.Executable_Suffix,
                         Name_Type (View.Executable_Directory.Value)).Value);
                end if;
             end if;
