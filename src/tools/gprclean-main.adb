@@ -253,8 +253,7 @@ procedure GPRclean.Main is
          if not View.Is_Library then
             if View.Has_Imports then
                for Import of View.Imports (True) loop
-                  if Import.Is_Defined
-                    and then Import.Is_Library
+                  if Import.Is_Library
                     and then Import.Is_Library_Standalone
                   then
                      declare
