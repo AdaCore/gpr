@@ -1041,8 +1041,8 @@ package body GPR2.Project.View is
         (Source : Value_Not_Empty;
          At_Num : Natural) return GPR2.Path_Name.Object
       is
-         Attr : GPR2.Project.Attribute.Object;
          BN   : constant Value_Not_Empty := Directories.Base_Name (Source);
+         Attr : GPR2.Project.Attribute.Object;
 
          function Create_Path
            (Name : Value_Not_Empty) return GPR2.Path_Name.Object
