@@ -128,22 +128,6 @@ package body GPR2.Project.Source.Artifact is
                end;
             end if;
          end loop;
-
-         --  Adds secondary object code if needed
-
-         if S_View.Is_Library then
-            for CU of Source.Source.Compilation_Units loop
-               if CU.Kind = S_Body then
-                  Dependency_Files.Insert
-                    (Idx,
-                     Path_Name.Create_File
-                       (Src & At_Suffix (CU.Index) & D_Suffix,
-                        Optional_Name_Type
-                          (O_View.Object_Directory.Value)));
-                  Idx := Idx + 1;
-               end if;
-            end loop;
-         end if;
       end if;
 
       return Artifact.Object'
