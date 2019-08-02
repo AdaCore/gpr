@@ -44,8 +44,8 @@ package GPR2.Project.Source is
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean;
-      Is_Compilable        : Boolean)
-      return Object
+      Is_Compilable        : Boolean;
+      Aggregated           : Boolean := False) return Object
      with Pre => Source.Is_Defined and then View.Is_Defined;
    --  Constructor for Object. View is where the source is defined (found from
    --  View Source_Dirs) and Extending_View is the optional view from which the
@@ -56,6 +56,11 @@ package GPR2.Project.Source is
      with Pre  => Self.Is_Defined,
           Post => View'Result.Is_Defined;
    --  The view the source is in
+
+   function Is_Aggregated (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if the source is taken into aggregating library source set
+   --  from the aggregated project.
 
    function Is_Compilable (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -151,12 +156,16 @@ private
       Is_Interface         : Boolean := False;
       Has_Naming_Exception : Boolean := False;
       Is_Compilable        : Boolean := False;
+      Aggregated           : Boolean := False;
    end record;
 
    Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Is_Aggregated (Self : Object) return Boolean is
+     (Self.Aggregated);
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Source < Right.Source);

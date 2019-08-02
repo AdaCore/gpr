@@ -2,30 +2,12 @@ Demo     K_AGGREGATE_LIBRARY
    pcka
        > a-obj/pcka.ads.dg
        > a-obj/pcka.ads.rep
-       > a-obj/pcka.o
-       > a-obj/pcka.ads.stdout
-       > a-obj/pcka.ads.stderr
-       > a-obj/pcka.adt
-       > a-obj/pcka.ci
-       > a-obj/pcka.gcno
-       > a-obj/pcka.s
-       > a-obj/pcka.su
        > agg-ali-lib/pcka.ali
-       > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
    pckb
        > b-obj/pckb.ads.dg
        > b-obj/pckb.ads.rep
-       > b-obj/pckb.o
-       > b-obj/pckb.ads.stdout
-       > b-obj/pckb.ads.stderr
-       > b-obj/pckb.adt
-       > b-obj/pckb.ci
-       > b-obj/pckb.gcno
-       > b-obj/pckb.s
-       > b-obj/pckb.su
        > agg-ali-lib/pckb.ali
-       > b-obj/pckb.ali
        > b-obj/pckb.ads.prep
 A        K_STANDARD
    pcka
@@ -39,7 +21,6 @@ A        K_STANDARD
        > a-obj/pcka.gcno
        > a-obj/pcka.s
        > a-obj/pcka.su
-       > agg-ali-lib/pcka.ali
        > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
 B        K_LIBRARY
@@ -54,6 +35,6 @@ B        K_LIBRARY
        > b-obj/pckb.gcno
        > b-obj/pckb.s
        > b-obj/pckb.su
-       > agg-ali-lib/pckb.ali
+       > b-lib/pckb.ali
        > b-obj/pckb.ali
        > b-obj/pckb.ads.prep

@@ -1616,7 +1616,8 @@ package body GPR2.Project.Definition is
                               View                 => P.View,
                               Is_Interface         => Is_Interface,
                               Has_Naming_Exception => P.Has_Naming_Exception,
-                              Is_Compilable        => P.Is_Compilable));
+                              Is_Compilable        => P.Is_Compilable,
+                              Aggregated           => True));
                      end;
                   end loop;
 

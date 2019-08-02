@@ -305,7 +305,8 @@ procedure GPRclean.Main is
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
          begin
             if Opts.Verbose then
-               Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value);
+               Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value & ' '
+                                 & S.Is_Aggregated'Img);
             end if;
 
             if Opts.Mains.Contains
@@ -619,8 +620,12 @@ begin
    --  Iterate on all view, and clean them
 
    for V in Project_Tree.Iterate
-     (Kind   => (Project.I_Recursive => Options.All_Projects,
-                 Project.I_Imported  => Options.All_Projects, others => True),
+     (Kind   => (Project.I_Recursive  => Options.All_Projects,
+                 Project.I_Imported   => Options.All_Projects,
+                 Project.I_Aggregated => Options.All_Projects
+                                         or else Project_Tree.Root_Project.Kind
+                                                 /= K_Aggregate_Library,
+                 others => True),
       Status => (Project.S_Externally_Built => False),
       Filter => (Project.F_Abstract | Project.F_Aggregate => False,
                  others => True))

@@ -58,12 +58,12 @@ package body GPR2.Project.Source is
       View                 : Project.View.Object;
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean;
-      Is_Compilable        : Boolean)
-      return Object is
+      Is_Compilable        : Boolean;
+      Aggregated           : Boolean := False) return Object is
    begin
       return Object'
         (Source, Definition.Weak (View),
-         Is_Interface, Has_Naming_Exception, Is_Compilable);
+         Is_Interface, Has_Naming_Exception, Is_Compilable, Aggregated);
    end Create;
 
    ------------------

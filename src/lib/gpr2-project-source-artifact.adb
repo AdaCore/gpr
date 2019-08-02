@@ -78,35 +78,39 @@ package body GPR2.Project.Source.Artifact is
 
    begin
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
-         Object_Files.Insert
-           (Idx, Path_Name.Create_File
-              (Src & O_Suffix,
-               Optional_Name_Type (O_View.Object_Directory.Value)));
-
          --  For aggregated library the .ali is also copied into the
          --  aggregate library directory.
 
-         if Source.Has_Aggregating_View then
+         if Source.Aggregated then
             Dependency_Files.Insert
-              (Idx, Path_Name.Create_File
+              (1,
+               Path_Name.Create_File
                  (Src & D_Suffix,
                   Optional_Name_Type
                     (Source.Aggregating_View.Library_Ali_Directory.Value)));
-            Idx := Idx + 1;
 
-         elsif S_View.Is_Library and then Lang = "Ada" then
+         else
+            Object_Files.Insert
+              (1,
+               Path_Name.Create_File
+                 (Src & O_Suffix,
+                  Optional_Name_Type (O_View.Object_Directory.Value)));
+
+            if S_View.Is_Library and then Lang = "Ada" then
+               Dependency_Files.Insert
+                 (Idx,
+                  Path_Name.Create_File
+                    (Src & D_Suffix,
+                     Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
+               Idx := Idx + 1;
+            end if;
+
             Dependency_Files.Insert
-              (Idx, Path_Name.Create_File
+              (Idx,
+               Path_Name.Create_File
                  (Src & D_Suffix,
-                  Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
-            Idx := Idx + 1;
+                  Optional_Name_Type (O_View.Object_Directory.Value)));
          end if;
-
-         Dependency_Files.Insert
-           (Idx, Path_Name.Create_File
-              (Src & D_Suffix,
-               Optional_Name_Type (O_View.Object_Directory.Value)));
-         Idx := Idx + 1;
 
       else
          for CU of Source.Source.Compilation_Units loop
