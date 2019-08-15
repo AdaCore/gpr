@@ -97,7 +97,7 @@ package body GPR2.Project.View is
 
    function Aggregate (Self : Object) return GPR2.Project.View.Object is
    begin
-      return Definition.Get_RO (Self).Aggregate;
+      return Definition.Strong (Definition.Get_RO (Self).Aggregate);
    end Aggregate;
 
    ----------------
@@ -519,7 +519,7 @@ package body GPR2.Project.View is
 
    function Extending (Self : Object) return Object is
    begin
-      return Definition.Get_RO (Self).Extending;
+      return Definition.Strong (Definition.Get_RO (Self).Extending);
    end Extending;
 
    --------------------
@@ -733,8 +733,9 @@ package body GPR2.Project.View is
    -------------------
 
    function Is_Aggregated (Self : Object) return Boolean is
+      use Definition_References;
    begin
-      return Definition.Get_RO (Self).Aggregate.Is_Defined;
+      return Definition.Get_RO (Self).Aggregate /= Null_Weak_Ref;
    end Is_Aggregated;
 
    ------------------------------
@@ -742,10 +743,11 @@ package body GPR2.Project.View is
    ------------------------------
 
    function Is_Aggregated_In_Library (Self : Object) return Boolean is
+      use type Weak_Reference;
       Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      return Ref.Aggregate.Is_Defined
-        and then Ref.Aggregate.Kind = K_Aggregate_Library;
+      return Ref.Aggregate /= Definition_References.Null_Weak_Ref
+        and then Definition.Strong (Ref.Aggregate).Kind = K_Aggregate_Library;
    end Is_Aggregated_In_Library;
 
    -----------------
@@ -753,8 +755,9 @@ package body GPR2.Project.View is
    -----------------
 
    function Is_Extended (Self : Object) return Boolean is
+      use Definition_References;
    begin
-      return Definition.Get_RO (Self).Extending.Is_Defined;
+      return Definition.Get_RO (Self).Extending /= Null_Weak_Ref;
    end Is_Extended;
 
    ------------------

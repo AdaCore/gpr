@@ -924,6 +924,8 @@ package body GPR2.Project.Tree is
       else
          raise Project_Error with Filename.Value & " syntax error";
       end if;
+
+      pragma Assert (Definition.Check_Circular_References (Self.Root_Project));
    end Load;
 
    -------------------
@@ -1205,9 +1207,9 @@ package body GPR2.Project.Tree is
                      else Filename.Dir_Name));
 
                if Status = Extended then
-                  Data.Extending := Parent;
+                  Data.Extending := Definition.Weak (Parent);
                else
-                  Data.Aggregate := Parent;
+                  Data.Aggregate := Definition.Weak (Parent);
                end if;
 
                --  Let's setup the full external environment for project

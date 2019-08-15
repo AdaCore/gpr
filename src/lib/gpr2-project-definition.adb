@@ -23,8 +23,8 @@ with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Strings.Maps.Constants;
-with Ada.Text_IO;
 with Ada.Strings.Unbounded;
+with Ada.Text_IO;
 
 with GNAT.MD5;
 with GNAT.OS_Lib;
@@ -57,6 +57,82 @@ package body GPR2.Project.Definition is
 
    function Languages (Def : Data) return Containers.Source_Value_List is
      (Def.Attrs.Languages.Values);
+
+   -------------------------------
+   -- Check_Circular_References --
+   -------------------------------
+
+   function Check_Circular_References
+     (View : Project.View.Object) return Boolean
+   is
+      use Ada.Strings.Unbounded;
+      Steps : Containers.Name_Set;
+      Way   : Unbounded_String;
+
+      procedure Next_View (From : Project.View.Object);
+      --  Got to next level in check for reference circle
+
+      ---------------
+      -- Next_View --
+      ---------------
+
+      procedure Next_View (From : Project.View.Object) is
+         Def  : constant Const_Ref := Get_RO (From);
+         Name : constant Name_Type := From.Name;
+
+         procedure Relate (Dest : Project.View.Object; Kind : Name_Type);
+         --  Check is the current step was not on the way
+
+         ------------
+         -- Relate --
+         ------------
+
+         procedure Relate (Dest : Project.View.Object; Kind : Name_Type) is
+            OK  : Boolean;
+            CN  : Containers.Name_Type_Set.Cursor;
+            Len : constant Natural := Length (Way);
+
+            function "&" (Left, Right : Name_Type) return Name_Type is
+              (GPR2."&" (Left, Right));
+            --  Workaround for GNAT visibility resolve error:
+            --  ambiguous expression (cannot resolve "&")
+
+            Point : constant Name_Type :=
+                      Name & " " & Kind & " " & Dest.Name;
+         begin
+            Append (Way, String (Point) & "; ");
+            Steps.Insert (Point, CN, OK);
+
+            if not OK then
+               raise Program_Error with
+                 "References cycle: " & To_String (Way);
+            end if;
+
+            Next_View (Dest);
+            Steps.Delete (Point);
+
+            Delete (Way, Len + 1, Length (Way));
+            pragma Assert (Length (Way) = Len);
+         end Relate;
+
+      begin
+         if Def.Extended.Is_Defined then
+            Relate (Def.Extended, "child");
+         end if;
+
+         for V of Def.Imports loop
+            Relate (V, "import");
+         end loop;
+
+         for V of Def.Aggregated loop
+            Relate (V, "aggregated");
+         end loop;
+      end Next_View;
+
+   begin
+      Next_View (View);
+      return True;
+   end Check_Circular_References;
 
    --------------------
    -- Naming_Package --

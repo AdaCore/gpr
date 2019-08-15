@@ -66,9 +66,9 @@ private package GPR2.Project.Definition is
       Trees             : Tree;
 
       --  Actual values for the view
-      Extending         : View.Object;
+      Extending         : Weak_Reference;
       Extended          : View.Object;
-      Aggregate         : View.Object;
+      Aggregate         : Weak_Reference;
       Imports           : Project_View_Store.Map;
       Aggregated        : Project_View_Store.Map;
       Attrs             : Project.Attribute.Set.Object;
@@ -89,6 +89,8 @@ private package GPR2.Project.Definition is
       --  a context from the External attribute. Undefined is used for the
       --  root view to differentiate a root context from a root and aggregate
       --  project.
+      --  ToDo: Context view makes reference circle, but current GPR2
+      --  testsuite is OK with it in Valgrind mode.
 
       --  The project tree for this view
       Tree              : access Project.Tree.Object;
@@ -200,5 +202,11 @@ private package GPR2.Project.Definition is
 
    procedure Set_Default_Attributes (Def : in out Data);
    --  Set default and inherited attributes for the project view
+
+   function Check_Circular_References
+     (View : Project.View.Object) return Boolean;
+   --  Check that references between View.Object does not create cycles.
+   --  Either returns True or raises exception about found reference circle.
+   --  Return value need to use this function in pragma Assert.
 
 end GPR2.Project.Definition;
