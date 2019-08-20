@@ -491,10 +491,10 @@ package body GPR2.Project.Tree is
             declare
                Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
             begin
-               if Defs.Tree.all = Tree
-                 and then Defs.Context_View = Context_View
-                 and then (Defs.Status = Status
-                           or else Status /= Aggregated)
+               pragma Assert (Defs.Tree.all = Tree);
+
+               if Defs.Context_View = Context_View
+                 and then (Defs.Status = Status or else Status /= Aggregated)
                then
                   return V;
                end if;
@@ -515,9 +515,9 @@ package body GPR2.Project.Tree is
             declare
                Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
             begin
-               if Defs.Tree.all = Tree
-                 and then Defs.Context_View = Context_View
-               then
+               pragma Assert (Defs.Tree.all = Tree);
+
+               if Defs.Context_View = Context_View then
                   return V;
                end if;
             end;
