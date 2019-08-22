@@ -7,18 +7,18 @@ INSTALLING THIS LIBRARY
 
 The LibGPR2 library depends on some other external libraries:
 
-- GNATcoll
+* [GNATcoll](https://github.com/AdaCore/gnatcoll-core)
 
-- Langkit
+* [Langkit](https://github.com/AdaCore/langkit)
 
 Both must be installed on the system to be able to compile LibGPR2.
 
-To regenerate the GPR parser from the Langkit grammar the following
-additional external modules are required:
+To regenerate the GPR parser from the Langkit grammar the following additional
+external modules are required:
 
-- Python
+* Python
 
-- Langkit (build directory)
+* Langkit (build directory)
 
 
 CONFIGURING LibGPR2
@@ -26,25 +26,29 @@ CONFIGURING LibGPR2
 
 The following variables can be used to configure the libGPR2 library:
 
-   prefix     : location of the installation, the default is the running
-                GNAT installation root.
+* `prefix`: Location of the installation, the default is the running GNAT
+  installation root.
 
-   BUILD      : control the build options : release (default) or debug
+* `BUILD`: Control the build options: `release` (default) or `debug`.
 
-   PROCESSORS : parallel compilation (default is 0, depends on the number
-                of cores)
+* `PROCESSORS`: Parallel compilation (default is 0, depends on the number of
+   cores).
 
-   TARGET     : for cross-compilation, auto-detected for native platforms
+* `TARGET`: For cross-compilation, auto-detected for native platforms.
 
-   SOURCE_DIR : for out-of-tree build
+* `SOURCE_DIR`: For out-of-tree build.
 
 To use the default options:
 
-   $ make setup
+```sh
+$ make setup
+```
 
-For example, to setup libGPR2 to install a debug version on /opt/libgpr2:
+For example, to setup LibGPR2 to install a debug version on `/opt/libgpr2`:
 
-   $ make prefix=/opt/libgpr2 BUILD=debug install
+```sh
+$ make prefix=/opt/libgpr2 BUILD=debug install
+```
 
 
 BUILDING LibGPR2
@@ -52,36 +56,50 @@ BUILDING LibGPR2
 
 LibGPR2 is using project file, to build it is as simple as:
 
+```sh
 $ gprbuild gpr2.gpr
+```
 
 Though, to build all versions of the library (static, relocatable and
-static-pic) plus the associated tools it is simpler to use the
-provided Makefile:
+static-pic) plus the associated tools it is simpler to use the provided
+Makefile:
 
+```sh
 $ make
+```
 
 Then, to install it:
 
+```sh
 $ make install
+```
 
 
 USING THE LIBRARY
 -----------------
 
-See the libGPR2 examples.
+See the LibGPR2 [examples](examples).
 
 
 TESTING THE LIBRARY
 -------------------
 
-To run the testsuite GNATpython is required:
+To run the testsuite [GNATpython](https://github.com/Nikokrock/gnatpython) is
+required:
 
+```sh
 $ cd testsuite
 $ ./testsuite.py
+```
 
 
 BUG REPORTS
 -----------
 
-Please send questions and bug reports to report@gnat.com following
-the same procedures used to submit reports with the GNAT toolset itself.
+If you got this source file from GNATtracker, please send questions and bug
+reports to report@gnat.com following the same procedures used to submit reports
+with the GNAT toolset itself.
+
+If you read this from the [GitHub repository](https://github.com/AdaCore/gpr),
+please [open issues](https://github.com/AdaCore/gpr/issues) to send questions
+and bug reports.
