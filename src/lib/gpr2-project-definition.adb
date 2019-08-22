@@ -66,6 +66,7 @@ package body GPR2.Project.Definition is
      (View : Project.View.Object) return Boolean
    is
       use Ada.Strings.Unbounded;
+
       Steps : Containers.Name_Set;
       Way   : Unbounded_String;
 
@@ -80,32 +81,36 @@ package body GPR2.Project.Definition is
          Def  : constant Const_Ref := Get_RO (From);
          Name : constant Name_Type := From.Name;
 
-         procedure Relate (Dest : Project.View.Object; Kind : Name_Type);
+         procedure Check_Relation
+           (Dest : Project.View.Object; Kind : Name_Type)
+           with Pre => Dest.Is_Defined;
          --  Check is the current step was not on the way
 
-         ------------
-         -- Relate --
-         ------------
+         --------------------
+         -- Check_Relation --
+         --------------------
 
-         procedure Relate (Dest : Project.View.Object; Kind : Name_Type) is
+         procedure Check_Relation
+           (Dest : Project.View.Object;
+            Kind : Name_Type)
+         is
+            Len : constant Natural := Length (Way);
             OK  : Boolean;
             CN  : Containers.Name_Type_Set.Cursor;
-            Len : constant Natural := Length (Way);
 
             function "&" (Left, Right : Name_Type) return Name_Type is
               (GPR2."&" (Left, Right));
             --  Workaround for GNAT visibility resolve error:
             --  ambiguous expression (cannot resolve "&")
 
-            Point : constant Name_Type :=
-                      Name & " " & Kind & " " & Dest.Name;
+            Point : constant Name_Type := Name & " " & Kind & " " & Dest.Name;
          begin
             Append (Way, String (Point) & "; ");
             Steps.Insert (Point, CN, OK);
 
             if not OK then
                raise Program_Error with
-                 "References cycle: " & To_String (Way);
+                 "references cycle: " & To_String (Way);
             end if;
 
             Next_View (Dest);
@@ -113,19 +118,19 @@ package body GPR2.Project.Definition is
 
             Delete (Way, Len + 1, Length (Way));
             pragma Assert (Length (Way) = Len);
-         end Relate;
+         end Check_Relation;
 
       begin
          if Def.Extended.Is_Defined then
-            Relate (Def.Extended, "child");
+            Check_Relation (Def.Extended, "child");
          end if;
 
          for V of Def.Imports loop
-            Relate (V, "import");
+            Check_Relation (V, "import");
          end loop;
 
          for V of Def.Aggregated loop
-            Relate (V, "aggregated");
+            Check_Relation (V, "aggregated");
          end loop;
       end Next_View;
 
