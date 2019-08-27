@@ -20,7 +20,7 @@ with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
 with GPR2.Context;
-with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 
@@ -52,6 +52,7 @@ package GPRclean.Options is
       Target        : Unbounded_String := To_Unbounded_String ("all");
       Subdirs       : Unbounded_String;
       Src_Subdirs   : Unbounded_String;
+      Implicit_With : GPR2.Path_Name.Set.Object;
    end record;
 
    procedure Parse_Command_Line

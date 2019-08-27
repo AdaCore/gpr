@@ -578,7 +578,8 @@ begin
          Subdirs          => To_Optional_Name (Options.Subdirs),
          Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
-         Implicit_Project => Options.Implicit_Proj);
+         Implicit_Project => Options.Implicit_Proj,
+         Implicit_With    => Options.Implicit_With);
 
    else
       Project_Tree.Load_Autoconf
@@ -587,7 +588,8 @@ begin
          Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
          Target           => Name_Type (To_String (Options.Target)),
-         Implicit_Project => Options.Implicit_Proj);
+         Implicit_Project => Options.Implicit_Proj,
+         Implicit_With    => Options.Implicit_With);
 
       if Project_Tree.Configuration.Log_Messages.Has_Element
            (Warning     => True,

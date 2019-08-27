@@ -95,7 +95,7 @@ package body GPR2.Project.Tree is
       Messages         : out Log.Object;
       Circularities    : out Boolean;
       Starting_From    : View.Object := View.Undefined;
-      Implicit_Project : Boolean := False) return View.Object
+      Implicit_Project : Boolean     := False) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
         then Starting_From.Qualifier in Aggregate_Kind);
@@ -673,12 +673,13 @@ package body GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      Config           : PC.Object          := PC.Undefined;
-      Build_Path       : Path_Name.Object   := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type := No_Name;
-      Src_Subdirs      : Optional_Name_Type := No_Name;
-      Check_Shared_Lib : Boolean            := True;
-      Implicit_Project : Boolean            := False)
+      Config           : PC.Object            := PC.Undefined;
+      Build_Path       : Path_Name.Object     := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type   := No_Name;
+      Src_Subdirs      : Optional_Name_Type   := No_Name;
+      Check_Shared_Lib : Boolean              := True;
+      Implicit_Project : Boolean              := False;
+      Implicit_With    : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
    is
       use Ada.Strings.Unbounded;
 
@@ -883,6 +884,7 @@ package body GPR2.Project.Tree is
       Self.Subdirs          := To_Unbounded_String (String (Subdirs));
       Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
       Self.Check_Shared_Lib := Check_Shared_Lib;
+      Self.Implicit_With    := Implicit_With;
 
       --  Now we can initialize the project search paths
 
@@ -936,14 +938,15 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Build_Path        : Path_Name.Object   := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type := No_Name;
-      Src_Subdirs       : Optional_Name_Type := No_Name;
-      Check_Shared_Lib  : Boolean            := True;
-      Implicit_Project  : Boolean            := False;
-      Target            : Optional_Name_Type := No_Name;
-      Language_Runtimes : GPR2.Containers.Name_Value_Map :=
-                            GPR2.Containers.Name_Value_Map_Package.Empty_Map)
+      Build_Path        : Path_Name.Object     := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type   := No_Name;
+      Src_Subdirs       : Optional_Name_Type   := No_Name;
+      Check_Shared_Lib  : Boolean              := True;
+      Implicit_Project  : Boolean              := False;
+      Implicit_With     : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
+      Target            : Optional_Name_Type   := No_Name;
+      Language_Runtimes : Containers.Name_Value_Map :=
+                            Containers.Name_Value_Map_Package.Empty_Map)
    is
       Languages   : Containers.Source_Value_Set;
       Descr_Index : Natural := 0;
@@ -957,7 +960,8 @@ package body GPR2.Project.Tree is
          Subdirs          => Subdirs,
          Src_Subdirs      => Src_Subdirs,
          Check_Shared_Lib => Check_Shared_Lib,
-         Implicit_Project => Implicit_Project);
+         Implicit_Project => Implicit_Project,
+         Implicit_With    => Implicit_With);
 
       for C in Self.Iterate
         (Filter => (F_Aggregate | F_Aggregate_Library => False,
@@ -1037,7 +1041,8 @@ package body GPR2.Project.Tree is
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
-            Implicit_Project => Implicit_Project);
+            Implicit_Project => Implicit_Project,
+            Implicit_With    => Implicit_With);
       end;
    end Load_Autoconf;
 
@@ -1368,6 +1373,17 @@ package body GPR2.Project.Tree is
                      end if;
                   end;
                end loop;
+
+               if not Self.Implicit_With.Contains (View.Path_Name) then
+                  for W of Self.Implicit_With loop
+                     Data.Imports.Insert
+                       (W.Name,
+                        Internal
+                          (W,
+                           Status => Imported,
+                           Parent => GPR2.Project.View.Undefined));
+                  end loop;
+               end if;
 
                --  Load the extended project if any
 

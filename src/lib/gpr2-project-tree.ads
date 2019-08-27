@@ -68,7 +68,8 @@ package GPR2.Project.Tree is
       Subdirs          : Optional_Name_Type   := No_Name;
       Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
-      Implicit_Project : Boolean              := False)
+      Implicit_Project : Boolean              := False;
+      Implicit_With    : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
      with Pre => Filename.Is_Defined;
    --  Loads a root project
    --  If Implicit_Project is True, the main project file being parsed is
@@ -88,14 +89,15 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Build_Path        : Path_Name.Object   := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type := No_Name;
-      Src_Subdirs       : Optional_Name_Type := No_Name;
-      Check_Shared_Lib  : Boolean            := True;
-      Implicit_Project  : Boolean            := False;
-      Target            : Optional_Name_Type := No_Name;
-      Language_Runtimes : GPR2.Containers.Name_Value_Map :=
-                            GPR2.Containers.Name_Value_Map_Package.Empty_Map)
+      Build_Path        : Path_Name.Object     := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type   := No_Name;
+      Src_Subdirs       : Optional_Name_Type   := No_Name;
+      Check_Shared_Lib  : Boolean              := True;
+      Implicit_Project  : Boolean              := False;
+      Implicit_With     : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
+      Target            : Optional_Name_Type   := No_Name;
+      Language_Runtimes : Containers.Name_Value_Map :=
+                            Containers.Name_Value_Map_Package.Empty_Map)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
@@ -341,6 +343,7 @@ private
       Sources          : Name_View.Map;
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object;
+      Implicit_With    : Path_Name.Set.Object;
       Build_Path       : Path_Name.Object;
       Subdirs          : Ada.Strings.Unbounded.Unbounded_String;
       Src_Subdirs      : Ada.Strings.Unbounded.Unbounded_String;
