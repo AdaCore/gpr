@@ -21,6 +21,7 @@ with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
@@ -343,12 +344,6 @@ procedure GPRinstall.Main is
          Argument    => "<name>");
 
       Define_Switch
-        (Options.Config, Options.Target_Name'Access,
-         Long_Switch => "--target=",
-         Help        => "Specify a target for cross platforms",
-         Argument    => "<name>");
-
-      Define_Switch
         (Options.Config, Options.Subdirs'Access,
          Long_Switch => "--subdirs=",
          Help        => "Real obj/lib/exec dirs are subdirs",
@@ -527,12 +522,6 @@ procedure GPRinstall.Main is
          raise Usage_Error with "--prefix argument cannot be empty";
       end if;
 
-      --  Set default target
-
-      if Options.Target_Name.all = "" then
-         Options.Target_Name := new String'("all");
-      end if;
-
       if Options.Project_File.Is_Defined then
          Options.Clean_Build_Path (Options.Project_File);
       end if;
@@ -562,7 +551,8 @@ begin
       if Options.Config_Project.all /= "" then
          Config := Project.Configuration.Load
            (Path_Name.Create_File (Name_Type (Options.Config_Project.all)),
-            Target => Name_Type (Options.Target_Name.all));
+            Target => Name_Type
+              (Strings.Unbounded.To_String (Options.Target)));
       end if;
 
       --  Then, parse the user's project and the configuration file. Apply the

@@ -147,16 +147,18 @@ package body GPRinstall.Install is
 
       function Dup (P : Param) return Param renames GPRinstall.Options.Dup;
 
+      Target_Name : constant String := To_String (Options.Target);
+
       Objcopy_Exec : constant String :=
-                       (if Options.Target_Name.all = "all"
+                       (if Target_Name = "all"
                         then "objcopy"
-                        else Options.Target_Name.all & "-objcopy");
+                        else Target_Name & "-objcopy");
       --  Name of objcopy executable, possible a cross one
 
       Strip_Exec   : constant String :=
-                       (if Options.Target_Name.all = "all"
+                       (if Target_Name = "all"
                         then "strip"
-                        else Options.Target_Name.all & "-strip");
+                        else Target_Name & "-strip");
       --  Name of strip executable, possible a cross one
 
       Objcopy      : constant OS_Lib.String_Access :=

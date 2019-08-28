@@ -16,6 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded;
+
 with GNAT.Command_Line;
 
 with GPR2.Containers;
@@ -23,6 +25,7 @@ with GPR2.Path_Name.Set;
 
 package GPRtools.Options is
 
+   use Ada.Strings.Unbounded;
    use GNAT.Command_Line;
 
    type Object is tagged record
@@ -35,6 +38,9 @@ package GPRtools.Options is
       Full_Path_Name_For_Brief : aliased Boolean := False;
       Version                  : aliased Boolean := False;
       Warnings                 : aliased Boolean := True;
+      Target                   : Unbounded_String :=
+                                   To_Unbounded_String ("all");
+
       Debug_Mode               : aliased Boolean := False;
       Verbosity                : Verbosity_Level := Regular;
       Root_Path                : GPR2.Path_Name.Object;

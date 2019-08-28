@@ -133,9 +133,6 @@ package GPRinstall.Options is
       --  Whether the debug symbols are kept into the main executable (default)
       --  or written into a side debug file.
 
-      Target_Name       : aliased OS_Lib.String_Access;
-      --  The name of the target
-
       Subdirs           : aliased OS_Lib.String_Access;
       --  Make obj/lib/exec dirs as subdirs
    end record;

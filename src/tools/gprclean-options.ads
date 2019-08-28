@@ -49,7 +49,6 @@ package GPRclean.Options is
       Context       : GPR2.Context.Object;
       Config_File   : Path_Name.Object;
       Remove_Config : Boolean := False;
-      Target        : Unbounded_String := To_Unbounded_String ("all");
       Subdirs       : Unbounded_String;
       Src_Subdirs   : Unbounded_String;
    end record;

@@ -168,6 +168,14 @@ package body GPRtools.Options is
          Long_Switch => "--debug",
          Help        => "Debug mode");
 
+      if Tool in Build | Clean | Install then
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--target=",
+            Help        => "Specify a target for cross platforms",
+            Argument    => "<name>");
+      end if;
+
       if Tool in Build | Clean then
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,
@@ -217,6 +225,9 @@ package body GPRtools.Options is
       elsif Switch = "--implicit-with" then
          Self.Implicit_With.Append
            (GPR2.Path_Name.Create_File (GPR2.Name_Type (Normalize_Value)));
+
+      elsif Switch = "--target" then
+         Self.Target := To_Unbounded_String (Normalize_Value);
       end if;
    end Value_Callback;
 

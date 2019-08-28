@@ -25,8 +25,6 @@ with GNAT.OS_Lib;
 with GPR2;
 with GPR2.Project;
 
-with GPRls.Common;
-
 with GPRtools.Util;
 
 separate (GPRls.Options)
@@ -208,8 +206,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    Config : Command_Line_Configuration;
 
-   Tmp_Target          : aliased OS_Lib.String_Access;
-   Tmp_RTS             : aliased OS_Lib.String_Access;
+   Tmp_RTS : aliased OS_Lib.String_Access;
 
 begin
    Define_Switch
@@ -232,12 +229,6 @@ begin
       "-aP:",
       Help     => "Add directory <dir> to project search path",
       Argument => "<dir>");
-
-   Define_Switch
-     (Config, Tmp_Target'Access,
-      "--target=",
-      Help     => "Use target <target>",
-      Argument => "<target>");
 
    Define_Switch
      (Config, Tmp_RTS'Access,
@@ -304,11 +295,6 @@ begin
       Help => "Browse the entire project tree");
 
    Getopt (Config, Concatenate => False);
-
-   if Tmp_Target /= null then
-      Self.Target := +Tmp_Target.all;
-      OS_Lib.Free (Tmp_Target);
-   end if;
 
    if Tmp_RTS /= null then
       Self.RTS := +Tmp_RTS.all;

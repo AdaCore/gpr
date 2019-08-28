@@ -142,9 +142,6 @@ package body GPRclean.Options is
             Options.Config_File :=
               Path_Name.Create_File (Name_Type (Normalize_Value));
 
-         elsif Switch = "--target" then
-            Options.Target := To_Unbounded_String (Normalize_Value);
-
          elsif Switch = "-aP" then
             Project_Tree.Register_Project_Search_Path
               (Path_Name.Create_Directory (Name_Type (Value)));
@@ -169,11 +166,6 @@ package body GPRclean.Options is
         (Config, Options.No_Project'Access,
          Long_Switch => "--no-project",
          Help        => "Do not use project file");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--target:",
-         Help => "Specify a target for cross platforms");
 
       Define_Switch
         (Config, Options.All_Projects'Access, "-r",
