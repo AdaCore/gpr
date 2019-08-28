@@ -19,7 +19,7 @@
 with GNAT.Command_Line;
 
 with GPR2.Containers;
-with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 
 package GPRtools.Options is
 
@@ -39,9 +39,12 @@ package GPRtools.Options is
       Verbosity                : Verbosity_Level := Regular;
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;
+      Implicit_With            : GPR2.Path_Name.Set.Object;
    end record;
 
-   procedure Setup (Self : aliased in out Object'Class);
+   procedure Setup
+     (Self : aliased in out Object'Class;
+      Tool : Which);
    --  Setup command line parsing options
 
    procedure Read_Remaining_Arguments

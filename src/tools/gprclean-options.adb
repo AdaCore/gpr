@@ -149,10 +149,6 @@ package body GPRclean.Options is
             Project_Tree.Register_Project_Search_Path
               (Path_Name.Create_Directory (Name_Type (Value)));
 
-         elsif Switch = "--implicit-with" then
-            Options.Implicit_With.Append
-              (GPR2.Path_Name.Create_File (GPR2.Name_Type (Normalize_Value)));
-
          elsif Switch = "--subdirs" then
             Options.Subdirs := To_Unbounded_String (Normalize_Value);
 
@@ -162,7 +158,8 @@ package body GPRclean.Options is
       end Value_Callback;
 
    begin
-      GPRtools.Options.Setup (GPRtools.Options.Object (Options));
+      GPRtools.Options.Setup
+        (GPRtools.Options.Object (Options), GPRtools.Clean);
 
       Define_Switch
         (Config, Value_Callback'Unrestricted_Access, "-P:",
@@ -194,13 +191,6 @@ package body GPRclean.Options is
          Help        => "Prepend <obj>/dir to the list of source dirs for each"
                         & " project",
          Argument    => "<dir>");
-
-      Define_Switch
-        (Options.Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--implicit-with:",
-         Help        => "Add the given projects as a dependency on all loaded"
-                        & " projects",
-         Argument    => "<filename>");
 
       Define_Switch
         (Config, Options.Dry_Run'Access, "-n",

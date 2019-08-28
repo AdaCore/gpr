@@ -111,7 +111,9 @@ package body GPRtools.Options is
    -- Setup --
    -----------
 
-   procedure Setup (Self : aliased in out Object'Class) is
+   procedure Setup
+     (Self : aliased in out Object'Class;
+      Tool : Which) is
    begin
       TLS.Set_Value (Self'Unchecked_Access);
 
@@ -165,6 +167,16 @@ package body GPRtools.Options is
         (Self.Config, Self.Debug_Mode'Access,
          Long_Switch => "--debug",
          Help        => "Debug mode");
+
+      if Tool in Build | Clean then
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--implicit-with:",
+            Help        =>
+              "Add the given projects as a dependency on all loaded"
+            & " projects",
+            Argument    => "<filename>");
+      end if;
    end Setup;
 
    --------------------
@@ -201,6 +213,10 @@ package body GPRtools.Options is
 
       elsif Switch = "-v" or else Switch = "--verbose" then
          Self.Verbosity := Verbose;
+
+      elsif Switch = "--implicit-with" then
+         Self.Implicit_With.Append
+           (GPR2.Path_Name.Create_File (GPR2.Name_Type (Normalize_Value)));
       end if;
    end Value_Callback;
 

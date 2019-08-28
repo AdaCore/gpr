@@ -176,7 +176,7 @@ procedure GPRinstall.Main is
    begin
       --  Call parent/generic command line setup
 
-      GPRtools.Options.Setup (Options);
+      GPRtools.Options.Setup (Options, GPRtools.Install);
 
       Define_Switch
         (Options.Config, Set_Project'Unrestricted_Access,
