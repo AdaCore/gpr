@@ -645,8 +645,10 @@ exception
    when GNAT.Command_Line.Exit_From_Command_Line =>
       null;
 
-   when E : GNAT.Command_Line.Invalid_Switch
-      | GNAT.Command_Line.Invalid_Parameter
+   when GNAT.Command_Line.Invalid_Switch =>
+      GPRtools.Util.Fail_Program ("");
+
+   when E : GNAT.Command_Line.Invalid_Parameter
       | GPRtools.Usage_Error =>
       GPRtools.Util.Fail_Program (Exception_Message (E));
 

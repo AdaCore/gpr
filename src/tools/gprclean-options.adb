@@ -225,7 +225,8 @@ package body GPRclean.Options is
          Switch => "-p",
          Help   => "Remove empty build directories");
 
-      Getopt (Config, Parser => Parser, Quiet => Additional);
+      Getopt
+        (Config, Parser => Parser, Quiet => Additional, Concatenate => False);
 
       GPR2.Set_Debug (Options.Debug_Mode);
 
