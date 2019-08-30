@@ -74,7 +74,6 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    use GPRname.Common;
    use GPRname.Section;
    use GPRname.Source;
-   use GPRname.Source.Vector;
    use GPRname.Options;
 
    use Langkit_Support.Text;
@@ -436,14 +435,14 @@ begin
                               Compiler_Args,
                               Lang_Sources_Map,
                               Source_Basenames);
-            Dir_List := Dir_List & Quote (D.Orig) & ',';
+            Append (Dir_List, Quote (D.Orig) & ',');
          end loop;
       end loop;
 
       --  Remove the trailing comma in the Source_Dirs template
 
       if Length (Dir_List) > 0 then
-         Dir_List := Head (Dir_List, Length (Dir_List) - 1);
+         Head (Dir_List, Length (Dir_List) - 1);
       end if;
 
       --  Fill the list of languages for which we have found some sources
@@ -459,8 +458,7 @@ begin
          begin
             if Sources.Length > 0 then
                Lang_With_Sources.Append (Lang);
-               Lang_With_Sources_List := Lang_With_Sources_List
-                 & Quote (String (Lang)) & ",";
+               Append (Lang_With_Sources_List, Quote (String (Lang)) & ",");
             end if;
          end;
       end loop;
@@ -468,9 +466,7 @@ begin
       --  Remove the trailing comma in the Languages template
 
       if Length (Lang_With_Sources_List) > 0 then
-         Lang_With_Sources_List :=
-           Head (Lang_With_Sources_List,
-                 Length (Lang_With_Sources_List) - 1);
+         Head (Lang_With_Sources_List, Length (Lang_With_Sources_List) - 1);
       end if;
 
       OS_Lib.Free (Compiler_Args);
@@ -754,14 +750,14 @@ begin
       if Lang_Sources_Map.Contains (Ada_Lang) then
          for S of Lang_Sources_Map (Ada_Lang) loop
             for U of S.Units loop
-               Naming_Project_Buffer := Naming_Project_Buffer
-                 & To_Unbounded_String
-                 ("for " & (if U.Kind = K_Spec then "Spec" else "Body")
+               Append
+                 (Naming_Project_Buffer,
+                  "for " & (if U.Kind = K_Spec then "Spec" else "Body")
                   & " (" & Quote (String (U.Name)) & ") use "
                   & Quote (String (S.File.Simple_Name))
-                  & (if U.Index_In_Source > 0 then
-                         " at " & Int_Image (U.Index_In_Source) & ";"
-                    else ";"));
+                  & (if U.Index_In_Source > 0
+                     then " at " & Int_Image (U.Index_In_Source) & ";"
+                     else ";"));
             end loop;
 
             --  Write the source to the source list file
@@ -783,23 +779,16 @@ begin
 
          begin
             if Lang /= Ada_Lang then
-               Naming_Project_Buffer := Naming_Project_Buffer
-                 & To_Unbounded_String
-                 ("for Implementation_Exceptions ("
-                  & Quote (String (Lang)) & ") use (");
+               Append
+                 (Naming_Project_Buffer,
+                  "for Implementation_Exceptions (" & Quote (String (Lang))
+                  & ") use (");
 
                for S_Curs in Sources.Iterate loop
-                  Naming_Project_Buffer := Naming_Project_Buffer &
-                    To_Unbounded_String
-                    (Quote (String (Sources (S_Curs).File.Simple_Name)));
-
-                  if S_Curs /= Sources.Last then
-                     Naming_Project_Buffer := Naming_Project_Buffer &
-                       To_Unbounded_String (", ");
-                  else
-                     Naming_Project_Buffer := Naming_Project_Buffer &
-                       To_Unbounded_String (");");
-                  end if;
+                  Append
+                    (Naming_Project_Buffer,
+                     Quote (String (Sources (S_Curs).File.Simple_Name))
+                     & (if S_Curs = Sources.Last then ");" else ", "));
 
                   --  Write the source to the source list file
 
@@ -811,8 +800,9 @@ begin
          end;
       end loop;
 
-      Naming_Project_Buffer := Naming_Project_Buffer &
-        To_Unbounded_String ("end Naming; end " & Naming_Project_Name & ";");
+      Append
+        (Naming_Project_Buffer,
+         "end Naming; end " & Naming_Project_Name & ";");
 
       --  We are done with the source list file
 
