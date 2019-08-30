@@ -114,6 +114,7 @@ package body GPR2.Project.Pretty_Printer is
         (S          : String;
          Indent     : Natural;
          End_Line   : Boolean := False;
+         Auto_EOL   : Boolean := True;
          Lower_Case : Boolean := True);
       --  Use this to write tokens that are not identifiers nor string
       --  literals. Lower case by default, since we expect keywords.
@@ -359,11 +360,11 @@ package body GPR2.Project.Pretty_Printer is
                      Print (C, Indent);
 
                      if Count < F_Exprs (Node.As_Expr_List).Children_Count then
-                        Write_Token (", ", Indent);
+                        Write_Token (", ", Indent, Auto_EOL => False);
                      end if;
                   end loop;
 
-                  Write_Token (")", Indent);
+                  Write_Token (")", Indent, Auto_EOL => False);
                end;
 
             when GPR_Builtin_Function_Call =>
@@ -829,6 +830,7 @@ package body GPR2.Project.Pretty_Printer is
         (S          : String;
          Indent     : Natural;
          End_Line   : Boolean := False;
+         Auto_EOL   : Boolean := True;
          Lower_Case : Boolean := True)
       is
          Formatted : constant String :=
@@ -846,7 +848,8 @@ package body GPR2.Project.Pretty_Printer is
 
          --  If the line would become too long, start a new line if it helps
 
-         if Column + Formatted'Length > Self.Max_Line_Length
+         if Auto_EOL
+           and then Column + Formatted'Length > Self.Max_Line_Length
            and then Column > Indent + Self.Increment
          then
             W_EOL;
