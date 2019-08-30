@@ -16,17 +16,18 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Indefinite_Ordered_Sets;
 
-package GPRname.Source.Vector is
+package GPRname.Source.Set is
 
-   package Vector is new Ada.Containers.Indefinite_Vectors
-     (Positive, Source.Object);
+   package Set is new Ada.Containers.Indefinite_Ordered_Sets (Source.Object);
 
-   subtype Object is Vector.Vector;
+   subtype Object is Set.Set;
 
-   subtype Cursor is Vector.Cursor;
+   Empty_Set : Object renames Set.Empty_Set;
 
-   function "=" (Left, Right : Object) return Boolean renames Vector."=";
+   subtype Cursor is Set.Cursor;
 
-end GPRname.Source.Vector;
+   function "=" (Left, Right : Object) return Boolean renames Set."=";
+
+end GPRname.Source.Set;

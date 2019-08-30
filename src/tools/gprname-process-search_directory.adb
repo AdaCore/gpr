@@ -55,17 +55,11 @@ is
      (Map : in out Language_Sources_Map.Map;
       Src : Source.Object)
    is
-      Is_New_Key    : Boolean;
-      Position      : Language_Sources_Map.Cursor;
-      Source_Vector : Source.Vector.Object;
-
+      Is_New_Key : Boolean;
+      Position   : Language_Sources_Map.Cursor;
    begin
-      Source_Vector.Append (Src);
-      Map.Insert (Src.Language, Source_Vector, Position, Is_New_Key);
-
-      if not Is_New_Key then
-         Map.Reference (Position).Append (Src);
-      end if;
+      Map.Insert (Src.Language, Source.Set.Empty_Set, Position, Is_New_Key);
+      Map (Position).Insert (Src);
    end Update_Lang_Sources_Map;
 
    type Matched_Type is (Match, No_Match, Excluded);

@@ -48,8 +48,7 @@ with GPR2.Source_Reference;
 with GPRname.Common;
 with GPRname.Options;
 with GPRname.Section;
-with GPRname.Source;
-with GPRname.Source.Vector;
+with GPRname.Source.Set;
 with GPRname.Unit;
 
 with Langkit_Support.Text;
@@ -82,10 +81,10 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
 
    package Language_Sources_Map is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Type,
-      Source.Vector.Object,
+      Source.Set.Object,
       Str_Hash_Case_Insensitive,
       "=",
-      Source.Vector."=");
+      Source.Set."=");
 
    procedure Search_Directory
      (Dir_Path         : Path_Name.Object;
@@ -453,7 +452,7 @@ begin
 
             Lang    : constant Language_Type :=
                         Language_Sources_Map.Key (Curs);
-            Sources : constant Source.Vector.Object :=
+            Sources : constant Source.Set.Object :=
                         Language_Sources_Map.Element (Curs);
          begin
             if Sources.Length > 0 then
@@ -745,36 +744,15 @@ begin
         ("abstract project " & Naming_Project_Name & " is "
          & "package Naming is ");
 
-      --  Spec/Body attributes for Ada sources
-
-      if Lang_Sources_Map.Contains (Ada_Lang) then
-         for S of Lang_Sources_Map (Ada_Lang) loop
-            for U of S.Units loop
-               Append
-                 (Naming_Project_Buffer,
-                  "for " & (if U.Kind = K_Spec then "Spec" else "Body")
-                  & " (" & Quote (String (U.Name)) & ") use "
-                  & Quote (String (S.File.Simple_Name))
-                  & (if U.Index_In_Source > 0
-                     then " at " & Int_Image (U.Index_In_Source) & ";"
-                     else ";"));
-            end loop;
-
-            --  Write the source to the source list file
-
-            Text_IO.Put_Line (File_Src_List, String (S.File.Simple_Name));
-         end loop;
-      end if;
-
-      --  Sources for other languages
+      --  Sources for none Ada languages
 
       for Curs in Lang_Sources_Map.Iterate loop
          declare
-            use type Source.Vector.Cursor;
+            use type Source.Set.Cursor;
 
             Lang    : constant Language_Type :=
                         Language_Sources_Map.Key (Curs);
-            Sources : constant Source.Vector.Object :=
+            Sources : constant Source.Set.Object :=
                         Language_Sources_Map.Element (Curs);
 
          begin
@@ -799,6 +777,27 @@ begin
             end if;
          end;
       end loop;
+
+      --  Spec/Body attributes for Ada sources
+
+      if Lang_Sources_Map.Contains (Ada_Lang) then
+         for S of Lang_Sources_Map (Ada_Lang) loop
+            for U of S.Units loop
+               Append
+                 (Naming_Project_Buffer,
+                  "for " & (if U.Kind = K_Spec then "Spec" else "Body")
+                  & " (" & Quote (String (U.Name)) & ") use "
+                  & Quote (String (S.File.Simple_Name))
+                  & (if U.Index_In_Source > 0
+                     then " at " & Int_Image (U.Index_In_Source) & ";"
+                     else ";"));
+            end loop;
+
+            --  Write the source to the source list file
+
+            Text_IO.Put_Line (File_Src_List, String (S.File.Simple_Name));
+         end loop;
+      end if;
 
       Append
         (Naming_Project_Buffer,
