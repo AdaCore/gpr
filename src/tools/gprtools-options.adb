@@ -19,7 +19,15 @@
 with Ada.Task_Attributes;
 with Ada.Characters.Handling;
 
+pragma Warnings (Off);
+with System.OS_Constants;
+pragma Warnings (On);
+
 with GNATCOLL.Utils;
+
+with GPR2.Compilation.Registry;
+
+with GPRtools.Util;
 
 package body GPRtools.Options is
 
@@ -68,6 +76,19 @@ package body GPRtools.Options is
             Name_Type (Self.Build_Path.Value));
       end if;
    end Clean_Build_Path;
+
+   ----------------
+   -- Get_Target --
+   ----------------
+
+   function Get_Target (Self : Object) return GPR2.Name_Type is
+   begin
+      if To_String (Self.Target) in "all" | "" then
+         return GPR2.Name_Type (System.OS_Constants.Target_Name);
+      else
+         return GPR2.Name_Type (To_String (Self.Target));
+      end if;
+   end Get_Target;
 
    ------------------------------
    -- Read_Remaining_Arguments --
