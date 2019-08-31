@@ -16,40 +16,45 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR.Compilation.Slave;
+--  A slave is a compilation node on the network. It is composed of a host name
+--  and a connection port. Slaves are recorded into the registry.
 
-with GPR2.Compilation.Protocol;
-with GPR2.Project.Tree;
-with GPR2.Project.View;
+with GNAT.Sockets;
+
+private with Ada.Strings.Unbounded;
 
 package GPR2.Compilation.Slave is
 
-   procedure Register_Remote_Slaves
-     (Tree        : GPR2.Project.Tree.Object;
-      Synchronize : Boolean);
-   --  Same as above. Synchronize is set to true if the project has to be
-   --  synchronized to the remote slave.
+   type Object is tagged private;
 
-   function Compute_Env
-     (Tree : GPR2.Project.Tree.Object; Auto : Boolean) return String;
-   --  Compute a slave environment based on the command line parameter and
-   --  the project variables. We want the same slave environment for identical
-   --  build. Data is a string that must be taken into account in the returned
-   --  value.
+   Undefined : constant Object;
 
-   function Remote_Root_Directory
-     (Project : GPR2.Project.View.Object) return String;
-   --  Returns the root directory for the project taking into account the
-   --  remote package Root_Dir attribute. That is, this is the root directory
-   --  used for the synchronization for example.
+   function Create
+     (Host : Name_Type;
+      Port : GNAT.Sockets.Port_Type) return Object;
+   --  Create a new slave
 
-   procedure Unregister_Remote_Slaves (From_Signal : Boolean := False)
-     renames GPR.Compilation.Slave.Unregister_Remote_Slaves;
+   function Host (Self : Object) return Name_Type;
+   --  Returns the host part of the slave
 
-   function Channel (Host : String) return Protocol.Communication_Channel
-     renames GPR.Compilation.Slave.Channel;
+   function Port (Self : Object) return GNAT.Sockets.Port_Type;
+   --  Returns the port of the slave
 
-   procedure Record_Slaves (Option : String)
-     renames GPR.Compilation.Slave.Record_Slaves;
+private
+
+   use Ada.Strings.Unbounded;
+
+   type Object is tagged record
+      Host : Unbounded_String;
+      Port : GNAT.Sockets.Port_Type;
+   end record;
+
+   Undefined : constant Object  :=
+                 (Port => GNAT.Sockets.Port_Type'Last, others => <>);
+
+   function Host (Self : Object) return Name_Type is
+      (Name_Type (To_String (Self.Host)));
+
+   function Port (Self : Object) return GNAT.Sockets.Port_Type is (Self.Port);
 
 end GPR2.Compilation.Slave;

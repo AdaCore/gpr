@@ -41,6 +41,9 @@ package GPRtools.Options is
       Target                   : Unbounded_String :=
                                    To_Unbounded_String ("all");
 
+      Slave_Env                : Unbounded_String;
+      Hash_Value               : Unbounded_String;
+
       Debug_Mode               : aliased Boolean := False;
       Verbosity                : Verbosity_Level := Regular;
       Root_Path                : GPR2.Path_Name.Object;

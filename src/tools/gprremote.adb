@@ -33,7 +33,7 @@ with GPR.Util;
 with GPR.Version;
 
 with GPR2.Compilation.Protocol;
-with GPR2.Compilation.Slave;
+with GPR2.Compilation.Registry;
 with GPR2.Compilation.Sync;
 with GPR2.Context;
 with GPR2.Path_Name;
@@ -145,11 +145,11 @@ procedure GPRremote is
 
    begin
       Root_Dir := To_Unbounded_String
-        (Compilation.Slave.Remote_Root_Directory (Project.Root_Project));
+        (Compilation.Registry.Remote_Root_Directory (Project.Root_Project));
 
       --  Get the channel for the given host
 
-      Channel := Compilation.Slave.Channel (Host);
+      Channel := Compilation.Registry.Channel (Host);
 
       --  Set options
 
@@ -230,7 +230,7 @@ procedure GPRremote is
    begin
       --  Get the channel for the given host
 
-      Channel := Compilation.Slave.Channel (Host);
+      Channel := Compilation.Registry.Channel (Host);
 
       Compilation.Protocol.Send_Info_Request (Channel);
 
@@ -286,7 +286,7 @@ procedure GPRremote is
    begin
       --  Get the channel for the given host
 
-      Channel := Compilation.Slave.Channel (Host);
+      Channel := Compilation.Registry.Channel (Host);
 
       --  Send sync command to slave
 
@@ -296,7 +296,7 @@ procedure GPRremote is
 
       Result := Compilation.Sync.Receive_Files
         (Channel,
-         Compilation.Slave.Remote_Root_Directory (Project.Root_Project),
+         Compilation.Registry.Remote_Root_Directory (Project.Root_Project),
          Total_File,
          Total_Transferred,
          Remote_Files,
@@ -310,7 +310,7 @@ procedure GPRremote is
    procedure Epilog (Cmd : Command_Kind) is
       pragma Unreferenced (Cmd);
    begin
-      Compilation.Slave.Unregister_Remote_Slaves;
+      Compilation.Registry.Unregister_Remote_Slaves;
    end Epilog;
 
    ------------------------
@@ -430,7 +430,7 @@ procedure GPRremote is
          end if;
       end if;
 
-      Compilation.Slave.Register_Remote_Slaves
+      Compilation.Registry.Register_Remote_Slaves
         (Project, Synchronize => Sync);
    end Prolog;
 
@@ -443,7 +443,7 @@ begin
 
    if GPR.Util.Slave_Env = null then
       GPR.Util.Slave_Env := new String'
-        (Compilation.Slave.Compute_Env (Project, GPR.Util.Slave_Env_Auto));
+        (Compilation.Registry.Compute_Env (Project, GPR.Util.Slave_Env_Auto));
 
       if GPR.Util.Slave_Env_Auto and not GPR.Opt.Quiet_Output then
          Put ("slave environment is ");
@@ -465,7 +465,7 @@ begin
 
          --  First connect to the host
 
-         Compilation.Slave.Record_Slaves (Host);
+         Compilation.Registry.Record_Slaves (Host);
 
          Prolog (Cmd);
 

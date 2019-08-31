@@ -16,17 +16,22 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body GPR2.Compilation.Slave is
+--  A container of slave object
 
-   ------------
-   -- Create --
-   ------------
+with Ada.Containers.Doubly_Linked_Lists;
 
-   function Create
-     (Host : Name_Type;
-      Port : GNAT.Sockets.Port_Type) return Object is
-   begin
-      return Object'(To_Unbounded_String (String (Host)), Port);
-   end Create;
+package GPR2.Compilation.Slave.List is
 
-end GPR2.Compilation.Slave;
+   package List is new Ada.Containers.Doubly_Linked_Lists (Object);
+
+   type Object is new List.List with private;
+
+   Empty_Set : constant Object;
+
+private
+
+   type Object is new List.List with null record;
+
+   Empty_Set : constant Object := (List.Empty_List with null record);
+
+end GPR2.Compilation.Slave.List;
