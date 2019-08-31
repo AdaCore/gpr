@@ -40,8 +40,10 @@ package GPRtools.Options is
       Warnings                 : aliased Boolean := True;
       Target                   : Unbounded_String :=
                                    To_Unbounded_String ("all");
-
+      Distributed_Mode         : Boolean := False;
+      Slaves                   : Unbounded_String;
       Slave_Env                : Unbounded_String;
+      Slave_Env_Auto           : Boolean := False;
       Hash_Value               : Unbounded_String;
 
       Debug_Mode               : aliased Boolean := False;
@@ -49,6 +51,7 @@ package GPRtools.Options is
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;
       Implicit_With            : GPR2.Path_Name.Set.Object;
+      Maximum_Processes        : Natural := 0;
    end record;
 
    procedure Setup

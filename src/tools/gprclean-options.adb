@@ -18,7 +18,9 @@
 
 with Ada.Directories;
 with Ada.Strings.Fixed;
+with Ada.Text_IO;
 
+with GPR2.Compilation.Registry;
 with GPR2.Version;
 with GPRtools.Util;
 
@@ -71,6 +73,8 @@ package body GPRclean.Options is
       Project_Tree : in out Project.Tree.Object;
       Parser       : Opt_Parser := Command_Line_Parser)
    is
+      use Ada;
+
       Config : Command_Line_Configuration renames Options.Config;
 
       Additional : constant Boolean := Parser /= Command_Line_Parser;
@@ -278,6 +282,19 @@ package body GPRclean.Options is
          then Path_Name.Create_Directory
                 (Name_Type (Ada.Directories.Current_Directory))
          else Options.Project_Path);
+
+      if Options.Slave_Env = Null_Unbounded_String
+        and then Options.Distributed_Mode
+      then
+         Options.Slave_Env := To_Unbounded_String
+           (GPR2.Compilation.Registry.Compute_Env
+              (Project_Tree, Options.Slave_Env_Auto));
+
+         if Options.Slave_Env_Auto and then Options.Verbose then
+            Text_IO.Put_Line
+              ("slave environment is " & To_String (Options.Slave_Env));
+         end if;
+      end if;
    end Parse_Command_Line;
 
 end GPRclean.Options;

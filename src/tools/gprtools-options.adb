@@ -19,11 +19,15 @@
 with Ada.Task_Attributes;
 with Ada.Characters.Handling;
 
+with GPR2.Compilation.Registry;
+
 pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
 
 with GNATCOLL.Utils;
+
+with GPRtools.Util;
 
 package body GPRtools.Options is
 
@@ -149,41 +153,44 @@ package body GPRtools.Options is
          "-v", "--verbose",
          Help => "Verbose output");
 
-      Define_Switch
-        (Self.Config, Value_Callback'Unrestricted_Access,
-         "-q", "--quiet",
-         Help => "Be quiet/terse");
+      if Tool /= Remote then
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            "-q", "--quiet",
+            Help => "Be quiet/terse");
 
-      --  The code below should be uncommented when we will be able to give a
-      --  name for the hiding warnings switch.
-      --
-      --  Define_Switch
-      --    (Self.Config, Self.Warnings'Unrestricted_Access,
-      --     Switch => "-ws",
-      --     Help   => "Suppress all warnings",
-      --     Value  => False);
+         --  The code below should be uncommented when we will be able to give
+         --  a name for the hiding warnings switch.
+         --
+         --  Define_Switch
+         --    (Self.Config, Self.Warnings'Unrestricted_Access,
+         --     Switch => "-ws",
+         --     Help   => "Suppress all warnings",
+         --     Value  => False);
 
-      Define_Switch
-        (Self.Config, Self.Full_Path_Name_For_Brief'Access,
-         Switch => "-F",
-         Help   => "Full project path name in brief log messages");
+         Define_Switch
+           (Self.Config, Self.Full_Path_Name_For_Brief'Access,
+            Switch => "-F",
+            Help   => "Full project path name in brief log messages");
 
-      Define_Switch
-        (Self.Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--root-dir:",
-         Help        => "Root directory of obj/lib/exec to relocate",
-         Argument    => "<dir>");
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--root-dir:",
+            Help        => "Root directory of obj/lib/exec to relocate",
+            Argument    => "<dir>");
 
-      Define_Switch
-        (Self.Config, Value_Callback'Unrestricted_Access,
-         Long_Switch => "--relocate-build-tree?",
-         Help        => "Root obj/lib/exec dirs are current-directory or dir",
-         Argument    => "<dir>");
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--relocate-build-tree?",
+            Help        =>
+              "Root obj/lib/exec dirs are current-directory or dir",
+            Argument    => "<dir>");
 
-      Define_Switch
-        (Self.Config, Self.Debug_Mode'Access,
-         Long_Switch => "--debug",
-         Help        => "Debug mode");
+         Define_Switch
+           (Self.Config, Self.Debug_Mode'Access,
+            Long_Switch => "--debug",
+            Help        => "Debug mode");
+      end if;
 
       if Tool in Build | Clean | Install then
          Define_Switch
@@ -201,6 +208,20 @@ package body GPRtools.Options is
               "Add the given projects as a dependency on all loaded"
             & " projects",
             Argument    => "<filename>");
+
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--distributed?",
+            Help        =>
+              "Activate the distributed mode for the given slaves",
+            Argument    => "<host>[,<host>]");
+
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--slave-env?",
+            Help        =>
+              "Use a specific slave's environment",
+            Argument    => "<name>");
       end if;
    end Setup;
 
@@ -245,6 +266,36 @@ package body GPRtools.Options is
 
       elsif Switch = "--target" then
          Self.Target := To_Unbounded_String (Normalize_Value);
+
+      elsif Switch = "--distributed" then
+         declare
+            use type GPR2.Containers.Count_Type;
+
+            --  If Value is set, the first character is a =, we remove it
+
+            Hosts : constant GPR2.Containers.Name_List :=
+                      (if Value = ""
+                       then GPR2.Compilation.Registry.Get_Hosts
+                       else GPR2.Containers.Create
+                              (GPR2.Name_Type (Normalize_Value),
+                               Separator => ","));
+         begin
+            if Hosts.Length = 0 then
+               Util.Fail_Program
+                 ("missing hosts for distributed mode compilation");
+
+            else
+               GPR2.Compilation.Registry.Record_Slaves (Hosts);
+               Self.Distributed_Mode := True;
+            end if;
+         end;
+
+      elsif Switch = "--slave-env" then
+         if Value = "" then
+            Self.Slave_Env_Auto := True;
+         else
+            Self.Slave_Env := To_Unbounded_String (Normalize_Value);
+         end if;
       end if;
    end Value_Callback;
 

@@ -30,6 +30,7 @@ with GNATCOLL.Utils;
 
 with GPR.Util;
 
+with GPR2.Compilation.Registry;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
@@ -45,8 +46,10 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
 with GPR2.Source_Reference;
-with GPRclean.Options;
+
 with GPRtools.Util;
+
+with GPRclean.Options;
 
 procedure GPRclean.Main is
 
@@ -634,6 +637,12 @@ begin
                  others => True))
    loop
       Clean (Project.Tree.Element (V));
+
+      if Options.Distributed_Mode then
+         GPR2.Compilation.Registry.Clean_Up_Remote_Slaves
+           (Project.Tree.Element (V),
+            Options);
+      end if;
    end loop;
 
    if Options.Remove_Config then

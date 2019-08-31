@@ -28,17 +28,18 @@ with GNAT.Exception_Traces;
 with GNAT.OS_Lib;
 with GNAT.Traceback.Symbolic;
 
-with GPR.Opt;
-with GPR.Util;
-with GPR.Version;
-
 with GPR2.Compilation.Protocol;
 with GPR2.Compilation.Registry;
 with GPR2.Compilation.Sync;
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
-with GPRtools;
+with GPR2.Time_Stamp;
+with GPR2.Version;
+
+with GPRtools.Options;
+with GPRtools.Util;
 
 procedure GPRremote is
 
@@ -49,9 +50,6 @@ procedure GPRremote is
 
    use GPR2;
    use GPRtools;
-   use GPR.Util;
-
-   use type GNAT.OS_Lib.String_Access;
 
    procedure Parse_Command_Line;
    --  Parse command line parameters
@@ -72,16 +70,14 @@ procedure GPRremote is
    Arg_Project      : constant := 3;
    Arg_First_Option : constant := 4;
 
-   Help    : aliased Boolean := False;
-   Verbose : aliased Boolean := False;
-   Version : aliased Boolean := False;
-   Args    : array (1 .. Command_Line.Argument_Count) of Unbounded_String;
-   Last    : Natural := 0;
+   Args : array (1 .. Command_Line.Argument_Count) of Unbounded_String;
+   Last : Natural := 0;
 
    Exit_Status : Natural := 0;
    --  GPRremote's exit status
 
-   Project : GPR2.Project.Tree.Object;
+   Project     : GPR2.Project.Tree.Object;
+   Options     : GPRtools.Options.Object;
 
    type Command_Kind is (Info, Exec, Syncto, Syncfrom, Syncexec);
 
@@ -110,7 +106,8 @@ procedure GPRremote is
    procedure Cmd_Exec is
       use all type Compilation.Protocol.Command_Kind;
 
-      Host         : constant String := To_String (Args (Arg_Host));
+      Host         : constant Optional_Name_Type :=
+                       Optional_Name_Type (To_String (Args (Arg_Host)));
       Project_Name : constant String := To_String (Args (Arg_Project));
       Channel      : Compilation.Protocol.Communication_Channel;
       Root_Dir     : Unbounded_String;
@@ -141,7 +138,7 @@ procedure GPRremote is
          end if;
       end Filter_Path;
 
-      Options : String_Vectors.Vector;
+      Options : GPR2.Containers.Value_List;
 
    begin
       Root_Dir := To_Unbounded_String
@@ -220,11 +217,12 @@ procedure GPRremote is
 
    procedure Cmd_Info is
 
-      Host    : constant String := To_String (Args (Arg_Host));
+      Host    : constant Optional_Name_Type :=
+                  Optional_Name_Type (To_String (Args (Arg_Host)));
       Channel : Compilation.Protocol.Communication_Channel;
 
       Version_String   : Unbounded_String;
-      Current_UTC_Time : GPR.Stamps.Time_Stamp_Type;
+      Current_UTC_Time : GPR2.Time_Stamp.Data;
       GPR_Hash         : Unbounded_String;
       Success          : Boolean;
    begin
@@ -275,7 +273,8 @@ procedure GPRremote is
          Text_IO.Flush;
       end Output;
 
-      Host    : constant String := To_String (Args (Arg_Host));
+      Host    : constant Optional_Name_Type :=
+                  Optional_Name_Type (To_String (Args (Arg_Host)));
       Channel : Compilation.Protocol.Communication_Channel;
       Result  : Compilation.Protocol.Command_Kind with Unreferenced;
 
@@ -310,7 +309,7 @@ procedure GPRremote is
    procedure Epilog (Cmd : Command_Kind) is
       pragma Unreferenced (Cmd);
    begin
-      Compilation.Registry.Unregister_Remote_Slaves;
+      Compilation.Registry.Unregister_Remote_Slaves (Project, Options);
    end Epilog;
 
    ------------------------
@@ -321,46 +320,12 @@ procedure GPRremote is
       use GNAT.Command_Line;
       use GNAT.OS_Lib;
 
-      procedure Usage;
-
-      procedure Check_Version_And_Help is new
-        Check_Version_And_Help_G (Usage);
-
-      Config : Command_Line_Configuration;
-
-      -----------
-      -- Usage --
-      -----------
-
-      procedure Usage is
-      begin
-         Display_Help (Config);
-      end Usage;
-
    begin
-      Define_Switch
-        (Config, Help'Access,
-         "-h", Long_Switch => "--help",
-         Help => "display this help message and exit");
+      GPRtools.Options.Setup (Options, GPRtools.Remote);
 
-      Define_Switch
-        (Config, Version'Access,
-         "-V", Long_Switch => "--version",
-         Help => "display version and exit");
+      Getopt (Options.Config);
 
-      Define_Switch
-        (Config, Verbose'Access,
-         "-v", Long_Switch => "--verbose",
-         Help => "verbose mode, display extra information");
-
-      Set_Usage (Config, Usage => "[switches] [host] [command] [parameters]");
-
-      Check_Version_And_Help
-        ("GPRREMOTE",
-         "2017",
-         Version_String => GPR.Version.Gpr_Version_String);
-
-      Getopt (Config);
+      GPR2.Set_Debug (Options.Debug_Mode);
 
       --  Now read arguments
 
@@ -401,7 +366,7 @@ procedure GPRremote is
                       GPR2.Project.Create (GPR2.Optional_Name_Type (Filename));
          Context  : GPR2.Context.Object;
       begin
-         if Verbose then
+         if Options.Verbose then
             Put_Line ("loading project: " & Pathname.Value);
          end if;
 
@@ -431,32 +396,48 @@ procedure GPRremote is
       end if;
 
       Compilation.Registry.Register_Remote_Slaves
-        (Project, Synchronize => Sync);
+        (Project, Options, Synchronize => Sync);
    end Prolog;
 
 begin
+   GPRtools.Util.Set_Program_Name ("gprremote");
+
    Parse_Command_Line;
 
    Activate_Symbolic_Traceback;
 
+   if Args'Last < Arg_Cmd or else Options.Version then
+      Version.Display
+        ("GPRREMOTE", "2017", Version_String => Version.Long_Value);
+
+      if Options.Version then
+         Version.Display_Free_Software;
+      end if;
+
+      return;
+   end if;
+
    --  Set corresponding slave environment
 
-   if GPR.Util.Slave_Env = null then
-      GPR.Util.Slave_Env := new String'
-        (Compilation.Registry.Compute_Env (Project, GPR.Util.Slave_Env_Auto));
+   if Options.Slave_Env = Null_Unbounded_String
+     and then Options.Distributed_Mode
+   then
+      Options.Slave_Env := To_Unbounded_String
+        (GPR2.Compilation.Registry.Compute_Env
+           (Project, Options.Slave_Env_Auto));
 
-      if GPR.Util.Slave_Env_Auto and not GPR.Opt.Quiet_Output then
-         Put ("slave environment is ");
-         Put (GPR.Util.Slave_Env.all);
-         New_Line;
+      if Options.Slave_Env_Auto and then Options.Verbose then
+         Text_IO.Put_Line
+           ("slave environment is " & To_String (Options.Slave_Env));
       end if;
    end if;
 
    declare
-      Host    : constant String := To_String (Args (Arg_Host));
+      Host    : constant Name_Type := Name_Type (To_String (Args (Arg_Host)));
       Command : constant String :=
                   Characters.Handling.To_Upper (To_String (Args (Arg_Cmd)));
       Cmd     : Command_Kind;
+      Hosts   : GPR2.Containers.Name_List;
    begin
       --  Check that we have a valid command
 
@@ -465,7 +446,9 @@ begin
 
          --  First connect to the host
 
-         Compilation.Registry.Record_Slaves (Host);
+         Hosts.Append (Host);
+
+         Compilation.Registry.Record_Slaves (Hosts);
 
          Prolog (Cmd);
 
