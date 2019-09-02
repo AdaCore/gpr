@@ -734,6 +734,7 @@ begin
       use GPRname.Unit;
 
       Naming_Project_Buffer : Unbounded_String;
+      Implementation_Except : Unbounded_String;
       File_Src_List         : Text_IO.File_Type;
 
    begin
@@ -757,14 +758,14 @@ begin
 
          begin
             if Lang /= Ada_Lang then
-               Append
-                 (Naming_Project_Buffer,
-                  "for Implementation_Exceptions (" & Quote (String (Lang))
-                  & ") use (");
+               Implementation_Except :=
+                 To_Unbounded_String
+                   ("for Implementation_Exceptions (" & Quote (String (Lang))
+                    & ") use (");
 
                for S_Curs in Sources.Iterate loop
                   Append
-                    (Naming_Project_Buffer,
+                    (Implementation_Except,
                      Quote (String (Sources (S_Curs).File.Simple_Name))
                      & (if S_Curs = Sources.Last then ");" else ", "));
 
@@ -799,6 +800,7 @@ begin
          end loop;
       end if;
 
+      Append (Naming_Project_Buffer, Implementation_Except);
       Append
         (Naming_Project_Buffer,
          "end Naming; end " & Naming_Project_Name & ";");
