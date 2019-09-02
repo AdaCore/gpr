@@ -41,6 +41,7 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Pack;
 with GPR2.Project.Pretty_Printer;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
@@ -78,6 +79,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    use Langkit_Support.Text;
 
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
 
    package Language_Sources_Map is new Ada.Containers.Indefinite_Hashed_Maps
      (Language_Type,
@@ -347,19 +349,19 @@ begin
                            OS_Lib.Locate_Exec_On_Path ("gcc");
 
    begin
-      if Proj.Has_Packages ("compiler")
-        and then Proj.Pack ("compiler").Has_Attributes ("driver", "ada")
+      if Proj.Has_Packages (PRP.Compiler)
+        and then Proj.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, "ada")
       then
          --  Use the main project's driver if it is defined
 
-         Driver_Attr := Proj.Pack ("compiler").Attribute ("driver", "ada");
+         Driver_Attr := Proj.Pack (PRP.Compiler).Attribute (PRA.Driver, "ada");
 
-      elsif Conf.Has_Packages ("compiler")
-        and then Conf.Pack ("compiler").Has_Attributes ("driver", "ada")
+      elsif Conf.Has_Packages (PRP.Compiler)
+        and then Conf.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, "ada")
       then
          --  Otherwise, we expect to have a configuration-defined driver
 
-         Driver_Attr := Conf.Pack ("compiler").Attribute ("driver", "ada");
+         Driver_Attr := Conf.Pack (PRP.Compiler).Attribute (PRA.Driver, "ada");
 
       else
          raise GPRname_Exception with
@@ -576,9 +578,9 @@ begin
                                 (F_Attr_Name (Child.As_Attribute_Decl).
                                    As_Single_Tok_Node);
                            begin
-                              if Attr_Name = "Languages"
-                                or else Attr_Name = "Source_Dirs"
-                                or else Attr_Name = "Source_List_File"
+                              if Attr_Name = PRA.Languages
+                                or else Attr_Name = PRA.Source_Dirs
+                                or else Attr_Name = PRA.Source_List_File
                               then
                                  Remove_Child (Children_Handle, I);
                               end if;
@@ -590,7 +592,7 @@ begin
                                 (F_Pkg_Name (Child.As_Package_Decl).
                                    As_Single_Tok_Node);
                            begin
-                              if Pack_Name = "Naming" then
+                              if Pack_Name = PRP.Naming then
                                  Remove_Child (Children_Handle, I);
                               end if;
                            end;
