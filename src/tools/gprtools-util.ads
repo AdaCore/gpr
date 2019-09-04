@@ -46,7 +46,7 @@ package GPRtools.Util is
    -------------------------
 
    procedure Fail_Program (Message : String);
-   --  Terminate program with a message and a fatal status code.
+   --  Terminate program with a message and a fatal status code
 
    procedure Project_Processing_Failed
      (Tree    : GPR2.Project.Tree.Object;
