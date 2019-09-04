@@ -91,9 +91,9 @@ package body GPR2.Compilation.Registry is
      (Tree                       : not null access GPR2.Project.Tree.Object;
       S_Data                     : Slave.Object;
       Project_Name               : Name_Type;
-      Excluded_Patterns          : Sync.Str_Vect.Vector;
-      Included_Patterns          : Sync.Str_Vect.Vector;
-      Included_Artifact_Patterns : Sync.Str_Vect.Vector;
+      Excluded_Patterns          : Containers.Value_List;
+      Included_Patterns          : Containers.Value_List;
+      Included_Artifact_Patterns : Containers.Value_List;
       Synchronize                : Boolean;
       Options                    : GPRtools.Options.Object'Class);
    --  Register a slave living on Host for the given project name. User is
@@ -607,9 +607,9 @@ package body GPR2.Compilation.Registry is
      (Tree                       : not null access Project.Tree.Object;
       S_Data                     : Slave.Object;
       Project_Name               : Name_Type;
-      Excluded_Patterns          : Sync.Str_Vect.Vector;
-      Included_Patterns          : Sync.Str_Vect.Vector;
-      Included_Artifact_Patterns : Sync.Str_Vect.Vector;
+      Excluded_Patterns          : Containers.Value_List;
+      Included_Patterns          : Containers.Value_List;
+      Included_Artifact_Patterns : Containers.Value_List;
       Synchronize                : Boolean;
       Options                    : GPRtools.Options.Object'Class)
    is
@@ -715,20 +715,20 @@ package body GPR2.Compilation.Registry is
       Start, Stop : Calendar.Time;
 
       procedure Insert
-        (List   : out Sync.Str_Vect.Vector;
+        (List   : out Containers.Value_List;
          Values : GPR2.Containers.Source_Value_List);
       --  Inserts all values into the vector
 
-      Excluded_Patterns          : Sync.Str_Vect.Vector;
-      Included_Patterns          : Sync.Str_Vect.Vector;
-      Included_Artifact_Patterns : Sync.Str_Vect.Vector;
+      Excluded_Patterns          : Containers.Value_List;
+      Included_Patterns          : Containers.Value_List;
+      Included_Artifact_Patterns : Containers.Value_List;
 
       ------------
       -- Insert --
       ------------
 
       procedure Insert
-        (List   : out Sync.Str_Vect.Vector;
+        (List   : out Containers.Value_List;
          Values : GPR2.Containers.Source_Value_List) is
       begin
          for V of Values loop

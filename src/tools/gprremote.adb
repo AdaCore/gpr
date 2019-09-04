@@ -280,7 +280,7 @@ procedure GPRremote is
 
       Total_File        : Natural;
       Total_Transferred : Natural;
-      Remote_Files      : Compilation.Sync.Files.Set;
+      Remote_Files      : GPR2.Containers.Value_Set;
 
    begin
       --  Get the channel for the given host

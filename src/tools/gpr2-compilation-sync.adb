@@ -42,11 +42,11 @@ package body GPR2.Compilation.Sync is
 
    use type Containers.Count_Type;
 
-   Common_Excluded_Patterns : Str_Vect.Vector;
+   Common_Excluded_Patterns : Containers.Value_List;
    --  Default excluded patterns to use when in excluded mode as opposed to
    --  include mode where we describe the patterns to include specifically.
 
-   Artifact_Excluded_Patterns : Str_Vect.Vector;
+   Artifact_Excluded_Patterns : Containers.Value_List;
    --  Artifacts patterns to exclude
 
    Max_Gpr_Sync : constant := 10;
@@ -57,24 +57,24 @@ package body GPR2.Compilation.Sync is
 
    --  Data for each synchronization job for the Gpr protocol
 
-   type Gpr_Data is record
+   type GPR_Data is record
       Channel           : Protocol.Communication_Channel;
       Root_Dir          : Unbounded_String;
-      Excluded_Patterns : Str_Vect.Vector;
-      Included_Patterns : Str_Vect.Vector;
+      Excluded_Patterns : Containers.Value_List;
+      Included_Patterns : Containers.Value_List;
    end record;
 
-   package Gpr_Data_Set is new Containers.Vectors (Positive, Gpr_Data);
+   package GPR_Data_Set is new Ada.Containers.Vectors (Positive, GPR_Data);
 
    --  Queue of job to be done for the gpr protocol
 
    protected Gpr_Queue is
 
-      procedure Add (Job : Gpr_Data);
+      procedure Add (Job : GPR_Data);
       --  Add a new synchronization job
 
       entry Get
-        (Job   : out Gpr_Data;
+        (Job   : out GPR_Data;
          Files : out File_Data_Set.Vector;
          Stop  : out Boolean);
       --  Get a synchronization job with the corresponding files, Stop is set
@@ -83,10 +83,10 @@ package body GPR2.Compilation.Sync is
       procedure No_More_Job;
 
    private
-      procedure Set_Project_Files (Job : Gpr_Data);
+      procedure Set_Project_Files (Job : GPR_Data);
       --  Set the project files to be synchronized
 
-      Jobs           : Gpr_Data_Set.Vector;
+      Jobs           : GPR_Data_Set.Vector;
       Project_Files  : File_Data_Set.Vector;
       PF_Initialized : Boolean := False;
       No_More        : Boolean := False;
@@ -115,7 +115,7 @@ package body GPR2.Compilation.Sync is
       -- Add --
       ---------
 
-      procedure Add (Job : Gpr_Data) is
+      procedure Add (Job : GPR_Data) is
       begin
          Jobs.Append (Job);
       end Add;
@@ -125,7 +125,7 @@ package body GPR2.Compilation.Sync is
       ---------
 
       entry Get
-        (Job   : out Gpr_Data;
+        (Job   : out GPR_Data;
          Files : out File_Data_Set.Vector;
          Stop  : out Boolean) when Jobs.Length > 0 or else No_More is
       begin
@@ -158,7 +158,7 @@ package body GPR2.Compilation.Sync is
       -- Set_Project_Files --
       -----------------------
 
-      procedure Set_Project_Files (Job : Gpr_Data) is
+      procedure Set_Project_Files (Job : GPR_Data) is
 
          Root_Dir : constant String :=
                       (if Job.Root_Dir = Null_Unbounded_String
@@ -299,7 +299,7 @@ package body GPR2.Compilation.Sync is
    --------------
 
    task body Gpr_Sync is
-      Job         : Gpr_Data;
+      Job         : GPR_Data;
       Files       : File_Data_Set.Vector;
       No_More_Job : Boolean;
    begin
@@ -366,7 +366,7 @@ package body GPR2.Compilation.Sync is
       Root_Dir          : String;
       Total_File        : out Natural;
       Total_Transferred : out Natural;
-      Remote_Files      : out Files.Set;
+      Remote_Files      : out Containers.Value_Set;
       Is_Debug          : Boolean;
       Display           : access procedure (Message : String))
       return Protocol.Command_Kind
@@ -515,11 +515,11 @@ package body GPR2.Compilation.Sync is
    procedure Send_Files
      (Channel           : Protocol.Communication_Channel;
       Root_Dir          : String;
-      Excluded_Patterns : Str_Vect.Vector;
-      Included_Patterns : Str_Vect.Vector;
+      Excluded_Patterns : Containers.Value_List;
+      Included_Patterns : Containers.Value_List;
       Mode              : Direction)
    is
-      use type Str_Vect.Vector;
+      use type Containers.Value_List;
    begin
       --  Starts the tasks if not already done
 
@@ -528,13 +528,13 @@ package body GPR2.Compilation.Sync is
       end if;
 
       Gpr_Queue.Add
-        (Gpr_Data'
+        (GPR_Data'
            (Channel,
             To_Unbounded_String (Root_Dir),
             Excluded_Patterns & Common_Excluded_Patterns
             & (if Mode = To_Slave
                then Artifact_Excluded_Patterns
-               else Str_Vect.Empty_Vector),
+               else Containers.Value_Type_List.Empty_Vector),
             Included_Patterns));
    end Send_Files;
 

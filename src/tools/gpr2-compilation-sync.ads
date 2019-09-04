@@ -25,37 +25,30 @@
 --    On the other side:
 --       1. call Receive_Files
 
-with Ada.Containers.Indefinite_Ordered_Sets;
-with Ada.Containers.Indefinite_Vectors;
-
 with GPR2.Compilation.Protocol;
+with GPR2.Containers;
 
 package GPR2.Compilation.Sync is
-
-   package Str_Vect is
-     new Ada.Containers.Indefinite_Vectors (Positive, String);
 
    type Direction is (To_Slave, To_Master);
 
    procedure Send_Files
      (Channel           : Protocol.Communication_Channel;
       Root_Dir          : String;
-      Excluded_Patterns : Str_Vect.Vector;
-      Included_Patterns : Str_Vect.Vector;
+      Excluded_Patterns : Containers.Value_List;
+      Included_Patterns : Containers.Value_List;
       Mode              : Direction);
    --  Synchronize from the build master to the slave
 
    procedure Wait;
    --  Wait for all synchronization to be terminated
 
-   package Files is new Ada.Containers.Indefinite_Ordered_Sets (String);
-
    function Receive_Files
      (Channel           : Protocol.Communication_Channel;
       Root_Dir          : String;
       Total_File        : out Natural;
       Total_Transferred : out Natural;
-      Remote_Files      : out Files.Set;
+      Remote_Files      : out Containers.Value_Set;
       Is_Debug          : Boolean;
       Display           : access procedure (Message : String))
       return Protocol.Command_Kind;
