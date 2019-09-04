@@ -243,7 +243,6 @@ package body GPRclean.Options is
             GPR2.Version.Display_Free_Software;
             return;
          end if;
-
       end if;
 
       --  Now read arguments

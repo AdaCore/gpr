@@ -194,6 +194,7 @@ procedure GPRclean.Main is
             end loop;
 
             Initialize_Option_Scan (OP, Args'Unchecked_Access);
+
             GPRclean.Options.Parse_Command_Line (Opts, Project_Tree, OP);
 
             for J in Args'Range loop

@@ -377,11 +377,11 @@ private
      (Self /= Undefined);
 
    function Is_Windows_Target (Tree : Object) return Boolean is
-   (Tree.Has_Configuration
+     (Tree.Has_Configuration
         and then
-          Tree.Configuration.Corresponding_View.Attribute
-      (GPR2.Project.Registry.Attribute.Shared_Library_Suffix).Value_Equal
-        (".dll"));
+      Tree.Configuration.Corresponding_View.Attribute
+        (GPR2.Project.Registry.Attribute.Shared_Library_Suffix).Value_Equal
+          (".dll"));
       --  ??? We may also check that the Tree target name constains mingw or
       --  windows.
 
