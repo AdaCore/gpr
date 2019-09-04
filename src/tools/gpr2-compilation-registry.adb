@@ -1412,8 +1412,7 @@ package body GPR2.Compilation.Registry is
                      Remote_Process.Decrement;
                      Slaves.Decrement_Current (S);
 
-                     Process.Add_Result
-                       (Proc, Success, String (S.Data.Host));
+                     Process.Add_Result (Proc, Success, S.Data.Host);
 
                   --  An acknowledgment of an compilation job
 

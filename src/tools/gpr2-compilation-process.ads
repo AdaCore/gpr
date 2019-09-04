@@ -38,7 +38,8 @@ package GPR2.Compilation.Process is
    procedure Record_Environment
      (Project     : GPR2.Project.View.Object;
       Language    : Name_Type;
-      Name, Value : String);
+      Name        : Name_Type;
+      Value       : Value_Type);
    --  Record an environment variable to set when spawning a compilation. This
    --  is for example to set CPATH if needed for the compilation of C sources.
 
@@ -73,11 +74,14 @@ package GPR2.Compilation.Process is
 
    function Hash (Process : Id) return Header_Num;
 
-   function Get_Slave_For (Pid : Id) return String;
+   function Get_Slave_For (Pid : Id) return Optional_Name_Type;
    --  Returns the slave for the given compilation, or the empty string if the
    --  compilation was successful or conducted locally.
 
-   procedure Add_Result (Process : Id; Status : Boolean; Slave : String := "");
+   procedure Add_Result
+     (Process : Id;
+      Status  : Boolean;
+      Slave   : Optional_Name_Type := "");
    --  Add process Id with the given status into the list of results
 
    procedure Wait_Result (Process : out Id; Status : out Boolean);

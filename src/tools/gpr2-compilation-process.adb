@@ -24,24 +24,22 @@ with GPR2.Compilation.Registry;
 
 package body GPR2.Compilation.Process is
 
-   use Ada;
    use Ada.Strings.Unbounded;
 
    use type Containers.Count_Type;
 
-   package Env_Maps is
-     new Ada.Containers.Indefinite_Ordered_Maps (String, String);
+   package Env_Maps renames GPR2.Containers.Name_Value_Map_Package;
    --  A set of key=value
 
    package Prj_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (String, Env_Maps.Map, Env_Maps."<", Env_Maps."=");
+     (Name_Type, Env_Maps.Map, Env_Maps."<", Env_Maps."=");
    --  A set of project+language=map
 
    function "<" (Left, Right : Id) return Boolean is
      (Left.R_Pid < Right.R_Pid);
 
    package Failures_Slave_Set is
-     new Ada.Containers.Indefinite_Ordered_Maps (Id, String);
+     new Ada.Containers.Indefinite_Ordered_Maps (Id, Optional_Name_Type);
 
    function Get_Env
      (Project  : GPR2.Project.View.Object;
@@ -66,11 +64,11 @@ package body GPR2.Compilation.Process is
       procedure Add (Result : Process_Data);
       entry Get (Result : out Process_Data);
 
-      procedure Record_Remote_Failure (Pid : Id; Slave : String);
+      procedure Record_Remote_Failure (Pid : Id; Slave : Name_Type);
       --  This is to be able to display on which slaves a specific compilation
       --  has failed.
 
-      function Get_Slave_For (Pid : Id) return String;
+      function Get_Slave_For (Pid : Id) return Optional_Name_Type;
       --  Returns the remote slave for the given compilation, or the empty
       --  string if the compilation was successful.
 
@@ -84,7 +82,9 @@ package body GPR2.Compilation.Process is
    ----------------
 
    procedure Add_Result
-     (Process : Id; Status : Boolean; Slave : String := "") is
+     (Process : Id;
+      Status  : Boolean;
+      Slave   : Optional_Name_Type := "") is
    begin
       Results.Add (Process_Data'(Process, Status));
 
@@ -121,8 +121,8 @@ package body GPR2.Compilation.Process is
      (Project  : GPR2.Project.View.Object;
       Language : Optional_Name_Type) return String
    is
-      Key  : constant String :=
-               String (Project.Name) & "+" & String (Language);
+      Key  : constant Name_Type :=
+               Name_Type (String (Project.Name) & "+" & String (Language));
       Res  : Unbounded_String;
    begin
       if Environments.Contains (Key) then
@@ -131,7 +131,9 @@ package body GPR2.Compilation.Process is
                Res := Res & Opts_Sep;
             end if;
 
-            Res := Res & Env_Maps.Key (C) & '=' & Env_Maps.Element (C);
+            Append
+              (Res,
+               String (Env_Maps.Key (C)) & '=' & Env_Maps.Element (C));
          end loop;
       end if;
 
@@ -152,7 +154,7 @@ package body GPR2.Compilation.Process is
    -- Get_Slave_For --
    -------------------
 
-   function Get_Slave_For (Pid : Id) return String is
+   function Get_Slave_For (Pid : Id) return Optional_Name_Type is
    begin
       if Pid.Kind = Local then
          return "";
@@ -182,12 +184,13 @@ package body GPR2.Compilation.Process is
    ------------------------
 
    procedure Record_Environment
-     (Project     : GPR2.Project.View.Object;
-      Language    : Name_Type;
-      Name, Value : String)
+     (Project  : GPR2.Project.View.Object;
+      Language : Name_Type;
+      Name     : Name_Type;
+      Value    : Value_Type)
    is
-      Key      : constant String :=
-                   String (Project.Name) & "+" & String (Language);
+      Key      : constant Name_Type :=
+                   Name_Type (String (Project.Name) & "+" & String (Language));
       New_Item : Env_Maps.Map;
    begin
       --  Create new item, variable association
@@ -235,7 +238,7 @@ package body GPR2.Compilation.Process is
       -- Get_Slave_For --
       -------------------
 
-      function Get_Slave_For (Pid : Id) return String is
+      function Get_Slave_For (Pid : Id) return Optional_Name_Type is
          use type Failures_Slave_Set.Cursor;
          Pos : constant Failures_Slave_Set.Cursor := Failed_Proc.Find (Pid);
       begin
@@ -250,7 +253,7 @@ package body GPR2.Compilation.Process is
       -- Record_Remote_Failure --
       ---------------------------
 
-      procedure Record_Remote_Failure (Pid : Id; Slave : String) is
+      procedure Record_Remote_Failure (Pid : Id; Slave : Name_Type) is
       begin
          Failed_Proc.Insert (Pid, Slave);
       end Record_Remote_Failure;
