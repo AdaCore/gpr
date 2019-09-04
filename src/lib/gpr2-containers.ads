@@ -44,6 +44,16 @@ package GPR2.Containers is
 
    subtype Value_List is Value_Type_List.Vector;
 
+   function Create
+     (Value     : Name_Type;
+      Separator : Name_Type) return Containers.Value_List;
+   --  Create a Value_List out of a set of Value separated by Separator
+
+   function Create
+     (Value     : Name_Type;
+      Separator : Name_Type) return Containers.Name_List;
+   --  As above but for a list of names
+
    subtype Extended_Index is Value_Type_List.Extended_Index;
 
    function Image (Values : Value_List) return String;

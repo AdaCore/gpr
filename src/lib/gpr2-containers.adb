@@ -18,7 +18,69 @@
 
 with Ada.Strings.Unbounded;
 
+with GNAT.String_Split;
+
 package body GPR2.Containers is
+
+   generic
+      type Item (<>) is new String;
+      with package List is
+        new Ada.Containers.Indefinite_Vectors (Positive, Item);
+   function Create_G
+     (Value     : Name_Type;
+      Separator : Name_Type) return List.Vector;
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create_G
+     (Value     : Name_Type;
+      Separator : Name_Type) return List.Vector
+   is
+      use GNAT.String_Split;
+
+      Result : List.Vector;
+      Slices : Slice_Set;
+   begin
+      Create (Slices, String (Value), String (Separator), Mode => Multiple);
+
+      for K in 1 .. Slice_Count (Slices) loop
+         declare
+            Value : constant Item := Item (Slice (Slices, K));
+         begin
+            if Value /= "" then
+               Result.Append (Value);
+            end if;
+         end;
+      end loop;
+
+      return Result;
+   end Create_G;
+
+   pragma Style_Checks (Off);
+
+   function Create
+     (Value     : Name_Type;
+      Separator : Name_Type) return Containers.Value_List
+   is
+      function Internal is
+        new Create_G (Value_Type, GPR2.Containers.Value_Type_List);
+   begin
+      return Internal (Value, Separator);
+   end Create;
+
+   function Create
+     (Value     : Name_Type;
+      Separator : Name_Type) return Containers.Name_List
+   is
+      function Internal is
+        new Create_G (Name_Type, GPR2.Containers.Name_Type_List);
+   begin
+      return Internal (Value, Separator);
+   end Create;
+
+   pragma Style_Checks (On);
 
    -----------
    -- Image --
