@@ -6,7 +6,7 @@ Has_Element (warn) TRUE
 Has_Element (error) TRUE
 Has_Element (read) FALSE
 Has_Element (unread) TRUE
-prj2.gpr:2:3: test error
+prj2.gpr:2:3: error: test error
 
 Log is empty: FALSE
 Has_Element (info) TRUE
@@ -22,7 +22,7 @@ Has_Element (warn) FALSE
 Has_Element (error) FALSE
 Has_Element (read) TRUE
 Has_Element (unread) TRUE
-prj3.gpr:3:4: test information
+prj3.gpr:3:4: info: test information
 
 Log is empty: FALSE
 Has_Element (info) FALSE

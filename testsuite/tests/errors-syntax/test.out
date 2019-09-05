@@ -4,4 +4,4 @@ ERROR
  8
  4
 Expected ';', got Identifier
-demo.gpr:8:4: Expected ';', got Identifier
+demo.gpr:8:4: error: Expected ';', got Identifier

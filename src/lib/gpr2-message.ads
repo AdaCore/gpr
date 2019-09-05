@@ -67,8 +67,18 @@ package GPR2.Message is
      with Inline, Pre => Self.Is_Defined;
    --  Returns the actual source reference associated with this message
 
+   type Level_Format is (None, Short, Long);
+   --  None  : no output of level information in message
+   --  Short : short output of level, I, W, E
+   --  Long  : long output of level (info, warning, error)
+
+   type Level_Output is array (Level_Value) of Level_Format;
+   --  Control all level output
+
    function Format
-     (Self : Object; Full_Path_Name : Boolean := False) return String
+     (Self           : Object;
+      Full_Path_Name : Boolean := False;
+      Levels         : Level_Output := (Long, Long, Long)) return String
      with Pre => Self.Is_Defined;
    --  Returns the message with a standard message as expected by compiler
    --  tools: <filename>:<line>:<col>: <message>

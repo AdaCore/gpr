@@ -1,6 +1,6 @@
 Messages found:
-demo.gpr:5:4: value 'x' is illegal for typed string 'Var'
+demo.gpr:5:4: error: value 'x' is illegal for typed string 'Var'
 Messages found:
-demo2.gpr:4:4: expression for 'Val' must be a single string
+demo2.gpr:4:4: error: expression for 'Val' must be a single string
 Messages found:
-demo3.gpr:4:10: unknown string type 'T2'
+demo3.gpr:4:10: error: unknown string type 'T2'

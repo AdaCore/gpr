@@ -1,1 +1,1 @@
-q.gpr:2:24: attribute "Source_Dirs" must be a list
+q.gpr:2:24: error: attribute "Source_Dirs" must be a list

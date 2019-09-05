@@ -44,20 +44,43 @@ package body GPR2.Message is
    ------------
 
    function Format
-     (Self : Object; Full_Path_Name : Boolean := False) return String
+     (Self           : Object;
+      Full_Path_Name : Boolean := False;
+      Levels         : Level_Output := (Long, Long, Long)) return String
    is
       use Ada;
       use GNAT.Formatted_String;
+
+      function Level_Image return String is
+        (case Levels (Self.Level) is
+            when None =>
+               "",
+            when Short =>
+               (case Self.Level is
+                   when Error       => "E",
+                   when Warning     => "W",
+                   when Information => "I"),
+            when Long =>
+               (case Self.Level is
+                   when Error       => "error",
+                   when Warning     => "warning",
+                   when Information => "info"));
+
       Filename : constant String :=
                    (if Full_Path_Name
                     then Self.Sloc.Filename
                     else Directories.Simple_Name (Self.Sloc.Filename));
+
       Indent   : constant String := (1 .. Self.Indent * 2 => ' ');
+
       Indented : constant String := Indent
-                   & (if Self.Level = Warning then "warning: " else "")
+                   & (if Self.Indent < 1
+                      then Level_Image & ": "
+                      else "")
                    & To_String (Self.Message);
       --  Need to distingush warnings from errors because they are both going
       --  to the error output.
+
    begin
       if Self.Raw then
          return Indent & To_String (Self.Message);

@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:3:9: variable 'DoesNOTexists' is undefined
+demo.gpr:3:9: error: variable 'DoesNOTexists' is undefined

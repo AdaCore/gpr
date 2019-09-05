@@ -1,4 +1,4 @@
 Messages found:
-a.gpr:2:5: 'end A' expected
+a.gpr:2:5: error: 'end A' expected
 Messages found:
-b.gpr:2:5: 'end C.B' expected
+b.gpr:2:5: error: 'end C.B' expected

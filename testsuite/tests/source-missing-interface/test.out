@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:8:38: source for interface unit 'toto' not found
+demo.gpr:8:38: error: source for interface unit 'toto' not found

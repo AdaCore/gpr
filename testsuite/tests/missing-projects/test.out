@@ -1,19 +1,19 @@
 Messages found for demo.gpr
-demo.gpr:2:6: imported project file imp_missing.gpr not found
+demo.gpr:2:6: error: imported project file imp_missing.gpr not found
 
 Messages found for demo2.gpr
-demo2.gpr:1:6: imports /missing-projects/demo.gpr
-demo.gpr:2:6: imported project file imp_missing.gpr not found
+demo2.gpr:1:6: error: imports /missing-projects/demo.gpr
+demo.gpr:2:6: error: imported project file imp_missing.gpr not found
 
 Messages found for demo3.gpr
-demo3.gpr:2:15: extends /missing-projects/demo.gpr
-demo.gpr:2:6: imported project file imp_missing.gpr not found
+demo3.gpr:2:15: error: extends /missing-projects/demo.gpr
+demo.gpr:2:6: error: imported project file imp_missing.gpr not found
 
 Messages found for demo4.gpr
-demo4.gpr:2:15: extended project file ext_undef.gpr not found
+demo4.gpr:2:15: error: extended project file ext_undef.gpr not found
 
 Messages found for demo5.gpr
-demo5.gpr:2:6: imports /missing-projects/int.gpr
-int.gpr:2:6: imports /missing-projects/demo.gpr
-demo.gpr:2:6: imported project file imp_missing.gpr not found
+demo5.gpr:2:6: error: imports /missing-projects/int.gpr
+int.gpr:2:6: error: imports /missing-projects/demo.gpr
+demo.gpr:2:6: error: imported project file imp_missing.gpr not found
 

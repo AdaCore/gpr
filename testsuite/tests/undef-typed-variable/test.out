@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:3:23: undefined external reference "BLA"
+demo.gpr:3:23: error: undefined external reference "BLA"
