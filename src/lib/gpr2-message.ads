@@ -51,27 +51,33 @@ package GPR2.Message is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
-   function Level (Self : Object) return Level_Value with Inline;
+   function Level (Self : Object) return Level_Value
+     with Inline, Pre => Self.Is_Defined;
    --  Returns the message level associated with the message
 
-   function Status (Self : Object) return Status_Type with Inline;
+   function Status (Self : Object) return Status_Type
+     with Inline, Pre => Self.Is_Defined;
    --  Returns the status for the message
 
-   function Message (Self : Object) return String with Inline;
+   function Message (Self : Object) return String
+     with Inline, Pre => Self.Is_Defined;
    --  Returns the message itself
 
-   function Sloc (Self : Object) return Source_Reference.Object with Inline;
+   function Sloc (Self : Object) return Source_Reference.Object
+     with Inline, Pre => Self.Is_Defined;
    --  Returns the actual source reference associated with this message
 
    function Format
-     (Self : Object; Full_Path_Name : Boolean := False) return String;
+     (Self : Object; Full_Path_Name : Boolean := False) return String
+     with Pre => Self.Is_Defined;
    --  Returns the message with a standard message as expected by compiler
    --  tools: <filename>:<line>:<col>: <message>
    --  <filename> format controlled by Full_Path_Name parameter. Default False
    --  is for simple file name, True is for full path name format.
 
    procedure Set_Status (Self : in out Object; Status : Status_Type)
-     with Post => Self.Status = Status;
+     with Pre  => Self.Is_Defined,
+          Post => Self.Status = Status;
    --  Sets message as Read or Unread as specified by Status
 
 private
