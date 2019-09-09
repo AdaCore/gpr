@@ -25,10 +25,6 @@ pragma Warnings (On);
 
 with GNATCOLL.Utils;
 
-with GPR2.Compilation.Registry;
-
-with GPRtools.Util;
-
 package body GPRtools.Options is
 
    type Object_Class is access all Object'Class;
