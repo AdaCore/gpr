@@ -70,7 +70,7 @@ package GPR2.Project is
      with Pre  => Root_Project.Is_Defined
                   and then not Tree_Search_Paths.Is_Empty,
           Post => not Search_Paths'Result.Is_Empty;
-   --  Returns the project search path for the given project and the give tree
+   --  Returns the project search path for the given project and the given tree
 
    function Look_For_Default_Project
      (Implicit_Only : Boolean) return Path_Name.Object;
