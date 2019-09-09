@@ -86,32 +86,4 @@ package body GPR2.Builtin is
       return Result;
    end External_As_List;
 
-   -----------
-   -- Split --
-   -----------
-
-   function Split
-     (Value     : Name_Type;
-      Separator : Name_Type) return Containers.Value_List
-   is
-      use GNAT.String_Split;
-
-      Result : Containers.Value_List;
-      Slices : Slice_Set;
-   begin
-      Create (Slices, String (Value), String (Separator), Mode => Multiple);
-
-      for K in 1 .. Slice_Count (Slices) loop
-         declare
-            Value : constant String := Slice (Slices, K);
-         begin
-            if Value /= "" then
-               Result.Append (Value);
-            end if;
-         end;
-      end loop;
-
-      return Result;
-   end Split;
-
 end GPR2.Builtin;
