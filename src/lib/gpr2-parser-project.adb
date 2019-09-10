@@ -283,8 +283,9 @@ package body GPR2.Parser.Project is
    -----------
 
    function Parse
-     (Filename : GPR2.Path_Name.Object;
-      Messages : out Log.Object) return Object
+     (Filename      : GPR2.Path_Name.Object;
+      Implicit_With : Containers.Name_Set;
+      Messages      : out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
@@ -871,6 +872,27 @@ package body GPR2.Parser.Project is
 
       begin
          Traverse (Root (Unit), Parser'Access);
+
+         --  Import --implicit-with options
+
+         for W of Implicit_With loop
+            declare
+               use type GPR2.Path_Name.Object;
+               PN : constant GPR2.Path_Name.Object :=
+                      GPR2.Path_Name.Create (W, W);
+            begin
+               if PN /= Filename
+                 and then not Project.Imports.Contains (PN)
+               then
+                  Project.Imports.Insert
+                    (GPR2.Project.Import.Create
+                       (PN,
+                        Source_Reference.Object
+                          (Source_Reference.Create (Filename.Value, 0, 0)),
+                        Is_Limited => True));
+               end if;
+            end;
+         end loop;
 
          return Project;
       end Parse_Stage_1;

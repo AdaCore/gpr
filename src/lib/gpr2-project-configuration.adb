@@ -290,7 +290,9 @@ package body GPR2.Project.Configuration is
    is
       Result : Object;
    begin
-      Result.Project := Parser.Project.Parse (Filename, Result.Messages);
+      Result.Project :=
+        Parser.Project.Parse
+          (Filename, Containers.Empty_Name_Set, Result.Messages);
 
       --  Continue only if there is no parsing error on the configuration
       --  project.

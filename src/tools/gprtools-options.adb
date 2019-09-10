@@ -285,8 +285,7 @@ package body GPRtools.Options is
          Self.Verbosity := Verbose;
 
       elsif Switch = "--implicit-with" then
-         Self.Implicit_With.Append
-           (GPR2.Path_Name.Create_File (GPR2.Name_Type (Normalize_Value)));
+         Self.Implicit_With.Include (GPR2.Name_Type (Normalize_Value));
 
       elsif Switch = "--target" then
          Self.Target := To_Unbounded_String (Normalize_Value);

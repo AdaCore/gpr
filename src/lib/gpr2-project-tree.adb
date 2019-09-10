@@ -680,7 +680,7 @@ package body GPR2.Project.Tree is
       Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
       Implicit_Project : Boolean              := False;
-      Implicit_With    : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
+      Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
    is
       use Ada.Strings.Unbounded;
 
@@ -944,7 +944,7 @@ package body GPR2.Project.Tree is
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
       Implicit_Project  : Boolean              := False;
-      Implicit_With     : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
+      Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
                             Containers.Name_Value_Map_Package.Empty_Map)
@@ -1155,8 +1155,8 @@ package body GPR2.Project.Tree is
       package Data_Set is new Ada.Containers.Ordered_Maps
         (GPR2.Path_Name.Object, Data, "<" => GPR2.Path_Name."<");
 
-      Sets  : Data_Set.Map;
-      Paths : Path_Name.Set.Object;
+      Sets          : Data_Set.Map;
+      Project_Stack : Path_Name.Set.Object;
       --  Path to the root of the tree from the currently processing project
 
       Limited_Count : Natural := 0;
@@ -1168,7 +1168,7 @@ package body GPR2.Project.Tree is
 
       procedure Add_Paths_Messages is
       begin
-         for Import of Paths loop
+         for Import of Project_Stack loop
             declare
                Def : constant Data := Sets.Element (Import);
             begin
@@ -1258,13 +1258,14 @@ package body GPR2.Project.Tree is
                ---------
 
                procedure Pop is
-                  Last : constant Path_Name.Object := Paths.Last_Element;
+                  Last : constant Path_Name.Object :=
+                           Project_Stack.Last_Element;
                begin
                   if not Sets (Last).Extended and then Is_Limited (Last) then
                      Limited_Count := Limited_Count - 1;
                   end if;
 
-                  Paths.Delete_Last;
+                  Project_Stack.Delete_Last;
                   Sets.Delete (Last);
                end Pop;
 
@@ -1283,7 +1284,7 @@ package body GPR2.Project.Tree is
 
                   Sets.Insert
                     (Path_Name, Recursive_Load.Data'(Project, Is_Extended));
-                  Paths.Append (Path_Name);
+                  Project_Stack.Append (Path_Name);
                end Push;
 
             begin
@@ -1305,7 +1306,8 @@ package body GPR2.Project.Tree is
                              (Message.Create
                                 (Message.Error,
                                  "circular dependency detected",
-                                 Sets.Element (Paths.First_Element).Project));
+                                 Sets.Element
+                                   (Project_Stack.First_Element).Project));
 
                            Add_Paths_Messages;
 
@@ -1375,30 +1377,16 @@ package body GPR2.Project.Tree is
                   end;
                end loop;
 
-               if not Self.Implicit_With.Contains (View.Path_Name) then
-                  for W of Self.Implicit_With loop
-                     Data.Imports.Insert
-                       (W.Name,
-                        Internal
-                          (W,
-                           Status => Imported,
-                           Parent => GPR2.Project.View.Undefined));
-                  end loop;
-               end if;
-
                --  Load the extended project if any
 
                if Data.Trees.Project.Has_Extended then
                   declare
-                     Paths     : constant Path_Name.Set.Object :=
-                                   GPR2.Project.Search_Paths
-                                     (Filename, Self.Search_Paths);
-
                      Path_Name : constant GPR2.Path_Name.Object :=
                                    Create
                                      (Data.Trees.Project.Extended.Path_Name
                                       .Name,
-                                      Paths);
+                                      Search_Paths
+                                        (Filename, Self.Search_Paths));
 
                   begin
                      if Path_Name.Exists then
@@ -1439,7 +1427,8 @@ package body GPR2.Project.Tree is
          Paths   : constant Path_Name.Set.Object :=
                      GPR2.Project.Search_Paths (Filename, Self.Search_Paths);
          Project : constant Parser.Project.Object :=
-                     Parser.Project.Parse (Filename, Messages);
+                     Parser.Project.Parse
+                       (Filename, Self.Implicit_With, Messages);
          Data    : Definition.Data
                        (Has_Context =>
                           Project.Is_Defined
@@ -1470,7 +1459,8 @@ package body GPR2.Project.Tree is
                   if Import_Filename.Exists then
                      Data.Trees.Imports.Insert
                        (Import_Filename,
-                        Parser.Project.Parse (Import_Filename, Messages));
+                        Parser.Project.Parse
+                          (Import_Filename, Self.Implicit_With, Messages));
 
                   else
                      Add_Paths_Messages;

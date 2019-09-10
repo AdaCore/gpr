@@ -39,6 +39,8 @@ package GPR2.Containers is
 
    subtype Name_Set is Name_Type_Set.Set;
 
+   Empty_Name_Set : Name_Set renames Name_Type_Set.Empty_Set;
+
    package Value_Type_List is
      new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
 
