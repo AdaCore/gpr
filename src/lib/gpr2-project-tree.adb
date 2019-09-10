@@ -50,6 +50,7 @@ package body GPR2.Project.Tree is
 
    package PC renames Project.Configuration;
    package PRA renames Project.Registry.Attribute;
+   package PRP renames Project.Registry.Pack;
 
    GPRls : constant OS_Lib.String_Access :=
              OS_Lib.Locate_Exec_On_Path ("gprls");
@@ -1954,7 +1955,7 @@ package body GPR2.Project.Tree is
 
                         Check_Def (Def, A);
 
-                     else
+                     elsif PRP.Attributes_Are_Checked (P.Name) then
                         Self.Messages.Append
                           (Message.Create
                              (Message.Error,

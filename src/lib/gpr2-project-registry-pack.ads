@@ -16,6 +16,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+--  This packages provides to GPR library the known names of project packages
+--  and some of their properties.
+
 package GPR2.Project.Registry.Pack is
 
    function Exists (Name : Name_Type) return Boolean;
@@ -26,6 +29,16 @@ package GPR2.Project.Registry.Pack is
       Project : Project_Kind) return Boolean
      with Pre => Exists (Name);
    --  Returns True if the package is allowed in the given project
+
+   function Attributes_Are_Checked (Name : Name_Type) return Boolean;
+   --  Returns True if the attribute name should be checked for this package.
+   --  Each tool has to call procedure Check_Attributes to define the set of
+   --  packages relevant to this tool where attribute names should be checked.
+
+   procedure Check_Attributes (Name : Name_Type; Flag : Boolean := True);
+   --  Attribute names for the package should be checked or not depending on
+   --  parameter Flag. If Check_Attributes is not called, then the attribute
+   --  names are not going to be checked.
 
    --  Some common package names
 

@@ -20,6 +20,7 @@ with Ada.Task_Attributes;
 with Ada.Characters.Handling;
 
 with GPR2.Compilation.Registry;
+with GPR2.Project.Registry.Pack;
 
 pragma Warnings (Off);
 with System.OS_Constants;
@@ -34,6 +35,8 @@ package body GPRtools.Options is
    type Object_Class is access all Object'Class;
 
    package TLS is new Ada.Task_Attributes (Object_Class, null);
+
+   package PRP renames GPR2.Project.Registry.Pack;
 
    procedure Value_Callback (Switch, Value : String);
    --  Used for the command-line options parsing
@@ -136,6 +139,27 @@ package body GPRtools.Options is
      (Self : aliased in out Object'Class;
       Tool : Which) is
    begin
+      PRP.Check_Attributes (PRP.Naming);
+
+      case Tool is
+         when Build   =>
+            PRP.Check_Attributes (PRP.Builder);
+            PRP.Check_Attributes (PRP.Binder);
+            PRP.Check_Attributes (PRP.Linker);
+            PRP.Check_Attributes (PRP.Compiler);
+
+         when Clean  =>
+            PRP.Check_Attributes (PRP.Clean);
+
+         when Install =>
+            PRP.Check_Attributes (PRP.Install);
+
+         when Remote =>
+            PRP.Check_Attributes (PRP.Remote);
+
+         when Ls | Name => null;
+      end case;
+
       TLS.Set_Value (Self'Unchecked_Access);
 
       Define_Switch
