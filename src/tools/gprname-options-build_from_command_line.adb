@@ -17,16 +17,16 @@
 ------------------------------------------------------------------------------
 
 with Ada.Command_Line;
+with Ada.Directories;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
-
-with GPRname.Common;
 
 separate (GPRname.Options)
 procedure Build_From_Command_Line (Self : in out Object) is
 
    use Ada.Command_Line;
+   use Ada.Directories;
 
    subtype Arg_Access is String_Access
      with Dynamic_Predicate => Arg_Access = null
@@ -35,7 +35,12 @@ procedure Build_From_Command_Line (Self : in out Object) is
    Arg : Arg_Access;
    Pos : Integer := 1;
 
+   Root_Prj : Unbounded_String; -- Project root taken from -P switch
+
    Current_Section : Section.Object := Empty_Section;
+
+   procedure Add_Directory (Name : String);
+   --  Add directory to the Current_Section
 
    procedure Prepare_And_Add_Section (S : in out Section.Object);
    --  Make sure that section S is valid (i.e. contains at least one naming
@@ -49,6 +54,17 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    procedure Usage;
    --  Print usage
+
+   -------------------
+   -- Add_Directory --
+   -------------------
+
+   procedure Add_Directory (Name : String) is
+   begin
+      Current_Section.Add_Directory
+        ((if Root_Prj = Null_Unbounded_String then ""
+          else To_String (Root_Prj) & GNAT.OS_Lib.Directory_Separator) & Name);
+   end Add_Directory;
 
    -----------------------------
    -- Prepare_And_Add_Section --
@@ -176,6 +192,8 @@ begin
             Self.Project_File := +(Arg (3 .. Arg'Last));
          end if;
 
+         Root_Prj := +Containing_Directory (To_String (Self.Project_File));
+
       elsif Arg.all = "--ignore-predefined-units" then
          Self.Ignore_Predefined_Units := True;
 
@@ -239,9 +257,9 @@ begin
       elsif Arg'Length >= 2 and then Arg (1 .. 2) = "-d" then
          if Arg'Length = 2 then
             Read_Next_Arg (Err_Mssg => "directory name missing");
-            Current_Section.Add_Directory (Arg.all);
+            Add_Directory (Arg.all);
          else
-            Current_Section.Add_Directory (Arg.all (3 .. Arg'Last));
+            Add_Directory (Arg.all (3 .. Arg'Last));
          end if;
 
       elsif Arg'Length >= 2 and then Arg (1 .. 2) = "-D" then
