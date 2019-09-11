@@ -16,15 +16,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling; use Ada.Characters.Handling;
+with Ada.Characters.Handling;
 
-package body GPR2.ALI.Unit_Data is
+package body GPR2.ALI.Unit is
+
+   use Ada.Characters.Handling;
 
    --------------
    -- Add_With --
    --------------
 
-   procedure Add_With (Self : in out Object; W : With_Data.Object) is
+   procedure Add_With (Self : in out Object; W : Withed_Unit.Object) is
    begin
       Self.Withs.Append (W);
    end Add_With;
@@ -118,4 +120,4 @@ package body GPR2.ALI.Unit_Data is
       Self.Utype := Utype;
    end Set_Utype;
 
-end GPR2.ALI.Unit_Data;
+end GPR2.ALI.Unit;

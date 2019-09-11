@@ -21,9 +21,9 @@ with Ada.Calendar.Formatting;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 
-with GPR2.ALI.With_Data;
+with GPR2.ALI.Withed_Unit;
 
-package body GPR2.ALI.ALI_Data is
+package body GPR2.ALI.Definition is
 
    package IO is
 
@@ -266,12 +266,12 @@ package body GPR2.ALI.ALI_Data is
    -------------
 
    function Dep_For
-     (Self : Object; File : Simple_Name) return Dependency_Data.Object is
+     (Self : Object; File : Simple_Name) return Dependency.Object is
    begin
       if Self.Sdeps_Map.Contains (File) then
          return Self.Sdeps (Self.Sdeps_Map (File));
       else
-         return Dependency_Data.Undefined;
+         return Dependency.Undefined;
       end if;
    end Dep_For;
 
@@ -326,8 +326,8 @@ package body GPR2.ALI.ALI_Data is
       Result : Object := Object'
         (Ofile_Full_Name => +File.Value,
          Args            => Value_Type_List.Empty_Vector,
-         Units           => Unit_Data.List.Empty_List,
-         Sdeps           => Dependency_Data.List.Empty_List,
+         Units           => Unit.List.Empty_List,
+         Sdeps           => Dependency.List.Empty_List,
          Sdeps_Map       => Empty_Sdep_Map,
          GNAT_Version    => Null_Unbounded_String,
          Compile_Errors  => False,
@@ -362,7 +362,7 @@ package body GPR2.ALI.ALI_Data is
       --------------
 
       procedure Fill_Dep is
-         D : Dependency_Data.Object;
+         D : Dependency.Object;
 
          function Checksum (S : String) return Word;
 
@@ -452,7 +452,7 @@ package body GPR2.ALI.ALI_Data is
                raise Scan_ALI_Error;
             end if;
 
-            D := Dependency_Data.Create
+            D := Dependency.Create
               (Sfile     => Simple_Name (Sfile),
                Stamp     => Stamp,
                Checksum  => Chksum,
@@ -513,9 +513,9 @@ package body GPR2.ALI.ALI_Data is
       ---------------
 
       procedure Fill_Unit is
-         U : Unit_Data.Object;
+         U : Unit.Object;
 
-         use Unit_Data;
+         use Unit;
 
          U_Flags : Flag_Array := Default_Flags;
       begin
@@ -552,7 +552,7 @@ package body GPR2.ALI.ALI_Data is
                end if;
             end;
 
-            U := Unit_Data.Create
+            U := Unit.Create
               (Uname => Name_Type (Tok1 (1 .. Tok1'Last - 2)),
                Sfile => Simple_Name (Tok2),
                Utype => Utype);
@@ -652,14 +652,14 @@ package body GPR2.ALI.ALI_Data is
       ---------------
 
       procedure Fill_With (Header : Character) is
-         W : With_Data.Object;
+         W : Withed_Unit.Object;
 
          Impl : constant Boolean := (Header = 'Z');
          --  Implicit_With_From_Instantiation
 
-         procedure P (Element : in out Unit_Data.Object);
+         procedure P (Element : in out Unit.Object);
 
-         procedure P (Element : in out Unit_Data.Object) is
+         procedure P (Element : in out Unit.Object) is
          begin
             Element.Add_With (W);
          end P;
@@ -689,7 +689,7 @@ package body GPR2.ALI.ALI_Data is
                end if;
             end;
 
-            W := With_Data.Create
+            W := Withed_Unit.Create
               (Uname => Name_Type (N (1 .. N'Last - 2)),
                Ukind => Ukind,
                Sfile => Optional_Name_Type (S),
@@ -794,12 +794,12 @@ package body GPR2.ALI.ALI_Data is
 
          if Result.Units.Length = 2 then
             declare
-               use Unit_Data;
+               use Unit;
 
-               procedure P1 (Element : in out Unit_Data.Object);
-               procedure P2 (Element : in out Unit_Data.Object);
+               procedure P1 (Element : in out Unit.Object);
+               procedure P2 (Element : in out Unit.Object);
 
-               procedure P1 (Element : in out Unit_Data.Object) is
+               procedure P1 (Element : in out Unit.Object) is
                begin
                   if Element.Utype /= Is_Body_Only then
                      raise Scan_ALI_Error;
@@ -807,7 +807,7 @@ package body GPR2.ALI.ALI_Data is
                   Element.Set_Utype (Is_Body);
                end P1;
 
-               procedure P2 (Element : in out Unit_Data.Object) is
+               procedure P2 (Element : in out Unit.Object) is
                begin
                   if Element.Utype /= Is_Spec_Only then
                      raise Scan_ALI_Error;
@@ -837,4 +837,4 @@ package body GPR2.ALI.ALI_Data is
       end;
    end Scan_ALI;
 
-end GPR2.ALI.ALI_Data;
+end GPR2.ALI.Definition;

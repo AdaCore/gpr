@@ -22,7 +22,7 @@ with GNAT.Calendar;
 
 with GPR2.Source;
 
-package GPR2.ALI.Dependency_Data is
+package GPR2.ALI.Dependency is
 
    --
    --  Dependencies (D lines)
@@ -113,4 +113,4 @@ private
    function Unit_Name (Self : Object) return Name_Type is
      (Name_Type (-Self.Unit_Name));
 
-end GPR2.ALI.Dependency_Data;
+end GPR2.ALI.Dependency;

@@ -28,9 +28,9 @@ with GPR.Scans;
 with GPR.Sinput;
 with GPR.Snames;
 
-with GPR2.ALI.ALI_Data;
-with GPR2.ALI.Dependency_Data;
-with GPR2.ALI.Unit_Data;
+with GPR2.ALI.Definition;
+with GPR2.ALI.Dependency;
+with GPR2.ALI.Unit;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
@@ -480,7 +480,7 @@ begin
             end Recurse_On_Sources_For_Unit;
 
             ALI_File   : Path_Name.Object;
-            ALI_Object : ALI_Data.Object;
+            ALI_Object : Definition.Object;
 
          begin
             if Closures.Contains (Source) then
@@ -504,7 +504,7 @@ begin
                return;
             end if;
 
-            ALI_Object := ALI_Data.Scan_ALI (ALI_File);
+            ALI_Object := Definition.Scan_ALI (ALI_File);
 
             if not ALI_Object.Is_Defined then
                Finish_Program (E_Errors, "unable to scan ALI file: "
@@ -527,7 +527,7 @@ begin
                   U1 (U1'First .. U1'First + U2'Length - 1) = U2 and then
                   U1 (U1'First + U2'Length) = '.');
 
-               use Unit_Data;
+               use ALI.Unit;
 
             begin
                for U_Sec of ALI_Object.Units loop
@@ -615,18 +615,18 @@ begin
       procedure Display_Normal is
 
          procedure Output_Source
-           (S : Project.Source.Object; ALI_Obj : ALI_Data.Object);
+           (S : Project.Source.Object; ALI_Obj : Definition.Object);
 
          -------------------
          -- Output_Source --
          -------------------
 
          procedure Output_Source
-           (S : Project.Source.Object; ALI_Obj : ALI_Data.Object)
+           (S : Project.Source.Object; ALI_Obj : Definition.Object)
          is
             use type Ada.Calendar.Time;
 
-            D : constant Dependency_Data.Object := ALI_Obj.Dep_For
+            D : constant Dependency.Object := ALI_Obj.Dep_For
               (S.Source.Path_Name.Simple_Name);
 
             Status : File_Status;
@@ -693,10 +693,10 @@ begin
 
          for S of Sources loop
             declare
-               use GPR2.ALI.Unit_Data;
+               use GPR2.ALI.Unit;
 
                ALI_File     : Path_Name.Object;
-               ALI_Object   : ALI_Data.Object;
+               ALI_Object   : Definition.Object;
                Obj_File     : Path_Name.Object;
                U_Sec_Source : Project.Source.Object;
                Dep_Source   : Project.Source.Object;
@@ -707,7 +707,7 @@ begin
                Obj_File := S.Artifacts.Object_Code;
 
                if ALI_File.Is_Defined and then ALI_File.Exists then
-                  ALI_Object := ALI_Data.Scan_ALI (ALI_File);
+                  ALI_Object := Definition.Scan_ALI (ALI_File);
 
                   if not ALI_Object.Is_Defined then
                      Finish_Program (E_Errors, "unable to scan ALI file: "

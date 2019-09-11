@@ -18,7 +18,7 @@
 
 with Ada.Containers.Indefinite_Vectors;
 
-package GPR2.ALI.Unit_Data.List is
+package GPR2.ALI.Withed_Unit.List is
 
    package List is new Ada.Containers.Indefinite_Vectors (Positive, Object);
 
@@ -26,4 +26,4 @@ package GPR2.ALI.Unit_Data.List is
 
    Empty_List : constant Object := List.Empty_Vector;
 
-end GPR2.ALI.Unit_Data.List;
+end GPR2.ALI.Withed_Unit.List;

@@ -18,7 +18,7 @@
 
 with GPR2.Source;
 
-package GPR2.ALI.With_Data is
+package GPR2.ALI.Withed_Unit is
 
    --
    --  Withed units (W and Z lines below a U line)
@@ -75,4 +75,4 @@ private
    function Uname (Self : Object) return Name_Type is
      (Name_Type (-Self.Uname));
 
-end GPR2.ALI.With_Data;
+end GPR2.ALI.Withed_Unit;

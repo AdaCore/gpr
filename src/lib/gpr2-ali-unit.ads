@@ -16,9 +16,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.ALI.With_Data.List;
+with GPR2.ALI.Withed_Unit.List;
 
-package GPR2.ALI.Unit_Data is
+package GPR2.ALI.Unit is
 
    --
    --  Units (U lines)
@@ -74,7 +74,7 @@ package GPR2.ALI.Unit_Data is
    function Utype (Self : Object) return Unit_Type;
    --  Returns the Utype for Self
 
-   function Withs (Self : Object) return With_Data.List.Object;
+   function Withs (Self : Object) return Withed_Unit.List.Object;
    --  Returns the list of With_Data objects for Self
 
    function Flags (Self : Object) return Flag_Array;
@@ -83,7 +83,7 @@ package GPR2.ALI.Unit_Data is
    function Kind (Self : Object) return Unit_Kind;
    --  Returns the unit kind for Self
 
-   procedure Add_With (Self : in out Object; W : With_Data.Object);
+   procedure Add_With (Self : in out Object; W : Withed_Unit.Object);
    --  Add the With_Data object W to Self
 
    Default_Flags : constant Flag_Array;
@@ -110,7 +110,7 @@ private
       Utype : Unit_Type;
       --  Type of entry
 
-      Withs : With_Data.List.Object;
+      Withs : Withed_Unit.List.Object;
       --  Withs for this file
 
       Flags : Flag_Array;
@@ -129,7 +129,7 @@ private
      (Object'(Uname     => +String (Uname),
               Sfile     => +String (Sfile),
               Utype     => Utype,
-              Withs     => With_Data.List.Empty_List,
+              Withs     => Withed_Unit.List.Empty_List,
               Flags     => Default_Flags,
               Kind      => Kind_Package));
 
@@ -142,7 +142,7 @@ private
    function Utype (Self : Object) return Unit_Type is
      (Self.Utype);
 
-   function Withs (Self : Object) return With_Data.List.Object is
+   function Withs (Self : Object) return Withed_Unit.List.Object is
      (Self.Withs);
 
    function Flags (Self : Object) return Flag_Array is
@@ -151,4 +151,4 @@ private
    function Kind (Self : Object) return Unit_Kind is
      (Self.Kind);
 
-end GPR2.ALI.Unit_Data;
+end GPR2.ALI.Unit;
