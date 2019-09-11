@@ -36,7 +36,7 @@ with GNAT.Sockets;
 with GPR.Opt;
 
 with GPR2.Compilation.Process;
-with GPR2.Compilation.Slave;
+with GPR2.Compilation.Slave.List;
 with GPR2.Compilation.Sync;
 with GPR2.Message;
 with GPR2.Project.Pack;
@@ -53,6 +53,8 @@ package body GPR2.Compilation.Registry is
    use Ada.Exceptions;
 
    use GNAT;
+
+   Slaves_Data : Slave.List.Object;
 
    type Slave_Data is record
       Sock          : Integer;

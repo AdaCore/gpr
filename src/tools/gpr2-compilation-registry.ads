@@ -21,15 +21,12 @@
 
 with GPR2.Containers;
 with GPR2.Compilation.Protocol;
-with GPR2.Compilation.Slave.List;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 with GPRtools.Options;
 
 package GPR2.Compilation.Registry is
-
-   Slaves_Data : Slave.List.Object;
 
    procedure Register_Remote_Slaves
      (Tree        : GPR2.Project.Tree.Object;
