@@ -47,8 +47,14 @@ package body GPR2.Parser.Project is
 
    --  Some helpers routines for the parser
 
+   function Get_Value_Type
+     (Node : Single_Tok_Node'Class) return Value_Type;
+   --  Returns the Value_Type for the given node
+
    function Get_Name_Type
-     (Node : Single_Tok_Node'Class) return Name_Type;
+     (Node : Single_Tok_Node'Class) return Name_Type
+   is
+     (Name_Type (Get_Value_Type (Node)));
    --  Returns the Name for the given node
 
    function Present (Node : GPR_Node'Class) return Boolean is
@@ -125,23 +131,6 @@ package body GPR2.Parser.Project is
       return Self.Externals;
    end Externals;
 
-   -------------------
-   -- Get_Name_Type --
-   -------------------
-
-   function Get_Name_Type
-     (Node : Single_Tok_Node'Class) return Name_Type
-   is
-      use Ada.Characters.Conversions;
-      V      : constant Wide_Wide_String := Text (Node);
-      Offset : Natural := 0;
-   begin
-      if V (V'First) = '"' and then V (V'Last) = '"' then
-         Offset := 1;
-      end if;
-      return Name_Type (To_String (V (V'First + Offset .. V'Last - Offset)));
-   end Get_Name_Type;
-
    ------------------------
    -- Get_String_Literal --
    ------------------------
@@ -200,6 +189,23 @@ package body GPR2.Parser.Project is
 
       return Value_Type (To_String (Result));
    end Get_String_Literal;
+
+   --------------------
+   -- Get_Value_Type --
+   --------------------
+
+   function Get_Value_Type
+     (Node : Single_Tok_Node'Class) return Value_Type
+   is
+      use Ada.Characters.Conversions;
+      V      : constant Wide_Wide_String := Text (Node);
+      Offset : Natural := 0;
+   begin
+      if V (V'First) = '"' and then V (V'Last) = '"' then
+         Offset := 1;
+      end if;
+      return To_String (V (V'First + Offset .. V'Last - Offset));
+   end Get_Value_Type;
 
    ------------------
    -- Has_Extended --
@@ -689,8 +695,7 @@ package body GPR2.Parser.Project is
                   declare
                      Path_Name : constant GPR2.Path_Name.Object :=
                                    GPR2.Project.Create
-                                     (Get_Name_Type
-                                        (F_Path_Name (Ext)));
+                                     (Get_Name_Type (F_Path_Name (Ext)));
                   begin
                      Project.Extended :=
                        GPR2.Project.Import.Create
@@ -732,9 +737,8 @@ package body GPR2.Parser.Project is
                      if not Cur_Child.Is_Null then
                         declare
                            Value : constant Value_Type :=
-                                     Value_Type
-                                       (Get_Name_Type
-                                          (Cur_Child.As_String_Literal));
+                                     Get_Value_Type
+                                       (Cur_Child.As_String_Literal);
                         begin
                            if Set.Contains (Value) then
                               Messages.Append
@@ -1085,8 +1089,7 @@ package body GPR2.Parser.Project is
          I_Node : constant GPR_Node := F_Attribute_Index (Node);
          Index  : constant Value_Type :=
                     (if Present (I_Node)
-                     then Value_Type
-                       (Get_Name_Type (I_Node.As_Single_Tok_Node))
+                     then Get_Value_Type (I_Node.As_Single_Tok_Node)
                      else "");
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
@@ -1896,7 +1899,7 @@ package body GPR2.Parser.Project is
 
                   return Get_Value_Reference
                     (Self.Path_Name, Sloc_Range (Index),
-                     Value_Type (Get_Name_Type (Str_Lit.F_Str_Lit)),
+                     Get_Value_Type (Str_Lit.F_Str_Lit),
                      At_Num => (if At_Lit = No_GPR_Node then 0
                                 else Positive'Wide_Wide_Value (At_Lit.Text)));
                end Create_Index;
@@ -2042,7 +2045,7 @@ package body GPR2.Parser.Project is
                         Sloc    => Sloc,
                         Message =>
                           "variable '"
-                          & String (Get_Name_Type (Single_Tok_Node (Name)))
+                          & Get_Value_Type (Single_Tok_Node (Name))
                           & "' must be a simple value"));
                end;
             end if;
@@ -2371,13 +2374,10 @@ package body GPR2.Parser.Project is
                                 (Message.Create
                                    (Level   => Message.Error,
                                     Sloc    => Sloc,
-                                    Message =>
-                                      "value '"
-                                    & String (Value)
+                                    Message => "value '" & Value
                                     & "' is illegal for typed string '"
-                                    & String
-                                      (Get_Name_Type
-                                           (Single_Tok_Node (Name))) & '''));
+                                    & Get_Value_Type (Single_Tok_Node (Name))
+                                    & '''));
                            end if;
                         end;
 
@@ -2388,8 +2388,7 @@ package body GPR2.Parser.Project is
                               Sloc    => Sloc,
                               Message =>
                                 "expression for '"
-                                & String
-                                    (Get_Name_Type (Single_Tok_Node (Name)))
+                                & Get_Value_Type (Single_Tok_Node (Name))
                                 & "' must be a single string"));
                      end if;
 
