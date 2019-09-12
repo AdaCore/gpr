@@ -21,11 +21,11 @@
 
 with GNAT.OS_Lib;
 
+with GPRtools.Options;
+
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.View;
-
-with GPRtools.Options;
 
 package GPR2.Compilation.Process is
 

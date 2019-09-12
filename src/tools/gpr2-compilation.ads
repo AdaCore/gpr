@@ -20,7 +20,6 @@
 --  and distributed compilation modes.
 
 with Ada.Characters.Latin_1;
-
 with Ada.Containers.Vectors;
 with Ada.Strings.Unbounded;
 
