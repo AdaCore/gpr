@@ -1036,6 +1036,31 @@ package body GPR2.Project.View is
          At_Num : Natural) return GPR2.Path_Name.Object;
       --  Returns the full pathname of the main executable for the givem main
 
+      function Base_Name
+        (Simple_Name : Value_Not_Empty) return Value_Not_Empty;
+      --  Cut executable name at the first . (extension). Note that
+      --  this is not necessary the first base-name as we may have
+      --  multiple dots in the source when using non standard naming.
+      --  For example, having "main.2.ada" whe want to get on "main".
+
+      ---------------
+      -- Base_Name --
+      ---------------
+
+      function Base_Name
+        (Simple_Name : Value_Not_Empty) return Value_Not_Empty
+      is
+         Last : Positive := Simple_Name'First;
+      begin
+         while Last < Simple_Name'Last
+           and then Simple_Name (Last + 1) /= '.'
+         loop
+            Last := Last + 1;
+         end loop;
+
+         return Simple_Name (Simple_Name'First .. Last);
+      end Base_Name;
+
       ------------
       -- Create --
       ------------
@@ -1044,7 +1069,7 @@ package body GPR2.Project.View is
         (Source : Value_Not_Empty;
          At_Num : Natural) return GPR2.Path_Name.Object
       is
-         BN   : constant Value_Not_Empty := Directories.Base_Name (Source);
+         BN   : constant Value_Not_Empty := Base_Name (Source);
          Attr : GPR2.Project.Attribute.Object;
 
          function Create_Path

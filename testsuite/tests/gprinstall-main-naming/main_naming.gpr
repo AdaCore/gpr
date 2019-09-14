@@ -1,0 +1,9 @@
+project Main_Naming is
+   for Source_Dirs use ("src");
+   for Main use ("main.2.ada");
+
+   package Naming is
+    for Implementation_Suffix ("Ada") use ".2.ada";
+   end Naming;
+
+end Main_Naming;

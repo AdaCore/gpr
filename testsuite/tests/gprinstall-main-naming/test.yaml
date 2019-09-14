@@ -1,0 +1,3 @@
+description:
+    check gprinstall with naming for a main
+driver: python_script
