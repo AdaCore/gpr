@@ -80,6 +80,10 @@ package GPR2.Project is
    --  If Implicit_Only is False then look only for _default.gpr using the
    --  location of the current executable, returns Undefined if not found.
 
+   function Ensure_Extension (Name : Name_Type) return Name_Type;
+   --  If Name ending with ".gpr" or ".cgpr" the function returns it unchanged,
+   --  otherwise returns Name appended with ".gpr" suffix.
+
 private
 
    type Relation_Status is (Root, Imported, Extended, Aggregated);

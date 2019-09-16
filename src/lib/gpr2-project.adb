@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
 with Ada.Directories;
 
 with GNAT.Case_Util;
@@ -37,11 +38,7 @@ package body GPR2.Project is
       use GNAT;
 
       DS       : constant Character := OS_Lib.Directory_Separator;
-
-      GPR_Name : constant Name_Type :=
-                   (if Directories.Extension (String (Name)) in "gpr" | "cgpr"
-                    then Name
-                    else Name & ".gpr");
+      GPR_Name : constant Name_Type := Ensure_Extension (Name);
 
    begin
       --  If the file exists or an absolute path has been specificed or there
@@ -87,6 +84,25 @@ package body GPR2.Project is
       return Path_Name.Create_File
         (GPR_Name, Name_Type (Directories.Current_Directory));
    end Create;
+
+   ----------------------
+   -- Ensure_Extension --
+   ----------------------
+
+   function Ensure_Extension (Name : Name_Type) return Name_Type is
+      use Ada.Characters.Handling;
+      Ext1 : constant String := "gpr";
+      Ext2 : constant String := "cgpr";
+   begin
+      if To_Lower (Directories.Extension (String (Name))) in Ext1 | Ext2 then
+         return Name;
+      else
+         --  The default is the .gpr extension, i.e. configuration project file
+         --  name have to be provided with extension.
+
+         return Name & Name_Type ('.' & Ext1);
+      end if;
+   end Ensure_Extension;
 
    ------------------------------
    -- Look_For_Default_Project --

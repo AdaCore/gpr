@@ -104,7 +104,11 @@ package body GPR2.Parser.Project is
    is
      (Source_Reference.Identifier.Object
        (Source_Reference.Identifier.Create
-         (Get_Source_Reference (Path_Name, Slr), Identifier)));
+          (Get_Source_Reference (Path_Name, Slr), Identifier)));
+
+   function Get_Raw_Path
+     (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object;
+   --  Creates project Path_Name.Object not checked for location
 
    function Get_String_Literal
      (N     : GPR_Node'Class;
@@ -130,6 +134,19 @@ package body GPR2.Parser.Project is
    begin
       return Self.Externals;
    end Externals;
+
+   ------------------
+   -- Get_Raw_Path --
+   ------------------
+
+   function Get_Raw_Path
+     (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object
+   is
+      GPR_Name : constant Name_Type :=
+                   GPR2.Project.Ensure_Extension (Get_Name_Type (Node));
+   begin
+      return GPR2.Path_Name.Create (GPR_Name, GPR_Name);
+   end Get_Raw_Path;
 
    ------------------------
    -- Get_String_Literal --
@@ -692,18 +709,12 @@ package body GPR2.Parser.Project is
                --  Check if we have an extends declaration
 
                if Present (Ext) then
-                  declare
-                     Path_Name : constant GPR2.Path_Name.Object :=
-                                   GPR2.Project.Create
-                                     (Get_Name_Type (F_Path_Name (Ext)));
-                  begin
-                     Project.Extended :=
-                       GPR2.Project.Import.Create
-                         (Path_Name,
-                          Get_Source_Reference (Filename, Ext),
-                          Is_Limited => False);
-                     Project.Is_All := F_Is_All (Ext);
-                  end;
+                  Project.Extended :=
+                    GPR2.Project.Import.Create
+                      (Get_Raw_Path (F_Path_Name (Ext)),
+                       Get_Source_Reference (Filename, Ext),
+                       Is_Limited => False);
+                  Project.Is_All := F_Is_All (Ext);
                end if;
             end Parse_Project_Declaration;
 
@@ -787,9 +798,7 @@ package body GPR2.Parser.Project is
                         use type GPR2.Path_Name.Object;
 
                         Path : constant GPR2.Path_Name.Object :=
-                                 GPR2.Project.Create
-                                   (Get_Name_Type
-                                      (Cur_Child.As_String_Literal));
+                                 Get_Raw_Path (Cur_Child.As_String_Literal);
                      begin
                         if Project.Imports.Contains (Path) then
                            declare
@@ -2316,7 +2325,7 @@ package body GPR2.Parser.Project is
                                          Self.Imports.Element (Project);
                               Path   : constant GPR2.Path_Name.Object :=
                                          GPR2.Project.Create
-                                           (Name_Type (Import.Path_Name.Value),
+                                           (Import.Path_Name.Name,
                                             Search_Paths);
                               Prj    : constant GPR2.Parser.Project.Object :=
                                          Registry.Get (Path);
@@ -2339,8 +2348,7 @@ package body GPR2.Parser.Project is
                         declare
                            Path     : constant GPR2.Path_Name.Object :=
                                         GPR2.Project.Create
-                                          (Name_Type
-                                             (Self.Extended.Path_Name.Value),
+                                          (Self.Extended.Path_Name.Name,
                                            Search_Paths);
                            Extended : constant GPR2.Parser.Project.Object :=
                                         Registry.Get (Path);
