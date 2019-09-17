@@ -662,7 +662,7 @@ exception
       | GPRtools.Usage_Error =>
       GPRtools.Util.Fail_Program (Exception_Message (E));
 
-   when Project_Error =>
+   when Project_Error | Processing_Error =>
       GPRtools.Util.Project_Processing_Failed (Project_Tree, Options);
 
    when E : others =>

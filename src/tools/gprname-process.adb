@@ -319,7 +319,7 @@ begin
       Tree.Load (Project_Path, Context, Cnf);
 
    exception
-      when Project_Error =>
+      when Project_Error  | Processing_Error =>
          Show_Tree_Load_Errors (Tree);
          raise GPRname_Exception with "failed to load project tree";
 

@@ -83,6 +83,7 @@ package body GPR2.Compilation.Registry is
       Project_Name               : Name_Type;
       Sync                       : Boolean;
       Options                    : GPRtools.Options.Object'Class;
+      Sloc                       : Source_Reference.Object'Class;
       Included_Artifact_Patterns : String := "") return Slave_Data;
    --  Connect to the slave and return the corresponding object
 
@@ -194,19 +195,18 @@ package body GPR2.Compilation.Registry is
    is
       Tree : constant not null access GPR2.Project.Tree.Object := Project.Tree;
 
-      procedure Clean_Up_Remote_Slave
-        (S_Data       : Slave.Object;
-         Project_Name : Name_Type);
+      Project_Name : constant Name_Type := Project.Path_Name.Base_Name;
+      Sloc         : constant Source_Reference.Object'Class :=
+                       Source_Reference.Create (Project.Path_Name.Value, 0, 0);
+
+      procedure Clean_Up_Remote_Slave (S_Data : Slave.Object);
       --  Clean-up slave
 
       ---------------------------
       -- Clean_Up_Remote_Slave --
       ---------------------------
 
-      procedure Clean_Up_Remote_Slave
-        (S_Data       : Slave.Object;
-         Project_Name : Name_Type)
-      is
+      procedure Clean_Up_Remote_Slave (S_Data : Slave.Object) is
          use all type Compilation.Protocol.Command_Kind;
 
          S : Slave_Data;
@@ -214,7 +214,7 @@ package body GPR2.Compilation.Registry is
       begin
          S := Connect
            (Tree, S_Data, Project_Name,
-            Options => Options, Sync => False);
+            Options => Options, Sloc => Sloc, Sync => False);
 
          if not Tree.Log_Messages.Has_Error then
             --  Send the clean-up request
@@ -231,8 +231,7 @@ package body GPR2.Compilation.Registry is
                        (Message.Create
                           (Message.Information,
                            "Clean-up done on " & String (S_Data.Host),
-                           Sloc => Source_Reference.Object'Class
-                             (Source_Reference.Undefined)));
+                           Sloc => Sloc));
                   end if;
 
                elsif Compilation.Protocol.Kind (Cmd) = KO then
@@ -240,8 +239,7 @@ package body GPR2.Compilation.Registry is
                     (Message.Create
                        (Message.Error,
                         "Slave cannoe clean-up " & String (S_Data.Host),
-                        Sloc => Source_Reference.Object'Class
-                          (Source_Reference.Undefined)));
+                        Sloc => Sloc));
 
                else
                   Tree.Append_Message
@@ -249,8 +247,7 @@ package body GPR2.Compilation.Registry is
                        (Message.Error,
                         "protocol error: "
                         & Compilation.Protocol.Command_Kind'Image (Kind (Cmd)),
-                        Sloc => Source_Reference.Object'Class
-                          (Source_Reference.Undefined)));
+                        Sloc => Sloc));
                end if;
             end;
 
@@ -273,15 +270,16 @@ package body GPR2.Compilation.Registry is
       exception
          when others =>
             Compilation.Protocol.Close (S.Channel);
+            raise;
       end Clean_Up_Remote_Slave;
 
    begin
       for S of Slaves_Data loop
-         Clean_Up_Remote_Slave (S, Project.Path_Name.Base_Name);
+         Clean_Up_Remote_Slave (S);
       end loop;
 
       if Tree.Log_Messages.Has_Error then
-         raise Constraint_Error with "remote compilation error";
+         raise Processing_Error with "remote compilation error";
       end if;
    end Clean_Up_Remote_Slaves;
 
@@ -373,6 +371,7 @@ package body GPR2.Compilation.Registry is
       Project_Name               : Name_Type;
       Sync                       : Boolean;
       Options                    : GPRtools.Options.Object'Class;
+      Sloc                       : Source_Reference.Object'Class;
       Included_Artifact_Patterns : String := "") return Slave_Data
    is
       use GNAT.Sockets;
@@ -400,8 +399,7 @@ package body GPR2.Compilation.Registry is
                  (Message.Error,
                   "Cannot connect to slave "
                   & String (S_Data.Host) & ", aborting",
-                  Sloc => Source_Reference.Object'Class
-                            (Source_Reference.Undefined)));
+                  Sloc => Sloc));
             return S;
       end;
 
@@ -411,8 +409,7 @@ package body GPR2.Compilation.Registry is
               (Message.Error,
                "Cannot connect to slave "
                & String (S_Data.Host) & ", aborting",
-               Sloc => Source_Reference.Object'Class
-                         (Source_Reference.Undefined)));
+               Sloc => Sloc));
          return S;
       end if;
 
@@ -449,8 +446,7 @@ package body GPR2.Compilation.Registry is
                     (Message.Warning,
                      "non synchronized clock detected for "
                      & String (S.Data.Host),
-                     Sloc => Source_Reference.Object'Class
-                               (Source_Reference.Undefined)));
+                     Sloc => Sloc));
             end if;
 
          elsif Kind (Cmd) = KO then
@@ -461,8 +457,7 @@ package body GPR2.Compilation.Registry is
                    then Parameters (1).all
                    else "build slave is not compatible")
                   & " : " & String (S_Data.Host),
-                  Sloc => Source_Reference.Object'Class
-                    (Source_Reference.Undefined)));
+                  Sloc => Sloc));
             return S;
 
          else
@@ -471,8 +466,7 @@ package body GPR2.Compilation.Registry is
                  (Message.Error,
                   "protocol error: "
                   & Protocol.Command_Kind'Image (Kind (Cmd)),
-                  Sloc => Source_Reference.Object'Class
-                            (Source_Reference.Undefined)));
+                  Sloc => Sloc));
             return S;
          end if;
       end;
@@ -615,9 +609,11 @@ package body GPR2.Compilation.Registry is
       Synchronize                : Boolean;
       Options                    : GPRtools.Options.Object'Class)
    is
-      S   : Slave_Data;
-      IAP : Unbounded_String;
-
+      S    : Slave_Data;
+      IAP  : Unbounded_String;
+      Sloc : constant Source_Reference.Object'Class :=
+               Source_Reference.Create
+                 (Tree.Root_Project.Path_Name.Value, 0, 0);
    begin
       for P of Included_Artifact_Patterns loop
          if IAP /= Null_Unbounded_String then
@@ -632,6 +628,7 @@ package body GPR2.Compilation.Registry is
          Project_Name,
          Sync                       => Synchronize,
          Options                    => Options,
+         Sloc                       => Sloc,
          Included_Artifact_Patterns => To_String (IAP));
 
       Sockets.Set (Slaves_Sockets, Protocol.Sock (S.Channel));
@@ -647,15 +644,13 @@ package body GPR2.Compilation.Registry is
                "Register slave " & String (S_Data.Host)
                & "," & Integer'Image (S.Max_Processes)
                & " process(es)",
-               Sloc => Source_Reference.Object'Class
-                         (Source_Reference.Undefined)));
+               Sloc => Sloc));
 
          Tree.Append_Message
            (Message.Create
               (Message.Information,
                "  location: " & To_String (S.Root_Dir),
-               Sloc => Source_Reference.Object'Class
-                         (Source_Reference.Undefined)));
+               Sloc => Sloc));
       end if;
 
       --  Let's double check that Root_Dir and Projet_Name are not empty,
@@ -667,9 +662,8 @@ package body GPR2.Compilation.Registry is
            (Message.Create
               (Message.Error,
                "error: Root_Dir cannot be empty",
-               Sloc => Source_Reference.Object'Class
-                 (Source_Reference.Undefined)));
-         raise Constraint_Error;
+               Sloc => Sloc));
+         raise Processing_Error;
       end if;
 
       if Synchronize then
@@ -693,9 +687,8 @@ package body GPR2.Compilation.Registry is
            (Message.Create
               (Message.Error,
                 "cannot connect to " & String (S_Data.Host),
-               Sloc => Source_Reference.Object'Class
-                 (Source_Reference.Undefined)));
-         raise Constraint_Error;
+               Sloc => Sloc));
+         raise Processing_Error;
    end Register_Remote_Slave;
 
    ----------------------------

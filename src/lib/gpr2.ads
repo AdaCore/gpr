@@ -51,9 +51,14 @@
 package GPR2 is
 
    Project_Error : exception;
-   --  Raised when an error occurs. This exception is raised with a minimal
-   --  message but the actual messages are to be found in the Tree log
-   --  messages.
+   --  Raised when an error related to project syntax occurs. This exception is
+   --  raised with a minimal message but the actual messages are to be found in
+   --  the Tree log messages.
+
+   Processing_Error : exception;
+   --  Raised when an error related to project processing occurs. Exception is
+   --  raised with a minimal message but the actual messages are to be found in
+   --  the Tree log messages.
 
    type Project_Kind is
      (K_Configuration, K_Abstract,

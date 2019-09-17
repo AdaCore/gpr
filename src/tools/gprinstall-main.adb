@@ -609,7 +609,7 @@ exception
       Text_IO.Put_Line ("gprinstall: " & Exception_Message (E));
       GNAT.Command_Line.Try_Help;
 
-   when Project_Error =>
+   when Project_Error | Processing_Error =>
       if Options.Verbose then
          --  Display all messagges
          for M of Tree.Log_Messages.all loop
