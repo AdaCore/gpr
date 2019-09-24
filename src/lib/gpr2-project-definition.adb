@@ -955,10 +955,8 @@ package body GPR2.Project.Definition is
                         declare
                            Unit_Name : constant Name_Type :=
                                          Name_Type (Exc.Index.Text);
-
-                           Index : constant Natural :=
-                                     At_Num_Or (Exc.Value, 1);
-
+                           Index     : constant Natural :=
+                                         At_Num_Or (Exc.Value, 1);
                         begin
                            Kind := (if Exc.Name.Text = PRA.Spec
                                     then S_Spec
@@ -1178,8 +1176,6 @@ package body GPR2.Project.Definition is
          Mode    : Insert_Mode;
          Sloc    : Source_Reference.Object'Class)
       is
-         C : Project.Source.Set.Cursor;
-
          procedure Add_Source (Src : Project.Source.Object);
 
          procedure Source_Message (Src : Project.Source.Object);
@@ -1248,6 +1244,8 @@ package body GPR2.Project.Definition is
                   & """, """ & Src.Source.Path_Name.Value & '"',
                   Sloc, Indent => 1));
          end Source_Message;
+
+         C : Project.Source.Set.Cursor;
 
       begin
          for Source of Sources loop
