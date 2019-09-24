@@ -286,10 +286,9 @@ package body GPR2.Project.Definition is
       --  Libadalang for example. And in this case the units name could be non
       --  matching. This is true for the initial call in Handle_File.
 
-      type Insert_Mode is (Replace, Skip, Error);
+      type Insert_Mode is (Skip, Error);
       --  Controls behavior when a duplicated unit/filename is found
       --
-      --  Replace : the new source replace the previous one
       --  Skip    : the new source is ignored
       --  Error   : an error is raised
 
@@ -1256,9 +1255,6 @@ package body GPR2.Project.Definition is
 
             if Project.Source.Set.Has_Element (C) then
                case Mode is
-                  when Replace =>
-                     Def.Sources.Replace (Source);
-
                   when Error =>
                      Tree.Append_Message
                        (Message.Create
