@@ -36,7 +36,7 @@ private package GPR2.Project.Definition is
    use type View.Object;
 
    --  Tree contains the Project parser object. This is shared by all projects
-   --  view in all loaded tree. That is there is always a single instance of
+   --  view in all loaded trees. That is there is always a single instance of
    --  the project parser object.
    --  Imports contains the list of all imported projects for Project.
 
@@ -53,7 +53,7 @@ private package GPR2.Project.Definition is
    --  in the given tree. Imports here are the project views corresponding to
    --  the imports in Trees.
    --
-   --  Either a Data has a context or is referencing another with containing
+   --  Either a Data has a context or is referencing another containing
    --  the context. This is used for aggregate project which can be used to
    --  refine the global context by setting some external values with the
    --  corresponding attribute. So both the root project and all aggregate

@@ -50,7 +50,7 @@ package GPR2.Project.Source is
    --  Constructor for Object. View is where the source is defined (found from
    --  View Source_Dirs) and Extending_View is the optional view from which the
    --  project source is extended. That is, if Extending_View is defined then
-   --  this source is comming from an extended project for View.
+   --  this source is coming from an extended project for View.
 
    function View (Self : Object) return Project.View.Object
      with Pre  => Self.Is_Defined,

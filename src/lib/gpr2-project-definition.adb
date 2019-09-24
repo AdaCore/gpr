@@ -318,7 +318,10 @@ package body GPR2.Project.Definition is
         (Sources : Project.Source.Set.Object;
          Mode    : Insert_Mode;
          Sloc    : Source_Reference.Object'Class);
-      --  Insert Sources into Data.Sources
+      --  Insert Sources from an extended or aggregated project into
+      --  Def.Sources. Mode is Skip for extended projects (ignore sources from
+      --  the extended project that have been replaced in the extending one),
+      --  or Error for aggregated projects (reject duplicate sources).
 
       procedure Fill_Ada_Naming_Exceptions (Set : Project.Attribute.Set.Object)
         with Pre =>

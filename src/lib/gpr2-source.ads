@@ -146,13 +146,14 @@ package GPR2.Source is
 
    function Other_Part (Self : Object) return Object
      with Pre => Self.Is_Defined and then Self.Has_Other_Part;
-   --  Returns the other part for the source Self
+   --  Returns the other part for the source Self/
+   --  The "other part" is the body for a spec, or the spec for a body, or
+   --  the unit containing the stub for a (separate) subunit.
 
    procedure Set_Other_Part (Self : Object; Other_Part : Object)
      with Pre => Self.Is_Defined and then Other_Part.Is_Defined;
-   --  Sets the other part for the source Self, and the other way around.
-   --  The other part is the body for a spec, or the spec for a body or
-   --  separate unit.
+   --  Sets the other part for the source Self, and the other way around
+   --  (see comment above for function Other_Part).
 
 private
 
