@@ -1015,9 +1015,13 @@ package body GPRinstall.Install is
                        and then Src.Compilation_Units.Element
                          (1).Kind /= S_Separate
                      then
-                        Copy_File
-                          (From => Atf.Object_Code,
-                           To   => Lib_Dir);
+                        for CU of CUs loop
+                           if Atf.Has_Object_Code (CU.Index) then
+                              Copy_File
+                                (From => Atf.Object_Code (CU.Index),
+                                 To   => Lib_Dir);
+                           end if;
+                        end loop;
                      end if;
 
                      --  Only install Ada .ali files (always name the .ali
@@ -1047,12 +1051,17 @@ package body GPRinstall.Install is
                               Proj := Source.View;
                            end if;
 
-                           Copy_File
-                             (From => Atf.Dependency,
-                              To   => (if Proj.Kind = K_Library
-                                       then ALI_Dir
-                                       else Lib_Dir),
-                              File => Ssrc.Artifacts.Dependency.Simple_Name);
+                           for CU of CUs loop
+                              if Atf.Has_Dependency (CU.Index) then
+                                 Copy_File
+                                   (From => Atf.Dependency (CU.Index),
+                                    To   => (if Proj.Kind = K_Library
+                                             then ALI_Dir
+                                             else Lib_Dir),
+                                    File => Ssrc.Artifacts.
+                                      Dependency (CU.Index).Simple_Name);
+                              end if;
+                           end loop;
                         end;
                      end if;
                   end if;

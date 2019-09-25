@@ -66,9 +66,14 @@ begin
                Text_IO.Put_Line ("}");
             end if;
 
-            if S.Artifacts.Has_Dependency (CU.Index) then
+            if S.Artifacts.Has_Object_Code (CU.Index) then
                Text_IO.Put_Line
                  ("    object file  = "
+                  & String (S.Artifacts.Object_Code (CU.Index).Simple_Name));
+            end if;
+            if S.Artifacts.Has_Dependency (CU.Index) then
+               Text_IO.Put_Line
+                 ("    deps file    = "
                   & String (S.Artifacts.Dependency (CU.Index).Simple_Name));
             end if;
          end loop;
