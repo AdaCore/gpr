@@ -290,6 +290,8 @@ package GPR2.Project.View is
    --  Returns true if the project view has some sources
 
    type Source_Kind is (K_All, K_Interface_Only, K_Not_Interface);
+   --  K_Interface_Only will only return single unit sources. That is, a
+   --  source with multiple units is not counted as an interface.
 
    function Sources
      (Self        : Object;
