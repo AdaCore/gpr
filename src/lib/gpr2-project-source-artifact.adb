@@ -118,17 +118,42 @@ package body GPR2.Project.Source.Artifact is
                declare
                   Index_Suffix : constant Name_Type := At_Suffix (CU.Index);
                begin
-                  Object_Files.Insert
-                    (CU.Index,
-                     Path_Name.Create_File
-                       (Src & Index_Suffix & O_Suffix,
-                        Optional_Name_Type (O_View.Object_Directory.Value)));
+                  if Source.Aggregated then
+                     Dependency_Files.Insert
+                       (1,
+                        Path_Name.Create_File
+                          (Src & Index_Suffix & D_Suffix,
+                           Optional_Name_Type
+                             (Source.Aggregating_View.
+                                  Library_Ali_Directory.Value)));
 
-                  Dependency_Files.Insert
-                    (CU.Index,
-                     Path_Name.Create_File
-                       (Src & Index_Suffix & D_Suffix,
-                        Optional_Name_Type (O_View.Object_Directory.Value)));
+                  else
+                     Object_Files.Insert
+                       (CU.Index,
+                        Path_Name.Create_File
+                          (Src & Index_Suffix & O_Suffix,
+                           Optional_Name_Type
+                             (O_View.Object_Directory.Value)));
+
+                     Idx := CU.Index;
+
+                     if S_View.Is_Library and then Lang = "Ada" then
+                        Dependency_Files.Insert
+                          (Idx,
+                           Path_Name.Create_File
+                             (Src & Index_Suffix & D_Suffix,
+                              Optional_Name_Type
+                                (O_View.Library_Ali_Directory.Value)));
+                        Idx := Idx + 1;
+                     end if;
+
+                     Dependency_Files.Insert
+                       (Idx,
+                        Path_Name.Create_File
+                          (Src & Index_Suffix & D_Suffix,
+                           Optional_Name_Type
+                             (O_View.Object_Directory.Value)));
+                  end if;
                end;
             end if;
          end loop;
