@@ -1506,31 +1506,51 @@ package body GPRinstall.Install is
 
                   Line := +"         for Library_Interface use (";
 
-                  declare
-                     use all type GPR2.Project.View.Source_Kind;
+                  if Project.Attributes.Contains (A.Library_Interface) then
+                     Attr := Project.Attribute (A.Library_Interface);
 
-                     First : Boolean := True;
+                     declare
+                        First : Boolean := True;
+                     begin
+                        for V of Attr.Values loop
+                           if not First then
+                              Append (Line, ", ");
+                           end if;
 
-                  begin
-                     for Source
-                       of Project.Sources (Filter => K_Interface_Only)
-                     loop
-                        if Source.Source.Has_Units then
-                           for CU of Source.Source.Compilation_Units loop
-                              if CU.Kind = S_Spec then
-                                 if not First then
-                                    Append (Line, ", ");
+                           Append (Line, """");
+                           Append (Line, String (V.Text));
+                           Append (Line, """");
+                           First := False;
+                        end loop;
+                     end;
+
+                  else
+                     declare
+                        use all type GPR2.Project.View.Source_Kind;
+
+                        First : Boolean := True;
+
+                     begin
+                        for Source
+                          of Project.Sources (Filter => K_Interface_Only)
+                        loop
+                           if Source.Source.Has_Units then
+                              for CU of Source.Source.Compilation_Units loop
+                                 if CU.Kind = S_Body then
+                                    if not First then
+                                       Append (Line, ", ");
+                                    end if;
+
+                                    Append (Line, """");
+                                    Append (Line, String (CU.Unit_Name));
+                                    Append (Line, """");
+                                    First := False;
                                  end if;
-
-                                 Append (Line, """");
-                                 Append (Line, String (CU.Unit_Name));
-                                 Append (Line, """");
-                                 First := False;
-                              end if;
-                           end loop;
-                        end if;
-                     end loop;
-                  end;
+                              end loop;
+                           end if;
+                        end loop;
+                     end;
+                  end if;
 
                   Append (Line, ");");
                   V.Append (-Line);
