@@ -1506,12 +1506,13 @@ package body GPRinstall.Install is
 
                   Line := +"         for Library_Interface use (";
 
-                  if Project.Attributes.Contains (A.Library_Interface) then
-                     Attr := Project.Attribute (A.Library_Interface);
+                  declare
+                     use all type GPR2.Project.View.Source_Kind;
+                     First : Boolean := True;
+                  begin
+                     if Project.Attributes.Contains (A.Library_Interface) then
+                        Attr := Project.Attribute (A.Library_Interface);
 
-                     declare
-                        First : Boolean := True;
-                     begin
                         for V of Attr.Values loop
                            if not First then
                               Append (Line, ", ");
@@ -1522,15 +1523,8 @@ package body GPRinstall.Install is
                            Append (Line, """");
                            First := False;
                         end loop;
-                     end;
 
-                  else
-                     declare
-                        use all type GPR2.Project.View.Source_Kind;
-
-                        First : Boolean := True;
-
-                     begin
+                     else
                         for Source
                           of Project.Sources (Filter => K_Interface_Only)
                         loop
@@ -1549,8 +1543,8 @@ package body GPRinstall.Install is
                               end loop;
                            end if;
                         end loop;
-                     end;
-                  end if;
+                     end if;
+                  end;
 
                   Append (Line, ");");
                   V.Append (-Line);
