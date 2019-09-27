@@ -37,7 +37,7 @@ procedure Search_Directory
    Compiler_Path    : GPR2.Path_Name.Object;
    Compiler_Args    : GNAT.OS_Lib.Argument_List_Access;
    Lang_Sources_Map : in out Language_Sources_Map.Map;
-   Source_Basenames : in out String_Set.Set)
+   Source_Names     : in out String_Set.Set)
 is
 
    use GPRname.Unit;
@@ -135,7 +135,7 @@ begin
             --  either the "ignore duplicate files" option is set and we skip
             --  the file, or we carry on and just emit a warning.
 
-            if Source_Basenames.Contains (String (File.Simple_Name)) then
+            if Source_Names.Contains (String (File.Simple_Name)) then
                if Opt.Ignore_Duplicate_Files then
                   exit Patt_Loop;
 
@@ -145,8 +145,7 @@ begin
                   --  appear after all the directory processing.
 
                   Text_IO.Put_Line
-                    ("warning: duplicate basename "
-                     & String (File.Simple_Name));
+                    ("warning: duplicate file " & String (File.Simple_Name));
                end if;
             end if;
 
@@ -196,7 +195,7 @@ begin
                   if Match (String (File.Simple_Name), Regexp) then
                      Matched := Match;
                      Put_Line ("      -> match", Low);
-                     Source_Basenames.Include (String (File.Simple_Name));
+                     Source_Names.Include (String (File.Simple_Name));
                   end if;
                end if;
 
@@ -354,7 +353,7 @@ begin
             Compiler_Path,
             Compiler_Args,
             Lang_Sources_Map,
-            Source_Basenames);
+            Source_Names);
       end if;
    end loop;
 

@@ -125,7 +125,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
       Put_Line ("  -P[ ]<proj>     Update or create project file <proj>");
       New_Line;
 
-      Put_Line ("  --ignore-duplicate-files    Ignore duplicate basenames");
+      Put_Line ("  --ignore-duplicate-files    Ignore duplicate file names");
       Put_Line ("  --ignore-predefined-units   Ignore predefined units");
       New_Line;
 

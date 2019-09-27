@@ -96,7 +96,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Compiler_Path    : GPR2.Path_Name.Object;
       Compiler_Args    : OS_Lib.Argument_List_Access;
       Lang_Sources_Map : in out Language_Sources_Map.Map;
-      Source_Basenames : in out String_Set.Set);
+      Source_Names     : in out String_Set.Set);
    --  Process stage that searches a directory (recursively or not) for sources
    --  matching the patterns in section Sect.
 
@@ -163,7 +163,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Compiler_Path    : GPR2.Path_Name.Object;
       Compiler_Args    : OS_Lib.Argument_List_Access;
       Lang_Sources_Map : in out Language_Sources_Map.Map;
-      Source_Basenames : in out String_Set.Set)
+      Source_Names     : in out String_Set.Set)
    is separate;
 
    Tree    : GPR2.Project.Tree.Object;
@@ -190,7 +190,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
 
    Lang_Sources_Map  : Language_Sources_Map.Map;
    Lang_With_Sources : Language_Vector.Vector;
-   Source_Basenames  : String_Set.Set;
+   Source_Names      : String_Set.Set;
 
    --  Strings used in the GPR node templates for project rewriting
 
@@ -435,7 +435,7 @@ begin
                               Compiler_Path,
                               Compiler_Args,
                               Lang_Sources_Map,
-                              Source_Basenames);
+                              Source_Names);
             Append (Dir_List, Quote (D.Orig) & ',');
          end loop;
       end loop;
