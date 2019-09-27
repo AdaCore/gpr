@@ -65,7 +65,7 @@ package GPR2.Compilation.Process is
    function Get_Maximum_Processes
      (Options : GPRtools.Options.Object) return Positive;
    --  The maximum number of simultaneous compilation supported. This is the
-   --  sum of the local parallelism and the sum of of remote slaves supported
+   --  sum of the local parallelism and the sum of remote slaves supported
    --  processes.
 
    --  For the hash table of jobs
