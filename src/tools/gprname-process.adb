@@ -89,14 +89,11 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Source.Set."=");
 
    procedure Search_Directory
-     (Dir_Path         : Path_Name.Object;
-      Sect             : Section.Object;
-      Processed_Dirs   : in out Path_Name_Set.Set;
-      Recursively      : Boolean;
-      Compiler_Path    : GPR2.Path_Name.Object;
-      Compiler_Args    : OS_Lib.Argument_List_Access;
-      Lang_Sources_Map : in out Language_Sources_Map.Map;
-      Source_Names     : in out String_Set.Set);
+     (Dir_Path       : Path_Name.Object;
+      Sect           : Section.Object;
+      Processed_Dirs : in out Path_Name_Set.Set;
+      Recursively    : Boolean;
+      Compiler_Args  : OS_Lib.Argument_List_Access);
    --  Process stage that searches a directory (recursively or not) for sources
    --  matching the patterns in section Sect.
 
@@ -151,21 +148,6 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       end if;
    end Show_Tree_Load_Errors;
 
-   ---------------------------------------
-   -- GPRname.Process.Process_Directory --
-   ---------------------------------------
-
-   procedure Search_Directory
-     (Dir_Path         : Path_Name.Object;
-      Sect             : Section.Object;
-      Processed_Dirs   : in out Path_Name_Set.Set;
-      Recursively      : Boolean;
-      Compiler_Path    : GPR2.Path_Name.Object;
-      Compiler_Args    : OS_Lib.Argument_List_Access;
-      Lang_Sources_Map : in out Language_Sources_Map.Map;
-      Source_Names     : in out String_Set.Set)
-   is separate;
-
    Tree    : GPR2.Project.Tree.Object;
    Context : GPR2.Context.Object;
 
@@ -201,6 +183,18 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
      (if X < 0 then Integer'Image (X)
       else Integer'Image (X) (2 .. Integer'Image (X)'Length));
    --  Integer image, removing the leading whitespace for positive integers
+
+   ----------------------
+   -- Search_Directory --
+   ----------------------
+
+   procedure Search_Directory
+     (Dir_Path       : Path_Name.Object;
+      Sect           : Section.Object;
+      Processed_Dirs : in out Path_Name_Set.Set;
+      Recursively    : Boolean;
+      Compiler_Args  : OS_Lib.Argument_List_Access)
+   is separate;
 
 begin
    --  Properly set the naming project's name (use mixed case)
@@ -428,14 +422,12 @@ begin
          --  Process directories in the section
 
          for D of Section.Directories loop
-            Search_Directory (D.Value,
-                              Section,
-                              Processed_Dirs,
-                              D.Is_Recursive,
-                              Compiler_Path,
-                              Compiler_Args,
-                              Lang_Sources_Map,
-                              Source_Names);
+            Search_Directory
+              (D.Value,
+               Section,
+               Processed_Dirs,
+               D.Is_Recursive,
+               Compiler_Args);
             Append (Dir_List, Quote (D.Orig) & ',');
          end loop;
       end loop;

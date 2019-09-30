@@ -30,14 +30,11 @@ with GPRname.Unit;
 
 separate (GPRname.Process)
 procedure Search_Directory
-  (Dir_Path         : Path_Name.Object;
-   Sect             : Section.Object;
-   Processed_Dirs   : in out Path_Name_Set.Set;
-   Recursively      : Boolean;
-   Compiler_Path    : GPR2.Path_Name.Object;
-   Compiler_Args    : GNAT.OS_Lib.Argument_List_Access;
-   Lang_Sources_Map : in out Language_Sources_Map.Map;
-   Source_Names     : in out String_Set.Set)
+  (Dir_Path       : Path_Name.Object;
+   Sect           : Section.Object;
+   Processed_Dirs : in out Path_Name_Set.Set;
+   Recursively    : Boolean;
+   Compiler_Args  : GNAT.OS_Lib.Argument_List_Access)
 is
 
    use GPRname.Unit;
@@ -342,18 +339,14 @@ begin
 
       elsif Recursively
         and then GNAT.OS_Lib.Is_Directory (File.Value)
-        and then Str (1 .. Last) /= "."
-        and then Str (1 .. Last) /= ".."
+        and then Str (1 .. Last) not in "." | ".."
       then
          Search_Directory
            (Path_Name.Create_Directory (Name_Type (File.Value)),
             Sect,
             Processed_Dirs,
             True,
-            Compiler_Path,
-            Compiler_Args,
-            Lang_Sources_Map,
-            Source_Names);
+            Compiler_Args);
       end if;
    end loop;
 
