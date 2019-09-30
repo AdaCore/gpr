@@ -172,7 +172,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
 
    Lang_Sources_Map  : Language_Sources_Map.Map;
    Lang_With_Sources : Language_Vector.Vector;
-   Source_Names      : String_Set.Set;
+   Source_Names      : Source.Set.Object;
 
    --  Strings used in the GPR node templates for project rewriting
 

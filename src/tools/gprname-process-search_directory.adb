@@ -26,7 +26,7 @@ with GNAT.Regpat;
 
 with GNATCOLL.Strings;
 
-with GPRname.Unit;
+with GPRname.Unit.Vector;
 
 separate (GPRname.Process)
 procedure Search_Directory
@@ -54,7 +54,88 @@ is
    is
       Is_New_Key : Boolean;
       Position   : Language_Sources_Map.Cursor;
+      Src_Idx    : Source.Object :=
+                     Source.Create
+                       (Path_Name.Create
+                          (Src.File.Simple_Name, Src.File.Simple_Name),
+                        Src.Language,
+                        Src.Unit_Based);
+      --  Use source based only on simple name to index in Source_Names
+      Src_Pos    : constant Source.Set.Cursor := Source_Names.Find (Src_Idx);
    begin
+      if Source.Set.Set.Has_Element (Src_Pos) then
+         if Opt.Ignore_Duplicate_Files then
+            return;
+
+         else
+            declare
+               use type Unit.Vector.Object;
+               use type Ada.Containers.Count_Type;
+
+               function Less_Unit (Left, Right : Unit.Object) return Boolean is
+                 (Left.Name < Right.Name);
+               package Sort_Units is new Unit.Vector.Vector.Generic_Sorting
+                 ("<" => Less_Unit);
+               Units1 : Unit.Vector.Object;
+               Units2 : Unit.Vector.Object;
+               Prefix : constant String := "warning: duplicate file "
+                          & String (Src.File.Simple_Name);
+
+               function Image
+                 (List : Unit.Vector.Object;
+                  From : Positive := 1) return String
+               is
+                 ((if From > 1 then ", "
+                   elsif List.Length > 1 then "(" else "")
+                  & (if not List.Is_Empty then String (List (From).Name)
+                     else "")
+                  & (if From < List.Last_Index
+                     then Image (List, From + 1)
+                     elsif List.Length > 1 then ")" else ""));
+            begin
+               if Source_Names (Src_Pos).Unit_Based then
+                  Units1 := Source_Names (Src_Pos).Units;
+                  Sort_Units.Sort (Units1);
+               end if;
+
+               if Src.Unit_Based then
+                  Units2 := Src.Units;
+                  Sort_Units.Sort (Units2);
+               end if;
+
+               --  ??? We should use a proper logging system.
+               --  This warning is not part of the verbose output and should
+               --  appear after all the directory processing.
+
+               if Units1 /= Units2 then
+                  Text_IO.Put_Line
+                    (Prefix & " for units " & Image (Units2) & " and "
+                     & Image (Units1));
+                  Text_IO.Put_Line
+                    ("warning: generated Naming package needs to be reviewed"
+                     & " manually");
+
+               elsif Units1.Is_Empty then
+                  Text_IO.Put_Line (Prefix);
+
+               else
+                  Text_IO.Put_Line
+                    (Prefix & " for unit"
+                     & (if Units1.Length > 1 then "s" else "") & ' '
+                     & Image (Units1) & " will be ignored");
+               end if;
+            end;
+         end if;
+
+      else
+         if Src.Unit_Based then
+            for U of Src.Units loop
+               Src_Idx.Append_Unit (U);
+            end loop;
+         end if;
+         Source_Names.Insert (Src_Idx);
+      end if;
+
       Map.Insert (Src.Language, Source.Set.Empty_Set, Position, Is_New_Key);
       Map (Position).Insert (Src);
    end Update_Lang_Sources_Map;
@@ -132,20 +213,6 @@ begin
             --  either the "ignore duplicate files" option is set and we skip
             --  the file, or we carry on and just emit a warning.
 
-            if Source_Names.Contains (String (File.Simple_Name)) then
-               if Opt.Ignore_Duplicate_Files then
-                  exit Patt_Loop;
-
-               else
-                  --  ??? We should use a proper logging system.
-                  --  This warning is not part of the verbose output and should
-                  --  appear after all the directory processing.
-
-                  Text_IO.Put_Line
-                    ("warning: duplicate file " & String (File.Simple_Name));
-               end if;
-            end if;
-
             Matched := Match;
 
             declare
@@ -192,7 +259,6 @@ begin
                   if Match (String (File.Simple_Name), Regexp) then
                      Matched := Match;
                      Put_Line ("      -> match", Low);
-                     Source_Names.Include (String (File.Simple_Name));
                   end if;
                end if;
 
