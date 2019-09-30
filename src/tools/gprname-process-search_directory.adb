@@ -74,12 +74,9 @@ is
 
                function Less_Unit (Left, Right : Unit.Object) return Boolean is
                  (Left.Name < Right.Name);
+
                package Sort_Units is new Unit.Vector.Vector.Generic_Sorting
                  ("<" => Less_Unit);
-               Units1 : Unit.Vector.Object;
-               Units2 : Unit.Vector.Object;
-               Prefix : constant String := "warning: duplicate file "
-                          & String (Src.File.Simple_Name);
 
                function Image
                  (List : Unit.Vector.Object;
@@ -92,6 +89,12 @@ is
                   & (if From < List.Last_Index
                      then Image (List, From + 1)
                      elsif List.Length > 1 then ")" else ""));
+
+               Units1 : Unit.Vector.Object;
+               Units2 : Unit.Vector.Object;
+               Prefix : constant String :=
+                          "warning: duplicate file "
+                          & String (Src.File.Simple_Name);
             begin
                if Source_Names (Src_Pos).Unit_Based then
                   Units1 := Source_Names (Src_Pos).Units;
