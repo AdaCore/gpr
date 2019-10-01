@@ -171,7 +171,7 @@ package body GPRtools.Util is
    begin
       Output_Messages (Tree.Log_Messages.all, Options);
       Fail_Program
-        ('"' & String (Tree.Root_Project.Path_Name.Simple_Name)
+        ('"' & String (Options.Project_File.Simple_Name)
          & """ processing failed");
    end Project_Processing_Failed;
 
