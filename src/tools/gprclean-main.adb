@@ -317,7 +317,7 @@ procedure GPRclean.Main is
                  (String (S.Source.Path_Name.Simple_Name))
             then
                In_Mains := True;
-               Opts.Mains.Delete (String (S.Source.Path_Name.Simple_Name));
+               Opts.Args.Delete (String (S.Source.Path_Name.Simple_Name));
             end if;
 
             if Is_Main or else In_Mains then
@@ -578,7 +578,7 @@ begin
         (Options.Config_File, Name_Type (To_String (Options.Target)));
 
       Project_Tree.Load
-        (Options.Project_Path, Options.Context, Config, Options.Build_Path,
+        (Options.Project_File, Options.Context, Config, Options.Build_Path,
          Subdirs          => To_Optional_Name (Options.Subdirs),
          Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
@@ -587,7 +587,7 @@ begin
 
    else
       Project_Tree.Load_Autoconf
-        (Options.Project_Path, Options.Context, Options.Build_Path,
+        (Options.Project_File, Options.Context, Options.Build_Path,
          Subdirs          => To_Optional_Name (Options.Subdirs),
          Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
          Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
@@ -605,7 +605,7 @@ begin
               (GPR2.Message.Warning,
                "Cleaning may be incomplete, as there were problems during"
                & " auto-configuration",
-               Source_Reference.Create (Options.Project_Path.Value, 0, 0),
+               Source_Reference.Create (Options.Project_File.Value, 0, 0),
                Raw => True));
       end if;
    end if;
@@ -616,7 +616,7 @@ begin
            (GPR2.Message.Error,
             "main cannot be a source of a library project: """
             & Options.Mains.First_Element & '"',
-            Source_Reference.Create (Options.Project_Path.Value, 0, 0)));
+            Source_Reference.Create (Options.Project_File.Value, 0, 0)));
 
       Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
 

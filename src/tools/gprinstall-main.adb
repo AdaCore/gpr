@@ -18,7 +18,6 @@
 
 with Ada.Characters.Handling;
 with Ada.Command_Line;
-with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
@@ -96,9 +95,6 @@ procedure GPRinstall.Main is
       procedure Add_Scenario_Variable (Swicth, Value : String);
       --  Add a scenario variable (-X option)
 
-      procedure Set_Project (Switch, Value : String);
-      --  Set the project file
-
       ---------------------------
       -- Add_Scenario_Variable --
       ---------------------------
@@ -156,33 +152,10 @@ procedure GPRinstall.Main is
          P := (new String'(Value), False);
       end Set_Param;
 
-      -----------------
-      -- Set_Project --
-      -----------------
-
-      procedure Set_Project (Switch, Value : String) is
-         pragma Unreferenced (Switch);
-      begin
-         Options.Project_File := Path_Name.Create_File
-           (Name_Type
-              (Value
-               & (if Directories.Extension (Value) = ""
-                 then ".gpr"
-                 else "")),
-            Optional_Name_Type (Directories.Current_Directory));
-      end Set_Project;
-
-      Argument_Count : Natural := 0;
-
    begin
       --  Call parent/generic command line setup
 
       GPRtools.Options.Setup (Options, GPRtools.Install);
-
-      Define_Switch
-        (Options.Config, Set_Project'Unrestricted_Access,
-         "-P:",
-         Help => "Project file to install");
 
       Define_Switch
         (Options.Config, Options.Config_Project'Access,
@@ -427,28 +400,28 @@ procedure GPRinstall.Main is
 
       --  Now read arguments
 
-      Read_Arguments : loop
-         declare
-            Arg : constant String := Get_Argument;
-         begin
-            exit Read_Arguments when Arg = "";
+      Options.Read_Remaining_Arguments (GPRtools.Install);
 
-            if not Options.Project_File.Is_Defined then
-               Options.Project_File := Path_Name.Create_File
-                 (Name_Type (Arg),
-                  Optional_Name_Type (Directories.Current_Directory));
+      if Options.Uninstall_Mode then
+         if Options.Project_File.Is_Defined then
+            Options.Args.Include
+              (String (Options.Project_File.Name (Extension => False)));
+         end if;
 
-               Argument_Count := Argument_Count + 1;
+         case Options.Args.Length is
+            when 0 =>
+               raise Usage_Error with "A project file or an install name is"
+                 & " required with --uninstall";
+            when 1 =>
+               null;
+            when others =>
+               raise Usage_Error with "Can have only one uninstall name";
+         end case;
 
-            elsif Argument_Count = 0 then
-               raise Usage_Error with
-                 "cannot have -P<proj> and <proj> on the same command line";
-            else
-               raise Usage_Error with
-                 "cannot have multiple <proj> on the same command line";
-            end if;
-         end;
-      end loop Read_Arguments;
+      elsif not Options.Args.Is_Empty then
+         raise Usage_Error with
+           "Parameter " & Options.Args.First_Element & " unrecognized";
+      end if;
 
       --  check -a & -m
       --  check -v & -q
@@ -507,6 +480,7 @@ procedure GPRinstall.Main is
 
       if not Options.Project_File.Is_Defined
         and then not Options.List_Mode
+        and then not Options.Uninstall_Mode
       then
          raise Usage_Error with "no project file specified";
       end if;
@@ -561,9 +535,7 @@ begin
 
       if Options.Uninstall_Mode then
          if Options.Global_Install_Name.Default then
-            Uninstall.Process
-              (String (Options.Project_File.Name (Extension => False)),
-               Options);
+            Uninstall.Process (Options.Args.First_Element, Options);
          else
             Uninstall.Process (Options.Global_Install_Name.V.all, Options);
          end if;

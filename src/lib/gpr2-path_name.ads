@@ -142,6 +142,10 @@ package GPR2.Path_Name is
           Post => Containing_Directory'Result.Is_Defined;
    --  Returns the containing directory of the directory information of Self
 
+   function To_OS_Case (Name : String) return String with Inline;
+   --  If filenames is case insensitive converts path name to lowercase,
+   --  returns the same value othervise.
+
 private
 
    use Ada.Strings.Unbounded;

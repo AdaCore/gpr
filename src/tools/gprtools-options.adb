@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Task_Attributes;
-with Ada.Characters.Handling;
 
 with GPR2.Compilation.Registry;
 with GPR2.Project.Registry.Pack;
@@ -97,12 +96,9 @@ package body GPRtools.Options is
    -- Read_Remaining_Arguments --
    ------------------------------
 
-   procedure Read_Remaining_Arguments
-     (Project : in out GPR2.Path_Name.Object;
-      Mains   :    out GPR2.Containers.Value_Set)
-   is
+   procedure Read_Remaining_Arguments (Self : in out Object; Tool : Which) is
       use GNATCOLL;
-      use GPR2.Path_Name;
+      Got_Prj : Boolean := False;
    begin
       Read_Arguments : loop
          declare
@@ -110,22 +106,22 @@ package body GPRtools.Options is
          begin
             exit Read_Arguments when Arg = "";
 
-            if Utils.Ends_With
-              ((if GPR2.File_Names_Case_Sensitive
-                then Arg
-                else Ada.Characters.Handling.To_Lower (Arg)),
-               ".gpr")
-            then
-               if Project = Undefined then
-                  Project := Create_File (GPR2.Name_Type (Arg));
+            if Utils.Ends_With (GPR2.Path_Name.To_OS_Case (Arg), ".gpr") then
+               if not Self.Project_File.Is_Defined then
+                  Value_Callback ("-P", Arg);
+                  Got_Prj := True;
+
+               elsif not Got_Prj then
+                  raise Usage_Error with
+                    "cannot have -P<proj> and <proj> on the same command line";
 
                else
-                  raise GNAT.Command_Line.Invalid_Switch with
-                    '"' & Arg & """, project already """ & Project.Value & '"';
+                  raise Usage_Error with
+                    "cannot have multiple <proj> on the same command line";
                end if;
 
             else
-               Mains.Include (Arg);
+               Self.Args.Include (Arg);
             end if;
          end;
       end loop Read_Arguments;
@@ -218,6 +214,15 @@ package body GPRtools.Options is
 
       if Tool in Build | Clean | Install then
          Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access, "-P:",
+            Help => "Project file to "
+            & (case Tool is
+                 when Build   => "build",
+                 when Install => "install",
+                 when Clean   => "cleanup",
+                 when others => ""));
+
+         Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,
             Long_Switch => "--target=",
             Help        => "Specify a target for cross platforms",
@@ -266,7 +271,17 @@ package body GPRtools.Options is
       --  --config=file.cgrp
 
    begin
-      if Switch = "--relocate-build-tree" then
+      if Switch = "-P" then
+         if not Self.Project_File.Is_Defined then
+            Self.Project_File :=
+              GPR2.Project.Create (GPR2.Optional_Name_Type (Normalize_Value));
+         else
+            raise GPRtools.Usage_Error with
+              '"' & Normalize_Value & """, project already """
+              & Self.Project_File.Value & '"';
+         end if;
+
+      elsif Switch = "--relocate-build-tree" then
          Self.Build_Path :=
            GPR2.Path_Name.Create_Directory
              (GPR2.Name_Type (Normalize_Value (".")));

@@ -60,7 +60,7 @@ package body GPRclean.Options is
       Add (Self.Remove_Empty_Dirs,           Next.Remove_Empty_Dirs);
       Add (Self.Unchecked_Shared_Lib_Import, Next.Unchecked_Shared_Lib_Import);
 
-      Self.Mains.Union (Next.Mains);
+      Self.Args.Union (Next.Mains);
       Self.Arg_Mains := not Self.Mains.Is_Empty;
    end Append;
 
@@ -83,25 +83,6 @@ package body GPRclean.Options is
       procedure Value_Callback (Switch, Value : String);
       --  Accept string swithces
 
-      procedure Set_Project (Path : String);
-      --  Set project pathname, raise exception if already done
-
-      -----------------
-      -- Set_Project --
-      -----------------
-
-      procedure Set_Project (Path : String) is
-      begin
-         if not Options.Project_Path.Is_Defined then
-            Options.Project_Path := Project.Create (Optional_Name_Type (Path));
-
-         else
-            raise GPRtools.Usage_Error with
-              '"' & Path & """, project already """
-              & Options.Project_Path.Value & '"';
-         end if;
-      end Set_Project;
-
       --------------------
       -- Value_Callback --
       --------------------
@@ -117,10 +98,7 @@ package body GPRclean.Options is
          Idx : Natural := 0;
 
       begin
-         if Switch = "-P" then
-            Set_Project (Value);
-
-         elsif Switch = "-X" then
+         if Switch = "-X" then
             Idx := Ada.Strings.Fixed.Index (Value, "=");
 
             if Idx = 0 then
@@ -161,10 +139,6 @@ package body GPRclean.Options is
    begin
       GPRtools.Options.Setup
         (GPRtools.Options.Object (Options), GPRtools.Clean);
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access, "-P:",
-         Help => "Project file");
 
       Define_Switch
         (Config, Options.No_Project'Access,
@@ -251,22 +225,21 @@ package body GPRclean.Options is
 
       --  Now read arguments
 
-      GPRtools.Options.Read_Remaining_Arguments
-        (Options.Project_Path, Options.Mains);
+      Options.Read_Remaining_Arguments (GPRtools.Clean);
 
       Options.Arg_Mains := not Options.Mains.Is_Empty;
 
-      if not Options.Project_Path.Is_Defined then
-         Options.Project_Path :=
+      if not Options.Project_File.Is_Defined then
+         Options.Project_File :=
            GPRtools.Util.Look_For_Default_Project
              (Quiet         => Options.Quiet,
               Implicit_Only => Options.No_Project);
 
-         Options.Implicit_Proj := Options.Project_Path.Is_Defined
-           and then Options.Project_Path.Dir_Name
+         Options.Implicit_Proj := Options.Project_File.Is_Defined
+           and then Options.Project_File.Dir_Name
              /= Ada.Directories.Current_Directory;
 
-         if not Options.Project_Path.Is_Defined then
+         if not Options.Project_File.Is_Defined then
             Display_Help (Config);
             raise GPRtools.Usage_Error with
               "Can't determine project file to work with";
@@ -281,7 +254,7 @@ package body GPRclean.Options is
         (if Options.Implicit_Proj
          then Path_Name.Create_Directory
                 (Name_Type (Ada.Directories.Current_Directory))
-         else Options.Project_Path);
+         else Options.Project_File);
 
       if Options.Slave_Env = Null_Unbounded_String
         and then Options.Distributed_Mode

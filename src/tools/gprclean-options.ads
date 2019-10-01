@@ -42,10 +42,8 @@ package GPRclean.Options is
       Unchecked_Shared_Lib_Import : aliased Boolean := False;
       Remove_Empty_Dirs           : aliased Boolean := False;
 
-      Mains         : GPR2.Containers.Value_Set;
       Arg_Mains     : Boolean;
       Implicit_Proj : Boolean := False;
-      Project_Path  : Path_Name.Object;
       Context       : GPR2.Context.Object;
       Config_File   : Path_Name.Object;
       Remove_Config : Boolean := False;
@@ -58,9 +56,17 @@ package GPRclean.Options is
       Project_Tree : in out Project.Tree.Object;
       Parser       : Opt_Parser := Command_Line_Parser);
 
+   function Mains (Self : Object) return GPR2.Containers.Value_Set;
+   --  Return list of mains from command line
+
    overriding procedure Append (Self : in out Object; Next : Object);
    --  Append options values from Next to Self. Could be used to concatenate
    --  additional switches from Clean project package with command line taken
    --  switches.
+
+private
+
+   function Mains (Self : Object) return GPR2.Containers.Value_Set is
+      (Self.Args);
 
 end GPRclean.Options;

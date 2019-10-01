@@ -35,6 +35,15 @@ package GPRtools.Options is
       --  Set by switch -h: usage will be displayed after all command line
       --  switches have been scanned.
 
+      Project_File : GPR2.Path_Name.Object;
+      --  The project to be processed
+
+      Args : GPR2.Containers.Value_Set;
+      --  Another arguments from command line except project.
+      --  It is mains for gprclean and gprbuild.
+      --  It is install name for gprinstall --uninstall.
+      --  It could be object or dependency files for gprls.
+
       Full_Path_Name_For_Brief : aliased Boolean := False;
       Version                  : aliased Boolean := False;
       Warnings                 : aliased Boolean := True;
@@ -59,11 +68,14 @@ package GPRtools.Options is
       Tool : Which);
    --  Setup command line parsing options
 
-   procedure Read_Remaining_Arguments
-     (Project : in out GPR2.Path_Name.Object;
-      Mains   :    out GPR2.Containers.Value_Set);
-   --  Take project and main file names from command line parameters.
-   --  Should be used in gprclean and gprbuild.
+   procedure Read_Remaining_Arguments (Self : in out Object; Tool : Which);
+   --  This is called after processing all the switches, to read all remaining
+   --  parameters from the command line. This is intended for gprclean,
+   --  gprbuild and gprinstall.
+   --
+   --  Strings ending with a gpr file name extension are interpreted as a
+   --  project file name. All the other strings are recorded as arguments
+   --  (in Self.Args), which each specific tool processes on its own.
 
    procedure Clean_Build_Path
      (Self : in out Object; Project : GPR2.Path_Name.Object)

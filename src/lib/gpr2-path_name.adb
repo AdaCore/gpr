@@ -40,11 +40,14 @@ package body GPR2.Path_Name is
    function "+"
      (Str : String) return Unbounded_String renames To_Unbounded_String;
 
-   function To_OS_Case (Name : Unbounded_String) return Unbounded_String is
+   function To_OS_Case (Name : String) return String is
      (if File_Names_Case_Sensitive
       then Name
-      else +Characters.Handling.To_Lower (To_String (Name)));
-   --  If filernames is case insensitive converts path name to lowercase,
+      else Characters.Handling.To_Lower (Name));
+
+   function To_OS_Case (Name : Unbounded_String) return Unbounded_String is
+     (+To_OS_Case (To_String (Name)));
+   --  If filenames is case insensitive converts path name to lowercase,
    --  returns the same value othervise.
 
    function To_OS_Case (C : Character) return Character is
