@@ -63,6 +63,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Set_Print_Units (Switch, Value : String);
    procedure Set_Print_Object_Files (Switch, Value : String);
    procedure Set_Print_Sources (Switch, Value : String);
+   procedure Set_Target (Switch, Value : String);
 
    procedure Set_Selective_Output;
 
@@ -192,6 +193,16 @@ procedure Build_From_Command_Line (Self : in out Object) is
       end if;
    end Set_Selective_Output;
 
+   ----------------
+   -- Set_Target --
+   ----------------
+
+   procedure Set_Target (Switch, Value : String) is
+      pragma Unreferenced (Switch);
+   begin
+      Self.Target := To_Unbounded_String (Value);
+   end Set_Target;
+
    ---------------------
    -- Set_Low_Verbose --
    ---------------------
@@ -229,6 +240,12 @@ begin
       "-aP:",
       Help     => "Add directory <dir> to project search path",
       Argument => "<dir>");
+
+   Define_Switch
+     (Config, Set_Target'Unrestricted_Access,
+      Long_Switch => "--target=",
+      Help        => "Specify a target for cross platforms",
+      Argument    => "<name>");
 
    Define_Switch
      (Config, Tmp_RTS'Access,
