@@ -1485,24 +1485,32 @@ package body GPR2.Project.Definition is
                      Add (Attr);
                   end if;
 
-                  for Attr of Naming.Attributes (PRA.Spec_Suffix) loop
-                     Add (Attr);
+                  for A of Naming.Attributes (PRA.Spec_Suffix) loop
+                     Add (A);
                   end loop;
 
-                  for Attr of Naming.Attributes (PRA.Body_Suffix) loop
-                     Add (Attr);
+                  for A of Naming.Attributes (PRA.Body_Suffix) loop
+                     Add (A);
                   end loop;
 
-                  for Attr of Naming.Attributes (PRA.Separate_Suffix) loop
-                     Add (Attr);
+                  for A of Naming.Attributes (PRA.Separate_Suffix) loop
+                     Add (A);
                   end loop;
 
-                  for Attr of Naming.Attributes (PRA.Spec) loop
-                     Add (Attr);
+                  for A of Naming.Attributes (PRA.Spec) loop
+                     Add (A);
                   end loop;
 
-                  for Attr of Naming.Attributes (PRA.Body_N) loop
-                     Add (Attr);
+                  for A of Naming.Attributes (PRA.Specification) loop
+                     Add (A);
+                  end loop;
+
+                  for A of Naming.Attributes (PRA.Body_N) loop
+                     Add (A);
+                  end loop;
+
+                  for A of Naming.Attributes (PRA.Implementation) loop
+                     Add (A);
                   end loop;
                end Handle_Naming;
             end if;
