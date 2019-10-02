@@ -2230,8 +2230,8 @@ package body GPRinstall.Install is
                   if not Project.Is_Static_Library
                     and then Project.Has_Library_Version
                     and then
-                      Project.Library_Filename
-                        /= Project.Library_Version_Filename
+                      Project.Library_Filename.Name
+                        /= Project.Library_Version_Filename.Name
                   then
                      Content.Append
                        ("   for Library_Version use """
