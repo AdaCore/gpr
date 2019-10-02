@@ -379,6 +379,9 @@ private
    function Is_Windows_Target (Tree : Object) return Boolean is
      (Tree.Has_Configuration
         and then
+      Tree.Configuration.Corresponding_View.Has_Attributes
+        (GPR2.Project.Registry.Attribute.Shared_Library_Suffix)
+        and then
       Tree.Configuration.Corresponding_View.Attribute
         (GPR2.Project.Registry.Attribute.Shared_Library_Suffix).Value_Equal
           (".dll"));
