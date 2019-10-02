@@ -324,7 +324,10 @@ package body GPR2.Project.Definition is
       procedure Fill_Ada_Naming_Exceptions (Set : Project.Attribute.Set.Object)
         with Pre =>
           (for all A of Set =>
-             A.Name.Text = PRA.Spec or else A.Name.Text = PRA.Body_N);
+             A.Name.Text = PRA.Spec
+             or else A.Name.Text = PRA.Body_N
+             or else A.Name.Text = PRA.Specification
+             or else A.Name.Text = PRA.Implementation);
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
       procedure Fill_Other_Naming_Exceptions
@@ -958,6 +961,7 @@ package body GPR2.Project.Definition is
                                          At_Num_Or (Exc.Value, 1);
                         begin
                            Kind := (if Exc.Name.Text = PRA.Spec
+                                      or else Exc.Name.Text = PRA.Specification
                                     then S_Spec
                                     else S_Body);
                            --  May actually be a Separate, we cannot know until
@@ -1031,10 +1035,15 @@ package body GPR2.Project.Definition is
                            --  In this case we skip this source.
 
                            if (Kind = S_Spec
-                               and then Has_Conflict_NE (PRA.Spec))
+                               and then
+                                 (Has_Conflict_NE (PRA.Spec)
+                                  or else Has_Conflict_NE (PRA.Specification)))
                              or else
                                (Kind = S_Body
-                                and then Has_Conflict_NE (PRA.Body_N))
+                                and then
+                                  (Has_Conflict_NE (PRA.Body_N)
+                                   or else Has_Conflict_NE
+                                     (PRA.Implementation)))
                            then
                               return;
                            end if;
@@ -1552,7 +1561,9 @@ package body GPR2.Project.Definition is
       --  Setup the naming exceptions look-up table if needed
 
       Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Spec));
+      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Specification));
       Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Body_N));
+      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Implementation));
 
       Fill_Other_Naming_Exceptions
         (Naming.Attributes (PRA.Specification_Exceptions));
