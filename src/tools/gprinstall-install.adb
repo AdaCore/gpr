@@ -1349,14 +1349,20 @@ package body GPRinstall.Install is
             -------------------
 
             procedure Create_Naming (Project : GPR2.Project.View.Object) is
+               Found : Boolean := False;
             begin
                Content.Append ("   package Naming is");
 
                for A of Project.Naming_Package.Attributes loop
                   if not A.Has_Index then
                      Content.Append ("      " & A.Image);
+                     Found := True;
                   end if;
                end loop;
+
+               if Found then
+                  Content.Append ("");
+               end if;
 
                Content.Append ("      case BUILD is");
 
