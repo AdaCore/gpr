@@ -1389,7 +1389,7 @@ package body GPRinstall.Install is
 
             if Project.Has_Types then
                for Typ of Project.Types loop
-                  Write_Str (Typ.Image);
+                  Write_Str ("   " & Typ.Image);
                   Write_Eol;
                end loop;
             end if;
@@ -1403,7 +1403,7 @@ package body GPRinstall.Install is
                --  Finally output variables
 
                for Var of Project.Variables loop
-                  Write_Str (Var.Image (Max_Len));
+                  Write_Str ("   " & Var.Image (Name_Len => Max_Len));
                   Write_Eol;
                end loop;
             end if;
