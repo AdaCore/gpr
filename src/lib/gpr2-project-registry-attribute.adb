@@ -1131,7 +1131,7 @@ begin
    --  naming.spec
    Store_Insert
      (Create (Spec, Pack.Naming),
-      Index                => Optional,
+      Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
       Value                => Single,
@@ -1144,7 +1144,7 @@ begin
    --  naming.specification
    Store_Insert
      (Create (Specification, Pack.Naming),
-      Index                => Optional,
+      Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
       Value                => Single,
@@ -1155,7 +1155,7 @@ begin
    --  naming.body
    Store_Insert
      (Create (Body_N, Pack.Naming),
-      Index                => Optional,
+      Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
       Value                => Single,
@@ -1168,7 +1168,7 @@ begin
    --  naming.implementation
    Store_Insert
      (Create (Implementation, Pack.Naming),
-      Index                => Optional,
+      Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,
       Value                => Single,
