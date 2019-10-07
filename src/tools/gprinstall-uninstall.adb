@@ -112,7 +112,7 @@ package body GPRinstall.Uninstall is
       subtype MD5_Range is Positive range Message_Digest'Range;
       subtype Name_Range is Positive range MD5_Range'Last + 2 .. Buffer'Last;
 
-      File_Digest     : Message_Digest;
+      File_Digest     : Message_Digest := (others => ASCII.NUL);
       Expected_Digest : Message_Digest;
       Removed         : Boolean;
       Prefix          : Path_Name.Object := Path_Name.Undefined;
