@@ -4,7 +4,7 @@ project P is
     for Main use ("main.adb");
 
     package Naming is
-       for Body ("Pkg1.Sep") use "sub.adb" at 1;
-       for Body ("Pkg2.Sep") use "sub.adb" at 2;
+       for Implementation ("Pkg1.Sep") use "sub.adb" at 1;
+       for Implementation ("Pkg2.Sep") use "sub.adb" at 2;
     end Naming;
 end P;

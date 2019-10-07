@@ -2,7 +2,7 @@ project P is
    for Source_Dirs use ("src");
    for Main use ("main.adb");
    package Naming is
-      for Spec ("U") use "u.adb" at 1;
+      for Specification ("U") use "u.adb" at 1;
       for Body ("U") use "u.adb" at 2;
       for Body ("U.V") use "sep.adb" at 1;
       for Body ("U.W") use "sep.adb" at 2;

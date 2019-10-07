@@ -321,13 +321,8 @@ package body GPR2.Project.Definition is
       --  the extended project that have been replaced in the extending one),
       --  or Error for aggregated projects (reject duplicate sources).
 
-      procedure Fill_Ada_Naming_Exceptions (Set : Project.Attribute.Set.Object)
-        with Pre =>
-          (for all A of Set =>
-             A.Name.Text = PRA.Spec
-             or else A.Name.Text = PRA.Body_N
-             or else A.Name.Text = PRA.Specification
-             or else A.Name.Text = PRA.Implementation);
+      procedure Fill_Ada_Naming_Exceptions (Attr : Name_Type)
+        with Pre => Attr in  PRA.Spec | PRA.Body_N;
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
       procedure Fill_Other_Naming_Exceptions
@@ -404,11 +399,12 @@ package body GPR2.Project.Definition is
       -- Fill_Ada_Naming_Exceptions --
       --------------------------------
 
-      procedure Fill_Ada_Naming_Exceptions
-        (Set : Project.Attribute.Set.Object) is
+      procedure Fill_Ada_Naming_Exceptions (Attr : Name_Type) is
       begin
-         for A of Set loop
+         for CA in Naming.Attributes.Iterate (Attr, With_Defaults => True) loop
             declare
+               A               : constant Attribute.Object :=
+                                   Attribute.Set.Element (CA);
                Source          : constant Value_Type := A.Value.Text;
                Attributes      : Attribute_List.List :=
                                    Attribute_List.Empty_List;
@@ -961,7 +957,6 @@ package body GPR2.Project.Definition is
                                          At_Num_Or (Exc.Value, 1);
                         begin
                            Kind := (if Exc.Name.Text = PRA.Spec
-                                      or else Exc.Name.Text = PRA.Specification
                                     then S_Spec
                                     else S_Body);
                            --  May actually be a Separate, we cannot know until
@@ -1015,11 +1010,13 @@ package body GPR2.Project.Definition is
                         function Has_Conflict_NE
                           (Attr_Name : Name_Type) return Boolean is
                         begin
-                           for A of Naming.Attributes
-                             (Attr_Name, Value_Type (Unit_Name))
+                           for CA in Naming.Attributes.Iterate
+                                       (Attr_Name, Value_Type (Unit_Name),
+                                        With_Defaults => True)
                            loop
-                              if
-                                not Naming_Exception_Equal (A, Basename, 1)
+                              if not Naming_Exception_Equal
+                                       (Attribute.Set.Element (CA),
+                                        Basename, 1)
                               then
                                  return True;
                               end if;
@@ -1035,15 +1032,10 @@ package body GPR2.Project.Definition is
                            --  In this case we skip this source.
 
                            if (Kind = S_Spec
-                               and then
-                                 (Has_Conflict_NE (PRA.Spec)
-                                  or else Has_Conflict_NE (PRA.Specification)))
+                               and then Has_Conflict_NE (PRA.Spec))
                              or else
                                (Kind = S_Body
-                                and then
-                                  (Has_Conflict_NE (PRA.Body_N)
-                                   or else Has_Conflict_NE
-                                     (PRA.Implementation)))
+                                and then Has_Conflict_NE (PRA.Body_N))
                            then
                               return;
                            end if;
@@ -1506,20 +1498,16 @@ package body GPR2.Project.Definition is
                      Add (A);
                   end loop;
 
-                  for A of Naming.Attributes (PRA.Spec) loop
-                     Add (A);
+                  for CA in Naming.Attributes.Iterate
+                              (PRA.Spec, With_Defaults => True)
+                  loop
+                     Add (Attribute.Set.Element (CA));
                   end loop;
 
-                  for A of Naming.Attributes (PRA.Specification) loop
-                     Add (A);
-                  end loop;
-
-                  for A of Naming.Attributes (PRA.Body_N) loop
-                     Add (A);
-                  end loop;
-
-                  for A of Naming.Attributes (PRA.Implementation) loop
-                     Add (A);
+                  for CA in Naming.Attributes.Iterate
+                              (PRA.Body_N, With_Defaults => True)
+                  loop
+                     Add (Attribute.Set.Element (CA));
                   end loop;
                end Handle_Naming;
             end if;
@@ -1560,10 +1548,8 @@ package body GPR2.Project.Definition is
 
       --  Setup the naming exceptions look-up table if needed
 
-      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Spec));
-      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Specification));
-      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Body_N));
-      Fill_Ada_Naming_Exceptions (Naming.Attributes (PRA.Implementation));
+      Fill_Ada_Naming_Exceptions (PRA.Spec);
+      Fill_Ada_Naming_Exceptions (PRA.Body_N);
 
       Fill_Other_Naming_Exceptions
         (Naming.Attributes (PRA.Specification_Exceptions));
