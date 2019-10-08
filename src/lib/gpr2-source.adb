@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Calendar.Conversions;
 with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Strings.Unbounded;
@@ -25,9 +26,19 @@ with GPR2.Containers;
 with GPR2.Source.Parser;
 with GPR2.Source.Registry;
 
+with Interfaces.C;
+
+pragma Warnings (Off, """System.OS_Constants"" is an internal GNAT unit");
+pragma Warnings (Off,
+                 "use of this unit is non-portable and version-dependent");
+with System.OS_Constants;
+
 package body GPR2.Source is
 
    use Ada.Strings.Unbounded;
+
+   ONE_SECOND : constant Duration
+     := Ada.Calendar.Conversions.To_Duration (tv_sec  => 1, tv_nsec => 0);
 
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self.Is_Defined;
@@ -36,6 +47,10 @@ package body GPR2.Source is
    procedure Update (Self : Object);
    --  Run the parser on the given source and register information in the
    --  registry.
+
+   function Get_ALI_Timestamp (Filename : String) return Calendar.Time;
+   --  return Timestamp used in ALI file. On windows use first greater time
+   --  with an even number of second.
 
    ---------
    -- "<" --
@@ -87,7 +102,7 @@ package body GPR2.Source is
            (Registry.Data'
               (Is_Ada_Source => False,
                Path_Name     => Filename,
-               Timestamp     => Directories.Modification_Time (Filename.Value),
+               Timestamp     => Get_ALI_Timestamp (Filename.Value),
                Language      => To_Unbounded_String (String (Language)),
                Other_Part    => GPR2.Path_Name.Undefined,
                Kind          => Kind,
@@ -125,7 +140,7 @@ package body GPR2.Source is
            (Registry.Data'
               (Is_Ada_Source => True,
                Path_Name     => Filename,
-               Timestamp     => Directories.Modification_Time (Filename.Value),
+               Timestamp     => Get_ALI_Timestamp (Filename.Value),
                Language      => To_Unbounded_String ("Ada"),
                Other_Part    => GPR2.Path_Name.Undefined,
                Parsed        => False,
@@ -138,6 +153,42 @@ package body GPR2.Source is
          Result.Pathname := Filename;
       end return;
    end Create_Ada;
+
+   -----------------------
+   -- Get_ALI_Timestamp --
+   -----------------------
+
+   function Get_ALI_Timestamp (Filename : String) return Calendar.Time is
+      Timestamp : Calendar.Time := Directories.Modification_Time (Filename);
+      use System.OS_Constants;
+   begin
+      if Target_OS = Windows then
+         declare
+            use Ada.Calendar;
+            use type Interfaces.C.int;
+
+            Year   : Interfaces.C.int;
+            Month  : Interfaces.C.int;
+            Day    : Interfaces.C.int;
+            Hour   : Interfaces.C.int;
+            Minute : Interfaces.C.int;
+            Second : Interfaces.C.int;
+         begin
+            Ada.Calendar.Conversions.To_Struct_Tm
+              (T       => Timestamp,
+               tm_year => Year,
+               tm_mon  => Month,
+               tm_day  => Day,
+               tm_hour => Hour,
+               tm_min  => Minute,
+               tm_sec  => Second);
+            if Second mod 2 > 0 then
+               Timestamp := Timestamp + ONE_SECOND;
+            end if;
+         end;
+      end if;
+      return Timestamp;
+   end Get_ALI_Timestamp;
 
    -----------------------------
    -- Has_Compilation_Unit_At --
@@ -310,7 +361,7 @@ package body GPR2.Source is
 
       declare
          New_TS      : constant Calendar.Time :=
-                         Directories.Modification_Time (Filename);
+           Get_ALI_Timestamp (Filename);
 
          Updated     : Boolean := False;
 
