@@ -48,8 +48,10 @@ package body GPR2.Source is
    --  Run the parser on the given source and register information in the
    --  registry.
 
-   function Get_ALI_Timestamp (Filename : String) return Calendar.Time;
-   --  return Timestamp used in ALI file. On windows use first greater time
+   function Get_ALI_Timestamp
+     (File : GPR2.Path_Name.Object) return Calendar.Time
+     with Pre => File.Is_Defined;
+   --  Return Timestamp used in ALI file. On windows use first greater time
    --  with an even number of second.
 
    ---------
@@ -102,7 +104,7 @@ package body GPR2.Source is
            (Registry.Data'
               (Is_Ada_Source => False,
                Path_Name     => Filename,
-               Timestamp     => Get_ALI_Timestamp (Filename.Value),
+               Timestamp     => Get_ALI_Timestamp (Filename),
                Language      => To_Unbounded_String (String (Language)),
                Other_Part    => GPR2.Path_Name.Undefined,
                Kind          => Kind,
@@ -140,7 +142,7 @@ package body GPR2.Source is
            (Registry.Data'
               (Is_Ada_Source => True,
                Path_Name     => Filename,
-               Timestamp     => Get_ALI_Timestamp (Filename.Value),
+               Timestamp     => Get_ALI_Timestamp (Filename),
                Language      => To_Unbounded_String ("Ada"),
                Other_Part    => GPR2.Path_Name.Undefined,
                Parsed        => False,
@@ -158,8 +160,11 @@ package body GPR2.Source is
    -- Get_ALI_Timestamp --
    -----------------------
 
-   function Get_ALI_Timestamp (Filename : String) return Calendar.Time is
-      Timestamp : Calendar.Time := Directories.Modification_Time (Filename);
+   function Get_ALI_Timestamp
+     (File : GPR2.Path_Name.Object) return Calendar.Time
+   is
+      Timestamp : Calendar.Time :=
+                    Directories.Modification_Time (File.Value);
       use System.OS_Constants;
    begin
       pragma Warnings (Off, "*this code can never be executed*");
