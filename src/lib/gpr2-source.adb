@@ -359,16 +359,13 @@ package body GPR2.Source is
 
    procedure Update (Self : Object) is
       use type Calendar.Time;
-
-      Filename : constant GPR2.Path_Name.Full_Name := Self.Pathname.Value;
-      S        : Registry.Data := Registry.Shared.Get (Self);
+      S : Registry.Data := Registry.Shared.Get (Self);
    begin
-      pragma Assert (Directories.Exists (Filename));
+      pragma Assert (Self.Pathname.Exists);
 
       declare
          New_TS      : constant Calendar.Time :=
-           Get_ALI_Timestamp (Filename);
-
+                         Get_ALI_Timestamp (Self.Pathname);
          Updated     : Boolean := False;
 
          New_CU_List : Compilation_Unit.List.Object;
@@ -450,8 +447,7 @@ package body GPR2.Source is
 
    function With_Clauses
      (Self  : Object;
-      Index : Natural := 1) return Source_Reference.Identifier.Set.Object
-   is
+      Index : Natural := 1) return Source_Reference.Identifier.Set.Object is
    begin
       Update (Self);
       return Registry.Shared.Get (Self).CU_Map (Index).Withed_Units;
@@ -464,11 +460,13 @@ package body GPR2.Source is
       Res : Source_Reference.Identifier.Set.Object;
    begin
       Update (Self);
+
       for CU of Registry.Shared.Get (Self).CU_List loop
          if CU.Unit_Name = Unit then
             Res.Union (CU.Withed_Units);
          end if;
       end loop;
+
       return Res;
    end With_Clauses;
 
