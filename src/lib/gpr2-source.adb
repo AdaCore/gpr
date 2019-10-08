@@ -162,6 +162,8 @@ package body GPR2.Source is
       Timestamp : Calendar.Time := Directories.Modification_Time (Filename);
       use System.OS_Constants;
    begin
+      pragma Warnings (Off, "*this code can never be executed*");
+
       if Target_OS = Windows then
          declare
             use Ada.Calendar;
@@ -174,7 +176,7 @@ package body GPR2.Source is
             Minute : Interfaces.C.int;
             Second : Interfaces.C.int;
          begin
-            Ada.Calendar.Conversions.To_Struct_Tm
+            Calendar.Conversions.To_Struct_Tm
               (T       => Timestamp,
                tm_year => Year,
                tm_mon  => Month,
@@ -182,11 +184,15 @@ package body GPR2.Source is
                tm_hour => Hour,
                tm_min  => Minute,
                tm_sec  => Second);
+
             if Second mod 2 > 0 then
                Timestamp := Timestamp + ONE_SECOND;
             end if;
          end;
       end if;
+
+      pragma Warnings (On, "*this code can never be executed*");
+
       return Timestamp;
    end Get_ALI_Timestamp;
 
