@@ -40,22 +40,16 @@ package GPR2.ALI.Withed_Unit is
 private
 
    type Object is tagged record
-
       Uname : Unbounded_String;
       --  Name of Unit
-
       Ukind : Kind_Type;
       --  Kind
-
       Sfile : Unbounded_String;
       --  Name of source file, empty in generic case
-
       Afile : Unbounded_String;
       --  Name of ALI file, empty in generic case
-
       Implicit_With_From_Instantiation : Boolean := False;
       --  True if this is an implicit with from a generic instantiation
-
    end record;
 
    function Create

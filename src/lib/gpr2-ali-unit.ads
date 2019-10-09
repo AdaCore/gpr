@@ -100,22 +100,16 @@ package GPR2.ALI.Unit is
 private
 
    type Object is tagged record
-
       Uname : Unbounded_String;
       --  Name of Unit
-
       Sfile : Unbounded_String;
       --  Name of source file
-
       Utype : Unit_Type;
       --  Type of entry
-
       Withs : Withed_Unit.List.Object;
       --  Withs for this file
-
       Flags : Flag_Array;
       --  Unit flags
-
       Kind  : Unit_Kind;
       --  Indicates the nature of the unit
    end record;
