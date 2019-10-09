@@ -30,8 +30,6 @@ package GPRls.Common is
 
    use GPR2;
 
-   type Verbosity_Level_Type is (None, Low, High);
-
    function "+"
      (Str : String) return Unbounded_String renames To_Unbounded_String;
 

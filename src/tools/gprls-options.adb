@@ -49,7 +49,17 @@ package body GPRls.Options is
 
       Text_IO.Put_Line ("Target: " & To_String (Self.Target));
 
-      Text_IO.Put_Line ("RTS: " & To_String (Self.RTS));
+      for R in Self.RTS_Map.Iterate loop
+         declare
+            Lang : constant Name_Type :=
+                     GPR2.Containers.Name_Value_Map_Package.Key (R);
+         begin
+            Text_IO.Put_Line
+              ("RTS"
+               & (if Lang = "Ada" then "" else '(' & String (Lang) & ')')
+               & ": " & Self.RTS_Map (R));
+         end;
+      end loop;
 
       if Self.List_File /= Path_Name.Undefined then
          Text_IO.Put_Line ("List file: " & Self.List_File.Value);
@@ -61,7 +71,7 @@ package body GPRls.Options is
             K : constant Name_Type := Context.Key_Value.Key (Curs);
             V : constant Value_Type := Context.Key_Value.Element (Curs);
          begin
-            Text_IO.Put_Line ("   " & String (K) & " => " & String (V));
+            Text_IO.Put_Line ("   " & String (K) & " => " & V);
          end;
       end loop;
 

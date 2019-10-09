@@ -45,7 +45,6 @@ package GPRinstall.Options is
       Uninstall_Mode   : aliased Boolean := False;
       Install_Manifest : aliased Boolean := True;
 
-      RTS                 : aliased OS_Lib.String_Access;
       Config_Project      : aliased OS_Lib.String_Access;
       Auto_Config_Project : aliased OS_Lib.String_Access;
 

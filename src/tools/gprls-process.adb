@@ -31,7 +31,6 @@ with GPR.Snames;
 with GPR2.ALI.Definition;
 with GPR2.ALI.Dependency;
 with GPR2.ALI.Unit;
-with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -62,19 +61,20 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    use GPRls.Common;
    use GPRls.Options;
 
+   use GPRtools;
    use GPRtools.Util;
 
-   Tree : Project.Tree.Object;
+   Tree : Project.Tree.Object renames Opt.Tree.all;
 
    procedure Display_Paths;
 
    function Is_Ada_Predefined_File_Name (Fname : String) return Boolean;
 
-   procedure Put (Str : String; Lvl : Verbosity_Level_Type);
+   procedure Put (Str : String; Lvl : Verbosity_Level);
    pragma Unreferenced (Put);
    --  Call Ada.Text_IO.Put (Str) if Opt.Verbosity is at least Lvl
 
-   procedure Put_Line (Str : String; Lvl : Verbosity_Level_Type);
+   procedure Put_Line (Str : String; Lvl : Verbosity_Level);
    pragma Unreferenced (Put_Line);
    --  Call Ada.Text_IO.Put_Line (Str) if Opt.Verbosity is at least Lvl
 
@@ -223,7 +223,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -- Put --
    ---------
 
-   procedure Put (Str : String; Lvl : Verbosity_Level_Type) is
+   procedure Put (Str : String; Lvl : Verbosity_Level) is
    begin
       if Opt.Verbosity >= Lvl then
          Text_IO.Put (Str);
@@ -234,7 +234,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -- Put_Line --
    --------------
 
-   procedure Put_Line (Str : String; Lvl : Verbosity_Level_Type) is
+   procedure Put_Line (Str : String; Lvl : Verbosity_Level) is
    begin
       if Opt.Verbosity >= Lvl then
          Text_IO.Put_Line (Str);
@@ -267,21 +267,12 @@ begin
 
    --  Load the project (if defined) and its configuration
 
-   declare
-      use GPR2.Containers;
-
-      RTS_Map : Name_Value_Map := Name_Value_Map_Package.Empty_Map;
-
    begin
-      if Opt.RTS /= No_Value then
-         RTS_Map.Insert ("Ada", Opt.RTS);
-      end if;
-
       Tree.Load_Autoconf
         (Filename          => Opt.Project_File,
          Context           => Opt.Project_Context,
-         Target            => Optional_Name_Type (Opt.Target),
-         Language_Runtimes => RTS_Map);
+         Target            => Opt.Get_Target,
+         Language_Runtimes => Opt.RTS_Map);
    exception
       when others => Show_Tree_Load_Errors;
    end;
@@ -647,7 +638,7 @@ begin
                Status := Not_Same;
             end if;
 
-            if Opt.Verbosity = Low then
+            if Opt.Verbose then
                Text_IO.Put ("     Source => ");
                Text_IO.Put (S.Source.Path_Name.Value);
 
@@ -724,10 +715,7 @@ begin
 
                   for U_Sec of ALI_Object.Units loop
                      if Opt.Print_Units then
-                        if Opt.Verbosity = None then
-                           Text_IO.Put_Line ("   " & String (U_Sec.Uname));
-
-                        elsif Opt.Verbosity = Low then
+                        if Opt.Verbose then
                            Text_IO.Put_Line ("   Unit =>");
                            Text_IO.Put ("     Name   => ");
                            Text_IO.Put (String (U_Sec.Uname));
@@ -753,6 +741,9 @@ begin
                               end loop;
                               Text_IO.New_Line;
                            end if;
+
+                        else
+                           Text_IO.Put_Line ("   " & String (U_Sec.Uname));
                         end if;
                      end if;
 
@@ -773,13 +764,11 @@ begin
                      --  (i.e. for a body, do not go on to show the
                      --  dependencies of the corresponding spec).
 
-                     if Opt.Verbosity = None then
-                        exit;
-                     end if;
+                     exit when not Opt.Verbose;
                   end loop;
 
                   if Opt.Dependency_Mode and then Opt.Print_Sources then
-                     if Opt.Verbosity >= Low then
+                     if Opt.Verbose then
                         Text_IO.Put_Line ("   depends upon");
                      end if;
 
@@ -840,7 +829,7 @@ begin
       end Source_For;
 
    begin
-      if Opt.Verbosity = Low then
+      if Opt.Verbose then
          Display_Paths;
       end if;
 

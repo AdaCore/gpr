@@ -325,6 +325,9 @@ package GPR2.Project.Tree is
      with Pre => Tree.Is_Defined;
    --  Path to build tree
 
+   function Reference (Tree : Object) return access Object;
+   --  Returns access to itself
+
 private
 
    package Name_View is
@@ -405,6 +408,9 @@ private
      (if Self.Has_Configuration
       then Self.Configuration.Dependency_File_Suffix (Language)
       elsif Language = "ada" then ".ali" else ".d");
+
+   function Reference (Tree : Object) return access Object is
+     (Tree'Unrestricted_Access);
 
    function Subdirs (Tree : Object) return Optional_Name_Type is
      (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));

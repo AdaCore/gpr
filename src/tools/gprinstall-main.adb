@@ -89,9 +89,6 @@ procedure GPRinstall.Main is
       procedure Set_Build_Var (Swicth, Value : String);
       --  Call for each --build-var options Value being the parameter value
 
-      procedure Add_Search_Path (Swicth, Value : String);
-      --  Add Value to project search path (-aP option)
-
       procedure Add_Scenario_Variable (Swicth, Value : String);
       --  Add a scenario variable (-X option)
 
@@ -111,17 +108,6 @@ procedure GPRinstall.Main is
                Value (I + 1 .. Value'Last));
          end if;
       end Add_Scenario_Variable;
-
-      ---------------------
-      -- Add_Search_Path --
-      ---------------------
-
-      procedure Add_Search_Path (Swicth, Value : String) is
-         pragma Unreferenced (Swicth);
-      begin
-         Tree.Register_Project_Search_Path
-           (Path_Name.Create_Directory (Name_Type (Value)));
-      end Add_Search_Path;
 
       -------------------
       -- Set_Build_Var --
@@ -155,6 +141,7 @@ procedure GPRinstall.Main is
    begin
       --  Call parent/generic command line setup
 
+      Options.Tree := Tree.Reference;
       GPRtools.Options.Setup (Options, GPRtools.Install);
 
       Define_Switch
@@ -170,21 +157,9 @@ procedure GPRinstall.Main is
          Argument    =>  "file.cgpr");
 
       Define_Switch
-        (Options.Config, Options.RTS'Access,
-         "--RTS=",
-         Help     => "Use runtime <runtime> for language Ada",
-         Argument => "<runtime>");
-
-      Define_Switch
         (Options.Config, Options.Create_Dest_Dir'Access,
          "-p", "--create-missing-dirs",
          Help => "Use runtime <runtime> for language Ada");
-
-      Define_Switch
-        (Options.Config, Add_Search_Path'Unrestricted_Access,
-         "-aP:",
-         Help     => "Add directory dir to project search path",
-         Argument => "<dir>");
 
       Define_Switch
         (Options.Config, Add_Scenario_Variable'Unrestricted_Access,

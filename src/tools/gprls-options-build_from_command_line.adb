@@ -20,10 +20,8 @@ with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
-with GNAT.OS_Lib;
 
 with GPR2;
-with GPR2.Project;
 
 with GPRtools.Util;
 
@@ -35,18 +33,13 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    use GPRtools.Util;
 
-   use type GNAT.OS_Lib.String_Access;
-
    --  TODO: put relevant programs into the Options API
-
-   procedure Add_Search_Path (Switch, Value : String);
-   --  Add Value to project search path (-aP option)
 
    procedure Add_Scenario_Variable (Switch, Value : String);
    --  Add a scenario variable (-X option)
 
    function Get_Files_From_List_File
-     (File : Path_Name.Object) return String_Vector.Vector;
+     (File : Path_Name.Object) return GPR2.Containers.Value_Set;
    --  Add files from a list file
    --  ??? This is almost a duplicate of:
    --     GPRname.Section.Prepare.Get_Source_Dirs_From_File
@@ -55,15 +48,9 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Handle_List_File (Switch, Value : String);
    --  Read a list file and interpret each line as a new element to Self.Files
 
-   procedure Set_Verbose (Switch, Value : String);
-
-   procedure Set_Project (Switch, Value : String);
-   --  Set the project file
-
    procedure Set_Print_Units (Switch, Value : String);
    procedure Set_Print_Object_Files (Switch, Value : String);
    procedure Set_Print_Sources (Switch, Value : String);
-   procedure Set_Target (Switch, Value : String);
 
    procedure Set_Selective_Output;
 
@@ -84,35 +71,26 @@ procedure Build_From_Command_Line (Self : in out Object) is
       end if;
    end Add_Scenario_Variable;
 
-   ---------------------
-   -- Add_Search_Path --
-   ---------------------
-
-   procedure Add_Search_Path (Switch, Value : String) is
-      pragma Unreferenced (Switch);
-   begin
-      Self.Project_Search_Paths.Append
-        (Path_Name.Create_Directory (Name_Type (Value)));
-   end Add_Search_Path;
-
    ------------------------------
    -- Get_Files_From_List_File --
    ------------------------------
 
    function Get_Files_From_List_File
-     (File : Path_Name.Object) return String_Vector.Vector
+     (File : Path_Name.Object) return GPR2.Containers.Value_Set
    is
       use Ada.Text_IO;
 
       F   : File_Type;
-      Ret : String_Vector.Vector;
+      Ret : GPR2.Containers.Value_Set;
    begin
       Open (F, In_File, File.Value);
       while not End_Of_File (F) loop
          declare
             Line : constant String := Get_Line (F);
          begin
-            Ret.Append (Line);
+            if Line /= "" then
+               Ret.Include (Line);
+            end if;
          end;
       end loop;
       Close (F);
@@ -121,7 +99,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
       when others =>
          Finish_Program
            (E_Errors, "Could not read file '" & String (File.Name) & "'");
-         return String_Vector.Empty_Vector;
+         return GPR2.Containers.Value_Type_Set.Empty_Set;
    end Get_Files_From_List_File;
 
    ----------------------
@@ -167,18 +145,6 @@ procedure Build_From_Command_Line (Self : in out Object) is
       Self.Print_Units := True;
    end Set_Print_Units;
 
-   -----------------
-   -- Set_Project --
-   -----------------
-
-   procedure Set_Project (Switch, Value : String) is
-      pragma Unreferenced (Switch);
-   begin
-      if Value /= GPR2.No_Value then
-         Self.Project_File := Project.Create (Name_Type (Value));
-      end if;
-   end Set_Project;
-
    --------------------------
    -- Set_Selective_Output --
    --------------------------
@@ -193,65 +159,10 @@ procedure Build_From_Command_Line (Self : in out Object) is
       end if;
    end Set_Selective_Output;
 
-   ----------------
-   -- Set_Target --
-   ----------------
-
-   procedure Set_Target (Switch, Value : String) is
-      pragma Unreferenced (Switch);
-   begin
-      Self.Target := To_Unbounded_String (Value);
-   end Set_Target;
-
-   ---------------------
-   -- Set_Low_Verbose --
-   ---------------------
-
-   procedure Set_Verbose (Switch, Value : String) is
-      pragma Unreferenced (Switch, Value);
-   begin
-      if Self.Verbosity = None then
-         Self.Verbosity := Low;
-      end if;
-   end Set_Verbose;
-
-   Config : Command_Line_Configuration;
-
-   Tmp_RTS : aliased OS_Lib.String_Access;
+   Config : Command_Line_Configuration renames Self.Config;
 
 begin
-   Define_Switch
-     (Config, Self.Usage_Needed'Unrestricted_Access,
-      "-h", Long_Switch => "--help",
-      Help => "Display this help message and exit");
-
-   Define_Switch
-     (Config, Self.Version_Needed'Unrestricted_Access,
-      Long_Switch => "--version",
-      Help => "Display version and exit");
-
-   Define_Switch
-     (Config, Set_Project'Unrestricted_Access,
-      "-P:",
-      Help => "Path to the project to browse");
-
-   Define_Switch
-     (Config, Add_Search_Path'Unrestricted_Access,
-      "-aP:",
-      Help     => "Add directory <dir> to project search path",
-      Argument => "<dir>");
-
-   Define_Switch
-     (Config, Set_Target'Unrestricted_Access,
-      Long_Switch => "--target=",
-      Help        => "Specify a target for cross platforms",
-      Argument    => "<name>");
-
-   Define_Switch
-     (Config, Tmp_RTS'Access,
-      "--RTS=",
-      Help     => "Use runtime <runtime> for language Ada",
-      Argument => "<runtime>");
+   Self.Setup (Tool => GPRtools.Ls);
 
    Define_Switch
      (Config, Handle_List_File'Unrestricted_Access,
@@ -264,11 +175,6 @@ begin
       "-X!",
       Help     => "Add scenario variable",
       Argument => "<NAME>=<VALUE>");
-
-   Define_Switch
-     (Config, Set_Verbose'Unrestricted_Access,
-      "-v",
-      Help => "Set verbose");
 
    Define_Switch
      (Config, Self.Verbose_Parsing'Unrestricted_Access,
@@ -313,21 +219,9 @@ begin
 
    Getopt (Config, Concatenate => False);
 
-   if Tmp_RTS /= null then
-      Self.RTS := +Tmp_RTS.all;
-      OS_Lib.Free (Tmp_RTS);
-   end if;
-
    --  Now read the specified files from which we will browse, if any
 
-   Read_Arguments : loop
-      declare
-         Arg : constant String := Get_Argument;
-      begin
-         exit Read_Arguments when Arg = "";
-         Self.Files.Append (Arg);
-      end;
-   end loop Read_Arguments;
+   Self.Read_Remaining_Arguments (Tool => GPRtools.Ls);
 
    --  Check parsing verbosity value
 
@@ -343,7 +237,7 @@ begin
            (E_Errors,
             "list file " & String (Self.List_File.Name) & " not found.");
       else
-         Self.Files.Append (Get_Files_From_List_File (Self.List_File));
+         Self.Args.Union (Get_Files_From_List_File (Self.List_File));
       end if;
    end if;
 
@@ -358,7 +252,7 @@ begin
            "project file " & String (Self.Project_File.Name) & " not found.");
       end if;
    else
-      if Self.Files.Is_Empty and then Self.Verbosity = Low then
+      if Self.Files.Is_Empty and then Self.Verbose then
          Self.Only_Display_Paths := True;
       end if;
 
@@ -373,18 +267,7 @@ begin
       end if;
    end if;
 
-   --  The "very verbose" mode (when Verbosity is High) has its own special
-   --  output, so we switch off closure and dependency modes.
-
-   if Self.Verbosity = High then
-      Self.Closure_Mode := False;
-      Self.Dependency_Mode := False;
-
-      if not Self.Files.Is_Empty then
-         Self.All_Projects := True;
-      end if;
-
-   elsif Self.Closure_Mode then
+   if Self.Closure_Mode then
       Self.Dependency_Mode := False;
       --  Closure mode has precedence over dependency mode
    end if;

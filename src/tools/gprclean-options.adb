@@ -124,10 +124,6 @@ package body GPRclean.Options is
             Options.Config_File :=
               Path_Name.Create_File (Name_Type (Normalize_Value));
 
-         elsif Switch = "-aP" then
-            Project_Tree.Register_Project_Search_Path
-              (Path_Name.Create_Directory (Name_Type (Value)));
-
          elsif Switch = "--subdirs" then
             Options.Subdirs := To_Unbounded_String (Normalize_Value);
 
@@ -137,6 +133,7 @@ package body GPRclean.Options is
       end Value_Callback;
 
    begin
+      Options.Tree := Project_Tree.Reference;
       GPRtools.Options.Setup
         (GPRtools.Options.Object (Options), GPRtools.Clean);
 
@@ -183,11 +180,6 @@ package body GPRclean.Options is
       Define_Switch
         (Config, Options.Remain_Useful'Access, "-c",
          Help => "Only delete compiler generated files");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access,
-         "-aP:",
-         Help => "Add directory ARG to project search path");
 
       Define_Switch
         (Config, Dummy'Access, "-eL",

@@ -22,6 +22,7 @@ with GNAT.Command_Line;
 
 with GPR2.Containers;
 with GPR2.Path_Name;
+with GPR2.Project.Tree;
 
 package GPRtools.Options is
 
@@ -38,6 +39,8 @@ package GPRtools.Options is
       Project_File : GPR2.Path_Name.Object;
       --  The project to be processed
 
+      Tree : access GPR2.Project.Tree.Object;
+
       Args : GPR2.Containers.Value_Set;
       --  Another arguments from command line except project.
       --  It is mains for gprclean and gprbuild.
@@ -49,6 +52,7 @@ package GPRtools.Options is
       Warnings                 : aliased Boolean := True;
       Target                   : Unbounded_String :=
                                    To_Unbounded_String ("all");
+      RTS_Map                  : GPR2.Containers.Name_Value_Map;
       Distributed_Mode         : Boolean := False;
       Slaves                   : Unbounded_String;
       Slave_Env                : Unbounded_String;

@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Fixed;
 with Ada.Task_Attributes;
 
 with GPR2.Compilation.Registry;
@@ -99,10 +100,42 @@ package body GPRtools.Options is
    procedure Read_Remaining_Arguments (Self : in out Object; Tool : Which) is
       use GNATCOLL;
       Got_Prj : Boolean := False;
+
+      function Get_Next_Argument return String;
+      --  Returns the next non-empty and non-switch argument from the command
+      --  line.
+      --  Due to a limitation of GNAT.Command_Line functionality there is no
+      --  way to distinguish between the end of arguments and an empty
+      --  argument; we work around this by skipping over four empty arguments
+      --  before giving up and returning an empty argument
+      --  (we assume that this means we are really at the end).
+      --  ??? We should remove this code and use GMAT.Command_Line.Get_Argument
+      --  with Boolean out parameter instead once this routine is working
+      --  correctly in the oldest compiler GPR2 should be compatible with.
+
+      -----------------------
+      -- Get_Next_Argument --
+      -----------------------
+
+      function Get_Next_Argument return String is
+      begin
+         for J in 1 .. 4 loop
+            declare
+               Next : constant String := Get_Argument;
+            begin
+               if Next /= "" then
+                  return Next;
+               end if;
+            end;
+         end loop;
+
+         return "";
+      end Get_Next_Argument;
+
    begin
       Read_Arguments : loop
          declare
-            Arg : constant String := Get_Argument;
+            Arg : constant String := Get_Next_Argument;
          begin
             exit Read_Arguments when Arg = "";
 
@@ -173,7 +206,7 @@ package body GPRtools.Options is
          "-v", "--verbose",
          Help => "Verbose output");
 
-      if Tool /= Remote then
+      if Tool not in Remote | Ls then
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,
             "-q", "--quiet",
@@ -212,7 +245,7 @@ package body GPRtools.Options is
             Help        => "Debug mode");
       end if;
 
-      if Tool in Build | Clean | Install then
+      if Tool in Build | Clean | Install | Ls then
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access, "-P:",
             Help => "Project file to "
@@ -220,13 +253,26 @@ package body GPRtools.Options is
                  when Build   => "build",
                  when Install => "install",
                  when Clean   => "cleanup",
+                 when Ls      => "browse",
                  when others => ""));
+
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            "-aP:",
+            Help     => "Add directory <dir> to project search path",
+            Argument => "<dir>");
 
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,
             Long_Switch => "--target=",
             Help        => "Specify a target for cross platforms",
             Argument    => "<name>");
+
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--RTS:",
+            Help        => "Use runtime <runtime> for language Ada",
+            Argument    => "<runtime>");
       end if;
 
       if Tool in Build | Clean then
@@ -263,8 +309,8 @@ package body GPRtools.Options is
       Self : constant not null access Object'Class := TLS.Reference.all;
 
       function Normalize_Value (Default : String := "") return String is
-        (if Value in "" | "=" then Default
-         elsif Value (Value'First) = '='
+        (if Value in "" | "=" | ":" then Default
+         elsif Value (Value'First) in '=' | ':'
          then Value (Value'First + 1 .. Value'Last)
          else Value);
       --  Remove leading '=' symbol from value for options like
@@ -304,6 +350,24 @@ package body GPRtools.Options is
 
       elsif Switch = "--target" then
          Self.Target := To_Unbounded_String (Normalize_Value);
+
+      elsif Switch = "--RTS" then
+         declare
+            Value : constant String  := Normalize_Value;
+            Del   : constant Natural := Ada.Strings.Fixed.Index (Value, "=");
+         begin
+            if Del = 0 then
+               Self.RTS_Map.Insert ("Ada", Value);
+            else
+               Self.RTS_Map.Insert
+                 (GPR2.Name_Type (Value (Value'First .. Del - 1)),
+                  Value (Del + 1 .. Value'Last));
+            end if;
+         end;
+
+      elsif Switch = "-aP" then
+         Self.Tree.Register_Project_Search_Path
+           (GPR2.Path_Name.Create_Directory (GPR2.Name_Type (Value)));
 
       elsif Switch = "--distributed" then
          declare

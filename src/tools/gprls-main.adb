@@ -23,6 +23,7 @@ with Ada.Text_IO;
 with GNAT.Command_Line;
 
 with GPR2.Interrupt_Handler;
+with GPR2.Project.Tree;
 with GPR2.Version;
 
 with GPRls;
@@ -39,7 +40,8 @@ procedure GPRls.Main is
 
    use GPR2;
 
-   Opt : Options.Object;
+   Opt  : Options.Object;
+   Tree : Project.Tree.Object;
 
 begin
    --  Install the Ctrl-C handler
@@ -52,9 +54,10 @@ begin
 
    --  Parse arguments
 
+   Opt.Tree := Tree.Reference;
    Opt.Build_From_Command_Line;
 
-   if Opt.Version_Needed then
+   if Opt.Version then
       Version.Display
         ("GPRLS", "2018", Version_String => Version.Long_Value);
       Version.Display_Free_Software;

@@ -19,11 +19,12 @@
 with Ada.Strings.Unbounded;
 
 with GPR2;
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 
-with GPRls.Common;
+with GPRtools.Options;
 
 package GPRls.Options is
 
@@ -31,24 +32,16 @@ package GPRls.Options is
 
    use GPR2;
 
-   use GPRls.Common;
-
    Usage_Error : exception;
    --  Raised when a wrong usage is detected
 
-   type Object is tagged private;
+   type Object is new GPRtools.Options.Object with private;
    --  Options for gprls
 
    procedure Build_From_Command_Line (Self : in out Object);
    --  Fill out a gprls options object from the command line
 
-   function Files (Self : Object) return String_Vector.Vector;
-
-   function Verbosity (Self : Object) return Verbosity_Level_Type;
-
-   function Usage_Needed (Self : Object) return Boolean;
-
-   function Version_Needed (Self : Object) return Boolean;
+   function Files (Self : Object) return Containers.Value_Set;
 
    function Project_File (Self : Object) return Path_Name.Object;
 
@@ -56,9 +49,7 @@ package GPRls.Options is
 
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
 
-   function RTS (Self : Object) return String;
-
-   function Target (Self : Object) return String;
+   function Get_Target (Self : Object) return Optional_Name_Type;
 
    function List_File (Self : Object) return Path_Name.Object;
 
@@ -84,13 +75,8 @@ package GPRls.Options is
 
 private
 
-   type Object is tagged record
-      Files                : String_Vector.Vector;
-      Project_File         : Path_Name.Object     := Path_Name.Undefined;
-      Project_Search_Paths : Path_Name.Set.Object :=
-                               Path_Name.Set.Set.Empty_List;
-      Target               : Unbounded_String     := Null_Unbounded_String;
-      RTS                  : Unbounded_String     := Null_Unbounded_String;
+   type Object is new GPRtools.Options.Object with record
+      Project_Search_Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
       List_File            : Path_Name.Object     := Path_Name.Undefined;
       Project_Context      : Context.Object       := GPR2.Context.Empty;
 
@@ -102,27 +88,13 @@ private
       Dependency_Mode       : Boolean := False;
       Closure_Mode          : Boolean := False;
       All_Projects          : Boolean := False;
+      Only_Display_Paths    : Boolean := False;
 
-      Verbosity       : Verbosity_Level_Type := None;
-      Verbose_Parsing : Integer              := 0;
-
-      Usage_Needed   : Boolean := False;
-      Version_Needed : Boolean := False;
-
-      Only_Display_Paths : Boolean := False;
+      Verbose_Parsing : Integer := 0;
    end record;
 
-   function Files (Self : Object) return String_Vector.Vector is
-     (Self.Files);
-
-   function Verbosity (Self : Object) return Verbosity_Level_Type is
-     (Self.Verbosity);
-
-   function Usage_Needed (Self : Object) return Boolean is
-     (Self.Usage_Needed);
-
-   function Version_Needed (Self : Object) return Boolean is
-     (Self.Version_Needed);
+   function Files (Self : Object) return GPR2.Containers.Value_Set is
+     (Self.Args);
 
    function Only_Display_Paths (Self : Object) return Boolean is
      (Self.Only_Display_Paths);
@@ -136,11 +108,8 @@ private
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object is
      (Self.Project_Search_Paths);
 
-   function RTS (Self : Object) return String is
-     (To_String (Self.RTS));
-
-   function Target (Self : Object) return String is
-     (To_String (Self.Target));
+   function Get_Target (Self : Object) return Optional_Name_Type is
+     (Optional_Name_Type (To_String (Self.Target)));
 
    function List_File (Self : Object) return Path_Name.Object is
      (Self.List_File);

@@ -321,6 +321,7 @@ procedure GPRremote is
       use GNAT.OS_Lib;
 
    begin
+      Options.Tree := Project.Reference;
       GPRtools.Options.Setup (Options, GPRtools.Remote);
 
       Getopt (Options.Config);
