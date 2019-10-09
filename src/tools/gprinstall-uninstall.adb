@@ -121,9 +121,7 @@ package body GPRinstall.Uninstall is
       --  Check if manifest for this project exists
 
       if not Exists (Name) then
-         if Options.Verbosity > Quiet then
-            raise Constraint_Error with "Manifest " & Name & " not found.";
-         end if;
+         raise Constraint_Error with "Manifest " & Name & " not found.";
       end if;
 
       if Options.Verbosity > Quiet then
