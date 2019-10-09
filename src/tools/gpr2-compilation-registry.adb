@@ -418,15 +418,13 @@ package body GPR2.Compilation.Registry is
       --  Do initial handshake
 
       Compilation.Protocol.Send_Context
-        (S.Channel,
-         String (GPRtools.Options.Get_Target (Options)),
-         String (Project_Name),
-         To_String (Options.Slave_Env),
-         Sync,
-         (if Options.Hash_Value = Null_Unbounded_String
-          then ""
-          else To_String (Options.Hash_Value)),
-         Included_Artifact_Patterns);
+        (Channel                    => S.Channel,
+         Target                     => String (Tree.Target),
+         Project_Name               => String (Project_Name),
+         Build_Env                  => To_String (Options.Slave_Env),
+         Sync                       => Sync,
+         Hash                       => To_String (Options.Hash_Value),
+         Included_Artifact_Patterns => Included_Artifact_Patterns);
 
       declare
          use all type Compilation.Protocol.Command_Kind;

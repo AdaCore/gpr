@@ -105,7 +105,4 @@ package GPRtools.Options is
    --  additional switches from GPR tools related project packages with command
    --  line taken switches.
 
-   function Get_Target (Self : Object) return GPR2.Name_Type;
-   --  Returns the target name for the current compilation
-
 end GPRtools.Options;

@@ -80,19 +80,6 @@ package body GPRtools.Options is
       end if;
    end Clean_Build_Path;
 
-   ----------------
-   -- Get_Target --
-   ----------------
-
-   function Get_Target (Self : Object) return GPR2.Name_Type is
-   begin
-      if To_String (Self.Target) in "all" | "" then
-         return GPR2.Name_Type (System.OS_Constants.Target_Name);
-      else
-         return GPR2.Name_Type (To_String (Self.Target));
-      end if;
-   end Get_Target;
-
    ------------------------------
    -- Read_Remaining_Arguments --
    ------------------------------
