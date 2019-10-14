@@ -69,6 +69,7 @@ package GPR2.Project.Tree is
       Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
       Implicit_Project : Boolean              := False;
+      Absent_Dir_Error : Boolean              := False;
       Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
      with Pre => Filename.Is_Defined;
    --  Loads a root project
@@ -94,6 +95,7 @@ package GPR2.Project.Tree is
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
       Implicit_Project  : Boolean              := False;
+      Absent_Dir_Error  : Boolean              := False;
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
@@ -351,6 +353,7 @@ private
       Subdirs          : Ada.Strings.Unbounded.Unbounded_String;
       Src_Subdirs      : Ada.Strings.Unbounded.Unbounded_String;
       Check_Shared_Lib : Boolean := True;
+      Absent_Dir_Error : Boolean := False;
       Views            : aliased View_Maps.Map;
       Views_Set        : View.Set.Object; -- All projects in registration order
    end record;

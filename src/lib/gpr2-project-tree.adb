@@ -680,6 +680,7 @@ package body GPR2.Project.Tree is
       Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
       Implicit_Project : Boolean              := False;
+      Absent_Dir_Error : Boolean              := False;
       Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
    is
       use Ada.Strings.Unbounded;
@@ -886,6 +887,7 @@ package body GPR2.Project.Tree is
       Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
       Self.Check_Shared_Lib := Check_Shared_Lib;
       Self.Implicit_With    := Implicit_With;
+      Self.Absent_Dir_Error := Absent_Dir_Error;
 
       --  Now we can initialize the project search paths
 
@@ -944,6 +946,7 @@ package body GPR2.Project.Tree is
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
       Implicit_Project  : Boolean              := False;
+      Absent_Dir_Error  : Boolean              := False;
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
@@ -962,6 +965,7 @@ package body GPR2.Project.Tree is
          Src_Subdirs      => Src_Subdirs,
          Check_Shared_Lib => Check_Shared_Lib,
          Implicit_Project => Implicit_Project,
+         Absent_Dir_Error => Absent_Dir_Error,
          Implicit_With    => Implicit_With);
 
       for C in Self.Iterate
@@ -1992,8 +1996,7 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Name_Type;
                Human_Name    : String;
                Get_Directory : not null access function
-                                 (Self : Project.View.Object)
-               return Path_Name.Object);
+                 (Self : Project.View.Object) return Path_Name.Object);
             --  Check is directory exists and warn if there is try to relocate
             --  absolute path with --relocate-build-tree gpr tool command line
             --  parameter. Similar check for attributes with directory names.
@@ -2008,8 +2011,7 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Name_Type;
                Human_Name    : String;
                Get_Directory : not null access function
-                                 (Self : Project.View.Object)
-               return Path_Name.Object) is
+                 (Self : Project.View.Object) return Path_Name.Object) is
             begin
                if View.Check_Attribute (Attr_Name, Result => Attr) then
                   declare
@@ -2019,7 +2021,9 @@ package body GPR2.Project.Tree is
                      if not PN.Exists then
                         Self.Messages.Append
                           (Message.Create
-                             (Message.Warning,
+                             ((if Self.Absent_Dir_Error
+                               then Message.Error
+                               else Message.Warning),
                               (if Human_Name = ""
                                then "D"
                                else Human_Name & " d") & "irectory """

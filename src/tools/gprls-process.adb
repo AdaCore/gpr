@@ -271,6 +271,7 @@ begin
       Tree.Load_Autoconf
         (Filename          => Opt.Project_File,
          Context           => Opt.Project_Context,
+         Absent_Dir_Error  => True,
          Target            => Opt.Get_Target,
          Language_Runtimes => Opt.RTS_Map);
    exception
