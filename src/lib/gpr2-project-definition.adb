@@ -232,7 +232,6 @@ package body GPR2.Project.Definition is
 
    procedure Update_Sources (Def : in out Data; View : Project.View.Object) is
 
-      use type Ada.Containers.Count_Type;
       use type MD5.Binary_Message_Digest;
       use type Project.Attribute.Object;
 

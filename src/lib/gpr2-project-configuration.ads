@@ -18,7 +18,6 @@
 
 --  Handle the configuration object for a project tree
 
-with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Parser.Project;
 with GPR2.Project.View;
@@ -31,8 +30,6 @@ limited with GPR2.Project.Tree;
 package GPR2.Project.Configuration is
 
    Config_File_Key : Integer := 1;
-
-   use type Containers.Count_Type;
 
    type Object is tagged private;
 

@@ -16,6 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers;
+
 with GNATCOLL.Refcount;
 with GNATCOLL.Tribooleans;
 
@@ -28,6 +30,8 @@ private with GPR2.Source_Reference.Value;
 package GPR2.Project is
 
    use GNATCOLL.Tribooleans;
+
+   use type Ada.Containers.Count_Type;
 
    --  This package is the root of the high level abstraction of a hierarchy of
    --  projects given by a root project.
@@ -84,6 +88,17 @@ package GPR2.Project is
    --  If Name ending with ".gpr" or ".cgpr" the function returns it unchanged,
    --  otherwise returns Name appended with ".gpr" suffix.
 
+   function Default_Search_Paths
+     (Current_Directory : Boolean) return Path_Name.Set.Object
+   with Post => Default_Search_Paths'Result.Length > 0;
+   --  Get the search paths common for all targets.
+   --  If Current_Directory is True then the current directory is incuded at
+   --  the first place in the result set.
+
+   procedure Append_Default_Search_Paths (Paths : in out Path_Name.Set.Object);
+   --  Add Default_Search_Paths without current directory to the Paths
+   --  parameter.
+
 private
 
    type Relation_Status is (Root, Imported, Extended, Aggregated);
@@ -111,6 +126,9 @@ private
 
    package Definition_References is new GNATCOLL.Refcount.Shared_Pointers
      (Definition_Base'Class);
+
+   function Get_Prefix return String;
+   --  Get the GNAT prefix
 
    subtype Weak_Reference is Definition_References.Weak_Ref;
 

@@ -20,6 +20,7 @@ with Ada.Strings.Fixed;
 with Ada.Task_Attributes;
 
 with GPR2.Compilation.Registry;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Pack;
 
 pragma Warnings (Off);
@@ -156,6 +157,7 @@ package body GPRtools.Options is
       Tool : Which) is
    begin
       PRP.Check_Attributes (PRP.Naming);
+      Self.Tool := Tool;
 
       case Tool is
          when Build   =>
@@ -307,7 +309,12 @@ package body GPRtools.Options is
       if Switch = "-P" then
          if not Self.Project_File.Is_Defined then
             Self.Project_File :=
-              GPR2.Project.Create (GPR2.Optional_Name_Type (Normalize_Value));
+              GPR2.Project.Create
+                (GPR2.Optional_Name_Type (Normalize_Value),
+                 (if Self.Tool in Build | Ls | Clean
+                  then GPR2.Project.Default_Search_Paths
+                         (Current_Directory => True)
+                  else GPR2.Path_Name.Set.Empty_Set));
          else
             raise GPRtools.Usage_Error with
               '"' & Normalize_Value & """, project already """

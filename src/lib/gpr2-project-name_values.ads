@@ -27,7 +27,6 @@ with GPR2.Source_Reference.Value;
 
 package GPR2.Project.Name_Values is
 
-   use type Containers.Count_Type;
    use all type Registry.Attribute.Value_Kind;
 
    type Object is new Source_Reference.Object with private;

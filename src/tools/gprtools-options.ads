@@ -30,6 +30,7 @@ package GPRtools.Options is
    use GNAT.Command_Line;
 
    type Object is tagged record
+      Tool    : Which;
       Config  : Command_Line_Configuration;
 
       Help    : aliased Boolean := False;

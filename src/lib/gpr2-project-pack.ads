@@ -18,7 +18,6 @@
 
 --  Handle project's packages which are a set of attributes
 
-with GPR2.Containers;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -28,8 +27,6 @@ with GPR2.Source_Reference.Identifier;
 private with Ada.Strings.Unbounded;
 
 package GPR2.Project.Pack is
-
-   use type Containers.Count_Type;
 
    type Object is new Source_Reference.Object with private;
 

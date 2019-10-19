@@ -39,7 +39,6 @@ limited with GPR2.Unit.Set;
 
 package GPR2.Project.View is
 
-   use type Containers.Count_Type;
    use type Context.Object;
    use type Pack.Object;
 

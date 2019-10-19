@@ -36,7 +36,6 @@ with GPR2.Project.Registry.Attribute;
 
 package GPR2.Project.Tree is
 
-   use type Ada.Containers.Count_Type;
    use type GPR2.Context.Object;
    use type GPR2.Project.View.Object;
 

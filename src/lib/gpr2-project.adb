@@ -18,13 +18,113 @@
 
 with Ada.Characters.Handling;
 with Ada.Directories;
+with Ada.Environment_Variables;
+with Ada.Text_IO;
 
 with GNAT.Case_Util;
 with GNAT.OS_Lib;
+with GNAT.String_Split;
 
 package body GPR2.Project is
 
    use Ada;
+   use GNAT;
+
+   ---------------------------------
+   -- Append_Default_Search_Paths --
+   ---------------------------------
+
+   procedure Append_Default_Search_Paths
+     (Paths : in out Path_Name.Set.Object)
+   is
+      Prefix : constant String := Get_Prefix;
+
+      procedure Append (Value : String)
+        with Post => (if Value'Length = 0
+                      then Paths'Old.Length = Paths.Length
+                          else Paths'Old.Length <= Paths.Length);
+      --  Append Value into Paths is it is not empty and does not exists in
+      --  Paths.
+
+      procedure Add_List (Values : String)
+        with Post => Paths'Old.Length <= Paths.Length;
+      --  Add list Values (which has OS dependant path separator) into
+      --  Paths.
+
+      --------------
+      -- Add_List --
+      --------------
+
+      procedure Add_List (Values : String) is
+         V : String_Split.Slice_Set;
+      begin
+         String_Split.Create
+           (V, Values, String'(1 => OS_Lib.Path_Separator));
+
+         for K in 1 .. String_Split.Slice_Count (V) loop
+            Append (String_Split.Slice (V, K));
+         end loop;
+      end Add_List;
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append (Value : String) is
+         Path : constant Path_Name.Object :=
+                  Path_Name.Create_Directory (Name_Type (Value));
+      begin
+         if Value /= "" and then not Paths.Contains (Path) then
+            Paths.Append (Path);
+         end if;
+      end Append;
+
+   begin
+      --  Then in GPR_PROJECT_PATH_FILE, one path per line
+
+      if Environment_Variables.Exists ("GPR_PROJECT_PATH_FILE") then
+         declare
+            Filename : constant String :=
+                         Environment_Variables.Value
+                           ("GPR_PROJECT_PATH_FILE");
+            File     : Text_IO.File_Type;
+         begin
+            if Directories.Exists (Filename) then
+               Text_IO.Open (File, Text_IO.In_File, Filename);
+
+               while not Text_IO.End_Of_File (File) loop
+                  Append (Text_IO.Get_Line (File));
+               end loop;
+
+               Text_IO.Close (File);
+            end if;
+         end;
+      end if;
+
+      --  Then in GPR_PROJECT_PATH and ADA_PROJECT_PATH
+
+      if Environment_Variables.Exists ("GPR_PROJECT_PATH") then
+         Add_List (Environment_Variables.Value ("GPR_PROJECT_PATH"));
+      end if;
+
+      if Environment_Variables.Exists ("ADA_PROJECT_PATH") then
+         Add_List (Environment_Variables.Value ("ADA_PROJECT_PATH"));
+      end if;
+
+      if Prefix /= "" then
+         --  <prefix>/share/gpr
+
+         Append
+           (Directories.Compose
+              (Directories.Compose (Prefix, "share"), "gpr"));
+
+         --  <prefix>/lib/gnat
+
+         Append
+           (Directories.Compose
+              (Directories.Compose (Prefix, "lib"), "gnat"));
+      end if;
+   end Append_Default_Search_Paths;
 
    ------------
    -- Create --
@@ -35,8 +135,6 @@ package body GPR2.Project is
       Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return GPR2.Path_Name.Object
    is
-      use GNAT;
-
       DS       : constant Character := OS_Lib.Directory_Separator;
       GPR_Name : constant Name_Type := Ensure_Extension (Name);
 
@@ -56,7 +154,7 @@ package body GPR2.Project is
 
          if Paths.Is_Empty then
             if Directories.Exists
-                (Directories.Current_Directory & DS & String (GPR_Name))
+                 (Directories.Current_Directory & DS & String (GPR_Name))
             then
                return Path_Name.Create
                  (GPR_Name,
@@ -68,8 +166,7 @@ package body GPR2.Project is
             for P of Paths loop
                declare
                   F_Name : constant String :=
-                             String (Path_Name.Dir_Name (P))
-                             & String (GPR_Name);
+                             Path_Name.Dir_Name (P) & String (GPR_Name);
                begin
                   if Directories.Exists (F_Name) then
                      return Path_Name.Create
@@ -84,6 +181,26 @@ package body GPR2.Project is
       return Path_Name.Create_File
         (GPR_Name, Name_Type (Directories.Current_Directory));
    end Create;
+
+   --------------------------
+   -- Default_Search_Paths --
+   --------------------------
+
+   function Default_Search_Paths
+     (Current_Directory : Boolean) return Path_Name.Set.Object
+   is
+      Result : Path_Name.Set.Object;
+   begin
+      if Current_Directory then
+         Result.Append
+           (Path_Name.Create_Directory
+              (Name_Type (Directories.Current_Directory)));
+      end if;
+
+      Append_Default_Search_Paths (Result);
+
+      return Result;
+   end Default_Search_Paths;
 
    ----------------------
    -- Ensure_Extension --
@@ -103,6 +220,25 @@ package body GPR2.Project is
          return Name & Name_Type ('.' & Ext1);
       end if;
    end Ensure_Extension;
+
+   ----------------
+   -- Get_Prefix --
+   ----------------
+
+   function Get_Prefix return String is
+      use type GNAT.OS_Lib.String_Access;
+
+      GPRls : constant OS_Lib.String_Access :=
+                OS_Lib.Locate_Exec_On_Path ("gprls");
+      --  Check for GPRls executable
+   begin
+      if GPRls = null then
+         return "";
+      else
+         return Directories.Containing_Directory
+                  (Directories.Containing_Directory (GPRls.all));
+      end if;
+   end Get_Prefix;
 
    ------------------------------
    -- Look_For_Default_Project --
