@@ -20,7 +20,6 @@ with Ada.Strings.Fixed;
 with Ada.Task_Attributes;
 
 with GPR2.Compilation.Registry;
-with GPR2.Path_Name.Set;
 with GPR2.Project.Registry.Pack;
 
 pragma Warnings (Off);
@@ -311,10 +310,8 @@ package body GPRtools.Options is
             Self.Project_File :=
               GPR2.Project.Create
                 (GPR2.Optional_Name_Type (Normalize_Value),
-                 (if Self.Tool in Build | Ls | Clean
-                  then GPR2.Project.Default_Search_Paths
-                         (Current_Directory => True)
-                  else GPR2.Path_Name.Set.Empty_Set));
+                 GPR2.Project.Default_Search_Paths
+                   (Current_Directory => True));
          else
             raise GPRtools.Usage_Error with
               '"' & Normalize_Value & """, project already """
