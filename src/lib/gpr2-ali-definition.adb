@@ -365,7 +365,6 @@ package body GPR2.ALI.Definition is
       --------------
 
       procedure Fill_Dep is
-         D : Dependency.Object;
 
          function Checksum (S : String) return Word;
 
@@ -425,49 +424,42 @@ package body GPR2.ALI.Definition is
                & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
          end Time_Stamp;
 
-         Sfile  : constant String            := Get_Token;
+         Sfile  : constant Simple_Name       := Simple_Name (Get_Token);
          Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
 
+         Kind_Len : constant array (Kind_Type) of Natural :=
+                      (S_Spec | S_Body => 2,
+                       S_Separate      => 0);
+         --  Length of suffix denoting dependency kind
+
+         Kind     : Kind_Type;                    -- Unit_Kind
+         Name     : constant String := Get_Token; -- Unit_Name
+         Suffix   : constant String :=
+                      (if Name'Length > 2
+                       then Name (Name'Last - 1 .. Name'Last)
+                       else "");
       begin
-         --  Unit_Name, Unit_Kind
+         if Suffix = "%s" then
+            Kind := S_Spec;
+         elsif Suffix = "%b" then
+            Kind := S_Body;
+         elsif Name /= "" then
+            Kind := S_Separate;
+         else
+            raise Scan_ALI_Error;
+         end if;
 
-         declare
-            Kind_Len : constant array (Kind_Type) of Natural :=
-              (S_Spec | S_Body => 2,
-               S_Separate      => 0);
-            --  Length of suffix denoting dependency kind
-
-            Kind     : Kind_Type;
-            Name     : constant String := Get_Token;
-            Suffix   : constant String :=
-                         (if Name'Length > 2
-                          then Name (Name'Last - 1 .. Name'Last)
-                          else "");
-         begin
-            if Suffix = "%s" then
-               Kind := S_Spec;
-            elsif Suffix = "%b" then
-               Kind := S_Body;
-            elsif Name /= "" then
-               Kind := S_Separate;
-            else
-               raise Scan_ALI_Error;
-            end if;
-
-            D := Dependency.Create
-              (Sfile     => Simple_Name (Sfile),
+         Result.Sdeps.Append
+           (Dependency.Create
+              (Sfile     => Sfile,
                Stamp     => Stamp,
                Checksum  => Chksum,
                Unit_Name =>
                  Name_Type (Name (Name'First .. Name'Last - Kind_Len (Kind))),
-               Unit_Kind => Kind);
-         end;
+               Unit_Kind => Kind));
 
-         Result.Sdeps.Append (D);
-
-         Result.Sdeps_Map.Include
-           (D.Sfile, Result.Sdeps.Last_Index);
+         Result.Sdeps_Map.Include (Sfile, Result.Sdeps.Last_Index);
          --  Here we use Include and not Insert, due to possible duplicate
          --  D lines in ALI files.
       end Fill_Dep;
@@ -532,7 +524,9 @@ package body GPR2.ALI.Definition is
             Utype : Unit_Type;
 
          begin
-            if Tok1'Length < 3 then  --  At least "?%(b|s)"
+            --  At least "?%(b|s)"
+
+            if Tok1'Length < 3 and then Tok1 (Tok1'Last - 1) /= '%' then
                raise Scan_ALI_Error;
             end if;
 
@@ -543,17 +537,11 @@ package body GPR2.ALI.Definition is
             --  Set Utype. This will be adjusted after we finish reading the
             --  U lines, in case we have both spec and body.
 
-            declare
-               Suffix : constant String := Tok1 (Tok1'Last - 1 .. Tok1'Last);
-            begin
-               if Suffix = "%s" then
-                  Utype := Is_Spec_Only;
-               elsif Suffix = "%b" then
-                  Utype := Is_Body_Only;
-               else
-                  raise Scan_ALI_Error;
-               end if;
-            end;
+            case Tok1 (Tok1'Last) is
+               when 's'    => Utype := Is_Spec_Only;
+               when 'b'    => Utype := Is_Body_Only;
+               when others => raise Scan_ALI_Error;
+            end case;
 
             U := Unit.Create
               (Uname => Name_Type (Tok1 (1 .. Tok1'Last - 2)),
@@ -655,52 +643,32 @@ package body GPR2.ALI.Definition is
       ---------------
 
       procedure Fill_With (Header : Character) is
-         W : Withed_Unit.Object;
+         N : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
+         S : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
+         A : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
 
-         Impl : constant Boolean := (Header = 'Z');
-         --  Implicit_With_From_Instantiation
-
-         procedure P (Element : in out Unit.Object);
-
-         procedure P (Element : in out Unit.Object) is
-         begin
-            Element.Add_With (W);
-         end P;
-
+         U_Last : constant Integer := N'Last - 2; -- Unit last character in N
+         Ukind  : Kind_Type;
       begin
-         --  Uname, Ukind, Sfile, Afile
+         --  At least "?%(b|s)"
 
-         declare
-            N : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-            S : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-            A : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-            Ukind : Kind_Type;
-         begin
-            if N'Length < 3 then  --  At least "?%(b|s)"
-               raise Scan_ALI_Error;
-            end if;
+         if U_Last <= 0 or else N (N'Last - 1) /= '%' then
+            raise Scan_ALI_Error;
+         end if;
 
-            declare
-               Suffix : constant String := N (N'Last - 1 .. N'Last);
-            begin
-               if Suffix = "%s" then
-                  Ukind := S_Spec;
-               elsif Suffix = "%b" then
-                  Ukind := S_Body;
-               else
-                  raise Scan_ALI_Error;
-               end if;
-            end;
+         case N (N'Last) is
+            when 's'    => Ukind := S_Spec;
+            when 'b'    => Ukind := S_Body;
+            when others => raise Scan_ALI_Error;
+         end case;
 
-            W := Withed_Unit.Create
-              (Uname => Name_Type (N (1 .. N'Last - 2)),
-               Ukind => Ukind,
-               Sfile => Optional_Name_Type (S),
-               Afile => Optional_Name_Type (A),
-               Implicit_With_From_Instantiation => Impl);
-         end;
-
-         Result.Units.Update_Element (Result.Units.Last_Index, P'Access);
+         Result.Units (Result.Units.Last).Add_With
+           (Withed_Unit.Create
+              (Uname                            => Name_Type (N (1 .. U_Last)),
+               Ukind                            => Ukind,
+               Sfile                            => Optional_Name_Type (S),
+               Afile                            => Optional_Name_Type (A),
+               Implicit_With_From_Instantiation => (Header = 'Z')));
       end Fill_With;
 
    begin
