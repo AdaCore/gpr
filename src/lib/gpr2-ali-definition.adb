@@ -266,10 +266,13 @@ package body GPR2.ALI.Definition is
    -------------
 
    function Dep_For
-     (Self : Object; File : Simple_Name) return Dependency.Object is
+     (Self : Object; File : Simple_Name) return Dependency.Object
+   is
+      use Sdep_Map_Package;
+      CD : constant Cursor := Self.Sdeps_Map.Find (File);
    begin
-      if Self.Sdeps_Map.Contains (File) then
-         return Self.Sdeps (Self.Sdeps_Map (File));
+      if Has_Element (CD) then
+         return Self.Sdeps (Element (CD));
       else
          return Dependency.Undefined;
       end if;
