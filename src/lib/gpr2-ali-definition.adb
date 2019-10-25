@@ -128,7 +128,9 @@ package body GPR2.ALI.Definition is
          procedure Get_Word with Inline;
          --  Read a word, result will be in Tok (Tok'First .. Cur)
 
-         function Is_Sep (C : Character) return Boolean;
+         function Is_Sep (C : Character) return Boolean is
+           (C in ' ' | ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT);
+         --  The character is separator
 
          --------------
          -- Get_Word --
@@ -150,16 +152,6 @@ package body GPR2.ALI.Definition is
                end if;
             end loop;
          end Get_Word;
-
-         ------------
-         -- Is_Sep --
-         ------------
-
-         function Is_Sep (C : Character) return Boolean is
-         begin
-            return Character'Pos (C) in 32 | 9  --  Space/Tab
-              or else C in ASCII.CR | ASCII.LF | ASCII.EOT;
-         end Is_Sep;
 
          ---------------
          -- Next_Char --
