@@ -37,6 +37,15 @@ package GPR2.ALI.Withed_Unit is
    function Uname (Self : Object) return Name_Type;
    --  Returns the Uname for Self
 
+   function Afile (Self : Object) return Optional_Name_Type;
+   --  Returns name of ALI file, or empty in generic case
+
+   function Sfile (Self : Object) return Optional_Name_Type;
+   --  Returns name of source file, or empty in generic case
+
+   function Is_Implicit_With_From_Instantiation (Self : Object) return Boolean;
+   --  Returns True if this is an implicit with from a generic instantiation
+
 private
 
    type Object is tagged record
@@ -68,5 +77,16 @@ private
 
    function Uname (Self : Object) return Name_Type is
      (Name_Type (-Self.Uname));
+
+   function Afile (Self : Object) return Optional_Name_Type is
+     (Optional_Name_Type (-Self.Afile));
+
+   function Sfile (Self : Object) return Optional_Name_Type is
+     (Optional_Name_Type (-Self.Sfile));
+
+   function Is_Implicit_With_From_Instantiation
+     (Self : Object) return Boolean
+   is
+     (Self.Implicit_With_From_Instantiation);
 
 end GPR2.ALI.Withed_Unit;
