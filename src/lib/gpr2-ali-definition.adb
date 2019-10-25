@@ -120,10 +120,9 @@ package body GPR2.ALI.Definition is
          subtype Content_Index is Natural range 0 .. 1_024;
          subtype Content_Range is Content_Index range 1 .. Content_Index'Last;
 
-         Tok  : String (Content_Range);
-         Cur  : Content_Index := 0;
-         P, C : Character := ASCII.NUL;
-         pragma Unreferenced (P);
+         Tok : String (Content_Range);
+         Cur : Content_Index := 0;
+         C   : Character     := ASCII.NUL;
 
          procedure Get_Word with Inline;
          --  Read a word, result will be in Tok (Tok'First .. Cur)
@@ -197,8 +196,6 @@ package body GPR2.ALI.Definition is
                Get_Word;
                exit Read_Token;
             end if;
-
-            P := C;
          end loop Read_Token;
 
          return Tok (1 .. Cur);
