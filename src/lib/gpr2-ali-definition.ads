@@ -42,12 +42,22 @@ package GPR2.ALI.Definition is
 
    Undefined : constant Object;
 
+   type Main_Program_Type is (Proc, Func);
+
    function Scan_ALI (File : Path_Name.Object) return Object
      with Pre => File.Is_Defined;
    --  Scans an ALI file and returns the resulting object, or Undefined if
    --  something went wrong.
 
    function Is_Defined (Self : Object) return Boolean;
+
+   function Is_Main (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if unit could be used as main program
+
+   function Main_Kind (Self : Object) return Main_Program_Type
+     with Pre => Is_Main (Self);
+   --  Returns main program type: procedure or function
 
    function Dep_For
      (Self : Object; File : Simple_Name) return Dependency.Object
@@ -83,6 +93,12 @@ private
       Args : Value_List;
       --  Args for this file
 
+      Is_Main : Boolean := False;
+      --  Unit can be used as main program
+
+      Main_Kind : Main_Program_Type := Proc;
+      --  Main program type: None, procedure, or function
+
       Units : Unit.List.Object;
       --  Units for this file
 
@@ -108,6 +124,8 @@ private
 
    Undefined : constant Object :=
                  (Ofile_Full_Name => Null_Unbounded_String,
+                  Is_Main         => False,
+                  Main_Kind       => Proc,
                   Args            => Value_Type_List.Empty_Vector,
                   Units           => Unit.List.Empty_List,
                   Sdeps           => Dependency.List.Empty_List,
@@ -124,5 +142,11 @@ private
 
    function Units (Self : Object) return Unit.List.Object is
      (Self.Units);
+
+   function Is_Main (Self : Object) return Boolean is
+     (Self.Is_Main);
+
+   function Main_Kind (Self : Object) return Main_Program_Type is
+     (Self.Main_Kind);
 
 end GPR2.ALI.Definition;

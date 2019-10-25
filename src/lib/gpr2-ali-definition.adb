@@ -317,6 +317,8 @@ package body GPR2.ALI.Definition is
 
       Result : Object := Object'
         (Ofile_Full_Name => +File.Value,
+         Is_Main         => False,
+         Main_Kind       => Proc,
          Args            => Value_Type_List.Empty_Vector,
          Units           => Unit.List.Empty_List,
          Sdeps           => Dependency.List.Empty_List,
@@ -698,12 +700,37 @@ package body GPR2.ALI.Definition is
          Next_Line (Expected => 'V');
          Fill_GNAT_Version;
 
-         --  Skip to Args (A lines), or Units (U lines) if there is none.
-         --  There must be at least one U line.
-
          loop
             Next_Line;
-            exit when Header in 'A' | 'U';
+
+            case Header is
+               when 'M' =>
+                  --  Scan main program type if exists
+
+                  declare
+                     Tok : constant String :=
+                             IO.Get_Token (Handle, Stop_At_LF => True);
+                  begin
+                     if Tok = "F" then
+                        Result.Main_Kind := Func;
+                     elsif Tok = "P" then
+                        Result.Main_Kind := Proc;
+                     else
+                        raise Scan_ALI_Error;
+                     end if;
+                  end;
+
+                  Result.Is_Main := True;
+
+               when 'A' | 'U' =>
+                  --  Skip to Args (A lines), or Units (U lines) if there is
+                  --  none. There must be at least one U line.
+
+                  exit;
+
+               when others =>
+                  null;
+            end case;
          end loop;
 
          --  Read Args
