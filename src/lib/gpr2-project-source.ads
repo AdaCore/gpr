@@ -17,7 +17,8 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Project.View;
-with GPR2.Source;
+with GPR2.Source.Holder;
+with GPR2.Source_Info;
 
 limited with GPR2.Project.Source.Artifact;
 limited with GPR2.Project.Source.Set;
@@ -26,7 +27,7 @@ package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
 
-   type Object is tagged private;
+   type Object is new Source_Info.Object with private;
 
    subtype Source_Object is Object;
 
@@ -34,7 +35,7 @@ package GPR2.Project.Source is
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
-   function Is_Defined (Self : Object) return Boolean;
+   overriding function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
    function "<" (Left, Right : Object) return Boolean;
@@ -151,8 +152,8 @@ package GPR2.Project.Source is
 
 private
 
-   type Object is tagged record
-      Source : GPR2.Source.Object;
+   type Object is new Source_Info.Object with record
+      Source : GPR2.Source.Holder.Holder;
       View   : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
@@ -164,19 +165,20 @@ private
       Aggregated           : Boolean := False;
    end record;
 
-   Undefined : constant Object := (others => <>);
+   Undefined : constant Object :=
+                 (GPR2.Source_Info.Undefined with others => <>);
 
-   function Is_Defined (Self : Object) return Boolean is
+   overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
    function Is_Aggregated (Self : Object) return Boolean is
      (Self.Aggregated);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Source < Right.Source);
+     (Left.Source.Element < Right.Source.Element);
 
    overriding function "=" (Left, Right : Object) return Boolean is
-     (Left.Source = Right.Source);
+     (Left.Source.Element = Right.Source.Element);
 
    function Is_Interface (Self : Object) return Boolean is
      (Self.Is_Interface);
