@@ -43,6 +43,9 @@ package GPR2.ALI.Withed_Unit is
    function Sfile (Self : Object) return Optional_Name_Type;
    --  Returns name of source file, or empty in generic case
 
+   function Ukind (Self : Object) return Kind_Type;
+   --  Returs kind of withed unit: Spec, Body, or Separate
+
    function Is_Implicit_With_From_Instantiation (Self : Object) return Boolean;
    --  Returns True if this is an implicit with from a generic instantiation
 
@@ -83,6 +86,9 @@ private
 
    function Sfile (Self : Object) return Optional_Name_Type is
      (Optional_Name_Type (-Self.Sfile));
+
+   function Ukind (Self : Object) return Kind_Type is
+     (Self.Ukind);
 
    function Is_Implicit_With_From_Instantiation
      (Self : Object) return Boolean
