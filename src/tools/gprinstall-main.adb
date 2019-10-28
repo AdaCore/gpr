@@ -19,7 +19,6 @@
 with Ada.Characters.Handling;
 with Ada.Command_Line;
 with Ada.Exceptions;
-with Ada.Strings.Fixed;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
@@ -57,7 +56,6 @@ procedure GPRinstall.Main is
    use GPRtools;
 
    Tree    : GPR2.Project.Tree.Object;
-   Context : GPR2.Context.Object;
 
    Dummy   : aliased Boolean;
    --  A dummy boolean for supporting default switch like -a
@@ -88,26 +86,6 @@ procedure GPRinstall.Main is
 
       procedure Set_Build_Var (Swicth, Value : String);
       --  Call for each --build-var options Value being the parameter value
-
-      procedure Add_Scenario_Variable (Swicth, Value : String);
-      --  Add a scenario variable (-X option)
-
-      ---------------------------
-      -- Add_Scenario_Variable --
-      ---------------------------
-
-      procedure Add_Scenario_Variable (Swicth, Value : String) is
-         pragma Unreferenced (Swicth);
-         I : constant Natural := Strings.Fixed.Index (Value, "=");
-      begin
-         if I = 0 then
-            Context.Include (Name_Type (Value), "");
-         else
-            Context.Include
-              (Name_Type (Value (Value'First .. I - 1)),
-               Value (I + 1 .. Value'Last));
-         end if;
-      end Add_Scenario_Variable;
 
       -------------------
       -- Set_Build_Var --
@@ -160,12 +138,6 @@ procedure GPRinstall.Main is
         (Options.Config, Options.Create_Dest_Dir'Access,
          "-p", "--create-missing-dirs",
          Help => "Use runtime <runtime> for language Ada");
-
-      Define_Switch
-        (Options.Config, Add_Scenario_Variable'Unrestricted_Access,
-         "-X!",
-         Help     => "Add scenario variable",
-         Argument => "<NAME>=<VALUE>");
 
       Define_Switch
         (Options.Config, Dummy'Access,
@@ -521,7 +493,8 @@ begin
       else
          if Config.Is_Defined then
             Tree.Load
-              (Options.Project_File, Context, Config, Options.Build_Path,
+              (Options.Project_File, Options.Context, Config,
+               Options.Build_Path,
                (if Options.Subdirs = null
                 then ""
                 else Optional_Name_Type (Options.Subdirs.all)));
@@ -529,7 +502,7 @@ begin
             --  No configuration, go with auto-configuration
 
             Tree.Load_Autoconf
-              (Options.Project_File, Context, Options.Build_Path,
+              (Options.Project_File, Options.Context, Options.Build_Path,
                (if Options.Subdirs = null
                 then ""
                 else Optional_Name_Type (Options.Subdirs.all)));

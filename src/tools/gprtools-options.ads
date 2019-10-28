@@ -21,6 +21,7 @@ with Ada.Strings.Unbounded;
 with GNAT.Command_Line;
 
 with GPR2.Containers;
+with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
@@ -54,6 +55,7 @@ package GPRtools.Options is
       Target                   : Unbounded_String :=
                                    To_Unbounded_String ("all");
       RTS_Map                  : GPR2.Containers.Name_Value_Map;
+      Context                  : GPR2.Context.Object;
       Distributed_Mode         : Boolean := False;
       Slaves                   : Unbounded_String;
       Slave_Env                : Unbounded_String;

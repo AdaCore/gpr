@@ -78,7 +78,6 @@ private
    type Object is new GPRtools.Options.Object with record
       Project_Search_Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
       List_File            : Path_Name.Object     := Path_Name.Undefined;
-      Project_Context      : Context.Object       := GPR2.Context.Empty;
 
       With_Predefined_Units : Boolean := False;
       Print_Units           : Boolean := True;
@@ -100,7 +99,7 @@ private
      (Self.Only_Display_Paths);
 
    function Project_Context (Self : Object) return Context.Object is
-     (Self.Project_Context);
+     (Self.Context);
 
    function Project_File (Self : Object) return Path_Name.Object is
      (Self.Project_File);

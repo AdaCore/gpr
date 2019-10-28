@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Compilation.Registry;
@@ -95,22 +94,8 @@ package body GPRclean.Options is
          --  Remove leading '=' symbol from value for options like
          --  --config=file.cgrp
 
-         Idx : Natural := 0;
-
       begin
-         if Switch = "-X" then
-            Idx := Ada.Strings.Fixed.Index (Value, "=");
-
-            if Idx = 0 then
-               raise GPRtools.Usage_Error with
-                 "Can't split '" & Value & "' to name and value";
-            end if;
-
-            Options.Context.Insert
-              (Name_Type (Value (Value'First .. Idx - 1)),
-               Value (Idx + 1 .. Value'Last));
-
-         elsif Switch = "--config" then
+         if Switch = "--config" then
             Options.Config_File :=
               Path_Name.Create_File (Name_Type (Normalize_Value));
 
@@ -162,10 +147,6 @@ package body GPRclean.Options is
       Define_Switch
         (Config, Options.Dry_Run'Access, "-n",
          Help => "Nothing to do: only list files to delete");
-
-      Define_Switch
-        (Config, Value_Callback'Unrestricted_Access, "-X:",
-         Help => "Specify an external reference for Project Files");
 
       Define_Switch
         (Config, Value_Callback'Unrestricted_Access,

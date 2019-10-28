@@ -261,6 +261,12 @@ package body GPRtools.Options is
             Long_Switch => "--RTS:",
             Help        => "Use runtime <runtime> for language Ada",
             Argument    => "<runtime>");
+
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            "-X:",
+            Help     => "Specify an external reference for Project Files",
+            Argument => "<NAME>=<VALUE>");
       end if;
 
       if Tool in Build | Clean then
@@ -354,6 +360,20 @@ package body GPRtools.Options is
                  (GPR2.Name_Type (Value (Value'First .. Del - 1)),
                   Value (Del + 1 .. Value'Last));
             end if;
+         end;
+
+      elsif Switch = "-X" then
+         declare
+            Idx : constant Natural := Ada.Strings.Fixed.Index (Value, "=");
+         begin
+            if Idx = 0 then
+               raise GPRtools.Usage_Error with
+                 "Can't split '" & Value & "' to name and value";
+            end if;
+
+            Self.Context.Insert
+              (GPR2.Name_Type (Value (Value'First .. Idx - 1)),
+               Value (Idx + 1 .. Value'Last));
          end;
 
       elsif Switch = "-aP" then

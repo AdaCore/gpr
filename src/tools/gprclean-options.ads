@@ -44,7 +44,6 @@ package GPRclean.Options is
 
       Arg_Mains     : Boolean;
       Implicit_Proj : Boolean := False;
-      Context       : GPR2.Context.Object;
       Config_File   : Path_Name.Object;
       Remove_Config : Boolean := False;
       Subdirs       : Unbounded_String;

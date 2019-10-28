@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
@@ -35,9 +34,6 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    --  TODO: put relevant programs into the Options API
 
-   procedure Add_Scenario_Variable (Switch, Value : String);
-   --  Add a scenario variable (-X option)
-
    function Get_Files_From_List_File
      (File : Path_Name.Object) return GPR2.Containers.Value_Set;
    --  Add files from a list file
@@ -53,23 +49,6 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Set_Print_Sources (Switch, Value : String);
 
    procedure Set_Selective_Output;
-
-   ---------------------------
-   -- Add_Scenario_Variable --
-   ---------------------------
-
-   procedure Add_Scenario_Variable (Switch, Value : String) is
-      pragma Unreferenced (Switch);
-      I : constant Natural := Strings.Fixed.Index (Value, "=");
-   begin
-      if I = 0 then
-         Self.Project_Context.Include (Name_Type (Value), "");
-      else
-         Self.Project_Context.Include
-           (Name_Type (Value (Value'First .. I - 1)),
-            Value (I + 1 .. Value'Last));
-      end if;
-   end Add_Scenario_Variable;
 
    ------------------------------
    -- Get_Files_From_List_File --
@@ -169,12 +148,6 @@ begin
       "-files=",
       Help     => "File containing the list of ???",
       Argument => "<file>");
-
-   Define_Switch
-     (Config, Add_Scenario_Variable'Unrestricted_Access,
-      "-X!",
-      Help     => "Add scenario variable",
-      Argument => "<NAME>=<VALUE>");
 
    Define_Switch
      (Config, Self.Verbose_Parsing'Unrestricted_Access,
