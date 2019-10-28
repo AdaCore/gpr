@@ -56,7 +56,7 @@ package GPR2.ALI.Definition is
    --  Returns True if unit could be used as main program
 
    function Main_Kind (Self : Object) return Main_Program_Type
-     with Pre => Is_Main (Self);
+     with Pre => Self.Is_Defined and then Self.Is_Main;
    --  Returns main program type: procedure or function
 
    function Dep_For
@@ -93,7 +93,7 @@ private
       Args : Value_List;
       --  Args for this file
 
-      Is_Main : Boolean := False;
+      Is_Main_Unit : Boolean := False;
       --  Unit can be used as main program
 
       Main_Kind : Main_Program_Type := Proc;
@@ -124,7 +124,7 @@ private
 
    Undefined : constant Object :=
                  (Ofile_Full_Name => Null_Unbounded_String,
-                  Is_Main         => False,
+                  Is_Main_Unit    => False,
                   Main_Kind       => Proc,
                   Args            => Value_Type_List.Empty_Vector,
                   Units           => Unit.List.Empty_List,
@@ -144,7 +144,7 @@ private
      (Self.Units);
 
    function Is_Main (Self : Object) return Boolean is
-     (Self.Is_Main);
+     (Self.Is_Main_Unit);
 
    function Main_Kind (Self : Object) return Main_Program_Type is
      (Self.Main_Kind);

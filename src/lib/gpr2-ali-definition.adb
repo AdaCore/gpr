@@ -317,7 +317,7 @@ package body GPR2.ALI.Definition is
 
       Result : Object := Object'
         (Ofile_Full_Name => +File.Value,
-         Is_Main         => False,
+         Is_Main_Unit    => False,
          Main_Kind       => Proc,
          Args            => Value_Type_List.Empty_Vector,
          Units           => Unit.List.Empty_List,
@@ -720,7 +720,7 @@ package body GPR2.ALI.Definition is
                      end if;
                   end;
 
-                  Result.Is_Main := True;
+                  Result.Is_Main_Unit := True;
 
                when 'A' | 'U' =>
                   --  Skip to Args (A lines), or Units (U lines) if there is
