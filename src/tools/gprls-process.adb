@@ -494,9 +494,10 @@ begin
                return;
             end if;
 
-            ALI_Object := Definition.Scan_ALI (ALI_File);
+            ALI_Object := Definition.Scan_ALI (ALI_File, Tree.Log_Messages);
 
             if not ALI_Object.Is_Defined then
+               Output_Messages (Tree.Log_Messages.all, Opt);
                Finish_Program (E_Errors, "unable to scan ALI file: "
                                & ALI_File.Value);
             end if;
@@ -530,7 +531,10 @@ begin
 
                      if U_Sec.Utype in Is_Body | Is_Body_Only then
                         for Dep of ALI_Object.Sdeps loop
-                           if Is_Subunit_Of (Dep.Unit_Name, U_Sec.Uname) then
+                           if not Dep.Is_Configuration
+                             and then Is_Subunit_Of
+                                        (Dep.Unit_Name, U_Sec.Uname)
+                           then
                               Recurse_On_Sources_For_Unit (Dep.Unit_Name);
                            end if;
                         end loop;
@@ -697,11 +701,14 @@ begin
                Obj_File := S.Artifacts.Object_Code;
 
                if ALI_File.Is_Defined and then ALI_File.Exists then
-                  ALI_Object := Definition.Scan_ALI (ALI_File);
+                  ALI_Object := Definition.Scan_ALI
+                                  (ALI_File, Tree.Log_Messages);
 
                   if not ALI_Object.Is_Defined then
-                     Finish_Program (E_Errors, "unable to scan ALI file: "
-                                     & ALI_File.Value);
+                     Output_Messages (Tree.Log_Messages.all, Opt);
+                     Finish_Program
+                       (E_Errors,
+                        "unable to scan ALI file: " & ALI_File.Value);
                   end if;
 
                   if Opt.Print_Object_Files then

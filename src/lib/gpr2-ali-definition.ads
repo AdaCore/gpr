@@ -25,6 +25,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 with GPR2.ALI.Dependency.List;
 with GPR2.ALI.Unit.List;
 with GPR2.Containers;
+with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Source;
 
@@ -44,10 +45,12 @@ package GPR2.ALI.Definition is
 
    type Main_Program_Type is (Proc, Func);
 
-   function Scan_ALI (File : Path_Name.Object) return Object
+   function Scan_ALI
+     (File : Path_Name.Object;
+      Log  : access GPR2.Log.Object := null) return Object
      with Pre => File.Is_Defined;
-   --  Scans an ALI file and returns the resulting object, or Undefined if
-   --  something went wrong.
+   --  Scans an ALI file and returns the resulting object. Raise exception if
+   --  something went wrong. If Log is defined, put there parsing errors.
 
    function Is_Defined (Self : Object) return Boolean;
 
@@ -79,7 +82,7 @@ package GPR2.ALI.Definition is
 private
 
    package Sdep_Map_Package is new
-     Ada.Containers.Indefinite_Ordered_Maps (Simple_Name, Positive);
+     Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Positive);
 
    subtype Sdep_Map is Sdep_Map_Package.Map;
 

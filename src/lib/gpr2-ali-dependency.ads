@@ -33,20 +33,24 @@ package GPR2.ALI.Dependency is
    Undefined : constant Object;
 
    function Create
-     (Sfile     : Simple_Name;
+     (Sfile     : Name_Type;
       Stamp     : Ada.Calendar.Time;
       Checksum  : Word;
-      Unit_Name : Name_Type;
+      Unit_Name : Optional_Name_Type;
       Unit_Kind : Kind_Type) return Object;
-   --  Creates and returns a Dependency_Data object
+   --  Creates and returns a Dependency_Data object.
+   --  If Unit_Name is empty, than the Sfile is configuration pragmas file.
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns True if Self is defined
 
+   function Is_Configuration (Self : Object) return Boolean;
+   --  Returns True if dependency is to configuration pragmas file
+
    function Checksum (Self : Object) return Word;
    --  Returns the Checksum for Self
 
-   function Sfile (Self : Object) return Simple_Name;
+   function Sfile (Self : Object) return Name_Type;
    --  Returns the Sfile for Self
 
    function Stamp (Self : Object) return Ada.Calendar.Time;
@@ -60,7 +64,8 @@ private
    type Object is tagged record
 
       Sfile : Unbounded_String;
-      --  Name of source file
+      --  Base name of the source file.
+      --  Or full path name of the configuration pragmas files.
 
       Stamp : Ada.Calendar.Time;
       --  Time stamp value. Note that this will be all zero characters for the
@@ -69,9 +74,11 @@ private
       Checksum : Word;
       --  Checksum value. Note that this will be all zero characters for the
       --  dummy entries for missing or non-dependent files
+      --  Zero if Sfile is configuration pragmas file.
 
       Unit_Name : Unbounded_String;
-      --  Name of the unit or subunit
+      --  Name of the unit or subunit.
+      --  Empty if Sfile is configuration pragmas file.
 
       Unit_Kind : Kind_Type;
       --  Unit kind (S_Separate for a subunit)
@@ -86,10 +93,10 @@ private
                          Unit_Kind => S_Spec);
 
    function Create
-     (Sfile     : Simple_Name;
+     (Sfile     : Name_Type;
       Stamp     : Ada.Calendar.Time;
       Checksum  : Word;
-      Unit_Name : Name_Type;
+      Unit_Name : Optional_Name_Type;
       Unit_Kind : Kind_Type) return Object
    is
      (Object'(Sfile     => +String (Sfile),
@@ -104,7 +111,7 @@ private
    function Checksum (Self : Object) return Word is
      (Self.Checksum);
 
-   function Sfile (Self : Object) return Simple_Name is
+   function Sfile (Self : Object) return Name_Type is
      (Simple_Name (-Self.Sfile));
 
    function Stamp (Self : Object) return Ada.Calendar.Time is
@@ -112,5 +119,8 @@ private
 
    function Unit_Name (Self : Object) return Name_Type is
      (Name_Type (-Self.Unit_Name));
+
+   function Is_Configuration (Self : Object) return Boolean is
+      (Self.Unit_Name = Null_Unbounded_String);
 
 end GPR2.ALI.Dependency;

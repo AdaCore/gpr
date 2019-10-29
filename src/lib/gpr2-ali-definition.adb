@@ -18,10 +18,13 @@
 
 with Ada.Calendar;
 with Ada.Calendar.Formatting;
+with Ada.Exceptions;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 
 with GPR2.ALI.Withed_Unit;
+with GPR2.Message;
+with GPR2.Source_Reference;
 
 package body GPR2.ALI.Definition is
 
@@ -274,7 +277,6 @@ package body GPR2.ALI.Definition is
    procedure Print_ALI (Self : Object) is
       use Ada.Text_IO;
    begin
-
       Put_Line ("Ofile: " & (-Self.Ofile_Full_Name));
 
       Put ("Args: ");
@@ -309,7 +311,9 @@ package body GPR2.ALI.Definition is
    -- Scan_ALI --
    --------------
 
-   function Scan_ALI (File : Path_Name.Object) return Object
+   function Scan_ALI
+     (File : Path_Name.Object;
+      Log  : access GPR2.Log.Object := null) return Object
    is
       Scan_ALI_Error : exception;
 
@@ -337,6 +341,8 @@ package body GPR2.ALI.Definition is
 
       procedure Fill_With (Header : Character);
 
+      procedure Log_Error (Text : String);
+
       --------------
       -- Fill_Arg --
       --------------
@@ -345,7 +351,7 @@ package body GPR2.ALI.Definition is
          Tok : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
       begin
          if Tok = "" then
-            raise Scan_ALI_Error;
+            raise Scan_ALI_Error with "Empty argumet";
          else
             Result.Args.Append (Tok);
          end if;
@@ -366,7 +372,8 @@ package body GPR2.ALI.Definition is
          function Checksum (S : String) return Word is
          begin
             if S'Length /= 8 then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with
+                 "Wrong checksum length" & S'Length'Img;
             end if;
 
             declare
@@ -374,17 +381,19 @@ package body GPR2.ALI.Definition is
 
             begin
                for C of S loop
-                  if C in '0' .. '9' then
-                     Chk := Chk * 16 +
-                              Character'Pos (C) - Character'Pos ('0');
+                  case C is
+                     when '0' .. '9' =>
+                        Chk := Chk * 16 +
+                          Character'Pos (C) - Character'Pos ('0');
 
-                  elsif C in 'a' .. 'f' then
-                     Chk := Chk * 16 +
-                              Character'Pos (C) - Character'Pos ('a') + 10;
+                     when 'a' .. 'f' =>
+                        Chk := Chk * 16 +
+                          Character'Pos (C) - Character'Pos ('a') + 10;
 
-                  else
-                     raise Scan_ALI_Error;
-                  end if;
+                     when others =>
+                        raise Scan_ALI_Error with
+                          "Wrong character '" & C & "' in checksum";
+                  end case;
                end loop;
 
                return Chk;
@@ -395,7 +404,7 @@ package body GPR2.ALI.Definition is
             Tok : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
          begin
             if Tok = "" then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with "Missed dependency field";
             else
                return Tok;
             end if;
@@ -405,7 +414,8 @@ package body GPR2.ALI.Definition is
             T : String (1 .. 14);
          begin
             if S'Length /= 14 then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with
+                 "Wrong timestamp length" & S'Length'Img;
             end if;
 
             T := S;
@@ -415,7 +425,7 @@ package body GPR2.ALI.Definition is
                & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
          end Time_Stamp;
 
-         Sfile  : constant Simple_Name       := Simple_Name (Get_Token);
+         Sfile  : constant Name_Type         := Name_Type (Get_Token);
          Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
 
@@ -424,21 +434,22 @@ package body GPR2.ALI.Definition is
                        S_Separate      => 0);
          --  Length of suffix denoting dependency kind
 
-         Kind     : Kind_Type;                    -- Unit_Kind
-         Name     : constant String := Get_Token; -- Unit_Name
-         Suffix   : constant String :=
-                      (if Name'Length > 2
-                       then Name (Name'Last - 1 .. Name'Last)
-                       else "");
+         Kind : Kind_Type;                                     -- Unit_Kind
+         Name : constant String :=
+                    IO.Get_Token (Handle, Stop_At_LF => True); -- Unit_Name
+         --  Could be empty on *.adc file dependency
+
+         Suffix : constant String :=
+                     (if Name'Length > 2
+                      then Name (Name'Last - 1 .. Name'Last)
+                      else "");
       begin
          if Suffix = "%s" then
             Kind := S_Spec;
          elsif Suffix = "%b" then
             Kind := S_Body;
-         elsif Name /= "" then
-            Kind := S_Separate;
          else
-            raise Scan_ALI_Error;
+            Kind := S_Separate;
          end if;
 
          Result.Sdeps.Append
@@ -447,7 +458,8 @@ package body GPR2.ALI.Definition is
                Stamp     => Stamp,
                Checksum  => Chksum,
                Unit_Name =>
-                 Name_Type (Name (Name'First .. Name'Last - Kind_Len (Kind))),
+                 Optional_Name_Type
+                   (Name (Name'First .. Name'Last - Kind_Len (Kind))),
                Unit_Kind => Kind));
 
          Result.Sdeps_Map.Include (Sfile, Result.Sdeps.Last_Index);
@@ -490,7 +502,7 @@ package body GPR2.ALI.Definition is
             Result.GNAT_Version := +"GNAT " &
               Unbounded_Slice (Version, 2, Length - 1);
          else
-            raise Scan_ALI_Error;
+            raise Scan_ALI_Error with "Wrong version string";
          end if;
       end Fill_GNAT_Version;
 
@@ -518,11 +530,11 @@ package body GPR2.ALI.Definition is
             --  At least "?%(b|s)"
 
             if Tok1'Length < 3 and then Tok1 (Tok1'Last - 1) /= '%' then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with "Wrong unit suffix";
             end if;
 
             if Tok2 = "" then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with "Filename missed in unit line";
             end if;
 
             --  Set Utype. This will be adjusted after we finish reading the
@@ -531,7 +543,7 @@ package body GPR2.ALI.Definition is
             case Tok1 (Tok1'Last) is
                when 's'    => Utype := Is_Spec_Only;
                when 'b'    => Utype := Is_Body_Only;
-               when others => raise Scan_ALI_Error;
+               when others => raise Scan_ALI_Error with "Wrong kind of unit";
             end case;
 
             U := Unit.Create
@@ -644,13 +656,14 @@ package body GPR2.ALI.Definition is
          --  At least "?%(b|s)"
 
          if U_Last <= 0 or else N (N'Last - 1) /= '%' then
-            raise Scan_ALI_Error;
+            raise Scan_ALI_Error with "Wrong withed unit suffix";
          end if;
 
          case N (N'Last) is
             when 's'    => Ukind := S_Spec;
             when 'b'    => Ukind := S_Body;
-            when others => raise Scan_ALI_Error;
+            when others =>
+               raise Scan_ALI_Error with "Wrong kind of withed unit";
          end case;
 
          Result.Units (Result.Units.Last).Add_With
@@ -661,6 +674,22 @@ package body GPR2.ALI.Definition is
                Afile                            => Optional_Name_Type (A),
                Implicit_With_From_Instantiation => (Header = 'Z')));
       end Fill_With;
+
+      ---------------
+      -- Log_Error --
+      ---------------
+
+      procedure Log_Error (Text : String) is
+      begin
+         if Log /= null then
+            Log.Append
+              (Message.Create
+                 (Level   => Message.Error,
+                  Message => Text,
+                  Sloc    => Source_Reference.Create
+                               (File.Value, Handle.Line, 1)));
+         end if;
+      end Log_Error;
 
    begin
       --  Fill the ALI object up till the XREFs
@@ -688,7 +717,7 @@ package body GPR2.ALI.Definition is
             if (Expected /= ASCII.NUL and then Header /= Expected)
               or else (not Allow_EOF and then Header = ASCII.NUL)
             then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with "Error in getting next line";
             end if;
          end Next_Line;
 
@@ -716,7 +745,8 @@ package body GPR2.ALI.Definition is
                      elsif Tok = "P" then
                         Result.Main_Kind := Proc;
                      else
-                        raise Scan_ALI_Error;
+                        raise Scan_ALI_Error with
+                          "Unexpected type of the main program";
                      end if;
                   end;
 
@@ -752,7 +782,7 @@ package body GPR2.ALI.Definition is
 
          loop
             if Result.Units.Length = 2 then
-               raise Scan_ALI_Error;  --  Cannot have more than 2 units
+               raise Scan_ALI_Error with "Cannot have more than 2 units";
             end if;
 
             Fill_Unit;
@@ -789,7 +819,8 @@ package body GPR2.ALI.Definition is
                procedure P1 (Element : in out Unit.Object) is
                begin
                   if Element.Utype /= Is_Body_Only then
-                     raise Scan_ALI_Error;
+                     raise Scan_ALI_Error with
+                       "Unit body is on the wrong position";
                   end if;
                   Element.Set_Utype (Is_Body);
                end P1;
@@ -797,7 +828,8 @@ package body GPR2.ALI.Definition is
                procedure P2 (Element : in out Unit.Object) is
                begin
                   if Element.Utype /= Is_Spec_Only then
-                     raise Scan_ALI_Error;
+                     raise Scan_ALI_Error with
+                       "Unit spec is on the wrong position";
                   end if;
                   Element.Set_Utype (Is_Spec);
                end P2;
@@ -818,8 +850,14 @@ package body GPR2.ALI.Definition is
          return Result;
 
       exception
-         when others =>
+         when E : Scan_ALI_Error =>
             IO.Close (Handle);
+            Log_Error (Exceptions.Exception_Message (E));
+            return Undefined;
+
+         when E : others =>
+            IO.Close (Handle);
+            Log_Error (Exceptions.Exception_Information (E));
             return Undefined;
       end;
    end Scan_ALI;
