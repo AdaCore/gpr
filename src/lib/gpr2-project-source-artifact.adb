@@ -52,9 +52,9 @@ package body GPR2.Project.Source.Artifact is
       S_View : constant Project.View.Object :=
                  Definition.Strong (Source.View);
       O_View : constant Project.View.Object :=
-                 (if Source.Has_Extending_View
-                  then Source.Extending_View
-                  else Definition.Strong (Source.View));
+                 (if S_View.Is_Extended and then not S_View.Is_Externally_Built
+                  then S_View.Extending
+                  else S_View);
 
       O_Suffix : constant Name_Type := S_View.Tree.Object_Suffix (Lang);
       D_Suffix : constant Name_Type := S_View.Tree.Dependency_Suffix (Lang);
