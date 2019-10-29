@@ -98,10 +98,12 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          --  Source search path
 
          for V of Tree loop
-            for D of V.Source_Directories.Values loop
-               Src_Path.Append
-                 (Path_Name.Create_Directory (Optional_Name_Type (D.Text)));
-            end loop;
+            if V.Kind not in K_Aggregate | K_Abstract then
+               for D of V.Source_Directories.Values loop
+                  Src_Path.Append
+                    (Path_Name.Create_Directory (Optional_Name_Type (D.Text)));
+               end loop;
+            end if;
          end loop;
 
          for D of Tree.Runtime_Project.Source_Directories.Values loop
@@ -119,7 +121,9 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          --  Object search path
 
          for V of Tree loop
-            Obj_Path.Append (V.Object_Directory);
+            if V.Kind in K_Standard | K_Library | K_Aggregate_Library then
+               Obj_Path.Append (V.Object_Directory);
+            end if;
          end loop;
 
          Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
