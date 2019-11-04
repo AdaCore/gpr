@@ -5,7 +5,7 @@ with "first.gpr";
 project Demo is
    type Me is ("one", "two");
    Dir1 := "toto";
-   Dir2 := external ("OS");
+   Dir2 := external ("UNSET_ENVIRONMENT_VARIABLE");
    Dir3 : Me := "one";
 
    for Source_Dirs use (".", Dir1, Dir2);
