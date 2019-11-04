@@ -8,8 +8,6 @@
 8: subdir/
 9: ../
 A: ./
-B: /dir1/dir2
-C: /dir1/dir2
 B: subdir/one
 C: subdir/one
 D: subdir/one.a

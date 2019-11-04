@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Text_IO;
 
 with GPR2.Path_Name;
@@ -53,8 +54,13 @@ begin
    Text_IO.Put_Line ("8: " & String (C2.Relative_Path(C1).Name));
    Text_IO.Put_Line ("9: " & String (C1.Relative_Path(C2).Name));
    Text_IO.Put_Line ("A: " & String (Path_Name.Relative_Path (P6, P5).Name));
-   Text_IO.Put_Line ("B: " & P5.Containing_Directory.Value);
-   Text_IO.Put_Line ("C: " & P5.Containing_Directory.Value);
+   --  on windows current drive is added to absolute GPR2.Path_Name.
+   --  use Ada.Directories.Full_Name to get normalized path.
+   --  /dir1/dir2 on linux, C:/dir1/dir2 on windows
+   if P5.Containing_Directory.Value /= Ada.Directories.Full_Name ("/dir1/dir2") then
+      Text_IO.Put_Line ("Expected: " & Ada.Directories.Full_Name ("/dir1/dir2") &
+                          " Actual: " & P5.Containing_Directory.Value);
+   end if;
    PV := C2.Change_Extension ("");
    Text_IO.Put_Line ("B: " & String (PV.Name));
    PV := C2.Change_Extension (".");
