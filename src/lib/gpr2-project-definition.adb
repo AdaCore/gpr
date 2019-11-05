@@ -1752,7 +1752,7 @@ package body GPR2.Project.Definition is
          for V of Other_Except_Usage loop
             Tree.Append_Message
               (Message.Create
-                 (Message.Error,
+                 (Message.Warning,
                   "source file """ & V.Text & """ not found",
                   V));
          end loop;
