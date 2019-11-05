@@ -23,8 +23,9 @@
 --  A soucre parser is created as a child package. It is then
 --  registered into the source info parser registry child package.
 
+with GPR2.Project.View;
+
 limited with GPR2.Source;
-limited with GPR2.Project.Tree;
 
 package GPR2.Source_Info.Parser is
 
@@ -34,15 +35,15 @@ package GPR2.Source_Info.Parser is
 
    procedure Compute
      (Parser : Object;
-      Data   : in out Source_Info.Object;
-      Source : GPR2.Source.Object;
-      LI     : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
-      Tree   : access GPR2.Project.Tree.Object := null) is abstract
+      Data   : in out Source_Info.Object'Class;
+      Source : GPR2.Source.Object'Class;
+      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
+      View   : Project.View.Object'Class := Project.View.Undefined) is abstract
    with Pre'Class  => Parser.Kind /= None
-                        and then
-                      (LI.Is_Defined or else Parser.Kind /= Source_Info.LI)
-                        and then
-                      (LI.Is_Defined or else Tree = null),
+                            and then
+                          (LI.Is_Defined or else Parser.Kind /= Source_Info.LI)
+                            and then
+                          (LI.Is_Defined or else not View.Is_Defined),
         Post'Class => Data.Used_Backend in Source_Info.LI | Source_Info.Source;
    --  Set Data with the information for the given source. If LI is undefined
    --  or not present then the source is parsed (using either the LI based
