@@ -71,11 +71,16 @@ package body GPR2.Project is
       ------------
 
       procedure Append (Value : String) is
-         Path : constant Path_Name.Object :=
-                  Path_Name.Create_Directory (Name_Type (Value));
       begin
-         if Value /= "" and then not Paths.Contains (Path) then
-            Paths.Append (Path);
+         if Value /= "" then
+            declare
+               Path : constant Path_Name.Object :=
+                        Path_Name.Create_Directory (Name_Type (Value));
+            begin
+               if not Paths.Contains (Path) then
+                  Paths.Append (Path);
+               end if;
+            end;
          end if;
       end Append;
 
