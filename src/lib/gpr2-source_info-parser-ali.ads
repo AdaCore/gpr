@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,14 +16,20 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Vectors;
+package GPR2.Source_Info.Parser.ALI is
 
-package GPR2.ALI.Withed_Unit.List is
+   Language : aliased constant Name_Type := "Ada";
 
-   package List is new Ada.Containers.Indefinite_Vectors (Positive, Object);
+   type Object is new Parser.Object
+     (Language => Language'Unrestricted_Access,
+      Kind     => LI) with null record;
 
-   subtype Object is List.Vector;
+   overriding procedure Compute
+     (Parser : Object;
+      Data   : in out Source_Info.Object'Class;
+      Source : GPR2.Source.Object'Class;
+      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
+      View   : Project.View.Object'Class := Project.View.Undefined);
+   --  Setup Data with the information from GNAT .ali file
 
-   Empty_List : constant Object := List.Empty_Vector;
-
-end GPR2.ALI.Withed_Unit.List;
+end GPR2.Source_Info.Parser.ALI;
