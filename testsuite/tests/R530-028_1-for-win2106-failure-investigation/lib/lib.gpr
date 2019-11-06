@@ -1,0 +1,9 @@
+with "pkg/pkg.gpr";
+
+library project Lib is
+   for Library_Dir use "lib";
+   for Library_Name use "lib";
+   for Object_Dir use "obj";
+   for Library_Kind use "static";
+   for Interfaces use ("lib.ads");
+end Lib;

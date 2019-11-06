@@ -1,0 +1,4 @@
+description: investigate test failure on win-2016. temporary xfail test
+driver: python_script
+expect_failure: "TODO: remove test when resolved"
+

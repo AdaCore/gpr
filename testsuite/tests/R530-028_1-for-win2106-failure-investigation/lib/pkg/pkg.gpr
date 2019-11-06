@@ -1,0 +1,7 @@
+library project Pkg is
+   for Library_Dir use "lib";
+   for Library_Name use "pkg";
+   for Object_Dir use "obj";
+   for Library_Kind use "static";
+   for Interfaces use ("pkg.ads");
+end Pkg;
