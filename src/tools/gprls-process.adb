@@ -263,12 +263,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    end Show_Tree_Load_Errors;
 
 begin
-   --  Register project search path passed as parameter
-
-   for D of Opt.Project_Search_Paths loop
-      Tree.Register_Project_Search_Path (D);
-   end loop;
-
    --  Load the project (if defined) and its configuration
 
    begin

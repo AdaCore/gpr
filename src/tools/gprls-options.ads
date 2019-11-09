@@ -22,7 +22,6 @@ with GPR2;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
-with GPR2.Path_Name.Set;
 
 with GPRtools.Options;
 
@@ -46,8 +45,6 @@ package GPRls.Options is
    function Project_File (Self : Object) return Path_Name.Object;
 
    function Project_Context (Self : Object) return Context.Object;
-
-   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
 
    function Get_Target (Self : Object) return Optional_Name_Type;
 
@@ -76,9 +73,7 @@ package GPRls.Options is
 private
 
    type Object is new GPRtools.Options.Object with record
-      Project_Search_Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set;
-      List_File            : Path_Name.Object     := Path_Name.Undefined;
-
+      List_File             : Path_Name.Object;
       With_Predefined_Units : Boolean := False;
       Print_Units           : Boolean := True;
       Print_Sources         : Boolean := True;
@@ -103,9 +98,6 @@ private
 
    function Project_File (Self : Object) return Path_Name.Object is
      (Self.Project_File);
-
-   function Project_Search_Paths (Self : Object) return Path_Name.Set.Object is
-     (Self.Project_Search_Paths);
 
    function Get_Target (Self : Object) return Optional_Name_Type is
      (Optional_Name_Type (To_String (Self.Target)));

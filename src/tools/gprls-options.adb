@@ -43,7 +43,7 @@ package body GPRls.Options is
       Text_IO.Put_Line ("Project file: " & Self.Project_File.Value);
 
       Text_IO.Put_Line ("Project search path:");
-      for P of Self.Project_Search_Paths loop
+      for P of Self.Tree.Project_Search_Paths loop
          Text_IO.Put_Line ("   " & P.Value);
       end loop;
 
