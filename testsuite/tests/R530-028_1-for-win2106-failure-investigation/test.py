@@ -6,9 +6,13 @@ try:
                  'lib/pkg/obj/*', 'lib/pkg/lib/*']
 
 
-    output=subprocess.check_output('gprbuild -p -P main.gpr -dn', shell=True)
+    output=subprocess.check_output('gprbuild -v -p -P main.gpr -dn', shell=True)
+    print output
+    output=subprocess.check_output('ls -laR --full-time', shell=True)
     print output
     output=subprocess.check_output('gpr2clean -v -p -P main.gpr -r', shell=True)
+    print output
+    output=subprocess.check_output('ls -laR --full-time', shell=True)
     print output
 
     if ls(artifacts) == []:
