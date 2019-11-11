@@ -38,6 +38,11 @@ package GPR2.Path_Name is
 
    Undefined : constant Object;
 
+   Resolve_On_Current : constant Optional_Name_Type := "./";
+   --  Resolves relative path from current directory
+   No_Resolution      : constant Optional_Name_Type := "";
+   --  Skip full path-name resolution, delay for later
+
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
@@ -53,10 +58,16 @@ package GPR2.Path_Name is
 
    function Create_File
      (Name      : Name_Type;
-      Directory : Optional_Name_Type := "") return Object
+      Directory : Optional_Name_Type := Resolve_On_Current) return Object
      with Post => Create_File'Result.Is_Defined
                   and then not Create_File'Result.Is_Directory;
-   --  Creates a Path_Name_Type for a file
+   --  Creates a Path_Name.Object for a file.
+   --  See Resolve_On_Current and No_Resolution above for Directory options.
+   --  If Directory parameter is No_Resolution and Name is not absolute
+   --  filename then Object is created without directory information. To create
+   --  the file relatively to the current directory, use the Resolve_On_Current
+   --  in the Directory parameter. In case of absolute pathname in Name
+   --  parameter the Directory parameter has no meaning.
 
    function Create_Directory
      (Name      : Name_Type;
@@ -91,8 +102,12 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined;
    --  Returns the base name for Self (with extension)
 
+   function Has_Dir_Name (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Self has directory information
+
    function Dir_Name (Self : Object) return Full_Name
-     with Pre  => Self.Is_Defined,
+     with Pre  => Self.Is_Defined and then Self.Has_Dir_Name,
           Post => Dir_Name'Result (Dir_Name'Result'Last) in '/' | '\';
    --  Returns the directory part for Self
 
@@ -185,6 +200,9 @@ private
    function Dir_Name (Self : Object) return Full_Name is
      (Full_Name
         (To_String (if Self.Is_Dir then Self.Value else Self.Dir_Name)));
+
+   function Has_Dir_Name (Self : Object) return Boolean is
+     (Self.Dir_Name /= Null_Unbounded_String);
 
    function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
 

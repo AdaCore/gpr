@@ -897,7 +897,8 @@ package body GPR2.Project.Definition is
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
          File      : constant GPR2.Path_Name.Object :=
-                       Path_Name.Create_File (Name_Type (Path));
+                       Path_Name.Create_File
+                         (Name_Type (Path), Path_Name.No_Resolution);
          Basename  : constant Value_Type := Value_Type (File.Simple_Name);
 
          Match                  : Boolean := False;

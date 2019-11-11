@@ -335,7 +335,8 @@ package body GPRinstall.Install is
                declare
                   Man_Path : constant Path_Name.Object :=
                                Path_Name.Create_File
-                                 (Name_Type (N (Name (Man))));
+                                 (Name_Type (N (Name (Man))),
+                                  Path_Name.No_Resolution);
                begin
                   Put_Line
                     (Man,
@@ -349,7 +350,8 @@ package body GPRinstall.Install is
                declare
                   Agg_Man_Path : constant Path_Name.Object :=
                                    Path_Name.Create_File
-                                     (Name_Type (N (Name (Agg_Manifest))));
+                                     (Name_Type (N (Name (Agg_Manifest))),
+                                      Path_Name.No_Resolution);
                begin
                   Put_Line
                     (Agg_Manifest,

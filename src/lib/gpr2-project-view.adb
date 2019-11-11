@@ -1234,7 +1234,7 @@ package body GPR2.Project.View is
       end if;
 
       for S of Definition.Get_RO (Self).Sources loop
-         if S.Source.Path_Name.Value = File.Value then
+         if S.Source.Path_Name.Simple_Name = File.Simple_Name then
             return S;
          end if;
       end loop;

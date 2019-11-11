@@ -106,7 +106,11 @@ package body GPR2.Parser.Project is
           (Get_Source_Reference (Path_Name, Slr), Identifier)));
 
    function Get_Raw_Path
-     (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object;
+     (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object
+   is
+     (GPR2.Path_Name.Create_File
+        (GPR2.Project.Ensure_Extension (Get_Name_Type (Node)),
+         GPR2.Path_Name.No_Resolution));
    --  Creates project Path_Name.Object not checked for location
 
    function Get_String_Literal
@@ -133,19 +137,6 @@ package body GPR2.Parser.Project is
    begin
       return Self.Externals;
    end Externals;
-
-   ------------------
-   -- Get_Raw_Path --
-   ------------------
-
-   function Get_Raw_Path
-     (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object
-   is
-      GPR_Name : constant Name_Type :=
-                   GPR2.Project.Ensure_Extension (Get_Name_Type (Node));
-   begin
-      return GPR2.Path_Name.Create (GPR_Name, GPR_Name);
-   end Get_Raw_Path;
 
    ------------------------
    -- Get_String_Literal --
@@ -876,9 +867,9 @@ package body GPR2.Parser.Project is
 
          for W of Implicit_With loop
             declare
-               use type GPR2.Path_Name.Object;
+               use GPR2.Path_Name;
                PN : constant GPR2.Path_Name.Object :=
-                      GPR2.Path_Name.Create (W, W);
+                      Create_File (W, No_Resolution);
             begin
                if PN /= Filename
                  and then not Project.Imports.Contains (PN)

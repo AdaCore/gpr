@@ -56,8 +56,8 @@ is
       Position   : Language_Sources_Map.Cursor;
       Src_Idx    : Source.Object :=
                      Source.Create
-                       (Path_Name.Create
-                          (Src.File.Simple_Name, Src.File.Simple_Name),
+                       (Path_Name.Create_File
+                          (Src.File.Simple_Name, Path_Name.No_Resolution),
                         Src.Language,
                         Src.Unit_Based);
       --  Use source based only on simple name to index in Source_Names

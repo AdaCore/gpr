@@ -183,8 +183,7 @@ package body GPR2.Project is
          end if;
       end if;
 
-      return Path_Name.Create_File
-        (GPR_Name, Name_Type (Directories.Current_Directory));
+      return Path_Name.Create_File (GPR_Name, Path_Name.Resolve_On_Current);
    end Create;
 
    --------------------------
@@ -365,8 +364,7 @@ package body GPR2.Project is
       end if;
 
       Implicit := Path_Name.Create_File
-        (Optional_Name_Type
-           (Executable_Prefix_Path & "/share/gpr/_default.gpr"));
+        (Name_Type (Executable_Prefix_Path & "/share/gpr/_default.gpr"));
 
       if Implicit.Exists then
          return Implicit;

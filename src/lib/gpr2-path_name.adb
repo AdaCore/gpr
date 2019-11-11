@@ -236,7 +236,7 @@ package body GPR2.Path_Name is
          if Self.Is_Dir then
             return Create_Directory (CP);
          else
-            return Create_File (CP);
+            return Create_File (CP, No_Resolution);
          end if;
       end;
    end Common_Prefix;
@@ -256,7 +256,7 @@ package body GPR2.Path_Name is
       if Directory then
          return Create_Directory (Filename);
       else
-         return Create_File (Filename);
+         return Create_File (Filename, No_Resolution);
       end if;
    end Compose;
 
@@ -400,18 +400,31 @@ package body GPR2.Path_Name is
 
    function Create_File
      (Name      : Name_Type;
-      Directory : Optional_Name_Type := "") return Object
+      Directory : Optional_Name_Type := Resolve_On_Current) return Object
    is
-      NN : constant String := Make_Absolute (Name, Directory);
-      VN : constant Unbounded_String := +NN;
    begin
-      return Object'
-        (Is_Dir    => False,
-         As_Is     => +String (Name),
-         Value     => VN,
-         Comparing => To_OS_Case (VN),
-         Base_Name => +Base_Name (NN),
-         Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
+      if Directory = No_Resolution
+        and then not OS_Lib.Is_Absolute_Path (String (Name))
+      then
+         return Object'
+           (As_Is     => +String (Name),
+            Comparing => +String (Name),
+            Base_Name => +Base_Name (String (Name)),
+            others    => <>);
+      else
+         declare
+            NN : constant String := Make_Absolute (Name, Directory);
+            VN : constant Unbounded_String := +NN;
+         begin
+            return Object'
+              (Is_Dir    => False,
+               As_Is     => +String (Name),
+               Value     => VN,
+               Comparing => To_OS_Case (VN),
+               Base_Name => +Base_Name (NN),
+               Dir_Name  => +Ensure_Directory (Containing_Directory (NN)));
+         end;
+      end if;
    end Create_File;
 
    ---------------------
