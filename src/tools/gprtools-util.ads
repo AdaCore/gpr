@@ -37,8 +37,7 @@ package GPRtools.Util is
 
    procedure Set_Program_Name (Name : String);
 
-   procedure Output_Messages
-     (Log : GPR2.Log.Object; Options : GPRtools.Options.Object'Class);
+   procedure Output_Messages (Options : GPRtools.Options.Object'Class);
    --  Output errors and if Verbose is True other messages from log
 
    -------------------------
@@ -49,8 +48,7 @@ package GPRtools.Util is
    --  Terminate program with a message and a fatal status code
 
    procedure Project_Processing_Failed
-     (Tree    : GPR2.Project.Tree.Object;
-      Options : GPRtools.Options.Object'Class);
+     (Options : GPRtools.Options.Object'Class);
    --  Output or not project processing error messages depend on Verbose
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.

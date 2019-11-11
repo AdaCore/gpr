@@ -124,11 +124,11 @@ package body GPRtools.Util is
    -- Output_Messages --
    ---------------------
 
-   procedure Output_Messages
-     (Log : GPR2.Log.Object; Options : GPRtools.Options.Object'Class)
-   is
+   procedure Output_Messages (Options : GPRtools.Options.Object'Class) is
       use Ada.Text_IO;
       Displayed : GPR2.Containers.Value_Set;
+      Log       : constant not null access GPR2.Log.Object :=
+                    Options.Tree.Log_Messages;
    begin
       for C in Log.Iterate
         (Information => Options.Verbosity = Verbose,
@@ -166,10 +166,9 @@ package body GPRtools.Util is
    -------------------------------
 
    procedure Project_Processing_Failed
-     (Tree    : GPR2.Project.Tree.Object;
-      Options : GPRtools.Options.Object'Class) is
+     (Options : GPRtools.Options.Object'Class) is
    begin
-      Output_Messages (Tree.Log_Messages.all, Options);
+      Output_Messages (Options);
       Fail_Program
         ('"' & String (Options.Project_File.Simple_Name)
          & """ processing failed");

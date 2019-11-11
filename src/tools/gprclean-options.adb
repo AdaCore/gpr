@@ -218,7 +218,7 @@ package body GPRclean.Options is
               "Can't determine project file to work with";
          end if;
 
-      elsif Options.No_Project  then
+      elsif Options.No_Project then
          raise GPRtools.Usage_Error with
            "cannot specify --no-project with a project file";
       end if;

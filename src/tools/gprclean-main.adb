@@ -619,7 +619,7 @@ begin
             & Options.Mains.First_Element & '"',
             Source_Reference.Create (Options.Project_File.Value, 0, 0)));
 
-      Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
+      Util.Output_Messages (Options);
 
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
@@ -650,7 +650,7 @@ begin
       Delete_File (Options.Config_File.Value, Options);
    end if;
 
-   Util.Output_Messages (Project_Tree.Log_Messages.all, Options);
+   Util.Output_Messages (Options);
 
 exception
    when GNAT.Command_Line.Exit_From_Command_Line =>
@@ -664,7 +664,7 @@ exception
       GPRtools.Util.Fail_Program (Exception_Message (E));
 
    when Project_Error | Processing_Error =>
-      GPRtools.Util.Project_Processing_Failed (Project_Tree, Options);
+      GPRtools.Util.Project_Processing_Failed (Options);
 
    when E : others =>
       GPRtools.Util.Fail_Program
