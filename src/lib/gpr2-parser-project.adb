@@ -18,7 +18,6 @@
 
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
-with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 
@@ -911,12 +910,12 @@ package body GPR2.Parser.Project is
          end;
 
       else
-         if not Directories.Exists (Filename.Value) then
+         if not Filename.Exists then
             Messages.Append
               (GPR2.Message.Create
                  (Level   => Message.Error,
-                  Message => "project file not found",
-                  Sloc    => Source_Reference.Create (Filename.Value, 1, 1)));
+                  Message => "project file '" & Filename.Value & "' not found",
+                  Sloc    => Source_Reference.Create (Filename.Value, 0, 0)));
             return Undefined;
          end if;
 

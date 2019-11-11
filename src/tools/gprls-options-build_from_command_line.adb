@@ -214,17 +214,10 @@ begin
       end if;
    end if;
 
-   --  Check that we have a project file to use.
-   --  If not and there is no file on the command line, check if -v is provided
+   --  If there is no file on the command line, check if -v is provided
    --  so that we enter the "only display paths" mode.
 
-   if Self.Project_File.Is_Defined then
-      if not Self.Project_File.Exists then
-         Finish_Program
-           (E_Errors,
-           "project file " & String (Self.Project_File.Name) & " not found.");
-      end if;
-   else
+   if not Self.Project_File.Is_Defined then
       if Self.Files.Is_Empty and then Self.Verbose then
          Self.Only_Display_Paths := True;
       end if;

@@ -265,16 +265,12 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
 begin
    --  Load the project (if defined) and its configuration
 
-   begin
-      Tree.Load_Autoconf
-        (Filename          => Opt.Project_File,
-         Context           => Opt.Project_Context,
-         Absent_Dir_Error  => True,
-         Target            => Opt.Get_Target,
-         Language_Runtimes => Opt.RTS_Map);
-   exception
-      when others => Show_Tree_Load_Errors;
-   end;
+   Tree.Load_Autoconf
+     (Filename          => Opt.Project_File,
+      Context           => Opt.Project_Context,
+      Absent_Dir_Error  => True,
+      Target            => Opt.Get_Target,
+      Language_Runtimes => Opt.RTS_Map);
 
    --  The configuration step could fail because the language list has been
    --  set to empty ("for Languages use ()"), in this case just exit.
@@ -297,11 +293,7 @@ begin
 
    --  Make sure the sources are up to date
 
-   begin
-      Tree.Update_Sources;
-   exception
-      when others => Show_Tree_Load_Errors;
-   end;
+   Tree.Update_Sources;
 
    --
    --  Main processing
