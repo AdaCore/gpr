@@ -346,7 +346,7 @@ private
       Units            : Name_View.Map;
       Sources          : Name_View.Map;
       Messages         : aliased Log.Object;
-      Search_Paths     : Path_Name.Set.Object;
+      Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
       Implicit_With    : Containers.Name_Set;
       Build_Path       : Path_Name.Object;
       Subdirs          : Ada.Strings.Unbounded.Unbounded_String;

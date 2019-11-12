@@ -626,7 +626,6 @@ package body GPR2.Path_Name is
    -----------------
 
    function Simple_Name (Self : Object) return GPR2.Simple_Name is
-
    begin
       --  Ada.Directories.Simple_Name cannot be used here as
       --  Path can contain '*' character that will be rejected on windows

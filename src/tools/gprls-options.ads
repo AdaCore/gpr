@@ -42,8 +42,6 @@ package GPRls.Options is
 
    function Files (Self : Object) return Containers.Value_Set;
 
-   function Project_File (Self : Object) return Path_Name.Object;
-
    function Project_Context (Self : Object) return Context.Object;
 
    function Get_Target (Self : Object) return Optional_Name_Type;
@@ -95,9 +93,6 @@ private
 
    function Project_Context (Self : Object) return Context.Object is
      (Self.Context);
-
-   function Project_File (Self : Object) return Path_Name.Object is
-     (Self.Project_File);
 
    function Get_Target (Self : Object) return Optional_Name_Type is
      (Optional_Name_Type (To_String (Self.Target)));

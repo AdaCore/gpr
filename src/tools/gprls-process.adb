@@ -257,9 +257,9 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          Text_IO.Put_Line (Log.Element (C).Format);
       end loop;
 
-      Finish_Program (E_Errors,
-                      "unable to process project file " &
-                        String (Opt.Project_File.Name));
+      Finish_Program
+        (E_Errors,
+         "unable to process project file " & String (Opt.Project_File.Name));
    end Show_Tree_Load_Errors;
 
 begin

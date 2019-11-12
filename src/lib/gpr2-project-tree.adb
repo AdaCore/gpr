@@ -50,8 +50,6 @@ package body GPR2.Project.Tree is
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
 
-   GNAT_Prefix : constant String := Get_Prefix;
-
    Version_Regexp : constant Regexp.Regexp :=
                       Regexp.Compile (".[0-9]+(.[0-9]+)?");
 
@@ -692,6 +690,8 @@ package body GPR2.Project.Tree is
 
       procedure Set_Project_Search_Paths is
 
+         GNAT_Prefix : constant String := Get_Prefix;
+
          procedure Append (Dir1, Dir2  : String)
            with Post => Self.Search_Paths'Old.Length + 1
                         = Self.Search_Paths.Length;
@@ -713,8 +713,6 @@ package body GPR2.Project.Tree is
          end Append;
 
       begin
-         Append_Default_Search_Paths (Self.Search_Paths);
-
          if GNAT_Prefix /= "" then
             --  <prefix>/<target>/share/gpr
 
@@ -724,18 +722,9 @@ package body GPR2.Project.Tree is
 
             Append ("lib", "gnat");
          end if;
-
-         --  Add all search paths into the message log
-
-         for P of Self.Search_Paths loop
-            Self.Messages.Append
-              (Message.Create
-                 (Message.Information,
-                  P.Value,
-                  Source_Reference.Create (Filename.Value, 0, 0)));
-         end loop;
       end Set_Project_Search_Paths;
 
+      Project_Path  : Path_Name.Object;
       Root_Context  : GPR2.Context.Object := Context;
       Circularities : Boolean;
       Def           : Definition.Ref;
@@ -798,8 +787,33 @@ package body GPR2.Project.Tree is
 
       Set_Project_Search_Paths;
 
+      if Filename.Has_Dir_Name then
+         Project_Path := Filename;
+
+      else
+         --  If project directory still not defined, search it in full set of
+         --  search paths.
+
+         Project_Path := Create (Filename.Name, Self.Search_Paths);
+
+         if not Build_Path.Is_Defined then
+            Self.Build_Path := Path_Name.Create_Directory
+              (Name_Type (Project_Path.Dir_Name));
+         end if;
+      end if;
+
+      --  Add all search paths into the message log
+
+      for P of Self.Search_Paths loop
+         Self.Messages.Append
+           (Message.Create
+              (Message.Information,
+               P.Value,
+               Source_Reference.Create (Project_Path.Value, 0, 0)));
+      end loop;
+
       Self.Root := Recursive_Load
-        (Self, Filename, View.Undefined, Root, Root_Context, Self.Messages,
+        (Self, Project_Path, View.Undefined, Root, Root_Context, Self.Messages,
          Circularities, Implicit_Project => Implicit_Project);
 
       --  Do nothing more if there are errors during the parsing
@@ -832,7 +846,7 @@ package body GPR2.Project.Tree is
          Set_Context (Self, Context);
 
       else
-         raise Project_Error with Filename.Value & " syntax error";
+         raise Project_Error with Project_Path.Value & " syntax error";
       end if;
 
       pragma Assert (Definition.Check_Circular_References (Self.Root_Project));
@@ -964,10 +978,10 @@ package body GPR2.Project.Tree is
          end loop;
 
          Conf := Project.Configuration.Create
-           (Conf_Descriptions, Actual_Target, Filename);
+           (Conf_Descriptions, Actual_Target, Self.Root_Project.Path_Name);
 
          Self.Load
-           (Filename, Context, Conf, Build_Path,
+           (Self.Root_Project.Path_Name, Context, Conf, Build_Path,
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,

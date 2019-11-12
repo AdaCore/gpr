@@ -145,6 +145,18 @@ package body GPRtools.Options is
             end if;
          end;
       end loop Read_Arguments;
+
+      if Self.Project_File.Is_Defined
+        and then not Self.Project_File.Has_Dir_Name
+        and then Self.Root_Path.Is_Defined
+      then
+         --  We have to resolve the project directory without target specific
+         --  directories in search path because --root-dir exists in command
+         --  line parameters.
+
+         Self.Project_File := GPR2.Project.Create
+           (Self.Project_File.Name, Self.Tree.Project_Search_Paths);
+      end if;
    end Read_Remaining_Arguments;
 
    -----------
@@ -314,10 +326,10 @@ package body GPRtools.Options is
       if Switch = "-P" then
          if not Self.Project_File.Is_Defined then
             Self.Project_File :=
-              GPR2.Project.Create
-                (GPR2.Optional_Name_Type (Normalize_Value),
-                 GPR2.Project.Default_Search_Paths
-                   (Current_Directory => True));
+              GPR2.Path_Name.Create_File
+                (GPR2.Project.Ensure_Extension
+                   (GPR2.Optional_Name_Type (Normalize_Value)),
+                 GPR2.Path_Name.No_Resolution);
          else
             raise GPRtools.Usage_Error with
               '"' & Normalize_Value & """, project already """

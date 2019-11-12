@@ -613,7 +613,8 @@ begin
               (GPR2.Message.Warning,
                "Cleaning may be incomplete, as there were problems during"
                & " auto-configuration",
-               Source_Reference.Create (Options.Project_File.Value, 0, 0),
+               Source_Reference.Create
+                 (Project_Tree.Root_Project.Path_Name.Value, 0, 0),
                Raw => True));
       end if;
    end if;
@@ -624,7 +625,8 @@ begin
            (GPR2.Message.Error,
             "main cannot be a source of a library project: """
             & Options.Mains.First_Element & '"',
-            Source_Reference.Create (Options.Project_File.Value, 0, 0)));
+            Source_Reference.Create
+              (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
 
       Util.Output_Messages (Options);
 

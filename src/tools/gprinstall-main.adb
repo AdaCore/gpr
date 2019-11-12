@@ -443,7 +443,9 @@ procedure GPRinstall.Main is
          raise Usage_Error with "--prefix argument cannot be empty";
       end if;
 
-      if Options.Project_File.Is_Defined then
+      if Options.Project_File.Is_Defined
+        and then Options.Project_File.Has_Dir_Name
+      then
          Options.Clean_Build_Path (Options.Project_File);
       end if;
    end Parse_Command_Line;

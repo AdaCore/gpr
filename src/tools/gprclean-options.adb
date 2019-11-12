@@ -228,11 +228,14 @@ package body GPRclean.Options is
            "cannot specify --no-project with a project file";
       end if;
 
-      Options.Clean_Build_Path
-        (if Options.Implicit_Proj
-         then Path_Name.Create_Directory
-                (Name_Type (Ada.Directories.Current_Directory))
-         else Options.Project_File);
+      if Options.Implicit_Proj then
+         Options.Clean_Build_Path
+           (Path_Name.Create_Directory
+              (Name_Type (Ada.Directories.Current_Directory)));
+
+      elsif Options.Project_File.Has_Dir_Name then
+         Options.Clean_Build_Path (Options.Project_File);
+      end if;
 
       if Options.Slave_Env = Null_Unbounded_String
         and then Options.Distributed_Mode
