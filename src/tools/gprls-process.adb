@@ -687,10 +687,12 @@ begin
                U_Sec_Source : Project.Source.Object;
                Dep_Source   : Project.Source.Object;
                U_Flags      : Flag_Array;
+               Artifacts    : constant Project.Source.Artifact.Object :=
+                                S.Artifacts;
 
             begin
-               ALI_File := S.Artifacts.Dependency;
-               Obj_File := S.Artifacts.Object_Code;
+               ALI_File := Artifacts.Dependency;
+               Obj_File := Artifacts.Object_Code;
 
                if ALI_File.Is_Defined and then ALI_File.Exists then
                   ALI_Object := Definition.Scan_ALI
@@ -847,20 +849,25 @@ begin
             --  will have duplicates (e.g. body and spec have both the same
             --  .ali file).
 
-            if S.Artifacts.Has_Dependency then
-               Dep_Simple_Names.Include
-                 (String (S.Artifacts.Dependency.Simple_Name),
-                  Positive (All_Sources.Length));
-               Dep_Base_Names.Include
-                 (String (S.Artifacts.Dependency.Base_Name),
-                  Positive (All_Sources.Length));
-            end if;
+            declare
+               Artifacts : constant Project.Source.Artifact.Object :=
+                             S.Artifacts;
+            begin
+               if Artifacts.Has_Dependency then
+                  Dep_Simple_Names.Include
+                    (String (Artifacts.Dependency.Simple_Name),
+                     Positive (All_Sources.Length));
+                  Dep_Base_Names.Include
+                    (String (Artifacts.Dependency.Base_Name),
+                     Positive (All_Sources.Length));
+               end if;
 
-            if S.Artifacts.Has_Object_Code then
-               Obj_Simple_Names.Include
-                 (String (S.Artifacts.Object_Code.Simple_Name),
-                  Positive (All_Sources.Length));
-            end if;
+               if Artifacts.Has_Object_Code then
+                  Obj_Simple_Names.Include
+                    (String (Artifacts.Object_Code.Simple_Name),
+                     Positive (All_Sources.Length));
+               end if;
+            end;
          end loop;
       end loop;
 
