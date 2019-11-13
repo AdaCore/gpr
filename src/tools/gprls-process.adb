@@ -489,7 +489,7 @@ begin
             ALI_Object := Definition.Scan_ALI (ALI_File, Tree.Log_Messages);
 
             if not ALI_Object.Is_Defined then
-               Output_Messages (Tree.Log_Messages.all, Opt);
+               Output_Messages (Opt);
                Finish_Program (E_Errors, "unable to scan ALI file: "
                                & ALI_File.Value);
             end if;
@@ -697,7 +697,7 @@ begin
                                   (ALI_File, Tree.Log_Messages);
 
                   if not ALI_Object.Is_Defined then
-                     Output_Messages (Tree.Log_Messages.all, Opt);
+                     Output_Messages (Opt);
                      Finish_Program
                        (E_Errors,
                         "unable to scan ALI file: " & ALI_File.Value);
