@@ -969,4 +969,7 @@ begin
       end if;
    end;
 
+exception
+   when Project_Error | Processing_Error =>
+      Show_Tree_Load_Errors;
 end GPRls.Process;
