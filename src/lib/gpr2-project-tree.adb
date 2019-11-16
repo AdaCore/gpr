@@ -1119,11 +1119,14 @@ package body GPR2.Project.Tree is
                      then Ada.Directories.Current_Directory
                      else Filename.Dir_Name));
 
-               if Status = Extended then
-                  Data.Extending := Definition.Weak (Parent);
-               else
-                  Data.Aggregate := Definition.Weak (Parent);
-               end if;
+               case Status is
+                  when Extended =>
+                     Data.Extending := Definition.Weak (Parent);
+                  when Aggregated =>
+                     Data.Aggregate := Definition.Weak (Parent);
+                  when others =>
+                     null;
+               end case;
 
                --  Let's setup the full external environment for project
 
