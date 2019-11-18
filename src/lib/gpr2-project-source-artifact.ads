@@ -31,6 +31,11 @@ package GPR2.Project.Source.Artifact is
 
    Undefined : constant Object;
 
+   type Dependency_Location is (In_Library, In_Objects, In_Both);
+   --  Kind of the dependency files location.
+   --  The Ada dependency files can be either in object durectory or/and
+   --  in Library directory.
+
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
@@ -54,15 +59,25 @@ package GPR2.Project.Source.Artifact is
    --  one (Index = 1) is the one to be used by the installer.
 
    function Has_Dependency
-     (Self : Object; Index : Natural := 1) return Boolean
+     (Self     : Object;
+      Index    : Natural             := 1;
+      Location : Dependency_Location := In_Both) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True if a dependency path is defined
+   --  Returns True if a dependency path is defined.
+   --  The Location parameter defines are we looking for dependency files in
+   --  the object directory, library directory, or in both directories.
 
    function Dependency
-     (Self : Object; Index : Natural := 1) return Path_Name.Object
+     (Self     : Object;
+      Index    : Natural             := 1;
+      Location : Dependency_Location := In_Both) return Path_Name.Object
      with Pre => Self.Is_Defined;
    --  A file containing information (.ali for GNAT, .d for GCC) like
    --  cross-reference, units used by the source, etc.
+   --  The Location parameter defines are we looking for dependency files in
+   --  the object directory, library directory, or in both directories.
+   --  In case of Location = In_Both, the returning priority is for existing
+   --  files.
 
    function Has_Preprocessed_Source (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -86,7 +101,8 @@ private
    type Object is tagged record
       Source           : Project.Source.Object;
       Object_Files     : Index_Path_Name_Map.Map;
-      Dependency_Files : Index_Path_Name_Map.Map;
+      Deps_Lib_Files   : Index_Path_Name_Map.Map;
+      Deps_Obj_Files   : Index_Path_Name_Map.Map;
       Switches         : Path_Name.Object;
       Preprocessed_Src : Path_Name.Object;
    end record;
@@ -101,8 +117,14 @@ private
      (Self.Object_Files.Contains (Index));
 
    function Has_Dependency
-     (Self : Object; Index : Natural := 1) return Boolean is
-     (Self.Dependency_Files.Contains (Index));
+     (Self     : Object;
+      Index    : Natural             := 1;
+      Location : Dependency_Location := In_Both) return Boolean is
+     (case Location is
+         when In_Objects => Self.Deps_Obj_Files.Contains (Index),
+         when In_Library => Self.Deps_Lib_Files.Contains (Index),
+         when In_Both    => Self.Deps_Lib_Files.Contains (Index)
+                    or else Self.Deps_Obj_Files.Contains (Index));
 
    function Has_Preprocessed_Source (Self : Object) return Boolean is
      (Self.Preprocessed_Src.Is_Defined);

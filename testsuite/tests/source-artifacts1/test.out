@@ -14,5 +14,5 @@ Project: Demo2
 
  > main.adb
  > obj/main.o
- > lib/main.ali
+ > obj/main.ali
 

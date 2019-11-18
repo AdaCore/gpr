@@ -691,7 +691,6 @@ begin
 
             begin
                ALI_File := Artifacts.Dependency;
-               Obj_File := Artifacts.Object_Code;
 
                if ALI_File.Is_Defined and then ALI_File.Exists then
                   ALI_Object := Definition.Scan_ALI
@@ -704,8 +703,10 @@ begin
                         "unable to scan ALI file: " & ALI_File.Value);
                   end if;
 
-                  if Opt.Print_Object_Files then
-                     if Obj_File.Is_Defined and then Obj_File.Exists then
+                  if Opt.Print_Object_Files and then not S.Is_Aggregated then
+                     Obj_File := Artifacts.Object_Code;
+
+                     if Obj_File.Exists then
                         Text_IO.Put_Line (Obj_File.Value);
                      else
                         Text_IO.Put_Line (No_Obj);
@@ -914,7 +915,29 @@ begin
                   loop
                      if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
                      then
-                        Sources.Insert (Element (S_Cur));
+                        declare
+                           D_Cur : Project.Source.Set.Cursor;
+                           OK    : Boolean;
+                        begin
+                           Sources.Insert (Element (S_Cur), D_Cur, OK);
+
+                           --  Source could be already in the set because we
+                           --  can have the same project in the All_Views
+                           --  twice, one time for aggregated project another
+                           --  time for the imported project. Besides that we
+                           --  can have the same source in the aggregated
+                           --  project and in the aggregating library project.
+
+                           if not OK
+                             and then Element (S_Cur).Is_Aggregated
+                                    < Element (D_Cur).Is_Aggregated
+                           then
+                              --  We prefer Is_Aggregated = False because it
+                              --  has object files.
+
+                              Sources.Replace (D_Cur, Element (S_Cur));
+                           end if;
+                        end;
                      end if;
                   end loop;
                end loop;

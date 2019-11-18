@@ -61,8 +61,9 @@ package body GPR2.Project.Source.Artifact is
       P_Suffix : constant Name_Type := ".prep";
       S_Suffix : constant Name_Type := ".cswi";
 
-      Object_Files     : Index_Path_Name_Map.Map;
-      Dependency_Files : Index_Path_Name_Map.Map;
+      Object_Files : Index_Path_Name_Map.Map;
+      Deps_Lib     : Index_Path_Name_Map.Map;
+      Deps_Obj     : Index_Path_Name_Map.Map;
 
       Preprocessed : constant Path_Name.Object :=
                        Path_Name.Create_File
@@ -74,15 +75,13 @@ package body GPR2.Project.Source.Artifact is
                          (Src & S_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
-      Idx          : Positive := 1;
-
    begin
       if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
          --  For aggregated library the .ali is also copied into the
          --  aggregate library directory.
 
          if Source.Aggregated then
-            Dependency_Files.Insert
+            Deps_Lib.Insert
               (1,
                Path_Name.Create_File
                  (Src & D_Suffix,
@@ -97,16 +96,15 @@ package body GPR2.Project.Source.Artifact is
                   Optional_Name_Type (O_View.Object_Directory.Value)));
 
             if S_View.Is_Library and then Lang = "Ada" then
-               Dependency_Files.Insert
-                 (Idx,
+               Deps_Lib.Insert
+                 (1,
                   Path_Name.Create_File
                     (Src & D_Suffix,
                      Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
-               Idx := Idx + 1;
             end if;
 
-            Dependency_Files.Insert
-              (Idx,
+            Deps_Obj.Insert
+              (1,
                Path_Name.Create_File
                  (Src & D_Suffix,
                   Optional_Name_Type (O_View.Object_Directory.Value)));
@@ -119,13 +117,13 @@ package body GPR2.Project.Source.Artifact is
                   Index_Suffix : constant Name_Type := At_Suffix (CU.Index);
                begin
                   if Source.Aggregated then
-                     Dependency_Files.Insert
-                       (1,
+                     Deps_Lib.Insert
+                       (CU.Index,
                         Path_Name.Create_File
                           (Src & Index_Suffix & D_Suffix,
                            Optional_Name_Type
-                             (Source.Aggregating_View.
-                                  Library_Ali_Directory.Value)));
+                             (Source.Aggregating_View.Library_Ali_Directory
+                              .Value)));
 
                   else
                      Object_Files.Insert
@@ -135,20 +133,16 @@ package body GPR2.Project.Source.Artifact is
                            Optional_Name_Type
                              (O_View.Object_Directory.Value)));
 
-                     Idx := CU.Index;
-
                      if S_View.Is_Library and then Lang = "Ada" then
-                        Dependency_Files.Insert
-                          (Idx,
+                        Deps_Lib.Insert
+                          (CU.Index,
                            Path_Name.Create_File
                              (Src & Index_Suffix & D_Suffix,
-                              Optional_Name_Type
-                                (O_View.Library_Ali_Directory.Value)));
-                        Idx := Idx + 1;
+                              Name_Type (O_View.Library_Ali_Directory.Value)));
                      end if;
 
-                     Dependency_Files.Insert
-                       (Idx,
+                     Deps_Obj.Insert
+                       (CU.Index,
                         Path_Name.Create_File
                           (Src & Index_Suffix & D_Suffix,
                            Optional_Name_Type
@@ -162,7 +156,8 @@ package body GPR2.Project.Source.Artifact is
       return Artifact.Object'
         (Source           => Source,
          Object_Files     => Object_Files,
-         Dependency_Files => Dependency_Files,
+         Deps_Lib_Files   => Deps_Lib,
+         Deps_Obj_Files   => Deps_Obj,
          Switches         => Switches,
          Preprocessed_Src => Preprocessed);
    end Create;
@@ -172,9 +167,34 @@ package body GPR2.Project.Source.Artifact is
    ----------------
 
    function Dependency
-     (Self : Artifact.Object; Index : Natural := 1) return Path_Name.Object is
+     (Self     : Artifact.Object;
+      Index    : Natural             := 1;
+      Location : Dependency_Location := In_Both) return Path_Name.Object is
    begin
-      return Self.Dependency_Files (Index);
+      case Location is
+         when In_Library =>
+            return Self.Deps_Lib_Files (Index);
+
+         when In_Objects =>
+            return Self.Deps_Obj_Files (Index);
+
+         when In_Both    =>
+            if not Self.Deps_Lib_Files.Contains (Index) then
+               return Self.Deps_Obj_Files (Index);
+
+            elsif not Self.Deps_Obj_Files.Contains (Index) then
+               return Self.Deps_Lib_Files (Index);
+
+            elsif Self.Deps_Lib_Files (Index).Exists then
+               return Self.Deps_Lib_Files (Index);
+
+            elsif Self.Deps_Obj_Files (Index).Exists then
+               return Self.Deps_Obj_Files (Index);
+
+            else
+               return Self.Deps_Lib_Files (Index);
+            end if;
+      end case;
    end Dependency;
 
    ----------
@@ -232,7 +252,11 @@ package body GPR2.Project.Source.Artifact is
 
       --  Append the dependencies
 
-      for D of Self.Dependency_Files loop
+      for D of Self.Deps_Lib_Files loop
+         Result.Append (D);
+      end loop;
+
+      for D of Self.Deps_Obj_Files loop
          Result.Append (D);
       end loop;
 

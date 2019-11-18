@@ -30,6 +30,10 @@ package GPR2.Project.Source.Set is
 
    subtype Source_Set is Object;
 
+   type Cursor is private;
+
+   No_Element : constant Cursor;
+
    function Is_Empty (Self : Object) return Boolean;
 
    procedure Clear (Self : in out Object);
@@ -42,6 +46,18 @@ package GPR2.Project.Source.Set is
    procedure Insert (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source.Is_Defined;
 
+   procedure Insert
+     (Self     : in out Object;
+      Source   : Project.Source.Object;
+      Position : out Cursor;
+      Inserted : out Boolean)
+     with Pre => Source.Is_Defined;
+   --  Checks if an element equivalent to Source is already present in Self.
+   --  If a match is found, Inserted is set to False and Position designates
+   --  the matching element. Otherwise, Insert adds Source to Container;
+   --  Inserted is set to True and Position designates the newly-inserted
+   --  element.
+
    procedure Union (Self : in out Object; Sources : Object);
    --  Inserts into Self the elements of Source that are not equivalent to some
    --  element already in Self.
@@ -53,11 +69,11 @@ package GPR2.Project.Source.Set is
    procedure Replace (Self : in out Object; Source : Project.Source.Object)
      with Pre => Source.Is_Defined;
 
+   procedure Replace
+     (Self : in out Object; Position : Cursor; Source : Project.Source.Object)
+     with Pre => Source.Is_Defined;
+
    function First_Element (Self : Object) return Project.Source.Object;
-
-   type Cursor is private;
-
-   No_Element : constant Cursor;
 
    function Find
      (Self : Object; Source : Project.Source.Object) return Cursor
@@ -79,8 +95,7 @@ package GPR2.Project.Source.Set is
      with Implicit_Dereference => Source;
 
    function Constant_Reference
-     (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type;
+     (Self : aliased Object; Position : Cursor) return Constant_Reference_Type;
 
    Empty_Set : constant Object;
 

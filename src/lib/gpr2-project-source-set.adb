@@ -125,6 +125,19 @@ package body GPR2.Project.Source.Set is
    -- Insert --
    ------------
 
+   procedure Insert
+     (Self     : in out Object;
+      Source   : Project.Source.Object;
+      Position : out Cursor;
+      Inserted : out Boolean) is
+   begin
+      Self.S.Insert (Source, Position.Current, Inserted);
+   end Insert;
+
+   ------------
+   -- Insert --
+   ------------
+
    procedure Insert (Self : in out Object; Source : Project.Source.Object) is
    begin
       Self.S.Insert (Source);
@@ -246,6 +259,19 @@ package body GPR2.Project.Source.Set is
 
       return Next;
    end Next;
+
+   -------------
+   -- Replace --
+   -------------
+
+   procedure Replace
+     (Self     : in out Object;
+      Position : Cursor;
+      Source   : Project.Source.Object)
+   is
+   begin
+      Self.S.Replace_Element (Position.Current, Source);
+   end Replace;
 
    -------------
    -- Replace --
