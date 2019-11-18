@@ -254,9 +254,7 @@ package body GPR2.Project.Source is
 
    function Has_Aggregating_View (Self : Object) return Boolean is
    begin
-      return Definition.Strong (Self.View).Is_Aggregated
-        and then
-          Definition.Strong (Self.View).Aggregate.Kind = K_Aggregate_Library;
+      return Definition.Strong (Self.View).Is_Aggregated_In_Library;
    end Has_Aggregating_View;
 
    ------------------------

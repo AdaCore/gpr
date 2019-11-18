@@ -46,7 +46,10 @@ package GPR2.Project.Source is
       Has_Naming_Exception : Boolean;
       Is_Compilable        : Boolean;
       Aggregated           : Boolean := False) return Object
-     with Pre => Source.Is_Defined and then View.Is_Defined;
+     with Pre => Source.Is_Defined
+                 and then View.Is_Defined
+                 and then (not Aggregated
+                           or else View.Is_Aggregated_In_Library);
    --  Constructor for Object. View is where the source is defined (found from
    --  View Source_Dirs) and Extending_View is the optional view from which the
    --  project source is extended. That is, if Extending_View is defined then
