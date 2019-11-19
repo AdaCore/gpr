@@ -176,6 +176,11 @@ package body GPRclean.Options is
          Switch => "-p",
          Help   => "Remove empty build directories");
 
+      Define_Switch
+        (Config, Options.Force_Deletions'Access,
+         Switch => "-f",
+         Help => "Force deletions of unwritable files");
+
       Getopt
         (Config, Parser => Parser, Quiet => Additional, Concatenate => False);
 

@@ -543,23 +543,30 @@ procedure GPRclean.Main is
       use GNAT.OS_Lib;
       Success : Boolean := False;
    begin
-      if Opts.Dry_Run then
-         if Is_Regular_File (Name) then
+      if Is_Regular_File (Name) then
+         if Opts.Dry_Run then
             Text_IO.Put_Line (Name);
 
-         elsif Opts.Verbose then
-            Text_IO.Put_Line ("absent: " & Name);
+         else
+            if GNAT.OS_Lib.Is_Owner_Writable_File (Name) then
+               Delete_File (Name, Success);
+
+            elsif Opts.Force_Deletions then
+               GNAT.OS_Lib.Set_Writable (Name);
+               Delete_File (Name, Success);
+            end if;
+
+            if Opts.Verbosity > Quiet then
+               if Success then
+                  Text_IO.Put_Line ('"' & Name & """ has been deleted");
+               else
+                  Text_IO.Put_Line
+                    ("Warning: """ & Name & """ could not be deleted");
+               end if;
+            end if;
          end if;
-
-      else
-         Delete_File (Name, Success);
-
-         if Opts.Verbosity > Quiet and then Success then
-            Text_IO.Put_Line ('"' & Name & """ has been deleted");
-
-         elsif Opts.Verbosity >= Verbose and then not Success then
-            Text_IO.Put_Line ('"' & Name & """ absent");
-         end if;
+      elsif Opts.Verbosity >= Verbose then
+         Text_IO.Put_Line ('"' & Name & """ absent");
       end if;
    end Delete_File;
 
