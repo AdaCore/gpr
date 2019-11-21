@@ -1714,7 +1714,7 @@ package body GPR2.Project.Definition is
             end;
          end loop;
 
-      else
+      elsif View.Kind not in K_Configuration | K_Abstract then
          --  Handle Source_Dirs
 
          for Dir of View.Source_Directories.Values loop
