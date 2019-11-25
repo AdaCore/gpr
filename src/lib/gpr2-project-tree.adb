@@ -357,24 +357,30 @@ package body GPR2.Project.Tree is
       procedure Append (View : Project.View.Object) is
       begin
          if not P_Set.Contains (View) then
-            declare
-               Qualifier : constant Project_Kind := View.Kind;
-            begin
-               --  Check if it corresponds to the current filter
-               if (Qualifier = K_Library and then Iter.Filter (F_Library))
-                 or else
-                   (Qualifier = K_Standard and then Iter.Filter (F_Standard))
-                 or else
-                   (Qualifier = K_Abstract and then Iter.Filter (F_Abstract))
-                 or else
-                   (Qualifier = K_Aggregate and then Iter.Filter (F_Aggregate))
-                 or else
-                   (Qualifier = K_Aggregate_Library
-                    and then Iter.Filter (F_Aggregate_Library))
-               then
-                  Projects.Append (View);
-               end if;
-            end;
+            if Equal
+              (Iter.Status (S_Externally_Built),
+               View.Is_Externally_Built) in True | Indeterminate
+            then
+               declare
+                  Qualifier : constant Project_Kind := View.Kind;
+               begin
+                  --  Check if it corresponds to the current filter
+                  if (Qualifier = K_Library and then Iter.Filter (F_Library))
+                    or else
+                     (Qualifier = K_Standard and then Iter.Filter (F_Standard))
+                    or else
+                     (Qualifier = K_Abstract and then Iter.Filter (F_Abstract))
+                    or else
+                     (Qualifier = K_Aggregate
+                      and then Iter.Filter (F_Aggregate))
+                    or else
+                     (Qualifier = K_Aggregate_Library
+                      and then Iter.Filter (F_Aggregate_Library))
+                  then
+                     Projects.Append (View);
+                  end if;
+               end;
+            end if;
 
             P_Set.Insert (View);
          end if;
@@ -404,14 +410,10 @@ package body GPR2.Project.Tree is
       procedure For_Imports (View : Project.View.Object) is
       begin
          for I of Definition.Get_RO (View).Imports loop
-            if Equal (Iter.Status (S_Externally_Built),
-                      I.Is_Externally_Built) in True | Indeterminate
-            then
-               if Iter.Kind (I_Recursive) then
-                  For_Project (I);
-               else
-                  Append (I);
-               end if;
+            if Iter.Kind (I_Recursive) then
+               For_Project (I);
+            else
+               Append (I);
             end if;
          end loop;
       end For_Imports;
@@ -858,7 +860,30 @@ package body GPR2.Project.Tree is
       Languages   : Containers.Source_Value_Set;
       Descr_Index : Natural := 0;
       Conf        : Project.Configuration.Object;
-      View        : Project.View.Object;
+
+      procedure Add_Languages (View : Project.View.Object);
+      --  Add project languages into the Languages container to configure.
+      --  Warn about project has no languages.
+
+      -------------------
+      -- Add_Languages --
+      -------------------
+
+      procedure Add_Languages (View : Project.View.Object) is
+      begin
+         if View.Languages.Length = 0 then
+            Self.Append_Message
+              (Message.Create
+                 (Level   => Message.Warning,
+                  Message => "no language for the project "
+                  & String (View.Name),
+                  Sloc    => View.Attributes.Languages));
+         end if;
+
+         for L of View.Languages loop
+            Languages.Include (L);
+         end loop;
+      end Add_Languages;
 
    begin
       Self.Load
@@ -871,26 +896,23 @@ package body GPR2.Project.Tree is
          Absent_Dir_Error => Absent_Dir_Error,
          Implicit_With    => Implicit_With);
 
-      for C in Self.Iterate
-        (Filter => (F_Aggregate | F_Aggregate_Library => False,
-                    others => True),
-         Status => (S_Externally_Built => False))
-      loop
-         View := Element (C);
+      if Self.Root_Project.Is_Externally_Built then
+         --  If we have externally built project, configure only the root one
 
-         if View.Languages.Length = 0 then
-            Self.Append_Message
-              (Message.Create
-                 (Level   => Message.Warning,
-                  Message => "no language for the project "
-                             & String (View.Name),
-                  Sloc    => View.Attributes.Languages));
-         end if;
+         Add_Languages (Self.Root_Project);
 
-         for L of View.Languages loop
-            Languages.Include (L);
+      else
+         --  If we have non externally built project, configure the none
+         --  externally built tree part.
+
+         for C in Self.Iterate
+           (Filter =>
+              (F_Aggregate | F_Aggregate_Library => False, others => True),
+            Status => (S_Externally_Built => False))
+         loop
+            Add_Languages (Element (C));
          end loop;
-      end loop;
+      end if;
 
       if Languages.Length = 0 then
          Self.Append_Message
