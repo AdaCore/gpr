@@ -285,11 +285,6 @@ package body GPRinstall.Install is
         with Inline;
       --  Returns True if the project contains sources
 
-      function Bring_Sources
-        (Project : GPR2.Project.View.Object) return Boolean;
-      --  Returns True if Project gives visibility to some sources directly or
-      --  indirectly via the with clauses.
-
       function Is_Install_Active
         (Project : GPR2.Project.View.Object) return Boolean;
       --  Returns True if the Project is active, that is there is no attribute
@@ -373,27 +368,6 @@ package body GPRinstall.Install is
       begin
          return Build_Subdir (ALI_Subdir, Build_Name);
       end ALI_Dir;
-
-      -------------------
-      -- Bring_Sources --
-      -------------------
-
-      function Bring_Sources
-        (Project : GPR2.Project.View.Object) return Boolean is
-      begin
-         if Project.Has_Sources then
-            return True;
-
-         elsif Project.Has_Imports then
-            for Import of Project.Imports loop
-               if Import.Has_Sources then
-                  return True;
-               end if;
-            end loop;
-         end if;
-
-         return False;
-      end Bring_Sources;
 
       ------------------
       -- Build_Subdir --
@@ -1751,7 +1725,7 @@ package body GPRinstall.Install is
                for L of Project.Imports (Recursive => True) loop
                   if L.Kind = K_Library
                     and then L.Is_Externally_Built
-                    and then not Bring_Sources (L)
+                    and then not L.Has_Sources
                   then
                      Opts.Append ("-l" & String (L.Library_Name));
                   end if;
@@ -2622,7 +2596,7 @@ package body GPRinstall.Install is
       --  installed.
 
       Is_Project_To_Install := Active
-        and then (Bring_Sources (Project)
+        and then (Project.Has_Sources
                   or else Project.Has_Attributes (A.Main)
                   or else Project.Is_Externally_Built);
 
