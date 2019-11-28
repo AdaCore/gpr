@@ -357,7 +357,6 @@ begin
 
       function Source_For
         (File                 : String;
-         View                 : Project.View.Object;
          File_May_Be_Artifact : Boolean) return Project.Source.Object;
       --  Given a file basename and a project view, tries to find a
       --  compilable source from this view that is associated with the
@@ -751,7 +750,6 @@ begin
                      then
                         U_Sec_Source := Source_For
                           (File                 => String (U_Sec.Sfile),
-                           View                 => Project.View.Undefined,
                            File_May_Be_Artifact => False);
 
                         if U_Sec_Source.Is_Defined then
@@ -778,13 +776,10 @@ begin
                         then
                            Dep_Source := Source_For
                              (File                 => String (D.Sfile),
-                              View                 => Tree.Runtime_Project,
                               File_May_Be_Artifact => False);
                         else
                            Dep_Source := Source_For
                              (File                 => String (D.Sfile),
-                              View                 =>
-                                Project.View.Undefined,
                               File_May_Be_Artifact => False);
                         end if;
 
@@ -807,10 +802,8 @@ begin
 
       function Source_For
         (File                 : String;
-         View                 : Project.View.Object;
          File_May_Be_Artifact : Boolean) return Project.Source.Object
       is
-         pragma Unreferenced (View);
       begin
          if Src_Simple_Names.Contains (File) then
             return All_Sources (Src_Simple_Names (File));
@@ -882,14 +875,11 @@ begin
 
       for F of Opt.Files loop
          declare
-            Source : Project.Source.Object := Project.Source.Undefined;
-
+            Source : constant Project.Source.Object :=
+                       Source_For
+                         (File                 => F,
+                          File_May_Be_Artifact => True);
          begin
-            Source := Source_For
-              (File                 => F,
-               View                 => Tree.Root_Project,
-               File_May_Be_Artifact => True);
-
             if not Source.Is_Defined then
                Text_IO.Put_Line ("Can't find source for " & F);
 
