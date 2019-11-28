@@ -112,7 +112,7 @@ private
      (Self.Checksum);
 
    function Sfile (Self : Object) return Name_Type is
-     (Simple_Name (-Self.Sfile));
+     (Name_Type (-Self.Sfile));
 
    function Stamp (Self : Object) return Ada.Calendar.Time is
      (Self.Stamp);
