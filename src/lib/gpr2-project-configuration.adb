@@ -30,6 +30,12 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
+with GPR2.Project.Configuration.Knowledge_Base;
+
+pragma Warnings (Off, """System.OS_Constants"" is an internal GNAT unit");
+pragma Warnings (Off,
+                 "use of this unit is non-portable and version-dependent");
+with System.OS_Constants;
 
 package body GPR2.Project.Configuration is
 
@@ -143,9 +149,13 @@ package body GPR2.Project.Configuration is
                                & Trim (Key, Left) & ".cgpr")).Value);
 
       GPRconfig : constant OS_Lib.String_Access :=
-                    OS_Lib.Locate_Exec_On_Path ("gprconfig");
-      Args      : OS_Lib.Argument_List (1 .. Settings'Length +
-                                        (if Debug then 6 else 5));
+        OS_Lib.Locate_Exec_On_Path ("gprconfig");
+
+      Native_Target : constant Boolean := Target = "all";
+
+      Args      : OS_Lib.Argument_List
+        (1 .. Settings'Length + 4 + (if Debug then 1 else 0) +
+         (if Native_Target then 1 else 0));
       Success   : Boolean := False;
       Ret_Code  : Integer := 0;
       Result    : Object;
@@ -181,14 +191,44 @@ package body GPR2.Project.Configuration is
    begin
       --  Build parameters
 
-      Args (1) := GPRconfig;
-      Args (2) := new String'("-o");
-      Args (3) := new String'(Conf_Filename);
-      Args (4) := new String'("--batch");
-      Args (5) := new String'("--target=" & String (Target));
+      Args (1) := new String'("-o");
+      Args (2) := new String'(Conf_Filename);
+      Args (3) := new String'("--batch");
+      if Native_Target then
+         --  Normalize implicit target
+         declare
+            use GPR2.Project.Configuration.Knowledge_Base;
+
+            Flags : Knowledge_Base_Flags := Default_Knowledge_Base_Flags;
+            KB    : Knowledge_Base.Knowledge_Base;
+            TS_Id : Targets_Set_Id;
+         begin
+            Set_Parse_Compiler_Info (Flags, False);
+            Parse_Knowledge_Base
+              (Base     => KB,
+               Location => Default_Knowledge_Base_Directory,
+               Flags    => Flags);
+            Get_Targets_Set
+              (KB,
+               Name_Type (System.OS_Constants.Target_Name),
+               TS_Id);
+
+            if TS_Id = Unknown_Targets_Set then
+               Args (4) :=
+                 new String'("--target=" & System.OS_Constants.Target_Name);
+            else
+               Args (4) := new String'
+                 ("--target=" & String (Normalized_Target (KB, TS_Id)));
+            end if;
+         end;
+
+         Args (5) := new String'("--fallback-targets");
+      else
+         Args (4) := new String'("--target=" & String (Target));
+      end if;
 
       for K in Settings'Range loop
-         Args (6 + K - Settings'First) :=
+         Args ((if Native_Target then 6 else 5) + K - Settings'First) :=
            new String'("--config="
                        & To_String (Settings (K).Language)
                        & "," & To_String (Settings (K).Version)
