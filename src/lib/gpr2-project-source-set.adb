@@ -267,15 +267,10 @@ package body GPR2.Project.Source.Set is
    procedure Replace
      (Self     : in out Object;
       Position : Cursor;
-      Source   : Project.Source.Object)
-   is
+      Source   : Project.Source.Object) is
    begin
       Self.S.Replace_Element (Position.Current, Source);
    end Replace;
-
-   -------------
-   -- Replace --
-   -------------
 
    procedure Replace (Self : in out Object; Source : Project.Source.Object) is
    begin

@@ -124,7 +124,8 @@ private
          when In_Objects => Self.Deps_Obj_Files.Contains (Index),
          when In_Library => Self.Deps_Lib_Files.Contains (Index),
          when In_Both    => Self.Deps_Lib_Files.Contains (Index)
-                    or else Self.Deps_Obj_Files.Contains (Index));
+                              or else
+                            Self.Deps_Obj_Files.Contains (Index));
 
    function Has_Preprocessed_Source (Self : Object) return Boolean is
      (Self.Preprocessed_Src.Is_Defined);

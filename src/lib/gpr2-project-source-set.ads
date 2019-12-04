@@ -63,15 +63,23 @@ package GPR2.Project.Source.Set is
    --  element already in Self.
 
    function Contains
-     (Self : Object; Source : Project.Source.Object) return Boolean
+     (Self   : Object;
+      Source : Project.Source.Object) return Boolean
      with Pre => Source.Is_Defined;
-
-   procedure Replace (Self : in out Object; Source : Project.Source.Object)
-     with Pre => Source.Is_Defined;
+   --  Returns True if Self constains Source
 
    procedure Replace
-     (Self : in out Object; Position : Cursor; Source : Project.Source.Object)
+     (Self   : in out Object;
+      Source : Project.Source.Object)
+     with Pre => Source.Is_Defined and then Self.Contains (Source);
+   --  Replaces Source in Self
+
+   procedure Replace
+     (Self     : in out Object;
+      Position : Cursor;
+      Source   : Project.Source.Object)
      with Pre => Source.Is_Defined;
+   --  Replaces Source in Self at the given Position
 
    function First_Element (Self : Object) return Project.Source.Object;
 
