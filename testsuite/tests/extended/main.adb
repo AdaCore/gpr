@@ -45,6 +45,12 @@ procedure Main is
    begin
       Text_IO.Put (String (Prj.Name) & " ");
       Text_IO.Set_Col (10);
+
+      if Prj.Kind /= K_Abstract then
+         Text_IO.Put
+           ("obj_dir=" & String (Prj.Object_Directory.Simple_Name) & ' ');
+      end if;
+
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       for Source of Prj.Sources loop

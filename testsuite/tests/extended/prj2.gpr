@@ -1,4 +1,9 @@
 project Prj2 extends "prj1" is
    for Source_Dirs use ("p2");
-   for Object_Dir use "obj2";
+
+   --  Check that we can refer to Prj0 from here through extension
+   --  transitivity (we extend prj1 and prj1 extends prj0).
+
+   for Object_Dir use Prj0.Obj_Name & "2";
+
 end Prj2;

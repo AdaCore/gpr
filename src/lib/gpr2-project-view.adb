@@ -1419,18 +1419,25 @@ package body GPR2.Project.View is
 
    function View_For (Self : Object; Name : Name_Type) return View.Object is
       Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Dad  : Object := Data.Extended;
    begin
-      --  Returns the project view corresponding to Name and found in the
-      --  context of View (e.g. imported or extended).
+      --  Lookup in the ancestors first
 
-      if Data.Extended.Is_Defined
-        and then Definition.Get_RO (Data.Extended).Trees.Project.Name = Name
-      then
-         return Data.Extended;
+      while Dad.Is_Defined loop
+         if Definition.Get_RO (Dad).Trees.Project.Name = Name then
+            return Dad;
+         end if;
 
-      elsif Data.Imports.Contains (Name) then
+         Dad := Definition.Get_RO (Dad).Extended;
+      end loop;
+
+      --  Lookup in the imported next
+
+      if Data.Imports.Contains (Name) then
          return Data.Imports.Element (Name);
       end if;
+
+      --  Try configuration project
 
       declare
          CV : constant Project.View.Object :=
@@ -1444,6 +1451,8 @@ package body GPR2.Project.View is
 
          if CV.Is_Defined and then CV.Name = Name then
             return CV;
+
+         --  Try runtime project
 
          elsif Data.Tree.Has_Runtime_Project
            and then Data.Tree.Runtime_Project.Name = Name
