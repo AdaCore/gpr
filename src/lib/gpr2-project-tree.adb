@@ -1711,9 +1711,7 @@ package body GPR2.Project.Tree is
                            --  load routine above.
 
                            for M of Messages loop
-                              if M.Sloc.Has_Source_Reference then
-                                 Self.Messages.Append (M);
-                              end if;
+                              Self.Messages.Append (M);
                            end loop;
 
                            return;
