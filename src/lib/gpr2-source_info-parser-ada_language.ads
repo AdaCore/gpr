@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,27 +16,20 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Compilation_Unit.List;
+package GPR2.Source_Info.Parser.Ada_Language is
 
-with Libadalang.Analysis;
+   Language : aliased constant Name_Type := "Ada";
 
-private package GPR2.Source.Parser is
-   --  The following package provides unit information from Ada sources,
-   --  using Libadalang.
+   type Object is new Parser.Object
+     (Language => Language'Unrestricted_Access,
+      Kind     => Source) with null record;
 
-   use Libadalang.Analysis;
+   overriding procedure Compute
+     (Parser : Object;
+      Data   : in out Source_Info.Object'Class;
+      Source : GPR2.Source.Object'Class;
+      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
+      View   : Project.View.Object'Class := Project.View.Undefined);
+   --  Setup Data with the information from parsing Ada source file
 
-   Ctx : constant Analysis_Context := Create_Context;
-
-   function Parse
-     (Filename : GPR2.Path_Name.Object) return Compilation_Unit.List.Object
-     with Pre => Filename.Is_Defined;
-   --  Parses the source Filename with Libadalang and returns a list of
-   --  Compilation Units.
-   --  An empty result means that something went wrong, and we should not
-   --  attempt to use information from the parser.
-   --  In any case, information from the project has precedence because Ada
-   --  sources may contain bad syntax and we still want to try building the
-   --  project as the user intended.
-
-end GPR2.Source.Parser;
+end GPR2.Source_Info.Parser.Ada_Language;

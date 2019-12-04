@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -17,37 +17,39 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
-with Ada.Strings.Unbounded;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Text;
 
-with Libadalang;
+with Libadalang.Analysis;
 with Libadalang.Common;
 
 with GNAT.Case_Util;
 
-with GPR2.Compilation_Unit;
+with GPR2.Project.Tree;
+with GPR2.Source;
+with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Identifier.Set;
+with GPR2.Unit;
 
-package body GPR2.Source.Parser is
+package body GPR2.Source_Info.Parser.Ada_Language is
 
-   use Ada.Strings.Unbounded;
+   Handle : Object;
 
-   function "+"
-     (Source : String) return Unbounded_String renames To_Unbounded_String;
-   function "-"
-     (Source : Unbounded_String) return String renames To_String;
+   -------------
+   -- Compute --
+   -------------
 
-   -----------
-   -- Parse --
-   -----------
-
-   function Parse
-     (Filename : GPR2.Path_Name.Object) return Compilation_Unit.List.Object
+   overriding procedure Compute
+     (Parser : Object;
+      Data   : in out Source_Info.Object'Class;
+      Source : GPR2.Source.Object'Class;
+      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
+      View   : Project.View.Object'Class := Project.View.Undefined)
    is
       use GNAT;
+      use Libadalang.Analysis;
 
       use Ada.Strings.Wide_Wide_Unbounded;
       use Ada.Characters.Conversions;
@@ -56,25 +58,27 @@ package body GPR2.Source.Parser is
 
       use Langkit_Support.Text;
 
+      Ctx : constant Analysis_Context := Create_Context;
+
       A_Unit : constant Analysis_Unit    :=
-                 Get_From_File (Ctx, Filename.Value, Reparse => True);
+                 Get_From_File
+                   (Ctx, Source.Path_Name.Value, Reparse => True);
 
       function To_String (T : Unbounded_Text_Type) return String is
         (To_String (To_Wide_Wide_String (T)));
-
-      Found : Compilation_Unit.List.Object;
-      --  Stores the compilation units found while traversing the AST
 
       Index : Integer := 0;
       --  Source index, incremented every time we parse a compilation unit
 
       function Callback (Node : Ada_Node'Class) return Visit_Status;
+      --  LibAdaLang parser's callback
 
       --------------
       -- Callback --
       --------------
 
       function Callback (Node : Ada_Node'Class) return Visit_Status is
+         use all type GPR2.Unit.Flag;
       begin
          if Node = No_Ada_Node then
             return Over;
@@ -118,11 +122,15 @@ package body GPR2.Source.Parser is
                                  Node.As_Compilation_Unit.F_Body;
 
                   U_Name        : Unbounded_String;
-                  U_Kind        : Kind_Type;
-                  U_Withed      : Source_Reference.Identifier.Set.Object;
                   U_Sep_From    : Unbounded_String;
-                  U_Is_Generic  : Boolean := False;
+                  U_Kind        : Unit.Kind_Type;
+                  U_Withed      : Source_Reference.Identifier.Set.Object;
 
+                  --  ??? For now we don't parse those:
+                  U_Main        : constant Unit.Main_Type :=
+                                    Unit.None;
+                  U_Flags       : Unit.Flags_Set :=
+                                    Unit.Default_Flags;
                begin
                   if U_Prelude.Is_Null or else U_Body.Is_Null then
                      return Over;
@@ -158,7 +166,7 @@ package body GPR2.Source.Parser is
                         for P of WC.As_With_Clause.F_Packages loop
                            U_Withed.Insert
                              (Source_Reference.Identifier.Create
-                                (Filename => Filename.Value,
+                                (Filename => Source.Path_Name.Value,
                                  Line     => Natural
                                    (WC.Sloc_Range.Start_Line),
                                  Column   => Natural
@@ -175,25 +183,27 @@ package body GPR2.Source.Parser is
                      when Ada_Library_Item =>
                         case Node.As_Compilation_Unit.P_Unit_Kind is
                            when Analysis_Unit_Kind'(Unit_Specification) =>
-                              U_Kind := S_Spec;
+                              U_Kind := Unit.S_Spec;
 
                               if U_Body.As_Library_Item.F_Item.Kind
                                 = Ada_Generic_Package_Decl
                               then
-                                 U_Is_Generic := True;
+                                 U_Flags (Is_Generic) := True;
                               end if;
 
                            when Analysis_Unit_Kind'(Unit_Body)          =>
-                              U_Kind := S_Body;
+                              U_Kind := Unit.S_Body;
                         end case;
 
                      when Ada_Subunit =>
-                        U_Kind := S_Separate;
+                        U_Kind := Unit.S_Separate;
                         U_Sep_From := Process_Defining_Name
                                         (U_Body.As_Subunit.F_Name);
 
                         pragma Assert
                           (Length (U_Name) > Length (U_Sep_From) + 1);
+
+                        --  Removes leading parent package
 
                         Delete (U_Name, 1, Length (U_Sep_From) + 1);
 
@@ -219,14 +229,27 @@ package body GPR2.Source.Parser is
 
                   Index := Index + 1;
 
-                  Found.Append
-                    (Compilation_Unit.Create
-                       (Unit_Name    => Name_Type (-U_Name),
-                        Index        => Index,
-                        Kind         => U_Kind,
-                        Withed_Units => U_Withed,
-                        Sep_From     => Optional_Name_Type (-U_Sep_From),
-                        Is_Generic   => U_Is_Generic));
+                  declare
+                     CU : constant Unit.Object :=
+                            Unit.Create
+                              (Name         => Name_Type (-U_Name),
+                               Index        => Index,
+                               Main         => U_Main,
+                               Flags        => U_Flags,
+                               Kind         => U_Kind,
+                               Dependencies => U_Withed,
+                               Sep_From     =>
+                                  Optional_Name_Type (-U_Sep_From));
+                  begin
+                     --  Kind of first unit is also recorded in Data.Kind
+
+                     if Index = 1 then
+                        Data.Kind := U_Kind;
+                     end if;
+
+                     Data.CU_List.Append (CU);
+                     Data.CU_Map.Insert (Index, CU);
+                  end;
                end;
 
                return Over;
@@ -238,7 +261,11 @@ package body GPR2.Source.Parser is
 
    begin
       Traverse (A_Unit.Root, Callback'Access);
-      return Found;
-   end Parse;
 
-end GPR2.Source.Parser;
+      Data.Parsed := Source_Info.Source;
+      Data.Is_Ada := True;
+   end Compute;
+
+begin
+   Parser.Registry.Register (Handle);
+end GPR2.Source_Info.Parser.Ada_Language;
