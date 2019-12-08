@@ -174,8 +174,10 @@ package GPR2.Project.Tree is
      (Self    : in out Object;
       Message : GPR2.Message.Object)
      with Pre  => Self.Is_Defined,
-          Post => Self.Log_Messages.Count = Self.Log_Messages.Count'Old + 1;
-   --  Adds new message into the Log of Self
+          Post => Self.Log_Messages.Count in Self.Log_Messages.Count'Old
+                                          .. Self.Log_Messages.Count'Old + 1;
+   --  Adds new message into the Log of Self, does nothing if message already
+   --  present.
 
    --  Context
 
