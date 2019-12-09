@@ -1400,7 +1400,7 @@ package body GPR2.Project.View is
 
    procedure Update_Sources (Self : Object) is
    begin
-      Get_Ref (Self).Update_Sources (Self);
+      Get_Ref (Self).Update_Sources (Self, Stop_On_Error => True);
    end Update_Sources;
 
    --------------

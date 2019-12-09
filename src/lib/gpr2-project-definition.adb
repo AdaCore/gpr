@@ -229,8 +229,9 @@ package body GPR2.Project.Definition is
    -- Update_Sources --
    --------------------
 
-   procedure Update_Sources (Def : in out Data; View : Project.View.Object) is
-
+   procedure Update_Sources
+     (Def : in out Data; View : Project.View.Object; Stop_On_Error : Boolean)
+   is
       use type MD5.Binary_Message_Digest;
       use type Project.Attribute.Object;
 
@@ -1854,7 +1855,8 @@ package body GPR2.Project.Definition is
 
       Source_Info.Parser.Registry.Clear_Cache;
 
-      if Message_Count < Tree.Log_Messages.Count
+      if Stop_On_Error
+        and then Message_Count < Tree.Log_Messages.Count
         and then Tree.Log_Messages.Has_Error
       then
          --  Some error messages have been logged, raise an exception

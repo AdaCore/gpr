@@ -2206,10 +2206,10 @@ package body GPR2.Project.Tree is
    -- Update_Sources --
    --------------------
 
-   procedure Update_Sources (Self : Object) is
+   procedure Update_Sources (Self : Object; Stop_On_Error : Boolean := True) is
    begin
       for V of Self.Views_Set loop
-         Definition.Get (V).Update_Sources (V);
+         Definition.Get (V).Update_Sources (V, Stop_On_Error);
       end loop;
    end Update_Sources;
 

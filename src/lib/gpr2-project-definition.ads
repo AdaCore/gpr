@@ -195,10 +195,15 @@ private package GPR2.Project.Definition is
    --  loaded configuration project if any and finally the default Naming
    --  package.
 
-   procedure Update_Sources (Def : in out Data; View : Project.View.Object);
+   procedure Update_Sources
+     (Def : in out Data; View : Project.View.Object; Stop_On_Error : Boolean);
    --  Ensure that the view definition sources are up-to-date. This is needed
    --  before computing the dependencies of a source in the project tree. This
    --  routine is called where needed and is there for internal use only.
+   --  If Stop_On_Error is True and an error occurred on reading the sources,
+   --  then the exception Project_Error raised. If Stop_On_Error is False then
+   --  no exception is raised and errors can be discovered only from the
+   --  Log.Object taken from the View.Tree.Log_Messages call.
 
    procedure Set_Default_Attributes (Def : in out Data);
    --  Set default and inherited attributes for the project view

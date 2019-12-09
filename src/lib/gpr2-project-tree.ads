@@ -286,11 +286,15 @@ package GPR2.Project.Tree is
    --  Update_Sources below, when the routine Sources on one of the views
    --  of the tree will be called, the set of sources will be recomputed.
 
-   procedure Update_Sources (Self : Object)
+   procedure Update_Sources (Self : Object; Stop_On_Error : Boolean := True)
      with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
+   --  If Stop_On_Error is True then exception Project_Error is raised in case
+   --  an error message exists in log after processing one of project files in
+   --  tree. If Stop_On_Error is False then no exception is raised and errors
+   --  can be discovered from the Log.Object taken from Log_Messages call.
 
    procedure Register_Project_Search_Path
      (Self : in out Object;
