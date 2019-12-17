@@ -247,7 +247,7 @@ begin
    --  Load the raw project, as it may define config-relevant attributes
 
    begin
-      Tree.Load (Project_Path, Context);
+      Tree.Load (Project_Path, Context, Check_Shared_Lib => False);
    exception
       when others =>
          Show_Tree_Load_Errors (Tree);
@@ -310,7 +310,7 @@ begin
 
       --  Finally, reload the project with the configuration
 
-      Tree.Load (Project_Path, Context, Cnf);
+      Tree.Load (Project_Path, Context, Cnf, Check_Shared_Lib => False);
 
    exception
       when Project_Error  | Processing_Error =>

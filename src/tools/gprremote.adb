@@ -371,7 +371,9 @@ procedure GPRremote is
             Put_Line ("loading project: " & Pathname.Value);
          end if;
 
-         Project.Load (Pathname, Context);
+         Project.Load
+           (Pathname, Context,
+            Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
       end Load_Project;
 
       Project_Name : constant String := To_String (Args (Arg_Project));

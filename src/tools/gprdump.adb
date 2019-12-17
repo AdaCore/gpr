@@ -255,7 +255,7 @@ begin
                      (GPR2.Optional_Name_Type (To_String (Project_Path)));
       Context  : GPR2.Context.Object;
    begin
-      Project_Tree.Load (Pathname, Context);
+      Project_Tree.Load (Pathname, Context, Check_Shared_Lib => False);
 
       if Display_Sources or else Display_All_Sources or else Display_Artifacts
         or else Display_Units

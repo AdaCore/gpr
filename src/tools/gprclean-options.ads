@@ -39,7 +39,6 @@ package GPRclean.Options is
       All_Projects                : aliased Boolean := False;
       Remain_Useful               : aliased Boolean := False;
       No_Project                  : aliased Boolean := False;
-      Unchecked_Shared_Lib_Import : aliased Boolean := False;
       Remove_Empty_Dirs           : aliased Boolean := False;
       Force_Deletions             : aliased Boolean := False;
 

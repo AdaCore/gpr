@@ -270,7 +270,8 @@ begin
       Context           => Opt.Project_Context,
       Absent_Dir_Error  => True,
       Target            => Opt.Get_Target,
-      Language_Runtimes => Opt.RTS_Map);
+      Language_Runtimes => Opt.RTS_Map,
+      Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib);
 
    --  The configuration step could fail because the language list has been
    --  set to empty ("for Languages use ()"), in this case just exit.

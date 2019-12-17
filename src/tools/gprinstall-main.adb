@@ -499,7 +499,8 @@ begin
                Options.Build_Path,
                (if Options.Subdirs = null
                 then ""
-                else Optional_Name_Type (Options.Subdirs.all)));
+                else Optional_Name_Type (Options.Subdirs.all)),
+               Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
          else
             --  No configuration, go with auto-configuration
 
@@ -507,7 +508,8 @@ begin
               (Options.Project_File, Options.Context, Options.Build_Path,
                (if Options.Subdirs = null
                 then ""
-                else Optional_Name_Type (Options.Subdirs.all)));
+                else Optional_Name_Type (Options.Subdirs.all)),
+               Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
          end if;
 
          if Options.Verbose then

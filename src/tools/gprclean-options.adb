@@ -50,14 +50,14 @@ package body GPRclean.Options is
    begin
       GTO.Append (GTO.Object (Self), GTO.Object (Next));
 
-      Add (Self.Dry_Run,                     Next.Dry_Run);
-      Add (Self.All_Projects,                Next.All_Projects);
-      Add (Self.Remain_Useful,               Next.Remain_Useful);
-      Add (Self.No_Project,                  Next.No_Project);
-      Add (Self.Debug_Mode,                  Next.Debug_Mode);
-      Add (Self.Full_Path_Name_For_Brief,    Next.Full_Path_Name_For_Brief);
-      Add (Self.Remove_Empty_Dirs,           Next.Remove_Empty_Dirs);
-      Add (Self.Unchecked_Shared_Lib_Import, Next.Unchecked_Shared_Lib_Import);
+      Add (Self.Dry_Run,                  Next.Dry_Run);
+      Add (Self.All_Projects,             Next.All_Projects);
+      Add (Self.Remain_Useful,            Next.Remain_Useful);
+      Add (Self.No_Project,               Next.No_Project);
+      Add (Self.Debug_Mode,               Next.Debug_Mode);
+      Add (Self.Full_Path_Name_For_Brief, Next.Full_Path_Name_For_Brief);
+      Add (Self.Remove_Empty_Dirs,        Next.Remove_Empty_Dirs);
+      Add (Self.Unchecked_Shared_Lib,     Next.Unchecked_Shared_Lib);
 
       Self.Args.Union (Next.Mains);
       Self.Arg_Mains := not Self.Mains.Is_Empty;
@@ -165,11 +165,6 @@ package body GPRclean.Options is
       Define_Switch
         (Config, Dummy'Access, "-eL",
          Help => "For backwards compatibility, has no effect");
-
-      Define_Switch
-        (Config, Options.Unchecked_Shared_Lib_Import'Access,
-         Long_Switch => "--unchecked-shared-lib-imports",
-         Help => "Shared lib projects may import any project");
 
       Define_Switch
         (Config, Options.Remove_Empty_Dirs'Access,

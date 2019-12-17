@@ -206,6 +206,11 @@ package body GPRtools.Options is
          "-v", "--verbose",
          Help => "Verbose output");
 
+      Define_Switch
+        (Self.Config, Self.Unchecked_Shared_Lib'Access,
+         Long_Switch => "--unchecked-shared-lib-imports",
+         Help => "Shared lib projects may import any project");
+
       if Tool not in Remote | Ls then
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,

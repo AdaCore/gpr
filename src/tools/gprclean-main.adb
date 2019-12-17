@@ -588,7 +588,7 @@ begin
         (Options.Project_File, Options.Context, Config, Options.Build_Path,
          Subdirs          => To_Optional_Name (Options.Subdirs),
          Src_Subdirs      => To_Optional_Name (Options.Src_Subdirs),
-         Check_Shared_Lib => not Options.Unchecked_Shared_Lib_Import,
+         Check_Shared_Lib => not Options.Unchecked_Shared_Lib,
          Implicit_Project => Options.Implicit_Proj,
          Implicit_With    => Options.Implicit_With);
 
@@ -597,7 +597,7 @@ begin
         (Options.Project_File, Options.Context, Options.Build_Path,
          Subdirs           => To_Optional_Name (Options.Subdirs),
          Src_Subdirs       => To_Optional_Name (Options.Src_Subdirs),
-         Check_Shared_Lib  => not Options.Unchecked_Shared_Lib_Import,
+         Check_Shared_Lib  => not Options.Unchecked_Shared_Lib,
          Target            => Name_Type (To_String (Options.Target)),
          Language_Runtimes => Options.RTS_Map,
          Implicit_Project  => Options.Implicit_Proj,
