@@ -75,7 +75,7 @@ package GPR2.Parser.Project is
    function Has_Extended (Self : Object) return Boolean;
    --  Returns True if an extended project is defined
 
-   function Is_Extended_All (Self : Object) return Boolean
+   function Is_Extending_All (Self : Object) return Boolean
      with Pre => Self.Has_Extended;
    --  Returns True if the extended project is an extends all
 

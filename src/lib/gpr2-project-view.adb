@@ -775,7 +775,7 @@ package body GPR2.Project.View is
 
    function Is_Extending_All (Self : Object) return Boolean is
    begin
-      return Definition.Get_RO (Self).Trees.Project.Is_Extended_All;
+      return Definition.Get_RO (Self).Trees.Project.Is_Extending_All;
    end Is_Extending_All;
 
    -------------------------

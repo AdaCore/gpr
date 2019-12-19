@@ -250,14 +250,14 @@ package body GPR2.Parser.Project is
       return Self.Imports;
    end Imports;
 
-   ---------------------
-   -- Is_Extended_All --
-   ---------------------
+   ----------------------
+   -- Is_Extending_All --
+   ----------------------
 
-   function Is_Extended_All (Self : Object) return Boolean is
+   function Is_Extending_All (Self : Object) return Boolean is
    begin
       return Self.Is_All;
-   end Is_Extended_All;
+   end Is_Extending_All;
 
    ----------
    -- Name --
