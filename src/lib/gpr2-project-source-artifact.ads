@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -30,6 +30,8 @@ package GPR2.Project.Source.Artifact is
    type Object is tagged private;
 
    Undefined : constant Object;
+   --  This constant is equal to any object declared without an explicit
+   --  initializer.
 
    type Dependency_Location is (In_Library, In_Objects, In_Both);
    --  Kind of the dependency files location.

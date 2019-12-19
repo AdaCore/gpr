@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -47,6 +47,8 @@ package GPR2.Project.View is
    subtype Project_View is Object;
 
    Undefined : constant Object;
+   --  This constant is equal to any object declared without an explicit
+   --  initializer.
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -491,7 +493,7 @@ private
    --  configuration view, extending view if it exists and Self view.
 
    Undefined : constant Object :=
-                 Object'(Definition_References.Null_Ref with null record);
+                 (Definition_References.Null_Ref with null record);
 
    function Object_Artifact_Extensions
      (Self : Object; Language : Name_Type) return Containers.Value_Set

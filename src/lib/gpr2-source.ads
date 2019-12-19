@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -35,6 +35,8 @@ package GPR2.Source is
    type Object is tagged private;
 
    Undefined : constant Object;
+   --  This constant is equal to any object declared without an explicit
+   --  initializer.
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -161,7 +163,7 @@ private
       Pathname : GPR2.Path_Name.Object;
    end record;
 
-   Undefined : constant Object := Object'(Pathname => <>);
+   Undefined : constant Object := (Pathname => <>);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

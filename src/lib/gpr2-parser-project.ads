@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -41,6 +41,8 @@ package GPR2.Parser.Project is
    subtype Project_Type is Object;
 
    Undefined : constant Object;
+   --  This constant is equal to any object declared without an explicit
+   --  initializer.
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -127,7 +129,7 @@ private
       Qualifier : Project_Kind := K_Standard;
       Externals : Containers.Name_List;
       Imports   : GPR2.Project.Import.Set.Object;
-      Extended  : GPR2.Project.Import.Object := GPR2.Project.Import.Undefined;
+      Extended  : GPR2.Project.Import.Object;
       Is_All    : Boolean := False;
       Unit      : Analysis_Unit := No_Analysis_Unit;
       Types     : GPR2.Project.Typ.Set.Object;

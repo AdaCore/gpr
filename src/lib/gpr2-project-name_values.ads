@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -32,6 +32,8 @@ package GPR2.Project.Name_Values is
    type Object is new Source_Reference.Object with private;
 
    Undefined : constant Object;
+   --  This constant is equal to any object declared without an explicit
+   --  initializer.
 
    subtype Value_Kind is Registry.Attribute.Value_Kind;
 
@@ -127,7 +129,7 @@ private
    end record;
 
    Undefined : constant Object :=
-                 Object'(Source_Reference.Undefined with others => <>);
+                 (Source_Reference.Undefined with others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

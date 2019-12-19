@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -166,7 +166,7 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    Source_List_File_Basename : constant String := String
      (Project_Path.Base_Name) & "_source_list.txt";
 
-   Compiler_Path : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+   Compiler_Path : GPR2.Path_Name.Object;
 
    --  Some containers used throughout the process
 
