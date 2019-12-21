@@ -23,7 +23,6 @@ with GPR2.Parser.Project;
 with GPR2.Project.View;
 
 private with Ada.Containers.Vectors;
-private with Ada.Strings.Unbounded;
 
 limited with GPR2.Project.Tree;
 
@@ -124,8 +123,6 @@ package GPR2.Project.Configuration is
    --  Returns the dependency file suffix (with the leading dot)
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Description is record
       Language : Unbounded_String;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -42,7 +42,6 @@ pragma Warnings (On);
 
 package body GPR2.Project.Tree is
 
-   use Ada;
    use GNAT;
    use type GPR2.Path_Name.Object;
 
@@ -679,8 +678,6 @@ package body GPR2.Project.Tree is
       Absent_Dir_Error : Boolean              := False;
       Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
    is
-      use Ada.Strings.Unbounded;
-
       procedure Set_Project_Search_Paths;
       --  Set project search path for the tree
 
@@ -1531,7 +1528,6 @@ package body GPR2.Project.Tree is
       Context : GPR2.Context.Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      use Ada.Strings.Unbounded;
       Root        : constant Definition.Ref := Definition.Get_RW (Self.Root);
       Src_Subdirs : constant String         := To_String (Self.Src_Subdirs);
    begin

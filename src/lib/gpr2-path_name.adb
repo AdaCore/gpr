@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Handling;
-with Ada.Directories;
 with Ada.Directories.Hierarchical_File_Names;
 with Ada.Environment_Variables;
 with Ada.Streams.Stream_IO;
@@ -31,8 +30,6 @@ with GNAT.Regexp;
 with System;
 
 package body GPR2.Path_Name is
-
-   use Ada;
 
    use GNAT;
    use GNAT.Regexp;

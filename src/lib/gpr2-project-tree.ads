@@ -44,8 +44,6 @@ package GPR2.Project.Tree is
           Default_Iterator  => Iterate,
           Iterator_Element  => View.Object;
 
-   subtype Project_Tree is Object;
-
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.

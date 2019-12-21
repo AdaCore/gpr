@@ -30,8 +30,6 @@ package GPR2.Project.Attribute is
 
    type Object is new Name_Values.Object with private;
 
-   subtype Project_Attribute is Object;
-
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.

@@ -24,8 +24,6 @@ package GPR2.Project.Import is
 
    type Object is new Source_Reference.Object with private;
 
-   subtype Import_Type is Object;
-
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.

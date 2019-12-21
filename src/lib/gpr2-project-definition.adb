@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -23,7 +23,6 @@ with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Strings.Maps.Constants;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.MD5;
@@ -43,7 +42,6 @@ with GPR2.Source_Reference.Value;
 
 package body GPR2.Project.Definition is
 
-   use Ada;
    use GNAT;
 
    package PRA renames Project.Registry.Attribute;
@@ -64,7 +62,6 @@ package body GPR2.Project.Definition is
    function Check_Circular_References
      (View : Project.View.Object) return Boolean
    is
-      use Ada.Strings.Unbounded;
 
       Steps : Containers.Name_Set;
       Way   : Unbounded_String;
@@ -199,6 +196,7 @@ package body GPR2.Project.Definition is
                      Def.Attrs (CT).Append (V);
                   end if;
                end loop;
+
             else
                Def.Attrs.Insert (Parent);
             end if;
@@ -724,7 +722,6 @@ package body GPR2.Project.Definition is
          is
             use Ada.Strings;
             use Ada.Strings.Maps;
-            use Ada.Strings.Unbounded;
 
             Result : Unbounded_String :=
                        To_Unbounded_String (String (File.Simple_Name));

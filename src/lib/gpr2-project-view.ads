@@ -44,8 +44,6 @@ package GPR2.Project.View is
 
    type Object is tagged private;
 
-   subtype Project_View is Object;
-
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.

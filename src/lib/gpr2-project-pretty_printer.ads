@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -18,16 +18,12 @@
 
 --  Pretty Printer for a GPR2 project
 
-with Ada.Strings.Unbounded;
-
 with GPR_Parser.Analysis;
 
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 package GPR2.Project.Pretty_Printer is
-
-   use Ada;
 
    use GPR_Parser;
    use GPR_Parser.Analysis;
@@ -85,8 +81,6 @@ package GPR2.Project.Pretty_Printer is
    --  Returns the result of the pretty printer
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       With_Comments          : Boolean            := True;

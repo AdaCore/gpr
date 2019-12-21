@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -93,7 +93,7 @@ private package GPR2.Project.Definition is
       --  testsuite is OK with it in Valgrind mode.
 
       --  The project tree for this view
-      Tree              : access Project.Tree.Object;
+      Tree         : access Project.Tree.Object;
    end record
      with Dynamic_Predicate =>
             --  Only a root-aggregate project can have a context defined via

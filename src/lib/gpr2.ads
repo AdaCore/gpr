@@ -48,6 +48,8 @@
 --     Unit
 --        A unit with its spec and possible bodies (main body and separates)
 
+private with Ada.Strings.Unbounded;
+
 package GPR2 is
 
    Project_Error : exception;
@@ -133,6 +135,9 @@ package GPR2 is
 
 private
 
+   use Ada;
+   use Ada.Strings.Unbounded;
+
    No_Name  : constant Optional_Name_Type := "";
    No_Value : constant Value_Type := "";
 
@@ -153,5 +158,11 @@ private
 
    File_Names_Case_Sensitive : constant Boolean :=
                                  Get_File_Names_Case_Sensitive /= 0;
+
+   function "+"
+     (Source : String) return Unbounded_String renames To_Unbounded_String;
+
+   function "-"
+     (Source : Unbounded_String) return String renames To_String;
 
 end GPR2;

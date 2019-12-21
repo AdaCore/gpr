@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -293,8 +293,6 @@ package GPR2.Compilation.Protocol is
    --  the file's timestamp is set.
 
 private
-
-   use Ada;
 
    type Communication_Channel is new Finalization.Controlled with record
       Sock           : Socket_Type;

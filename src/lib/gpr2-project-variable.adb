@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -15,8 +15,6 @@
 -- see <http://www.gnu.org/licenses/>.                                      --
 --                                                                          --
 ------------------------------------------------------------------------------
-
-with Ada.Strings.Unbounded;
 
 package body GPR2.Project.Variable is
 
@@ -65,7 +63,6 @@ package body GPR2.Project.Variable is
       Name_Len : Natural := 0) return String
    is
 
-      use Ada.Strings.Unbounded;
       use GPR2.Project.Registry.Attribute;
       use all type GPR2.Project.Name_Values.Object;
 

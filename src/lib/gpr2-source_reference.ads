@@ -21,13 +21,9 @@
 
 with GPR2.Path_Name;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Source_Reference is
 
    type Object is tagged private;
-
-   subtype Source_Reference is Object;
 
    function "<" (Left, Right : Object) return Boolean;
 
@@ -62,8 +58,6 @@ package GPR2.Source_Reference is
    --  Returns the starting column of the entity declaration
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Line     : Natural := 0;

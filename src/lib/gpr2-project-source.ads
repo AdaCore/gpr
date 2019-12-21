@@ -29,8 +29,6 @@ package GPR2.Project.Source is
 
    type Object is new Source_Info.Object with private;
 
-   subtype Source_Object is Object;
-
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -26,7 +26,6 @@ with Ada.Exceptions;
 with Ada.Numerics.Float_Random;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps.Constants;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.MD5;
@@ -48,8 +47,6 @@ with GPRtools.Util;
 
 package body GPR2.Compilation.Registry is
 
-   use Ada;
-   use Ada.Strings.Unbounded;
    use Ada.Exceptions;
 
    use GNAT;

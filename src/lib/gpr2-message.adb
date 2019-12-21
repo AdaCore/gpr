@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -48,7 +48,6 @@ package body GPR2.Message is
       Full_Path_Name : Boolean := False;
       Levels         : Level_Output := (Long, Long, Long)) return String
    is
-      use Ada;
       use GNAT.Formatted_String;
 
       function Level_Image return String is

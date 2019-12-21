@@ -20,8 +20,6 @@
 
 with GPR2.Source_Reference;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Message is
 
    type Level_Value is (Information, Warning, Error);
@@ -93,8 +91,6 @@ package GPR2.Message is
    --  Sets message as Read or Unread as specified by Status
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Level   : Level_Value := Warning;

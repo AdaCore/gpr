@@ -28,8 +28,6 @@
 
 with GNAT.MD5;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Path_Name is
 
    type Object is tagged private;
@@ -171,8 +169,6 @@ package GPR2.Path_Name is
    --  First dot in the Extension is ignored.
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Is_Dir    : Boolean := False;

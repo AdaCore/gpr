@@ -24,8 +24,6 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Variable.Set;
 with GPR2.Source_Reference.Identifier;
 
-private with Ada.Strings.Unbounded;
-
 package GPR2.Project.Pack is
 
    type Object is new Source_Reference.Object with private;
@@ -33,8 +31,6 @@ package GPR2.Project.Pack is
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
-
-   subtype Project_Pack is Object;
 
    overriding function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -189,8 +185,6 @@ package GPR2.Project.Pack is
    --  Handles Body, Implementation, this is only defined for the Ada language
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is new Source_Reference.Object with record
       Name  : Unbounded_String;

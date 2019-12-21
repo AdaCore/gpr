@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -34,8 +34,6 @@ package GPR2.Context is
    --  A parsing context containing the external values for a given project
    --  tree. This context corresponds to all values of external variables found
    --  in a project tree.
-
-   subtype Context_Type is Object;
 
    Empty : constant Object;
 

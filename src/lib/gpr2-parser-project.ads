@@ -29,7 +29,6 @@ with GPR2.Project.View;
 
 limited with GPR2.Project.Tree;
 
-private with Ada.Strings.Unbounded;
 with GPR_Parser.Analysis;
 
 package GPR2.Parser.Project is
@@ -37,8 +36,6 @@ package GPR2.Parser.Project is
    use GPR_Parser.Analysis;
 
    type Object is tagged private;
-
-   subtype Project_Type is Object;
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -120,8 +117,6 @@ package GPR2.Parser.Project is
    --  Returns the GPR_Parser analysis unit
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Name      : Unbounded_String;

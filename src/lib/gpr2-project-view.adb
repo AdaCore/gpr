@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
@@ -36,9 +35,6 @@ with GPR2.Unit;
 with GNATCOLL.Utils;
 
 package body GPR2.Project.View is
-
-   use Ada;
-   use Ada.Strings.Unbounded;
 
    use GNAT;
 

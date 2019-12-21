@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -26,7 +26,5 @@ package GPR2.Project.Pack.Set is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Object, "<");
 
    subtype Object is Set.Map;
-
-   subtype Package_Set is Object;
 
 end GPR2.Project.Pack.Set;

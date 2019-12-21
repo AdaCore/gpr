@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -18,11 +18,8 @@
 
 with Ada.Characters.Handling;
 with Ada.Strings.Equal_Case_Insensitive;
-with Ada.Strings.Unbounded;
 
 package body GPR2.Project.Name_Values is
-
-   use Ada.Strings.Unbounded;
 
    function Build_Map
      (Values         : Containers.Source_Value_List;
@@ -50,9 +47,7 @@ package body GPR2.Project.Name_Values is
 
    function Build_Map
      (Values         : Containers.Source_Value_List;
-      Case_Sensitive : Boolean) return Containers.Value_Source_Reference
-   is
-      use Ada;
+      Case_Sensitive : Boolean) return Containers.Value_Source_Reference is
    begin
       return R : Containers.Value_Source_Reference do
          for V of Values loop
@@ -110,7 +105,6 @@ package body GPR2.Project.Name_Values is
    ---------------
 
    function Has_Value (Self : Object; Value : Value_Type) return Boolean is
-      use Ada;
    begin
       return Self.V_Map.Contains
         (if Self.Value_Case_Sensitive
@@ -192,9 +186,8 @@ package body GPR2.Project.Name_Values is
    -----------
 
    function Value
-     (Self : Object; Value : Value_Type) return Source_Reference.Value.Object
-   is
-      use Ada;
+     (Self  : Object;
+      Value : Value_Type) return Source_Reference.Value.Object is
    begin
       return Self.V_Map ((if Self.Value_Case_Sensitive
                           then Value

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -20,8 +20,6 @@
 --  and a connection port. Slaves are recorded into the registry.
 
 with GNAT.Sockets;
-
-private with Ada.Strings.Unbounded;
 
 package GPR2.Compilation.Slave is
 
@@ -41,8 +39,6 @@ package GPR2.Compilation.Slave is
    --  Returns the port of the slave
 
 private
-
-   use Ada.Strings.Unbounded;
 
    type Object is tagged record
       Host : Unbounded_String;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -20,7 +20,6 @@ with Ada.Calendar.Time_Zones;
 with Ada.Containers.Vectors;
 with Ada.Directories;
 with Ada.Exceptions;
-with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Regexp;
@@ -30,11 +29,9 @@ with GPR2.Time_Stamp;
 
 package body GPR2.Compilation.Sync is
 
-   use Ada;
    use Ada.Calendar;
    use Ada.Directories;
    use Ada.Exceptions;
-   use Ada.Strings.Unbounded;
    use Ada.Text_IO;
 
    use GNAT.Regexp;
