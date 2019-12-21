@@ -16,8 +16,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with GPR2.Unit;
 with GPR2.Project.View;
-with GPR2.Source.Holder;
+with GPR2.Source;
 with GPR2.Source_Info;
 
 limited with GPR2.Project.Source.Artifact;
@@ -26,14 +27,15 @@ limited with GPR2.Project.Source.Set;
 package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
+   use type GPR2.Unit.Kind_Type;
 
-   type Object is new Source_Info.Object with private;
+   type Object is tagged private;
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
-   overriding function Is_Defined (Self : Object) return Boolean;
+   function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
    function "<" (Left, Right : Object) return Boolean;
@@ -55,6 +57,10 @@ package GPR2.Project.Source is
    --  View Source_Dirs) and Extending_View is the optional view from which the
    --  project source is extended. That is, if Extending_View is defined then
    --  this source is coming from an extended project for View.
+
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the source path-name
 
    function View (Self : Object) return Project.View.Object
      with Pre  => Self.Is_Defined,
@@ -131,23 +137,36 @@ package GPR2.Project.Source is
    --  non-unit-based sources. In the latter case, Index is not used.
    --
 
-   function Has_Other_Part (Self : Object) return Boolean
+   function Has_Other_Part
+     (Self  : Object;
+      Index : Source_Info.Unit_Index := 1) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True if an other part exists for this project source
+   --  Returns True if an other part exists for this project source's unit at
+   --  the given index.
 
-   function Other_Part (Self : Object) return Object
-     with Pre => Self.Is_Defined and then Self.Has_Other_Part,
+   function Other_Part
+     (Self  : Object;
+      Index : Source_Info.Unit_Index := 1) return Object
+     with Pre  => Self.Is_Defined and then Self.Has_Other_Part (Index),
           Post => Other_Part'Result.Is_Defined;
-   --  Returns the other part for this project source
+   --  Returns the project's source containing the other part for this project
+   --  source's unit at the given index.
 
-   function Separate_From (Self : Object) return Object
-     with Pre => Self.Is_Defined and then Self.Source.Kind = S_Separate;
-   --  Returns the separate for Self
+   function Separate_From
+     (Self  : Object;
+      Index : Source_Info.Unit_Index := 1) return Object
+     with Pre => Self.Is_Defined
+                 and then Self.Source.Kind = GPR2.Unit.S_Separate;
+   --  Returns the project's source containing the separate for Self's unit at
+   --  the given index.
+
+   procedure Update (Self : in out Object);
+   --  Ensure that the project source is parsed/updated if needed
 
 private
 
-   type Object is new Source_Info.Object with record
-      Source : GPR2.Source.Holder.Holder;
+   type Object is tagged record
+      Source : GPR2.Source.Object;
       View   : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
@@ -160,24 +179,28 @@ private
    end record;
 
    Undefined : constant Object :=
-                 (GPR2.Source_Info.Undefined with others => <>);
+                 (Source => GPR2.Source.Undefined,
+                  others => <>);
 
-   overriding function Is_Defined (Self : Object) return Boolean is
+   function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
    function Is_Aggregated (Self : Object) return Boolean is
      (Self.Aggregated);
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Source.Element < Right.Source.Element);
+     (Left.Source < Right.Source);
 
    overriding function "=" (Left, Right : Object) return Boolean is
-     (Left.Source.Element = Right.Source.Element);
+     (Left.Source = Right.Source);
 
    function Is_Interface (Self : Object) return Boolean is
      (Self.Is_Interface);
 
    function Has_Naming_Exception (Self : Object) return Boolean is
      (Self.Has_Naming_Exception);
+
+   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
+     (Self.Source.Path_Name);
 
 end GPR2.Project.Source;
