@@ -310,15 +310,6 @@ package body GPR2.Project.Source is
       end if;
    end Other_Part;
 
-   -------------
-   -- Release --
-   -------------
-
-   procedure Release (Self : in out Object) is
-   begin
-      Self.Source.Release;
-   end Release;
-
    -------------------
    -- Separate_From --
    -------------------

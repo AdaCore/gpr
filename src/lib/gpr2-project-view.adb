@@ -1180,24 +1180,6 @@ package body GPR2.Project.View is
    end Qualifier;
 
    -------------
-   -- Release --
-   -------------
-
-   procedure Release (Self : in out Object) is
-      Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
-   begin
-      for C in Data.Sources.Iterate loop
-         declare
-            S : Project.Source.Object := Project.Source.Set.Element (C);
-         begin
-            S.Release;
-         end;
-      end loop;
-
-      Self := Undefined;
-   end Release;
-
-   -------------
    -- Set_Def --
    -------------
 

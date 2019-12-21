@@ -110,10 +110,6 @@ package GPR2.Project.Source is
    --  Source artifacts may not exist if the compilation has not yet been
    --  done/finished.
 
-   procedure Release (Self : in out Object)
-     with Pre => Self.Is_Defined;
-   --  Releases the project source
-
    --
    --  The following routines only make sense if Has_Units is True
    --

@@ -333,16 +333,6 @@ package body GPR2.Project.Configuration is
    end Object_File_Suffix;
 
    -------------
-   -- Release --
-   -------------
-
-   procedure Release (Self : in out Object) is
-   begin
-      Self.Conf.Release;
-      Self := Undefined;
-   end Release;
-
-   -------------
    -- Runtime --
    -------------
 

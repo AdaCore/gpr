@@ -476,9 +476,6 @@ package GPR2.Project.View is
    --  Returns artifact files taken from Artifacts_In_Object_Dir and
    --  Artifacts_In_Exec_Dir attributes.
 
-   procedure Release (Self : in out Object);
-   --  Releases the project view and release all associated memory
-
 private
 
    type Object is new Definition_References.Ref with null record;
