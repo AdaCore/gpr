@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -38,12 +38,12 @@ package body GPR2.Project.Pretty_Printer is
    ------------
 
    function Create
-     (With_Comments           : Boolean           := True;
-      Initial_Indent         : Natural            := 0;
-      Increment              : Positive           := 3;
-      Max_Line_Length        : Max_Length_Of_Line := 80;
-      Minimize_Empty_Lines   : Boolean            := False;
-      Backward_Compatibility : Boolean            := False)
+     (With_Comments          : Boolean     := True;
+      Initial_Indent         : Natural     := 0;
+      Increment              : Positive    := 3;
+      Max_Line_Length        : Line_Length := 80;
+      Minimize_Empty_Lines   : Boolean     := False;
+      Backward_Compatibility : Boolean     := False)
       return Object is
    begin
       return Object'

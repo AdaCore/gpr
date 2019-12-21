@@ -30,15 +30,15 @@ package GPR2.Project.Pretty_Printer is
 
    type Object is tagged private;
 
-   subtype Max_Length_Of_Line is Positive range 50 .. 255;
+   subtype Line_Length is Positive range 50 .. 255;
 
    function Create
-     (With_Comments          : Boolean            := True;
-      Initial_Indent         : Natural            := 0;
-      Increment              : Positive           := 3;
-      Max_Line_Length        : Max_Length_Of_Line := 80;
-      Minimize_Empty_Lines   : Boolean            := False;
-      Backward_Compatibility : Boolean            := False) return Object;
+     (With_Comments          : Boolean     := True;
+      Initial_Indent         : Natural     := 0;
+      Increment              : Positive    := 3;
+      Max_Line_Length        : Line_Length := 80;
+      Minimize_Empty_Lines   : Boolean     := False;
+      Backward_Compatibility : Boolean     := False) return Object;
    --  Creates a pretty-printer object.
    --
    --  Initial_Indent is the initial indentation.
@@ -83,12 +83,12 @@ package GPR2.Project.Pretty_Printer is
 private
 
    type Object is tagged record
-      With_Comments          : Boolean            := True;
-      Initial_Indent         : Natural            := 0;
-      Increment              : Positive           := 3;
-      Max_Line_Length        : Max_Length_Of_Line := 80;
-      Minimize_Empty_Lines   : Boolean            := False;
-      Backward_Compatibility : Boolean            := False;
+      With_Comments          : Boolean           := True;
+      Initial_Indent         : Natural           := 0;
+      Increment              : Positive          := 3;
+      Max_Line_Length        : Line_Length       := 80;
+      Minimize_Empty_Lines   : Boolean           := False;
+      Backward_Compatibility : Boolean           := False;
       Buffer                 : Unbounded_String;
    end record;
 
