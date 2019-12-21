@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -66,8 +66,6 @@ package GPR2 is
 
    subtype Aggregate_Kind
      is Project_Kind range K_Aggregate .. K_Aggregate_Library;
-
-   type Kind_Type is (S_Spec, S_Body, S_Separate);
 
    function Image (Kind : Project_Kind) return String;
    --  Returns a human representation of kind value

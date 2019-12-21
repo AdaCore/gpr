@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,17 +16,15 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Vectors;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
-package GPR2.Compilation_Unit.List is
+package GPR2.Project.Unit_Info.Set is
 
-   package List is
-     new Ada.Containers.Indefinite_Vectors (Positive, Compilation_Unit.Object);
+   package Set is
+     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Unit_Info.Object);
 
-   subtype Object is List.Vector;
+   subtype Object is Set.Map;
 
-   subtype Cursor is List.Cursor;
+   subtype Cursor is Set.Cursor;
 
-   Empty_List : constant Object := List.Empty_Vector;
-
-end GPR2.Compilation_Unit.List;
+end GPR2.Project.Unit_Info.Set;

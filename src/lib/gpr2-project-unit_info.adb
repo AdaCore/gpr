@@ -16,15 +16,52 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body GPR2.Unit is
+package body GPR2.Project.Unit_Info is
 
------------------
--- Update_Kind --
------------------
+   ------------
+   -- Create --
+   ------------
 
-   procedure Update_Kind (Self : in out Object; Kind : Kind_Type) is
+   function Create
+     (Name      : Name_Type;
+      Spec      : Path_Name.Object;
+      Main_Body : Path_Name.Object;
+      Separates : Path_Name.Set.Object) return Object is
    begin
-      Self.Kind := Kind;
-   end Update_Kind;
+      return Object'(To_Unbounded_String (String (Name)),
+                     Spec,
+                     Main_Body,
+                     Separates);
+   end Create;
 
-end GPR2.Unit;
+   -----------------
+   -- Update_Body --
+   -----------------
+
+   procedure Update_Body
+     (Self : in out Object; Source : Path_Name.Object) is
+   begin
+      Self.Main_Body := Source;
+   end Update_Body;
+
+   ----------------------
+   -- Update_Separates --
+   ----------------------
+
+   procedure Update_Separates
+     (Self : in out Object; Source : Path_Name.Object) is
+   begin
+      Self.Separates.Append (Source);
+   end Update_Separates;
+
+   -----------------
+   -- Update_Spec --
+   -----------------
+
+   procedure Update_Spec
+     (Self : in out Object; Source : Path_Name.Object) is
+   begin
+      Self.Spec := Source;
+   end Update_Spec;
+
+end GPR2.Project.Unit_Info;

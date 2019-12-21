@@ -16,15 +16,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body GPR2.Unit is
+with Ada.Containers.Indefinite_Ordered_Maps;
 
------------------
--- Update_Kind --
------------------
+package GPR2.Unit.Map is
 
-   procedure Update_Kind (Self : in out Object; Kind : Kind_Type) is
-   begin
-      Self.Kind := Kind;
-   end Update_Kind;
+   package Map is new Ada.Containers.Indefinite_Ordered_Maps
+     (Natural, Unit.Object);
 
-end GPR2.Unit;
+   subtype Object is Map.Map;
+
+   subtype Cursor is Map.Cursor;
+
+   Empty_Map : constant Object := Map.Empty_Map;
+
+end GPR2.Unit.Map;
