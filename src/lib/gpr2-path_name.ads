@@ -26,7 +26,10 @@
 --  From a path-name object it is always possible to get the full pathname
 --  of the file and its containing directory.
 
+with Ada.Calendar;
 with GNAT.MD5;
+
+private with Ada.Directories;
 
 package GPR2.Path_Name is
 
@@ -168,6 +171,10 @@ package GPR2.Path_Name is
    --  removing current extension if any).
    --  First dot in the Extension is ignored.
 
+   function Modification_Time (Self : Object) return Ada.Calendar.Time
+     with Pre => Self.Is_Defined;
+   --  Returns Self's modification time
+
 private
 
    type Object is tagged record
@@ -203,5 +210,8 @@ private
      (Self.Dir_Name /= Null_Unbounded_String);
 
    function Is_Directory (Self : Object) return Boolean is (Self.Is_Dir);
+
+   function Modification_Time (Self : Object) return Ada.Calendar.Time is
+     (Ada.Directories.Modification_Time (To_String (Self.Value)));
 
 end GPR2.Path_Name;
