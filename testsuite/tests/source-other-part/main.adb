@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -19,6 +19,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
@@ -61,26 +62,22 @@ procedure Main is
             Text_IO.Put_Line
               (Filter_Filename (S.Path_Name.Value)
                & " -> "
-               & (if S.Has_Other_Part
-                  then Filter_Filename (S.Other_Part.Path_Name.Value)
+               & (if Source.Has_Other_Part
+                  then Filter_Filename (Source.Other_Part.Path_Name.Value)
                   else "undefined"));
 
             Text_IO.Set_Col (4);
             Text_IO.Put ("   language: " & String (S.Language));
 
             Text_IO.Set_Col (22);
-            Text_IO.Put ("   Kind: " & GPR2.Kind_Type'Image (S.Kind));
+            Text_IO.Put
+              ("   Kind: "
+               & GPR2.Unit.Kind_Type'Image (S.Kind));
 
             if S.Has_Units then
                Text_IO.Put ("   unit: " & String (S.Unit_Name));
             end if;
 
-            Text_IO.Put_Line
-              ("   other part : "
-               & (if Source.Has_Other_Part
-                  then Filter_Filename
-                         (Source.Other_Part.Source.Path_Name.Value)
-                  else "undefined"));
             Text_IO.New_Line;
          end;
       end loop;

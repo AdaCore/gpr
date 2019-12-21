@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,7 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Compilation_Unit;
+with GPR2.Unit;
 
 package body GPR2.Project.Source.Set is
 
@@ -178,7 +178,10 @@ package body GPR2.Project.Source.Set is
    ------------------
 
    function Match_Filter
-     (Iter : Iterator'Class; Source : Project.Source.Object) return Boolean is
+     (Iter   : Iterator'Class;
+      Source : Project.Source.Object) return Boolean
+   is
+      Src : constant GPR2.Source.Object := Source.Source;
    begin
       --  We check the S_All filter here as getting the Kind for a source may
       --  require a parsing to know whether we have a body or a separate unit.
@@ -191,15 +194,15 @@ package body GPR2.Project.Source.Set is
       else
          case Iter.Filter is
             when S_Compilable =>
-               if Source.Source.Has_Units then
-                  for CU of Source.Source.Compilation_Units loop
-                     if (Source.Source.Has_Single_Unit
+               if Src.Has_Units then
+                  for CU of Src.Units loop
+                     if (Src.Has_Single_Unit
                          and then not Source.Has_Other_Part
-                         and then CU.Kind /= GPR2.S_Separate
-                         and then Source.Source.Language = "Ada")
+                         and then CU.Kind /= GPR2.Unit.S_Separate
+                         and then Src.Language = "Ada")
                         --  The condition above is about Ada package specs
                         --  without a body, which have to be compilable.
-                        or else CU.Kind = GPR2.S_Body
+                        or else CU.Kind in GPR2.Unit.Body_Kind
                      then
                         --  At least one compilable unit
                         return True;
@@ -209,31 +212,31 @@ package body GPR2.Project.Source.Set is
                   return False;
 
                else
-                  return Source.Source.Kind = GPR2.S_Body;
+                  return Src.Kind = GPR2.Unit.S_Body;
                end if;
 
             when S_Spec     =>
-               if Source.Source.Has_Units then
-                  return (for some CU of Source.Source.Compilation_Units =>
-                            CU.Kind = GPR2.S_Spec);
+               if Src.Has_Units then
+                  return (for some CU of Src.Units =>
+                            CU.Kind in GPR2.Unit.Spec_Kind);
                else
-                  return Source.Source.Kind = GPR2.S_Spec;
+                  return Src.Kind in GPR2.Unit.Spec_Kind;
                end if;
 
             when S_Body     =>
-               if Source.Source.Has_Units then
-                  return (for some CU of Source.Source.Compilation_Units =>
-                            CU.Kind = GPR2.S_Body);
+               if Src.Has_Units then
+                  return (for some CU of Src.Units =>
+                            CU.Kind in GPR2.Unit.Body_Kind);
                else
-                  return Source.Source.Kind = GPR2.S_Body;
+                  return Src.Kind in GPR2.Unit.Body_Kind;
                end if;
 
             when S_Separate =>
-               if Source.Source.Has_Units then
-                  return (for some CU of Source.Source.Compilation_Units =>
-                            CU.Kind = GPR2.S_Separate);
+               if Src.Has_Units then
+                  return (for some CU of Src.Units =>
+                            CU.Kind = GPR2.Unit.S_Separate);
                else
-                  return Source.Source.Kind = GPR2.S_Separate;
+                  return Src.Kind = GPR2.Unit.S_Separate;
                end if;
 
             when others     =>

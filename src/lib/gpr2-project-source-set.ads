@@ -101,7 +101,8 @@ package GPR2.Project.Source.Set is
      with Implicit_Dereference => Source;
 
    function Constant_Reference
-     (Self : aliased Object; Position : Cursor) return Constant_Reference_Type;
+     (Self     : aliased Object;
+      Position : Cursor) return Constant_Reference_Type with Inline;
 
    Empty_Set : constant Object;
 

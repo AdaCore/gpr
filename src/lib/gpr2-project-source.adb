@@ -444,7 +444,7 @@ package body GPR2.Project.Source is
             --  Let's check if we have a dependency for this file
 
             if Art.Has_Dependency
-              and then Art.Dependency.Exists
+              and then GPR2.Path_Name.Object'(Art.Dependency).Exists
             then
                LI := Art.Dependency;
             end if;

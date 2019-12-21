@@ -8,6 +8,8 @@
 
 [Agg]    K_AGGREGATE
    External (KVAL) -> two
+   Library_Dir -> .
+   Library_Name -> Agg
    Project_Files -> a.gpr
    Var1 = var is one
    Var2 = one

@@ -29,7 +29,9 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source;
+with GPR2.Source_Info;
 with GPR2.Source_Reference;
+with GPR2.Project.Unit_Info;
 with GPR2.Unit;
 
 with GNATCOLL.Utils;
@@ -850,7 +852,7 @@ package body GPR2.Project.View is
       package A renames GPR2.Project.Registry.Attribute;
    begin
       return Self.Apply_Root_And_Subdirs
-               (Self.Attribute (A.Library_Ali_Dir).Value.Text);
+        (Self.Attribute (A.Library_Ali_Dir).Value.Text);
    end Library_Ali_Directory;
 
    -----------------------
@@ -1211,6 +1213,8 @@ package body GPR2.Project.View is
          Self.Update_Sources;
       end if;
 
+      --  ??? we probably want to optimize this with a map. This is was Sources
+      --  is based on project name.
       for S of Definition.Get_RO (Self).Sources loop
          if S.Source.Path_Name.Simple_Name = File.Simple_Name then
             return S;
@@ -1249,45 +1253,72 @@ package body GPR2.Project.View is
       Filter      : Source_Kind := K_All;
       Need_Update : Boolean := True) return Project.Source.Set.Object is
    begin
+      --  First we make sure that if needed the set of sources is up-to-date.
+      --  This only updates the set of source for the View depending on the
+      --  project deffinition. Basically it brings a list of source file and
+      --  their corresponding language into the set.
+
       if Need_Update then
          Self.Update_Sources;
       end if;
 
-      if Filter = K_All then
-         return Definition.Get_RO (Self).Sources;
-
-      else
-         return S_Set : Project.Source.Set.Object do
-            declare
-               Data : constant Project.Definition.Const_Ref :=
-                        Definition.Get_RO (Self);
+      declare
+         Data  : constant Project.Definition.Ref :=
+                   Project.Definition.Get (Self);
+      begin
+         if Need_Update then
+            Update_Source_Info : declare
+               N_Set : Project.Source.Set.Object;
             begin
+               --  Now update the source information if necessary. This will
+               --  properly set the source kind, the withed units.
+
+               for C in Data.Sources.Iterate loop
+                  declare
+                     S : Project.Source.Object := Data.Sources (C);
+                  begin
+                     S.Update;
+                     N_Set.Insert (S);
+                  end;
+               end loop;
+
+               Data.Sources := N_Set;
+            end Update_Source_Info;
+         end if;
+
+         --  Compute and return the sources depending on the filtering
+
+         if Filter = K_All then
+            return Definition.Get_RO (Self).Sources;
+
+         else
+            return S_Set : Project.Source.Set.Object do
                for S of Data.Sources loop
                   declare
-                     Unit_Is_Interface : constant Boolean :=
-                                           S.Source.Has_Units
-                                               and then
-                                           S.Source.Has_Single_Unit
-                                               and then Data.Units.Contains
-                                                 (S.Source.Unit_Name)
-                                                   and then Data.Units.Element
-                                                     (S.Source.Unit_Name).
-                                                     Is_Interface;
+                     U_Name       : constant Name_Type :=
+                                      S.Source.Unit_Name;
+                     Is_Interface : constant Boolean :=
+                                      S.Source.Has_Units
+                                          and then
+                                      S.Source.Has_Single_Unit
+                                          and then
+                                      Data.Units.Contains (U_Name)
+                                          and then
+                                      S.Is_Interface;
                      --  All sources related to an interface unit are also
                      --  taken as interface (not only the spec)???
                   begin
-                     if (Filter = K_Interface_Only and then Unit_Is_Interface)
-                       or else
-                         (Filter = K_Not_Interface
-                          and then not Unit_Is_Interface)
+                     if (Filter = K_Interface_Only and then Is_Interface)
+                           or else
+                        (Filter = K_Not_Interface and then not Is_Interface)
                      then
                         S_Set.Insert (S);
                      end if;
                   end;
                end loop;
-            end;
-         end return;
-      end if;
+            end return;
+         end if;
+      end;
    end Sources;
 
    ------------
@@ -1335,7 +1366,7 @@ package body GPR2.Project.View is
    function Unit
      (Self        : Object;
       Name        : Name_Type;
-      Need_Update : Boolean := True) return GPR2.Unit.Object is
+      Need_Update : Boolean := True) return Unit_Info.Object is
    begin
       if Need_Update then
          Self.Update_Sources;
@@ -1344,7 +1375,7 @@ package body GPR2.Project.View is
       if Definition.Get_RO (Self).Units.Contains (Name) then
          return Definition.Get_RO (Self).Units.Element (Name);
       else
-         return GPR2.Unit.Undefined;
+         return Unit_Info.Undefined;
       end if;
    end Unit;
 
@@ -1354,7 +1385,7 @@ package body GPR2.Project.View is
 
    function Units
      (Self        : Object;
-      Need_Update : Boolean := True) return GPR2.Unit.Set.Object is
+      Need_Update : Boolean := True) return Unit_Info.Set.Object is
    begin
       if Need_Update then
          Self.Update_Sources;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -31,6 +31,7 @@ with GNATCOLL.Utils;
 with GPR.Util;
 
 with GPR2.Compilation.Registry;
+with GPR2.Unit;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
@@ -62,6 +63,7 @@ procedure GPRclean.Main is
    use GPR2;
    use GPRtools;
    use GPR2.Path_Name;
+   use all type Unit.Kind_Type;
 
    package PRA renames GPR2.Project.Registry.Attribute;
    package PRP renames GPR2.Project.Registry.Pack;
@@ -327,7 +329,7 @@ procedure GPRclean.Main is
                   if S.Source.Language = "Ada"
                     and then not S.Source.Has_Single_Unit
                   then
-                     for CU of S.Source.Compilation_Units loop
+                     for CU of S.Source.Units loop
                         if CU.Kind = S_Body then
                            Binder_Artifacts
                              (S.Source.Path_Name.Base_Name

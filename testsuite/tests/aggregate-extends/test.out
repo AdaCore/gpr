@@ -6,6 +6,8 @@ V:   Var -> var is one
 
 [Agg]    K_AGGREGATE
 A:   External -> two
+A:   Library_Dir -> .
+A:   Library_Name -> Agg
 A:   Project_Files -> a.gpr
 V:   Var -> var is one
 

@@ -55,7 +55,7 @@ package GPR2.Project.Source.Artifact is
    --  Returns True if an object-code path is defined
 
    function Object_Code
-     (Self : Object; Index : Natural := 1) return Path_Name.Object
+     (Self : Object; Index : Natural := 1) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  The target-dependent code (generally .o or .obj). Note that the first
    --  one (Index = 1) is the one to be used by the installer.
@@ -72,8 +72,9 @@ package GPR2.Project.Source.Artifact is
    function Dependency
      (Self     : Object;
       Index    : Natural             := 1;
-      Location : Dependency_Location := In_Both) return Path_Name.Object
-     with Pre => Self.Is_Defined;
+      Location : Dependency_Location := In_Both) return GPR2.Path_Name.Object
+     with Pre  => Self.Is_Defined,
+          Post => Dependency'Result.Is_Defined;
    --  A file containing information (.ali for GNAT, .d for GCC) like
    --  cross-reference, units used by the source, etc.
    --  The Location parameter defines are we looking for dependency files in
@@ -85,28 +86,28 @@ package GPR2.Project.Source.Artifact is
      with Pre => Self.Is_Defined;
    --  Returns True if a preprocessed-source is defined
 
-   function Preprocessed_Source (Self : Object) return Path_Name.Object
+   function Preprocessed_Source (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Returns the file containing the pre-processed source
 
-   function List (Self : Object) return Path_Name.Set.Object
+   function List (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all artifacts
 
 private
 
-   use type Path_Name.Object;
+   use type GPR2.Path_Name.Object;
 
    package Index_Path_Name_Map is new Ada.Containers.Ordered_Maps
-     (Positive, Path_Name.Object);
+     (Positive, GPR2.Path_Name.Object);
 
    type Object is tagged record
       Source           : Project.Source.Object;
       Object_Files     : Index_Path_Name_Map.Map;
       Deps_Lib_Files   : Index_Path_Name_Map.Map;
       Deps_Obj_Files   : Index_Path_Name_Map.Map;
-      Switches         : Path_Name.Object;
-      Preprocessed_Src : Path_Name.Object;
+      Switches         : GPR2.Path_Name.Object;
+      Preprocessed_Src : GPR2.Path_Name.Object;
    end record;
 
    Undefined : constant Object := (others => <>);

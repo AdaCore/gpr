@@ -27,7 +27,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
-with GPR2.Unit.Set;
+with GPR2.Project.Unit_Info.Set;
 
 limited with GPR2.Project.Tree;
 
@@ -63,25 +63,25 @@ private package GPR2.Project.Definition is
    type Data (Has_Context : Boolean) is
      new Definition_Base (Has_Context)
    with record
-      Trees             : Tree;
+      Trees        : Tree;
 
       --  Actual values for the view
-      Extending         : Weak_Reference;
-      Extended          : View.Object;
-      Aggregate         : Weak_Reference;
-      Imports           : Project_View_Store.Map;
-      Aggregated        : Project_View_Store.Map;
-      Attrs             : Project.Attribute.Set.Object;
-      Vars              : Project.Variable.Set.Object;
-      Packs             : Project.Pack.Set.Object;
-      Types             : Project.Typ.Set.Object;
+      Extending    : Weak_Reference;
+      Extended     : View.Object;
+      Aggregate    : Weak_Reference;
+      Imports      : Project_View_Store.Map;
+      Aggregated   : Project_View_Store.Map;
+      Attrs        : Project.Attribute.Set.Object;
+      Vars         : Project.Variable.Set.Object;
+      Packs        : Project.Pack.Set.Object;
+      Types        : Project.Typ.Set.Object;
 
-      Sources           : Project.Source.Set.Object;
+      Sources      : Project.Source.Set.Object;
 
-      Units             : Unit.Set.Object;
+      Units        : Unit_Info.Set.Object;
 
       --  Some general information
-      Context_View      : View.Object;
+      Context_View : View.Object;
       --  The context view is the view that has context for this project. That
       --  is, Context_View will always point to a view with a context, either
       --  the Undefined view (means root project) which contains the context

@@ -28,10 +28,10 @@ with Ada.Text_IO;
 with GNAT.MD5;
 with GNAT.OS_Lib;
 
-with GPR2.Compilation_Unit;
-with GPR2.Compilation_Unit.List;
+with GPR2.Unit;
+with GPR2.Unit.List;
 with GPR2.Message;
-with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -273,11 +273,11 @@ package body GPR2.Project.Definition is
            "="          => Source_Reference.Value."=");
 
       procedure Register_Units
-        (Source            : Project.Source.Object;
-         Compilation_Units : Compilation_Unit.List.Object)
+        (Source : Project.Source.Object;
+         Units  : Unit.List.Object)
         with Pre => Source.Source.Language = "Ada";
       --  Registers units for the given project source. Note that we need to
-      --  pass the Compilation_Units and not to use the one registered with the
+      --  pass the Units and not to use the one registered with the
       --  source as the later could have been updated by a real parser based on
       --  Libadalang for example. And in this case the units name could be non
       --  matching. This is true for the initial call in Handle_File.
@@ -515,6 +515,8 @@ package body GPR2.Project.Definition is
       -----------------
 
       procedure Handle_File (Path : GPR2.Path_Name.Full_Name) is
+         use all type Unit.Kind_Type;
+
          --  The implementation works as follows:
          --    For every language L in the project:
          --      1- Check if F matches with a naming exception (see
@@ -547,7 +549,7 @@ package body GPR2.Project.Definition is
          --         - Create the GPR2.Source object. We now have different
          --           constructors for Ada and for other languages. This change
          --           is just to make things more explicit. In addition to the
-         --           Compilation_Units argument, the Ada source constructor
+         --           Units argument, the Ada source constructor
          --           takes a new argument Is_RTS_Source, used to handle this
          --           special case when parsing the source.
          --         - Create the GPR2.Project.Source. Nothing special here.
@@ -562,7 +564,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Kind_Type);
+            Kind     : out Unit.Kind_Type);
          --  Try to match a file using its Basename and the project's
          --  naming exceptions for Language.
          --  If Language is Ada, use the attributes "for Body|Spec ... ".
@@ -574,7 +576,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Kind_Type);
+            Kind     : out Unit.Kind_Type);
          --  Try to match a file using its extension and the project's
          --  naming scheme for Language.
          --  If Language is Ada, use the attributes "for (Body|Spec|
@@ -584,7 +586,7 @@ package body GPR2.Project.Definition is
 
          function Compute_Unit_From_Filename
            (File    : Path_Name.Object;
-            Kind    : Kind_Type;
+            Kind    : Unit.Kind_Type;
             Success : out Boolean) return Name_Type;
          --  For an Ada source and given its kind, try to compute a valid unit
          --  name. Success takes True if such a valid name is found.
@@ -597,12 +599,12 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Kind_Type)
+            Kind     : out Unit.Kind_Type)
          is
             Attr : Attribute.Object;
          begin
             Match := False;
-            Kind  := S_Spec;  --  Dummy value
+            Kind  := Unit.S_Spec;  --  Dummy value
 
             if Language = "Ada" then
                Match := Ada_Naming_Exceptions.Contains (Basename);
@@ -615,7 +617,7 @@ package body GPR2.Project.Definition is
                  and then Attr.Has_Value (Basename)
                then
                   Match := True;
-                  Kind  := S_Spec;
+                  Kind  := Unit.S_Spec;
 
                elsif Naming.Check_Attribute
                     (PRA.Implementation_Exceptions,
@@ -624,7 +626,7 @@ package body GPR2.Project.Definition is
                  and then Attr.Has_Value (Basename)
                then
                   Match := True;
-                  Kind  := S_Body;
+                  Kind  := Unit.S_Body;
                end if;
 
                if Match then
@@ -641,7 +643,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Kind_Type)
+            Kind     : out Unit.Kind_Type)
          is
             function Ends_With (Str, Ending : Value_Type) return Boolean
               with Inline;
@@ -663,7 +665,7 @@ package body GPR2.Project.Definition is
 
          begin
             Match := False;
-            Kind  := S_Spec;
+            Kind  := Unit.S_Spec;
 
             if Naming.Has_Spec_Suffix (Language) then
                Check_Spec : declare
@@ -672,7 +674,7 @@ package body GPR2.Project.Definition is
                begin
                   if Ends_With (Basename, Spec_Suffix.Value.Text) then
                      Match := True;
-                     Kind  := S_Spec;
+                     Kind  := Unit.S_Spec;
                      return;
                   end if;
                end Check_Spec;
@@ -685,7 +687,7 @@ package body GPR2.Project.Definition is
                begin
                   if Ends_With (Basename, Body_Suffix.Value.Text) then
                      Match := True;
-                     Kind  := S_Body;
+                     Kind  := Unit.S_Body;
                      --  May be actually a Separate, we cannot know until
                      --  we parse the file.
 
@@ -705,7 +707,7 @@ package body GPR2.Project.Definition is
                begin
                   if Ends_With (Basename, Sep_Suffix.Value.Text) then
                      Match := True;
-                     Kind  := S_Separate;
+                     Kind  := Unit.S_Separate;
                   end if;
                end Check_Separate;
             end if;
@@ -717,7 +719,7 @@ package body GPR2.Project.Definition is
 
          function Compute_Unit_From_Filename
            (File    : Path_Name.Object;
-            Kind    : Kind_Type;
+            Kind    : Unit.Kind_Type;
             Success : out Boolean) return Name_Type
          is
             use Ada.Strings;
@@ -731,11 +733,11 @@ package body GPR2.Project.Definition is
             declare
                Suffix : constant Value_Type :=
                           (case Kind is
-                              when S_Spec     =>
+                              when S_Spec | S_Spec_Only =>
                                 Naming.Spec_Suffix ("ada").Value.Text,
-                              when S_Body     =>
+                              when S_Body | S_Body_Only =>
                                 Naming.Body_Suffix ("ada").Value.Text,
-                              when S_Separate =>
+                              when S_Separate           =>
                                 Naming.Separate_Suffix ("ada").Value.Text);
             begin
                if Length (Result) > Suffix'Length then
@@ -902,10 +904,12 @@ package body GPR2.Project.Definition is
 
          Source_Is_In_Interface : Boolean := False;
          Has_Naming_Exception   : Boolean := False;
-         Compilation_Units      : Compilation_Unit.List.Object;  --  For Ada
-         Kind                   : Kind_Type;
+         Units                  : Unit.List.Object;  --  For Ada
+         Kind                   : Unit.Kind_Type;
+         U_Main                 : constant Unit.Main_Type := Unit.None;
+         U_Flags                : constant Unit.Flags_Set :=
+                                    Unit.Default_Flags;
          Source                 : GPR2.Source.Object;
-         Project_Source         : Project.Source.Object;
 
          function Naming_Exception_Equal
            (A : Attribute.Object;
@@ -954,22 +958,23 @@ package body GPR2.Project.Definition is
                                          At_Num_Or (Exc.Value, 1);
                         begin
                            Kind := (if Exc.Name.Text = PRA.Spec
-                                    then S_Spec
-                                    else S_Body);
+                                    then Unit.S_Spec
+                                    else Unit.S_Body);
                            --  May actually be a Separate, we cannot know until
                            --  we parse the file.
 
                            Ada_Except_Usage.Delete (Ada_Use_Index (Exc));
 
-                           Compilation_Units.Append
-                             (Compilation_Unit.Create
-                                (Unit_Name    => Unit_Name,
+                           Units.Append
+                             (Unit.Create
+                                (Name         => Unit_Name,
                                  Index        => Index,
+                                 Main         => U_Main,
+                                 Flags        => U_Flags,
                                  Kind         => Kind,
-                                 Withed_Units =>
+                                 Dependencies =>
                                    Source_Reference.Identifier.Set.Empty_Set,
-                                 Sep_From     => No_Name,
-                                 Is_Generic   => False));
+                                 Sep_From     => No_Name));
                         end;
                      end loop;
                   end if;
@@ -1028,24 +1033,25 @@ package body GPR2.Project.Definition is
                            --  same (unit,kind) but different source.
                            --  In this case we skip this source.
 
-                           if (Kind = S_Spec
+                           if (Kind = Unit.S_Spec
                                and then Has_Conflict_NE (PRA.Spec))
                              or else
-                               (Kind = S_Body
+                               (Kind = Unit.S_Body
                                 and then Has_Conflict_NE (PRA.Body_N))
                            then
                               return;
                            end if;
 
-                           Compilation_Units.Append
-                             (Compilation_Unit.Create
-                                (Unit_Name    => Unit_Name,
+                           Units.Append
+                             (Unit.Create
+                                (Name         => Unit_Name,
                                  Index        => 1,
+                                 Main         => U_Main,
+                                 Flags        => U_Flags,
                                  Kind         => Kind,
-                                 Withed_Units =>
+                                 Dependencies =>
                                    Source_Reference.Identifier.Set.Empty_Set,
-                                 Sep_From     => No_Name,
-                                 Is_Generic   => False));
+                                 Sep_From     => No_Name));
                         end if;
                      end;
                   end if;
@@ -1062,19 +1068,21 @@ package body GPR2.Project.Definition is
                   --  languages. Also some additional checks for Ada.
 
                   if Language_Is_Ada then
-                     for CU of Compilation_Units loop
-                        if Interface_Units.Contains (CU.Unit_Name) then
-                           Interface_Units_Found.Include (CU.Unit_Name);
+                     for CU of Units loop
+                        if Interface_Units.Contains (CU.Name)
+                          and then CU.Kind in S_Spec | S_Spec_Only
+                        then
+                           Interface_Units_Found.Include (CU.Name);
                            Source_Is_In_Interface := True;
                         end if;
                      end loop;
 
                      Source := GPR2.Source.Create_Ada
-                       (Filename          => File,
-                        Compilation_Units => Compilation_Units,
-                        Is_RTS_Source     =>
-                          (View.Tree.Has_Runtime_Project
-                           and then View = View.Tree.Runtime_Project));
+                          (Filename          => File,
+                           Units => Units,
+                           Is_RTS_Source     =>
+                             (View.Tree.Has_Runtime_Project
+                              and then View = View.Tree.Runtime_Project));
 
                   else
                      Source := GPR2.Source.Create (File, Language, Kind);
@@ -1087,25 +1095,28 @@ package body GPR2.Project.Definition is
                   end if;
 
                   declare
-                     Is_Interface : constant Boolean :=
-                                      Source_Is_In_Interface
-                                          or else
-                                            (not Interface_Found
-                                             and then View.Kind in K_Library
-                                             and then Source.Kind = S_Spec);
-                  begin
-                     Project_Source := Project.Source.Create
-                       (Source               => Source,
-                        View                 => View,
-                        Is_Interface         => Is_Interface,
-                        Has_Naming_Exception => Has_Naming_Exception,
-                        Is_Compilable        => Is_Compilable (Language));
-                  end;
+                     Is_Interface   : constant Boolean :=
+                                        Source_Is_In_Interface
+                                            or else
+                                        (not Interface_Found
+                                         and then View.Kind in K_Library
+                                         and then
+                                         Source.Kind in
+                                           Unit.S_Spec | Unit.S_Spec_Only);
+                     Project_Source : constant GPR2.Project.Source.Object :=
+                                        Project.Source.Create
+                                          (Source               => Source,
+                                           View                 => View,
+                                           Is_Interface         =>
+                                             Is_Interface,
+                                           Has_Naming_Exception =>
+                                             Has_Naming_Exception,
+                                           Is_Compilable        =>
+                                             Is_Compilable (Language));
 
                   --  Check source duplication and insert if possible or
                   --  replace if necessary.
 
-                  declare
                      CS : constant Project.Source.Set.Cursor :=
                             Src_Dir_Set.Find (Project_Source);
                   begin
@@ -1148,13 +1159,13 @@ package body GPR2.Project.Definition is
                      else
                         Src_Dir_Set.Insert (Project_Source);
                      end if;
+
+                     --  For Ada, register the Unit object into the view
+
+                     if Language_Is_Ada then
+                        Register_Units (Project_Source, Units);
+                     end if;
                   end;
-
-                  --  For Ada, register the Unit object into the view
-
-                  if Language_Is_Ada then
-                     Register_Units (Project_Source, Compilation_Units);
-                  end if;
 
                   --  Exit the languages loop
 
@@ -1192,7 +1203,7 @@ package body GPR2.Project.Definition is
                                        Value_Type (File.Base_Name);
             Language               : constant Name_Type := Src.Source.Language;
             Language_Is_Ada        : constant Boolean := Language = "Ada";
-            Compilation_Units      : Compilation_Unit.List.Object;
+            Units                  : Unit.List.Object;
             Source_Is_In_Interface : Boolean :=
                                        Interface_Sources.Contains (Basename);
 
@@ -1203,11 +1214,11 @@ package body GPR2.Project.Definition is
             --  languages. Also some additional checks for Ada.
 
             if Language_Is_Ada then
-               Compilation_Units := Src.Source.Compilation_Units;
+               Units := Src.Source.Units;
 
-               for CU of Compilation_Units loop
-                  if Interface_Units.Contains (CU.Unit_Name) then
-                     Interface_Units_Found.Include (CU.Unit_Name);
+               for CU of Units loop
+                  if Interface_Units.Contains (CU.Name) then
+                     Interface_Units_Found.Include (CU.Name);
                      Source_Is_In_Interface := True;
                   end if;
                end loop;
@@ -1224,7 +1235,7 @@ package body GPR2.Project.Definition is
             --  For Ada, register the Unit object into the view
 
             if Language_Is_Ada then
-               Register_Units (Src, Compilation_Units);
+               Register_Units (Src, Units);
             end if;
          end Add_Source;
 
@@ -1364,35 +1375,42 @@ package body GPR2.Project.Definition is
       --------------------
 
       procedure Register_Units
-        (Source            : Project.Source.Object;
-         Compilation_Units : Compilation_Unit.List.Object)
+        (Source : Project.Source.Object;
+         Units  : Unit.List.Object)
       is
 
-         File  : constant Path_Name.Object := Source.Source.Path_Name;
-         U_Def : Unit.Object;
+         File : constant Path_Name.Object := Source.Source.Path_Name;
 
-         procedure Register_Src (Kind : Kind_Type);
+         procedure Register_Src
+           (U_Def : in out Unit_Info.Object;
+            Kind  : Unit.Kind_Type);
          --  Register Project_Source into U_Def, according to its kind
 
          ------------------
          -- Register_Src --
          ------------------
 
-         procedure Register_Src (Kind : Kind_Type) is
+         procedure Register_Src
+           (U_Def : in out Unit_Info.Object;
+            Kind  : Unit.Kind_Type)
+         is
+            use all type Unit.Kind_Type;
          begin
-            if Kind = S_Spec then
-               U_Def.Update_Spec (Source);
-            elsif Kind = S_Body then
-               U_Def.Update_Body (Source);
-            else
-               U_Def.Update_Separates (Source);
-            end if;
+            case Kind is
+               when Unit.Spec_Kind =>
+                  U_Def.Update_Spec (Source.Path_Name);
+               when Unit.Body_Kind =>
+                  U_Def.Update_Body (Source.Path_Name);
+               when S_Separate =>
+                  U_Def.Update_Separates (Source.Path_Name);
+            end case;
          end Register_Src;
 
       begin
-         for CU of Compilation_Units loop
+         for CU of Units loop
             declare
-               Unit_Name : constant Name_Type := CU.Unit_Name;
+               Unit_Name : constant Name_Type := CU.Name;
+               U_Def     : Unit_Info.Object;
             begin
                Def.Tree.Record_View
                  (View   => View,
@@ -1402,12 +1420,18 @@ package body GPR2.Project.Definition is
                if Def.Units.Contains (Unit_Name) then
                   U_Def := Def.Units.Element (Unit_Name);
 
-                  Register_Src (CU.Kind);
+                  Register_Src (U_Def, CU.Kind);
 
                   Def.Units.Replace (Unit_Name, U_Def);
 
                else
-                  Register_Src (CU.Kind);
+                  U_Def := Unit_Info.Create
+                    (Unit_Name,
+                     Spec      => Path_Name.Undefined,
+                     Main_Body => Path_Name.Undefined,
+                     Separates => Path_Name.Set.Set.Empty_List);
+
+                  Register_Src (U_Def, CU.Kind);
 
                   Def.Units.Insert (Unit_Name, U_Def);
                end if;
@@ -1670,15 +1694,17 @@ package body GPR2.Project.Definition is
                          (String (P.Source.Path_Name.Base_Name));
 
                      if P.Source.Has_Units then
-                        for CU of P.Source.Compilation_Units loop
-                           if Interface_Units.Contains (CU.Unit_Name) then
-                              Interface_Units_Found.Include (CU.Unit_Name);
+                        for CU of P.Source.Units loop
+                           if Interface_Units.Contains (CU.Name) then
+                              Interface_Units_Found.Include (CU.Name);
                               In_Interface := True;
                            end if;
                         end loop;
                      end if;
 
                      declare
+                        use all type Unit.Kind_Type;
+
                         Is_Interface : constant Boolean :=
                                          In_Interface
                                              or else

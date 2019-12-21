@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -19,6 +19,7 @@
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
+with GPR2.Source;
 
 package body GPR2.Project.Source.Artifact is
 
@@ -65,13 +66,13 @@ package body GPR2.Project.Source.Artifact is
       Deps_Lib     : Index_Path_Name_Map.Map;
       Deps_Obj     : Index_Path_Name_Map.Map;
 
-      Preprocessed : constant Path_Name.Object :=
-                       Path_Name.Create_File
+      Preprocessed : constant GPR2.Path_Name.Object :=
+                       GPR2.Path_Name.Create_File
                          (Source.Source.Path_Name.Simple_Name & P_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
-      Switches     : constant Path_Name.Object :=
-                       Path_Name.Create_File
+      Switches     : constant GPR2.Path_Name.Object :=
+                       GPR2.Path_Name.Create_File
                          (Src & S_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
@@ -83,7 +84,7 @@ package body GPR2.Project.Source.Artifact is
          if Source.Aggregated then
             Deps_Lib.Insert
               (1,
-               Path_Name.Create_File
+               GPR2.Path_Name.Create_File
                  (Src & D_Suffix,
                   Optional_Name_Type
                     (Source.Aggregating_View.Library_Ali_Directory.Value)));
@@ -91,35 +92,35 @@ package body GPR2.Project.Source.Artifact is
          else
             Object_Files.Insert
               (1,
-               Path_Name.Create_File
+               GPR2.Path_Name.Create_File
                  (Src & O_Suffix,
                   Optional_Name_Type (O_View.Object_Directory.Value)));
 
             if S_View.Is_Library and then Lang = "Ada" then
                Deps_Lib.Insert
                  (1,
-                  Path_Name.Create_File
+                  GPR2.Path_Name.Create_File
                     (Src & D_Suffix,
                      Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
             end if;
 
             Deps_Obj.Insert
               (1,
-               Path_Name.Create_File
+               GPR2.Path_Name.Create_File
                  (Src & D_Suffix,
                   Optional_Name_Type (O_View.Object_Directory.Value)));
          end if;
 
       else
-         for CU of Source.Source.Compilation_Units loop
-            if CU.Kind = S_Body then
+         for CU of Source.Source.Units loop
+            if CU.Kind in GPR2.Unit.Body_Kind then
                declare
                   Index_Suffix : constant Name_Type := At_Suffix (CU.Index);
                begin
                   if Source.Aggregated then
                      Deps_Lib.Insert
                        (CU.Index,
-                        Path_Name.Create_File
+                        GPR2.Path_Name.Create_File
                           (Src & Index_Suffix & D_Suffix,
                            Optional_Name_Type
                              (Source.Aggregating_View.Library_Ali_Directory
@@ -128,7 +129,7 @@ package body GPR2.Project.Source.Artifact is
                   else
                      Object_Files.Insert
                        (CU.Index,
-                        Path_Name.Create_File
+                        GPR2.Path_Name.Create_File
                           (Src & Index_Suffix & O_Suffix,
                            Optional_Name_Type
                              (O_View.Object_Directory.Value)));
@@ -136,14 +137,14 @@ package body GPR2.Project.Source.Artifact is
                      if S_View.Is_Library and then Lang = "Ada" then
                         Deps_Lib.Insert
                           (CU.Index,
-                           Path_Name.Create_File
+                           GPR2.Path_Name.Create_File
                              (Src & Index_Suffix & D_Suffix,
                               Name_Type (O_View.Library_Ali_Directory.Value)));
                      end if;
 
                      Deps_Obj.Insert
                        (CU.Index,
-                        Path_Name.Create_File
+                        GPR2.Path_Name.Create_File
                           (Src & Index_Suffix & D_Suffix,
                            Optional_Name_Type
                              (O_View.Object_Directory.Value)));
@@ -169,7 +170,8 @@ package body GPR2.Project.Source.Artifact is
    function Dependency
      (Self     : Artifact.Object;
       Index    : Natural             := 1;
-      Location : Dependency_Location := In_Both) return Path_Name.Object is
+      Location : Dependency_Location := In_Both)
+     return GPR2.Path_Name.Object is
    begin
       case Location is
          when In_Library =>
@@ -201,19 +203,20 @@ package body GPR2.Project.Source.Artifact is
    -- List --
    ----------
 
-   function List (Self : Object) return Path_Name.Set.Object is
-      Lang   : constant Name_Type := Self.Source.Source.Language;
-      Source : constant GPR2.Source.Object := Self.Source.Source;
-      C_View : constant Project.View.Object :=
-                 Definition.Strong (Self.Source.View);
-      O_View : constant Project.View.Object :=
-                 (if Self.Source.Has_Extending_View
-                  then Self.Source.Extending_View
-                  else C_View);
-      Result : Path_Name.Set.Object;
-      Name   : constant Name_Type := Source.Path_Name.Simple_Name;
-      O_Dir  : constant Optional_Name_Type :=
-                 Optional_Name_Type (O_View.Object_Directory.Value);
+   function List (Self : Object) return GPR2.Path_Name.Set.Object is
+      P_Source : constant GPR2.Project.Source.Object := Self.Source;
+      Source   : constant GPR2.Source.Object := P_Source.Source;
+      Lang     : constant Name_Type := Source.Language;
+      C_View   : constant Project.View.Object :=
+                   Definition.Strong (P_Source.View);
+      O_View   : constant Project.View.Object :=
+                   (if P_Source.Has_Extending_View
+                    then P_Source.Extending_View
+                    else C_View);
+      Result   : GPR2.Path_Name.Set.Object;
+      Name     : constant Name_Type := Source.Path_Name.Simple_Name;
+      O_Dir    : constant Optional_Name_Type :=
+                   Optional_Name_Type (O_View.Object_Directory.Value);
 
       procedure Append_File (Name : Name_Type);
       --  Append full filename constructed from Name and Object_Dir to result
@@ -224,7 +227,7 @@ package body GPR2.Project.Source.Artifact is
 
       procedure Append_File (Name : Name_Type) is
       begin
-         Result.Append (Path_Name.Create_File (Name, O_Dir));
+         Result.Append (GPR2.Path_Name.Create_File (Name, O_Dir));
       end Append_File;
 
    begin
@@ -245,6 +248,7 @@ package body GPR2.Project.Source.Artifact is
          Append_File (Name & ".stderr");
 
          Append_File (Source.Path_Name.Base_Name & ".adt");
+
          for E of C_View.Object_Artifact_Extensions (Lang) loop
             Append_File (Source.Path_Name.Base_Name & Name_Type (E));
          end loop;
@@ -278,7 +282,8 @@ package body GPR2.Project.Source.Artifact is
    -----------------
 
    function Object_Code
-     (Self : Artifact.Object; Index : Natural := 1) return Path_Name.Object is
+     (Self  : Artifact.Object;
+      Index : Natural := 1) return GPR2.Path_Name.Object is
    begin
       return Self.Object_Files (Index);
    end Object_Code;
@@ -287,7 +292,8 @@ package body GPR2.Project.Source.Artifact is
    -- Preprocessed_Source --
    -------------------------
 
-   function Preprocessed_Source (Self : Object) return Path_Name.Object is
+   function Preprocessed_Source
+     (Self : Object) return GPR2.Path_Name.Object is
    begin
       return Self.Preprocessed_Src;
    end Preprocessed_Source;

@@ -3,7 +3,7 @@ main.adb
   has naming exception = FALSE
   - compilation unit at 1
     unit name    = Main
-    kind         = S_BODY
+    kind         = S_BODY_ONLY
     withed units = { Ada.Exceptions Ada.Text_IO GPR2 GPR2.Context GPR2.Project.Tree GPR2.Project.Source GPR2.Project.Source.Artifact GPR2.Project.Source.Set GPR2.Source Pkg1 Pkg2 }
     object file  = main.ali
 sub.adb
@@ -12,11 +12,9 @@ sub.adb
   - compilation unit at 1
     unit name    = Sep
     kind         = S_SEPARATE
-    separate from Pkg1
   - compilation unit at 2
     unit name    = Sep
     kind         = S_SEPARATE
-    separate from Pkg2
 pkg1.adb
   single-unit          = TRUE
   has naming exception = FALSE

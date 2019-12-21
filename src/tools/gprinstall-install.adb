@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -32,7 +32,7 @@ with GNAT.String_Split;
 
 with GNATCOLL.OS.Constants;
 
-with GPR2.Compilation_Unit.List;
+with GPR2.Unit.List;
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
@@ -61,6 +61,7 @@ package body GPRinstall.Install is
    use GNAT;
 
    use GPR2;
+   use all type Unit.Kind_Type;
 
    use type GNATCOLL.OS.OS_Type;
 
@@ -943,7 +944,7 @@ package body GPRinstall.Install is
 
             Src : GPR2.Source.Object;
             Atf : GPR2.Project.Source.Artifact.Object;
-            CUs : GPR2.Compilation_Unit.List.Object;
+            CUs : GPR2.Unit.List.Object;
 
          begin
             for Source of Project.Sources loop
@@ -958,7 +959,7 @@ package body GPRinstall.Install is
                  or else Source.Is_Interface
                then
                   if Src.Has_Units then
-                     CUs := Src.Compilation_Units;
+                     CUs := Src.Units;
                   end if;
 
                   if Options.All_Sources
@@ -975,7 +976,7 @@ package body GPRinstall.Install is
                      --  generated project.
 
                      for CU of CUs loop
-                        Excluded_Naming.Include (CU.Unit_Name);
+                        Excluded_Naming.Include (CU.Name);
                      end loop;
                   end if;
 
@@ -985,10 +986,10 @@ package body GPRinstall.Install is
                     and then Source.Is_Compilable
                     and then
                       (not Source.Has_Other_Part
-                       or else CUs (1).Kind /= GPR2.S_Spec)
+                       or else CUs (1).Kind /= S_Spec)
                   then
                      if Copy (Object)
-                       and then Src.Compilation_Units.Element
+                       and then Src.Units.Element
                          (1).Kind /= S_Separate
                      then
                         for CU of CUs loop
@@ -1511,14 +1512,16 @@ package body GPRinstall.Install is
                           of Project.Sources (Filter => K_Interface_Only)
                         loop
                            if Source.Source.Has_Units then
-                              for CU of Source.Source.Compilation_Units loop
-                                 if CU.Kind = S_Body then
+                              for CU of Source.Source.Units loop
+                                 if CU.Kind in
+                                   S_Spec | S_Spec_Only | S_Body_Only
+                                 then
                                     if not First then
                                        Append (Line, ", ");
                                     end if;
 
                                     Append (Line, """");
-                                    Append (Line, String (CU.Unit_Name));
+                                    Append (Line, String (CU.Name));
                                     Append (Line, """");
                                     First := False;
                                  end if;

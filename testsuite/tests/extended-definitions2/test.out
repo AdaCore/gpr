@@ -9,4 +9,4 @@ A:   Object_Dir -> obj2
 A:   Source_Dirs -> p2-mdl
 V:   V -> prj1-prj2
  > p2-mdl/pck2.ads
-                  language: Ada    Kind: S_SPEC   unit: Pck2
+                  language: Ada    Kind: S_SPEC_ONLY   unit: Pck2

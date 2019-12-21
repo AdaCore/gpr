@@ -4,4 +4,7 @@ aggregate project Agg extends "conf.gpr" is
    Var2 := Conf.K;
    for External ("KVAL") use "two";
    for Project_Files use ("a.gpr");
+
+   for Library_Name use "Agg";
+   for Library_Dir use ".";
 end Agg;

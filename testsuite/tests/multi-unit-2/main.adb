@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -54,21 +54,18 @@ begin
                            & Src.Has_Single_Unit'Image);
          Text_IO.Put_Line ("  has naming exception = "
                            & S.Has_Naming_Exception'Image);
-         for CU of Src.Compilation_Units loop
+         for CU of Src.Units loop
             Text_IO.Put_Line ("  - compilation unit at" & CU.Index'Image);
-            Text_IO.Put_Line ("    unit name    = " & String (CU.Unit_Name));
+            Text_IO.Put_Line ("    unit name    = " & String (CU.Name));
             Text_IO.Put_Line ("    kind         = " & CU.Kind'Image);
 
-            if CU.Is_Separate then
-               Text_IO.Put_Line ("    separate from "
-                                 & String (CU.Separate_From));
-            end if;
-
-            if not CU.Withed_Units.Is_Empty then
+            if not CU.Dependencies.Is_Empty then
                Text_IO.Put      ("    withed units = { ");
-               for W of CU.Withed_Units loop
+
+               for W of CU.Dependencies loop
                   Text_IO.Put (String (W.Text) & " ");
                end loop;
+
                Text_IO.Put_Line ("}");
             end if;
 

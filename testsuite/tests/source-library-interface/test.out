@@ -7,9 +7,9 @@ Project: Demo
  > src/pck.ads        language: Ada   Kind: S_SPEC         unit: Pck
 
 ---------- INTERFACE ONLY
- > src/api.adb        Kind: S_BODY                         unit: Api
  > src/api.ads        Kind: S_SPEC                         unit: Api
 
 ---------- NOT INTERFACE
+ > src/api.adb        Kind: S_BODY                         unit: Api
  > src/pck.adb        Kind: S_BODY                         unit: Pck
  > src/pck.ads        Kind: S_SPEC                         unit: Pck

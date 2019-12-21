@@ -21,6 +21,6 @@ AFTER: Has unread Message: FALSE
 
 Project: Demo3
  > src2/pck__a.adb
-                  language: Ada    Kind: S_BODY   unit: Pck.A
+                  language: Ada    Kind: S_BODY_ONLY   unit: Pck.A
  > src2/pcka.ads
-                  language: Ada    Kind: S_SPEC   unit: Pcka
+                  language: Ada    Kind: S_SPEC_ONLY   unit: Pcka

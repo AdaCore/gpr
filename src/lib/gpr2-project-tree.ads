@@ -28,11 +28,10 @@ with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 with GPR2.Project.View.Set;
-
-limited with GPR2.Unit;
+with GPR2.Project.Unit_Info;
+with GPR2.Project.Registry.Attribute;
 
 private with Ada.Containers.Vectors;
-with GPR2.Project.Registry.Attribute;
 
 package GPR2.Project.Tree is
 
@@ -259,7 +258,7 @@ package GPR2.Project.Tree is
 
    procedure Clear_View
      (Self : in out Object;
-      Unit : GPR2.Unit.Object)
+      Unit : Unit_Info.Object)
      with Pre => Self.Is_Defined;
    --  Clears the view set for the given unit
 

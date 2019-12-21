@@ -1,8 +1,8 @@
 **************** Iterator Prj1
 Prj0     K_ABSTRACT
 Prj1     obj_dir=obj1 K_STANDARD
- > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: Pck1
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC_ONLY   unit: Pck1
 **************** Iterator Prj2
 Prj2     obj_dir=obj2 K_STANDARD
- > /p1/pck1.ads   language: Ada    Kind: S_SPEC   unit: Pck1
- > /p2/pck2.ads   language: Ada    Kind: S_SPEC   unit: Pck2
+ > /p1/pck1.ads   language: Ada    Kind: S_SPEC_ONLY   unit: Pck1
+ > /p2/pck2.ads   language: Ada    Kind: S_SPEC_ONLY   unit: Pck2

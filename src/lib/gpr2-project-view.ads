@@ -31,11 +31,11 @@ with GPR2.Project.Pack.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
+with GPR2.Project.Unit_Info.Set;
 
 limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
-limited with GPR2.Unit.Set;
 
 package GPR2.Project.View is
 
@@ -321,7 +321,7 @@ package GPR2.Project.View is
 
    function Units
      (Self        : Object;
-      Need_Update : Boolean := True) return GPR2.Unit.Set.Object
+      Need_Update : Boolean := True) return Unit_Info.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the units for the view, note that this routine ensure that
    --  the current sources and units are up-to-date by calling Update_Sources.
@@ -329,7 +329,7 @@ package GPR2.Project.View is
    function Unit
      (Self         : Object;
       Name         : Name_Type;
-      Need_Update  : Boolean := True) return GPR2.Unit.Object
+      Need_Update  : Boolean := True) return Unit_Info.Object
      with Pre => Self.Is_Defined;
 
    function Is_Externally_Built (Self : Object) return Boolean
@@ -401,13 +401,13 @@ package GPR2.Project.View is
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Is_Library;
-   --  Returns the library directory, note that this may be difference than
+   --  Returns the library directory, note that this may be different than
    --  getting the Library_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 
    function Library_Ali_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Is_Library;
-   --  Returns the library directory, note that this may be difference than
+   --  Returns the library directory, note that this may be different than
    --  getting the Library_Ali_Dir attribute value as the result here is always
    --  a path-name with proper resolution for relative directory specification.
 

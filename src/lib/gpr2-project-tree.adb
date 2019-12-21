@@ -29,7 +29,6 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
-with GPR2.Unit;
 
 with GNAT.OS_Lib;
 with GNAT.Regexp;
@@ -141,7 +140,7 @@ package body GPR2.Project.Tree is
 
    procedure Clear_View
      (Self : in out Object;
-      Unit : GPR2.Unit.Object) is
+      Unit : Unit_Info.Object) is
    begin
       --  Clear the corresponding sources
 
@@ -150,16 +149,16 @@ package body GPR2.Project.Tree is
 
       if Unit.Spec.Is_Defined then
          Self.Sources.Exclude
-           (Name_Type (Unit.Spec.Source.Path_Name.Value));
+           (Name_Type (Unit.Spec.Value));
       end if;
 
       if Unit.Main_Body.Is_Defined then
          Self.Sources.Exclude
-           (Name_Type (Unit.Main_Body.Source.Path_Name.Value));
+           (Name_Type (Unit.Main_Body.Value));
       end if;
 
       for S of Unit.Separates loop
-         Self.Sources.Exclude (Name_Type (S.Source.Path_Name.Value));
+         Self.Sources.Exclude (Name_Type (S.Value));
       end loop;
    end Clear_View;
 

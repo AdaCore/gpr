@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -28,9 +28,7 @@ with GPR.Scans;
 with GPR.Sinput;
 with GPR.Snames;
 
-with GPR2.ALI.Definition;
-with GPR2.ALI.Dependency;
-with GPR2.ALI.Unit;
+with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -55,8 +53,8 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    use Ada;
 
    use GPR2;
-   use GPR2.ALI;
    use GPR2.Project.Source.Set;
+   use all type GPR2.Unit.Kind_Type;
 
    use GPRls.Common;
    use GPRls.Options;
@@ -471,7 +469,7 @@ begin
 
             Closures.Insert (Source);
 
-            if Source.Source.Kind = GPR2.S_Separate then
+            if Source.Source.Kind = S_Separate then
                return;  --  No ALI file for a separate
             end if;
 

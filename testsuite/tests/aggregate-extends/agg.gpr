@@ -3,4 +3,7 @@ aggregate project Agg is
    Var := B.Var;
    for External ("KVAL") use "two";
    for Project_Files use ("a.gpr");
+
+   for Library_Name use "Agg";
+   for Library_Dir use ".";
 end Agg;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -19,6 +19,7 @@
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
@@ -84,7 +85,8 @@ procedure Main is
             Text_IO.Put ("   language: " & String (S.Language));
 
             Text_IO.Set_Col (33);
-            Text_IO.Put ("   Kind: " & GPR2.Kind_Type'Image (S.Kind));
+            Text_IO.Put ("   Kind: "
+                         & GPR2.Unit.Kind_Type'Image (S.Kind));
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));

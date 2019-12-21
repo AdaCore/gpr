@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -67,7 +67,7 @@ procedure Main is
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
 
-               for W of S.With_Clauses loop
+               for W of S.Dependencies loop
                   Text_IO.Put_Line ("   " & String (Id (W).Text));
                end loop;
             end if;

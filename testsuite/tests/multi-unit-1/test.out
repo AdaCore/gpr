@@ -3,7 +3,7 @@ main.adb
   has naming exception = FALSE
   - compilation unit at 1
     unit name    = Main
-    kind         = S_BODY
+    kind         = S_BODY_ONLY
     withed units = { U Ada Pkg }
     object file  = main.o
     deps file    = main.ali
@@ -29,12 +29,10 @@ sep.adb
   - compilation unit at 1
     unit name    = V
     kind         = S_SEPARATE
-    separate from U
     withed units = { Ada.Text_IO }
   - compilation unit at 2
     unit name    = W
     kind         = S_SEPARATE
-    separate from U
     withed units = { GNAT.Regexp }
 u.adb
   single-unit          = FALSE

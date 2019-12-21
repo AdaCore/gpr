@@ -16,17 +16,15 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Calendar;
-with Ada.Calendar.Formatting;
-with Ada.Exceptions;
 with Ada.Streams.Stream_IO;
-with Ada.Text_IO;
 
-with GPR2.ALI.Withed_Unit;
-with GPR2.Message;
-with GPR2.Source_Reference;
+with GPR2.Unit;
+with GPR2.Source_Info.Parser.Registry;
+with GPR2.Source;
 
-package body GPR2.ALI.Definition is
+package body GPR2.Source_Info.Parser.ALI is
+
+   Handle : Object;
 
    package IO is
 
@@ -46,7 +44,7 @@ package body GPR2.ALI.Definition is
 
       procedure Open
         (File     : in out Handle;
-         Filename : GPR2.Path_Name.Object)
+         Filename : GPR2.Path_Name.Object'Class)
         with Post => Stream_IO.Is_Open (File.FD)
         and then File.Current = 0
         and then File.Last >= 0;
@@ -208,8 +206,7 @@ package body GPR2.ALI.Definition is
       -- Next_Line --
       ---------------
 
-      procedure Next_Line (File : in out Handle; Header : in out Character)
-      is
+      procedure Next_Line (File : in out Handle; Header : in out Character) is
          Old_Line : constant Positive := File.Line;
          At_LF    : constant Boolean  := File.At_LF;
          Current  : constant Stream_Element_Offset := File.Current;
@@ -244,7 +241,7 @@ package body GPR2.ALI.Definition is
 
       procedure Open
         (File     : in out Handle;
-         Filename : GPR2.Path_Name.Object) is
+         Filename : GPR2.Path_Name.Object'Class) is
       begin
          Stream_IO.Open (File.FD, Stream_IO.In_File, Filename.Value);
          Fill_Buffer (File);
@@ -252,313 +249,91 @@ package body GPR2.ALI.Definition is
       end Open;
 
    end IO;
-
    -------------
-   -- Dep_For --
+   -- Compute --
    -------------
 
-   function Dep_For
-     (Self : Object; File : Simple_Name) return Dependency.Object
+   overriding procedure Compute
+     (Parser : Object;
+      Data   : in out Source_Info.Object'Class;
+      Source : GPR2.Source.Object'Class;
+      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
+      View   : Project.View.Object'Class := Project.View.Undefined)
    is
-      use Sdep_Map_Package;
-      CD : constant Cursor := Self.Sdeps_Map.Find (File);
-   begin
-      if Has_Element (CD) then
-         return Self.Sdeps (Element (CD));
-      else
-         return Dependency.Undefined;
-      end if;
-   end Dep_For;
+      use all type GPR2.Unit.Kind_Type;
 
-   ---------------
-   -- Print_ALI --
-   ---------------
-
-   procedure Print_ALI (Self : Object) is
-      use Ada.Text_IO;
-   begin
-      Put_Line ("Ofile: " & (-Self.Ofile_Full_Name));
-
-      Put ("Args: ");
-      for A of Self.Args loop
-         Put (A & ", ");
-      end loop;
-      New_Line;
-
-      Put_Line ("Units: ");
-      for U of Self.Units loop
-         Put_Line ("   " & String (U.Uname));
-
-         for W of U.Withs loop
-            Put_Line ("   -> " & String (W.Uname));
-         end loop;
-
-      end loop;
-
-      Put_Line ("Dependencies: ");
-      for D of Self.Sdeps loop
-         Put_Line ("   " & String (D.Sfile));
-      end loop;
-
-      Put_Line ("GNAT version: " & (-Self.GNAT_Version));
-
-      Put_Line ("Compil errors: " & Self.Compile_Errors'Image);
-
-      Put_Line ("No object: " & Self.No_Object'Image);
-   end Print_ALI;
-
-   --------------
-   -- Scan_ALI --
-   --------------
-
-   function Scan_ALI
-     (File : Path_Name.Object;
-      Log  : access GPR2.Log.Object := null) return Object
-   is
       Scan_ALI_Error : exception;
 
-      Handle : IO.Handle;
+      A_Handle : IO.Handle;
 
-      Result : Object := Object'
-        (Ofile_Full_Name => +File.Value,
-         Is_Main_Unit    => False,
-         Main_Kind       => Proc,
-         Args            => Value_Type_List.Empty_Vector,
-         Units           => Unit.List.Empty_List,
-         Sdeps           => Dependency.List.Empty_List,
-         Sdeps_Map       => Empty_Sdep_Map,
-         GNAT_Version    => Null_Unbounded_String,
-         Compile_Errors  => False,
-         No_Object       => False);
+      --  Unit data
 
-      procedure Fill_Arg;
+      subtype CU_Index is Natural range 0 .. 2;
 
-      procedure Fill_Dep;
+      U_Name  : Unbounded_String;
+      S_Name  : Unbounded_String with Unreferenced;
+      U_Kind  : Unit.Kind_Type;
+      U_Flags : Unit.Flags_Set := Unit.Default_Flags;
+      Main    : Unit.Main_Type := Unit.None;
+      Withs   : Source_Reference.Identifier.Set.Object;
 
-      procedure Fill_GNAT_Version;
+      CUs     : array (CU_Index range 1 .. 2) of Unit.Object;
+      CU_Idx  : CU_Index := 0;
 
       procedure Fill_Unit;
+      --  Add all units defined in ALI (spec, body or both)
 
-      procedure Fill_With (Header : Character);
-
-      procedure Log_Error (Text : String);
-
-      --------------
-      -- Fill_Arg --
-      --------------
-
-      procedure Fill_Arg is
-         Tok : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-      begin
-         if Tok = "" then
-            raise Scan_ALI_Error with "Empty argumet";
-         else
-            Result.Args.Append (Tok);
-         end if;
-      end Fill_Arg;
-
-      --------------
-      -- Fill_Dep --
-      --------------
-
-      procedure Fill_Dep is
-
-         function Checksum (S : String) return Word;
-
-         function Get_Token return String;
-
-         function Time_Stamp (S : String) return Ada.Calendar.Time;
-
-         function Checksum (S : String) return Word is
-         begin
-            if S'Length /= 8 then
-               raise Scan_ALI_Error with
-                 "Wrong checksum length" & S'Length'Img;
-            end if;
-
-            declare
-               Chk : Word := 0;
-
-            begin
-               for C of S loop
-                  case C is
-                     when '0' .. '9' =>
-                        Chk := Chk * 16 +
-                          Character'Pos (C) - Character'Pos ('0');
-
-                     when 'a' .. 'f' =>
-                        Chk := Chk * 16 +
-                          Character'Pos (C) - Character'Pos ('a') + 10;
-
-                     when others =>
-                        raise Scan_ALI_Error with
-                          "Wrong character '" & C & "' in checksum";
-                  end case;
-               end loop;
-
-               return Chk;
-            end;
-         end Checksum;
-
-         function Get_Token return String is
-            Tok : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-         begin
-            if Tok = "" then
-               raise Scan_ALI_Error with "Missed dependency field";
-            else
-               return Tok;
-            end if;
-         end Get_Token;
-
-         function Time_Stamp (S : String) return Ada.Calendar.Time is
-            T : String (1 .. 14);
-         begin
-            if S'Length /= 14 then
-               raise Scan_ALI_Error with
-                 "Wrong timestamp length" & S'Length'Img;
-            end if;
-
-            T := S;
-
-            return Ada.Calendar.Formatting.Value
-              (T (1 .. 4) & "-" & T (5 .. 6) & "-" & T (7 .. 8) & " "
-               & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
-         end Time_Stamp;
-
-         Sfile  : constant Name_Type         := Name_Type (Get_Token);
-         Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
-         Chksum : constant Word              := Checksum (Get_Token);
-
-         Kind_Len : constant array (Kind_Type) of Natural :=
-                      (S_Spec | S_Body => 2,
-                       S_Separate      => 0);
-         --  Length of suffix denoting dependency kind
-
-         Kind : Kind_Type;                                     -- Unit_Kind
-         Name : constant String :=
-                    IO.Get_Token (Handle, Stop_At_LF => True); -- Unit_Name
-         --  Could be empty on *.adc file dependency
-
-         Suffix : constant String :=
-                     (if Name'Length > 2
-                      then Name (Name'Last - 1 .. Name'Last)
-                      else "");
-      begin
-         if Suffix = "%s" then
-            Kind := S_Spec;
-         elsif Suffix = "%b" then
-            Kind := S_Body;
-         else
-            Kind := S_Separate;
-         end if;
-
-         Result.Sdeps.Append
-           (Dependency.Create
-              (Sfile     => Sfile,
-               Stamp     => Stamp,
-               Checksum  => Chksum,
-               Unit_Name =>
-                 Optional_Name_Type
-                   (Name (Name'First .. Name'Last - Kind_Len (Kind))),
-               Unit_Kind => Kind));
-
-         Result.Sdeps_Map.Include (Sfile, Result.Sdeps.Last_Index);
-         --  Here we use Include and not Insert, due to possible duplicate
-         --  D lines in ALI files.
-      end Fill_Dep;
-
-      ------------------
-      -- Fill_Version --
-      ------------------
-
-      procedure Fill_GNAT_Version is
-         Version : Unbounded_String;
-         Length  : Natural := 0;
-      begin
-         --  This field is quoted and should look like: "GNAT Lib v...".
-         --  We get space-delimited words from the IO package and only the last
-         --  one before LF is relevant.
-
-         loop
-            declare
-               Tok : constant String :=
-                       IO.Get_Token (Handle, Stop_At_LF => True);
-            begin
-               if Tok = "" then
-                  exit;
-               else
-                  Version := +Tok;
-                  Length  := Tok'Length;
-               end if;
-            end;
-         end loop;
-
-         --  We must at least have the initial 'v', the closing quote, and
-         --  one character in the middle.
-
-         if Length > 2 and then Element (Version, 1) = 'v'
-           and then Element (Version, Length) = '"'
-         then
-            Result.GNAT_Version := +"GNAT " &
-              Unbounded_Slice (Version, 2, Length - 1);
-         else
-            raise Scan_ALI_Error with "Wrong version string";
-         end if;
-      end Fill_GNAT_Version;
+      procedure Fill_With
+        with Post => Withs.Length > Withs'Old.Length;
+      --  Add all withed units into Withs below
 
       ---------------
       -- Fill_Unit --
       ---------------
 
       procedure Fill_Unit is
-         U : Unit.Object;
-
-         use Unit;
-
-         U_Flags : Flag_Array := Default_Flags;
+         L_Type : Unit.Library_Type with Unreferenced;
       begin
          --  Uname, Sfile, Utype
 
          declare
-            Tok1  : constant String :=
-                      IO.Get_Token (Handle, Stop_At_LF => True);
-            Tok2  : constant String :=
-                      IO.Get_Token (Handle, Stop_At_LF => True);
-            Utype : Unit_Type;
-
+            Tok1   : constant String :=
+                       IO.Get_Token (A_Handle, Stop_At_LF => True);
+            Tok2   : constant String :=
+                       IO.Get_Token (A_Handle, Stop_At_LF => True);
          begin
             --  At least "?%(b|s)"
 
             if Tok1'Length < 3 and then Tok1 (Tok1'Last - 1) /= '%' then
-               raise Scan_ALI_Error with "Wrong unit suffix";
+               raise Scan_ALI_Error;
             end if;
 
             if Tok2 = "" then
-               raise Scan_ALI_Error with "Filename missed in unit line";
+               raise Scan_ALI_Error;
             end if;
 
             --  Set Utype. This will be adjusted after we finish reading the
             --  U lines, in case we have both spec and body.
 
             case Tok1 (Tok1'Last) is
-               when 's'    => Utype := Is_Spec_Only;
-               when 'b'    => Utype := Is_Body_Only;
-               when others => raise Scan_ALI_Error with "Wrong kind of unit";
+               when 's'    => U_Kind := Unit.S_Spec_Only;
+               when 'b'    => U_Kind := Unit.S_Body_Only;
+               when others => raise Scan_ALI_Error;
             end case;
 
-            U := Unit.Create
-              (Uname => Name_Type (Tok1 (1 .. Tok1'Last - 2)),
-               Sfile => Simple_Name (Tok2),
-               Utype => Utype);
+            U_Name := +Tok1 (1 .. Tok1'Last - 2);
+            S_Name := +Tok2;
          end;
 
          --  Flags (we skip the unit version)
 
          loop
             declare
+               use Unit;
+
                C1, C2 : Character;
                Tok    : constant String :=
-                          IO.Get_Token (Handle, Stop_At_LF => True);
+                          IO.Get_Token (A_Handle, Stop_At_LF => True);
             begin
                exit when Tok = "";
 
@@ -609,7 +384,7 @@ package body GPR2.ALI.Definition is
                      elsif C2 = 'U' then
                         U_Flags (Pure) := True;
                      elsif C2 = 'K' then
-                        U.Set_Kind (Kind_Package);
+                        L_Type := Unit.Is_Package;
                      end if;
 
                   elsif C1 = 'R' then
@@ -629,72 +404,60 @@ package body GPR2.ALI.Definition is
                      if C2 = 'P' then
                         U_Flags (Shared_Passive) := True;
                      elsif C2 = 'U' then
-                        U.Set_Kind (Kind_Subprogram);
+                        L_Type := Unit.Is_Subprogram;
                      end if;
                   end if;
                end if;
             end;
          end loop;
-
-         U.Set_Flags (U_Flags);
-
-         Result.Units.Append (U);
       end Fill_Unit;
 
       ---------------
       -- Fill_With --
       ---------------
 
-      procedure Fill_With (Header : Character) is
-         N : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-         S : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
-         A : constant String := IO.Get_Token (Handle, Stop_At_LF => True);
+      procedure Fill_With is
+         N : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True);
+         S : constant String :=
+               IO.Get_Token (A_Handle, Stop_At_LF => True) with Unreferenced;
+         A : constant String :=
+               IO.Get_Token (A_Handle, Stop_At_LF => True) with Unreferenced;
 
-         U_Last : constant Integer := N'Last - 2; -- Unit last character in N
-         Ukind  : Kind_Type;
+         U_Last  : constant Integer := N'Last - 2; -- Unit last character in N
+         U_Kind  : Unit.Kind_Type with Unreferenced;
       begin
          --  At least "?%(b|s)"
 
          if U_Last <= 0 or else N (N'Last - 1) /= '%' then
-            raise Scan_ALI_Error with "Wrong withed unit suffix";
+            raise Scan_ALI_Error;
          end if;
 
          case N (N'Last) is
-            when 's'    => Ukind := S_Spec;
-            when 'b'    => Ukind := S_Body;
-            when others =>
-               raise Scan_ALI_Error with "Wrong kind of withed unit";
+            when 's'    => U_Kind := Unit.S_Spec;
+            when 'b'    => U_Kind := Unit.S_Body;
+            when others => raise Scan_ALI_Error;
          end case;
 
-         Result.Units (Result.Units.Last).Add_With
-           (Withed_Unit.Create
-              (Uname                            => Name_Type (N (1 .. U_Last)),
-               Ukind                            => Ukind,
-               Sfile                            => Optional_Name_Type (S),
-               Afile                            => Optional_Name_Type (A),
-               Implicit_With_From_Instantiation => (Header = 'Z')));
+         --  Insert the withed unit without the sloc information. This
+         --  information is found at the end of the ALI file and will be
+         --  setup later.
+
+         declare
+            S : constant Source_Reference.Identifier.Object'Class :=
+                  Source_Reference.Identifier.Create
+                    (Sloc => Source_Reference.Undefined,
+                     Text => Name_Type (N (1 .. U_Last)));
+         begin
+            Withs.Insert (S);
+         end;
       end Fill_With;
 
-      ---------------
-      -- Log_Error --
-      ---------------
-
-      procedure Log_Error (Text : String) is
-      begin
-         if Log /= null then
-            Log.Append
-              (Message.Create
-                 (Level   => Message.Error,
-                  Message => Text,
-                  Sloc    => Source_Reference.Create
-                               (File.Value, Handle.Line, 1)));
-         end if;
-      end Log_Error;
+      use GPR2.Unit;
 
    begin
       --  Fill the ALI object up till the XREFs
 
-      IO.Open (Handle, File);
+      IO.Open (A_Handle, LI);
 
       declare
          Header : Character;  --  Line header, set when calling Next_Line
@@ -713,21 +476,21 @@ package body GPR2.ALI.Definition is
            (Expected  : Character := ASCII.NUL;
             Allow_EOF : Boolean   := False) is
          begin
-            IO.Next_Line (Handle, Header);
+            IO.Next_Line (A_Handle, Header);
+
             if (Expected /= ASCII.NUL and then Header /= Expected)
               or else (not Allow_EOF and then Header = ASCII.NUL)
             then
-               raise Scan_ALI_Error with "Error in getting next line";
+               raise Scan_ALI_Error;
             end if;
          end Next_Line;
-
-         use type Ada.Containers.Count_Type;
 
       begin
          --  Version (V line, mandatory)
 
          Next_Line (Expected => 'V');
-         Fill_GNAT_Version;
+
+         --  Skip version string
 
          loop
             Next_Line;
@@ -738,19 +501,16 @@ package body GPR2.ALI.Definition is
 
                   declare
                      Tok : constant String :=
-                             IO.Get_Token (Handle, Stop_At_LF => True);
+                             IO.Get_Token (A_Handle, Stop_At_LF => True);
                   begin
                      if Tok = "F" then
-                        Result.Main_Kind := Func;
+                        Main := Unit.Is_Function;
                      elsif Tok = "P" then
-                        Result.Main_Kind := Proc;
+                        Main := Unit.Is_Procedure;
                      else
-                        raise Scan_ALI_Error with
-                          "Unexpected type of the main program";
+                        raise Scan_ALI_Error;
                      end if;
                   end;
-
-                  Result.Is_Main_Unit := True;
 
                when 'A' | 'U' =>
                   --  Skip to Args (A lines), or Units (U lines) if there is
@@ -766,7 +526,7 @@ package body GPR2.ALI.Definition is
          --  Read Args
 
          while Header = 'A' loop
-            Fill_Arg;
+            --  Skipp compilation arguments
             Next_Line;
             exit when Header /= 'A';
          end loop;
@@ -781,8 +541,10 @@ package body GPR2.ALI.Definition is
          --  Read Units + {Withs}
 
          loop
-            if Result.Units.Length = 2 then
-               raise Scan_ALI_Error with "Cannot have more than 2 units";
+            --  Cannot have more than 2 units:  the spec and the body
+
+            if CU_Idx = 2 then
+               raise Scan_ALI_Error;
             end if;
 
             Fill_Unit;
@@ -791,9 +553,23 @@ package body GPR2.ALI.Definition is
             --  For each unit, read the With list (W/Y/Z lines) if any
 
             while Header in 'W' | 'Y' | 'Z' loop
-               Fill_With (Header);
+               Fill_With;
                Next_Line;
             end loop;
+
+            --  Record this unit
+
+            CU_Idx := CU_Idx + 1;
+
+            CUs (CU_Idx) :=
+              Unit.Create
+                (Name         => Name_Type (-U_Name),
+                 Index        => 1,
+                 Kind         => U_Kind,
+                 Main         => Main,
+                 Dependencies => Withs,
+                 Sep_From     => "",
+                 Flags        => U_Flags);
 
             --  Skip to either the next U section, or the first D line.
             --  There must be at least one D line: the dependency to the
@@ -806,60 +582,37 @@ package body GPR2.ALI.Definition is
             exit when Header /= 'U';
          end loop;
 
+         --  Look for X (cross-references) lines
+
+         while Header not in 'X' loop
+            Next_Line;
+         end loop;
+
+         IO.Close (A_Handle);
+
          --  If we have 2 units, the first one should be the body and the
          --  second one the spec. Update the Utype accordingly.
 
-         if Result.Units.Length = 2 then
-            declare
-               use Unit;
+         if CU_Idx = 2 then
+            if CUs (CUs'First).Kind in Spec_Kind then
+               Data.CU_List.Append (CUs (CUs'Last));
+               Data.CU_List.Append (CUs (CUs'First));
+            else
+               Data.CU_List.Append (CUs (CUs'First));
+               Data.CU_List.Append (CUs (CUs'Last));
+            end if;
 
-               procedure P1 (Element : in out Unit.Object);
-               procedure P2 (Element : in out Unit.Object);
-
-               procedure P1 (Element : in out Unit.Object) is
-               begin
-                  if Element.Utype /= Is_Body_Only then
-                     raise Scan_ALI_Error with
-                       "Unit body is on the wrong position";
-                  end if;
-                  Element.Set_Utype (Is_Body);
-               end P1;
-
-               procedure P2 (Element : in out Unit.Object) is
-               begin
-                  if Element.Utype /= Is_Spec_Only then
-                     raise Scan_ALI_Error with
-                       "Unit spec is on the wrong position";
-                  end if;
-                  Element.Set_Utype (Is_Spec);
-               end P2;
-            begin
-               Result.Units.Update_Element (1, P1'Access);
-               Result.Units.Update_Element (2, P2'Access);
-            end;
+         else
+            Data.CU_List.Append (CUs (CUs'First));
          end if;
 
-         --  Read Deps
-
-         while Header = 'D' loop
-            Fill_Dep;
-            Next_Line (Allow_EOF => True);  --  Only here we allow EOF
-         end loop;
-
-         IO.Close (Handle);
-         return Result;
-
+         Data.Parsed    := Source_Info.LI;
       exception
-         when E : Scan_ALI_Error =>
-            IO.Close (Handle);
-            Log_Error (Exceptions.Exception_Message (E));
-            return Undefined;
-
-         when E : others =>
-            IO.Close (Handle);
-            Log_Error (Exceptions.Exception_Information (E));
-            return Undefined;
+         when others =>
+            IO.Close (A_Handle);
       end;
-   end Scan_ALI;
+   end Compute;
 
-end GPR2.ALI.Definition;
+begin
+   GPR2.Source_Info.Parser.Registry.Register (Handle);
+end GPR2.Source_Info.Parser.ALI;

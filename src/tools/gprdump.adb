@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -38,7 +38,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
-with GPR2.Unit.Set; use GPR2.Unit.Set;
+with GPR2.Project.Unit_Info;
 
 with GPRtools.Util;
 
@@ -211,9 +211,9 @@ procedure GPRdump is
                if Display_Sources or Display_All_Sources then
                   Text_IO.Put_Line (S.Source.Path_Name.Value);
                   if Display_Units and then S.Source.Has_Units then
-                     for U of S.Source.Compilation_Units loop
+                     for U of S.Source.Units loop
                         Text_IO.Put_Line
-                          (ASCII.HT & String (U.Unit_Name)
+                          (ASCII.HT & String (U.Name)
                            & ASCII.HT & U.Kind'Img);
                      end loop;
                   end if;
@@ -232,9 +232,9 @@ procedure GPRdump is
             for U of View.Units loop
                Text_IO.Put_Line
                  (String (U.Name) & ' '
-                  & (if U.Has_Spec then U.Spec.Source.Path_Name.Value else "-")
+                  & (if U.Has_Spec then U.Spec.Value else "-")
                   & ' '
-                  & (if U.Has_Body then U.Main_Body.Source.Path_Name.Value
+                  & (if U.Has_Body then U.Main_Body.Value
                      else "-")
                  );
             end loop;

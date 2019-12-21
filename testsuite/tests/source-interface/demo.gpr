@@ -5,5 +5,5 @@ project Demo is
    for Object_Dir use "obj";
    for Library_Name use "toto";
    for Library_Dir use "lib";
-   for Interfaces use ("api.ads");
+   for Interfaces use ("api.ads", "data.ads");
 end Demo;
