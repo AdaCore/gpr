@@ -331,9 +331,10 @@ package body GPR2.Source_Info.Parser.ALI is
             declare
                use Unit;
 
-               C1, C2 : Character;
                Tok    : constant String :=
                           IO.Get_Token (A_Handle, Stop_At_LF => True);
+               C1, C2 : Character;
+
             begin
                exit when Tok = "";
 
