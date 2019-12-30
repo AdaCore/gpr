@@ -1,0 +1,7 @@
+Project: Demo
+ > li/src/api.adb     language: Ada    Kind: S_BODY   unit: api
+ > li/src/api.ads     language: Ada    Kind: S_SPEC   unit: api
+ > li/src/pck.adb     language: Ada    Kind: S_BODY   unit: pck
+ > li/src/pck.ads     language: Ada    Kind: S_SPEC   unit: pck
+ > li/src/code.ada    language: Ada    Kind: S_SPEC   unit: U1
+                                       Kind: S_SPEC   unit: U2

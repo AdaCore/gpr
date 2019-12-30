@@ -249,6 +249,7 @@ package body GPR2.Source_Info.Parser.ALI is
       end Open;
 
    end IO;
+
    -------------
    -- Compute --
    -------------
@@ -270,8 +271,9 @@ package body GPR2.Source_Info.Parser.ALI is
 
       subtype CU_Index is Natural range 0 .. 2;
 
+      B_Name  : constant Name_Type := Source.Path_Name.Simple_Name;
       U_Name  : Unbounded_String;
-      S_Name  : Unbounded_String with Unreferenced;
+      S_Name  : Unbounded_String;
       U_Kind  : Unit.Kind_Type;
       U_Flags : Unit.Flags_Set := Unit.Default_Flags;
       Main    : Unit.Main_Type := Unit.None;
@@ -279,6 +281,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
       CUs     : array (CU_Index range 1 .. 2) of Unit.Object;
       CU_Idx  : CU_Index := 0;
+      Current : CU_Index := 0;
 
       procedure Fill_Unit;
       --  Add all units defined in ALI (spec, body or both)
@@ -297,10 +300,10 @@ package body GPR2.Source_Info.Parser.ALI is
          --  Uname, Sfile, Utype
 
          declare
-            Tok1   : constant String :=
-                       IO.Get_Token (A_Handle, Stop_At_LF => True);
-            Tok2   : constant String :=
-                       IO.Get_Token (A_Handle, Stop_At_LF => True);
+            Tok1 : constant String :=
+                     IO.Get_Token (A_Handle, Stop_At_LF => True);
+            Tok2 : constant String :=
+                     IO.Get_Token (A_Handle, Stop_At_LF => True);
          begin
             --  At least "?%(b|s)"
 
@@ -424,8 +427,8 @@ package body GPR2.Source_Info.Parser.ALI is
          A : constant String :=
                IO.Get_Token (A_Handle, Stop_At_LF => True) with Unreferenced;
 
-         U_Last  : constant Integer := N'Last - 2; -- Unit last character in N
-         U_Kind  : Unit.Kind_Type with Unreferenced;
+         U_Last : constant Integer := N'Last - 2; -- Unit last character in N
+         U_Kind : Unit.Kind_Type with Unreferenced;
       begin
          --  At least "?%(b|s)"
 
@@ -444,10 +447,15 @@ package body GPR2.Source_Info.Parser.ALI is
          --  setup later.
 
          declare
-            S : constant Source_Reference.Identifier.Object'Class :=
-                  Source_Reference.Identifier.Create
-                    (Sloc => Source_Reference.Undefined,
-                     Text => Name_Type (N (1 .. U_Last)));
+            --  ??? line & column are wrong, we should parse the xref
+            Sloc : constant GPR2.Source_Reference.Object :=
+                     GPR2.Source_Reference.Object
+                       (Source_Reference.Create
+                          (Source.Path_Name.Value, 1, 1));
+            S    : constant Source_Reference.Identifier.Object'Class :=
+                     Source_Reference.Identifier.Create
+                       (Sloc => Sloc,
+                        Text => Name_Type (N (1 .. U_Last)));
          begin
             Withs.Insert (S);
          end;
@@ -572,6 +580,16 @@ package body GPR2.Source_Info.Parser.ALI is
                  Sep_From     => "",
                  Flags        => U_Flags);
 
+            if Name_Type (-S_Name) = B_Name then
+               Current := CU_Idx;
+            end if;
+
+            --  Kind of first unit is also recorded in Data.Kind
+
+            if CU_Idx = 1 then
+               Data.Kind := U_Kind;
+            end if;
+
             --  Skip to either the next U section, or the first D line.
             --  There must be at least one D line: the dependency to the
             --  unit itself.
@@ -592,25 +610,35 @@ package body GPR2.Source_Info.Parser.ALI is
          IO.Close (A_Handle);
 
          --  If we have 2 units, the first one should be the body and the
-         --  second one the spec. Update the Utype accordingly.
+         --  second one the spec. Update the u_kind accordingly.
 
          if CU_Idx = 2 then
-            if CUs (CUs'First).Kind in Spec_Kind then
-               Data.CU_List.Append (CUs (CUs'Last));
-               Data.CU_List.Append (CUs (CUs'First));
-            else
-               Data.CU_List.Append (CUs (CUs'First));
-               Data.CU_List.Append (CUs (CUs'Last));
+            if CUs (1).Kind /= Unit.S_Body_Only then
+               raise Scan_ALI_Error
+                 with "Unit body is on the wrong position";
             end if;
 
-         else
-            Data.CU_List.Append (CUs (CUs'First));
+            Unit.Update_Kind (CUs (1), Unit.S_Body);
+            Data.Kind := Unit.S_Body;
+
+            if CUs (2).Kind /= Unit.S_Spec_Only then
+               raise Scan_ALI_Error
+                 with "Unit spec is on the wrong position";
+            end if;
+
+            Unit.Update_Kind (CUs (2), Unit.S_Spec);
          end if;
 
-         Data.Parsed    := Source_Info.LI;
+         Data.CU_List.Append (CUs (Current));
+         Data.CU_Map.Insert (CUs (Current).Index, CUs (Current));
+         Data.Kind := CUs (Current).Kind;
+
+         Data.Parsed := Source_Info.LI;
+         Data.Is_Ada := True;
       exception
          when others =>
             IO.Close (A_Handle);
+            Data.Parsed := Source_Info.None;
       end;
    end Compute;
 

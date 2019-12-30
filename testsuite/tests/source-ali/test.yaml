@@ -1,0 +1,5 @@
+description:
+    Test the ALI source info parser
+driver: build_and_run
+project_file: source_ali
+main: main

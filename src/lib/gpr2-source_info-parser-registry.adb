@@ -24,7 +24,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 pragma Warnings (Off);
 with GPR2.Source_Info.Parser.Ada_Language;
---  with GPR2.Source_Info.Parser.ALI;
+with GPR2.Source_Info.Parser.ALI;
 pragma Warnings (On);
 
 package body GPR2.Source_Info.Parser.Registry is
