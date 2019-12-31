@@ -121,7 +121,7 @@ package body GPR2.Project.Definition is
 
       begin
          if Def.Extended.Is_Defined then
-            Check_Relation (Def.Extended, "child");
+            Check_Relation (Def.Extended, "extended");
          end if;
 
          for V of Def.Imports loop
