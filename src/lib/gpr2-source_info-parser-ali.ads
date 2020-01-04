@@ -16,13 +16,16 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+private with Ada.Containers.Indefinite_Ordered_Maps;
+private with GPR2.Unit;
+
 package GPR2.Source_Info.Parser.ALI is
 
    Language : aliased constant Name_Type := "Ada";
 
    type Object is new Parser.Object
      (Language => Language'Unrestricted_Access,
-      Kind     => LI) with null record;
+      Kind     => LI) with private;
 
    overriding procedure Compute
      (Self   : not null access Object;
@@ -31,5 +34,17 @@ package GPR2.Source_Info.Parser.ALI is
       LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
       View   : Project.View.Object'Class := Project.View.Undefined);
    --  Setup Data with the information from GNAT .ali file
+
+private
+
+   package Unit_Map is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Unit.Object, "=" => Unit."=");
+
+   type Object is new Parser.Object
+     (Language => Language'Unrestricted_Access,
+      Kind     => LI)
+   with record
+      Cache : Unit_Map.Map;
+   end record;
 
 end GPR2.Source_Info.Parser.ALI;

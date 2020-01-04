@@ -18,7 +18,6 @@
 
 with Ada.Streams.Stream_IO;
 
-with GPR2.Unit;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source;
 
@@ -280,6 +279,9 @@ package body GPR2.Source_Info.Parser.ALI is
       Withs   : Source_Reference.Identifier.Set.Object;
 
       CUs     : array (CU_Index range 1 .. 2) of Unit.Object;
+      CU_BN   : array (CU_Index range 1 .. 2) of Unbounded_String;
+      --  Units' corresponding source base name
+
       CU_Idx  : CU_Index := 0;
       Current : CU_Index := 0;
 
@@ -289,6 +291,13 @@ package body GPR2.Source_Info.Parser.ALI is
       procedure Fill_With
         with Post => Withs.Length > Withs'Old.Length;
       --  Add all withed units into Withs below
+
+      procedure Set_Source_Info_Data (Unit : GPR2.Unit.Object);
+      --  Set returned source infor data
+
+      function Key
+        (LI : Path_Name.Object'Class; Basename : Name_Type) return Name_Type
+      is (Name_Type (LI.Value & '@' & String (Basename)));
 
       ---------------
       -- Fill_Unit --
@@ -461,9 +470,31 @@ package body GPR2.Source_Info.Parser.ALI is
          end;
       end Fill_With;
 
+      --------------------------
+      -- Set_Source_Info_Data --
+      --------------------------
+
+      procedure Set_Source_Info_Data (Unit : GPR2.Unit.Object) is
+      begin
+         Data.CU_List.Append (Unit);
+         Data.CU_Map.Insert (Unit.Index, Unit);
+         Data.Kind := Unit.Kind;
+
+         Data.Parsed := Source_Info.LI;
+         Data.Is_Ada := True;
+      end Set_Source_Info_Data;
+
       use GPR2.Unit;
 
    begin
+      --  If this unit is in the cache, return now we don't want to parse
+      --  again the whole file.
+
+      if Self.Cache.Contains (Key (LI, B_Name)) then
+         Set_Source_Info_Data (Self.Cache (Key (LI, B_Name)));
+         return;
+      end if;
+
       --  Fill the ALI object up till the XREFs
 
       IO.Open (A_Handle, LI);
@@ -580,6 +611,8 @@ package body GPR2.Source_Info.Parser.ALI is
                  Sep_From     => "",
                  Flags        => U_Flags);
 
+            CU_BN (CU_Idx) := S_Name;
+
             if Name_Type (-S_Name) = B_Name then
                Current := CU_Idx;
             end if;
@@ -629,12 +662,27 @@ package body GPR2.Source_Info.Parser.ALI is
             Unit.Update_Kind (CUs (2), Unit.S_Spec);
          end if;
 
-         Data.CU_List.Append (CUs (Current));
-         Data.CU_Map.Insert (CUs (Current).Index, CUs (Current));
-         Data.Kind := CUs (Current).Kind;
+         --  Record into the cache
 
-         Data.Parsed := Source_Info.LI;
-         Data.Is_Ada := True;
+         for K in 1 .. CU_Idx loop
+            declare
+               Cache_Key : constant Name_Type :=
+                             Key (LI, Name_Type (-CU_BN (K)));
+            begin
+               if not Self.Cache.Contains (Cache_Key) then
+                  Self.Cache.Insert (Cache_Key, CUs (K));
+               end if;
+            end;
+         end loop;
+
+         --  Set data for the current source
+
+         if Current in CUs'Range then
+            Set_Source_Info_Data (CUs (Current));
+         else
+            Data.Parsed := Source_Info.None;
+         end if;
+
       exception
          when others =>
             IO.Close (A_Handle);
