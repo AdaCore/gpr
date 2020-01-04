@@ -36,14 +36,14 @@ package GPR2.Source_Info.Parser is
    type Object_Ref is not null access all Object'Class;
 
    procedure Compute
-     (Parser : not null access Object;
+     (Self   : not null access Object;
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Source.Object'Class;
       LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
       View   : Project.View.Object'Class := Project.View.Undefined) is abstract
-   with Pre'Class  => Parser.Kind /= None
+   with Pre'Class  => Self.Kind /= None
                             and then
-                          (LI.Is_Defined or else Parser.Kind /= Source_Info.LI)
+                          (LI.Is_Defined or else Self.Kind /= Source_Info.LI)
                             and then
                           (LI.Is_Defined or else not View.Is_Defined),
         Post'Class => Data.Used_Backend in Source_Info.LI | Source_Info.Source;

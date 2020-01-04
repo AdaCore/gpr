@@ -463,7 +463,7 @@ package body GPR2.Project.Source is
                   Source_Info.Object (Self.Source).Reset;
 
                   Source_Info.Parser.Compute
-                    (Parser => Backend,
+                    (Self   => Backend,
                      Data   => Source_Info.Object'Class (Self.Source),
                      LI     => LI,
                      Source => Self.Source);

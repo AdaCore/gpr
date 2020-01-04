@@ -214,7 +214,7 @@ package body GPR2.Source is
                Source_Info.Object (Self).Reset;
 
                Source_Info.Parser.Compute
-                 (Parser => Backend,
+                 (Self   => Backend,
                   Data   => Source_Info.Object'Class (Self),
                   Source => Self);
             end;

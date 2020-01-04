@@ -25,7 +25,7 @@ package GPR2.Source_Info.Parser.Ada_Language is
       Kind     => Source) with null record;
 
    overriding procedure Compute
-     (Parser : not null access Object;
+     (Self   : not null access Object;
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Source.Object'Class;
       LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
