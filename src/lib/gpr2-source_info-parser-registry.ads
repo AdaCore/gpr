@@ -26,7 +26,8 @@ package GPR2.Source_Info.Parser.Registry is
    --  Returns True if the parser backend for Language if found. If Kind is
    --  Auto then True is returned if either an LI or Source parser exists.
 
-   function Get (Language : Name_Type; Kind : Backend) return Object'Class
+   function Get
+     (Language : Name_Type; Kind : Backend) return not null access Object'Class
      with Pre => Exists (Language, Kind);
    --  Get a parser for the given langugae and kind. If Kind if Auto then the
    --  LI based parser is returned and the Source based otherwise.

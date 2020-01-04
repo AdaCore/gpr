@@ -455,9 +455,10 @@ package body GPR2.Project.Source is
             if LI.Is_Defined then
                --  ??? check if LI file is more recent than source
                declare
-                  Backend : constant Source_Info.Parser.Object'Class :=
-                              Source_Info.Parser.Registry.Get
-                                (Language, Source_Info.LI);
+                  Backend : constant not null access
+                              Source_Info.Parser.Object'Class :=
+                                Source_Info.Parser.Registry.Get
+                                  (Language, Source_Info.LI);
                begin
                   Source_Info.Object (Self.Source).Reset;
 

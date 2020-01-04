@@ -31,10 +31,12 @@ package GPR2.Source_Info.Parser is
 
    type Object
      (Language : not null access Name_Type;
-      Kind     : Backend) is abstract tagged null record;
+      Kind     : Backend) is abstract tagged limited private;
+
+   type Object_Ref is not null access all Object'Class;
 
    procedure Compute
-     (Parser : Object;
+     (Parser : not null access Object;
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Source.Object'Class;
       LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
@@ -51,5 +53,14 @@ package GPR2.Source_Info.Parser is
    --  is parsed to get the corresponding information. Note that if Data is
    --  already defined (Backend different of None) the routine will update
    --  the information if needed.
+
+private
+
+   type Object
+     (Language : not null access Name_Type;
+      Kind     : Backend) is abstract tagged limited
+   record
+      Self : not null access Object'Class := Object'Unchecked_Access;
+   end record;
 
 end GPR2.Source_Info.Parser;

@@ -206,9 +206,10 @@ package body GPR2.Source is
            and then (not Self.Is_Parsed or else Updated)
          then
             declare
-               Backend : constant Source_Info.Parser.Object'Class :=
-                           Source_Info.Parser.Registry.Get
-                             (Language, Source_Info.Source);
+               Backend : constant not null access
+                           Source_Info.Parser.Object'Class :=
+                             Source_Info.Parser.Registry.Get
+                               (Language, Source_Info.Source);
             begin
                Source_Info.Object (Self).Reset;
 

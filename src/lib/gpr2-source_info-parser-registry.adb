@@ -30,7 +30,7 @@ pragma Warnings (On);
 package body GPR2.Source_Info.Parser.Registry is
 
    package Parser_Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Object'Class);
+     (Name_Type, Object_Ref);
 
    Parser_Store : Parser_Set.Map;
    --  Record all parser for given language and kind
@@ -53,7 +53,9 @@ package body GPR2.Source_Info.Parser.Registry is
    -- Get --
    ---------
 
-   function Get (Language : Name_Type; Kind : Backend) return Object'Class is
+   function Get
+     (Language : Name_Type; Kind : Backend)
+      return not null access Object'Class is
    begin
       return Parser_Store (Key (Language, Kind));
    end Get;
@@ -64,7 +66,8 @@ package body GPR2.Source_Info.Parser.Registry is
 
    procedure Register (Parser : Object'Class) is
    begin
-      Parser_Store.Insert (Key (Parser.Language.all, Parser.Kind), Parser);
+      Parser_Store.Insert
+        (Key (Parser.Language.all, Parser.Kind), Parser.Self);
    end Register;
 
 end GPR2.Source_Info.Parser.Registry;
