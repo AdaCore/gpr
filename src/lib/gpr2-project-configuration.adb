@@ -321,12 +321,15 @@ package body GPR2.Project.Configuration is
 
    function Object_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Name_Type is
+      Language : Name_Type) return Name_Type
+   is
+      A : Project.Attribute.Object;
    begin
-      if Self.Conf.Has_Packages (PRP.Compiler) then
-         return Name_Type
-                  (Self.Conf.Pack (PRP.Compiler).Attribute
-                     (PRA.Object_File_Suffix, String (Language)).Value.Text);
+      if Self.Conf.Has_Packages (PRP.Compiler)
+        and then Self.Conf.Pack (PRP.Compiler).Check_Attribute
+                   (PRA.Object_File_Suffix, String (Language), Result => A)
+      then
+         return Name_Type (A.Value.Text);
       else
          return ".o";
       end if;
