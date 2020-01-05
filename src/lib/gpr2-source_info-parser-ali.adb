@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Streams.Stream_IO;
 
 with GPR2.Source_Info.Parser.Registry;
@@ -491,6 +492,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
          Data.Parsed := Source_Info.LI;
          Data.Is_Ada := True;
+         Data.Timestamp := Directories.Modification_Time (LI.Value);
       end Set_Source_Info_Data;
 
       use GPR2.Unit;

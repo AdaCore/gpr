@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Characters.Conversions;
+with Ada.Directories;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Text;
@@ -264,6 +265,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       Data.Parsed := Source_Info.Source;
       Data.Is_Ada := True;
+      Data.Timestamp := Directories.Modification_Time (Source.Path_Name.Value);
    end Compute;
 
 begin

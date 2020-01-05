@@ -106,6 +106,7 @@ package body GPR2.Source_Info is
       Self.Parsed        := None;
       Self.Is_RTS_Source := True;
       Self.Is_Ada        := False;
+      Self.Timestamp     := Undefined_Time;
    end Reset;
 
    ---------

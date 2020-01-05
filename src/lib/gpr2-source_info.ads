@@ -21,6 +21,8 @@
 --  compilation artifact parser. The routine Used_Backend will return
 --  the kind of parser that has been used.
 
+with Ada.Calendar;
+
 with GPR2.Unit.List;
 with GPR2.Containers;
 with GPR2.Path_Name;
@@ -63,6 +65,13 @@ package GPR2.Source_Info is
    function Is_Ada (Self : Object) return Boolean
      with Pre  => Self.Is_Defined;
    --  Returns True if language is Ada
+
+   function Timespamp (Self : Object) return Ada.Calendar.Time
+     with Pre => Self.Is_Defined;
+   --  Returns the timestamp of the file from where the source information have
+   --  been retrieved. For example, this is the Ada ALI file time stamp for the
+   --  Ada LI parser, or the timestamp for the source for source based parser.
+   --  Note that the timestamp is the last modification time.
 
    function Has_Units (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -162,6 +171,7 @@ private
       CU_List       : Unit.List.Object;
       CU_Map        : Unit.Map.Object;
       Kind          : Unit.Kind_Type;
+      Timestamp     : Calendar.Time;
    end record
      with Dynamic_Predicate =>
             Object.CU_List.Length = 0
@@ -169,14 +179,20 @@ private
    --  Record that holds relevant source information, including details about
    --  the compilation unit(s) for Ada sources.
 
+   Undefined_Time : constant Calendar.Time := Calendar.Time_Of (1901, 1, 1);
+
    Undefined : constant Object :=
                  Object'(Is_Ada        => False,
                          Parsed        => None,
                          Is_RTS_Source => True,
                          Kind          => Unit.S_Separate,
+                         Timestamp     => Undefined_Time,
                          others        => <>);
 
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
+
+   function Timespamp (Self : Object) return Ada.Calendar.Time is
+     (Self.Timestamp);
 
    function Has_Units (Self : Object) return Boolean is (Self.Is_Ada);
 
