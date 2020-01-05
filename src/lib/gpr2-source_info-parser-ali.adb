@@ -249,6 +249,15 @@ package body GPR2.Source_Info.Parser.ALI is
 
    end IO;
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   overriding procedure Clear_Cache (Self : not null access Object) is
+   begin
+      Self.Cache.Clear;
+   end Clear_Cache;
+
    -------------
    -- Compute --
    -------------

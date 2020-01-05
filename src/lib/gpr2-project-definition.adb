@@ -37,6 +37,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Source;
+with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Source_Reference.Value;
 
@@ -1850,6 +1851,8 @@ package body GPR2.Project.Definition is
       --  Record back new definition for the view with updated sources
 
       Def.Sources_Signature := Current_Signature;
+
+      Source_Info.Parser.Registry.Clear_Cache;
 
       if Message_Count < Tree.Log_Messages.Count
         and then Tree.Log_Messages.Has_Error

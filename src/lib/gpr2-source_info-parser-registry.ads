@@ -32,4 +32,11 @@ package GPR2.Source_Info.Parser.Registry is
    --  Get a parser for the given langugae and kind. If Kind if Auto then the
    --  LI based parser is returned and the Source based otherwise.
 
+   procedure Clear_Cache;
+   --  Clear cache for all registered parsers. While parsing it is possible for
+   --  each parser to store in cache some information (Ada ALI parser does that
+   --  as the same ALI constains information for possibly two units). After
+   --  updating all the sources for a view one can clear the cache to free
+   --  up the memory.
+
 end GPR2.Source_Info.Parser.Registry;

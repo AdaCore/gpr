@@ -54,6 +54,10 @@ package GPR2.Source_Info.Parser is
    --  already defined (Backend different of None) the routine will update
    --  the information if needed.
 
+   procedure Clear_Cache (Self : not null access Object) is null;
+   --  Default version is null, this must be overriden by parsers in need of
+   --  cleaning up cache information.
+
 private
 
    type Object

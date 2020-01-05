@@ -35,6 +35,9 @@ package GPR2.Source_Info.Parser.ALI is
       View   : Project.View.Object'Class := Project.View.Undefined);
    --  Setup Data with the information from GNAT .ali file
 
+   overriding procedure Clear_Cache (Self : not null access Object);
+   --  Clear cached ALI data
+
 private
 
    package Unit_Map is new Ada.Containers.Indefinite_Ordered_Maps

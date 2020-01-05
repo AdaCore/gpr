@@ -40,6 +40,17 @@ package body GPR2.Source_Info.Parser.Registry is
                  & '@' & Backend'Image (Kind)));
    --  The key used in the parser store
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache is
+   begin
+      for P of Parser_Store loop
+         P.Clear_Cache;
+      end loop;
+   end Clear_Cache;
+
    ------------
    -- Exists --
    ------------
