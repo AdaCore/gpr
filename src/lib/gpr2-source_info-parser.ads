@@ -48,7 +48,9 @@ package GPR2.Source_Info.Parser is
                           (LI.Is_Defined or else not View.Is_Defined)
                             and then
                           (not LI.Is_Defined or else LI.Exists),
-        Post'Class => Data.Used_Backend in Source_Info.LI | Source_Info.Source;
+        Post'Class => not Data.Is_Parsed
+                        or else
+                      Data.Used_Backend in Source_Info.LI | Source_Info.Source;
    --  Set Data with the information for the given source. If LI is undefined
    --  or not present then the source is parsed (using either the LI based
    --  or source based parser). If LI is defined and present then the LI file
