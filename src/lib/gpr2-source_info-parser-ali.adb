@@ -604,7 +604,11 @@ package body GPR2.Source_Info.Parser.ALI is
             --  For each unit, read the With list (W/Y/Z lines) if any
 
             while Header in 'W' | 'Y' | 'Z' loop
-               Fill_With;
+               --  Only record explicite with clauses
+               if Header = 'W' then
+                  Fill_With;
+               end if;
+
                Next_Line;
             end loop;
 
@@ -623,6 +627,8 @@ package body GPR2.Source_Info.Parser.ALI is
                  Flags        => U_Flags);
 
             CU_BN (CU_Idx) := S_Name;
+
+            Withs.Clear;
 
             if Name_Type (-S_Name) = B_Name then
                Current := CU_Idx;
