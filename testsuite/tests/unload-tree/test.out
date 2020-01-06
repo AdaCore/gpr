@@ -1,5 +1,6 @@
 **************** Iterator Prj1
 Lib      K_LIBRARY
+A:   Library_Dir -> lib
 A:   Library_Name -> l
 A:   Object_Dir -> lobj
 A:   Source_Dirs -> lsrc1
@@ -12,6 +13,7 @@ A:   Source_Dirs -> fsrc
    is root
 **************** Iterator Prj2
 Lib      K_LIBRARY
+A:   Library_Dir -> lib
 A:   Library_Name -> l
 A:   Object_Dir -> lobj
 A:   Source_Dirs -> lsrc2
