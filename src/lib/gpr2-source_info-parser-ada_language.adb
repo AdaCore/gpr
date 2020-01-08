@@ -126,6 +126,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   U_Sep_From    : Unbounded_String;
                   U_Kind        : Unit.Kind_Type;
                   U_Withed      : Source_Reference.Identifier.Set.Object;
+                  W_Found       : Containers.Name_Set;
 
                   --  ??? For now we don't parse those:
                   U_Main        : constant Unit.Main_Type :=
@@ -165,15 +166,50 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   for WC of U_Prelude loop
                      if WC.Kind = Ada_With_Clause then
                         for P of WC.As_With_Clause.F_Packages loop
-                           U_Withed.Insert
-                             (Source_Reference.Identifier.Create
-                                (Filename => Source.Path_Name.Value,
-                                 Line     => Natural
-                                   (WC.Sloc_Range.Start_Line),
-                                 Column   => Natural
-                                   (WC.Sloc_Range.Start_Column),
-                                 Text     => Name_Type
-                                   (-(Process_Defining_Name (P)))));
+                           --  We record this package and all parent if any
+                           declare
+                              Sloc : constant Source_Reference.Object :=
+                                       Source_Reference.Object
+                                         (Source_Reference.Create
+                                           (Filename => Source.Path_Name.Value,
+                                            Line     => Natural
+                                              (WC.Sloc_Range.Start_Line),
+                                            Column   => Natural
+                                              (WC.Sloc_Range.Start_Column)));
+
+                              procedure Register (Name : String);
+                              --  Register Name and parent if any
+
+                              --------------
+                              -- Register --
+                              --------------
+
+                              procedure Register (Name : String) is
+                                 subtype O
+                                   is Source_Reference.Identifier.Object;
+
+                                 N      : constant Name_Type :=
+                                            Name_Type (Name);
+                                 B_Name : constant String :=
+                                            Directories.Base_Name (Name);
+                                 Item   : constant O :=
+                                            O (Source_Reference.Identifier.
+                                                Create
+                                                 (Sloc, Name_Type (Name)));
+                              begin
+                                 if not W_Found.Contains (N) then
+                                    U_Withed.Insert (Item);
+                                    W_Found.Include (N);
+                                 end if;
+
+                                 if B_Name /= Name then
+                                    Register (B_Name);
+                                 end if;
+                              end Register;
+
+                           begin
+                              Register (-(Process_Defining_Name (P)));
+                           end;
                         end loop;
                      end if;
                   end loop;

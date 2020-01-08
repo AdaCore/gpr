@@ -74,6 +74,8 @@ api.ads:3:1: warning: withed unit titi not found
  > /src/tst.adb   unit: Tst
 ..... DIRECT
    > /src/abc-plop.ads
+   > /src/abc.adb
+   > /src/abc.ads
    > /src/api.adb
    > /src/api.ads
 ..... UNIT

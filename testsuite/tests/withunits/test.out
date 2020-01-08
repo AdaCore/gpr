@@ -14,6 +14,7 @@ Project: Demo
  > src/api.ads   unit: Api
 
  > src/tst.adb   unit: Tst
+   ABC
    ABC.Plop
 
  > src/tst.ads   unit: Tst

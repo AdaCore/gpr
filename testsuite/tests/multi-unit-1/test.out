@@ -2,16 +2,16 @@ main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = Main
+    unit name    = main
     kind         = S_BODY_ONLY
-    withed units = { U Ada Pkg }
+    withed units = { ada pkg u }
     object file  = main.o
     deps file    = main.ali
 pkg.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = Pkg
+    unit name    = pkg
     kind         = S_BODY
     object file  = pkg.o
     deps file    = pkg.ali
@@ -19,7 +19,7 @@ pkg.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = Pkg
+    unit name    = pkg
     kind         = S_SPEC
     object file  = pkg.o
     deps file    = pkg.ali
@@ -29,11 +29,11 @@ sep.adb
   - compilation unit at 1
     unit name    = V
     kind         = S_SEPARATE
-    withed units = { Ada.Text_IO }
+    withed units = { Ada Ada.Text_IO }
   - compilation unit at 2
     unit name    = W
     kind         = S_SEPARATE
-    withed units = { GNAT.Regexp }
+    withed units = { GNAT GNAT.Regexp }
 u.adb
   single-unit          = FALSE
   has naming exception = TRUE
@@ -43,6 +43,6 @@ u.adb
   - compilation unit at 2
     unit name    = U
     kind         = S_BODY
-    withed units = { GNAT.OS_Lib }
+    withed units = { GNAT GNAT.OS_Lib }
     object file  = u~2.o
     deps file    = u~2.ali
