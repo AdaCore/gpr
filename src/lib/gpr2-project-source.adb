@@ -466,7 +466,9 @@ package body GPR2.Project.Source is
                      LI     => LI,
                      Source => Self.Source);
 
-                  return;
+                  if Source_Info.Object'Class (Self.Source).Is_Parsed then
+                     return;
+                  end if;
                end;
             end if;
          end;
