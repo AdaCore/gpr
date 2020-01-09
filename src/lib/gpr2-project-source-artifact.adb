@@ -171,7 +171,7 @@ package body GPR2.Project.Source.Artifact is
      (Self     : Artifact.Object;
       Index    : Natural             := 1;
       Location : Dependency_Location := In_Both)
-     return GPR2.Path_Name.Object is
+      return GPR2.Path_Name.Object is
    begin
       case Location is
          when In_Library =>
