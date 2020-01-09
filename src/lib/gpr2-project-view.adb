@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -701,14 +701,14 @@ package body GPR2.Project.View is
       ---------
 
       procedure Add (Self : Object) is
+         Position : Set.Set.Cursor;
+         Inserted : Boolean;
       begin
          for Import of Definition.Get_RO (Self).Imports loop
-            if not Result.Contains (Import) then
-               Result.Insert (Import);
+            Result.Insert (Import, Position, Inserted);
 
-               if Recursive then
-                  Add (Import);
-               end if;
+            if Inserted and then Recursive then
+               Add (Import);
             end if;
          end loop;
       end Add;
