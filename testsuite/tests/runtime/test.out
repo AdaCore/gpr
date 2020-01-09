@@ -10,13 +10,13 @@ A:   languages -> ada
 A:   object_dir -> .../adalib
 A:   source_dirs -> .../adainclude
 
- > adainclude/a-calend.adb   Kind: S_BODY   unit: Ada.Calendar
- > adainclude/a-calend.ads   Kind: S_SPEC   unit: Ada.Calendar
- > adainclude/a-contai.ads   Kind: S_SPEC   unit: Ada.Containers
- > adainclude/a-string.ads   Kind: S_SPEC   unit: Ada.Strings
- > adainclude/a-strunb.adb   Kind: S_BODY   unit: Ada.Strings.Unbounded
- > adainclude/a-strunb.ads   Kind: S_SPEC   unit: Ada.Strings.Unbounded
- > adainclude/a-tags.adb     Kind: S_BODY   unit: Ada.Tags
- > adainclude/a-tags.ads     Kind: S_SPEC   unit: Ada.Tags
- > adainclude/a-uncdea.ads   Kind: S_SPEC   unit: Ada.Unchecked_Deallocation
- > adainclude/ada.ads        Kind: S_SPEC_ONLY   unit: Ada
+ > adainclude/a-calend.adb   Kind: S_BODY   unit: ada.calendar
+ > adainclude/a-calend.ads   Kind: S_SPEC   unit: ada.calendar
+ > adainclude/a-contai.ads   Kind: S_SPEC_ONLY   unit: ada.containers
+ > adainclude/a-string.ads   Kind: S_SPEC_ONLY   unit: ada.strings
+ > adainclude/a-strunb.adb   Kind: S_BODY   unit: ada.strings.unbounded
+ > adainclude/a-strunb.ads   Kind: S_SPEC   unit: ada.strings.unbounded
+ > adainclude/a-tags.adb     Kind: S_BODY   unit: ada.tags
+ > adainclude/a-tags.ads     Kind: S_SPEC   unit: ada.tags
+ > adainclude/a-uncdea.ads   Kind: S_SPEC_ONLY   unit: ada.unchecked_deallocation
+ > adainclude/ada.ads        Kind: S_SPEC_ONLY   unit: ada
