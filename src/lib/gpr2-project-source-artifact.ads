@@ -73,7 +73,8 @@ package GPR2.Project.Source.Artifact is
      (Self     : Object;
       Index    : Natural             := 1;
       Location : Dependency_Location := In_Both) return GPR2.Path_Name.Object
-     with Pre  => Self.Is_Defined,
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Dependency (Index, Location),
           Post => Dependency'Result.Is_Defined;
    --  A file containing information (.ali for GNAT, .d for GCC) like
    --  cross-reference, units used by the source, etc.
