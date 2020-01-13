@@ -1451,6 +1451,23 @@ package body GPR2.Project.Tree is
       Path_Name : constant Name_Type :=
                     Name_Type (Def.Trees.Project.Path_Name.Value);
       View      : Project.View.Object;
+
+      procedure Add_View (Key : Name_Type);
+      --  Add view to the Def.Tree.Views with the Key index
+
+      --------------
+      -- Add_View --
+      --------------
+
+      procedure Add_View (Key : Name_Type) is
+         Position : View_Maps.Cursor;
+         Inserted : Boolean;
+      begin
+         Def.Tree.Views.Insert
+           (Key, Project.View.Set.Empty_Set, Position, Inserted);
+         Def.Tree.Views (Position).Insert (View);
+      end Add_View;
+
    begin
       if Def.Tree.Views_Set.Is_Empty then
          Def.Id := 1;
@@ -1464,19 +1481,11 @@ package body GPR2.Project.Tree is
 
       pragma Assert (Definition.Refcount (View) = 2);
 
-      if Def.Tree.Views.Contains (Path_Name) then
-         Def.Tree.Views (Path_Name).Insert (View);
-      else
-         Def.Tree.Views.Insert (Path_Name, Project.View.Set.To_Set (View));
-      end if;
+      Add_View (Path_Name);
 
       pragma Assert (Definition.Refcount (View) = 3);
 
-      if Def.Tree.Views.Contains (Name) then
-         Def.Tree.Views (Name).Insert (View);
-      else
-         Def.Tree.Views.Insert (Name, Project.View.Set.To_Set (View));
-      end if;
+      Add_View (Name);
 
       pragma Assert (Definition.Refcount (View) = 4);
 
