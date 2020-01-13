@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -18,7 +18,7 @@
 
 with GPR2.Path_Name;
 
-limited with GPR2.Parser.Project;
+with GPR2.Parser.Project;
 
 private package GPR2.Parser.Registry is
 
@@ -36,6 +36,16 @@ private package GPR2.Parser.Registry is
    --  Registers a new project syntactic tree for Pathname or increment the
    --  reference count for the given project as this object can be shared
    --  by multiple project tree.
+
+   function Check_Project
+     (Pathname : Path_Name.Object;
+      Project  : out Parser.Project.Object) return Boolean
+     with Pre  => Pathname.Is_Defined,
+          Post => Check_Project'Result = Project.Is_Defined;
+   --  Returns True if the project file given by its full path-name is known in
+   --  the registry and puts it into the Project out parameter with the
+   --  reference count incremented. Returns False otherwise and puts Undefined
+   --  into Project out parameter.
 
    procedure Unregister (Pathname : Path_Name.Object)
      with Pre => Exists (Pathname);

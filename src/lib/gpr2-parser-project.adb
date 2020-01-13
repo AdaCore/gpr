@@ -891,13 +891,8 @@ package body GPR2.Parser.Project is
       Project : Object;
 
    begin
-      if Registry.Exists (Filename) then
-         declare
-            P : constant Parser.Project.Object := Registry.Get (Filename);
-         begin
-            Registry.Register (Filename, P);
-            return P;
-         end;
+      if Registry.Check_Project (Filename, Project) then
+         return Project;
 
       else
          if not Filename.Exists then

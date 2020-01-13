@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -18,7 +18,6 @@
 
 with Ada.Containers.Ordered_Maps;
 
-with GPR2.Parser.Project;
 with GPR2.Project.View;
 
 package body GPR2.Parser.Registry is
@@ -42,11 +41,26 @@ package body GPR2.Parser.Registry is
       procedure Register
         (Pathname : Path_Name.Object; Project : Parser.Project.Object);
 
+      procedure Check_Registry
+        (Pathname : Path_Name.Object; Project : out Parser.Project.Object);
+
       procedure Unregister (Pathname : Path_Name.Object);
 
    private
       Store : Project_Store.Map;
    end Shared;
+
+   -------------------
+   -- Check_Project --
+   -------------------
+
+   function Check_Project
+     (Pathname : Path_Name.Object;
+      Project  : out Parser.Project.Object) return Boolean is
+   begin
+      Shared.Check_Registry (Pathname, Project);
+      return Project.Is_Defined;
+   end Check_Project;
 
    ------------
    -- Exists --
@@ -81,6 +95,28 @@ package body GPR2.Parser.Registry is
    ------------
 
    protected body Shared is
+
+      --------------------
+      -- Check_Registry --
+      --------------------
+
+      procedure Check_Registry
+        (Pathname : Path_Name.Object; Project : out Parser.Project.Object)
+      is
+         CP : constant Project_Store.Cursor := Store.Find (Pathname);
+      begin
+         if Project_Store.Has_Element (CP) then
+            declare
+               Ref : constant Project_Store.Reference_Type :=
+                       Store.Reference (CP);
+            begin
+               Project := Ref.Project;
+               Ref.Ref := Ref.Ref + 1;
+            end;
+         else
+            Project := Parser.Project.Undefined;
+         end if;
+      end Check_Registry;
 
       -----------
       -- Exist --
