@@ -136,7 +136,7 @@ private
       Context   : Analysis_Context := No_Analysis_Context;
    end record;
 
-   Undefined : constant Object := (others  => <>);
+   Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

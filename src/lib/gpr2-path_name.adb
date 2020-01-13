@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -408,7 +408,7 @@ package body GPR2.Path_Name is
       then
          return Object'
            (As_Is     => +String (Name),
-            Comparing => +String (Name),
+            Comparing => +To_OS_Case (String (Name)),
             Base_Name => +Base_Name (String (Name)),
             others    => <>);
       else
