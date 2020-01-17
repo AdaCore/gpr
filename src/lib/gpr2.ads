@@ -133,6 +133,8 @@ package GPR2 is
 
    File_Names_Case_Sensitive : constant Boolean;
 
+   function To_Hex_String (Num : Word) return String;
+
 private
 
    use Ada;

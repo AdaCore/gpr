@@ -22,6 +22,7 @@
 --  the kind of parser that has been used.
 
 with Ada.Calendar;
+with Ada.Containers.Ordered_Maps;
 
 with GPR2.Unit.List;
 with GPR2.Containers;
@@ -66,12 +67,15 @@ package GPR2.Source_Info is
      with Pre  => Self.Is_Defined;
    --  Returns True if language is Ada
 
-   function Timespamp (Self : Object) return Ada.Calendar.Time
+   function Timestamp (Self : Object) return Ada.Calendar.Time
      with Pre => Self.Is_Defined;
    --  Returns the timestamp of the file from where the source information have
    --  been retrieved. For example, this is the Ada ALI file time stamp for the
    --  Ada LI parser, or the timestamp for the source for source based parser.
    --  Note that the timestamp is the last modification time.
+
+   function Checksum (Self : Object) return Word
+     with Pre => Self.Is_Defined;
 
    function Has_Units (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -117,14 +121,14 @@ package GPR2.Source_Info is
                                            or else Self.Has_Unit_At (Index));
    --  Returns True if the source Self has the generic unit at Index
 
-   function Dependencies
+   function Context_Clause_Dependencies
      (Self  : Object;
       Index : Unit_Index := 1) return Source_Reference.Identifier.Set.Object
      with Pre => Self.Is_Defined and then Self.Has_Units
                  and then Self.Has_Unit_At (Index);
    --  Returns the list of withed unit for Self's source at Index (default = 1)
 
-   function Dependencies
+   function Context_Clause_Dependencies
      (Self : Object;
       Unit : Name_Type) return Source_Reference.Identifier.Set.Object
      with Pre => Self.Is_Defined
@@ -132,6 +136,10 @@ package GPR2.Source_Info is
                  and then Self.Has_Unit (Unit);
    --  Returns the dependencies in Self associated with all the compilation
    --  units for the given Unit. The result may be empty.
+
+   function Dependencies (Self : Object) return Containers.Name_List
+     with Pre => Self.Is_Defined and then Self.Has_Units;
+   --  Returns the list of source files dependencies
 
    procedure Set
      (Self : in out Object;
@@ -163,16 +171,64 @@ package GPR2.Source_Info is
      with Post => not Self.Is_Defined;
    --  Reset Self to undefined
 
+   procedure Clear (Self : in out Object);
+   --  Clear units and dependencies
+
+   function Is_Runtime (Self : Object) return Boolean;
+   --  Is the source from runtime library
+
 private
 
+   use Ada.Calendar;
+
+   type Dependency_Key is record
+      Unit_Name : Unbounded_String;
+      --  Name of the unit or subunit.
+      --  Empty if Sfile is configuration pragmas file.
+
+      Unit_Kind : Unit.Library_Unit_Type;
+      --  Unit kind (S_Separate for a subunit)
+   end record;
+
+   No_Time : constant Time :=
+               Time_Of
+                 (Year_Number'First, Month_Number'First, Day_Number'First);
+
+   type Dependency is record
+      Sfile : Unbounded_String;
+      --  Base name of the source file.
+      --  Or full path name of the configuration pragmas files.
+
+      Stamp : Time := No_Time;
+      --  Time stamp value. Note that this will be all zero characters for the
+      --  dummy entries for missing or non-dependent files.
+
+      Checksum : Word := 0;
+      --  Checksum value. Note that this will be all zero characters for the
+      --  dummy entries for missing or non-dependent files
+      --  Zero if Sfile is configuration pragmas file.
+   end record;
+
+   function "<" (Left, Right : Dependency_Key) return Boolean is
+     (if Left.Unit_Name = Right.Unit_Name
+      then Left.Unit_Kind < Right.Unit_Kind
+      else Left.Unit_Name < Right.Unit_Name);
+
+   package Dependency_Maps is new Ada.Containers.Ordered_Maps
+     (Dependency_Key, Dependency);
+
+   Undefined_Time : constant Calendar.Time := Calendar.Time_Of (1901, 1, 1);
+
    type Object is tagged record
-      Is_Ada        : Boolean := True;
+      Is_Ada        : Boolean := False;
       Parsed        : Backend := None;
       Is_RTS_Source : Boolean := False;
       CU_List       : Unit.List.Object;
       CU_Map        : Unit.Map.Object;
-      Kind          : Unit.Library_Unit_Type;
-      Timestamp     : Calendar.Time;
+      Kind          : Unit.Library_Unit_Type := Unit.S_Separate;
+      LI_Timestamp  : Calendar.Time          := Undefined_Time;
+      Checksum      : Word                   := 0;
+      Dependencies  : Dependency_Maps.Map;
    end record
      with Dynamic_Predicate =>
             Object.CU_List.Length = 0
@@ -180,20 +236,15 @@ private
    --  Record that holds relevant source information, including details about
    --  the compilation unit(s) for Ada sources.
 
-   Undefined_Time : constant Calendar.Time := Calendar.Time_Of (1901, 1, 1);
-
-   Undefined : constant Object :=
-                 Object'(Is_Ada        => False,
-                         Parsed        => None,
-                         Is_RTS_Source => True,
-                         Kind          => Unit.S_Separate,
-                         Timestamp     => Undefined_Time,
-                         others        => <>);
+   Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
 
-   function Timespamp (Self : Object) return Ada.Calendar.Time is
-     (Self.Timestamp);
+   function Timestamp (Self : Object) return Ada.Calendar.Time is
+     (Self.LI_Timestamp);
+
+   function Checksum (Self : Object) return Word is
+      (Self.Checksum);
 
    function Has_Units (Self : Object) return Boolean is (Self.Is_Ada);
 
@@ -204,6 +255,9 @@ private
      (Self.CU_List.Length = 1);
 
    function Is_Ada (Self : Object) return Boolean is (Self.Is_Ada);
+
+   function Is_Runtime (Self : Object) return Boolean is
+     (Self.Is_RTS_Source);
 
    function Is_Parsed (Self : Object) return Boolean is (Self.Parsed /= None);
 

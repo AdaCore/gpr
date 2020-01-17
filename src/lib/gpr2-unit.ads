@@ -99,14 +99,17 @@ package GPR2.Unit is
    Default_Flags : constant Flags_Set;
 
    function Create
-     (Name         : Name_Type;
-      Index        : Positive;
-      Kind         : Library_Unit_Type;
-      Main         : Main_Type;
-      Dependencies : Source_Reference.Identifier.Set.Object;
-      Sep_From     : Optional_Name_Type;
-      Flags        : Flags_Set) return Object;
-   --  Create a compilation unit object
+     (Name          : Name_Type;
+      Index         : Positive;
+      Lib_Unit_Kind : Library_Unit_Type;
+      Lib_Item_Kind : Library_Item_Type;
+      Main          : Main_Type;
+      Dependencies  : Source_Reference.Identifier.Set.Object;
+      Sep_From      : Optional_Name_Type;
+      Flags         : Flags_Set) return Object
+     with Post => Create'Result.Is_Defined;
+   --  Create a compilation unit object.
+   --  File_Name could be known only for ALI parser
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns True if Self is defined
@@ -123,6 +126,10 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns the kind for this compilation unit
 
+   function Library_Item_Kind (Self : Object) return Library_Item_Type
+     with Pre => Self.Is_Defined;
+   --  Returns the library type, i.e is the unit package or subroutine
+
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object
      with Pre => Self.Is_Defined;
@@ -131,6 +138,14 @@ package GPR2.Unit is
    function Is_Separate (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self is a separate
+
+   function Is_Flag_Set (Self : Object; Item : Flag) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Flag is set
+
+   function Is_Any_Flag_Set (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if any Flag is set
 
    function Separate_From (Self : Object) return Name_Type
      with Pre => Self.Is_Defined and then Self.Is_Separate;
@@ -145,15 +160,19 @@ package GPR2.Unit is
           Post => Self.Kind = Kind;
    --  Update kind for this unit
 
+   function Image (Item : Flag) return String;
+   --  Returns a string representation of Flag
+
 private
 
    Default_Flags : constant Flags_Set := (others => False);
 
    type Object is tagged record
       Name         : Unbounded_String;
-      Index        : Natural   := 0;
+      Index        : Natural           := 0;
       Kind         : Library_Unit_Type := S_Spec;
-      Main         : Main_Type;
+      Item_Kind    : Library_Item_Type := Is_Package;
+      Main         : Main_Type         := None;
       Dependencies : Source_Reference.Identifier.Set.Object;
       Sep_From     : Unbounded_String;
       Flags        : Flags_Set := Default_Flags;
@@ -168,16 +187,18 @@ private
    Undefined : constant Object := (others => <>);
 
    function Create
-     (Name         : Name_Type;
-      Index        : Positive;
-      Kind         : Library_Unit_Type;
-      Main         : Main_Type;
-      Dependencies : Source_Reference.Identifier.Set.Object;
-      Sep_From     : Optional_Name_Type;
-      Flags        : Flags_Set) return Object is
+     (Name          : Name_Type;
+      Index         : Positive;
+      Lib_Unit_Kind : Library_Unit_Type;
+      Lib_Item_Kind : Library_Item_Type;
+      Main          : Main_Type;
+      Dependencies  : Source_Reference.Identifier.Set.Object;
+      Sep_From      : Optional_Name_Type;
+      Flags         : Flags_Set) return Object is
      (Object'(Name         => To_Unbounded_String (String (Name)),
               Index        => Index,
-              Kind         => Kind,
+              Kind         => Lib_Unit_Kind,
+              Item_Kind    => Lib_Item_Kind,
               Main         => Main,
               Dependencies => Dependencies,
               Sep_From     => To_Unbounded_String (String (Sep_From)),
@@ -201,6 +222,9 @@ private
    function Kind (Self : Object) return Library_Unit_Type is
      (Self.Kind);
 
+   function Library_Item_Kind (Self : Object) return Library_Item_Type is
+      (Self.Item_Kind);
+
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object
    is
@@ -208,5 +232,29 @@ private
 
    function Is_Generic (Self : Object) return Boolean is
       (Self.Flags (Is_Generic));
+
+   function Is_Flag_Set (Self : Object; Item : Flag) return Boolean is
+      (Self.Flags (Item));
+
+   function Is_Any_Flag_Set (Self : Object) return Boolean is
+      (Self.Flags /= (Flag'Range => False));
+
+   function Image (Item : Flag) return String is
+     (case Item is
+         when Preelab                  => "Preelaborable",
+         when No_Elab_Code             => "No_Elab_Code",
+         when Pure                     => "Pure",
+         when Dynamic_Elab             => "Dynamic_Elab",
+         when Elaborate_Body           => "Elaborate_Body",
+         when Has_RACW                 => "Has_RACW",
+         when Remote_Types             => "Remote_Types",
+         when Shared_Passive           => "Shared_Passive",
+         when RCI                      => "RCI",
+         when Predefined               => "Predefined",
+         when Is_Generic               => "Is_Generic",
+         when Init_Scalars             => "Init_Scalars",
+         when SAL_Interface            => "SAL_Interface",
+         when Body_Needed_For_SAL      => "Body_Needed_For_SAL",
+         when Elaborate_Body_Desirable => "Elaborate_Body_Desirable");
 
 end GPR2.Unit;

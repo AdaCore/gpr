@@ -69,7 +69,7 @@ procedure Main is
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
 
-               for W of S.Dependencies loop
+               for W of S.Context_Clause_Dependencies loop
                   Text_IO.Put_Line ("   " & String (Id (W).Text));
                end loop;
             end if;

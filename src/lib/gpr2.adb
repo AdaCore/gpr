@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -60,6 +60,24 @@ package body GPR2 is
    begin
       Debug := Enable;
    end Set_Debug;
+
+   -------------------
+   -- To_Hex_String --
+   -------------------
+
+   function To_Hex_String (Num : Word) return String is
+      Hex_Digit : constant array (Word range 0 .. 15) of Character :=
+                    "0123456789abcdef";
+      Result : String (1 .. 8);
+      Value  : Word := Num;
+   begin
+      for J in reverse Result'Range loop
+         Result (J) := Hex_Digit (Value mod 16);
+         Value := Value / 16;
+      end loop;
+
+      return Result;
+   end To_Hex_String;
 
    -------------
    -- Unquote --

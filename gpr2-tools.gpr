@@ -34,7 +34,7 @@ project GPR2.Tools is
    for Object_Dir use ".build/" & Build & "/obj-tools";
 
    for Main use ("gprremote.adb", "gprdump.adb", "gprinstall-main.adb",
-                 "gprclean-main.adb", "gprname-main.adb"); -- , "gprls-main.adb");
+                 "gprclean-main.adb", "gprname-main.adb", "gprls-main.adb");
 
    --------------
    -- Compiler --

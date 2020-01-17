@@ -82,21 +82,9 @@ procedure Main is
                   end loop;
                end if;
 
-               Text_IO.Put_Line ("..... UNIT");
-
-               for D of
-                 Source.Dependencies (Mode => GPR2.Project.Source.Unit)
-               loop
-                  Text_IO.Put ("  ");
-                  Output_Filename (D.Source.Path_Name.Value);
-                  Text_IO.New_Line;
-               end loop;
-
                Text_IO.Put_Line ("..... CLOSURE");
 
-               for D of
-                 Source.Dependencies (Mode => GPR2.Project.Source.Closure)
-               loop
+               for D of Source.Dependencies (Closure => True) loop
                   Text_IO.Put ("  ");
                   Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;

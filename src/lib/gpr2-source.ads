@@ -57,6 +57,11 @@ package GPR2.Source is
      with Pre => Self.Is_Defined;
    --  Returns the creation time for this source
 
+   function Check_Timestamp (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Check is the timestamp kept in the object corresponds to source filename
+   --  timestamp.
+
    function Create
      (Filename : GPR2.Path_Name.Object;
       Language : Name_Type;

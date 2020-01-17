@@ -908,9 +908,6 @@ package body GPR2.Project.Definition is
          Has_Naming_Exception   : Boolean := False;
          Units                  : Unit.List.Object;  --  For Ada
          Kind                   : Unit.Library_Unit_Type;
-         U_Main                 : constant Unit.Main_Type := Unit.None;
-         U_Flags                : constant Unit.Flags_Set :=
-                                    Unit.Default_Flags;
          Source                 : GPR2.Source.Object;
 
          function Naming_Exception_Equal
@@ -967,16 +964,21 @@ package body GPR2.Project.Definition is
 
                            Ada_Except_Usage.Delete (Ada_Use_Index (Exc));
 
+                           --  We know only Name, Index and Kind unit
+                           --  properties for now. Others will be taken on
+                           --  source parsing.
+
                            Units.Append
                              (Unit.Create
-                                (Name         => Unit_Name,
-                                 Index        => Index,
-                                 Main         => U_Main,
-                                 Flags        => U_Flags,
-                                 Kind         => Kind,
-                                 Dependencies =>
+                                (Name          => Unit_Name,
+                                 Index         => Index,
+                                 Lib_Unit_Kind => Kind,
+                                 Lib_Item_Kind => Unit.Is_Package,
+                                 Main          => Unit.None,
+                                 Flags         => Unit.Default_Flags,
+                                 Dependencies  =>
                                    Source_Reference.Identifier.Set.Empty_Set,
-                                 Sep_From     => No_Name));
+                                 Sep_From      => No_Name));
                         end;
                      end loop;
                   end if;
@@ -1046,14 +1048,15 @@ package body GPR2.Project.Definition is
 
                            Units.Append
                              (Unit.Create
-                                (Name         => Unit_Name,
-                                 Index        => 1,
-                                 Main         => U_Main,
-                                 Flags        => U_Flags,
-                                 Kind         => Kind,
-                                 Dependencies =>
+                                (Name          => Unit_Name,
+                                 Index         => 1,
+                                 Main          => Unit.None,
+                                 Flags         => Unit.Default_Flags,
+                                 Lib_Unit_Kind => Kind,
+                                 Lib_Item_Kind => Unit.Is_Package,
+                                 Dependencies  =>
                                    Source_Reference.Identifier.Set.Empty_Set,
-                                 Sep_From     => No_Name));
+                                 Sep_From      => No_Name));
                         end if;
                      end;
                   end if;
@@ -1078,9 +1081,9 @@ package body GPR2.Project.Definition is
                      end loop;
 
                      Source := GPR2.Source.Create_Ada
-                          (Filename          => File,
-                           Units => Units,
-                           Is_RTS_Source     =>
+                          (Filename      => File,
+                           Units         => Units,
+                           Is_RTS_Source =>
                              (View.Tree.Has_Runtime_Project
                               and then View = View.Tree.Runtime_Project));
 
@@ -1413,7 +1416,7 @@ package body GPR2.Project.Definition is
             begin
                Def.Tree.Record_View
                  (View   => View,
-                  Source => File.Value,
+                  Source => File,
                   Unit   => Unit_Name);
 
                if Def.Units.Contains (Unit_Name) then
@@ -1852,6 +1855,18 @@ package body GPR2.Project.Definition is
       Def.Sources_Signature := Current_Signature;
 
       Source_Info.Parser.Registry.Clear_Cache;
+
+      declare
+         Def_Sources : Project.Source.Set.Object;
+         SW          : Project.Source.Object;
+      begin
+         for S of Def.Sources loop
+            SW := S;
+            SW.Update;
+            Def_Sources.Insert (SW);
+         end loop;
+         Def.Sources := Def_Sources;
+      end;
 
       if Stop_On_Error
         and then Message_Count < Tree.Log_Messages.Count

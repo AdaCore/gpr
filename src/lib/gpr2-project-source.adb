@@ -28,8 +28,18 @@ with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Identifier.Set;
+with GPR2.Project.Unit_Info.Set;
 
 package body GPR2.Project.Source is
+
+   procedure Context_Clause_Dependencies
+     (Self     : Object;
+      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      Closure  : Boolean := False)
+     with Pre => Self.Is_Defined and then Self.Source.Has_Units;
+   --  Returns the source files on which the current source file depends
+   --  (potentially transitively). The dependence built on top of Ada "with"
+   --  statements.
 
    ----------------------
    -- Aggregating_View --
@@ -48,6 +58,168 @@ package body GPR2.Project.Source is
    begin
       return Artifact.Create (Self);
    end Artifacts;
+
+   ---------------------------------
+   -- Context_Clause_Dependencies --
+   ---------------------------------
+
+   procedure Context_Clause_Dependencies
+     (Self    : Object;
+      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      Closure  : Boolean := False)
+   is
+      View : constant Project.View.Object := Definition.Strong (Self.View);
+      Tree : constant not null access Project.Tree.Object := View.Tree;
+
+      Done : Containers.Name_Set;
+      --  Fast look-up table to avoid analysing the same unit multiple time and
+      --  more specifically avoid circularities.
+
+      procedure Output (Unit : Unit_Info.Object)
+        with Inline, Pre => Unit.Is_Defined;
+      --  Call For_Each for each part of the Unit
+
+      procedure To_Analyze (Src : GPR2.Project.Source.Object);
+      --  Record Src's withed units to be analysed (insert into Buf)
+
+      function Get
+        (Source : GPR2.Path_Name.Object) return Project.Source.Object
+      is
+        (Tree.Get_View (Source).Source (Source));
+
+      ------------
+      -- Output --
+      ------------
+
+      procedure Output (Unit : Unit_Info.Object) is
+         procedure Outp (Item : GPR2.Path_Name.Object);
+
+         procedure Outp (Item : GPR2.Path_Name.Object) is
+            Position : Containers.Name_Type_Set.Cursor;
+            Inserted : Boolean;
+         begin
+            Done.Insert (Item.Simple_Name, Position, Inserted);
+            if Inserted then
+               For_Each (Get (Item));
+            end if;
+         end Outp;
+
+      begin
+         if Unit.Has_Spec then
+            --  function and procedure compilation units allowed to do not have
+            --  a spec.
+            Outp (Unit.Spec);
+         end if;
+
+         if Unit.Has_Body then
+            Outp (Unit.Main_Body);
+         end if;
+
+         for Sep of Unit.Separates loop
+            Outp (Sep);
+         end loop;
+      end Output;
+
+      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
+
+      Buf  : Source_Reference.Identifier.Set.Object :=
+               Self.Source.Context_Clause_Dependencies;
+      --  Buf contains units to be checked, this list is extended when looking
+      --  for the full-closure. Using this list we avoid a recursive call.
+
+      ----------------
+      -- To_Analyze --
+      ----------------
+
+      procedure To_Analyze (Src : GPR2.Project.Source.Object) is
+         Done_Pos : Containers.Name_Type_Set.Cursor;
+         Position : Source_Reference.Identifier.Set.Cursor;
+         Inserted : Boolean;
+      begin
+         for CU of Src.Source.Units loop
+            for W of CU.Dependencies loop
+               Done.Insert (W.Text, Done_Pos, Inserted);
+
+               if Inserted then
+                  Buf.Insert (W, Position, Inserted);
+               end if;
+            end loop;
+         end loop;
+      end To_Analyze;
+
+   begin
+      if Self.Has_Other_Part then
+         To_Analyze (Self.Other_Part);
+      end if;
+
+      To_Analyze (Self);
+
+      For_Every_Unit : while not Buf.Is_Empty loop
+         declare
+            W    : constant Source_Reference.Identifier.Object'Class :=
+                     Buf.First_Element;
+            View : Project.View.Object;
+         begin
+            --  Remove the unit just taken from the list
+
+            Buf.Delete_First;
+
+            View := Data.Tree.Get_View (Unit => W.Text);
+
+            if not View.Is_Defined then
+               Data.Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Warning,
+                     "withed unit " & String (W.Text) & " not found",
+                     W));
+
+            else
+               declare
+                  Data : constant Definition.Const_Ref :=
+                           Definition.Get_RO (View);
+                  --  The view information for the unit Identifier
+                  CU   : constant Unit_Info.Set.Cursor :=
+                           Data.Units.Find (W.Text);
+                  SU   : Unit_Info.Object;
+               begin
+                  if Unit_Info.Set.Set.Has_Element (CU) then
+                     SU := Data.Units (CU);
+
+                     --  At least the dependencies are the spec and body of
+                     --  the withed unit.
+
+                     Output (SU);
+
+                     --  Finaly, for the Closure mode add the dependencies
+                     --  of withed unit from the direct withed spec and
+                     --  bodies.
+
+                     if Closure then
+                        if SU.Spec.Is_Defined then
+                           To_Analyze (Get (SU.Spec));
+                        end if;
+
+                        if SU.Main_Body.Is_Defined then
+                           To_Analyze (Get (SU.Main_Body));
+                        end if;
+
+                        for Sep of SU.Separates loop
+                           To_Analyze (Get (Sep));
+                        end loop;
+                     end if;
+
+                  else
+                     --  This should never happen, if the unit has been
+                     --  found to be in the View, it should be there.
+
+                     raise Project_Error
+                       with "internal error in dependencies";
+                  end if;
+               end;
+            end if;
+         end;
+      end loop For_Every_Unit;
+   end Context_Clause_Dependencies;
 
    ------------
    -- Create --
@@ -72,181 +244,79 @@ package body GPR2.Project.Source is
    ------------------
 
    function Dependencies
-     (Self : Object;
-      Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object
+     (Self    : Object;
+      Closure : Boolean := False) return GPR2.Project.Source.Set.Object
    is
-      View : constant Project.View.Object  := Definition.Strong (Self.View);
-      Tree : constant not null access Project.Tree.Object := View.Tree;
+      Deps : GPR2.Project.Source.Set.Object;
 
-      procedure Insert
-        (Deps : in out GPR2.Project.Source.Set.Object;
-         Unit : Unit_Info.Object)
-        with Inline, Pre => Unit.Is_Defined;
-      --  Insert Unit into Deps (result of this routine)
-
-      procedure To_Analyze (Src : GPR2.Project.Source.Object);
-      --  Record Src's withed units to be analysed (insert into Buf)
-
-      function Get
-        (Source : GPR2.Path_Name.Object) return Project.Source.Object is
-        (Tree.Get_View (Source).Source (Source));
+      procedure Insert (Source : GPR2.Project.Source.Object);
 
       ------------
       -- Insert --
       ------------
 
-      procedure Insert
-        (Deps : in out GPR2.Project.Source.Set.Object;
-         Unit : Unit_Info.Object)
-      is
-         procedure Insert
-           (Deps : in out GPR2.Project.Source.Set.Object;
-            Src  : GPR2.Project.Source.Object) with Inline;
-         --  Insert Src into the Deps if it does not exists
-
-         ------------
-         -- Insert --
-         ------------
-
-         procedure Insert
-           (Deps : in out GPR2.Project.Source.Set.Object;
-            Src  : GPR2.Project.Source.Object) is
-         begin
-            if not Deps.Contains (Src) then
-               Deps.Insert (Src);
-            end if;
-         end Insert;
-
+      procedure Insert (Source : GPR2.Project.Source.Object) is
       begin
-         if Unit.Has_Spec then
-            --  function and procedure compilation units allowed to do not have
-            --  a spec.
-            Insert (Deps, Get (Unit.Spec));
-         end if;
-
-         if Unit.Has_Body then
-            Insert (Deps, Get (Unit.Main_Body));
-         end if;
-
-         for Sep of Unit.Separates loop
-            Insert (Deps, Get (Sep));
-         end loop;
+         Deps.Insert (Source);
       end Insert;
 
-      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
-
-      Buf  : Source_Reference.Identifier.Set.Object :=
-               Source (Self).Dependencies;
-      --  Buf contains units to be checked, this list is extended when looking
-      --  for the full-closure. Using this list we avoid a recursive call.
-
-      Done : Source_Reference.Identifier.Set.Object;
-      --  Fast look-up table to avoid analysing the same unit multiple time and
-      --  more specifically avoid circularities.
-
-      Deps : GPR2.Project.Source.Set.Object;
-      --  The resulting source set
-
-      ----------------
-      -- To_Analyze --
-      ----------------
-
-      procedure To_Analyze (Src : GPR2.Project.Source.Object) is
-      begin
-         for CU of Source (Src).Units loop
-            for W of CU.Dependencies loop
-               if not Done.Contains (W) and then not Buf.Contains (W) then
-                  Buf.Include (W);
-               end if;
-            end loop;
-         end loop;
-      end To_Analyze;
-
    begin
-      --  First we need to ensure that all views are up-to-date regarding the
-      --  sources/unit. The sources are recomputed only if required.
+      Self.Dependencies (Insert'Access, Closure);
+      return Deps;
+   end Dependencies;
 
-      Data.Tree.Update_Sources;
+   procedure Dependencies
+     (Self     : Object;
+      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      Closure  : Boolean := False)
+   is
+      Tree : constant not null access Project.Tree.Object :=
+               Definition.Strong (Self.View).Tree;
+      Done : Containers.Name_Set;
 
-      --  For Unit or Closure add dependencies from the other part
+      procedure Collect_Source (Source : Source_Info.Object'Class);
 
-      if Mode in Unit | Closure then
-         if Source (Self).Has_Single_Unit and then Self.Has_Other_Part then
-            To_Analyze (View.Source (Self.Other_Part.Path_Name));
-         end if;
-      end if;
+      --------------------
+      -- Collect_Source --
+      --------------------
 
-      For_Every_Unit : loop
-         exit For_Every_Unit when Buf.Is_Empty;
+      procedure Collect_Source (Source : Source_Info.Object'Class) is
+         S        : Project.Source.Object;
+         Position : Containers.Name_Type_Set.Cursor;
+         Inserted : Boolean;
+         Src_File : GPR2.Path_Name.Object;
+         View     : Project.View.Object;
+      begin
+         for File of Source.Dependencies loop
+            Done.Insert (File, Position, Inserted);
+            if Inserted then
 
-         declare
-            W    : constant Source_Reference.Identifier.Object :=
-                     Source_Reference.Identifier.Object (Buf.First_Element);
-            View : Project.View.Object;
-         begin
-            --  Remove the unit just taken from the list
+               Src_File := GPR2.Path_Name.Create_File
+                 (File, GPR2.Path_Name.No_Resolution);
+               View := Tree.Get_View (Src_File);
 
-            Buf.Delete_First;
+               if View.Is_Defined then
+                  S := View.Source (Src_File);
 
-            if not Done.Contains (W) then
-               Done.Include (W);
+                  pragma Assert (S.Is_Defined, "Can't find " & String (File));
 
-               View := Data.Tree.Get_View (Unit => W.Text);
-
-               if not View.Is_Defined then
-                  Data.Tree.Log_Messages.Append
-                    (Message.Create
-                       (Message.Warning,
-                        "withed unit " & String (W.Text) & " not found",
-                        W));
-
-               else
-                  declare
-                     Data : constant Definition.Const_Ref :=
-                              Definition.Get_RO (View);
-                     --  The view information for the unit Identifier
-                     SU   : Unit_Info.Object;
-                  begin
-                     if Data.Units.Contains (W.Text) then
-                        SU := Data.Units.Element (W.Text);
-
-                        --  At least the dependencies are the spec and body of
-                        --  the withed unit.
-
-                        Insert (Deps, SU);
-
-                        --  Finaly, for the Closure mode add the dependencies
-                        --  of withed unit from the direct withed spec and
-                        --  bodies.
-
-                        if Mode = Closure then
-                           if SU.Spec.Is_Defined then
-                              To_Analyze (Get (SU.Spec));
-                           end if;
-
-                           if SU.Main_Body.Is_Defined then
-                              To_Analyze (Get (SU.Main_Body));
-                           end if;
-
-                           for Sep of SU.Separates loop
-                              To_Analyze (Get (Sep));
-                           end loop;
-                        end if;
-
-                     else
-                        --  This should never happen, if the unit has been
-                        --  found to be in the View, it should be there.
-
-                        raise Project_Error
-                          with "internal error in dependencies";
-                     end if;
-                  end;
+                  For_Each (S);
+                  if Closure then
+                     Collect_Source (S.Source);
+                  end if;
                end if;
             end if;
-         end;
-      end loop For_Every_Unit;
+         end loop;
+      end Collect_Source;
 
-      return Deps;
+   begin
+      Collect_Source (Self.Source);
+
+      if Done.Is_Empty then
+         --  It mean that we do not have ALI file parsed, try to get "with"
+         --  dependencies from Ada parser.
+         Self.Context_Clause_Dependencies (For_Each, Closure);
+      end if;
    end Dependencies;
 
    --------------------
@@ -439,18 +509,18 @@ package body GPR2.Project.Source is
       then
          declare
             Art : constant Artifact.Object := Self.Artifacts;
-            LI  : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+            LI  : GPR2.Path_Name.Object;
          begin
             --  Let's check if we have a dependency for this file
 
-            if Art.Has_Dependency and then Art.Dependency.Exists then
+            if Art.Has_Dependency then
                LI := Art.Dependency;
             end if;
 
             --  If LI is present then we can parse it to get the source
             --  information.
 
-            if LI.Is_Defined then
+            if LI.Is_Defined and then LI.Exists then
                --  ??? check if LI file is more recent than source
                declare
                   Backend : constant not null access
@@ -458,11 +528,9 @@ package body GPR2.Project.Source is
                                 Source_Info.Parser.Registry.Get
                                   (Language, Source_Info.LI);
                begin
-                  Source_Info.Object (Self.Source).Reset;
-
                   Source_Info.Parser.Compute
                     (Self   => Backend,
-                     Data   => Source_Info.Object'Class (Self.Source),
+                     Data   => Self.Source,
                      LI     => LI,
                      Source => Self.Source);
 
@@ -494,11 +562,13 @@ package body GPR2.Project.Source is
            and then Self.Source.Used_Backend = Source_Info.Source
            and then Self.Source.Has_Units
            and then Self.Source.Has_Single_Unit
-           and then View (Self).Units.Contains (Self.Source.Unit_Name)
+           and then View (Self).Units (Need_Update => False).Contains
+                      (Self.Source.Unit_Name)
          then
             declare
                Unit : constant Unit_Info.Object :=
-                        View (Self).Unit (Self.Source.Unit_Name);
+                        View (Self).Unit
+                          (Self.Source.Unit_Name, Need_Update => False);
             begin
                --  If a runtime source the unit is not defined
 

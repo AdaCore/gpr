@@ -29,12 +29,13 @@ pragma Warnings
 pragma Warnings
   (Off, "use of this unit is non-portable and version-dependent");
 with System.OS_Constants;
+pragma Warnings (On);
 
 package body GPR2.Source is
 
    One_Second : constant Duration :=
                   Calendar.Conversions.To_Duration
-                    (tv_sec  => 1, tv_nsec => 0);
+                    (tv_sec => 1, tv_nsec => 0);
 
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self.Is_Defined;
@@ -70,6 +71,16 @@ package body GPR2.Source is
            and then Key (Left) = Key (Right);
       end if;
    end "=";
+
+   ---------------------
+   -- Check_Timestamp --
+   ---------------------
+
+   function Check_Timestamp (Self : Object) return Boolean is
+      use type Ada.Calendar.Time;
+   begin
+      return Self.Timestamp = Get_ALI_Timestamp (Self.Path_Name);
+   end Check_Timestamp;
 
    ------------
    -- Create --
@@ -211,11 +222,9 @@ package body GPR2.Source is
                              Source_Info.Parser.Registry.Get
                                (Language, Source_Info.Source);
             begin
-               Source_Info.Object (Self).Reset;
-
                Source_Info.Parser.Compute
                  (Self   => Backend,
-                  Data   => Source_Info.Object'Class (Self),
+                  Data   => Self,
                   Source => Self);
             end;
          end if;

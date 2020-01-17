@@ -20,7 +20,6 @@ with Ada.Calendar;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Vectors;
-with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR.Err;
@@ -38,9 +37,10 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
+with GPR2.Project.Unit_Info;
 with GPR2.Project.View;
 with GPR2.Source;
-with GPR2.Unit.Set;
+with GPR2.Source_Info;
 with GPR2.Version;
 
 with GPRtools.Util;
@@ -54,7 +54,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
 
    use GPR2;
    use GPR2.Project.Source.Set;
-   use all type GPR2.Unit.Kind_Type;
+   use all type GPR2.Unit.Library_Unit_Type;
 
    use GPRls.Common;
    use GPRls.Options;
@@ -65,8 +65,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    Tree : Project.Tree.Object renames Opt.Tree.all;
 
    procedure Display_Paths;
-
-   function Is_Ada_Predefined_File_Name (Fname : String) return Boolean;
 
    procedure Put (Str : String; Lvl : Verbosity_Level);
    pragma Unreferenced (Put);
@@ -147,79 +145,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          Text_IO.New_Line;
       end;
    end Display_Paths;
-
-   ---------------------------------
-   -- Is_Ada_Predefined_File_Name --
-   ---------------------------------
-
-   function Is_Ada_Predefined_File_Name (Fname : String) return Boolean
-   is
-      subtype Str8 is String (1 .. 8);
-
-      Predef_Names : constant array (1 .. 12) of Str8 :=
-        ("ada     ",       -- Ada
-         "interfac",       -- Interfaces
-         "system  ",       -- System
-         "gnat    ",       -- GNAT
-         "calendar",       -- Calendar
-         "machcode",       -- Machine_Code
-         "unchconv",       -- Unchecked_Conversion
-         "unchdeal",       -- Unchecked_Deallocation
-         "directio",       -- Direct_IO
-         "ioexcept",       -- IO_Exceptions
-         "sequenio",       -- Sequential_IO
-         "text_io ");      -- Text_IO
-
-      Name_Len      : Integer := Fname'Length;
-      Name_Buffer   : constant String (1 .. Name_Len) := Fname;
-   begin
-
-      --  Remove extension (.ads/.adb) if present
-
-      if Name_Len > 4 and then Name_Buffer (Name_Len - 3) = '.' then
-         Name_Len := Name_Len - 4;
-      end if;
-
-      --  Definitely predefined if prefix is a- i- or s- followed by letter
-
-      if Name_Len >=  3
-        and then Name_Buffer (2) = '-'
-        and then (Name_Buffer (1) = 'a'
-                    or else
-                  Name_Buffer (1) = 'g'
-                    or else
-                  Name_Buffer (1) = 'i'
-                    or else
-                  Name_Buffer (1) = 's')
-        and then (Name_Buffer (3) in 'a' .. 'z'
-                    or else
-                  Name_Buffer (3) in 'A' .. 'Z')
-      then
-         return True;
-
-      --  Definitely false if longer than 12 characters (8.3)
-
-      elsif Name_Len > 8 then
-         return False;
-      end if;
-
-      --  Otherwise check against special list, first padding to 8 characters
-
-      declare
-         Name_Buffer_8 : constant Str8 := Strings.Fixed.Head
-           (Name_Buffer (1 .. Name_Len), 8);
-      begin
-         Name_Len := 8;
-
-         for J in Predef_Names'Range loop
-            if Name_Buffer_8 (1 .. 8) = Predef_Names (J) then
-               return True;
-            end if;
-         end loop;
-
-         return False;
-      end;
-   end Is_Ada_Predefined_File_Name;
 
    ---------
    -- Put --
@@ -315,28 +240,19 @@ begin
       package Source_Vector_Package is new Ada.Containers.Vectors
         (Positive, Project.Source.Object);
 
-      package Src_Simple_Names_Package is new
-        Ada.Containers.Indefinite_Ordered_Maps (String, Positive);
-
-      package Dep_Simple_Names_Package is new
-        Ada.Containers.Indefinite_Ordered_Maps (String, Positive);
-
-      package Dep_Base_Names_Package is new
-        Ada.Containers.Indefinite_Ordered_Maps (String, Positive);
-
-      package Obj_Simple_Names_Package is new
+      package String_To_Positive_Maps is new
         Ada.Containers.Indefinite_Ordered_Maps (String, Positive);
 
       All_Sources      : Source_Vector_Package.Vector;
-      Src_Simple_Names : Src_Simple_Names_Package.Map;
-      Dep_Simple_Names : Dep_Simple_Names_Package.Map;
-      Dep_Base_Names   : Dep_Base_Names_Package.Map;
-      Obj_Simple_Names : Obj_Simple_Names_Package.Map;
+      Src_Simple_Names : String_To_Positive_Maps.Map;
+      Dep_Simple_Names : String_To_Positive_Maps.Map;
+      Dep_Base_Names   : String_To_Positive_Maps.Map;
+      Obj_Simple_Names : String_To_Positive_Maps.Map;
 
       type File_Status is
-        (OK,                  --  matching timestamp
-         Checksum_OK,         --  only matching checksum
-         Not_Same);           --  neither checksum nor timestamp matching
+        (OK,          --  matching timestamp
+         Checksum_OK, --  only matching checksum
+         Not_Same);   --  neither checksum nor timestamp matching
 
       No_Obj : constant String := "<no_obj>";
 
@@ -347,6 +263,9 @@ begin
       --     - The sources associated with the files given on the CL
       --     - In closure mode and no file given on the CL, the root project's
       --       main sources.
+
+      Full_Closure : Boolean := Opt.Closure_Mode;
+      --  Reset this flag to False if closure became incomplete
 
       function Checksum (Source : Path_Name.Object) return Word;
 
@@ -389,154 +308,7 @@ begin
 
       procedure Display_Closures is
 
-         type Closure_Status_Type is (Success, Incomplete_Closure);
-
-         Processed_ALI : Path_Name.Set.Object;
-         Closures      : Project.Source.Set.Object;
-         Status        : Closure_Status_Type;
-
-         procedure Compute_Closure (Source : Project.Source.Object);
-         --  Equivalent to the legacy GPR.Util.Get_Closures.Process:
-         --
-         --  - Add Source to Result. Return if already present.
-         --
-         --  - Let A be the path to the ALI file for Source.
-         --    Check that A is not in Processed_ALI, otherwise return.
-         --
-         --  - Try to read A. If it doesn't exist or the read fails, set status
-         --    to Incomplete_Closure and return.
-         --
-         --  - Read the 'U' sections (2 at most).
-         --    For each 'U' section related to <unit>:
-         --
-         --    - if it is the first one, then:
-         --      - call Recurse_On_Sources_For_Unit on <unit>,
-         --      - if it is a body, i.e. the line looks like "U <unit>%b [...]"
-         --        then loop over the 'D' lines and add to Closures any subunit
-         --        of <unit>.
-         --
-         --    - for every 'W' (also including 'Z') line of the section, call
-         --      Recurse_On_Sources_For_Unit on the "withed" unit.
-
-         ---------------------
-         -- Compute_Closure --
-         ---------------------
-
-         procedure Compute_Closure (Source : Project.Source.Object) is
-
-            procedure Recurse_On_Sources_For_Unit (Unit : Name_Type);
-            --  Calls Compute_Closure on every source defining Unit.
-            --  If All_Projects is False, nothing is done for sources that do
-            --  not belong to the root project.
-
-            procedure Recurse_On_Sources_For_Unit (Unit : Name_Type) is
-               Unit_Obj : GPR2.Unit.Object;
-
-            begin
-               for V of All_Views loop
-                  Unit_Obj := V.Unit (Unit, Need_Update => False);
-
-                  if Unit_Obj.Is_Defined then
-                     Unit_Obj := V.Units (Need_Update => False).Element (Unit);
-                     exit;
-                  end if;
-               end loop;
-
-               if not Unit_Obj.Is_Defined then
-                  return;
-               end if;
-
-               if Unit_Obj.Has_Spec then
-                  Compute_Closure (Unit_Obj.Spec);
-               end if;
-
-               if Unit_Obj.Has_Body then
-                  Compute_Closure (Unit_Obj.Main_Body);
-               end if;
-
-               for B of Unit_Obj.Separates loop
-                  Compute_Closure (B);
-               end loop;
-            end Recurse_On_Sources_For_Unit;
-
-            ALI_File   : Path_Name.Object;
-            ALI_Object : Definition.Object;
-
-         begin
-            if Closures.Contains (Source) then
-               return;
-            end if;
-
-            Closures.Insert (Source);
-
-            if Source.Source.Kind = S_Separate then
-               return;  --  No ALI file for a separate
-            end if;
-
-            ALI_File := Source.Artifacts.Dependency;
-
-            if Processed_ALI.Contains (ALI_File) then
-               return;
-            end if;
-
-            if not ALI_File.Exists then
-               Status := Incomplete_Closure;
-               return;
-            end if;
-
-            ALI_Object := Definition.Scan_ALI (ALI_File, Tree.Log_Messages);
-
-            if not ALI_Object.Is_Defined then
-               Output_Messages (Opt);
-               Finish_Program (E_Errors, "unable to scan ALI file: "
-                               & ALI_File.Value);
-            end if;
-
-            Processed_ALI.Append (ALI_File);
-
-            declare
-               First : Boolean := True;
-
-               function Is_Subunit_Of
-                 (U1 : Name_Type; U2 : Name_Type) return Boolean;
-               --  Compares the unit names U1 and U2 to decide if U1 is a
-               --  subunit of U2.
-
-               function Is_Subunit_Of
-                 (U1 : Name_Type; U2 : Name_Type) return Boolean is
-                 (U1'Length >= U2'Length + 2 and then
-                  U1 (U1'First .. U1'First + U2'Length - 1) = U2 and then
-                  U1 (U1'First + U2'Length) = '.');
-
-               use ALI.Unit;
-
-            begin
-               for U_Sec of ALI_Object.Units loop
-                  if First then
-                     First := False;
-                     Recurse_On_Sources_For_Unit (U_Sec.Uname);
-
-                     --  For a body, check if there are subunits and add the
-                     --  corresponding sources to Closures.
-
-                     if U_Sec.Utype in Is_Body | Is_Body_Only then
-                        for Dep of ALI_Object.Sdeps loop
-                           if not Dep.Is_Configuration
-                             and then Is_Subunit_Of
-                                        (Dep.Unit_Name, U_Sec.Uname)
-                           then
-                              Recurse_On_Sources_For_Unit (Dep.Unit_Name);
-                           end if;
-                        end loop;
-                     end if;
-                  end if;
-
-                  for W of U_Sec.Withs loop
-                     Recurse_On_Sources_For_Unit (W.Uname);
-                  end loop;
-               end loop;
-            end;
-         end Compute_Closure;
+         Closures : Project.Source.Set.Object;
 
          use type Ada.Containers.Count_Type;
 
@@ -545,31 +317,20 @@ begin
             Finish_Program (E_Errors, "no main specified for closure");
          end if;
 
-         Status := Success;
-
          for S of Sources loop
-            Compute_Closure (S);
+            declare
+               Deps : constant Project.Source.Set.Object :=
+                        S.Dependencies (Closure => True);
+            begin
+               if Deps.Is_Empty then
+                  --  If no dependencies, use only this one because without ALI
+                  --  file we don't know dependency even on itself.
+                  Closures.Include (S);
+               else
+                  Closures.Union (Deps);
+               end if;
+            end;
          end loop;
-
-         Text_IO.New_Line;
-
-         if Status = Incomplete_Closure then
-            if Sources.Length = 1 then
-               Text_IO.Put_Line ("Incomplete closure:");
-            else
-               Text_IO.Put_Line ("Incomplete closures:");
-            end if;
-
-         elsif Status = Success then
-            if Sources.Length = 1 then
-               Text_IO.Put_Line ("Closure:");
-            else
-               Text_IO.Put_Line ("Closures:");
-            end if;
-
-         else
-            Finish_Program (E_Errors, "unable to get closures: " & Status'Img);
-         end if;
 
          Text_IO.New_Line;
 
@@ -579,10 +340,21 @@ begin
 
          begin
             for R of Closures loop
-               Output.Append ("  " & R.Source.Path_Name.Value);
+               if not R.Source.Is_Runtime then
+                  if not R.Artifacts.Has_Dependency then
+                     Full_Closure := False;
+                  end if;
+
+                  Output.Append ("  " & R.Source.Path_Name.Value);
+               end if;
             end loop;
 
             String_Sorting.Sort (Output);
+
+            Text_IO.Put_Line
+              ((if Full_Closure then "C" else "Incomplete c") & "losure"
+               & (if Sources.Length = 1 then "" else "s") & ":");
+            Text_IO.New_Line;
 
             for O of Output loop
                Text_IO.Put_Line (O);
@@ -598,33 +370,25 @@ begin
 
       procedure Display_Normal is
 
-         procedure Output_Source
-           (S : Project.Source.Object; ALI_Obj : Definition.Object);
+         procedure Output_Source (S : Project.Source.Object);
 
          -------------------
          -- Output_Source --
          -------------------
 
-         procedure Output_Source
-           (S : Project.Source.Object; ALI_Obj : Definition.Object)
-         is
+         procedure Output_Source (S : Project.Source.Object) is
             use type Ada.Calendar.Time;
-
-            D : constant Dependency.Object := ALI_Obj.Dep_For
-              (S.Source.Path_Name.Simple_Name);
 
             Status : File_Status;
 
          begin
-            pragma Assert (D.Is_Defined);
-
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if D.Stamp = S.Source.Time_Stamp then
+            if S.Source.Timestamp = S.Source.Path_Name.Modification_Time then
                Status := OK;
 
-            elsif D.Checksum = Checksum (S.Source.Path_Name) then
+            elsif S.Source.Checksum = Checksum (S.Source.Path_Name) then
                Status := Checksum_OK;
 
             else
@@ -677,30 +441,98 @@ begin
 
          for S of Sources loop
             declare
-               use GPR2.ALI.Unit;
+               View       : constant Project.View.Object := S.View;
+               ALI_File   : Path_Name.Object;
+               Obj_File   : Path_Name.Object;
+               Unit_Info  : Project.Unit_Info.Object;
+               Artifacts  : constant Project.Source.Artifact.Object :=
+                              S.Artifacts;
+               Main_Unit  : Unit.Object;
 
-               ALI_File     : Path_Name.Object;
-               ALI_Object   : Definition.Object;
-               Obj_File     : Path_Name.Object;
-               U_Sec_Source : Project.Source.Object;
-               Dep_Source   : Project.Source.Object;
-               U_Flags      : Flag_Array;
-               Artifacts    : constant Project.Source.Artifact.Object :=
-                                S.Artifacts;
+               procedure Print_Unit_From (Src : Path_Name.Object);
+               function  Print_Unit (U_Sec : Unit.Object) return Boolean;
+
+               procedure Dependence_Output
+                 (Dep_Source : Project.Source.Object);
+
+               procedure Dependence_Output
+                 (Dep_Source : Project.Source.Object) is
+               begin
+                  if Opt.With_Predefined_Units
+                    or else not Dep_Source.Source.Is_Runtime
+                  then
+                     Text_IO.Put ("   ");
+                     Output_Source (S => Dep_Source);
+                  end if;
+               end Dependence_Output;
+
+               ----------------
+               -- Print_Unit --
+               ----------------
+
+               function  Print_Unit (U_Sec : Unit.Object) return Boolean is
+                  use type Unit.Object;
+               begin
+                  if not Main_Unit.Is_Defined then
+                     Main_Unit := U_Sec;
+                  elsif Main_Unit = U_Sec then
+                     return False;
+                  end if;
+
+                  if Opt.Verbose then
+                     Text_IO.Put_Line ("   Unit =>");
+                     Text_IO.Put ("     Name   => ");
+                     Text_IO.Put (String (U_Sec.Name));
+                     Text_IO.New_Line;
+
+                     Text_IO.Put_Line
+                       ("     Kind   => "
+                        & (case U_Sec.Library_Item_Kind is
+                             when Unit.Is_Package    => "package",
+                             when Unit.Is_Subprogram => "subprogram")
+                        & ' '
+                        & (case U_Sec.Kind is
+                             when Unit.Spec_Kind  => "spec",
+                             when Unit.Body_Kind  => "body",
+                             when Unit.S_Separate => "separate"));
+
+                     if U_Sec.Is_Any_Flag_Set then
+                        Text_IO.Put ("     Flags  =>");
+                        for Flag in Unit.Flag'Range loop
+                           if U_Sec.Is_Flag_Set (Flag) then
+                              Text_IO.Put (' ' & Unit.Image (Flag));
+                           end if;
+                        end loop;
+                        Text_IO.New_Line;
+                     end if;
+                  else
+                     Text_IO.Put_Line ("   " & String (U_Sec.Name));
+                  end if;
+
+                  return True;
+               end Print_Unit;
+
+               ---------------------
+               -- Print_Unit_From --
+               ---------------------
+
+               procedure Print_Unit_From (Src : Path_Name.Object) is
+                  U_Src : constant Project.Source.Object := View.Source (Src);
+               begin
+                  if not Opt.Print_Units
+                    or else
+                      (Print_Unit (U_Src.Source.Units.First_Element)
+                       and then not Opt.Dependency_Mode
+                       and then Opt.Print_Sources)
+                  then
+                     Output_Source (U_Src);
+                  end if;
+               end Print_Unit_From;
 
             begin
                ALI_File := Artifacts.Dependency;
 
                if ALI_File.Is_Defined and then ALI_File.Exists then
-                  ALI_Object := Definition.Scan_ALI
-                                  (ALI_File, Tree.Log_Messages);
-
-                  if not ALI_Object.Is_Defined then
-                     Output_Messages (Opt);
-                     Finish_Program
-                       (E_Errors,
-                        "unable to scan ALI file: " & ALI_File.Value);
-                  end if;
 
                   if Opt.Print_Object_Files and then not S.Is_Aggregated then
                      Obj_File := Artifacts.Object_Code;
@@ -712,57 +544,30 @@ begin
                      end if;
                   end if;
 
-                  for U_Sec of ALI_Object.Units loop
-                     if Opt.Print_Units then
-                        if Opt.Verbose then
-                           Text_IO.Put_Line ("   Unit =>");
-                           Text_IO.Put ("     Name   => ");
-                           Text_IO.Put (String (U_Sec.Uname));
-                           Text_IO.New_Line;
-
-                           Text_IO.Put_Line
-                             ("     Kind   => "
-                              & (case U_Sec.Kind is
-                                   when Kind_Package => "package",
-                                   when Kind_Subprogram => "subprogram")
-                              & ' '
-                              & (case U_Sec.Utype is
-                                   when Is_Spec | Is_Spec_Only => "spec",
-                                   when others                 => "body"));
-
-                           U_Flags := U_Sec.Flags;
-                           if U_Flags /= Flag_Array'(others => False) then
-                              Text_IO.Put ("     Flags  =>");
-                              for Flag in U_Flags'Range loop
-                                 if U_Flags (Flag) then
-                                    Text_IO.Put (' ' & Image (Flag));
-                                 end if;
-                              end loop;
-                              Text_IO.New_Line;
-                           end if;
-
-                        else
-                           Text_IO.Put_Line ("   " & String (U_Sec.Uname));
-                        end if;
+                  for U_Sec of S.Source.Units loop
+                     if Opt.Print_Units and then Print_Unit (U_Sec) then
+                        null;
                      end if;
 
-                     if Opt.Print_Sources and then not Opt.Dependency_Mode
-                     then
-                        U_Sec_Source := Source_For
-                          (File                 => String (U_Sec.Sfile),
-                           File_May_Be_Artifact => False);
-
-                        if U_Sec_Source.Is_Defined then
-                           Output_Source (S       => U_Sec_Source,
-                                          ALI_Obj => ALI_Object);
-                        end if;
+                     if Opt.Print_Sources and then not Opt.Dependency_Mode then
+                        Output_Source (S);
                      end if;
-
-                     --  In non-verbose mode, only print the first U section
-                     --  (i.e. for a body, do not go on to show the
-                     --  dependencies of the corresponding spec).
 
                      exit when not Opt.Verbose;
+
+                     Unit_Info := S.View.Unit (U_Sec.Name);
+
+                     if Unit_Info.Has_Spec then
+                        Print_Unit_From (Unit_Info.Spec);
+                     end if;
+
+                     if Unit_Info.Has_Body then
+                        Print_Unit_From (Unit_Info.Main_Body);
+                     end if;
+
+                     for S of Unit_Info.Separates loop
+                        Print_Unit_From (S);
+                     end loop;
                   end loop;
 
                   if Opt.Dependency_Mode and then Opt.Print_Sources then
@@ -770,26 +575,7 @@ begin
                         Text_IO.Put_Line ("   depends upon");
                      end if;
 
-                     for D of ALI_Object.Sdeps loop
-                        if Opt.With_Predefined_Units and then
-                          Is_Ada_Predefined_File_Name (String (D.Sfile))
-                        then
-                           Dep_Source := Source_For
-                             (File                 => String (D.Sfile),
-                              File_May_Be_Artifact => False);
-                        else
-                           Dep_Source := Source_For
-                             (File                 => String (D.Sfile),
-                              File_May_Be_Artifact => False);
-                        end if;
-
-                        if Dep_Source.Is_Defined then
-                           Text_IO.Put ("   ");
-                           Output_Source (S       => Dep_Source,
-                                          ALI_Obj => ALI_Object);
-
-                        end if;
-                     end loop;
+                     S.Dependencies (Dependence_Output'Access);
                   end if;
                end if;
             end;
@@ -804,17 +590,31 @@ begin
         (File                 : String;
          File_May_Be_Artifact : Boolean) return Project.Source.Object
       is
+         CN : String_To_Positive_Maps.Cursor;
+
+         function Search_In (Map : String_To_Positive_Maps.Map) return Boolean;
+
+         function Search_In (Map : String_To_Positive_Maps.Map) return Boolean
+         is
+         begin
+            CN := Map.Find (File);
+            return String_To_Positive_Maps.Has_Element (CN);
+         end Search_In;
+
+         function Result return Project.Source.Object is
+           (All_Sources (String_To_Positive_Maps.Element (CN)));
+
       begin
-         if Src_Simple_Names.Contains (File) then
-            return All_Sources (Src_Simple_Names (File));
+         if Search_In (Src_Simple_Names) then
+            return Result;
 
          elsif File_May_Be_Artifact then
-            if Dep_Simple_Names.Contains (File) then
-               return All_Sources (Dep_Simple_Names (File));
-            elsif Dep_Base_Names.Contains (File) then
-               return All_Sources (Dep_Base_Names (File));
-            elsif Obj_Simple_Names.Contains (File) then
-               return All_Sources (Obj_Simple_Names (File));
+            if Search_In (Dep_Simple_Names) then
+               return Result;
+            elsif Search_In (Dep_Base_Names) then
+               return Result;
+            elsif Search_In (Obj_Simple_Names) then
+               return Result;
             end if;
          end if;
 
@@ -838,27 +638,47 @@ begin
               (String (S.Source.Path_Name.Simple_Name),
                Positive (All_Sources.Length));
 
-            --  For artifact -> source caches, use the Include method as we
-            --  will have duplicates (e.g. body and spec have both the same
-            --  .ali file).
-
             declare
                Artifacts : constant Project.Source.Artifact.Object :=
                              S.Artifacts;
+
+               procedure Insert_Prefer_Body
+                 (Map : in out String_To_Positive_Maps.Map; Key : Name_Type);
+
+               ------------------------
+               -- Insert_Prefer_Body --
+               ------------------------
+
+               procedure Insert_Prefer_Body
+                 (Map : in out String_To_Positive_Maps.Map; Key : Name_Type)
+               is
+                  Position : String_To_Positive_Maps.Cursor;
+                  Inserted : Boolean;
+               begin
+                  Map.Insert
+                    (String (Key), Positive (All_Sources.Length), Position,
+                     Inserted);
+
+                  if not Inserted
+                    and then S.Source.Kind = GPR2.Unit.S_Body
+                  then
+                     --  Body has a preference
+
+                     Map (Position) := Positive (All_Sources.Length);
+                  end if;
+               end Insert_Prefer_Body;
+
             begin
                if Artifacts.Has_Dependency then
-                  Dep_Simple_Names.Include
-                    (String (Artifacts.Dependency.Simple_Name),
-                     Positive (All_Sources.Length));
-                  Dep_Base_Names.Include
-                    (String (Artifacts.Dependency.Base_Name),
-                     Positive (All_Sources.Length));
+                  Insert_Prefer_Body
+                    (Dep_Simple_Names, Artifacts.Dependency.Simple_Name);
+                  Insert_Prefer_Body
+                    (Dep_Base_Names, Artifacts.Dependency.Base_Name);
                end if;
 
                if Artifacts.Has_Object_Code then
-                  Obj_Simple_Names.Include
-                    (String (Artifacts.Object_Code.Simple_Name),
-                     Positive (All_Sources.Length));
+                  Insert_Prefer_Body
+                    (Obj_Simple_Names, Artifacts.Object_Code.Simple_Name);
                end if;
             end;
          end loop;
@@ -898,9 +718,9 @@ begin
       if Opt.Files.Is_Empty then
          if Opt.Closure_Mode then
             for S of Tree.Root_Project.Sources (Need_Update => False) loop
-               if Tree.Root_Project.Has_Mains and then
-                 S.Is_Main and then
-                 S.Source.Language = Name_Type (Ada_Lang)
+               if Tree.Root_Project.Has_Mains
+                 and then S.Is_Main
+                 and then S.Source.Language = Name_Type (Ada_Lang)
                then
                   Sources.Insert (S);
                end if;
@@ -964,8 +784,9 @@ begin
 
       for S of Sources loop
          if not S.Artifacts.Dependency.Exists then
-            Text_IO.Put_Line ("Can't find ALI file for "
-                              & S.Source.Path_Name.Value);
+            Full_Closure := False;
+            Text_IO.Put_Line
+              ("Can't find ALI file for " & S.Source.Path_Name.Value);
          end if;
       end loop;
 

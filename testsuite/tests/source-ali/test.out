@@ -5,3 +5,5 @@ Project: Demo
  > li/src/pck.ads     language: Ada    Kind: S_SPEC   unit: Pck
  > li/src/code.ada    language: Ada    Kind: S_SPEC   unit: U1
                                        Kind: S_SPEC   unit: U2
+                                       Kind: S_BODY   unit: U2
+                                       Kind: S_BODY   unit: U3

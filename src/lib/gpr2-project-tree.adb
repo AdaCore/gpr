@@ -530,8 +530,11 @@ package body GPR2.Project.Tree is
      (Self   : Object;
       Source : Path_Name.Object) return Project.View.Object
    is
-      Pos : Name_View.Cursor :=
-              Self.Sources.Find (Name_Type (Source.Value));
+      Filename : constant Name_Type :=
+                   (if Source.Has_Dir_Name
+                    then Name_Type (Source.Value)
+                    else Source.Simple_Name);
+      Pos : Name_View.Cursor := Self.Sources.Find (Filename);
    begin
       if Name_View.Has_Element (Pos) then
          return Name_View.Element (Pos);
@@ -540,7 +543,7 @@ package body GPR2.Project.Tree is
          --  Try to update sources and check again
 
          Update_Sources (Self);
-         Pos := Self.Sources.Find (Name_Type (Source.Value));
+         Pos := Self.Sources.Find (Filename);
 
          if Name_View.Has_Element (Pos) then
             return Name_View.Element (Pos);
@@ -1091,11 +1094,12 @@ package body GPR2.Project.Tree is
    procedure Record_View
      (Self   : in out Object;
       View   : GPR2.Project.View.Object;
-      Source : Path_Name.Full_Name;
+      Source : Path_Name.Object;
       Unit   : Name_Type) is
    begin
       Self.Units.Include (Unit, View);
-      Self.Sources.Include (Name_Type (Source), View);
+      Self.Sources.Include (Name_Type (Source.Value), View);
+      Self.Sources.Include (Source.Simple_Name, View);
    end Record_View;
 
    --------------------

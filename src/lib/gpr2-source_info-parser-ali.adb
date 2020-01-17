@@ -16,15 +16,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Directories;
+with Ada.Calendar.Formatting;
 with Ada.Streams.Stream_IO;
 
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source;
 
+with Ada.Exceptions;
+with Ada.Text_IO;
+
 package body GPR2.Source_Info.Parser.ALI is
 
    Handle : Object;
+
+   function "+" (Item : String) return Unbounded_String
+                 renames To_Unbounded_String;
 
    package IO is
 
@@ -284,16 +290,22 @@ package body GPR2.Source_Info.Parser.ALI is
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
       U_Kind  : Unit.Library_Unit_Type;
-      U_Flags : Unit.Flags_Set := Unit.Default_Flags;
-      Main    : Unit.Main_Type := Unit.None;
+      U_Flags : Unit.Flags_Set         := Unit.Default_Flags;
+      Main    : Unit.Main_Type         := Unit.None;
+      L_Type  : Unit.Library_Item_Type := Unit.Is_Package;
       Withs   : Source_Reference.Identifier.Set.Object;
 
       CUs     : array (CU_Index range 1 .. 2) of Unit.Object;
+      CU_TS   : array (CU_Index range 1 .. 2) of Ada.Calendar.Time;
+      CU_CS   : array (CU_Index range 1 .. 2) of Word;
       CU_BN   : array (CU_Index range 1 .. 2) of Unbounded_String;
       --  Units' corresponding source base name
 
       CU_Idx  : CU_Index := 0;
       Current : CU_Index := 0;
+
+      procedure Fill_Dep;
+      --  Add dependency from D line
 
       procedure Fill_Unit;
       --  Add all units defined in ALI (spec, body or both)
@@ -302,19 +314,148 @@ package body GPR2.Source_Info.Parser.ALI is
         with Post => Withs.Length > Withs'Old.Length;
       --  Add all withed units into Withs below
 
-      procedure Set_Source_Info_Data (Unit : GPR2.Unit.Object);
+      procedure Set_Source_Info_Data (Cache : Cache_Holder);
       --  Set returned source infor data
 
       function Key
         (LI : Path_Name.Object'Class; Basename : Name_Type) return Name_Type
       is (Name_Type (LI.Value & '@' & String (Basename)));
 
+      --------------
+      -- Fill_Dep --
+      --------------
+
+      procedure Fill_Dep is
+
+         function Checksum (S : String) return Word;
+
+         function Get_Token return String;
+
+         function Time_Stamp (S : String) return Ada.Calendar.Time;
+
+         --------------
+         -- Checksum --
+         --------------
+
+         function Checksum (S : String) return Word is
+            Chk : Word := 0;
+            Hex : Word;
+         begin
+            if S'Length /= 8 then
+               raise Scan_ALI_Error with
+                 "Wrong checksum length" & S'Length'Img;
+            end if;
+
+            for C of S loop
+               case C is
+                  when '0' .. '9' =>
+                     Hex := Character'Pos (C) - Character'Pos ('0');
+
+                  when 'a' .. 'f' =>
+                     Hex := Character'Pos (C) - Character'Pos ('a') + 10;
+
+                  when others =>
+                     raise Scan_ALI_Error with
+                       "Wrong character '" & C & "' in checksum";
+               end case;
+
+               Chk := Chk * 16 + Hex;
+            end loop;
+
+            return Chk;
+         end Checksum;
+
+         ---------------
+         -- Get_Token --
+         ---------------
+
+         function Get_Token return String is
+            Tok : constant String :=
+                    IO.Get_Token (A_Handle, Stop_At_LF => True);
+         begin
+            if Tok = "" then
+               raise Scan_ALI_Error with "Missed dependency field";
+            else
+               return Tok;
+            end if;
+         end Get_Token;
+
+         ----------------
+         -- Time_Stamp --
+         ----------------
+
+         function Time_Stamp (S : String) return Ada.Calendar.Time is
+            T : String (1 .. 14);
+         begin
+            if S'Length /= 14 then
+               raise Scan_ALI_Error with
+                 "Wrong timestamp length" & S'Length'Img;
+            end if;
+
+            T := S;
+
+            return Ada.Calendar.Formatting.Value
+              (T (1 .. 4) & "-" & T (5 .. 6) & "-" & T (7 .. 8) & " "
+               & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
+         end Time_Stamp;
+
+         Sfile  : constant String            := Get_Token;
+         Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
+         Chksum : constant Word              := Checksum (Get_Token);
+
+         use GPR2.Unit;
+
+         Kind : Library_Unit_Type; -- Unit_Kind
+         Name : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True);
+         --  Unit_Name
+         --  Could be empty on *.adc file dependency
+
+         function Kind_Len return Natural is
+            (if Kind in S_Spec | S_Body then 2 else 0);
+         --  Length of suffix denoting dependency kind
+
+         Suffix : constant String :=
+                     (if Name'Length > 2
+                      then Name (Name'Last - 1 .. Name'Last)
+                      else "");
+         Position : Dependency_Maps.Cursor;
+         Inserted : Boolean;
+
+      begin
+         if Suffix = "%s" then
+            Kind := S_Spec;
+         elsif Suffix = "%b" then
+            Kind := S_Body;
+         else
+            Kind := S_Separate;
+         end if;
+
+         for Idx in CU_BN'Range loop
+            if Sfile = CU_BN (Idx) then
+               CU_TS (Idx) := Stamp;
+               CU_CS (Idx) := Chksum;
+            end if;
+         end loop;
+
+         Data.Dependencies.Insert
+           ((+Name (Name'First .. Name'Last - Kind_Len), Kind),
+            (+Sfile, Stamp, Chksum), Position, Inserted);
+
+         if not Inserted
+           and then Dependency_Maps.Element (Position)
+                    /= (+Sfile, Stamp, Chksum)
+         then
+            raise Scan_ALI_Error with
+              Name & " already in dependencies of " & LI.Value
+              & " with different data";
+         end if;
+      end Fill_Dep;
+
       ---------------
       -- Fill_Unit --
       ---------------
 
       procedure Fill_Unit is
-         L_Type : Unit.Library_Item_Type with Unreferenced;
       begin
          --  Uname, Sfile, Utype
 
@@ -327,11 +468,11 @@ package body GPR2.Source_Info.Parser.ALI is
             --  At least "?%(b|s)"
 
             if Tok1'Length < 3 and then Tok1 (Tok1'Last - 1) /= '%' then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with "Wrong unit name format " & Tok1;
             end if;
 
             if Tok2 = "" then
-               raise Scan_ALI_Error;
+               raise Scan_ALI_Error with "File name absent in U line";
             end if;
 
             --  Set Utype. This will be adjusted after we finish reading the
@@ -340,7 +481,8 @@ package body GPR2.Source_Info.Parser.ALI is
             case Tok1 (Tok1'Last) is
                when 's'    => U_Kind := Unit.S_Spec_Only;
                when 'b'    => U_Kind := Unit.S_Body_Only;
-               when others => raise Scan_ALI_Error;
+               when others =>
+                  raise Scan_ALI_Error with "Wrong unit name " & Tok1;
             end case;
 
             U_Name := +Tok1 (1 .. Tok1'Last - 2);
@@ -441,25 +583,19 @@ package body GPR2.Source_Info.Parser.ALI is
 
       procedure Fill_With is
          N : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True);
-         S : constant String :=
-               IO.Get_Token (A_Handle, Stop_At_LF => True) with Unreferenced;
-         A : constant String :=
-               IO.Get_Token (A_Handle, Stop_At_LF => True) with Unreferenced;
-
+         S : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True)
+               with Unreferenced;
+         A : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True)
+               with Unreferenced;
          U_Last : constant Integer := N'Last - 2; -- Unit last character in N
          U_Kind : Unit.Library_Unit_Type with Unreferenced;
       begin
-         --  At least "?%(b|s)"
-
-         if U_Last <= 0 or else N (N'Last - 1) /= '%' then
-            raise Scan_ALI_Error;
+         if U_Last <= 0
+           or else N (N'Last - 1) /= '%'
+           or else N (N'Last) not in 's' | 'b'
+         then
+            raise Scan_ALI_Error with "Wrong unit name format """ & N & '"';
          end if;
-
-         case N (N'Last) is
-            when 's'    => U_Kind := Unit.S_Spec;
-            when 'b'    => U_Kind := Unit.S_Body;
-            when others => raise Scan_ALI_Error;
-         end case;
 
          --  Insert the withed unit without the sloc information. This
          --  information is found at the end of the ALI file and will be
@@ -471,12 +607,10 @@ package body GPR2.Source_Info.Parser.ALI is
                      GPR2.Source_Reference.Object
                        (Source_Reference.Create
                           (Source.Path_Name.Value, 1, 1));
-            S    : constant Source_Reference.Identifier.Object'Class :=
-                     Source_Reference.Identifier.Create
-                       (Sloc => Sloc,
-                        Text => Name_Type (N (1 .. U_Last)));
          begin
-            Withs.Insert (S);
+            Withs.Insert
+              (Source_Reference.Identifier.Create
+                 (Sloc => Sloc, Text => Name_Type (N (1 .. U_Last))));
          end;
       end Fill_With;
 
@@ -484,25 +618,31 @@ package body GPR2.Source_Info.Parser.ALI is
       -- Set_Source_Info_Data --
       --------------------------
 
-      procedure Set_Source_Info_Data (Unit : GPR2.Unit.Object) is
+      procedure Set_Source_Info_Data (Cache : Cache_Holder) is
       begin
-         Data.CU_List.Append (Unit);
-         Data.CU_Map.Insert (Unit.Index, Unit);
-         Data.Kind := Unit.Kind;
+         Data.CU_List.Append (Cache.Unit);
+         Data.CU_Map.Insert (Cache.Unit.Index, Cache.Unit);
+         Data.Kind := Cache.Unit.Kind;
 
          Data.Parsed := Source_Info.LI;
          Data.Is_Ada := True;
-         Data.Timestamp := Directories.Modification_Time (LI.Value);
+         Data.LI_Timestamp := Cache.Timestamp;
+         Data.Checksum     := Cache.Checksum;
+         Data.Dependencies := Cache.Depends;
       end Set_Source_Info_Data;
 
       use GPR2.Unit;
 
+      In_Cache : Cache_Map.Cursor := Self.Cache.Find (Key (LI, B_Name));
+
    begin
+      Data.Clear;
+
       --  If this unit is in the cache, return now we don't want to parse
       --  again the whole file.
 
-      if Self.Cache.Contains (Key (LI, B_Name)) then
-         Set_Source_Info_Data (Self.Cache (Key (LI, B_Name)));
+      if Cache_Map.Has_Element (In_Cache) then
+         Set_Source_Info_Data (Cache_Map.Element (In_Cache));
          return;
       end if;
 
@@ -618,13 +758,14 @@ package body GPR2.Source_Info.Parser.ALI is
 
             CUs (CU_Idx) :=
               Unit.Create
-                (Name         => Name_Type (-U_Name),
-                 Index        => 1,
-                 Kind         => U_Kind,
-                 Main         => Main,
-                 Dependencies => Withs,
-                 Sep_From     => "",
-                 Flags        => U_Flags);
+                (Name          => Name_Type (-U_Name),
+                 Index         => 1,
+                 Lib_Unit_Kind => U_Kind,
+                 Lib_Item_Kind => L_Type,
+                 Main          => Main,
+                 Dependencies  => Withs,
+                 Sep_From      => No_Name,
+                 Flags         => U_Flags);
 
             CU_BN (CU_Idx) := S_Name;
 
@@ -649,6 +790,13 @@ package body GPR2.Source_Info.Parser.ALI is
             end loop;
 
             exit when Header /= 'U';
+         end loop;
+
+         --  Read Deps
+
+         while Header = 'D' loop
+            Fill_Dep;
+            Next_Line (Allow_EOF => True);  --  Only here we allow EOF
          end loop;
 
          --  Look for X (cross-references) lines
@@ -683,25 +831,61 @@ package body GPR2.Source_Info.Parser.ALI is
 
          for K in 1 .. CU_Idx loop
             declare
-               Cache_Key : constant Name_Type :=
-                             Key (LI, Name_Type (-CU_BN (K)));
+               Inserted : Boolean;
+               function Image (Item : Unit.Object) return String is
+                 (String (Item.Name)
+                  & ' ' & String (Source.Path_Name.Simple_Name)
+                  & ' ' & Item.Kind'Img);
+               Ref : access Cache_Holder;
             begin
-               if not Self.Cache.Contains (Cache_Key) then
-                  Self.Cache.Insert (Cache_Key, CUs (K));
+               Self.Cache.Insert
+                 (Key (LI, Name_Type (-CU_BN (K))),
+                  (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
+                  In_Cache, Inserted);
+               if not Inserted
+                 and then CUs (K) /= Cache_Map.Element (In_Cache).Unit
+               then
+                  --  Could be generic instantiation case when spec and body
+                  --  is in the same file position.
+
+                  Ref := Self.Cache.Reference
+                    (In_Cache).Element.all'Unrestricted_Access;
+
+                  pragma Assert
+                    (CUs (K).Kind = S_Spec and then K = 2
+                     and then Ref.Unit.Kind              = S_Body
+                     and then Ref.Unit.Name              = CUs (K).Name
+                     and then Ref.Unit.Index             = CUs (K).Index
+                     and then Ref.Unit.Is_Separate       = CUs (K).Is_Separate
+                     and then Ref.Unit.Library_Item_Kind =
+                              CUs (K).Library_Item_Kind
+                     and then
+                       (not Ref.Unit.Is_Separate
+                        or else Ref.Unit.Separate_From =
+                                CUs (K).Separate_From),
+                     Image (Ref.Unit) & " /= " & Image (CUs (K)));
+
+                  --  Keep it as spec in the cache
+
+                  Ref.Unit.Update_Kind (Unit.S_Spec);
+               end if;
+
+               if Current = K then
+                  Set_Source_Info_Data (Cache_Map.Element (In_Cache));
                end if;
             end;
          end loop;
 
          --  Set data for the current source
 
-         if Current in CUs'Range then
-            Set_Source_Info_Data (CUs (Current));
-         else
+         if Current not in CUs'Range then
             Data.Parsed := Source_Info.None;
          end if;
 
       exception
-         when others =>
+         when E : others =>
+            Ada.Text_IO.Put_Line
+              ("#ALI parser " & Ada.Exceptions.Exception_Information (E));
             IO.Close (A_Handle);
             Data.Parsed := Source_Info.None;
       end;

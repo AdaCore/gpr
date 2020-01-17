@@ -1266,30 +1266,23 @@ package body GPR2.Project.View is
          Data  : constant Project.Definition.Ref :=
                    Project.Definition.Get (Self);
       begin
-         if Need_Update then
-            Update_Source_Info : declare
-               N_Set : Project.Source.Set.Object;
-            begin
-               --  Now update the source information if necessary. This will
-               --  properly set the source kind, the withed units.
-
-               for C in Data.Sources.Iterate loop
-                  declare
-                     S : Project.Source.Object := Data.Sources (C);
-                  begin
-                     S.Update;
-                     N_Set.Insert (S);
-                  end;
-               end loop;
-
-               Data.Sources := N_Set;
-            end Update_Source_Info;
-         end if;
-
          --  Compute and return the sources depending on the filtering
 
          if Filter = K_All then
-            return Definition.Get_RO (Self).Sources;
+            if Need_Update then
+               --  Check sources timestamp
+
+               for S of Data.Sources loop
+                  if not S.Source.Check_Timestamp then
+                     Data.Sources_Signature :=
+                       GPR2.Context.Default_Signature;
+                     Self.Update_Sources;
+                     exit;
+                  end if;
+               end loop;
+            end if;
+
+            return Data.Sources;
 
          else
             return S_Set : Project.Source.Set.Object do
@@ -1310,7 +1303,16 @@ package body GPR2.Project.View is
                            or else
                         (Filter = K_Not_Interface and then not Is_Interface)
                      then
-                        S_Set.Insert (S);
+                        if Need_Update
+                          and then not S.Source.Check_Timestamp
+                        then
+                           Data.Sources_Signature :=
+                             GPR2.Context.Default_Signature;
+                           S_Set := Self.Sources (Filter, Need_Update);
+                           exit;
+                        else
+                           S_Set.Insert (S);
+                        end if;
                      end if;
                   end;
                end loop;

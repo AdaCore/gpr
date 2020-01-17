@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
@@ -48,6 +49,9 @@ procedure Main is
    procedure Check (Project_Name : Name_Type) is
 
       procedure List_Sources (View : Project.View.Object);
+
+      procedure Copy_Source (Name : String);
+      --  Copy source file from srcp directory to src
 
       ------------------
       -- List_Sources --
@@ -82,24 +86,21 @@ procedure Main is
          end loop;
       end List_Sources;
 
+      -----------------
+      -- Copy_Source --
+      -----------------
+
+      procedure Copy_Source (Name : String) is
+      begin
+         Ada.Directories.Copy_File ("srcp/" & Name, "src/" & Name);
+      end Copy_Source;
+
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;
 
    begin
       --  Create api-call.adb as a separate
-
-      declare
-         File : Text_IO.File_Type;
-      begin
-         Text_IO.Create (File, Text_IO.Out_File, "src/api-call.adb");
-         Text_IO.Put_Line (File, "separate (Api)");
-         Text_IO.Put_Line (File, "procedure Call is");
-         Text_IO.Put_Line (File, "begin");
-         Text_IO.Put_Line (File, "   null;");
-         Text_IO.Put_Line (File, "end Call;");
-         Text_IO.Close (File);
-      end;
 
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
 
@@ -108,20 +109,11 @@ procedure Main is
 
       List_Sources (View);
 
-      --  Change api-call.adb to be a child package We need a small
-      --  delay to ensure that the timestamp is updated. To be safe we
-      --  wait for a full second.
-
       delay 2.0;
 
-      declare
-         File : Text_IO.File_Type;
-      begin
-         Text_IO.Create (File, Text_IO.Out_File, "src/api-call.adb");
-         Text_IO.Put_Line (File, "package body API.Call is");
-         Text_IO.Put_Line (File, "end API.Call;");
-         Text_IO.Close (File);
-      end;
+      Copy_Source ("api.ads");
+      Copy_Source ("api.adb");
+      Copy_Source ("api-call.adb");
 
       List_Sources (View);
    end Check;

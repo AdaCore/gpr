@@ -258,7 +258,7 @@ package GPR2.Project.Tree is
    procedure Record_View
      (Self   : in out Object;
       View   : GPR2.Project.View.Object;
-      Source : Path_Name.Full_Name;
+      Source : Path_Name.Object;
       Unit   : Name_Type)
      with Pre => Self.Is_Defined;
    --  Records the view in which unit is defined
@@ -280,8 +280,8 @@ package GPR2.Project.Tree is
      (Self   : Object;
       Source : Path_Name.Object) return Project.View.Object
      with Pre => Self.Is_Defined;
-   --  Gets the view in which unit is defined, returns Undefined if the unit
-   --  has not been found.
+   --  Gets the view in which source file is defined, returns Undefined if the
+   --  source file has not been found.
 
    procedure Invalidate_Sources
      (Self : Object;

@@ -18,18 +18,29 @@
 
 package body GPR2.Source_Info is
 
-   ------------------
-   -- Dependencies --
-   ------------------
+   -----------
+   -- Clear --
+   -----------
 
-   function Dependencies
+   procedure Clear (Self : in out Object) is
+   begin
+      Self.CU_List.Clear;
+      Self.CU_Map.Clear;
+      Self.Dependencies.Clear;
+   end Clear;
+
+   ---------------------------------
+   -- Context_Clause_Dependencies --
+   ---------------------------------
+
+   function Context_Clause_Dependencies
      (Self  : Object;
       Index : Unit_Index := 1) return Source_Reference.Identifier.Set.Object is
    begin
       return Self.CU_List (Positive (Index)).Dependencies;
-   end Dependencies;
+   end Context_Clause_Dependencies;
 
-   function Dependencies
+   function Context_Clause_Dependencies
      (Self : Object;
       Unit : Name_Type) return Source_Reference.Identifier.Set.Object
    is
@@ -39,6 +50,20 @@ package body GPR2.Source_Info is
          if CU.Name = Unit then
             Result.Union (CU.Dependencies);
          end if;
+      end loop;
+
+      return Result;
+   end Context_Clause_Dependencies;
+
+   -----------------------
+   -- File_Dependencies --
+   -----------------------
+
+   function Dependencies (Self  : Object) return Containers.Name_List is
+      Result : Containers.Name_List;
+   begin
+      for D of Self.Dependencies loop
+         Result.Append (Name_Type (To_String (D.Sfile)));
       end loop;
 
       return Result;
@@ -101,13 +126,7 @@ package body GPR2.Source_Info is
 
    procedure Reset (Self : in out Object) is
    begin
-      Self.CU_List.Clear;
-      Self.CU_Map.Clear;
-      Self.Kind          := Unit.S_Separate;
-      Self.Parsed        := None;
-      Self.Is_RTS_Source := True;
-      Self.Is_Ada        := False;
-      Self.Timestamp     := Undefined_Time;
+      Self := Undefined;
    end Reset;
 
    ---------

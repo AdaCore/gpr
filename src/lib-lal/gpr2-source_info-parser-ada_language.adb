@@ -125,6 +125,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   U_Name        : Unbounded_String;
                   U_Sep_From    : Unbounded_String;
                   U_Kind        : Unit.Library_Unit_Type;
+                  L_Type        : Unit.Library_Item_Type;
                   U_Withed      : Source_Reference.Identifier.Set.Object;
                   W_Found       : Containers.Name_Set;
 
@@ -221,21 +222,52 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                         case Node.As_Compilation_Unit.P_Unit_Kind is
                            when Analysis_Unit_Kind'(Unit_Specification) =>
                               U_Kind := Unit.S_Spec;
-
-                              if U_Body.As_Library_Item.F_Item.Kind
-                                = Ada_Generic_Package_Decl
-                              then
-                                 U_Flags (Is_Generic) := True;
-                              end if;
-
                            when Analysis_Unit_Kind'(Unit_Body)          =>
                               U_Kind := Unit.S_Body;
+                        end case;
+
+                        case U_Body.As_Library_Item.F_Item.Kind is
+                           when Ada_Generic_Package_Decl =>
+                              U_Flags (Is_Generic) := True;
+                              L_Type := Unit.Is_Package;
+
+                           when Ada_Generic_Subp_Decl =>
+                              U_Flags (Is_Generic) := True;
+                              L_Type := Unit.Is_Subprogram;
+
+                           when Ada_Subp_Decl
+                              | Ada_Null_Subp_Decl
+                              | Ada_Subp_Body
+                              | Ada_Generic_Subp_Instantiation
+                              =>
+                              L_Type := Unit.Is_Subprogram;
+
+                           when Ada_Package_Decl
+                              | Ada_Package_Body
+                              | Ada_Generic_Package_Instantiation
+                              =>
+                              L_Type := Unit.Is_Package;
+
+                           when others =>
+                              pragma Assert
+                                (False,
+                                 U_Body.As_Library_Item.F_Item.Kind'Img);
                         end case;
 
                      when Ada_Subunit =>
                         U_Kind := Unit.S_Separate;
                         U_Sep_From := Process_Defining_Name
                                         (U_Body.As_Subunit.F_Name);
+
+                        case U_Body.As_Subunit.F_Body.Kind is
+                           when Ada_Package_Body =>
+                              L_Type := Unit.Is_Package;
+                           when Ada_Subp_Body =>
+                              L_Type := Unit.Is_Subprogram;
+                           when others =>
+                              pragma Assert
+                                (False, U_Body.As_Subunit.F_Body.Kind'Img);
+                        end case;
 
                         pragma Assert
                           (Length (U_Name) > Length (U_Sep_From) + 1);
@@ -269,14 +301,15 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   declare
                      CU : constant Unit.Object :=
                             Unit.Create
-                              (Name         => Name_Type (-U_Name),
-                               Index        => Index,
-                               Main         => U_Main,
-                               Flags        => U_Flags,
-                               Kind         => U_Kind,
-                               Dependencies => U_Withed,
-                               Sep_From     =>
-                                  Optional_Name_Type (-U_Sep_From));
+                              (Name          => Name_Type (-U_Name),
+                               Index         => Index,
+                               Main          => U_Main,
+                               Flags         => U_Flags,
+                               Lib_Unit_Kind => U_Kind,
+                               Lib_Item_Kind => L_Type,
+                               Dependencies  => U_Withed,
+                               Sep_From      =>
+                                 Optional_Name_Type (-U_Sep_From));
                   begin
                      --  Kind of first unit is also recorded in Data.Kind
 
@@ -297,11 +330,14 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       end Callback;
 
    begin
+      Data.Clear;
+
       Traverse (A_Unit.Root, Callback'Access);
 
       Data.Parsed := Source_Info.Source;
       Data.Is_Ada := True;
-      Data.Timestamp := Directories.Modification_Time (Source.Path_Name.Value);
+      Data.LI_Timestamp := Directories.Modification_Time
+                             (Source.Path_Name.Value);
    end Compute;
 
    ----------------

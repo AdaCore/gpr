@@ -120,17 +120,18 @@ package GPR2.Project.Source is
    --  The following routines only make sense if Has_Units is True
    --
 
-   type Dependency is (Direct, Unit, Closure);
-   --  Direct  : the dependencies from the source withed units.
-   --  Unit    : the dependencies from the spec/body for this source.
-   --  Closure : the full dependencies for this sources and all withed sources
-   --            recursively.
-
    function Dependencies
-     (Self : Object;
-      Mode : Dependency := Direct) return GPR2.Project.Source.Set.Object
+     (Self    : Object;
+      Closure : Boolean := False) return GPR2.Project.Source.Set.Object
      with Pre => Self.Is_Defined and then Self.Source.Has_Units;
-   --  Returns the dependencies for this given source
+   --  Returns the source files on which the current source file depends
+   --  (potentially transitively).
+
+   procedure Dependencies
+     (Self     : Object;
+      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      Closure  : Boolean := False);
+   --  Call For_Each routine for each dependency source.
 
    --
    --  The following routines may be used for both unit-based and

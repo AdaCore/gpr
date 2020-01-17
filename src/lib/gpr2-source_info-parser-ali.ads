@@ -40,14 +40,21 @@ package GPR2.Source_Info.Parser.ALI is
 
 private
 
-   package Unit_Map is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Unit.Object, "=" => Unit."=");
+   type Cache_Holder is record
+      Unit      : GPR2.Unit.Object;
+      Depends   : Dependency_Maps.Map;
+      Checksum  : Word;
+      Timestamp : Ada.Calendar.Time;
+   end record;
+
+   package Cache_Map is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Cache_Holder);
 
    type Object is new Parser.Object
      (Language => Language'Unrestricted_Access,
       Kind     => LI)
    with record
-      Cache : Unit_Map.Map;
+      Cache : Cache_Map.Map;
    end record;
 
 end GPR2.Source_Info.Parser.ALI;

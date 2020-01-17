@@ -89,9 +89,7 @@ procedure GPRdump is
             Source : constant GPR2.Project.Source.Object :=
                        View.Source (File);
          begin
-            for S of Source.Dependencies
-              (Mode => GPR2.Project.Source.Closure)
-            loop
+            for S of Source.Dependencies (Closure => True) loop
                Text_IO.Put_Line (S.Source.Path_Name.Value);
             end loop;
          end;

@@ -5,8 +5,10 @@ project Demo is
    for Object_Dir use "obj";
 
    package Naming is
-      for Specification ("U1") use "code.ada" at 1;
-      for Specification ("U2") use "code.ada" at 2;
+      for Spec ("U1") use "code.ada" at 1;
+      for Spec ("U2") use "code.ada" at 2;
+      for Body ("U2") use "code.ada" at 3;
+      for Body ("U3") use "code.ada" at 4;
    end Naming;
 
 end Demo;
