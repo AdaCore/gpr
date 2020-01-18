@@ -7,5 +7,5 @@ a library project
 Demo     K_ABSTRACT
 an abstract project
 Messages found:
-lib2.gpr:2:8: warning: attribute "library_dir" cannot be used in a standard project
-lib3.gpr:2:8: warning: attribute "library_kind" cannot be used in a standard project
+lib2.gpr:2:08: warning: attribute "library_dir" cannot be used in a standard project
+lib3.gpr:2:08: warning: attribute "library_kind" cannot be used in a standard project

@@ -33,8 +33,8 @@ Project: Demo
 
  > src/api.ads   unit: Api
 ..... DIRECT
-api.ads:1:1: warning: withed unit Toto not found
-api.ads:3:1: warning: withed unit titi not found
+api.ads:1:01: warning: withed unit Toto not found
+api.ads:3:01: warning: withed unit titi not found
 ..... UNIT
 ..... CLOSURE
 

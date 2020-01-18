@@ -1,5 +1,5 @@
 Messages found:
-demo.gpr:4:9: error: type T1 already defined
+demo.gpr:4:09: error: type T1 already defined
 Messages found:
 demo2.gpr:4:30: error: T2 has duplicate value 'one'
 All good, no message.

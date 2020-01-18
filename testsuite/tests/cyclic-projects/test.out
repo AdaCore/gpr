@@ -1,10 +1,10 @@
 Messages found for a.gpr
-a.gpr:1:6: error: circular dependency detected
-a.gpr:1:6: error: imports /cyclic-projects/b.gpr
-b.gpr:2:6: error: imports /cyclic-projects/a.gpr
+a.gpr:1:06: error: circular dependency detected
+a.gpr:1:06: error: imports /cyclic-projects/b.gpr
+b.gpr:2:06: error: imports /cyclic-projects/a.gpr
 Messages found for agg.gpr
 agg.gpr:2:27: error: project cannot aggregate itself agg
 Messages found for agg2.gpr
 agg2.gpr:2:27: error: circular dependency detected
 agg2.gpr:2:27: error: aggregate d.gpr
-d.gpr:1:6: error: imports /cyclic-projects/agg2.gpr
+d.gpr:1:06: error: imports /cyclic-projects/agg2.gpr

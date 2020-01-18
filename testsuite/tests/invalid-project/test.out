@@ -1,2 +1,2 @@
-p.gpr:2:4: error: Expected Identifier, got ';'
+p.gpr:2:04: error: Expected Identifier, got ';'
 gprls: unable to process project file p.gpr

@@ -86,7 +86,7 @@ package body GPR2.Message is
 
       elsif Self.Sloc.Has_Source_Reference then
          declare
-            Format : constant Formatted_String := +"%s:%d:%d: %s";
+            Format : constant Formatted_String := +"%s:%d:%02d: %s";
          begin
             return -(Format
                      & Filename & Self.Sloc.Line & Self.Sloc.Column

@@ -1,5 +1,5 @@
 Messages found:
-demo.gpr:3:6: warning: duplicate project name 'first'
-demo.gpr:3:6: warning: already in 'prj1/first.gpr'
+demo.gpr:3:06: warning: duplicate project name 'first'
+demo.gpr:3:06: warning: already in 'prj1/first.gpr'
 first.gpr:5:23: warning: object directory "obj" not found
 first.gpr:4:24: warning: library directory "lib" not found

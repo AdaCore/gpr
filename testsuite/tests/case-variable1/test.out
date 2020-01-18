@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:9:4: error: variable 'sTarget' must be a simple value
+demo.gpr:9:04: error: variable 'sTarget' must be a simple value

@@ -1,3 +1,3 @@
 > unknown-attribute/simple.gpr
 ERROR
-simple.gpr:2:8: error: unrecognized attribute "An_Unknown_Attr"
+simple.gpr:2:08: error: unrecognized attribute "An_Unknown_Attr"
