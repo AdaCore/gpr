@@ -1,0 +1,1 @@
+ALL XFAIL test relies on gpr2ls, in heavy dev these days per SC30-005
