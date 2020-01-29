@@ -23,7 +23,6 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 --  there is no other places where those are withed.
 
 pragma Warnings (Off);
-with GPR2.Source_Info.Parser.Ada_Language;
 with GPR2.Source_Info.Parser.ALI;
 pragma Warnings (On);
 

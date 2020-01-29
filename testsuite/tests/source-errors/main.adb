@@ -29,6 +29,8 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
 
+with GPR2.Source_Info.Parser.Ada_Language;
+
 procedure Main is
 
    use Ada;

@@ -16,7 +16,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package GPR2.Source_Info.Parser.Ada_Language is
+package GPR2.Source_Info.Parser.Ada_Language
+  with Elaborate_Body
+is
 
    Language : aliased constant Name_Type := "Ada";
 

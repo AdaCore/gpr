@@ -30,6 +30,8 @@ with GPR2.Source;
 with Pkg1;
 with Pkg2;
 
+with GPR2.Source_Info.Parser.Ada_Language;
+
 procedure Main is
    use Ada;
 

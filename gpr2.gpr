@@ -19,7 +19,6 @@
 with "gnatcoll_iconv";
 with "gnatcoll_gmp";
 with "langkit_support";
-with "libadalang";
 
 library project GPR2 is
 

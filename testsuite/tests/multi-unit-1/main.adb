@@ -27,6 +27,8 @@ with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Source;
 
+with GPR2.Source_Info.Parser.Ada_Language;
+
 procedure Main is
    use Ada;
 

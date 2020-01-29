@@ -4,7 +4,7 @@ main.adb
   - compilation unit at 1
     unit name    = main
     kind         = S_BODY_ONLY
-    withed units = { ada ada.exceptions ada.text_io gpr2 gpr2.context gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source pkg1 pkg2 }
+    withed units = { ada ada.exceptions ada.text_io gpr2 gpr2.context gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source gpr2.source_info gpr2.source_info.parser gpr2.source_info.parser.ada_language pkg1 pkg2 }
     object file  = main.ali
 sub.adb
   single-unit          = FALSE

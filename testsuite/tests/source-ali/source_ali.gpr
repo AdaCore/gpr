@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with "gpr2";
+with "gpr2-lal";
 
 project Source_ALI is
    for Object_Dir use "mobj";
