@@ -56,36 +56,26 @@ library project GPR2 is
    Release_Options :=
      ("-O2", "-gnatn");
 
-   Common_C_Options :=
-     ("-I" & Project'Project_Dir & "/langkit/quex",
-      "-DQUEX_OPTION_ASSERTS_DISABLED",
-      "-DQUEX_OPTION_ASSERTS_WARNING_MESSAGE_DISABLED");
-
    package Compiler is
 
       case Build is
          when "debug" =>
             for Default_Switches ("Ada") use Common_Options & Debug_Options;
-            for Default_Switches ("C") use Common_C_Options & ("-g");
+            for Default_Switches ("C") use ("-g");
 
-            --  Langkit/Quex
+            --  Langkit
             for Switches ("gpr_parser-*") use ("-g", "-O0");
             for Switches ("gpr_parser.*") use ("-g", "-O0");
             for Switches ("adalog*") use  ("-g", "-O0");
-            for Switches ("gpr_parser_quex_*") use Common_C_Options & ("-g3", "-O0");
 
          when "release" =>
             for Default_Switches ("Ada") use Common_Options & Release_Options;
-            for Default_Switches ("C") use Common_C_Options & ("-O2");
+            for Default_Switches ("C") use ("-O2");
 
-            --  Langkit/Quex
+            --  Langkit
             for Switches ("gpr_parser-*") use ("-g", "-Ofast");
             for Switches ("gpr_parser.*") use ("-g", "-Ofast");
             for Switches ("adalog*") use  ("-g", "-Ofast");
-            for Switches ("gpr_parser_quex_*")
-              use Common_C_Options & ("-Ofast",
-                   -- Deactivate because of memory usage, see OA26-005
-                   "-fno-ree");
       end case;
 
    end Compiler;

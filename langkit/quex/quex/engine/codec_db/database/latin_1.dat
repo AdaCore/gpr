@@ -1,3 +1,0 @@
-// Describes mapping from Unicode Code pointer to Character code in latin_1 (['West Europe'])
-// [SourceInterval.begin] [SourceInterval.Size]  [TargetInterval.begin] (all in hexidecimal)
-0x0 0x100 0x0

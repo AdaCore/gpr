@@ -27,9 +27,6 @@ CURRENT_DIR := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
 DEST := "build"
 
-#  QUEX installation
-export QUEX_PATH=$(CURRENT_DIR)/quex
-
 setup:
 	mkdir -p ${DEST}
 	python manage.py --build-dir=${DEST} generate --generate-unparser
