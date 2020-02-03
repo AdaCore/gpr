@@ -100,13 +100,13 @@ UNINSTALLER=$(INSTALLER) -p -f --uninstall
 
 all: build build-tools
 
-build: ${LIBGPR2_TYPES:%=build-%} ${LIBGPR2_TYPES:%=build-lal-%}
+build: ${LIBGPR2_TYPES:%=build-%} ${LIBGPR2_TYPES:%=buildlal-%}
 
 build-%:
 	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2)
 
-build-lal-%:
+buildlal-%:
 	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2LAL)
 
@@ -127,7 +127,7 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-lal))
 endif
 
 install: uninstall ${LIBGPR2_TYPES:%=install-%} \
-		${LIBGPR2_TYPES:%=install-lal-%} install-tools
+		${LIBGPR2_TYPES:%=installlal-%} install-tools
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
@@ -135,7 +135,7 @@ install-%:
 		--build-name=$* --build-var=LIBRARY_TYPE \
 		--build-var=GPR2_BUILD $(GPR2)
 
-install-lal-%:
+installlal-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE \
