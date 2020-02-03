@@ -1,0 +1,99 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--                           GPR2 PROJECT MANAGER                           --
+--                                                                          --
+--                       Copyright (C) 2020, AdaCore                        --
+--                                                                          --
+-- This is  free  software;  you can redistribute it and/or modify it under --
+-- terms of the  GNU  General Public License as published by the Free Soft- --
+-- ware  Foundation;  either version 3,  or (at your option) any later ver- --
+-- sion.  This software is distributed in the hope  that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public --
+-- License for more details.  You should have received  a copy of the  GNU  --
+-- General Public License distributed with GNAT; see file  COPYING. If not, --
+-- see <http://www.gnu.org/licenses/>.                                      --
+--                                                                          --
+------------------------------------------------------------------------------
+
+with "gnatcoll_iconv";
+with "gnatcoll_gmp";
+with "libadalang";
+
+with "gpr2";
+
+library project GPR2.LAL is
+
+   type Build_Type is ("debug", "release");
+   Build : Build_Type := external ("BUILD", "debug");
+
+   Processors := external ("PROCESSORS", "0");
+   Langkit_Generated_Src := external ("LANGKIT_GENERATED_SRC", "langkit/build");
+
+   type Library_Kind is ("static", "relocatable", "static-pic");
+   Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
+
+   for Languages use ("Ada");
+   for Source_Dirs use ("src/lib-lal");
+   for Library_Name use "gpr2lal";
+
+   for Object_Dir use ".build/" & Build & "/obj-lal-" & Library_Type;
+   for Library_Dir use ".build/" & Build & "/lib-lal-" & Library_Type;
+   for Library_Kind use Library_Type;
+
+   case Library_Type is
+      when "relocatable" =>
+         for Interfaces use ("gpr2-source_info-parser-ada_language.ads");
+         for Library_Standalone use "standard";
+         for Library_Auto_Init use "true";
+      when others =>
+         null;
+   end case;
+
+   --------------
+   -- Compiler --
+   --------------
+
+   Common_Options :=
+     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
+   --  Common options used for the Debug and Release modes
+
+   Debug_Options :=
+     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall",
+      "-fstack-check");
+
+   Release_Options :=
+     ("-O2", "-gnatn");
+
+   Common_C_Options :=
+     ("-I" & Project'Project_Dir & "/langkit/quex",
+      "-DQUEX_OPTION_ASSERTS_DISABLED",
+      "-DQUEX_OPTION_ASSERTS_WARNING_MESSAGE_DISABLED");
+
+   package Compiler is
+      case Build is
+         when "debug" =>
+            for Default_Switches ("Ada") use Common_Options & Debug_Options;
+
+         when "release" =>
+            for Default_Switches ("Ada") use Common_Options & Release_Options;
+      end case;
+   end Compiler;
+
+   ------------
+   -- Binder --
+   ------------
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-Es");
+   end Binder;
+
+   -------------
+   -- Builder --
+   -------------
+
+   package Builder is
+      for Switches (others) use ("-m", "-j" & Processors);
+   end Builder;
+
+end GPR2.LAL;
