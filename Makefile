@@ -167,7 +167,7 @@ langkit:
 	mkdir -p langkit
 
 langkit/build: langkit
-	make -C ${SOURCE_DIR}/langkit setup DEST=$(shell pwd)/langkit/build
+	$(MAKE) -C ${SOURCE_DIR}/langkit setup DEST=$(shell pwd)/langkit/build
 
 ###########
 # Cleanup #
