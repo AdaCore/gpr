@@ -1005,9 +1005,8 @@ package body GPRinstall.Install is
                      --  against the spec file).
 
                      if Copy (Dependency)
-                       and then Is_Ada (Source)
-                       and then Src.Has_Units
-                       and then CUs (1).Kind /= S_Separate
+                       and then (not Src.Has_Units
+                                 or else CUs (1).Kind /= S_Separate)
                      then
                         declare
                            Proj : GPR2.Project.View.Object;
@@ -1028,17 +1027,32 @@ package body GPRinstall.Install is
                               Proj := Source.View;
                            end if;
 
-                           for CU of CUs loop
-                              if Atf.Has_Dependency (CU.Index) then
-                                 Copy_File
-                                   (From => Atf.Dependency (CU.Index),
-                                    To   => (if Proj.Kind = K_Library
-                                             then ALI_Dir
-                                             else Lib_Dir),
-                                    File => Ssrc.Artifacts.
-                                      Dependency (CU.Index).Simple_Name);
-                              end if;
-                           end loop;
+                           if Is_Ada (Source)
+                             and then Src.Has_Units
+                           then
+                              for CU of CUs loop
+                                 if Atf.Has_Dependency (CU.Index) then
+                                    Copy_File
+                                      (From => Atf.Dependency (CU.Index),
+                                       To   => (if Proj.Kind = K_Library
+                                                then ALI_Dir
+                                                else Lib_Dir),
+                                       File => Ssrc.Artifacts.
+                                         Dependency (CU.Index).Simple_Name);
+                                 end if;
+                              end loop;
+                           end if;
+
+                           if Atf.Has_Callgraph
+                             and then Atf.Callgraph.Exists
+                           then
+                              Copy_File
+                                (From => Atf.Callgraph,
+                                 To   => (if Proj.Kind = K_Library
+                                          then ALI_Dir
+                                          else Lib_Dir),
+                                 File => Ssrc.Artifacts.Callgraph.Simple_Name);
+                           end if;
                         end;
                      end if;
                   end if;

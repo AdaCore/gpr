@@ -41,6 +41,15 @@ package body GPR2.Project.Source.Artifact is
       return Name_Type (Result);
    end At_Suffix;
 
+   ---------------
+   -- Callgraph --
+   ---------------
+
+   function Callgraph (Self : Object) return GPR2.Path_Name.Object is
+   begin
+      return Self.Callgraph;
+   end Callgraph;
+
    ------------
    -- Create --
    ------------
@@ -59,6 +68,7 @@ package body GPR2.Project.Source.Artifact is
 
       O_Suffix : constant Name_Type := S_View.Tree.Object_Suffix (Lang);
       D_Suffix : constant Name_Type := S_View.Tree.Dependency_Suffix (Lang);
+      C_Suffix : constant Name_Type := ".ci";
       P_Suffix : constant Name_Type := ".prep";
       S_Suffix : constant Name_Type := ".cswi";
 
@@ -69,6 +79,11 @@ package body GPR2.Project.Source.Artifact is
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (Source.Source.Path_Name.Simple_Name & P_Suffix,
+                          Optional_Name_Type (O_View.Object_Directory.Value));
+
+      Callgraph    : constant GPR2.Path_Name.Object :=
+                       GPR2.Path_Name.Create_File
+                         (Source.Source.Path_Name.Base_Name & C_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
       Switches     : constant GPR2.Path_Name.Object :=
@@ -160,7 +175,8 @@ package body GPR2.Project.Source.Artifact is
          Deps_Lib_Files   => Deps_Lib,
          Deps_Obj_Files   => Deps_Obj,
          Switches         => Switches,
-         Preprocessed_Src => Preprocessed);
+         Preprocessed_Src => Preprocessed,
+         Callgraph        => Callgraph);
    end Create;
 
    ----------------
@@ -272,6 +288,10 @@ package body GPR2.Project.Source.Artifact is
 
       if Self.Switches.Is_Defined and then Self.Switches.Exists then
          Result.Append (Self.Switches);
+      end if;
+
+      if Self.Has_Callgraph then
+         Result.Append (Self.Callgraph);
       end if;
 
       return Result;

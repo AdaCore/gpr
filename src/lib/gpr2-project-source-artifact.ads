@@ -91,6 +91,14 @@ package GPR2.Project.Source.Artifact is
      with Pre => Self.Is_Defined;
    --  Returns the file containing the pre-processed source
 
+   function Has_Callgraph (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if a callgraph is defined
+
+   function Callgraph (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the callgraph file
+
    function List (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all artifacts
@@ -107,6 +115,7 @@ private
       Object_Files     : Index_Path_Name_Map.Map;
       Deps_Lib_Files   : Index_Path_Name_Map.Map;
       Deps_Obj_Files   : Index_Path_Name_Map.Map;
+      Callgraph        : GPR2.Path_Name.Object;
       Switches         : GPR2.Path_Name.Object;
       Preprocessed_Src : GPR2.Path_Name.Object;
    end record;
@@ -133,5 +142,8 @@ private
 
    function Has_Preprocessed_Source (Self : Object) return Boolean is
      (Self.Preprocessed_Src.Is_Defined);
+
+   function Has_Callgraph (Self : Object) return Boolean is
+     (Self.Callgraph.Is_Defined);
 
 end GPR2.Project.Source.Artifact;

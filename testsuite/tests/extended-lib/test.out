@@ -12,6 +12,7 @@ A        K_STANDARD
        > e-obj/pcka.su
        > e-obj/pcka.ali
        > e-obj/pcka.ads.prep
+       > e-obj/pcka.ci
     > a-src/repl.adb
        > e-obj/repl.adb.dg
        > e-obj/repl.adb.rep
@@ -25,6 +26,7 @@ A        K_STANDARD
        > e-obj/repl.su
        > e-obj/repl.ali
        > e-obj/repl.adb.prep
+       > e-obj/repl.ci
     > a-src/repl.ads
        > e-obj/repl.ads.dg
        > e-obj/repl.ads.rep
@@ -38,6 +40,7 @@ A        K_STANDARD
        > e-obj/repl.su
        > e-obj/repl.ali
        > e-obj/repl.ads.prep
+       > e-obj/repl.ci
 Demo     K_LIBRARY
     > src/code.ads
        > e-obj/code.ads.dg
@@ -53,6 +56,7 @@ Demo     K_LIBRARY
        > e-lib/code.ali
        > e-obj/code.ali
        > e-obj/code.ads.prep
+       > e-obj/code.ci
     > a-src/pcka.ads
        > e-obj/pcka.ads.dg
        > e-obj/pcka.ads.rep
@@ -66,6 +70,7 @@ Demo     K_LIBRARY
        > e-obj/pcka.su
        > e-obj/pcka.ali
        > e-obj/pcka.ads.prep
+       > e-obj/pcka.ci
     > src/repl.adb
        > e-obj/repl.adb.dg
        > e-obj/repl.adb.rep
@@ -80,6 +85,7 @@ Demo     K_LIBRARY
        > e-lib/repl.ali
        > e-obj/repl.ali
        > e-obj/repl.adb.prep
+       > e-obj/repl.ci
     > src/repl.ads
        > e-obj/repl.ads.dg
        > e-obj/repl.ads.rep
@@ -94,3 +100,4 @@ Demo     K_LIBRARY
        > e-lib/repl.ali
        > e-obj/repl.ali
        > e-obj/repl.ads.prep
+       > e-obj/repl.ci
