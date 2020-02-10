@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,10 +16,24 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This packages provides to GPR library the known names of project packages
+--  This package provides to GPR library the known names of project packages
 --  and some of their properties.
+--  Custom packages can be added by custom tools.
 
 package GPR2.Project.Registry.Pack is
+
+   type Projects_Kind is array (Project_Kind) of Boolean
+     with Pack,
+          Dynamic_Predicate => Projects_Kind /= (Project_Kind => False);
+   --  A boolean array describing what project kind if allowed
+
+   Everywhere    : constant Projects_Kind := (others => True);
+
+   No_Aggregates : constant Projects_Kind :=
+                     (Aggregate_Kind => False, others => True);
+
+   procedure Add (Name : Name_Type; Projects : Projects_Kind);
+   --  Insert package in known packages
 
    function Exists (Name : Name_Type) return Boolean;
    --  Returns True if Name is a known package

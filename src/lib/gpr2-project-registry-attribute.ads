@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -15,6 +15,10 @@
 -- see <http://www.gnu.org/licenses/>.                                      --
 --                                                                          --
 ------------------------------------------------------------------------------
+
+--  This package provides to GPR library the common attributes names
+--  and attribute definition accessors.
+--  Custom package's attributes definition can be added by custom tools.
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 
@@ -44,6 +48,9 @@ package GPR2.Project.Registry.Attribute is
    --  Returns a fully qualified name for the given attribute and package names
 
    type Allowed_In is array (Project_Kind) of Boolean with Pack;
+
+   Everywhere : constant Allowed_In := (others => True);
+   Nowhere    : constant Allowed_In := (others => False);
 
    package VSR renames Containers.Name_Value_Map_Package;
 
@@ -91,6 +98,21 @@ package GPR2.Project.Registry.Attribute is
         (Attribute : Name_Type; Definition : Def));
    --  Call Action routine for each definition with defaults in package.
    --  If Pack is empty, call Action for each root attribute with defaults.
+
+   procedure Add
+     (Name                 : Qualified_Name;
+      Index                : Index_Kind;
+      Others_Allowed       : Boolean;
+      Index_Case_Sensitive : Boolean;
+      Value                : Value_Kind;
+      Value_Case_Sensitive : Boolean;
+      Read_Only            : Boolean;
+      Is_Allowed_In        : Allowed_In;
+      Empty_Value          : Empty_Value_Status := Allow;
+      Default              : VSR.Map    := VSR.Empty_Map;
+      Default_Is_Reference : Boolean    := False;
+      Has_Default_In       : Allowed_In := Nowhere);
+   --  add package/attribute definition in database for attribute checks
 
    --  Some common attribute names
 
