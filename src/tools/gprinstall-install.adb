@@ -1666,30 +1666,12 @@ package body GPRinstall.Install is
             procedure Append (Attribute : GPR2.Project.Attribute.Object);
             --  Add values if any
 
-            procedure Add_Library_Options (Proj : GPR2.Project.View.Object);
-            --  For a library project, add the Library_Options
-
             Seen : Seen_Set.Set;
             --  Records the attribute generated to avoid duplicate when
             --  handling aggregated projects.
 
             R    : String_Vector.Vector;
             Opts : String_Vector.Vector;
-
-            -------------------------
-            -- Add_Library_Options --
-            -------------------------
-
-            procedure Add_Library_Options (Proj : GPR2.Project.View.Object) is
-               Attr : GPR2.Project.Attribute.Object;
-            begin
-               if Proj.Kind = K_Library
-                 and then Proj.Check_Attribute
-                            (A.Library_Options, Result => Attr)
-               then
-                  Append (Attr);
-               end if;
-            end Add_Library_Options;
 
             ------------
             -- Append --
@@ -1721,17 +1703,11 @@ package body GPRinstall.Install is
                Linker_For (Project.Packages.Element (P.Linker));
             end if;
 
-            --  For libraries we want to add the library options here
-
-            Add_Library_Options (Proj);
-
             if Proj.Qualifier = K_Aggregate_Library then
                for Aggregated of Proj.Aggregated loop
                   if Aggregated.Has_Packages (P.Linker) then
                      Linker_For (Aggregated.Packages.Element (P.Linker));
                   end if;
-
-                  Add_Library_Options (Aggregated);
                end loop;
             end if;
 
