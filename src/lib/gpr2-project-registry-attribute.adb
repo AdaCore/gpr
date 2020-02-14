@@ -88,9 +88,9 @@ package body GPR2.Project.Registry.Attribute is
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In;
       Empty_Value          : Empty_Value_Status := Allow;
-      Default              : VSR.Map    := VSR.Empty_Map;
-      Default_Is_Reference : Boolean    := False;
-      Has_Default_In       : Allowed_In := Nowhere)
+      Default              : VSR.Map            := VSR.Empty_Map;
+      Default_Is_Reference : Boolean            := False;
+      Has_Default_In       : Allowed_In         := Nowhere)
    is
       procedure Index_Default;
       --  Save definition with default value to Defaults index
@@ -101,16 +101,16 @@ package body GPR2.Project.Registry.Attribute is
 
       procedure Index_Default is
          Dot_At : constant Natural :=
-           Ada.Strings.Fixed.Index (String (Name), ".");
+                    Ada.Strings.Fixed.Index (String (Name), ".");
          Pack   : constant Optional_Name_Type :=
-           (if Dot_At = 0
-            then No_Name
-            else Name_Type (Name (Name'First .. Dot_At - 1)));
+                    (if Dot_At = 0
+                     then No_Name
+                     else Name_Type (Name (Name'First .. Dot_At - 1)));
          Attr   : constant Name_Type :=
-           Name_Type
-             (if Dot_At = 0
-              then Name
-              else Name (Dot_At + 1 .. Name'Last));
+                    Name_Type
+                      (if Dot_At = 0
+                       then Name
+                       else Name (Dot_At + 1 .. Name'Last));
          CP     : Pack_Defaults.Cursor := Defaults.Find (Pack);
          OK     : Boolean;
       begin

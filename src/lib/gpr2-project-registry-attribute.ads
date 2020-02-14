@@ -109,9 +109,9 @@ package GPR2.Project.Registry.Attribute is
       Read_Only            : Boolean;
       Is_Allowed_In        : Allowed_In;
       Empty_Value          : Empty_Value_Status := Allow;
-      Default              : VSR.Map    := VSR.Empty_Map;
-      Default_Is_Reference : Boolean    := False;
-      Has_Default_In       : Allowed_In := Nowhere);
+      Default              : VSR.Map            := VSR.Empty_Map;
+      Default_Is_Reference : Boolean            := False;
+      Has_Default_In       : Allowed_In         := Nowhere);
    --  add package/attribute definition in database for attribute checks
 
    --  Some common attribute names
