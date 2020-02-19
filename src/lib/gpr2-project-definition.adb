@@ -1100,9 +1100,8 @@ package body GPR2.Project.Definition is
                                             or else
                                         (not Interface_Found
                                          and then View.Kind in K_Library
-                                         and then
-                                         Source.Kind in
-                                           Unit.S_Spec | Unit.S_Spec_Only);
+                                         and then Source.Kind in
+                                                     Unit.Spec_Kind);
                      Project_Source : constant GPR2.Project.Source.Object :=
                                         Project.Source.Create
                                           (Source               => Source,
@@ -1709,7 +1708,8 @@ package body GPR2.Project.Definition is
                                          In_Interface
                                              or else
                                          (not Interface_Found
-                                          and then P.Source.Kind = S_Spec);
+                                          and then P.Source.Kind
+                                                      in Unit.Spec_Kind);
                      begin
                         --  An aggregate library project does not allow naming
                         --  exception. So the source naming exception status is
