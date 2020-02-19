@@ -27,6 +27,7 @@ with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source;
+with GPR2.Project.Source.Set;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 
@@ -34,10 +35,6 @@ with GNAT.OS_Lib;
 with GNAT.Regexp;
 
 with GNATCOLL.Utils;
-
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
 
 package body GPR2.Project.Tree is
 
@@ -122,6 +119,27 @@ package body GPR2.Project.Tree is
       Externals : Containers.Name_List);
    --  If any of externals is not available in context, try to get it from
    --  process environment and put into the context.
+
+   procedure Get_File
+     (Self            : Object;
+      Base_Name       : Simple_Name;
+      Ambiguous       : out Boolean;
+      Full_Path       : out Path_Name.Object;
+      View            : Project.View.Object := Project.View.Undefined;
+      Use_Source_Path : Boolean := True;
+      Use_Object_Path : Boolean := True;
+      Predefined_Only : Boolean := False);
+   --  Return in Full_Path absolute path of source/object/project file found
+   --  in Self or in View when defined.
+   --
+   --  If no file found, Undefined is returned in Full_Path and Ambiguous is
+   --  set to False.
+   --
+   --  If file is part of the sources for several projects, Ambiguous is set
+   --  to True and all of them have same absolute path Full_Path is set to
+   --  the common source file, otherwise Undefined is returned in Full_Path.
+   --
+   --  see also function Get_File
 
    --------------------
    -- Append_Message --
@@ -521,6 +539,212 @@ package body GPR2.Project.Tree is
 
       return Project.View.Undefined;
    end Get;
+
+   --------------
+   -- Get_File --
+   --------------
+
+   procedure Get_File
+     (Self            : Object;
+      Base_Name       : Simple_Name;
+      Ambiguous       : out Boolean;
+      Full_Path       : out Path_Name.Object;
+      View            : Project.View.Object := Project.View.Undefined;
+      Use_Source_Path : Boolean := True;
+      Use_Object_Path : Boolean := True;
+      Predefined_Only : Boolean := False)
+   is
+
+      Found_Count : Natural := 0;
+      --  found files so far
+
+      procedure Add_File
+        (Name : Path_Name.Object; Check_Exist : Boolean := True);
+      --  add Name to matching files, when Check_Exist is True file existence
+      --  is checked before Path is added to matching files.
+
+      procedure Handle_Object_File;
+      --  set Full_Path with matching object file.
+
+      procedure Handle_Project_File;
+      --  set Full_Path with the first matching project.
+
+      procedure Handle_Source_File;
+      --  set Full_Path with matching source file.
+
+      --------------
+      -- Add_File --
+      --------------
+
+      procedure Add_File
+        (Name : Path_Name.Object; Check_Exist : Boolean := True) is
+      begin
+         if not Check_Exist or else Name.Exists then
+            Found_Count := Found_Count + 1;
+            if Found_Count = 1 then
+               Full_Path := Name;
+            else
+               Ambiguous := True;
+               if Name /= Full_Path then
+                  Full_Path := Path_Name.Undefined;
+               end if;
+            end if;
+         end if;
+      end Add_File;
+
+      ------------------------
+      -- Handle_Object_File --
+      ------------------------
+
+      procedure Handle_Object_File is
+
+         procedure Handle_Object_File_In_View (View : Project.View.Object);
+         --  set Full_Path with matching View's object file.
+
+         --------------------------------
+         -- Handle_Object_File_In_View --
+         --------------------------------
+
+         procedure Handle_Object_File_In_View (View : Project.View.Object) is
+         begin
+            if View.Is_Library then
+               Add_File (View.Object_Directory.Compose (Base_Name));
+               if Found_Count = 0 then
+                  Add_File (View.Library_Directory.Compose (Base_Name));
+               end if;
+               if Found_Count = 0 then
+                  Add_File (View.Library_Ali_Directory.Compose (Base_Name));
+               end if;
+            elsif View.Kind = K_Standard then
+               Add_File (View.Object_Directory.Compose (Base_Name));
+            end if;
+         end Handle_Object_File_In_View;
+
+      begin
+         if not Predefined_Only then
+            if View /= Project.View.Undefined then
+               Handle_Object_File_In_View (View);
+            else
+               for V in Self.Iterate
+                 (Status => (Project.S_Externally_Built => Indeterminate))
+               loop
+                  Handle_Object_File_In_View (Project.Tree.Element (V));
+               end loop;
+            end if;
+         end if;
+         if Found_Count = 0 then
+            if Self.Has_Runtime_Project then
+               Handle_Object_File_In_View (Self.Runtime_Project);
+            end if;
+         end if;
+      end Handle_Object_File;
+
+      -------------------------
+      -- Handle_Project_File --
+      -------------------------
+
+      procedure Handle_Project_File is
+      begin
+         for V in Self.Iterate
+           (Status => (Project.S_Externally_Built => Indeterminate)) loop
+            declare
+               View : constant Project.View.Object := Project.Tree.Element (V);
+            begin
+               if View.Path_Name.Simple_Name = Base_Name then
+                  Full_Path := View.Path_Name;
+               end if;
+            end;
+         end loop;
+      end Handle_Project_File;
+
+      ------------------------
+      -- Handle_Source_File --
+      ------------------------
+
+      procedure Handle_Source_File is
+
+         procedure Handle_Source_File_In_View (View : Project.View.Object);
+         --  set Full_Path with matching View's source file.
+
+         --------------------------------
+         -- Handle_Source_File_In_View --
+         --------------------------------
+
+         procedure Handle_Source_File_In_View (View : Project.View.Object) is
+            Full_Path : constant Path_Name.Object :=
+                          View.Source_Path (Base_Name, Need_Update => False);
+         begin
+            if Full_Path /= Path_Name.Undefined then
+               Add_File (Full_Path, False);
+            end if;
+         end Handle_Source_File_In_View;
+
+      begin
+         if not Predefined_Only then
+            if View /= Project.View.Undefined then
+               Handle_Source_File_In_View (View);
+            else
+               for V in Self.Iterate
+                 (Status => (Project.S_Externally_Built => Indeterminate)) loop
+                  Handle_Source_File_In_View (Project.Tree.Element (V));
+               end loop;
+            end if;
+         end if;
+         if Found_Count = 0 then
+            if Self.Has_Runtime_Project then
+               Handle_Source_File_In_View (Self.Runtime_Project);
+            end if;
+         end if;
+      end Handle_Source_File;
+
+   begin
+      --  initialize return values
+      Ambiguous := False;
+      Full_Path := Path_Name.Undefined;
+
+      --  handle project file.
+      if Project.Ensure_Extension (Base_Name) = Base_Name
+      then
+         Handle_Project_File;
+         return;
+      end if;
+
+      --  handle source file.
+      if Use_Source_Path then
+         Handle_Source_File;
+      end if;
+
+      --  handle object file
+      if Found_Count = 0 and then Use_Object_Path then
+         Handle_Object_File;
+      end if;
+   end Get_File;
+
+   function Get_File
+     (Self             : Object;
+      Base_Name        : Simple_Name;
+      View             : Project.View.Object := Project.View.Undefined;
+      Use_Source_Path  : Boolean := True;
+      Use_Object_Path  : Boolean := True;
+      Predefined_Only  : Boolean := False;
+      Return_Ambiguous : Boolean := True) return Path_Name.Object
+   is
+      File_Name : Path_Name.Object;
+      Ambiguous : Boolean;
+   begin
+      Self.Get_File (Base_Name,
+                     Ambiguous,
+                     File_Name,
+                     View,
+                     Use_Source_Path,
+                     Use_Object_Path,
+                     Predefined_Only);
+      if Ambiguous and then not Return_Ambiguous then
+         return Path_Name.Undefined;
+      else
+         return File_Name;
+      end if;
+   end Get_File;
 
    --------------
    -- Get_View --
@@ -2227,7 +2451,7 @@ package body GPR2.Project.Tree is
          return Name_Type (TA.Value.Text);
 
       else
-         return Name_Type (System.OS_Constants.Target_Name);
+         return Target_Name;
       end if;
    end Target;
 

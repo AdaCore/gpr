@@ -1233,6 +1233,7 @@ package body GPR2.Project.Definition is
             end if;
 
             Def.Sources.Insert (Src);
+            Def.Sources_Map.Insert (Src.Path_Name.Simple_Name, Src.Path_Name);
 
             --  For Ada, register the Unit object into the view
 
@@ -1625,6 +1626,7 @@ package body GPR2.Project.Definition is
       --  First reset the current set
 
       Def.Sources.Clear;
+      Def.Sources_Map.Clear;
 
       --  Clear the units record, note that we also want to record the
       --  unit_name -> view lookup table in the tree.
@@ -1755,6 +1757,9 @@ package body GPR2.Project.Definition is
             end if;
 
             Def.Sources.Union (Src_Dir_Set);
+            for S of Src_Dir_Set loop
+               Def.Sources_Map.Insert (S.Path_Name.Simple_Name, S.Path_Name);
+            end loop;
             Src_Dir_Set.Clear;
          end loop;
 
@@ -1857,15 +1862,18 @@ package body GPR2.Project.Definition is
       Source_Info.Parser.Registry.Clear_Cache;
 
       declare
-         Def_Sources : Project.Source.Set.Object;
-         SW          : Project.Source.Object;
+         Def_Sources     : Project.Source.Set.Object;
+         Def_Sources_Map : Simple_Name_Full_Path.Map;
+         SW              : Project.Source.Object;
       begin
          for S of Def.Sources loop
             SW := S;
             SW.Update;
             Def_Sources.Insert (SW);
+            Def_Sources_Map.Insert (SW.Path_Name.Simple_Name, SW.Path_Name);
          end loop;
          Def.Sources := Def_Sources;
+         Def.Sources_Map := Def_Sources_Map;
       end;
 
       if Stop_On_Error

@@ -307,6 +307,13 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Get project source object corresponding to the given File
 
+   function Source_Path
+     (Self        : Object;
+      Filename    : GPR2.Simple_Name;
+      Need_Update : Boolean := True) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Get full path name corresponding to the given filename
+
    procedure Invalidate_Sources (Self : in out Object)
      with Pre => Self.Is_Defined;
    --  Invalidate the sources for the view. This means that the Sources routine
@@ -428,7 +435,7 @@ package GPR2.Project.View is
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object
      with Pre =>
        Self.Is_Defined
-       and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
+       and then Self.Kind not in K_Configuration | K_Abstract;
    --  As above but for the Object_Dir attribute
 
    function Source_Subdirectory (Self : Object) return GPR2.Path_Name.Object

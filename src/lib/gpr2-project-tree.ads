@@ -31,6 +31,10 @@ with GPR2.Project.View.Set;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.Registry.Attribute;
 
+pragma Warnings (Off);
+with System.OS_Constants;
+pragma Warnings (On);
+
 private with Ada.Containers.Vectors;
 
 package GPR2.Project.Tree is
@@ -341,6 +345,49 @@ package GPR2.Project.Tree is
    function Reference (Tree : Object) return access Object;
    --  Returns access to itself
 
+   function Get_File
+     (Self             : Object;
+      Base_Name        : Simple_Name;
+      View             : Project.View.Object := Project.View.Undefined;
+      Use_Source_Path  : Boolean := True;
+      Use_Object_Path  : Boolean := True;
+      Predefined_Only  : Boolean := False;
+      Return_Ambiguous : Boolean := True) return Path_Name.Object
+     with Pre => Self.Is_Defined;
+
+   --  Return absolute path of source/object/project file found in Self or in
+   --  View when defined.
+   --
+   --  If a source file matches Base_Name and Use_Source_Path is true, it
+   --  is always returned.
+   --  Set Predefined_Only to True to disable looking in the project sources
+   --  and only look in the predefined source files.
+   --
+   --  Otherwise, the file will be searched for in the source dirs and/or
+   --  object dirs of either a specific Project or in the whole project tree.
+   --  As a special case, if Base_Name ends with '.gpr', it is also looked
+   --  for among the already loaded project, even if their directory is outside
+   --  the source dirs and object dirs.
+   --
+   --  If no such file is found, Undefined is returned.
+   --
+   --  The matching from base source names to full path names is potentially
+   --  ambiguous when using aggregate projects, because it is valid to have
+   --  multiple files with the same base name within a given project tree.
+   --  In such an ambiguous case, this function will return Undefined.
+   --  To lift this ambiguity, and if you know which project the file is found
+   --  in, you must pass a View argument. The file must be a direct source
+   --  of that project.
+   --
+   --  If a given full path is part of the sources for several projects, this
+   --  is considered as ambiguous, because the associated object file,
+   --  for instance, is different. In this case the returned value is
+   --  set to the common source file if Return_Ambiguous is set to True
+   --  otherwise Undefined is returned.
+
+   Target_Name : constant Name_Type;
+   --  native host target
+
 private
 
    package Name_View is
@@ -389,6 +436,9 @@ private
      (View : not null access constant Project.View.Object) is null record;
 
    Undefined : constant Object := (others => <>);
+
+   Target_Name : constant Name_Type :=
+                   Name_Type (System.OS_Constants.Target_Name);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

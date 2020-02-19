@@ -34,6 +34,7 @@ limited with GPR2.Project.Tree;
 private package GPR2.Project.Definition is
 
    use type View.Object;
+   use type Path_Name.Object;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded trees. That is there is always a single instance of
@@ -44,6 +45,11 @@ private package GPR2.Project.Definition is
       Project : Parser.Project.Object;
       Imports : Parser.Project.Set.Object;
    end record;
+
+   package Simple_Name_Full_Path is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (Simple_Name, Path_Name.Object);
+   --  Map to find in which view a unit/source is defined
 
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
@@ -77,6 +83,7 @@ private package GPR2.Project.Definition is
       Types        : Project.Typ.Set.Object;
 
       Sources      : Project.Source.Set.Object;
+      Sources_Map  : Simple_Name_Full_Path.Map;
 
       Units        : Unit_Info.Set.Object;
 

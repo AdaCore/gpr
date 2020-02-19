@@ -1,0 +1,5 @@
+description:
+    Test GPR2.Project.Tree.Get_File
+driver: build_and_run
+project_file: test
+main: main
