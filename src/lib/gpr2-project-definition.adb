@@ -1071,9 +1071,7 @@ package body GPR2.Project.Definition is
 
                   if Language_Is_Ada then
                      for CU of Units loop
-                        if Interface_Units.Contains (CU.Name)
-                          and then CU.Kind in S_Spec | S_Spec_Only
-                        then
+                        if Interface_Units.Contains (CU.Name) then
                            Interface_Units_Found.Include (CU.Name);
                            Source_Is_In_Interface := True;
                         end if;
