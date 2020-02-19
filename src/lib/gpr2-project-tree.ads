@@ -129,13 +129,14 @@ package GPR2.Project.Tree is
 
    function Configuration (Self : Object) return Configuration.Object
      with Pre => Self.Is_Defined and then Self.Has_Configuration;
+   --  Returns the configuration project for the given tree
 
    function Has_Runtime_Project (Self : Object) return Boolean;
-   --  Returns True if a configuration project is loaded on this tree
+   --  Returns True if a runtime project is loaded on this tree
 
    function Runtime_Project (Self : Object) return View.Object
      with Pre => Self.Is_Defined and then Self.Has_Runtime_Project;
-   --  Returns the configuration project for the given tree
+   --  Returns the runtime project for the given tree
 
    function Target (Self : Object) return Name_Type;
    --  Returns the target for the project tree
