@@ -1295,14 +1295,12 @@ package body GPR2.Project.View is
             return S_Set : Project.Source.Set.Object do
                for S of Data.Sources loop
                   declare
-                     U_Name       : constant Name_Type :=
-                                      S.Source.Unit_Name;
                      Is_Interface : constant Boolean :=
                                       S.Source.Has_Units
                                           and then
                                       S.Source.Has_Single_Unit
                                           and then
-                                      Data.Units.Contains (U_Name)
+                                      Data.Units.Contains (S.Source.Unit_Name)
                                           and then
                                       S.Is_Interface;
                      --  All sources related to an interface unit are also

@@ -77,7 +77,8 @@ package body GPR2.Source_Info is
    function Is_Generic
      (Self : Object; Index : Unit_Index := 1) return Boolean is
    begin
-      return Self.CU_List (Positive (Index)).Is_Generic;
+      return Self.Has_Units
+        and then Self.CU_List (Positive (Index)).Is_Generic;
    end Is_Generic;
    ----------
    -- Kind --

@@ -113,8 +113,9 @@ package GPR2.Source_Info is
 
    function Is_Generic
      (Self : Object; Index : Unit_Index := 1) return Boolean
-     with Pre => Self.Is_Defined and then Self.Has_Unit_At (Index);
-   --  Returns True if Self is a generic unit
+     with Pre => Self.Is_Defined and then (not Self.Has_Units
+                                           or else Self.Has_Unit_At (Index));
+   --  Returns True if the source Self has the generic unit at Index
 
    function Dependencies
      (Self  : Object;
