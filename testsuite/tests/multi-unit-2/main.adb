@@ -44,6 +44,8 @@ begin
    Pkg1.Sep;
    Pkg2.Sep;
 
+   --  Source_Info.Parser.Ada_Language.Unregister;
+
    Tree.Load (Filename => Project.Create ("p.gpr"),
               Context  => Ctx);
 

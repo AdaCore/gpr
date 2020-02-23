@@ -25,5 +25,11 @@ project P is
     package Naming is
        for Implementation ("Pkg1.Sep") use "sub.adb" at 1;
        for Implementation ("Pkg2.Sep") use "sub.adb" at 2;
+       for Spec ("U1") use "few_units.ada" at 1;
+       for Spec ("U2") use "few_units.ada" at 3;
+       for Spec ("U3") use "few_units.ada" at 5;
+       for Body ("U1") use "few_units.ada" at 2;
+       for Body ("U2") use "few_units.ada" at 4;
+       for Body ("U3") use "few_units.ada" at 6;
     end Naming;
 end P;

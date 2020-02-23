@@ -80,4 +80,13 @@ package body GPR2.Source_Info.Parser.Registry is
         (Key (Parser.Language.all, Parser.Kind), Parser.Self);
    end Register;
 
+   ----------------
+   -- Unregister --
+   ----------------
+
+   procedure Unregister (Parser : Object'Class) is
+   begin
+      Parser_Store.Delete (Key (Parser.Language.all, Parser.Kind));
+   end Unregister;
+
 end GPR2.Source_Info.Parser.Registry;

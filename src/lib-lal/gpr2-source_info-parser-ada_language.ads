@@ -34,4 +34,7 @@ is
       View   : Project.View.Object'Class := Project.View.Undefined);
    --  Setup Data with the information from parsing Ada source file
 
+   procedure Unregister;
+   --  Unregister the Ada_Language source parser
+
 end GPR2.Source_Info.Parser.Ada_Language;

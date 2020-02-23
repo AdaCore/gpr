@@ -1,3 +1,4 @@
+demo output
 main.adb
   single-unit          = TRUE
   has naming exception = FALSE
@@ -15,6 +16,7 @@ sub.adb
   - compilation unit at 2
     unit name    = Sep
     kind         = S_SEPARATE
+    withed units = { U1 }
 pkg1.adb
   single-unit          = TRUE
   has naming exception = FALSE
@@ -35,6 +37,7 @@ pkg2.adb
   - compilation unit at 1
     unit name    = pkg2
     kind         = S_BODY
+    withed units = { u1 }
     object file  = pkg2.ali
 pkg2.ads
   single-unit          = TRUE
@@ -43,3 +46,30 @@ pkg2.ads
     unit name    = pkg2
     kind         = S_SPEC
     object file  = pkg2.ali
+few_units.ada
+  single-unit          = FALSE
+  has naming exception = TRUE
+  - compilation unit at 1
+    unit name    = U1
+    kind         = S_SPEC
+  - compilation unit at 2
+    unit name    = U1
+    kind         = S_BODY
+    withed units = { U2 }
+    object file  = few_units~2.ali
+  - compilation unit at 3
+    unit name    = U2
+    kind         = S_SPEC
+  - compilation unit at 4
+    unit name    = U2
+    kind         = S_BODY
+    withed units = { U3 }
+    object file  = few_units~4.ali
+  - compilation unit at 5
+    unit name    = U3
+    kind         = S_SPEC
+  - compilation unit at 6
+    unit name    = U3
+    kind         = S_BODY
+    withed units = { GNAT GNAT.IO }
+    object file  = few_units~6.ali

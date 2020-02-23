@@ -304,6 +304,15 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       Data.Timestamp := Directories.Modification_Time (Source.Path_Name.Value);
    end Compute;
 
+   ----------------
+   -- Unregister --
+   ----------------
+
+   procedure Unregister is
+   begin
+      Parser.Registry.Unregister (Handle);
+   end Unregister;
+
 begin
    Parser.Registry.Register (Handle);
 end GPR2.Source_Info.Parser.Ada_Language;

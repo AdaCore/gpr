@@ -21,6 +21,9 @@ package GPR2.Source_Info.Parser.Registry is
    procedure Register (Parser : Object'Class);
    --  Register a source info parser
 
+   procedure Unregister (Parser : Object'Class);
+   --  Unregister a source info parser
+
    function Exists (Language : Name_Type; Kind : Backend) return Boolean
      with Pre => Kind /= None;
    --  Returns True if the parser backend for Language if found. If Kind is
