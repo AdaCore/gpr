@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -35,6 +35,12 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 with GPR2.Source_Reference;
 with GPR2.Version;
+
+pragma Warnings
+  (Off, "unit ""GPR2.Source_Info.Parser.Ada_Language"" is not referenced");
+with GPR2.Source_Info.Parser.Ada_Language;
+--  !!! This "with" need until ALI parser implementation complete
+pragma Warnings (On);
 
 with GPRtools.Options;
 with GPRtools.Sigint;

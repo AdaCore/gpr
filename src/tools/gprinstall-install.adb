@@ -942,9 +942,11 @@ package body GPRinstall.Install is
                return Source.Source.Language = "ada";
             end Is_Ada;
 
-            Src : GPR2.Source.Object;
-            Atf : GPR2.Project.Source.Artifact.Object;
-            CUs : GPR2.Unit.List.Object;
+            Src     : GPR2.Source.Object;
+            Atf     : GPR2.Project.Source.Artifact.Object;
+            CUs     : GPR2.Unit.List.Object;
+            Has_Atf : Boolean := False;
+            --  Has artefacts to install
 
          begin
             for Source of Project.Sources loop
@@ -983,18 +985,19 @@ package body GPRinstall.Install is
 
                   --  Objects / Deps
 
-                  if not Options.Sources_Only
-                    and then Source.Is_Compilable
-                    and then
-                      (not Source.Has_Other_Part
-                       or else CUs (1).Kind /= S_Spec)
-                  then
-                     if Copy (Object)
-                       and then Src.Units.Element
-                         (1).Kind /= S_Separate
-                     then
+                  for CU of CUs loop
+                     if CU.Kind not in S_Spec | S_Separate then
+                        Has_Atf := True;
+                        exit;
+                     end if;
+                  end loop;
+
+                  if not Options.Sources_Only and then Has_Atf then
+                     if Copy (Object) then
                         for CU of CUs loop
-                           if Atf.Has_Object_Code (CU.Index) then
+                           if CU.Kind not in S_Spec | S_Separate
+                             and then Atf.Has_Object_Code (CU.Index)
+                           then
                               Copy_File
                                 (From => Atf.Object_Code (CU.Index),
                                  To   => Lib_Dir);
@@ -1005,10 +1008,7 @@ package body GPRinstall.Install is
                      --  Only install Ada .ali files (always name the .ali
                      --  against the spec file).
 
-                     if Copy (Dependency)
-                       and then (not Src.Has_Units
-                                 or else CUs (1).Kind /= S_Separate)
-                     then
+                     if Copy (Dependency) then
                         declare
                            Proj : GPR2.Project.View.Object;
                            Ssrc : GPR2.Project.Source.Object;
@@ -1028,11 +1028,11 @@ package body GPRinstall.Install is
                               Proj := Source.View;
                            end if;
 
-                           if Is_Ada (Source)
-                             and then Src.Has_Units
-                           then
+                           if Is_Ada (Source) then
                               for CU of CUs loop
-                                 if Atf.Has_Dependency (CU.Index) then
+                                 if CU.Kind not in S_Spec | S_Separate
+                                   and then Atf.Has_Dependency (CU.Index)
+                                 then
                                     Copy_File
                                       (From => Atf.Dependency (CU.Index),
                                        To   => (if Proj.Kind = K_Library
