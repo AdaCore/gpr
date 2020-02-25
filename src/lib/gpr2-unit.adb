@@ -22,7 +22,7 @@ package body GPR2.Unit is
 -- Update_Kind --
 -----------------
 
-   procedure Update_Kind (Self : in out Object; Kind : Kind_Type) is
+   procedure Update_Kind (Self : in out Object; Kind : Library_Unit_Type) is
    begin
       Self.Kind := Kind;
    end Update_Kind;

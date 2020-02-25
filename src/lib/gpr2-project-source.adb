@@ -284,7 +284,7 @@ package body GPR2.Project.Source is
      (Self  : Object;
       Index : Source_Info.Unit_Index := 1) return Boolean
    is
-      use all type GPR2.Unit.Kind_Type;
+      use all type GPR2.Unit.Library_Unit_Type;
 
       View   : constant Project.View.Object  := Definition.Strong (Self.View);
       Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
@@ -297,7 +297,7 @@ package body GPR2.Project.Source is
          declare
             CU        : constant GPR2.Unit.Object :=
                           Source.Units.Element (Positive (Index));
-            Kind      : constant GPR2.Unit.Kind_Type := CU.Kind;
+            Kind      : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
             Unit_Name : constant Name_Type :=
                           (if Kind = S_Separate
                            then CU.Separate_From
@@ -355,13 +355,13 @@ package body GPR2.Project.Source is
      (Self  : Object;
       Index : Source_Info.Unit_Index := 1) return Object
    is
-      use all type GPR2.Unit.Kind_Type;
+      use all type GPR2.Unit.Library_Unit_Type;
 
       View      : constant Project.View.Object :=
                     Definition.Strong (Self.View);
       CU        : constant GPR2.Unit.Object :=
                     Source (Self).Units.Element (Positive (Index));
-      Kind      : constant GPR2.Unit.Kind_Type := CU.Kind;
+      Kind      : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
       Unit_Name : constant Name_Type :=
                           (if Kind = S_Separate
                            then CU.Separate_From
@@ -479,7 +479,7 @@ package body GPR2.Project.Source is
 
       declare
          use type GPR2.Source_Info.Implemented_Backend;
-         use all type GPR2.Unit.Kind_Type;
+         use all type GPR2.Unit.Library_Unit_Type;
          --  At this point, all sources have been loaded into the
          --  view and so we know the relation between unit and
          --  spec/body/separate. We can then update the kind to

@@ -66,7 +66,7 @@ procedure Main is
 
             Text_IO.Set_Col (37);
             Text_IO.Put ("   Kind: "
-                         & GPR2.Unit.Kind_Type'Image (S.Kind));
+                         & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
 
             if S.Has_Units then
                Text_IO.Put ("   unit: " & String (S.Unit_Name));

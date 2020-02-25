@@ -78,7 +78,7 @@ package body GPR2.Source is
    function Create
      (Filename : GPR2.Path_Name.Object;
       Language : Name_Type;
-      Kind     : Unit.Kind_Type) return Object is
+      Kind     : Unit.Library_Unit_Type) return Object is
    begin
       return Result : Object  do
          Result.Path_Name := Filename;
@@ -98,7 +98,7 @@ package body GPR2.Source is
       Units         : Unit.List.Object;
       Is_RTS_Source : Boolean) return Object
    is
-      use all type Unit.Kind_Type;
+      use all type Unit.Library_Unit_Type;
 
       Key : Unbounded_String;
    begin

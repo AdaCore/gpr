@@ -517,7 +517,7 @@ package body GPR2.Project.Definition is
       -----------------
 
       procedure Handle_File (Path : GPR2.Path_Name.Full_Name) is
-         use all type Unit.Kind_Type;
+         use all type Unit.Library_Unit_Type;
 
          --  The implementation works as follows:
          --    For every language L in the project:
@@ -566,7 +566,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Unit.Kind_Type);
+            Kind     : out Unit.Library_Unit_Type);
          --  Try to match a file using its Basename and the project's
          --  naming exceptions for Language.
          --  If Language is Ada, use the attributes "for Body|Spec ... ".
@@ -578,7 +578,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Unit.Kind_Type);
+            Kind     : out Unit.Library_Unit_Type);
          --  Try to match a file using its extension and the project's
          --  naming scheme for Language.
          --  If Language is Ada, use the attributes "for (Body|Spec|
@@ -588,7 +588,7 @@ package body GPR2.Project.Definition is
 
          function Compute_Unit_From_Filename
            (File    : Path_Name.Object;
-            Kind    : Unit.Kind_Type;
+            Kind    : Unit.Library_Unit_Type;
             Success : out Boolean) return Name_Type;
          --  For an Ada source and given its kind, try to compute a valid unit
          --  name. Success takes True if such a valid name is found.
@@ -601,7 +601,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Unit.Kind_Type)
+            Kind     : out Unit.Library_Unit_Type)
          is
             Attr : Attribute.Object;
          begin
@@ -645,7 +645,7 @@ package body GPR2.Project.Definition is
            (Basename : Value_Type;
             Language : Name_Type;
             Match    : out Boolean;
-            Kind     : out Unit.Kind_Type)
+            Kind     : out Unit.Library_Unit_Type)
          is
             function Ends_With (Str, Ending : Value_Type) return Boolean
               with Inline;
@@ -721,7 +721,7 @@ package body GPR2.Project.Definition is
 
          function Compute_Unit_From_Filename
            (File    : Path_Name.Object;
-            Kind    : Unit.Kind_Type;
+            Kind    : Unit.Library_Unit_Type;
             Success : out Boolean) return Name_Type
          is
             use Ada.Strings;
@@ -907,7 +907,7 @@ package body GPR2.Project.Definition is
          Source_Is_In_Interface : Boolean := False;
          Has_Naming_Exception   : Boolean := False;
          Units                  : Unit.List.Object;  --  For Ada
-         Kind                   : Unit.Kind_Type;
+         Kind                   : Unit.Library_Unit_Type;
          U_Main                 : constant Unit.Main_Type := Unit.None;
          U_Flags                : constant Unit.Flags_Set :=
                                     Unit.Default_Flags;
@@ -1382,7 +1382,7 @@ package body GPR2.Project.Definition is
 
          procedure Register_Src
            (U_Def : in out Unit_Info.Object;
-            Kind  : Unit.Kind_Type);
+            Kind  : Unit.Library_Unit_Type);
          --  Register Project_Source into U_Def, according to its kind
 
          ------------------
@@ -1391,9 +1391,9 @@ package body GPR2.Project.Definition is
 
          procedure Register_Src
            (U_Def : in out Unit_Info.Object;
-            Kind  : Unit.Kind_Type)
+            Kind  : Unit.Library_Unit_Type)
          is
-            use all type Unit.Kind_Type;
+            use all type Unit.Library_Unit_Type;
          begin
             case Kind is
                when Unit.Spec_Kind =>
@@ -1702,7 +1702,7 @@ package body GPR2.Project.Definition is
                      end if;
 
                      declare
-                        use all type Unit.Kind_Type;
+                        use all type Unit.Library_Unit_Type;
 
                         Is_Interface : constant Boolean :=
                                          In_Interface

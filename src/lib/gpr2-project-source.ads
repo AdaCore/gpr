@@ -27,7 +27,7 @@ limited with GPR2.Project.Source.Set;
 package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
-   use type GPR2.Unit.Kind_Type;
+   use type GPR2.Unit.Library_Unit_Type;
 
    type Object is tagged private;
 

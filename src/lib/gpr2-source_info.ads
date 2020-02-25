@@ -33,7 +33,7 @@ private with GPR2.Unit.Map;
 package GPR2.Source_Info is
 
    use type Containers.Count_Type;
-   use type GPR2.Unit.Kind_Type;
+   use type GPR2.Unit.Library_Unit_Type;
 
    type Object is tagged private;
    --  The source information container
@@ -84,7 +84,7 @@ package GPR2.Source_Info is
    type Unit_Index is new Positive;
 
    function Kind
-     (Self : Object; Index : Unit_Index := 1) return Unit.Kind_Type
+     (Self : Object; Index : Unit_Index := 1) return Unit.Library_Unit_Type
      with Pre => Self.Is_Defined
                  and then (not Self.Has_Units
                            or else Self.Has_Unit_At (Index));
@@ -134,7 +134,7 @@ package GPR2.Source_Info is
 
    procedure Set
      (Self : in out Object;
-      Kind : Unit.Kind_Type)
+      Kind : Unit.Library_Unit_Type)
      with Post => not Self.Is_Ada;
 
    procedure Set_Ada
@@ -149,7 +149,7 @@ package GPR2.Source_Info is
    --  actual work must be done for Source or Project.Source object and depends
    --  on different parser (language or LI based).
 
-   procedure Update_Kind (Self : in out Object; Kind : Unit.Kind_Type)
+   procedure Update_Kind (Self : in out Object; Kind : Unit.Library_Unit_Type)
      with Pre  => Self.Is_Defined
                   and then Self.Has_Units
                   and then Self.Has_Single_Unit
@@ -170,7 +170,7 @@ private
       Is_RTS_Source : Boolean := False;
       CU_List       : Unit.List.Object;
       CU_Map        : Unit.Map.Object;
-      Kind          : Unit.Kind_Type;
+      Kind          : Unit.Library_Unit_Type;
       Timestamp     : Calendar.Time;
    end record
      with Dynamic_Predicate =>

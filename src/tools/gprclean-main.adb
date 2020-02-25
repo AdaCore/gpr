@@ -63,7 +63,7 @@ procedure GPRclean.Main is
    use GPR2;
    use GPRtools;
    use GPR2.Path_Name;
-   use all type Unit.Kind_Type;
+   use all type Unit.Library_Unit_Type;
 
    package PRA renames GPR2.Project.Registry.Attribute;
    package PRP renames GPR2.Project.Registry.Pack;

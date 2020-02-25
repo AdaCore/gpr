@@ -270,7 +270,7 @@ package body GPR2.Source_Info.Parser.ALI is
       LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
       View   : Project.View.Object'Class := Project.View.Undefined)
    is
-      use all type GPR2.Unit.Kind_Type;
+      use all type GPR2.Unit.Library_Unit_Type;
 
       Scan_ALI_Error : exception;
 
@@ -283,7 +283,7 @@ package body GPR2.Source_Info.Parser.ALI is
       B_Name  : constant Name_Type := Source.Path_Name.Simple_Name;
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
-      U_Kind  : Unit.Kind_Type;
+      U_Kind  : Unit.Library_Unit_Type;
       U_Flags : Unit.Flags_Set := Unit.Default_Flags;
       Main    : Unit.Main_Type := Unit.None;
       Withs   : Source_Reference.Identifier.Set.Object;
@@ -314,7 +314,7 @@ package body GPR2.Source_Info.Parser.ALI is
       ---------------
 
       procedure Fill_Unit is
-         L_Type : Unit.Library_Type with Unreferenced;
+         L_Type : Unit.Library_Item_Type with Unreferenced;
       begin
          --  Uname, Sfile, Utype
 
@@ -447,7 +447,7 @@ package body GPR2.Source_Info.Parser.ALI is
                IO.Get_Token (A_Handle, Stop_At_LF => True) with Unreferenced;
 
          U_Last : constant Integer := N'Last - 2; -- Unit last character in N
-         U_Kind : Unit.Kind_Type with Unreferenced;
+         U_Kind : Unit.Library_Unit_Type with Unreferenced;
       begin
          --  At least "?%(b|s)"
 

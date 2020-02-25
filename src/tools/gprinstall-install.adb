@@ -61,7 +61,7 @@ package body GPRinstall.Install is
    use GNAT;
 
    use GPR2;
-   use all type Unit.Kind_Type;
+   use all type Unit.Library_Unit_Type;
 
    use type GNATCOLL.OS.OS_Type;
 

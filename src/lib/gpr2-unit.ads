@@ -60,17 +60,18 @@ package GPR2.Unit is
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
-   type Kind_Type is (S_Spec, S_Spec_Only, S_Body, S_Body_Only, S_Separate);
+   type Library_Unit_Type is
+     (S_Spec, S_Spec_Only, S_Body, S_Body_Only, S_Separate);
    --  Indicates type of unit, if both body and spec are present, then the
-   --  first unit is marked Is_Body, and the second is marked Is_Spec. If only
-   --  a spec appears, then it is marked as Is_Spec_Only, and if only a body
-   --  appears, then it is marked Is_Body_Only).
+   --  first unit is marked S_Body, and the second is marked S_Spec. If only
+   --  a spec appears, then it is marked as S_Spec_Only, and if only a body
+   --  appears, then it is marked S_Body_Only).
 
-   subtype Spec_Kind is Kind_Type range S_Spec .. S_Spec_Only;
-   subtype Body_Kind is Kind_Type range S_Body .. S_Body_Only;
+   subtype Spec_Kind is Library_Unit_Type range S_Spec .. S_Spec_Only;
+   subtype Body_Kind is Library_Unit_Type range S_Body .. S_Body_Only;
 
-   type Library_Type is (Is_Package, Is_Subprogram);
-   --  Indicates whether a library unit is a package or a subprogram
+   type Library_Item_Type is (Is_Package, Is_Subprogram);
+   --  Indicates whether a library item is a package or a subprogram
 
    type Main_Type is (None, Is_Procedure, Is_Function);
 
@@ -100,7 +101,7 @@ package GPR2.Unit is
    function Create
      (Name         : Name_Type;
       Index        : Positive;
-      Kind         : Kind_Type;
+      Kind         : Library_Unit_Type;
       Main         : Main_Type;
       Dependencies : Source_Reference.Identifier.Set.Object;
       Sep_From     : Optional_Name_Type;
@@ -118,7 +119,7 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns the source index for this compilation unit
 
-   function Kind (Self : Object) return Kind_Type
+   function Kind (Self : Object) return Library_Unit_Type
      with Pre => Self.Is_Defined;
    --  Returns the kind for this compilation unit
 
@@ -139,7 +140,7 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns True if Self is a generic unit
 
-   procedure Update_Kind (Self : in out Object; Kind : Kind_Type)
+   procedure Update_Kind (Self : in out Object; Kind : Library_Unit_Type)
      with Pre  => Self.Is_Defined,
           Post => Self.Kind = Kind;
    --  Update kind for this unit
@@ -151,7 +152,7 @@ private
    type Object is tagged record
       Name         : Unbounded_String;
       Index        : Natural   := 0;
-      Kind         : Kind_Type := S_Spec;
+      Kind         : Library_Unit_Type := S_Spec;
       Main         : Main_Type;
       Dependencies : Source_Reference.Identifier.Set.Object;
       Sep_From     : Unbounded_String;
@@ -169,7 +170,7 @@ private
    function Create
      (Name         : Name_Type;
       Index        : Positive;
-      Kind         : Kind_Type;
+      Kind         : Library_Unit_Type;
       Main         : Main_Type;
       Dependencies : Source_Reference.Identifier.Set.Object;
       Sep_From     : Optional_Name_Type;
@@ -197,7 +198,7 @@ private
    function Separate_From (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.Sep_From)));
 
-   function Kind (Self : Object) return Kind_Type is
+   function Kind (Self : Object) return Library_Unit_Type is
      (Self.Kind);
 
    function Dependencies

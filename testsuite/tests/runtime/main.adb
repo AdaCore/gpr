@@ -199,7 +199,7 @@ begin
 
                Text_IO.Set_Col (27);
                Text_IO.Put
-                 ("   Kind: " & GPR2.Unit.Kind_Type'Image (S.Kind));
+                 ("   Kind: " & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
             end;

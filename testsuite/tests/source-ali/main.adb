@@ -70,7 +70,7 @@ procedure Main is
                   if S.Has_Unit_At (K) then
                      Text_IO.Set_Col (37);
                      Text_IO.Put ("   Kind: "
-                                  & GPR2.Unit.Kind_Type'Image (S.Kind (K)));
+                                  & GPR2.Unit.Library_Unit_Type'Image (S.Kind (K)));
 
                      Text_IO.Put ("   unit: " & String (S.Unit_Name (K)));
                      Text_IO.New_Line;

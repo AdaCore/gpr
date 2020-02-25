@@ -85,7 +85,7 @@ package body GPR2.Source_Info is
 
    function Kind
      (Self  : Object;
-      Index : Unit_Index := 1) return Unit.Kind_Type is
+      Index : Unit_Index := 1) return Unit.Library_Unit_Type is
    begin
       if Self.Is_Ada then
          return Self.CU_List (Positive (Index)).Kind;
@@ -115,7 +115,7 @@ package body GPR2.Source_Info is
 
    procedure Set
      (Self : in out Object;
-      Kind : Unit.Kind_Type) is
+      Kind : Unit.Library_Unit_Type) is
    begin
       Self.Is_Ada := False;
       Self.Kind   := Kind;
@@ -169,7 +169,8 @@ package body GPR2.Source_Info is
    -- Update_Kind --
    -----------------
 
-   procedure Update_Kind (Self : in out Object; Kind : Unit.Kind_Type) is
+   procedure Update_Kind
+     (Self : in out Object; Kind : Unit.Library_Unit_Type) is
    begin
       Self.Kind := Kind;
       Self.CU_List (1).Update_Kind (Kind);

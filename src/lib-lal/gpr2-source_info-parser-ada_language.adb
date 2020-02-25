@@ -124,7 +124,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
                   U_Name        : Unbounded_String;
                   U_Sep_From    : Unbounded_String;
-                  U_Kind        : Unit.Kind_Type;
+                  U_Kind        : Unit.Library_Unit_Type;
                   U_Withed      : Source_Reference.Identifier.Set.Object;
                   W_Found       : Containers.Name_Set;
 

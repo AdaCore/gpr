@@ -28,7 +28,7 @@ with GPR2.Source_Info;
 
 package GPR2.Source is
 
-   use type GPR2.Unit.Kind_Type;
+   use type GPR2.Unit.Library_Unit_Type;
 
    type Object is new Source_Info.Object with private;
 
@@ -60,7 +60,7 @@ package GPR2.Source is
    function Create
      (Filename : GPR2.Path_Name.Object;
       Language : Name_Type;
-      Kind     : Unit.Kind_Type) return Object
+      Kind     : Unit.Library_Unit_Type) return Object
      with Pre  => Filename.Is_Defined and then Language /= "Ada",
           Post => Create'Result.Is_Defined;
    --  Constructor for a non-Ada source object
