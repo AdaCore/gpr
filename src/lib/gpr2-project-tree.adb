@@ -618,6 +618,45 @@ package body GPR2.Project.Tree is
       return Self.Runtime.Is_Defined;
    end Has_Runtime_Project;
 
+   ------------------
+   -- Has_View_For --
+   ------------------
+
+   function Has_View_For
+     (Self         : Object;
+      Name         : Name_Type;
+      Context_View : View.Object) return Boolean
+   is
+      View : constant Project.View.Object := Self.Get (Name, Context_View);
+   begin
+      if not View.Is_Defined then
+         declare
+            CV : constant Project.View.Object :=
+                   (if Self.Has_Configuration
+                    then Self.Conf.Corresponding_View
+                    else Project.View.Undefined);
+         begin
+            --  If not found let's check if it is the configuration or runtime
+            --  project. Note that this means that any Runtime or Config user's
+            --  project name will have precedence.
+
+            if CV.Is_Defined and then CV.Name = Name then
+               return True;
+
+            elsif Self.Has_Runtime_Project
+              and then Self.Runtime.Name = Name
+            then
+               return True;
+            end if;
+         end;
+
+         return False;
+
+      else
+         return True;
+      end if;
+   end Has_View_For;
+
    ------------------------
    -- Invalidate_Sources --
    ------------------------

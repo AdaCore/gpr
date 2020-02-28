@@ -147,19 +147,25 @@ package GPR2.Project.Tree is
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
+   function Has_View_For
+     (Self         : Object;
+      Name         : Name_Type;
+      Context_View : View.Object) return Boolean;
+   --  Returns True if the project Name is found on the tree (see below)
+
    function View_For
      (Self         : Object;
       Name         : Name_Type;
       Context_View : View.Object) return View.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined
+                 and then Self.Has_View_For (Name, Context_View);
    --  Returns the project's view in the tree which corresponds to project name
    --  and that is matching the context. The context is needed as in the tree
    --  the same project can have different views with different context (e.g.
    --  under an aggregate project which is redefining some external variables).
    --  Given the context we are not sure of the uniqueness of the view, but
    --  this doesn't matter as all views of the same project with the same
-   --  context will have the exact same definition. Returns Undefined if the
-   --  view was not found.
+   --  context will have the exact same definition.
 
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this project tree
