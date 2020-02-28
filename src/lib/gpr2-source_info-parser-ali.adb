@@ -605,7 +605,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
             while Header in 'W' | 'Y' | 'Z' loop
                --  Only record explicite with clauses
-               if Header = 'W' then
+               if Header in 'W' | 'Y' then
                   Fill_With;
                end if;
 
