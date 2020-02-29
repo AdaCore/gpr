@@ -44,13 +44,13 @@ package body GPR2.Project.View is
    package PRP renames GPR2.Project.Registry.Pack;
 
    function Get_Ref (View : Object) return Definition.Ref is
-      (View.Get.Element);
+     (Definition.Data (View.Get.Element.all)'Unchecked_Access);
 
    function Get_RO (View : Object) return Definition.Const_Ref is
-      (View.Get.Element);
+     (Definition.Data (View.Get.Element.all)'Unchecked_Access);
 
    function Get_RW (View : in out Object) return Definition.Ref is
-      (View.Get.Element);
+     (Definition.Data (View.Get.Element.all)'Unchecked_Access);
 
    function Refcount (Self : Object) return Natural is
      (Definition_References.Get_Refcount (Self));
