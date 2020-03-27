@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                    Copyright (C) 2019-2020, AdaCore                      --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -37,8 +37,11 @@ package GPRtools.Util is
 
    procedure Set_Program_Name (Name : String);
 
-   procedure Output_Messages (Options : GPRtools.Options.Object'Class);
-   --  Output errors and if Verbose is True other messages from log
+   procedure Output_Messages
+     (Options : GPRtools.Options.Object'Class;
+      Log     : GPR2.Log.Object := GPR2.Log.Undefined);
+   --  Output errors and if Verbose is True other messages from Log.
+   --  Options Tree's log is used when Log is undefined.
 
    -------------------------
    -- Program termination --

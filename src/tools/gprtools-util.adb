@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -124,13 +124,20 @@ package body GPRtools.Util is
    -- Output_Messages --
    ---------------------
 
-   procedure Output_Messages (Options : GPRtools.Options.Object'Class) is
+   procedure Output_Messages
+     (Options : GPRtools.Options.Object'Class;
+      Log     : GPR2.Log.Object := GPR2.Log.Undefined)
+   is
       use Ada.Text_IO;
+      use GPR2.Log;
       Displayed : GPR2.Containers.Value_Set;
-      Log       : constant not null access GPR2.Log.Object :=
-                    Options.Tree.Log_Messages;
+      Used_Log  : constant GPR2.Log.Object :=
+                    (if not Log.Is_Defined and then Options.Tree /= null
+                       and then Options.Tree.Has_Messages
+                     then Options.Tree.Log_Messages.all
+                     else Log);
    begin
-      for C in Log.Iterate
+      for C in Used_Log.Iterate
         (Information => Options.Verbosity = Verbose,
          Warning     => Options.Warnings,
          Error       => True,
@@ -141,7 +148,7 @@ package body GPRtools.Util is
             use GPR2.Message;
 
             Msg      : constant GPR2.Log.Constant_Reference_Type :=
-                         Log.Constant_Reference (C);
+                         Used_Log.Constant_Reference (C);
             Text     : constant String :=
                          Msg.Format (Options.Full_Path_Name_For_Brief);
             Dummy    : GPR2.Containers.Value_Type_Set.Cursor;

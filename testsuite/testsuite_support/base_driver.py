@@ -339,3 +339,16 @@ class BaseDriver(TestDriver):
             self.result.actual_output += diff
         else:
             self.set_passed()
+
+
+# filter routine replaces in output all actual occurrences by expected.
+
+def filter(output, actual, expected):
+    return output.replace(actual, expected)
+
+
+# filter_cwd replaces in output all
+# current working directory occurrences by ''
+
+def filter_cwd(output):
+    return output.replace(os.getcwd(), '')

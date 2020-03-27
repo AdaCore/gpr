@@ -482,6 +482,12 @@ begin
            (Path_Name.Create_File (Name_Type (Options.Config_Project.all)),
             Target => Name_Type
               (Strings.Unbounded.To_String (Options.Target)));
+
+         if Config.Has_Error then
+            Util.Output_Messages (Options, Config.Log_Messages);
+            GPRtools.Util.Fail_Program ('"' & Options.Config_Project.all
+                          & """ processing failed");
+         end if;
       end if;
 
       --  Then, parse the user's project and the configuration file. Apply the
@@ -540,21 +546,7 @@ exception
       GNAT.Command_Line.Try_Help;
 
    when Project_Error | Processing_Error =>
-      if Options.Verbose then
-         --  Display all messagges
-         for M of Tree.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
-         end loop;
-
-      else
-         --  Display only errors
-         for C in Tree.Log_Messages.Iterate
-           (False, False, True, True, True)
-         loop
-            Text_IO.Put_Line (Log.Element (C).Format);
-         end loop;
-      end if;
-      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+      GPRtools.Util.Project_Processing_Failed (Options);
 
    when E : Constraint_Error =>
       Text_IO.Put_Line

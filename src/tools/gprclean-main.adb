@@ -592,6 +592,12 @@ begin
       Config := Project.Configuration.Load
         (Options.Config_File, Name_Type (To_String (Options.Target)));
 
+      if Config.Has_Error then
+         Util.Output_Messages (Options, Config.Log_Messages);
+         GPRtools.Util.Fail_Program
+           ('"' & String (Options.Config_File.Name) & """ processing failed");
+      end if;
+
       Project_Tree.Load
         (Options.Project_File, Options.Context, Config, Options.Build_Path,
          Subdirs          => To_Optional_Name (Options.Subdirs),
