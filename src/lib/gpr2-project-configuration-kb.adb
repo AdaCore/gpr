@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GNATCOLL.Traces;
 with GNATCOLL.VFS;
 with GNATCOLL.VFS_Utils;
 
@@ -26,28 +25,12 @@ with GPR2.Project.Configuration.KB.Parsing;
 
 package body GPR2.Project.Configuration.KB is
 
-   function "+" (Str : Optional_Name_Type) return Unbounded_String is
-     (To_Unbounded_String (String (Str)));
-
    function Query_Targets_Set
      (Self   : Object;
       Target : Name_Type) return Targets_Set_Id
      with Pre => Self.Is_Defined;
    --  Gets the target alias set id for a target, or Unknown_Targets_Set_Id if
    --  no such target is in the base.
-
-   procedure Get_Targets_Set
-     (Base   : in out Object;
-      Target : Name_Type;
-      Id     : out Targets_Set_Id)
-     with Pre => Base.Is_Defined;
-   pragma Unreferenced (Get_Targets_Set);
-   --  Gets the target alias set id for a target.  If not already in the base,
-   --  add it.
-
-   Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
-     GNATCOLL.Traces.Create
-       ("KNOWLEDGE_BASE.MAIN_TRACE", GNATCOLL.Traces.From_Config);
 
    ---------
    -- Add --
@@ -59,9 +42,10 @@ package body GPR2.Project.Configuration.KB is
       Location : GPR2.Path_Name.Object) is
    begin
       if Self.Parsed_Directories.Contains (Location) then
-         --  Do not parse several times the same database directory.
+         --  Do not parse several times the same database directory
          return;
       end if;
+
       Self.Parsed_Directories.Append (Location);
       Parsing.Parse_Knowledge_Base (Self, Location, Flags);
    end Add;
@@ -157,14 +141,13 @@ package body GPR2.Project.Configuration.KB is
    -- Default_Knowledge_Base_Directory --
    --------------------------------------
 
-   function Default_Location return GPR2.Path_Name.Object
-   is
+   function Default_Location return GPR2.Path_Name.Object is
       use GNATCOLL.VFS;
       use GNATCOLL.VFS_Utils;
 
       GPRconfig : constant Filesystem_String_Access :=
-        Locate_Exec_On_Path ("gprconfig");
-      Dir : Virtual_File;
+                    Locate_Exec_On_Path ("gprconfig");
+      Dir       : Virtual_File;
    begin
       if GPRconfig = null then
          return GPR2.Path_Name.Undefined;
@@ -196,38 +179,6 @@ package body GPR2.Project.Configuration.KB is
       return Empty_Vector;
    end Fallback_List;
 
-   ---------------------
-   -- Get_Targets_Set --
-   ---------------------
-
-   procedure Get_Targets_Set
-     (Base   : in out Object;
-      Target : Name_Type;
-      Id     : out Targets_Set_Id)
-   is
-      use GNAT.Regpat;
-      use GNATCOLL.Traces;
-   begin
-      Id := Query_Targets_Set (Base, Target);
-
-      if Id /= Unknown_Targets_Set then
-         return;
-      end if;
-
-      --  Create a new set
-      declare
-         Set : Target_Lists.List;
-      begin
-         Trace (Main_Trace, "create a new target set for " & String (Target));
-
-         Set.Append
-           (new Pattern_Matcher'(Compile
-            ("^" & GNAT.Regpat.Quote (String (Target)) & "$")));
-         Base.Targets_Sets.Append ((+Target, Set));
-         Id := Base.Targets_Sets.Last_Index;
-      end;
-   end Get_Targets_Set;
-
    -----------------------
    -- Normalized_Target --
    -----------------------
@@ -240,8 +191,8 @@ package body GPR2.Project.Configuration.KB is
    begin
       Result := Targets_Set_Vectors.Element
         (Self.Targets_Sets, Self.Query_Targets_Set (Target));
-      return Name_Type (To_String (Result.Name));
 
+      return Name_Type (To_String (Result.Name));
    exception
       when others =>
          return "unknown";
@@ -264,8 +215,8 @@ package body GPR2.Project.Configuration.KB is
          return All_Target_Sets;
       end if;
 
-      for I in First_Index (Self.Targets_Sets)
-        .. Last_Index (Self.Targets_Sets)
+      for I in
+        First_Index (Self.Targets_Sets) .. Last_Index (Self.Targets_Sets)
       loop
          declare
             Set : constant Target_Lists.List :=

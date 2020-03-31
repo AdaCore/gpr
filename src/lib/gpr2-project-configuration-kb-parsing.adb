@@ -44,7 +44,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
    function Node_Value_As_String (N : DOM.Core.Node) return String
      with Pre  => DOM.Core."/=" (N, null);
-   --  Returns the value of the node, concatenating all Text children.
+   --  Returns the value of the node, concatenating all Text children
 
    procedure Parse_Knowledge_Base
      (Base      : in out Object;
@@ -55,8 +55,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
    --  Parses a single top-level KB node. From_File used for diagnostics
 
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
-     GNATCOLL.Traces.Create
-       ("KNOWLEDGE_BASE.PARSING_TRACE", GNATCOLL.Traces.From_Config);
+                  GNATCOLL.Traces.Create
+                    ("KNOWLEDGE_BASE.PARSING_TRACE",
+                     GNATCOLL.Traces.From_Config);
 
    ---------
    -- Add --
@@ -80,16 +81,16 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Trace (Main_Trace, "Parsing string");
       Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
       Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
-      Open
-        (Unicode.CES.Byte_Sequence (String (Content)),
-         Unicode.CES.Utf8.Utf8_Encoding,
-         Input);
+
+      Open (Unicode.CES.Byte_Sequence (String (Content)),
+            Unicode.CES.Utf8.Utf8_Encoding,
+            Input);
       Parse (Reader, Input);
       Close (Input);
+
       Parse_Knowledge_Base
-        (Self,
-         DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
-         Flags);
+        (Self, DOM.Core.Documents.Get_Element (Get_Tree (Reader)), Flags);
+
       declare
          Doc : Document := Get_Tree (Reader);
       begin
@@ -157,32 +158,35 @@ package body GPR2.Project.Configuration.KB.Parsing is
       -- Parse_Single_File --
       -----------------------
 
-      procedure Parse_Single_File (File : GPR2.Path_Name.Object)
-      is
+      procedure Parse_Single_File (File : GPR2.Path_Name.Object) is
          use GNATCOLL.Traces;
          use DOM.Core, DOM.Core.Nodes;
          use Input_Sources.File;
          use Schema.Dom_Readers;
          use Sax.Readers;
 
-         Reader    : Schema.Dom_Readers.Tree_Reader;
-         Input     : File_Input;
+         Reader : Schema.Dom_Readers.Tree_Reader;
+         Input  : File_Input;
       begin
          Trace (Main_Trace, "Parsing file " & String (File.Value));
          Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
          Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
+
          Open (String (File.Value), Input);
          Parse (Reader, Input);
          Close (Input);
+
          Parse_Knowledge_Base
            (Self,
             DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
             Flags, File.Value);
+
          declare
             Doc : Document := Get_Tree (Reader);
          begin
             Free (Doc);
          end;
+
          Free (Reader);
       end Parse_Single_File;
 
@@ -201,6 +205,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
          end loop;
 
          End_Search (Search);
+
       else
          Parse_Single_File (Location);
       end if;
@@ -216,14 +221,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Flags     : Parsing_Flags;
       From_File : String := "")
    is
-      use DOM.Core, DOM.Core.Nodes;
-
-      N : Node;
+      use DOM.Core;
+      use DOM.Core.Nodes;
 
       Invalid_KB : exception;
 
       Error_Sloc : constant Source_Reference.Object :=
-        (if From_File = "" then Source_Reference.Builtin
+                     (if From_File = ""
+                      then Source_Reference.Builtin
                       else Source_Reference.Create (From_File, 0, 0));
 
       procedure Parse_Compiler_Description
@@ -290,16 +295,15 @@ package body GPR2.Project.Configuration.KB.Parsing is
       is
          use GNAT.Regpat;
 
-         Name    : Unbounded_String := Null_Unbounded_String;
+         Canon   : constant String :=
+                     Get_Attribute (Description, "canonical", "");
+         Name    : Unbounded_String;
          Set     : Target_Lists.List;
          Pattern : Pattern_Matcher_Access;
          N       : Node := First_Child (Description);
-         Canon   : constant String :=
-           Get_Attribute (Description, "canonical", "");
       begin
          if Canon = "" then
             if Flags (Pedantic) then
-
                Base.Messages.Append
                  (Message.Create
                     (Message.Error,
@@ -307,6 +311,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Sloc => Error_Sloc));
                raise Invalid_KB;
             end if;
+
          else
             Name := To_Unbounded_String (Canon);
          end if;
@@ -317,7 +322,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
             elsif Node_Name (N) = "target" then
                declare
-                  Val    : constant String := Node_Value_As_String (N);
+                  Val : constant String := Node_Value_As_String (N);
                begin
                   Pattern := new Pattern_Matcher'(Compile ("^" & Val & "$"));
                   Target_Lists.Append (Set, Pattern);
@@ -328,7 +333,6 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      --  is taken as canonical target.
                      Name := To_Unbounded_String (Val);
                   end if;
-
                exception
                   when Expression_Error =>
                      Base.Messages.Append
@@ -344,8 +348,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                Base.Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "Unknown XML tag "
-                      & Node_Name (N),
+                     "Unknown XML tag " & Node_Name (N),
                      Sloc => Error_Sloc));
                raise Invalid_KB;
             end if;
@@ -358,9 +361,12 @@ package body GPR2.Project.Configuration.KB.Parsing is
          end if;
       end Parse_Targets_Set;
 
+      N : Node;
+
    begin
       if Node_Name (Root_Node) = "gprconfig" then
          N := First_Child (Root_Node);
+
          while N /= null loop
             if Node_Type (N) /= Element_Node then
                null;
@@ -401,18 +407,16 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
             N := Next_Sibling (N);
          end loop;
+
       else
          Base.Messages.Append
            (Message.Create
-              (Message.Error,
-               "Invalid toplevel XML tag",
-               Sloc => Error_Sloc));
+              (Message.Error, "Invalid toplevel XML tag", Sloc => Error_Sloc));
       end if;
    exception
       when Invalid_KB =>
          --  Error messages have been added to the log, no point continuing
          --  parsing an inconsistent file.
-
          null;
    end Parse_Knowledge_Base;
 end GPR2.Project.Configuration.KB.Parsing;
