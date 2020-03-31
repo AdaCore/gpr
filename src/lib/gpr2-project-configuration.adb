@@ -325,6 +325,24 @@ package body GPR2.Project.Configuration is
       end if;
    end Dependency_File_Suffix;
 
+   ---------------
+   -- Externals --
+   ---------------
+
+   function Externals (Self : Object) return Containers.Name_List is
+   begin
+      return Self.Project.Externals;
+   end Externals;
+
+   -------------------
+   -- Has_Externals --
+   -------------------
+
+   function Has_Externals (Self : Object) return Boolean is
+   begin
+      return Self.Project.Is_Defined and then Self.Project.Has_Externals;
+   end Has_Externals;
+
    ------------------
    -- Has_Messages --
    ------------------

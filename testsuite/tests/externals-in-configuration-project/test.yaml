@@ -1,0 +1,2 @@
+description: check environment variable used when loading project tree
+driver: python_script

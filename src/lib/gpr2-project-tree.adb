@@ -1025,6 +1025,10 @@ package body GPR2.Project.Tree is
             raise Project_Error with "configuration project has errors";
          end if;
 
+         if Config.Is_Defined and then Config.Has_Externals then
+            Fill_Externals_From_Environment (Root_Context, Config.Externals);
+         end if;
+
          Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
          declare
@@ -1042,7 +1046,7 @@ package body GPR2.Project.Tree is
             Parser.Project.Process
               (P_Data.Trees.Project,
                Self,
-               Context,
+               Root_Context,
                C_View,
                P_Data.Attrs,
                P_Data.Vars,
@@ -1096,6 +1100,18 @@ package body GPR2.Project.Tree is
       --  Do nothing more if there are errors during the parsing
 
       if not Self.Messages.Has_Error then
+         --  Add to root view's externals, configuration project externals
+
+         if Config.Is_Defined and then Config.Has_Externals then
+            Def := Definition.Get (Self.Root);
+
+            for E of Config.Externals loop
+               if not Def.Externals.Contains (E) then
+                  Def.Externals.Append (E);
+               end if;
+            end loop;
+         end if;
+
          for V_Data of Self.Views_Set loop
             --  Compute the external dependencies for the views. This
             --  is the set of external used in the project and in all

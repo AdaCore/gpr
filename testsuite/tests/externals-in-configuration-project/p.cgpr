@@ -1,0 +1,5 @@
+configuration project Default is
+   VSB_Dir := external ("PATH");
+   package Naming is
+   end Naming;
+end Default;

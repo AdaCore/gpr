@@ -118,6 +118,15 @@ package GPR2.Project.Configuration is
                     (Dependency_File_Suffix'Result'First) = '.';
    --  Returns the dependency file suffix (with the leading dot)
 
+   function Has_Externals (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns whether Externals where found during configuration project load
+
+   function Externals (Self : Object) return Containers.Name_List
+     with Pre  => Self.Is_Defined and then Self.Has_Externals,
+          Post => not Externals'Result.Is_Empty;
+   --  Returns externals found in parsed configuration project
+
 private
 
    type Description is record
