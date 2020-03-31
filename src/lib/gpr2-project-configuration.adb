@@ -25,11 +25,16 @@ with GNATCOLL.Utils;
 
 with GPR2.Message;
 with GPR2.Project.Attribute;
+with GPR2.Project.Configuration.KB;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
+
+pragma Warnings (Off);
+with System.OS_Constants;
+pragma Warnings (On);
 
 package body GPR2.Project.Configuration is
 
@@ -122,6 +127,9 @@ package body GPR2.Project.Configuration is
       --  this case we just write the temporary file into the current working
       --  directory.
 
+      procedure Add_Arg (Arg : String);
+      --  Adds next argument of gprconfig call to the list
+
       Key : constant String := Config_File_Key'Img;
 
       Out_Filename  : constant String :=
@@ -141,13 +149,27 @@ package body GPR2.Project.Configuration is
                               (Process_Id & "-gpr2_tmp_conf_"
                                & Trim (Key, Left) & ".cgpr")).Value);
 
-      GPRconfig : constant OS_Lib.String_Access :=
-                    OS_Lib.Locate_Exec_On_Path ("gprconfig");
-      Args      : OS_Lib.Argument_List (1 .. Settings'Length +
-                                        (if Debug then 6 else 5));
+      GPRconfig     : constant OS_Lib.String_Access :=
+        OS_Lib.Locate_Exec_On_Path ("gprconfig");
+      Native_Target : constant Boolean := Target = "all";
+
+      Args      : OS_Lib.Argument_List
+        (1 .. Settings'Length + 4 + (if Debug then 1 else 0) +
+         (if Native_Target then 1 else 0));
       Success   : Boolean := False;
       Ret_Code  : Integer := 0;
       Result    : Object;
+      Cur_Arg   : Natural := Args'First;
+
+      -------------
+      -- Add_Arg --
+      -------------
+
+      procedure Add_Arg (Arg : String) is
+      begin
+         Args (Cur_Arg) := new String'(Arg);
+         Cur_Arg := Cur_Arg + 1;
+      end Add_Arg;
 
       -------------------
       -- Load_Messages --
@@ -180,24 +202,55 @@ package body GPR2.Project.Configuration is
    begin
       --  Build parameters
 
-      Args (1) := GPRconfig;
-      Args (2) := new String'("-o");
-      Args (3) := new String'(Conf_Filename);
-      Args (4) := new String'("--batch");
-      Args (5) := new String'("--target=" & String (Target));
+      Add_Arg ("-o");
+      Add_Arg (Conf_Filename);
+      Add_Arg ("--batch");
+
+      if Native_Target then
+         --  Normalize implicit target
+         declare
+            use GPR2.Project.Configuration.KB;
+
+            KB_Flags : Parsing_Flags := Default_Flags;
+            Base     : KB.Object;
+
+            Host : constant Name_Type :=
+              Name_Type (System.OS_Constants.Target_Name);
+         begin
+            KB_Flags (Compiler_Info) := False;
+            Base := KB.Create
+              (Location => Default_Location,
+               Flags    => KB_Flags);
+
+            if Base.Has_Error then
+               for Msg of Base.Log_Messages loop
+                  Result.Messages.Append (Msg);
+               end loop;
+            end if;
+
+            if Base.Normalized_Target (Host) = "unknown" then
+               Add_Arg ("--target=" & System.OS_Constants.Target_Name);
+            else
+               Add_Arg ("--target=" & String (Base.Normalized_Target (Host)));
+            end if;
+         end;
+
+         Add_Arg ("--fallback-targets");
+      else
+         Add_Arg ("--target=" & String (Target));
+      end if;
 
       for K in Settings'Range loop
-         Args (6 + K - Settings'First) :=
-           new String'("--config="
-                       & To_String (Settings (K).Language)
-                       & "," & To_String (Settings (K).Version)
-                       & "," & To_String (Settings (K).Runtime)
-                       & "," & To_String (Settings (K).Path)
-                       & "," & To_String (Settings (K).Name));
+         Add_Arg ("--config="
+                  & To_String (Settings (K).Language)
+                  & "," & To_String (Settings (K).Version)
+                  & "," & To_String (Settings (K).Runtime)
+                  & "," & To_String (Settings (K).Path)
+                  & "," & To_String (Settings (K).Name));
       end loop;
 
       if Debug then
-         Args (Args'Last) := new String'("-v");
+         Add_Arg ("-v");
       end if;
 
       --  Execute external GPRconfig tool
