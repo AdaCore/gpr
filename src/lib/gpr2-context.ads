@@ -20,9 +20,11 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GPR2.Containers;
 
-with GNAT.MD5; use GNAT;
+with GNAT.MD5;
 
 package GPR2.Context is
+
+   use GNAT;
 
    use type GPR2.Containers.Count_Type;
    use type MD5.Binary_Message_Digest;
