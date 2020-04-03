@@ -29,9 +29,6 @@ package body GPR2.Source_Info.Parser.ALI is
 
    Handle : Object;
 
-   function "+" (Item : String) return Unbounded_String
-                 renames To_Unbounded_String;
-
    package IO is
 
       use Ada.Streams;
@@ -587,6 +584,7 @@ package body GPR2.Source_Info.Parser.ALI is
                with Unreferenced;
          A : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True)
                with Unreferenced;
+
          U_Last : constant Integer := N'Last - 2; -- Unit last character in N
          U_Kind : Unit.Library_Unit_Type with Unreferenced;
       begin
@@ -831,17 +829,19 @@ package body GPR2.Source_Info.Parser.ALI is
 
          for K in 1 .. CU_Idx loop
             declare
-               Inserted : Boolean;
                function Image (Item : Unit.Object) return String is
                  (String (Item.Name)
                   & ' ' & String (Source.Path_Name.Simple_Name)
                   & ' ' & Item.Kind'Img);
-               Ref : access Cache_Holder;
+
+               Ref      : access Cache_Holder;
+               Inserted : Boolean;
             begin
                Self.Cache.Insert
                  (Key (LI, Name_Type (-CU_BN (K))),
                   (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
                   In_Cache, Inserted);
+
                if not Inserted
                  and then CUs (K) /= Cache_Map.Element (In_Cache).Unit
                then

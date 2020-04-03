@@ -129,9 +129,10 @@ package GPR2.Project.Source is
 
    procedure Dependencies
      (Self     : Object;
-      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False);
-   --  Call For_Each routine for each dependency source.
+   --  Call For_Each routine for each dependency source
 
    --
    --  The following routines may be used for both unit-based and

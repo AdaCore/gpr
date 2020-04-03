@@ -34,7 +34,8 @@ package body GPR2.Project.Source is
 
    procedure Context_Clause_Dependencies
      (Self     : Object;
-      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
      with Pre => Self.Is_Defined and then Self.Source.Has_Units;
    --  Returns the source files on which the current source file depends
@@ -64,8 +65,9 @@ package body GPR2.Project.Source is
    ---------------------------------
 
    procedure Context_Clause_Dependencies
-     (Self    : Object;
-      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+     (Self     : Object;
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
    is
       View : constant Project.View.Object := Definition.Strong (Self.View);
@@ -92,7 +94,12 @@ package body GPR2.Project.Source is
       ------------
 
       procedure Output (Unit : Unit_Info.Object) is
+
          procedure Outp (Item : GPR2.Path_Name.Object);
+
+         ----------
+         -- Outp --
+         ----------
 
          procedure Outp (Item : GPR2.Path_Name.Object) is
             Position : Containers.Name_Type_Set.Cursor;
@@ -120,8 +127,6 @@ package body GPR2.Project.Source is
          end loop;
       end Output;
 
-      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
-
       Buf  : Source_Reference.Identifier.Set.Object :=
                Self.Source.Context_Clause_Dependencies;
       --  Buf contains units to be checked, this list is extended when looking
@@ -146,6 +151,8 @@ package body GPR2.Project.Source is
             end loop;
          end loop;
       end To_Analyze;
+
+      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
 
    begin
       if Self.Has_Other_Part then
@@ -267,7 +274,8 @@ package body GPR2.Project.Source is
 
    procedure Dependencies
      (Self     : Object;
-      For_Each : access procedure (Source : GPR2.Project.Source.Object);
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
    is
       Tree : constant not null access Project.Tree.Object :=
@@ -289,8 +297,8 @@ package body GPR2.Project.Source is
       begin
          for File of Source.Dependencies loop
             Done.Insert (File, Position, Inserted);
-            if Inserted then
 
+            if Inserted then
                Src_File := GPR2.Path_Name.Create_File
                  (File, GPR2.Path_Name.No_Resolution);
                View := Tree.Get_View (Src_File);
@@ -301,6 +309,7 @@ package body GPR2.Project.Source is
                   pragma Assert (S.Is_Defined, "Can't find " & String (File));
 
                   For_Each (S);
+
                   if Closure then
                      Collect_Source (S.Source);
                   end if;
