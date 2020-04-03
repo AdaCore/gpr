@@ -150,12 +150,13 @@ package body GPR2.Project.Configuration is
                                & Trim (Key, Left) & ".cgpr")).Value);
 
       GPRconfig     : constant OS_Lib.String_Access :=
-        OS_Lib.Locate_Exec_On_Path ("gprconfig");
+                        OS_Lib.Locate_Exec_On_Path ("gprconfig");
       Native_Target : constant Boolean := Target = "all";
 
       Args      : OS_Lib.Argument_List
-        (1 .. Settings'Length + 4 + (if Debug then 1 else 0) +
-         (if Native_Target then 1 else 0));
+                    (1
+                     .. Settings'Length + 4 + (if Debug then 1 else 0) +
+                          (if Native_Target then 1 else 0));
       Success   : Boolean := False;
       Ret_Code  : Integer := 0;
       Result    : Object;
@@ -211,13 +212,13 @@ package body GPR2.Project.Configuration is
          declare
             use GPR2.Project.Configuration.KB;
 
+            Host     : constant Name_Type :=
+                         Name_Type (System.OS_Constants.Target_Name);
             KB_Flags : Parsing_Flags := Default_Flags;
             Base     : KB.Object;
-
-            Host : constant Name_Type :=
-              Name_Type (System.OS_Constants.Target_Name);
          begin
             KB_Flags (Compiler_Info) := False;
+
             Base := KB.Create
               (Location => Default_Location,
                Flags    => KB_Flags);
@@ -236,6 +237,7 @@ package body GPR2.Project.Configuration is
          end;
 
          Add_Arg ("--fallback-targets");
+
       else
          Add_Arg ("--target=" & String (Target));
       end if;
