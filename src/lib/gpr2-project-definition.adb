@@ -145,7 +145,10 @@ package body GPR2.Project.Definition is
       if Def.Has_Packages (PRP.Naming) then
          return Def.Packs (PRP.Naming);
 
-      elsif Def.Tree.Has_Configuration then
+      elsif Def.Tree.Has_Configuration
+              and then
+            Def.Tree.Configuration.Corresponding_View.Has_Packages (PRP.Naming)
+      then
          return Def.Tree.Configuration.Corresponding_View.Naming_Package;
 
       else
