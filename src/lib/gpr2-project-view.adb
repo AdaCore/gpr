@@ -1241,9 +1241,10 @@ package body GPR2.Project.View is
    function Source_Path
      (Self        : Object;
       Filename    : GPR2.Simple_Name;
-      Need_Update : Boolean := True) return GPR2.Path_Name.Object is
-      Sources_Map : constant GPR2.Project.Definition.Simple_Name_Full_Path.Map
-                     := Definition.Get_RO (Self).Sources_Map;
+      Need_Update : Boolean := True) return GPR2.Path_Name.Object
+   is
+      Sources_Map : constant Definition.Simple_Name_Full_Path.Map :=
+                      Definition.Get_RO (Self).Sources_Map;
    begin
       if Sources_Map.Contains (Filename) then
          return Sources_Map.Element (Filename);

@@ -556,21 +556,21 @@ package body GPR2.Project.Tree is
    is
 
       Found_Count : Natural := 0;
-      --  found files so far
+      --  Found files so far
 
       procedure Add_File
         (Name : Path_Name.Object; Check_Exist : Boolean := True);
-      --  add Name to matching files, when Check_Exist is True file existence
+      --  Add Name to matching files, when Check_Exist is True file existence
       --  is checked before Path is added to matching files.
 
       procedure Handle_Object_File;
-      --  set Full_Path with matching object file.
+      --  Set Full_Path with matching object file
 
       procedure Handle_Project_File;
-      --  set Full_Path with the first matching project.
+      --  Set Full_Path with the first matching project
 
       procedure Handle_Source_File;
-      --  set Full_Path with matching source file.
+      --  Set Full_Path with matching source file
 
       --------------
       -- Add_File --
@@ -581,8 +581,10 @@ package body GPR2.Project.Tree is
       begin
          if not Check_Exist or else Name.Exists then
             Found_Count := Found_Count + 1;
+
             if Found_Count = 1 then
                Full_Path := Name;
+
             else
                Ambiguous := True;
                if Name /= Full_Path then
@@ -599,7 +601,7 @@ package body GPR2.Project.Tree is
       procedure Handle_Object_File is
 
          procedure Handle_Object_File_In_View (View : Project.View.Object);
-         --  set Full_Path with matching View's object file.
+         --  Set Full_Path with matching View's object file
 
          --------------------------------
          -- Handle_Object_File_In_View --
@@ -609,12 +611,15 @@ package body GPR2.Project.Tree is
          begin
             if View.Is_Library then
                Add_File (View.Object_Directory.Compose (Base_Name));
+
                if Found_Count = 0 then
                   Add_File (View.Library_Directory.Compose (Base_Name));
                end if;
+
                if Found_Count = 0 then
                   Add_File (View.Library_Ali_Directory.Compose (Base_Name));
                end if;
+
             elsif View.Kind = K_Standard then
                Add_File (View.Object_Directory.Compose (Base_Name));
             end if;
@@ -624,6 +629,7 @@ package body GPR2.Project.Tree is
          if not Predefined_Only then
             if View /= Project.View.Undefined then
                Handle_Object_File_In_View (View);
+
             else
                for V in Self.Iterate
                  (Status => (Project.S_Externally_Built => Indeterminate))
@@ -632,6 +638,7 @@ package body GPR2.Project.Tree is
                end loop;
             end if;
          end if;
+
          if Found_Count = 0 then
             if Self.Has_Runtime_Project then
                Handle_Object_File_In_View (Self.Runtime_Project);
@@ -646,7 +653,8 @@ package body GPR2.Project.Tree is
       procedure Handle_Project_File is
       begin
          for V in Self.Iterate
-           (Status => (Project.S_Externally_Built => Indeterminate)) loop
+           (Status => (Project.S_Externally_Built => Indeterminate))
+         loop
             declare
                View : constant Project.View.Object := Project.Tree.Element (V);
             begin
@@ -664,7 +672,7 @@ package body GPR2.Project.Tree is
       procedure Handle_Source_File is
 
          procedure Handle_Source_File_In_View (View : Project.View.Object);
-         --  set Full_Path with matching View's source file.
+         --  Set Full_Path with matching View's source file
 
          --------------------------------
          -- Handle_Source_File_In_View --
@@ -683,13 +691,16 @@ package body GPR2.Project.Tree is
          if not Predefined_Only then
             if View /= Project.View.Undefined then
                Handle_Source_File_In_View (View);
+
             else
                for V in Self.Iterate
-                 (Status => (Project.S_Externally_Built => Indeterminate)) loop
+                 (Status => (Project.S_Externally_Built => Indeterminate))
+               loop
                   Handle_Source_File_In_View (Project.Tree.Element (V));
                end loop;
             end if;
          end if;
+
          if Found_Count = 0 then
             if Self.Has_Runtime_Project then
                Handle_Source_File_In_View (Self.Runtime_Project);
@@ -698,23 +709,26 @@ package body GPR2.Project.Tree is
       end Handle_Source_File;
 
    begin
-      --  initialize return values
+      --  Initialize return values
+
       Ambiguous := False;
       Full_Path := Path_Name.Undefined;
 
-      --  handle project file.
-      if Project.Ensure_Extension (Base_Name) = Base_Name
-      then
+      --  Handle project file
+
+      if Project.Ensure_Extension (Base_Name) = Base_Name then
          Handle_Project_File;
          return;
       end if;
 
-      --  handle source file.
+      --  Handle source file
+
       if Use_Source_Path then
          Handle_Source_File;
       end if;
 
-      --  handle object file
+      --  Handle object file
+
       if Found_Count = 0 and then Use_Object_Path then
          Handle_Object_File;
       end if;
@@ -739,6 +753,7 @@ package body GPR2.Project.Tree is
                      Use_Source_Path,
                      Use_Object_Path,
                      Predefined_Only);
+
       if Ambiguous and then not Return_Ambiguous then
          return Path_Name.Undefined;
       else
@@ -758,7 +773,7 @@ package body GPR2.Project.Tree is
                    (if Source.Has_Dir_Name
                     then Name_Type (Source.Value)
                     else Source.Simple_Name);
-      Pos : Name_View.Cursor := Self.Sources.Find (Filename);
+      Pos      : Name_View.Cursor := Self.Sources.Find (Filename);
    begin
       if Name_View.Has_Element (Pos) then
          return Name_View.Element (Pos);
