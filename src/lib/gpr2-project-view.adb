@@ -1207,21 +1207,21 @@ package body GPR2.Project.View is
    function Source
      (Self        : Object;
       File        : GPR2.Path_Name.Object;
-      Need_Update : Boolean := True) return Project.Source.Object is
+      Need_Update : Boolean := True) return Project.Source.Object
+   is
+      CS : Definition.Simple_Name_Source.Cursor;
    begin
       if Need_Update then
          Self.Update_Sources;
       end if;
 
-      --  ??? we probably want to optimize this with a map. This is was Sources
-      --  is based on project name.
-      for S of Definition.Get_RO (Self).Sources loop
-         if S.Source.Path_Name.Simple_Name = File.Simple_Name then
-            return S;
-         end if;
-      end loop;
+      CS := Definition.Get_RO (Self).Sources_Map.Find (File.Simple_Name);
 
-      return Project.Source.Undefined;
+      if Definition.Simple_Name_Source.Has_Element (CS) then
+         return Definition.Simple_Name_Source.Element (CS);
+      else
+         return  Project.Source.Undefined;
+      end if;
    end Source;
 
    ------------------------
@@ -1243,11 +1243,16 @@ package body GPR2.Project.View is
       Filename    : GPR2.Simple_Name;
       Need_Update : Boolean := True) return GPR2.Path_Name.Object
    is
-      Sources_Map : constant Definition.Simple_Name_Full_Path.Map :=
-                      Definition.Get_RO (Self).Sources_Map;
+      CS : Definition.Simple_Name_Source.Cursor;
    begin
-      if Sources_Map.Contains (Filename) then
-         return Sources_Map.Element (Filename);
+      if Need_Update then
+         Self.Update_Sources;
+      end if;
+
+      CS := Definition.Get_RO (Self).Sources_Map.Find (Filename);
+
+      if Definition.Simple_Name_Source.Has_Element (CS) then
+         return Definition.Simple_Name_Source.Element (CS).Path_Name;
       else
          return GPR2.Path_Name.Undefined;
       end if;

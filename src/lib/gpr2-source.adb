@@ -37,15 +37,15 @@ package body GPR2.Source is
                   Calendar.Conversions.To_Duration
                     (tv_sec => 1, tv_nsec => 0);
 
-   function Key (Self : Object) return Value_Type
-     with Inline, Pre => Self.Is_Defined;
-   --  Returns the key for Self, this is used to compare a source object
-
    function Get_ALI_Timestamp
      (File : GPR2.Path_Name.Object) return Calendar.Time
      with Pre => File.Is_Defined;
    --  Return Timestamp used in ALI file. On windows use first greater time
    --  with an even number of second.
+
+   function Key (Self : Object) return Value_Type
+     with Inline, Pre => Self.Is_Defined;
+   --  Returns the key for Self, this is used to compare a source object
 
    ---------
    -- "<" --

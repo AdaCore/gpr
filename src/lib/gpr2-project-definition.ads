@@ -46,9 +46,9 @@ private package GPR2.Project.Definition is
       Imports : Parser.Project.Set.Object;
    end record;
 
-   package Simple_Name_Full_Path is
+   package Simple_Name_Source is
      new Ada.Containers.Indefinite_Ordered_Maps
-       (Simple_Name, Path_Name.Object);
+       (Simple_Name, Project.Source.Object, "=" => Project.Source."=");
    --  Map to find in which view a unit/source is defined
 
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
@@ -83,7 +83,7 @@ private package GPR2.Project.Definition is
       Types        : Project.Typ.Set.Object;
 
       Sources      : Project.Source.Set.Object;
-      Sources_Map  : Simple_Name_Full_Path.Map;
+      Sources_Map  : Simple_Name_Source.Map;
 
       Units        : Unit_Info.Set.Object;
 
@@ -220,5 +220,9 @@ private package GPR2.Project.Definition is
    --  Check that references between View.Object does not create cycles.
    --  Either returns True or raises exception about found reference circle.
    --  Return value need to use this function in pragma Assert.
+
+   procedure Sources_Map_Insert
+     (Def : in out Data; Src : Project.Source.Object);
+   --  Insert source into simple filename index if it is not yet inserted
 
 end GPR2.Project.Definition;
