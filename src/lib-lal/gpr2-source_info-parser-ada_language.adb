@@ -336,8 +336,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       Data.Parsed := Source_Info.Source;
       Data.Is_Ada := True;
-      Data.LI_Timestamp := Directories.Modification_Time
-                             (Source.Path_Name.Value);
    end Compute;
 
    ----------------

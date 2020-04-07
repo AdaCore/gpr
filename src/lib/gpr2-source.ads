@@ -53,7 +53,7 @@ package GPR2.Source is
      with Pre => Self.Is_Defined;
    --  Returns the language for this source
 
-   function Time_Stamp (Self : Object) return Ada.Calendar.Time
+   function Timestamp (Self : Object) return Ada.Calendar.Time
      with Pre => Self.Is_Defined;
    --  Returns the creation time for this source
 
@@ -101,7 +101,7 @@ private
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Time_Stamp (Self : Object) return Ada.Calendar.Time is
+   function Timestamp (Self : Object) return Ada.Calendar.Time is
      (Self.Timestamp);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is

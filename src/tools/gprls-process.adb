@@ -385,7 +385,7 @@ begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if S.Source.Timestamp = S.Source.Path_Name.Modification_Time then
+            if S.Source.Build_Timestamp = S.Source.Timestamp then
                Status := OK;
 
             elsif S.Source.Checksum = Checksum (S.Source.Path_Name) then

@@ -18,6 +18,16 @@
 
 package body GPR2.Source_Info is
 
+   ---------------------
+   -- Build_Timestamp --
+   ---------------------
+
+   function Build_Timestamp (Self : Object) return Ada.Calendar.Time is
+   begin
+      pragma Assert (Self.LI_Timestamp /= No_Time);
+      return Self.LI_Timestamp;
+   end Build_Timestamp;
+
    -----------
    -- Clear --
    -----------

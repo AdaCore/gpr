@@ -67,12 +67,11 @@ package GPR2.Source_Info is
      with Pre  => Self.Is_Defined;
    --  Returns True if language is Ada
 
-   function Timestamp (Self : Object) return Ada.Calendar.Time
-     with Pre => Self.Is_Defined;
-   --  Returns the timestamp of the file from where the source information have
-   --  been retrieved. For example, this is the Ada ALI file time stamp for the
-   --  Ada LI parser, or the timestamp for the source for source based parser.
-   --  Note that the timestamp is the last modification time.
+   function Build_Timestamp (Self : Object) return Ada.Calendar.Time
+     with Inline,
+          Pre => Self.Is_Defined and then Self.Used_Backend = LI;
+   --  Returns last modification of the source file from the time point when
+   --  the last successful build was done.
 
    function Checksum (Self : Object) return Word
      with Pre => Self.Is_Defined;
@@ -190,10 +189,6 @@ private
       --  Unit kind (S_Separate for a subunit)
    end record;
 
-   No_Time : constant Time :=
-               Time_Of
-                 (Year_Number'First, Month_Number'First, Day_Number'First);
-
    type Dependency is record
       Sfile : Unbounded_String;
       --  Base name of the source file.
@@ -237,9 +232,6 @@ private
    Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
-
-   function Timestamp (Self : Object) return Ada.Calendar.Time is
-     (Self.LI_Timestamp);
 
    function Checksum (Self : Object) return Word is
       (Self.Checksum);

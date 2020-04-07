@@ -50,6 +50,7 @@
 
 private with Ada.Calendar;
 private with Ada.Strings.Unbounded;
+private with GNATCOLL.Utils;
 
 package GPR2 is
 
@@ -143,7 +144,7 @@ private
 
    No_Name  : constant Optional_Name_Type := "";
    No_Value : constant Value_Type := "";
-   No_Time  : constant Calendar.Time := Calendar.Time_Of (1901, 1, 1);
+   No_Time  : Calendar.Time renames GNATCOLL.Utils.No_Time;
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
