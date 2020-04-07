@@ -386,7 +386,7 @@ package GPR2.Project.Tree is
    --  otherwise Undefined is returned.
 
    Target_Name : constant Name_Type;
-   --  native host target
+   --  Native host target
 
 private
 
