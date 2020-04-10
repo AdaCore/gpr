@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -36,6 +36,11 @@ package GPR2.Log is
           Variable_Indexing => Reference,
           Default_Iterator  => Iterate,
           Iterator_Element  => Message.Object;
+
+   Undefined : constant Object;
+
+   function Is_Defined (Self : Object) return Boolean;
+   --  Returns true if Self is defined
 
    function Contains
      (Self : Object; Message : GPR2.Message.Object) return Boolean;
@@ -128,8 +133,9 @@ private
      new Ada.Containers.Vectors (Positive, Message.Object);
 
    type Object is tagged record
-      Store : aliased Message_Set.Vector;
-      Index : Containers.Value_Set;
+      Store   : aliased Message_Set.Vector;
+      Index   : Containers.Value_Set;
+      Defined : Boolean := True;
    end record;
 
    type Cursor is record
@@ -155,5 +161,12 @@ private
          Error       => True,
          Read        => False,
          Unread      => True));
+
+   Undefined : constant Object :=
+                 (Store   => Message_Set.Empty_Vector,
+                  Index   => Containers.Value_Type_Set.Empty_Set,
+                  Defined => False);
+
+   function Is_Defined (Self : Object) return Boolean is (Self.Defined);
 
 end GPR2.Log;
