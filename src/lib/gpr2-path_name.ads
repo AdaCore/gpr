@@ -123,7 +123,9 @@ package GPR2.Path_Name is
       Directory : Boolean := False) return Object
      with Pre  => Self.Is_Defined,
           Post => Compose'Result.Is_Defined;
-   --  Returns Name as sub-directory of Self : Self & '/' & Name
+   --  If Directory = True then returns Name as sub-directory of Self :
+   --  Self & '/' & Name
+   --  If Directory = False use Name as simple filename in directory of Self.
 
    function Exists (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
