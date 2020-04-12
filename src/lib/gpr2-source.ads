@@ -89,7 +89,7 @@ private
 
    type Object is new Source_Info.Object with record
       Path_Name : GPR2.Path_Name.Object;
-      Timestamp : Calendar.Time;
+      Timestamp : Calendar.Time := No_Time;
       Language  : Unbounded_String;
       Ada_Key   : Unbounded_String;
    end record;

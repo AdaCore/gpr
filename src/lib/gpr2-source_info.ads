@@ -217,8 +217,6 @@ private
    package Dependency_Maps is new Ada.Containers.Ordered_Maps
      (Dependency_Key, Dependency);
 
-   Undefined_Time : constant Calendar.Time := Calendar.Time_Of (1901, 1, 1);
-
    type Object is tagged record
       Is_Ada        : Boolean := False;
       Parsed        : Backend := None;
@@ -226,7 +224,7 @@ private
       CU_List       : Unit.List.Object;
       CU_Map        : Unit.Map.Object;
       Kind          : Unit.Library_Unit_Type := Unit.S_Separate;
-      LI_Timestamp  : Calendar.Time          := Undefined_Time;
+      LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;
       Dependencies  : Dependency_Maps.Map;
    end record
