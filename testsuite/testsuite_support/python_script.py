@@ -1,8 +1,6 @@
 import sys
 
-from testsuite_support.base_driver import (
-    BaseDriver, catch_test_errors, SetupError,
-)
+from testsuite_support.base_driver import BaseDriver
 
 
 class PythonScriptDriver(BaseDriver):
@@ -20,12 +18,7 @@ class PythonScriptDriver(BaseDriver):
     one. Use this driver when no other one fits.
     """
 
-    TIMEOUT = 300
+    default_process_timeout = 300
 
-    #
-    # Driver entry points
-    #
-
-    @catch_test_errors
     def run(self):
-        self.run_and_check([sys.executable, 'test.py'])
+        self.shell([sys.executable, 'test.py'])
