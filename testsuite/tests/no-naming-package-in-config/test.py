@@ -1,4 +1,4 @@
-import subprocess
+from e3.os.process import Run
 
-output=subprocess.check_output('gpr2clean -p -q p.gpr --config=p.cgpr', shell=True)
-print output
+p = Run('gpr2clean -p -q p.gpr --config=p.cgpr'.split())
+print(p.out)

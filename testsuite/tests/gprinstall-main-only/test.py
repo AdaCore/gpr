@@ -1,15 +1,17 @@
-from gnatpython.env import Env
-from gnatpython.fileutils import cp
-import os, subprocess
+import os
+
+from e3.env import Env
+from e3.fs import cp
+from e3.os.process import Run
 
 if Env().host.platform.endswith('windows'):
-    exeext='.exe'
+    exeext = '.exe'
     cp('adactl', 'adactl' + exeext)
 else:
-    exeext=""
+    exeext = ""
 
-output=subprocess.check_output('gpr2install -p --prefix='
-                               + os.getcwd() + '/inst inst.gpr', shell=True)
+p = Run(['gpr2install', '-p',
+         '--prefix=' + os.path.join(os.getcwd(), 'inst'), 'inst.gpr'])
 
 if os.path.exists('inst/share/doc/gps/html/main.html'):
     print("OK main html")

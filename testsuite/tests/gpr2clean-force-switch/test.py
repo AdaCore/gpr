@@ -1,5 +1,7 @@
-import os, stat
-from gnatpython.ex import Run
+import os
+import stat
+
+from e3.os.process import Run
 
 # build 'p' project
 Run(['gprbuild', '-p', '-q', '-Pp'])
@@ -12,7 +14,7 @@ Run(['gpr2clean', '-Pp'])
 
 # check read only main.ali not deleted
 if not os.path.exists('main.ali'):
-    print ('NOK read-only files deleted in normal mode')
+    print('NOK read-only files deleted in normal mode')
 
 else:
     # clean project forcing deletions
@@ -20,6 +22,6 @@ else:
 
     # check read only main.ali deleted
     if os.path.exists('main.ali'):
-        print ('NOK read-only files not deleted in force deletions mode')
+        print('NOK read-only files not deleted in force deletions mode')
     else:
-        print ('OK')
+        print('OK')

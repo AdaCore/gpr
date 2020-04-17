@@ -1,61 +1,37 @@
-import os, subprocess
+import os
+import subprocess
+
+
+def run(args_pattern):
+    subprocess.check_output(args_pattern.format(os.getcwd()), shell=True)
+
+
+def check_exists(filename, invert=False):
+    if_tag, else_tag = "OK", "NOK"
+    if invert:
+        if_tag, else_tag = else_tag, if_tag
+    print("{} {}".format(
+        if_tag if os.path.exists(filename) else else_tag,
+        os.path.basename(filename)
+    ))
+
 
 # Test a standard project
+run("gprbuild -p -q prj.gpr")
+run("gpr2install -p  --prefix={}/inst prj.gpr")
+check_exists("inst/lib/prj/pck.ci")
+check_exists('inst/lib/prj/pck2.ci')
 
-output=subprocess.check_output('gprbuild -p -q prj.gpr', shell=True)
-
-output=subprocess.check_output('gpr2install -p  --prefix='
-                               + os.getcwd() + '/inst prj.gpr', shell=True)
-
-if os.path.exists('inst/lib/prj/pck.ci'):
-    print("OK pck.ci")
-else:
-    print("NOK pck.ci")
-
-if os.path.exists('inst/lib/prj/pck2.ci'):
-    print("OK pck2.ci")
-else:
-    print("NOK pck2.ci")
-
-output=subprocess.check_output('gpr2install -p  --uninstall --prefix='
-                               + os.getcwd() + '/inst prj.gpr', shell=True)
-
-if os.path.exists('inst/lib/prj/pck.ci'):
-    print("NOK pck.ci")
-else:
-    print("OK pck.ci")
-
-if os.path.exists('inst/lib/prj/pck2.ci'):
-    print("NOK pck2.ci")
-else:
-    print("OK pck2.ci")
+run("gpr2install -p  --uninstall --prefix={}/inst prj.gpr")
+check_exists('inst/lib/prj/pck.ci', invert=True)
+check_exists('inst/lib/prj/pck2.ci', invert=True)
 
 # Test a library project
+run('gprbuild -p -q lib.gpr')
+run('gpr2install -p  --prefix={}/instl lib.gpr')
+check_exists('instl/lib/lib/pck.ci')
+check_exists('instl/lib/lib/pck2.ci')
 
-output=subprocess.check_output('gprbuild -p -q lib.gpr', shell=True)
-
-output=subprocess.check_output('gpr2install -p  --prefix='
-                               + os.getcwd() + '/instl lib.gpr', shell=True)
-
-if os.path.exists('instl/lib/lib/pck.ci'):
-    print("OK pck.ci")
-else:
-    print("NOK pck.ci")
-
-if os.path.exists('instl/lib/lib/pck2.ci'):
-    print("OK pck2.ci")
-else:
-    print("NOK pck2.ci")
-
-output=subprocess.check_output('gpr2install -p  --uninstall --prefix='
-                               + os.getcwd() + '/instl lib.gpr', shell=True)
-
-if os.path.exists('instl/lib/lib/pck.ci'):
-    print("NOK pck.ci")
-else:
-    print("OK pck.ci")
-
-if os.path.exists('instl/lib/lib/pck2.ci'):
-    print("NOK pck2.ci")
-else:
-    print("OK pck2.ci")
+run('gpr2install -p  --uninstall --prefix={}/instl lib.gpr')
+check_exists('instl/lib/lib/pck.ci', invert=True)
+check_exists('instl/lib/lib/pck2.ci', invert=True)

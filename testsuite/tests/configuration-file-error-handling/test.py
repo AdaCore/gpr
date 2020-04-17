@@ -1,18 +1,11 @@
-import subprocess
+from e3.os.process import Run
+
 from utils import filter_cwd
 
-try:
-    subprocess.check_output('gpr2clean --config=no.cgpr -P p.gpr',
-                            stderr=subprocess.STDOUT,
-                            shell=True)
-except Exception as E:
-    print E.returncode
-    print filter_cwd(E.output)
+p = Run('gpr2clean --config=no.cgpr -P p.gpr'.split())
+print(p.status)
+print(filter_cwd(p.out))
 
-try:
-    subprocess.check_output('gpr2install --prefix=p --config=no.cgpr -P p.gpr',
-                            stderr=subprocess.STDOUT,
-                            shell=True)
-except Exception as E:
-    print E.returncode
-    print filter_cwd(E.output)
+p = Run('gpr2install --prefix=p --config=no.cgpr -P p.gpr'.split())
+print(p.status)
+print(filter_cwd(p.out))
