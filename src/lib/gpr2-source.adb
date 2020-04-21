@@ -112,8 +112,24 @@ package body GPR2.Source is
       use all type Unit.Library_Unit_Type;
 
       Key : Unbounded_String;
+
+      Sorted_Units : Unit.List.Object :=
+                       Unit.List.List.To_Vector (Unit.Undefined, Units.Length);
+
    begin
       for CU of Units loop
+         if CU.Index > Positive (Units.Length) then
+            raise Project_Error with "Unit index overflow";
+         end if;
+
+         if Sorted_Units (CU.Index).Is_Defined then
+            raise Project_Error with "Unit index duplication";
+         end if;
+
+         Sorted_Units (CU.Index) := CU;
+      end loop;
+
+      for CU of Sorted_Units loop
          Append
            (Key,
             Characters.Handling.To_Lower (String (CU.Name))
@@ -126,7 +142,7 @@ package body GPR2.Source is
          Result.Language  := +"Ada";
          Result.Ada_Key   := Key;
 
-         Set_Ada (Result, Units, Is_RTS_Source);
+         Set_Ada (Result, Sorted_Units, Is_RTS_Source);
       end return;
    end Create_Ada;
 

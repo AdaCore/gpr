@@ -29,8 +29,6 @@ with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Source_Reference.Identifier.Set;
 
-private with GPR2.Unit.Map;
-
 package GPR2.Source_Info is
 
    use type Containers.Count_Type;
@@ -217,7 +215,6 @@ private
       Parsed        : Backend := None;
       Is_RTS_Source : Boolean := False;
       CU_List       : Unit.List.Object;
-      CU_Map        : Unit.Map.Object;
       Kind          : Unit.Library_Unit_Type := Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;

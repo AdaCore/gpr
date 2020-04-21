@@ -35,7 +35,6 @@ package body GPR2.Source_Info is
    procedure Clear (Self : in out Object) is
    begin
       Self.CU_List.Clear;
-      Self.CU_Map.Clear;
       Self.Dependencies.Clear;
    end Clear;
 
@@ -167,12 +166,6 @@ package body GPR2.Source_Info is
       if Self.CU_List.Length > 0 then
          Self.Kind := Self.CU_List (1).Kind;
       end if;
-
-      Self.CU_Map.Clear;
-
-      for CU of Units loop
-         Self.CU_Map.Insert (CU.Index, CU);
-      end loop;
    end Set_Ada;
 
    ---------------
@@ -204,7 +197,6 @@ package body GPR2.Source_Info is
    begin
       Self.Kind := Kind;
       Self.CU_List (1).Update_Kind (Kind);
-      Self.CU_Map (1).Update_Kind (Kind);
    end Update_Kind;
 
 end GPR2.Source_Info;

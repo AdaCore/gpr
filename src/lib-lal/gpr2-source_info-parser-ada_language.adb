@@ -318,7 +318,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      end if;
 
                      Data.CU_List.Append (CU);
-                     Data.CU_Map.Insert (Index, CU);
                   end;
                end;
 

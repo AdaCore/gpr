@@ -619,7 +619,6 @@ package body GPR2.Source_Info.Parser.ALI is
       procedure Set_Source_Info_Data (Cache : Cache_Holder) is
       begin
          Data.CU_List.Append (Cache.Unit);
-         Data.CU_Map.Insert (Cache.Unit.Index, Cache.Unit);
          Data.Kind := Cache.Unit.Kind;
 
          Data.Parsed := Source_Info.LI;
