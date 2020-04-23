@@ -16,7 +16,7 @@ Project: Demo
 ..... DIRECT
 ..... CLOSURE
 
- > src/api-call.adb   unit: Call
+ > src/api-call.adb   unit: Api.Call
 ..... DIRECT
 api.ads:1:01: warning: withed unit Toto not found
 api.ads:3:01: warning: withed unit titi not found

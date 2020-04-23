@@ -27,11 +27,11 @@ sep.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
-    unit name    = V
+    unit name    = U.V
     kind         = S_SEPARATE
     withed units = { Ada Ada.Text_IO }
   - compilation unit at 2
-    unit name    = W
+    unit name    = U.W
     kind         = S_SEPARATE
     withed units = { GNAT GNAT.Regexp }
 u.adb

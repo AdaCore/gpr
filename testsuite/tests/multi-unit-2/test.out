@@ -11,10 +11,10 @@ sub.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
-    unit name    = Sep
+    unit name    = Pkg1.Sep
     kind         = S_SEPARATE
   - compilation unit at 2
-    unit name    = Sep
+    unit name    = Pkg2.Sep
     kind         = S_SEPARATE
     withed units = { U1 }
 pkg1.adb

@@ -272,10 +272,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                         pragma Assert
                           (Length (U_Name) > Length (U_Sep_From) + 1);
 
-                        --  Removes leading parent package
-
-                        Delete (U_Name, 1, Length (U_Sep_From) + 1);
-
                      when others =>
                         pragma Assert (False);
                   end case;

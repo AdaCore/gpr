@@ -18,7 +18,7 @@ Project: Demo
 ..... DIRECT
 ..... CLOSURE
 
- > /src/api-call.adb   unit: Call
+ > /src/api-call.adb   unit: Api.Call
 ..... DIRECT
    > /src2/toto.adb
    > /src2/toto.ads
