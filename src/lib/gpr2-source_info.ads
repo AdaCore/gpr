@@ -155,12 +155,14 @@ package GPR2.Source_Info is
    --  actual work must be done for Source or Project.Source object and depends
    --  on different parser (language or LI based).
 
-   procedure Update_Kind (Self : in out Object; Kind : Unit.Library_Unit_Type)
+   procedure Update_Kind
+     (Self  : in out Object;
+      Kind  : Unit.Library_Unit_Type;
+      Index : Unit_Index := 1)
      with Pre  => Self.Is_Defined
                   and then Self.Has_Units
-                  and then Self.Has_Single_Unit
                   and then Kind in Unit.S_Spec_Only | Unit.S_Body_Only,
-          Post => Self.Kind = Kind;
+          Post => Self.Kind = Kind or else Index > 1;
    --  Update kind for the source, this is only to adjust the kind to
    --  S_Spec_Only and S_Body_Only after a source based parser has been used.
 

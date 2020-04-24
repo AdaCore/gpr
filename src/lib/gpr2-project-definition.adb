@@ -752,11 +752,11 @@ package body GPR2.Project.Definition is
             declare
                Suffix : constant Value_Type :=
                           (case Kind is
-                              when S_Spec | S_Spec_Only =>
+                              when Unit.Spec_Kind =>
                                 Naming.Spec_Suffix ("ada").Value.Text,
-                              when S_Body | S_Body_Only =>
+                              when Unit.Body_Kind =>
                                 Naming.Body_Suffix ("ada").Value.Text,
-                              when S_Separate           =>
+                              when S_Separate     =>
                                 Naming.Separate_Suffix ("ada").Value.Text);
             begin
                if Length (Result) > Suffix'Length then

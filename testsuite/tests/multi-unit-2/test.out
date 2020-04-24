@@ -74,7 +74,8 @@ few_units.ada
     object file  = few_units~6.ali
   - compilation unit at 7
     unit name    = U4
-    kind         = S_SPEC
+    kind         = S_SPEC_ONLY
+    object file  = few_units~7.ali
   - compilation unit at 8
     unit name    = U3.P
     kind         = S_SEPARATE
@@ -152,7 +153,8 @@ few_units.ada
     object file  = few_units~6.ali
   - compilation unit at 7
     unit name    = U4
-    kind         = S_SPEC
+    kind         = S_SPEC_ONLY
+    object file  = few_units~7.ali
   - compilation unit at 8
     unit name    = U3.P
     kind         = S_SEPARATE

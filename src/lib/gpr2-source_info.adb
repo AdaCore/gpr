@@ -193,10 +193,15 @@ package body GPR2.Source_Info is
    -----------------
 
    procedure Update_Kind
-     (Self : in out Object; Kind : Unit.Library_Unit_Type) is
+     (Self  : in out Object;
+      Kind  : Unit.Library_Unit_Type;
+      Index : Unit_Index := 1) is
    begin
-      Self.Kind := Kind;
-      Self.CU_List (1).Update_Kind (Kind);
+      if Index = 1 then
+         Self.Kind := Kind;
+      end if;
+
+      Self.CU_List (Positive (Index)).Update_Kind (Kind);
    end Update_Kind;
 
 end GPR2.Source_Info;

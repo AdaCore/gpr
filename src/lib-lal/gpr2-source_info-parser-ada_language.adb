@@ -29,6 +29,7 @@ with GNAT.Case_Util;
 
 with GPR2.Project.Source;
 with GPR2.Project.Tree;
+with GPR2.Project.Unit_Info;
 with GPR2.Source;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier;
@@ -58,8 +59,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       use Langkit_Support.Text;
 
-      Ctx : constant Analysis_Context := Create_Context;
-
+      Ctx    : constant Analysis_Context := Create_Context;
       A_Unit : constant Analysis_Unit    :=
                  Get_From_File
                    (Ctx, Source.Path_Name.Value, Reparse => True);

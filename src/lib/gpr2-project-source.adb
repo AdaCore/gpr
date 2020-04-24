@@ -510,76 +510,80 @@ package body GPR2.Project.Source is
 
    procedure Update (Self : in out Object) is
       Language : constant Name_Type := Self.Source.Language;
-   begin
-      --  If we have a LI parser for this language, use it
 
-      if Source_Info.Parser.Registry.Exists (Language, Source_Info.LI)
-        and then not Self.Source.Is_Parsed
-      then
-         declare
-            Backend : constant not null access
-              Source_Info.Parser.Object'Class :=
-                Source_Info.Parser.Registry.Get (Language, Source_Info.LI);
-         begin
-            Source_Info.Parser.Compute
-              (Self   => Backend,
-               Data   => Self.Source,
-               Source => Self);
+      procedure Clarify_Unit_Type;
+      --  Set Kind to Spec_Only for the units without body and
+      --  set Kind to S_Body_Only for the units without specification.
 
-            if Self.Source.Is_Parsed then
-               return;
-            end if;
-         end;
-      end if;
+      -----------------------
+      -- Clarify_Unit_Type --
+      -----------------------
 
-      --  If no LI file (source may not be compiled yet) we default to
-      --  parsing with a source parser.
-
-      declare
-         use type GPR2.Source_Info.Implemented_Backend;
-         use all type GPR2.Unit.Library_Unit_Type;
-         --  At this point, all sources have been loaded into the
-         --  view and so we know the relation between unit and
-         --  spec/body/separate. We can then update the kind to
-         --  S_Spec_Only or S_Body_Only accordingly.
-         --
-         --  We do that here only after a source parser as a LI based parser
-         --  does that already.
-
+      procedure Clarify_Unit_Type is
+         use Definition;
+         Def : constant Ref := Get (Strong (Self.View));
       begin
-         if Source_Info.Parser.Registry.Exists (Language, Source_Info.Source)
-         then
-            Source_Info.Parser.Registry.Get (Language, Source_Info.Source)
-              .Compute (Self.Source, Self);
-         end if;
-
-         if Self.Source.Is_Parsed
-           and then Self.Source.Used_Backend = Source_Info.Source
-           and then Self.Source.Has_Units
-           and then Self.Source.Has_Single_Unit
-           and then View (Self).Units (Need_Update => False).Contains
-                      (Self.Source.Unit_Name)
-         then
+         for U of Self.Source.Units loop
             declare
-               Unit : constant Unit_Info.Object :=
-                        View (Self).Unit
-                          (Self.Source.Unit_Name, Need_Update => False);
+               use GPR2.Unit;
+               package US renames Unit_Info.Set.Set;
+
+               CU : constant Project.Unit_Info.Set.Cursor :=
+                       Def.Units.Find (U.Name);
+
+               procedure Update_Kind (Kind : Library_Unit_Type);
+               --  Update U unit kind and Source kind if necessary
+
+               -----------------
+               -- Update_Kind --
+               -----------------
+
+               procedure Update_Kind (Kind : Library_Unit_Type) is
+               begin
+                  Self.Source.Update_Kind
+                    (Kind, Source_Info.Unit_Index (U.Index));
+               end Update_Kind;
+
             begin
-               --  If a runtime source the unit is not defined
+               if not US.Has_Element (CU) and then Self.Source.Is_Runtime then
+                  return;
+               end if;
 
-               if Self.Source.Kind = S_Spec
-                 and then not Unit.Has_Body
-               then
-                  Self.Source.Update_Kind (S_Spec_Only);
+               if U.Kind = S_Spec and then not US.Element (CU).Has_Body then
+                  Update_Kind (S_Spec_Only);
 
-               elsif Self.Source.Kind = S_Body
-                 and then not Unit.Has_Spec
-               then
-                  Self.Source.Update_Kind (S_Body_Only);
+               elsif U.Kind = S_Body and then not US.Element (CU).Has_Spec then
+                  Update_Kind (S_Body_Only);
                end if;
             end;
+         end loop;
+      end Clarify_Unit_Type;
+
+   begin
+      if not Self.Source.Has_Units or else Self.Source.Is_Parsed then
+         return;
+      end if;
+
+      Clarify_Unit_Type;
+
+      for BK in Source_Info.Implemented_Backend loop
+         if Source_Info.Parser.Registry.Exists (Language, BK) then
+            declare
+               Backend : constant not null access
+                 Source_Info.Parser.Object'Class :=
+                   Source_Info.Parser.Registry.Get (Language, BK);
+            begin
+               Source_Info.Parser.Compute
+                 (Self   => Backend,
+                  Data   => Self.Source,
+                  Source => Self);
+
+               exit when Self.Source.Is_Parsed;
+            end;
          end if;
-      end;
+      end loop;
+
+      Clarify_Unit_Type;
    end Update;
 
    ----------

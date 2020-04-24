@@ -686,8 +686,8 @@ package body GPR2.Source_Info.Parser.ALI is
          pragma Assert
            ((U_Ref.Kind in Unit.Spec_Kind)
             = (Cache.Unit.Kind in Unit.Spec_Kind),
-            "Index" & Cache.Unit.Index'Img & ' ' & U_Ref.Kind'Img & ' '
-            & Cache.Unit.Kind'Img);
+            String (U_Ref.Name) & Cache.Unit.Index'Img & ' ' & U_Ref.Kind'Img
+            & ' ' & Cache.Unit.Kind'Img);
 
          U_Ref := Cache.Unit;
 

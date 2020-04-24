@@ -5,7 +5,8 @@ Project: Source_ALI
                                        deps: main.ali
  > li/src/pck.adb     language: Ada    Kind: S_BODY   unit: Pck
  > li/src/pck.ads     language: Ada    Kind: S_SPEC   unit: Pck
- > li/src/code.ada    language: Ada    Kind: S_SPEC   unit: U1
+ > li/src/code.ada    language: Ada    Kind: S_SPEC_ONLY   unit: U1
+                                       deps: code~1.ali
                                        Kind: S_SPEC   unit: U2
                                        Kind: S_BODY   unit: U2
                                        deps: code~3.ali
@@ -17,7 +18,7 @@ Project: Source_ALI
  > li/main.adb        language: Ada    Kind: S_BODY_ONLY   unit: Main
  > li/src/pck.adb     language: Ada    Kind: S_BODY   unit: Pck
  > li/src/pck.ads     language: Ada    Kind: S_SPEC   unit: Pck
- > li/src/code.ada    language: Ada    Kind: S_SPEC   unit: U1
+ > li/src/code.ada    language: Ada    Kind: S_SPEC_ONLY   unit: U1
                                        Kind: S_SPEC   unit: U2
                                        Kind: S_BODY   unit: U2
-                                       Kind: S_BODY   unit: U3
+                                       Kind: S_BODY_ONLY   unit: U3
