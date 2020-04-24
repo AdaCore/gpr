@@ -130,13 +130,13 @@ package body GPR2.Project.Source.Artifact is
          for CU of Source.Source.Units loop
             if CU.Kind in GPR2.Unit.Body_Kind then
                declare
-                  Index_Suffix : constant Name_Type := At_Suffix (CU.Index);
+                  Base : constant Name_Type := Src & At_Suffix (CU.Index);
                begin
                   if Source.Aggregated then
                      Deps_Lib.Insert
                        (CU.Index,
                         GPR2.Path_Name.Create_File
-                          (Src & Index_Suffix & D_Suffix,
+                          (Base & D_Suffix,
                            Optional_Name_Type
                              (Source.Aggregating_View.Library_Ali_Directory
                               .Value)));
@@ -145,7 +145,7 @@ package body GPR2.Project.Source.Artifact is
                      Object_Files.Insert
                        (CU.Index,
                         GPR2.Path_Name.Create_File
-                          (Src & Index_Suffix & O_Suffix,
+                          (Base & O_Suffix,
                            Optional_Name_Type
                              (O_View.Object_Directory.Value)));
 
@@ -153,14 +153,14 @@ package body GPR2.Project.Source.Artifact is
                         Deps_Lib.Insert
                           (CU.Index,
                            GPR2.Path_Name.Create_File
-                             (Src & Index_Suffix & D_Suffix,
+                             (Base & D_Suffix,
                               Name_Type (O_View.Library_Ali_Directory.Value)));
                      end if;
 
                      Deps_Obj.Insert
                        (CU.Index,
                         GPR2.Path_Name.Create_File
-                          (Src & Index_Suffix & D_Suffix,
+                          (Base & D_Suffix,
                            Optional_Name_Type
                              (O_View.Object_Directory.Value)));
                   end if;
