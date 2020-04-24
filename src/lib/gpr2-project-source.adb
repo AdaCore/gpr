@@ -517,36 +517,17 @@ package body GPR2.Project.Source is
         and then not Self.Source.Is_Parsed
       then
          declare
-            Art : constant Artifact.Object := Self.Artifacts;
-            LI  : GPR2.Path_Name.Object;
+            Backend : constant not null access
+              Source_Info.Parser.Object'Class :=
+                Source_Info.Parser.Registry.Get (Language, Source_Info.LI);
          begin
-            --  Let's check if we have a dependency for this file
+            Source_Info.Parser.Compute
+              (Self   => Backend,
+               Data   => Self.Source,
+               Source => Self);
 
-            if Art.Has_Dependency then
-               LI := Art.Dependency;
-            end if;
-
-            --  If LI is present then we can parse it to get the source
-            --  information.
-
-            if LI.Is_Defined and then LI.Exists then
-               --  ??? check if LI file is more recent than source
-               declare
-                  Backend : constant not null access
-                              Source_Info.Parser.Object'Class :=
-                                Source_Info.Parser.Registry.Get
-                                  (Language, Source_Info.LI);
-               begin
-                  Source_Info.Parser.Compute
-                    (Self   => Backend,
-                     Data   => Self.Source,
-                     LI     => LI,
-                     Source => Self.Source);
-
-                  if Source_Info.Object'Class (Self.Source).Is_Parsed then
-                     return;
-                  end if;
-               end;
+            if Self.Source.Is_Parsed then
+               return;
             end if;
          end;
       end if;
@@ -564,8 +545,13 @@ package body GPR2.Project.Source is
          --
          --  We do that here only after a source parser as a LI based parser
          --  does that already.
+
       begin
-         Self.Source.Update;
+         if Source_Info.Parser.Registry.Exists (Language, Source_Info.Source)
+         then
+            Source_Info.Parser.Registry.Get (Language, Source_Info.Source)
+              .Compute (Self.Source, Self);
+         end if;
 
          if Self.Source.Is_Parsed
            and then Self.Source.Used_Backend = Source_Info.Source

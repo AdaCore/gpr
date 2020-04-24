@@ -18,9 +18,19 @@
 
 package body GPR2.Unit is
 
------------------
--- Update_Kind --
------------------
+   -----------------------
+   -- Set_Separate_From --
+   -----------------------
+
+   procedure Set_Separate_From (Self : in out Object; Name : Name_Type) is
+   begin
+      Self.Sep_From := To_Unbounded_String (String (Name));
+      Self.Kind     := S_Separate;
+   end Set_Separate_From;
+
+   -----------------
+   -- Update_Kind --
+   -----------------
 
    procedure Update_Kind (Self : in out Object; Kind : Library_Unit_Type) is
    begin

@@ -25,7 +25,7 @@
 
 with GPR2.Project.View;
 
-limited with GPR2.Source;
+limited with GPR2.Project.Source;
 
 package GPR2.Source_Info.Parser is
 
@@ -38,16 +38,8 @@ package GPR2.Source_Info.Parser is
    procedure Compute
      (Self   : not null access Object;
       Data   : in out Source_Info.Object'Class;
-      Source : GPR2.Source.Object'Class;
-      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
-      View   : Project.View.Object'Class := Project.View.Undefined) is abstract
-   with Pre'Class  => Self.Kind /= None
-                            and then
-                          (LI.Is_Defined or else Self.Kind /= Source_Info.LI)
-                            and then
-                          (LI.Is_Defined or else not View.Is_Defined)
-                            and then
-                          (not LI.Is_Defined or else LI.Exists),
+      Source : Project.Source.Object) is abstract
+   with Pre'Class  => Self.Kind /= None,
         Post'Class => not Data.Is_Parsed
                         or else
                       Data.Used_Backend in Source_Info.LI | Source_Info.Source;

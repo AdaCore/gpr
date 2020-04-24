@@ -16,7 +16,6 @@ sub.adb
   - compilation unit at 2
     unit name    = Pkg2.Sep
     kind         = S_SEPARATE
-    withed units = { U1 }
 pkg1.adb
   single-unit          = TRUE
   has naming exception = FALSE
@@ -55,7 +54,7 @@ few_units.ada
   - compilation unit at 2
     unit name    = U1
     kind         = S_BODY
-    withed units = { U2 }
+    withed units = { u2 }
     object file  = few_units~2.ali
   - compilation unit at 3
     unit name    = U2
@@ -63,7 +62,7 @@ few_units.ada
   - compilation unit at 4
     unit name    = U2
     kind         = S_BODY
-    withed units = { U3 }
+    withed units = { u3 }
     object file  = few_units~4.ali
   - compilation unit at 5
     unit name    = U3
@@ -71,5 +70,5 @@ few_units.ada
   - compilation unit at 6
     unit name    = U3
     kind         = S_BODY
-    withed units = { GNAT GNAT.IO }
+    withed units = { gnat gnat.io }
     object file  = few_units~6.ali

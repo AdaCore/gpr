@@ -530,21 +530,22 @@ begin
                end Print_Unit_From;
 
             begin
-               ALI_File := Artifacts.Dependency;
+               for U_Sec of S.Source.Units loop
+                  ALI_File := Artifacts.Dependency (U_Sec.Index);
 
-               if ALI_File.Is_Defined and then ALI_File.Exists then
+                  if ALI_File.Is_Defined and then ALI_File.Exists then
+                     if Opt.Print_Object_Files
+                       and then not S.Is_Aggregated
+                     then
+                        Obj_File := Artifacts.Object_Code (U_Sec.Index);
 
-                  if Opt.Print_Object_Files and then not S.Is_Aggregated then
-                     Obj_File := Artifacts.Object_Code;
-
-                     if Obj_File.Exists then
-                        Text_IO.Put_Line (Obj_File.Value);
-                     else
-                        Text_IO.Put_Line (No_Obj);
+                        if Obj_File.Exists then
+                           Text_IO.Put_Line (Obj_File.Value);
+                        else
+                           Text_IO.Put_Line (No_Obj);
+                        end if;
                      end if;
-                  end if;
 
-                  for U_Sec of S.Source.Units loop
                      if Opt.Print_Units and then Print_Unit (U_Sec) then
                         null;
                      end if;
@@ -568,16 +569,17 @@ begin
                      for S of Unit_Info.Separates loop
                         Print_Unit_From (S);
                      end loop;
-                  end loop;
-
-                  if Opt.Dependency_Mode and then Opt.Print_Sources then
-                     if Opt.Verbose then
-                        Text_IO.Put_Line ("   depends upon");
-                     end if;
-
-                     S.Dependencies (Dependence_Output'Access);
                   end if;
+               end loop;
+
+               if Opt.Dependency_Mode and then Opt.Print_Sources then
+                  if Opt.Verbose then
+                     Text_IO.Put_Line ("   depends upon");
+                  end if;
+
+                  S.Dependencies (Dependence_Output'Access);
                end if;
+
             end;
          end loop;
       end Display_Normal;
@@ -643,14 +645,18 @@ begin
                              S.Artifacts;
 
                procedure Insert_Prefer_Body
-                 (Map : in out String_To_Positive_Maps.Map; Key : Name_Type);
+                 (Map  : in out String_To_Positive_Maps.Map;
+                  Key  : Name_Type;
+                  Kind : GPR2.Unit.Library_Unit_Type);
 
                ------------------------
                -- Insert_Prefer_Body --
                ------------------------
 
                procedure Insert_Prefer_Body
-                 (Map : in out String_To_Positive_Maps.Map; Key : Name_Type)
+                 (Map  : in out String_To_Positive_Maps.Map;
+                  Key  : Name_Type;
+                  Kind : GPR2.Unit.Library_Unit_Type)
                is
                   Position : String_To_Positive_Maps.Cursor;
                   Inserted : Boolean;
@@ -659,9 +665,7 @@ begin
                     (String (Key), Positive (All_Sources.Length), Position,
                      Inserted);
 
-                  if not Inserted
-                    and then S.Source.Kind = GPR2.Unit.S_Body
-                  then
+                  if not Inserted and then Kind = GPR2.Unit.S_Body then
                      --  Body has a preference
 
                      Map (Position) := Positive (All_Sources.Length);
@@ -669,16 +673,26 @@ begin
                end Insert_Prefer_Body;
 
             begin
-               if Artifacts.Has_Dependency then
-                  Insert_Prefer_Body
-                    (Dep_Simple_Names, Artifacts.Dependency.Simple_Name);
-                  Insert_Prefer_Body
-                    (Dep_Base_Names, Artifacts.Dependency.Base_Name);
-               end if;
+               if S.Source.Has_Units then
+                  for CU of S.Source.Units loop
+                     if Artifacts.Has_Dependency then
+                        Insert_Prefer_Body
+                          (Dep_Simple_Names,
+                           Artifacts.Dependency (CU.Index).Simple_Name,
+                           CU.Kind);
+                        Insert_Prefer_Body
+                          (Dep_Base_Names,
+                           Artifacts.Dependency (CU.Index).Base_Name,
+                           CU.Kind);
+                     end if;
 
-               if Artifacts.Has_Object_Code then
-                  Insert_Prefer_Body
-                    (Obj_Simple_Names, Artifacts.Object_Code.Simple_Name);
+                     if Artifacts.Has_Object_Code (CU.Index) then
+                        Insert_Prefer_Body
+                          (Obj_Simple_Names,
+                           Artifacts.Object_Code (CU.Index).Simple_Name,
+                           CU.Kind);
+                     end if;
+                  end loop;
                end if;
             end;
          end loop;
@@ -783,11 +797,20 @@ begin
       --  Check all sources and notify when no ALI file is present
 
       for S of Sources loop
-         if not S.Artifacts.Dependency.Exists then
-            Full_Closure := False;
-            Text_IO.Put_Line
-              ("Can't find ALI file for " & S.Source.Path_Name.Value);
-         end if;
+         for CU of S.Source.Units loop
+            if S.Artifacts.Has_Dependency (CU.Index)
+              and then not S.Artifacts.Dependency (CU.Index).Exists
+            then
+               Full_Closure := False;
+               Text_IO.Put_Line
+                 ("Can't find ALI "
+                  & (if CU.Index > 1
+                    then String (S.Artifacts.Dependency (CU.Index).Simple_Name)
+                         & ' '
+                    else "")
+                  & "file for " & S.Source.Path_Name.Value);
+            end if;
+         end loop;
       end loop;
 
       --  We gathered all the sources:

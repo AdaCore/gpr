@@ -50,28 +50,30 @@ package GPR2.Project.Source.Artifact is
    --  The project's source used to generate the artifacts
 
    function Has_Object_Code
-     (Self : Object; Index : Natural := 1) return Boolean
+     (Self : Object; Index : Natural := 0) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True if an object-code path is defined
+   --  Returns True if an object-code path is defined at Index.
+   --  If Index = 0 returns True on any object file defined.
 
    function Object_Code
-     (Self : Object; Index : Natural := 1) return GPR2.Path_Name.Object
+     (Self : Object; Index : Natural) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
-   --  The target-dependent code (generally .o or .obj). Note that the first
-   --  one (Index = 1) is the one to be used by the installer.
+   --  The target-dependent code (generally .o or .obj).
+   --  If Index = 0 then returns first available object file path.
 
    function Has_Dependency
      (Self     : Object;
-      Index    : Natural             := 1;
+      Index    : Natural             := 0;
       Location : Dependency_Location := In_Both) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a dependency path is defined.
    --  The Location parameter defines are we looking for dependency files in
    --  the object directory, library directory, or in both directories.
+   --  If Index = 0 returns True if dependency exists at any index.
 
    function Dependency
      (Self     : Object;
-      Index    : Natural             := 1;
+      Index    : Natural;
       Location : Dependency_Location := In_Both) return GPR2.Path_Name.Object
      with Pre  => Self.Is_Defined
                   and then Self.Has_Dependency (Index, Location),
@@ -81,7 +83,7 @@ package GPR2.Project.Source.Artifact is
    --  The Location parameter defines are we looking for dependency files in
    --  the object directory, library directory, or in both directories.
    --  In case of Location = In_Both, the returning priority is for existing
-   --  files.
+   --  files. If Index = 0 returns dependency with first available index.
 
    function Has_Preprocessed_Source (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -126,19 +128,11 @@ private
      (Self /= Undefined);
 
    function Has_Object_Code
-     (Self : Object; Index : Natural := 1) return Boolean is
-     (Self.Object_Files.Contains (Index));
-
-   function Has_Dependency
-     (Self     : Object;
-      Index    : Natural             := 1;
-      Location : Dependency_Location := In_Both) return Boolean is
-     (case Location is
-         when In_Objects => Self.Deps_Obj_Files.Contains (Index),
-         when In_Library => Self.Deps_Lib_Files.Contains (Index),
-         when In_Both    => Self.Deps_Lib_Files.Contains (Index)
-                              or else
-                            Self.Deps_Obj_Files.Contains (Index));
+     (Self : Object; Index : Natural := 0) return Boolean
+   is
+     (if Index = 0
+      then not Self.Object_Files.Is_Empty
+      else Self.Object_Files.Contains (Index));
 
    function Has_Preprocessed_Source (Self : Object) return Boolean is
      (Self.Preprocessed_Src.Is_Defined);

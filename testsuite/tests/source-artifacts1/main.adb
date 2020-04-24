@@ -60,8 +60,21 @@ procedure Main is
             S : constant GPR2.Source.Object := Source.Source;
          begin
             Output_Filename (S.Path_Name.Value);
-            Output_Filename (A.Object_Code.Value);
-            Output_Filename (A.Dependency.Value);
+            if S.Has_Units then
+               for CU of S.Units loop
+                  if A.Has_Object_Code (CU.Index) then
+                     Output_Filename (A.Object_Code (CU.Index).Value);
+                  end if;
+
+                  if A.Has_Dependency (CU.Index) then
+                     Output_Filename (A.Dependency (CU.Index).Value);
+                  end if;
+               end loop;
+
+            else
+               Output_Filename (A.Object_Code (0).Value);
+               Output_Filename (A.Dependency (0).Value);
+            end if;
 
             Text_IO.New_Line;
          end;

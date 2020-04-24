@@ -128,7 +128,7 @@ package body GPR2.Project.Source.Artifact is
 
       else
          for CU of Source.Source.Units loop
-            if CU.Kind in GPR2.Unit.Body_Kind then
+            if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
                declare
                   Base : constant Name_Type := Src & At_Suffix (CU.Index);
                begin
@@ -185,35 +185,80 @@ package body GPR2.Project.Source.Artifact is
 
    function Dependency
      (Self     : Artifact.Object;
-      Index    : Natural             := 1;
+      Index    : Natural;
       Location : Dependency_Location := In_Both)
       return GPR2.Path_Name.Object is
    begin
-      case Location is
-         when In_Library =>
-            return Self.Deps_Lib_Files (Index);
+      if Index = 0 then
+         case Location is
+            when In_Library =>
+               return Self.Deps_Lib_Files.First_Element;
 
-         when In_Objects =>
-            return Self.Deps_Obj_Files (Index);
+            when In_Objects =>
+               return Self.Deps_Obj_Files.First_Element;
 
-         when In_Both    =>
-            if not Self.Deps_Lib_Files.Contains (Index) then
+            when In_Both    =>
+               return
+                 (if Self.Deps_Lib_Files.Is_Empty
+                  then Self.Deps_Obj_Files.First_Element
+                  elsif Self.Deps_Obj_Files.Is_Empty
+                  then Self.Deps_Lib_Files.First_Element
+                  elsif Self.Deps_Lib_Files.First_Element.Exists
+                  then Self.Deps_Lib_Files.First_Element
+                  elsif Self.Deps_Obj_Files.First_Element.Exists
+                  then Self.Deps_Obj_Files.First_Element
+                  else Self.Deps_Lib_Files.First_Element);
+         end case;
+
+      else
+         case Location is
+            when In_Library =>
+               return Self.Deps_Lib_Files (Index);
+
+            when In_Objects =>
                return Self.Deps_Obj_Files (Index);
 
-            elsif not Self.Deps_Obj_Files.Contains (Index) then
-               return Self.Deps_Lib_Files (Index);
-
-            elsif Self.Deps_Lib_Files (Index).Exists then
-               return Self.Deps_Lib_Files (Index);
-
-            elsif Self.Deps_Obj_Files (Index).Exists then
-               return Self.Deps_Obj_Files (Index);
-
-            else
-               return Self.Deps_Lib_Files (Index);
-            end if;
-      end case;
+            when In_Both    =>
+               return
+                 (if not Self.Deps_Lib_Files.Contains (Index)
+                  then Self.Deps_Obj_Files (Index)
+                  elsif not Self.Deps_Obj_Files.Contains (Index)
+                  then Self.Deps_Lib_Files (Index)
+                  elsif Self.Deps_Lib_Files (Index).Exists
+                  then Self.Deps_Lib_Files (Index)
+                  elsif Self.Deps_Obj_Files (Index).Exists
+                  then Self.Deps_Obj_Files (Index)
+                  else Self.Deps_Lib_Files (Index));
+         end case;
+      end if;
    end Dependency;
+
+   --------------------
+   -- Has_Dependency --
+   --------------------
+
+   function Has_Dependency
+     (Self     : Object;
+      Index    : Natural             := 0;
+      Location : Dependency_Location := In_Both) return Boolean is
+   begin
+      if Index = 0 then
+         return
+           (case Location is
+               when In_Objects => not Self.Deps_Obj_Files.Is_Empty,
+               when In_Library => not Self.Deps_Lib_Files.Is_Empty,
+               when In_Both    => not (Self.Deps_Lib_Files.Is_Empty
+                                       and then Self.Deps_Obj_Files.Is_Empty));
+      else
+         return
+           (case Location is
+               when In_Objects => Self.Deps_Obj_Files.Contains (Index),
+               when In_Library => Self.Deps_Lib_Files.Contains (Index),
+               when In_Both    => Self.Deps_Lib_Files.Contains (Index)
+                                  or else Self.Deps_Obj_Files.Contains
+                                            (Index));
+      end if;
+   end Has_Dependency;
 
    ----------
    -- List --
@@ -303,9 +348,11 @@ package body GPR2.Project.Source.Artifact is
 
    function Object_Code
      (Self  : Artifact.Object;
-      Index : Natural := 1) return GPR2.Path_Name.Object is
+      Index : Natural) return GPR2.Path_Name.Object is
    begin
-      return Self.Object_Files (Index);
+      return (if Index = 0
+              then Self.Object_Files.First_Element
+              else Self.Object_Files (Index));
    end Object_Code;
 
    -------------------------

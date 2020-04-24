@@ -160,6 +160,11 @@ package GPR2.Unit is
           Post => Self.Kind = Kind;
    --  Update kind for this unit
 
+   procedure Set_Separate_From (Self : in out Object; Name : Name_Type)
+     with Pre  => Self.Is_Defined,
+          Post => Self.Kind = S_Separate;
+   --  Set subunit to be separate from Name
+
    function Image (Item : Flag) return String;
    --  Returns a string representation of Flag
 
@@ -178,7 +183,7 @@ private
       Flags        : Flags_Set := Default_Flags;
    end record
      with Dynamic_Predicate =>
-       (Length (Sep_From) = 0 or else Kind = S_Separate);
+       (Length (Sep_From) > 0) = (Kind = S_Separate);
    --  Note that in GPR2 we have a distinction between sources, that may
    --  define either the spec or body/ies for a unit - those definitions are
    --  represented as Compil_Unit records, and the unit itself which

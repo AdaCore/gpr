@@ -948,7 +948,6 @@ package body GPR2.Project.Definition is
             declare
                Language        : constant Name_Type := Name_Type (L.Text);
                Language_Is_Ada : constant Boolean := Language = "Ada";
-
             begin
                --  First, try naming exceptions
 
@@ -999,7 +998,6 @@ package body GPR2.Project.Definition is
                         end;
                      end loop;
                   end if;
-
                else
                   --  If no naming exception matched, try with naming scheme
 
@@ -1430,31 +1428,25 @@ package body GPR2.Project.Definition is
          for CU of Units loop
             declare
                Unit_Name : constant Name_Type := CU.Name;
-               U_Def     : Unit_Info.Object;
+               Position  : Unit_Info.Set.Cursor;
+               Inserted  : Boolean;
             begin
                Def.Tree.Record_View
                  (View   => View,
                   Source => File,
                   Unit   => Unit_Name);
 
-               if Def.Units.Contains (Unit_Name) then
-                  U_Def := Def.Units.Element (Unit_Name);
-
-                  Register_Src (U_Def, CU.Kind);
-
-                  Def.Units.Replace (Unit_Name, U_Def);
-
-               else
-                  U_Def := Unit_Info.Create
+               Def.Units.Insert
+                 (Unit_Name,
+                  Unit_Info.Create
                     (Unit_Name,
                      Spec      => Path_Name.Undefined,
                      Main_Body => Path_Name.Undefined,
-                     Separates => Path_Name.Set.Set.Empty_List);
+                     Separates => Path_Name.Set.Empty_Set),
+                  Position,
+                  Inserted);
 
-                  Register_Src (U_Def, CU.Kind);
-
-                  Def.Units.Insert (Unit_Name, U_Def);
-               end if;
+               Register_Src (Def.Units (Position), CU.Kind);
             end;
          end loop;
       end Register_Units;
@@ -1878,19 +1870,23 @@ package body GPR2.Project.Definition is
 
       Source_Info.Parser.Registry.Clear_Cache;
 
-      Def.Sources_Map.Clear;
-
       declare
          Def_Sources : Project.Source.Set.Object;
+         Def_Src_Map : Simple_Name_Source.Map;
+         Position    : Simple_Name_Source.Cursor;
+         Inserted    : Boolean;
          SW          : Project.Source.Object;
       begin
          for S of Def.Sources loop
             SW := S;
             SW.Update;
             Def_Sources.Insert (SW);
-            Def.Sources_Map_Insert (SW);
+            Def_Src_Map.Insert
+              (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+            pragma Assert (Inserted or else SW.Source.Language /= "Ada");
          end loop;
-         Def.Sources := Def_Sources;
+         Def.Sources     := Def_Sources;
+         Def.Sources_Map := Def_Src_Map;
       end;
 
       if Stop_On_Error

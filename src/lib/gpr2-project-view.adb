@@ -1390,14 +1390,18 @@ package body GPR2.Project.View is
    function Unit
      (Self        : Object;
       Name        : Name_Type;
-      Need_Update : Boolean := True) return Unit_Info.Object is
+      Need_Update : Boolean := True) return Unit_Info.Object
+   is
+      CU : Unit_Info.Set.Cursor;
    begin
       if Need_Update then
          Self.Update_Sources;
       end if;
 
-      if Definition.Get_RO (Self).Units.Contains (Name) then
-         return Definition.Get_RO (Self).Units.Element (Name);
+      CU := Definition.Get_RO (Self).Units.Find (Name);
+
+      if Unit_Info.Set.Set.Has_Element (CU) then
+         return Unit_Info.Set.Set.Element (CU);
       else
          return Unit_Info.Undefined;
       end if;

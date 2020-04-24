@@ -82,9 +82,6 @@ package GPR2.Source is
    --  Units call results because Separate Ada units can be
    --  determined only on parsing source files.
 
-   overriding procedure Update (Self : in out Object);
-   --  Update source information using a source based parser if present
-
 private
 
    type Object is new Source_Info.Object with record

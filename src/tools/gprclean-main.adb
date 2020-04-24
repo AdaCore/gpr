@@ -48,12 +48,6 @@ with GPR2.Project.View;
 with GPR2.Source;
 with GPR2.Source_Reference;
 
-pragma Warnings
-  (Off, "unit ""GPR2.Source_Info.Parser.Ada_Language"" is not referenced");
-with GPR2.Source_Info.Parser.Ada_Language;
---  !!! This "with" need until ALI parser implementation complete
-pragma Warnings (On);
-
 with GPRtools.Util;
 
 with GPRclean.Options;

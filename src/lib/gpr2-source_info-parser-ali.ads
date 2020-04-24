@@ -30,9 +30,7 @@ package GPR2.Source_Info.Parser.ALI is
    overriding procedure Compute
      (Self   : not null access Object;
       Data   : in out Source_Info.Object'Class;
-      Source : GPR2.Source.Object'Class;
-      LI     : Path_Name.Object'Class    := GPR2.Path_Name.Undefined;
-      View   : Project.View.Object'Class := Project.View.Undefined);
+      Source : Project.Source.Object);
    --  Setup Data with the information from GNAT .ali file
 
    overriding procedure Clear_Cache (Self : not null access Object);

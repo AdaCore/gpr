@@ -20,8 +20,6 @@ with Ada.Calendar.Conversions;
 with Ada.Characters.Handling;
 with Ada.Directories;
 
-with GPR2.Source_Info.Parser.Registry;
-
 with Interfaces.C;
 
 pragma Warnings
@@ -111,11 +109,9 @@ package body GPR2.Source is
    is
       use all type Unit.Library_Unit_Type;
 
-      Key : Unbounded_String;
-
+      Key          : Unbounded_String;
       Sorted_Units : Unit.List.Object :=
                        Unit.List.List.To_Vector (Unit.Undefined, Units.Length);
-
    begin
       for CU of Units loop
          if CU.Index > Positive (Units.Length) then
@@ -207,44 +203,5 @@ package body GPR2.Source is
          return Self.Path_Name.Value;
       end if;
    end Key;
-
-   ------------
-   -- Update --
-   ------------
-
-   overriding procedure Update (Self : in out Object) is
-      use type Calendar.Time;
-
-      New_TS  : constant Calendar.Time :=
-                  Get_ALI_Timestamp (Self.Path_Name);
-      Updated : Boolean := False;
-   begin
-      pragma Assert (Self.Path_Name.Exists);
-
-      if Self.Timestamp /= New_TS then
-         Self.Timestamp := New_TS;
-         Updated := True;
-      end if;
-
-      declare
-         Language : constant Name_Type := Name_Type (-Self.Language);
-      begin
-         if Source_Info.Parser.Registry.Exists (Language, Source_Info.Source)
-           and then (not Self.Is_Parsed or else Updated)
-         then
-            declare
-               Backend : constant not null access
-                           Source_Info.Parser.Object'Class :=
-                             Source_Info.Parser.Registry.Get
-                               (Language, Source_Info.Source);
-            begin
-               Source_Info.Parser.Compute
-                 (Self   => Backend,
-                  Data   => Self,
-                  Source => Self);
-            end;
-         end if;
-      end;
-   end Update;
 
 end GPR2.Source;
