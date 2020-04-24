@@ -20,7 +20,16 @@ with "gpr2";
 with "gpr2-lal";
 
 project Source_ALI is
-   for Object_Dir use "mobj";
+   for Languages use ("ada");
+   for Object_Dir use "obj";
+   for Source_Dirs use (".", "src");
    for Exec_Dir use ".";
    for Main use ("main.adb");
+
+   package Naming is
+      for Spec ("U1") use "code.ada" at 1;
+      for Spec ("U2") use "code.ada" at 2;
+      for Body ("U2") use "code.ada" at 3;
+      for Body ("U3") use "code.ada" at 4;
+   end Naming;
 end Source_ALI;

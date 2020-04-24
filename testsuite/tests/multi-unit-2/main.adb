@@ -16,11 +16,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Text_IO;
 
 with GPR2;
 with GPR2.Context;
+with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.Source;
 with GPR2.Project.Source.Artifact;
@@ -40,6 +42,44 @@ procedure Main is
    Tree : Project.Tree.Object;
    Ctx  : Context.Object;
 
+   procedure Print (S : Project.Source.Object);
+   --  Print source information and remove dependency files if exists
+
+   procedure Print (S : Project.Source.Object) is
+      Src : Source.Object := S.Source;
+      Dep : Path_Name.Object;
+   begin
+      Text_IO.Put_Line (String (Src.Path_Name.Simple_Name));
+      Text_IO.Put_Line ("  single-unit          = "
+                        & Src.Has_Single_Unit'Image);
+      Text_IO.Put_Line ("  has naming exception = "
+                        & S.Has_Naming_Exception'Image);
+      for CU of Src.Units loop
+         Text_IO.Put_Line ("  - compilation unit at" & CU.Index'Image);
+         Text_IO.Put_Line ("    unit name    = " & String (CU.Name));
+         Text_IO.Put_Line ("    kind         = " & CU.Kind'Image);
+
+         if not CU.Dependencies.Is_Empty then
+            Text_IO.Put      ("    withed units = { ");
+
+            for W of CU.Dependencies loop
+               Text_IO.Put (String (W.Text) & " ");
+            end loop;
+
+            Text_IO.Put_Line ("}");
+         end if;
+
+         if S.Artifacts.Has_Dependency (CU.Index) then
+            Dep := S.Artifacts.Dependency (CU.Index);
+            Text_IO.Put_Line
+              ("    object file  = " & String (Dep.Simple_Name));
+            if Dep.Exists then
+               Directories.Delete_File (Dep.Value);
+            end if;
+         end if;
+      end loop;
+   end Print;
+
 begin
    Pkg1.Sep;
    Pkg2.Sep;
@@ -50,36 +90,16 @@ begin
               Context  => Ctx);
 
    for S of Tree.Root_Project.Sources loop
-      declare
-         Src : Source.Object := S.Source;
-      begin
-         Text_IO.Put_Line (String (Src.Path_Name.Simple_Name));
-         Text_IO.Put_Line ("  single-unit          = "
-                           & Src.Has_Single_Unit'Image);
-         Text_IO.Put_Line ("  has naming exception = "
-                           & S.Has_Naming_Exception'Image);
-         for CU of Src.Units loop
-            Text_IO.Put_Line ("  - compilation unit at" & CU.Index'Image);
-            Text_IO.Put_Line ("    unit name    = " & String (CU.Name));
-            Text_IO.Put_Line ("    kind         = " & CU.Kind'Image);
+      Print (S);
+   end loop;
 
-            if not CU.Dependencies.Is_Empty then
-               Text_IO.Put      ("    withed units = { ");
+   --  First iteration over the sources removes dependency files, i.e. next
+   --  source parsing going to be with Ada_Language parser.
 
-               for W of CU.Dependencies loop
-                  Text_IO.Put (String (W.Text) & " ");
-               end loop;
+   Tree.Invalidate_Sources;
 
-               Text_IO.Put_Line ("}");
-            end if;
-
-            if S.Artifacts.Has_Dependency (CU.Index) then
-               Text_IO.Put_Line
-                 ("    object file  = "
-                  & String (S.Artifacts.Dependency (CU.Index).Simple_Name));
-            end if;
-         end loop;
-      end;
+   for S of Tree.Root_Project.Sources loop
+      Print (S);
    end loop;
 
 exception

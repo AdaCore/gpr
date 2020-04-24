@@ -16,19 +16,21 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Path_Name;
+with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source_Info;
 with GPR2.Source;
-
 with GPR2.Source_Info.Parser.Ada_Language;
+
+with U3;
 
 procedure Main is
 
@@ -59,6 +61,7 @@ procedure Main is
       for Source of View.Sources loop
          declare
             S : constant GPR2.Source.Object := Source.Source;
+            D : Path_Name.Object;
          begin
             Output_Filename (S.Path_Name.Value);
 
@@ -68,12 +71,19 @@ procedure Main is
             if S.Has_Units then
                for K in Source_Info.Unit_Index range 1 .. 5 loop
                   if S.Has_Unit_At (K) then
-                     Text_IO.Set_Col (37);
-                     Text_IO.Put ("   Kind: "
+                     Text_IO.Set_Col (40);
+                     Text_IO.Put ("Kind: "
                                   & GPR2.Unit.Library_Unit_Type'Image (S.Kind (K)));
-
-                     Text_IO.Put ("   unit: " & String (S.Unit_Name (K)));
-                     Text_IO.New_Line;
+                     Text_IO.Put_Line ("   unit: " & String (S.Unit_Name (K)));
+                     if Source.Artifacts.Has_Dependency (Integer (K)) then
+                        D := Source.Artifacts.Dependency (Integer (K));
+                        if D.Exists then
+                           Text_IO.Set_Col (40);
+                           Text_IO.Put_Line
+                             ("deps: " & String (D.Simple_Name));
+                           Directories.Delete_File (D.Value);
+                        end if;
+                     end if;
                   end if;
                end loop;
             end if;
@@ -92,5 +102,8 @@ procedure Main is
    end Output_Filename;
 
 begin
-   Check ("demo.gpr");
+   U3;
+   for J in Boolean loop
+      Check ("source_ali.gpr");
+   end loop;
 end Main;

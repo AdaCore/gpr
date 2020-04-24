@@ -1,3 +1,7 @@
+--
+--  Copyright (C) 2020, AdaCore
+--
+
 package U1 is
    procedure P;
 end U1;
@@ -26,11 +30,17 @@ package U3 is
    procedure P;
 end U3;
 
-with GNAT.IO;
 package body U3 is
-   procedure P is
-   begin
-      GNAT.IO.Put_Line ("demo output");
-   end P;
+   procedure P is separate;
 end U3;
 
+package U4 is
+   Dummy : constant Integer := -1234;
+end U4;
+
+with GNAT.IO;
+separate (U3)
+procedure P is
+begin
+   GNAT.IO.Put_Line ("demo output");
+end P;

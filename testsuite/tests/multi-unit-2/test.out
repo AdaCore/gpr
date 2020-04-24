@@ -5,7 +5,7 @@ main.adb
   - compilation unit at 1
     unit name    = main
     kind         = S_BODY_ONLY
-    withed units = { ada ada.exceptions ada.text_io gpr2 gpr2.context gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source gpr2.source_info gpr2.source_info.parser gpr2.source_info.parser.ada_language pkg1 pkg2 }
+    withed units = { ada ada.directories ada.exceptions ada.text_io gpr2 gpr2.context gpr2.path_name gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source gpr2.source_info gpr2.source_info.parser gpr2.source_info.parser.ada_language pkg1 pkg2 }
     object file  = main.ali
 sub.adb
   single-unit          = FALSE
@@ -72,3 +72,88 @@ few_units.ada
     kind         = S_BODY
     withed units = { gnat gnat.io }
     object file  = few_units~6.ali
+  - compilation unit at 7
+    unit name    = U4
+    kind         = S_SPEC
+  - compilation unit at 8
+    unit name    = U3.P
+    kind         = S_SEPARATE
+main.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Main
+    kind         = S_BODY_ONLY
+    withed units = { Ada Ada.Directories Ada.Exceptions Ada.Text_IO GPR2 GPR2.Context GPR2.Path_Name GPR2.Project GPR2.Project.Tree GPR2.Project.Source GPR2.Project.Source.Artifact GPR2.Project.Source.Set GPR2.Source Pkg1 Pkg2 GPR2.Source_Info GPR2.Source_Info.Parser GPR2.Source_Info.Parser.Ada_Language }
+    object file  = main.ali
+sub.adb
+  single-unit          = FALSE
+  has naming exception = TRUE
+  - compilation unit at 1
+    unit name    = Pkg1.Sep
+    kind         = S_SEPARATE
+  - compilation unit at 2
+    unit name    = Pkg2.Sep
+    kind         = S_SEPARATE
+    withed units = { U1 }
+pkg1.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg1
+    kind         = S_BODY
+    object file  = pkg1.ali
+pkg1.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg1
+    kind         = S_SPEC
+    object file  = pkg1.ali
+pkg2.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg2
+    kind         = S_BODY
+    object file  = pkg2.ali
+pkg2.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg2
+    kind         = S_SPEC
+    object file  = pkg2.ali
+few_units.ada
+  single-unit          = FALSE
+  has naming exception = TRUE
+  - compilation unit at 1
+    unit name    = U1
+    kind         = S_SPEC
+  - compilation unit at 2
+    unit name    = U1
+    kind         = S_BODY
+    withed units = { U2 }
+    object file  = few_units~2.ali
+  - compilation unit at 3
+    unit name    = U2
+    kind         = S_SPEC
+  - compilation unit at 4
+    unit name    = U2
+    kind         = S_BODY
+    withed units = { U3 }
+    object file  = few_units~4.ali
+  - compilation unit at 5
+    unit name    = U3
+    kind         = S_SPEC
+  - compilation unit at 6
+    unit name    = U3
+    kind         = S_BODY
+    object file  = few_units~6.ali
+  - compilation unit at 7
+    unit name    = U4
+    kind         = S_SPEC
+  - compilation unit at 8
+    unit name    = U3.P
+    kind         = S_SEPARATE
+    withed units = { GNAT GNAT.IO }

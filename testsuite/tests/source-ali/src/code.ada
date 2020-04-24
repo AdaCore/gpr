@@ -1,3 +1,7 @@
+--
+--  Copyright (C) 2020, AdaCore
+--
+
 package U1 is
    A : Integer := 1;
 end U1;
@@ -12,15 +16,17 @@ package body U2 is
    procedure Increment is
    begin
       B := B + 1;
-   end;
+   end Increment;
    procedure Decrement is
    begin
       B := B - 1;
-   end;
+   end Decrement;
 end U2;
 
-with U1;
+with U1, U2;
 procedure U3 is
 begin
-   U1.A := U1.A + 1;
+   U2.Increment;
+   U1.A := U1.A + U2.B;
+   U2.Decrement;
 end U3;

@@ -1,6 +1,20 @@
-Project: Demo
+Project: Source_ALI
  > li/src/api.adb     language: Ada    Kind: S_BODY   unit: Api
  > li/src/api.ads     language: Ada    Kind: S_SPEC   unit: Api
+ > li/main.adb        language: Ada    Kind: S_BODY_ONLY   unit: main
+                                       deps: main.ali
+ > li/src/pck.adb     language: Ada    Kind: S_BODY   unit: Pck
+ > li/src/pck.ads     language: Ada    Kind: S_SPEC   unit: Pck
+ > li/src/code.ada    language: Ada    Kind: S_SPEC   unit: U1
+                                       Kind: S_SPEC   unit: U2
+                                       Kind: S_BODY   unit: U2
+                                       deps: code~3.ali
+                                       Kind: S_BODY_ONLY   unit: U3
+                                       deps: code~4.ali
+Project: Source_ALI
+ > li/src/api.adb     language: Ada    Kind: S_BODY   unit: Api
+ > li/src/api.ads     language: Ada    Kind: S_SPEC   unit: Api
+ > li/main.adb        language: Ada    Kind: S_BODY_ONLY   unit: Main
  > li/src/pck.adb     language: Ada    Kind: S_BODY   unit: Pck
  > li/src/pck.ads     language: Ada    Kind: S_SPEC   unit: Pck
  > li/src/code.ada    language: Ada    Kind: S_SPEC   unit: U1
