@@ -707,6 +707,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
       In_Cache : Cache_Map.Cursor :=
                    Self.Cache.Find (Key (LI, B_Name, U_Ref.Kind));
+      Inserted : Boolean;
 
    begin
       --  If this unit is in the cache, return now we don't want to parse
@@ -862,6 +863,12 @@ package body GPR2.Source_Info.Parser.ALI is
             exit when Header /= 'U';
          end loop;
 
+         if Current = 0 then
+            Data.Parsed := Source_Info.None;
+            IO.Close (A_Handle);
+            return;
+         end if;
+
          --  Read Deps
 
          while Header = 'D' loop
@@ -901,57 +908,20 @@ package body GPR2.Source_Info.Parser.ALI is
          --  Record into the cache
 
          for K in 1 .. CU_Idx loop
-            declare
-               function Image (Item : Unit.Object) return String is
-                 (String (Item.Name)
-                  & ' ' & String (Source.Simple_Name)
-                  & ' ' & Item.Kind'Img);
+            Self.Cache.Insert
+              (Key (LI, Name_Type (-CU_BN (K)), CUs (K).Kind),
+               (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
+               In_Cache, Inserted);
 
-               Ref      : access Cache_Holder;
-               Inserted : Boolean;
-            begin
-               Self.Cache.Insert
-                 (Key (LI, Name_Type (-CU_BN (K)), CUs (K).Kind),
-                  (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
-                  In_Cache, Inserted);
+            pragma Assert
+              (Inserted,
+               LI.Value & ' ' & String (Cache_Map.Key (In_Cache))
+               & Current'Img);
 
-               if not Inserted
-                 and then CUs (K) /= Cache_Map.Element (In_Cache).Unit
-               then
-                  --  Could be generic instantiation case when spec and body
-                  --  is in the same file position.
-
-                  Ref := Self.Cache.Reference
-                    (In_Cache).Element.all'Unrestricted_Access;
-
-                  pragma Assert
-                    (CUs (K).Kind = S_Spec and then K = 2
-                     and then Ref.Unit.Kind              = S_Body
-                     and then Ref.Unit.Name              = CUs (K).Name
-                     and then Ref.Unit.Index             = CUs (K).Index
-                     and then Ref.Unit.Is_Separate       = CUs (K).Is_Separate
-                     and then Ref.Unit.Library_Item_Kind =
-                              CUs (K).Library_Item_Kind
-                     and then
-                       (not Ref.Unit.Is_Separate
-                        or else Ref.Unit.Separate_From =
-                                CUs (K).Separate_From),
-                     Image (Ref.Unit) & " /= " & Image (CUs (K)));
-
-                  --  Keep it as spec in the cache
-
-                  Ref.Unit.Update_Kind (Unit.S_Spec);
-               end if;
-
-               if Current = K then
-                  Set_Source_Info_Data (Cache_Map.Element (In_Cache));
-               end if;
-            end;
+            if Current = K then
+               Set_Source_Info_Data (Cache_Map.Element (In_Cache));
+            end if;
          end loop;
-
-         if Current = 0 then
-            Data.Parsed := Source_Info.None;
-         end if;
 
       exception
          when E : others =>
