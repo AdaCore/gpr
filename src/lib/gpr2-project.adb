@@ -36,7 +36,7 @@ package body GPR2.Project is
    procedure Append_Default_Search_Paths
      (Paths : in out Path_Name.Set.Object)
    is
-      Prefix : constant String := Get_Prefix;
+      Prefix : constant String := Get_Tools_Directory;
 
       procedure Append (Value : String)
         with Post => (if Value'Length = 0
@@ -223,25 +223,6 @@ package body GPR2.Project is
          return Name & Name_Type ('.' & Ext1);
       end if;
    end Ensure_Extension;
-
-   ----------------
-   -- Get_Prefix --
-   ----------------
-
-   function Get_Prefix return String is
-      use type GNAT.OS_Lib.String_Access;
-
-      GPRls : constant OS_Lib.String_Access :=
-                OS_Lib.Locate_Exec_On_Path ("gprls");
-      --  Check for GPRls executable
-   begin
-      if GPRls = null then
-         return "";
-      else
-         return Directories.Containing_Directory
-                  (Directories.Containing_Directory (GPRls.all));
-      end if;
-   end Get_Prefix;
 
    ------------------------------
    -- Look_For_Default_Project --

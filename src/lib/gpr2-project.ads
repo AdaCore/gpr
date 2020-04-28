@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -126,9 +126,6 @@ private
 
    package Definition_References is new GNATCOLL.Refcount.Shared_Pointers
      (Definition_Base'Class);
-
-   function Get_Prefix return String;
-   --  Get the GNAT prefix
 
    subtype Weak_Reference is Definition_References.Weak_Ref;
 

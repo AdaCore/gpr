@@ -16,8 +16,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Less_Case_Insensitive;
+
+with GNAT.OS_Lib;
 
 package body GPR2 is
 
@@ -40,6 +43,25 @@ package body GPR2 is
    begin
       return Equal_Case_Insensitive (String (Left), String (Right));
    end "=";
+
+   -------------------------
+   -- Get_Tools_Directory --
+   -------------------------
+
+   function Get_Tools_Directory return String is
+      use type GNAT.OS_Lib.String_Access;
+
+      GPRls : constant GNAT.OS_Lib.String_Access :=
+                GNAT.OS_Lib.Locate_Exec_On_Path ("gprls");
+      --  Check for GPRls executable
+   begin
+      if GPRls = null then
+         return "";
+      else
+         return Directories.Containing_Directory
+                  (Directories.Containing_Directory (GPRls.all));
+      end if;
+   end Get_Tools_Directory;
 
    -----------
    -- Quote --

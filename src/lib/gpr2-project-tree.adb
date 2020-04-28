@@ -967,7 +967,7 @@ package body GPR2.Project.Tree is
 
       procedure Set_Project_Search_Paths is
 
-         GNAT_Prefix : constant String := Get_Prefix;
+         GNAT_Prefix : constant String := Get_Tools_Directory;
 
          procedure Append (Dir1, Dir2  : String)
            with Post => Self.Search_Paths'Old.Length + 1

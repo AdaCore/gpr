@@ -170,4 +170,7 @@ private
    function "-"
      (Source : Unbounded_String) return String renames To_String;
 
+   function Get_Tools_Directory return String;
+   --  Get the GNAT prefix
+
 end GPR2;
