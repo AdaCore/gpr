@@ -337,8 +337,7 @@ private
       Positive_Regexp : Unbounded_String;
       Negative_Regexp : Unbounded_String;
    end record
-     with Dynamic_Predicate => Positive_Regexp /= Null_Unbounded_String
-             and then Negative_Regexp /= Null_Unbounded_String;
+     with Dynamic_Predicate => Positive_Regexp /= Null_Unbounded_String;
 
    package Double_String_Lists is
      new Ada.Containers.Indefinite_Doubly_Linked_Lists (Double_String);
@@ -375,6 +374,8 @@ private
      (Known_Targets_Set_Id, GPR2.Containers.Name_List,
       GPR2.Containers.Name_Type_List."=");
 
+   package Known_Languages renames Variables_Maps;
+
    type Object is tagged record
       Compilers               : Compiler_Description_Maps.Map;
       No_Compilers            : GPR2.Containers.Name_List;
@@ -382,8 +383,11 @@ private
       Configurations          : Configuration_Lists.List;
       Targets_Sets            : Targets_Set_Vectors.Vector;
       Fallback_Targets_Sets   : Fallback_Targets_Set_Vectors.Vector;
+      Languages_Known         : Known_Languages.Map;
 
       Parsed_Directories      : GPR2.Path_Name.Set.Object;
+
+      External_Calls_Cache    : GPR2.Containers.Name_Value_Map;
 
       Initialized             : Boolean := False;
       Messages                : Log.Object;
