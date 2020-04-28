@@ -49,6 +49,8 @@ pragma Warnings (On);
 
 package body GPR2.Project.Configuration.KB.Parsing is
 
+   use GNAT;
+
    function Get_Attribute
      (N         : DOM.Core.Node;
       Attribute : Value_Not_Empty;
@@ -85,11 +87,11 @@ package body GPR2.Project.Configuration.KB.Parsing is
    --  the list.
 
    procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-     (GNAT.Regpat.Pattern_Matcher, Pattern_Matcher_Access);
+     (Regpat.Pattern_Matcher, Pattern_Matcher_Access);
 
    type External_Value_Item is record
       Value          : Unbounded_String;
-      Alternate      : Unbounded_String := Null_Unbounded_String;
+      Alternate      : Unbounded_String;
       Extracted_From : Unbounded_String;
    end record;
    --  Value is the actual value of the <external_value> node.
@@ -101,13 +103,13 @@ package body GPR2.Project.Configuration.KB.Parsing is
    package External_Value_Lists is new Ada.Containers.Doubly_Linked_Lists
      (External_Value_Item);
 
-   package String_To_External_Value is new
-     Ada.Containers.Indefinite_Hashed_Maps
-     (Key_Type        => String,
-      Element_Type    => External_Value_Lists.Cursor,
-      Hash            => Ada.Strings.Hash,
-      Equivalent_Keys => "=",
-      "="             => External_Value_Lists."=");
+   package String_To_External_Value is
+      new Ada.Containers.Indefinite_Hashed_Maps
+        (Key_Type        => String,
+         Element_Type    => External_Value_Lists.Cursor,
+         Hash            => Ada.Strings.Hash,
+         Equivalent_Keys => "=",
+         "="             => External_Value_Lists."=");
 
    function Name_As_Directory (Dir : String) return String;
    --  Ensures that Dir ends with a directory separator
@@ -146,7 +148,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Visited         : in out String_To_External_Value.Map;
       Current_Dir     : String;
       Path_To_Check   : String;
-      Regexp          : GNAT.Regpat.Pattern_Matcher;
+      Regexp          : Regpat.Pattern_Matcher;
       Regexp_Str      : String;
       Value_If_Match  : String;
       Group           : Integer;
@@ -222,9 +224,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
    ---------
 
    procedure Add
-     (Self     : in out Object;
-      Flags    : Parsing_Flags;
-      Content  : Value_Not_Empty)
+     (Self    : in out Object;
+      Flags   : Parsing_Flags;
+      Content : Value_Not_Empty)
    is
       use DOM.Core, DOM.Core.Nodes;
       use Input_Sources.Strings;
@@ -254,6 +256,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       begin
          Free (Doc);
       end;
+
       Free (Reader);
    end Add;
 
@@ -298,8 +301,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
       use GNATCOLL.Traces;
 
       function Get_Command_Output_Cache
-        (Path       : String;
-         Command    : String) return Unbounded_String;
+        (Path    : String;
+         Command : String) return Unbounded_String;
       --  Spawns given command and caches results. When the same command
       --  (same full path and arguments) should be spawned again,
       --  returns output from cache instead.
@@ -309,32 +312,31 @@ package body GPR2.Project.Configuration.KB.Parsing is
       ------------------------------
 
       function Get_Command_Output_Cache
-        (Path       : String;
-         Command    : String) return Unbounded_String
+        (Path    : String;
+         Command : String) return Unbounded_String
       is
-         use GPR2.Containers.Name_Value_Map_Package;
          use GNAT.OS_Lib;
+         use GPR2.Containers.Name_Value_Map_Package;
 
          Key : constant Name_Type := Name_Type (Path & Command);
          Cur : constant GPR2.Containers.Name_Value_Map_Package.Cursor :=
-           Calls_Cache.Find (Key);
+                 Calls_Cache.Find (Key);
 
          Tmp_Result : Unbounded_String;
-
-         Status : aliased Integer;
+         Status     : aliased Integer;
       begin
          if Cur = GPR2.Containers.Name_Value_Map_Package.No_Element then
             declare
                Args   : Argument_List_Access :=
-                 Argument_String_To_List (Command);
+                          Argument_String_To_List (Command);
                Output : constant String := Get_Command_Output
-                 (Command    => Args (Args'First).all,
-                  Arguments  => Args (Args'First + 1 .. Args'Last),
-                  Input      => "",
-                  Status     => Status'Unchecked_Access,
-                  Err_To_Out => True);
+                          (Command    => Args (Args'First).all,
+                           Arguments  => Args (Args'First + 1 .. Args'Last),
+                           Input      => "",
+                           Status     => Status'Unchecked_Access,
+                           Err_To_Out => True);
             begin
-               GNAT.OS_Lib.Free (Args);
+               OS_Lib.Free (Args);
                Tmp_Result := To_Unbounded_String (Output);
                Calls_Cache.Include (Key, To_String (Tmp_Result));
                return Tmp_Result;
@@ -345,14 +347,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
       end Get_Command_Output_Cache;
 
       Saved_Path     : constant String :=
-                         Ada.Environment_Variables.Value ("PATH");
+                         Environment_Variables.Value ("PATH");
       Extracted_From : Unbounded_String := Null_Unbounded_String;
       Tmp_Result     : Unbounded_String;
       Node_Cursor    : External_Value_Nodes.Cursor := Value.First;
       Node           : External_Value_Node;
       From_Static    : Boolean := False;
 
-      Visited : String_To_External_Value.Map;
+      Visited        : String_To_External_Value.Map;
    begin
       Processed_Value.Clear;
 
@@ -384,7 +386,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                   Ada.Environment_Variables.Set
                     ("PATH",
                      Comp.Path.Value
-                     & GNAT.OS_Lib.Path_Separator & Saved_Path);
+                     & OS_Lib.Path_Separator & Saved_Path);
 
                   declare
                      Command : constant String :=
@@ -426,6 +428,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                           (Main_Trace,
                            Attribute & ": search directories matching "
                            & Search & ", starting from /");
+
                         Parse_All_Dirs
                           (Processed_Value => Processed_Value,
                            Visited         => Visited,
@@ -447,6 +450,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            Attribute & ": search directories matching "
                            & Search & ", starting from "
                            & Comp.Path.Value);
+
                         Parse_All_Dirs
                           (Processed_Value => Processed_Value,
                            Visited         => Visited,
@@ -487,8 +491,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                when Value_Nogrep =>
                   declare
-                     Matched : Match_Array (0 .. 0);
                      Tmp_Str : constant String := To_String (Tmp_Result);
+                     Matched : Match_Array (0 .. 0);
                   begin
                      Match (Node.Regexp_No.all, Tmp_Str, Matched);
                      if Matched (0) /= No_Match then
@@ -512,6 +516,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                         "Ignore compiler since external value """
                         & To_String (Tmp_Result) & """ must match "
                         & To_String (Node.Must_Match));
+
                      Tmp_Result := Null_Unbounded_String;
                      raise Ignore_Compiler;
                   end if;
@@ -541,15 +546,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
                   declare
                      Split  : Containers.Name_List;
                      Filter : constant String :=
-                       (if Node.Typ = Value_Filter then
-                           To_String (Node.Filter)
-                        else
-                           "");
+                                (if Node.Typ = Value_Filter
+                                 then To_String (Node.Filter)
+                                 else "");
                   begin
-
                      --  When an external value is defined as a static string,
                      --  the only valid separator is ','. When computed
-                     --  however, we also allow space as a separator
+                     --  however, we also allow space as a separator.
+
                      if From_Static then
                         Get_Words
                           (Words                => To_String (Tmp_Result),
@@ -608,16 +612,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Last : Natural := Name'Last;
    begin
       if Last > 7
-        and then (Name (Last) = Directory_Separator
-                  or else Name (Last) = '/')
+        and then (Name (Last) in Directory_Separator | '/')
       then
          Last := Last - 1;
       end if;
 
       if Last > 6
         and then Name (Last - 5 .. Last) = "adalib"
-        and then (Name (Last - 6) = Directory_Separator
-                  or else Name (Last - 6) = '/')
+        and then (Name (Last - 6) in Directory_Separator | '/')
       then
          Last := Last - 6;
       else
@@ -732,8 +734,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       use GNAT.OS_Lib;
    begin
       if Dir = ""
-        or else Dir (Dir'Last) = Directory_Separator
-        or else Dir (Dir'Last) = '/'
+        or else Dir (Dir'Last) in Directory_Separator | '/'
       then
          return Dir;
       else
@@ -769,7 +770,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Visited         : in out String_To_External_Value.Map;
       Current_Dir     : String;
       Path_To_Check   : String;
-      Regexp          : GNAT.Regpat.Pattern_Matcher;
+      Regexp          : Regpat.Pattern_Matcher;
       Regexp_Str      : String;
       Value_If_Match  : String;
       Group           : Integer;
@@ -812,7 +813,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
          --  as a regexp, but "\.." is.
          Str2 : constant String := Unquote_Regexp (Str, Remove_Quoted => True);
       begin
-         return GNAT.Regpat.Quote (Str2) /= Str2;
+         return Regpat.Quote (Str2) /= Str2;
       end Is_Regexp;
 
       ---------------
@@ -834,21 +835,22 @@ package body GPR2.Project.Configuration.KB.Parsing is
             declare
                use String_To_External_Value;
                Normalized : constant String := Normalize_Pathname
-                 (Name           => Current_Dir,
-                  Directory      => "",
-                  Resolve_Links  => True,
-                  Case_Sensitive => True);
-               Prev  : External_Value_Lists.Cursor;
-               Rec   : External_Value_Item;
+                              (Name           => Current_Dir,
+                               Directory      => "",
+                               Resolve_Links  => True,
+                               Case_Sensitive => True);
+               Prev       : External_Value_Lists.Cursor;
+               Rec        : External_Value_Item;
             begin
                if Visited.Contains (Normalized) then
                   Trace
                     (Main_Trace,
                      "<dir>: ALREADY FOUND (" & Val & ") " & Current_Dir);
 
-                  Prev := Visited.Element (Normalized);
-                  Rec  := External_Value_Lists.Element (Prev);
+                  Prev          := Visited.Element (Normalized);
+                  Rec           := External_Value_Lists.Element (Prev);
                   Rec.Alternate := To_Unbounded_String (Val);
+
                   External_Value_Lists.Replace_Element
                     (Container => Processed_Value,
                      Position  => Prev,
@@ -864,6 +866,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                       Extracted_From =>
                         To_Unbounded_String
                           (Get_String_No_Adalib (Current_Dir))));
+
                   Visited.Include
                     (Normalized, External_Value_Lists.Last (Processed_Value));
                end if;
@@ -885,26 +888,31 @@ package body GPR2.Project.Configuration.KB.Parsing is
          while S <= Str'Last loop
             if Str (S) = '\' then
                S := S + 1;
+
                if not Remove_Quoted then
                   Str2 (Index) := Str (S);
                   Index := Index + 1;
                end if;
+
             else
                Str2 (Index) := Str (S);
                Index := Index + 1;
             end if;
+
             S     := S + 1;
          end loop;
+
          return Str2 (Str2'First .. Index - 1);
       end Unquote_Regexp;
 
       First : constant Integer := Path_To_Check'First;
       Last  : Integer;
       Val   : Unbounded_String;
+
    begin
       if Path_To_Check'Length = 0
         or else Path_To_Check = "/"
-        or else Path_To_Check = "" & Directory_Separator
+        or else Path_To_Check = String'(1 => Directory_Separator)
       then
          if Group = -1 then
             Val := To_Unbounded_String (Value_If_Match);
@@ -915,12 +923,11 @@ package body GPR2.Project.Configuration.KB.Parsing is
          if Contents /= null
            and then Is_Regular_File (Current_Dir)
          then
-            Trace
-              (Main_Trace, "<dir>: Checking inside file " & Current_Dir);
+            Trace (Main_Trace, "<dir>: Checking inside file " & Current_Dir);
 
             declare
                use Ada.Text_IO;
-               use GNAT.Directory_Operations;
+               use Directory_Operations;
                F : File_Type;
             begin
                Open (F, In_File, Current_Dir);
@@ -930,6 +937,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Line : constant String := Get_Line (F);
                   begin
                      Trace (Main_Trace, "<dir>: read line " & Line);
+
                      if Match (Contents.all, Line) then
                         Save_File
                           (Normalize_Pathname
@@ -953,31 +961,34 @@ package body GPR2.Project.Configuration.KB.Parsing is
          --  Do not split on '\', since we document we only accept UNIX paths
          --  anyway. This leaves \ for regexp quotes
          Last := First + 1;
+
          while Last <= Path_To_Check'Last
            and then Path_To_Check (Last) /= '/'
          loop
             Last := Last + 1;
          end loop;
 
-         --  If we do not have a regexp.
+         --  If we do not have a regexp
 
          if not Is_Regexp (Path_To_Check (First .. Last - 1)) then
             declare
                Dir     : constant String :=
-                 Normalize_Pathname
-                   (Current_Dir, Resolve_Links => False)
-                 & Directory_Separator
-                 & Unquote_Regexp (Path_To_Check (First .. Last - 1));
+                           Normalize_Pathname
+                             (Current_Dir, Resolve_Links => False)
+                           & Directory_Separator
+                           & Unquote_Regexp
+                              (Path_To_Check (First .. Last - 1));
                Remains : constant String :=
                            Path_To_Check (Last + 1 .. Path_To_Check'Last);
             begin
                if (Remains'Length = 0
                    or else Remains = "/"
-                   or else Remains = "" & Directory_Separator)
+                   or else Remains = String'(1 => Directory_Separator))
                  and then Is_Regular_File (Dir)
                then
                   Trace (Main_Trace, "<dir>: Found file " & Dir);
                   --  If there is such a subdir, keep checking
+
                   Parse_All_Dirs
                     (Processed_Value => Processed_Value,
                      Visited         => Visited,
@@ -997,6 +1008,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                elsif Is_Directory (Dir) then
                   Trace (Main_Trace, "<dir>: Recurse into " & Dir);
                   --  If there is such a subdir, keep checking
+
                   Parse_All_Dirs
                     (Processed_Value => Processed_Value,
                      Visited         => Visited,
@@ -1018,6 +1030,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
             end;
 
          --  Else we have a regexp, check all files
+
          else
             declare
                use Ada.Directories;
@@ -1040,6 +1053,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      "<dir>: Check directories in " & Current_Dir
                      & " that match " & File_Re);
                   Filter := (Directory => True, others => False);
+
                else
                   Trace
                     (Main_Trace,
@@ -1056,17 +1070,19 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                while More_Entries (Search) loop
                   Get_Next_Entry (Search, File);
-                  if Ada.Directories.Simple_Name (File) /= "."
-                    and then Ada.Directories.Simple_Name (File) /= ".."
+
+                  if Directories.Simple_Name (File) /= "."
+                    and then Directories.Simple_Name (File) /= ".."
                   then
                      declare
-                        Matched : Match_Array (0 .. Integer'Max (Group, 0));
                         Simple  : constant String :=
-                          Ada.Directories.Simple_Name (File);
+                                    Directories.Simple_Name (File);
                         Count   : constant Natural :=
                                     Paren_Count (File_Regexp);
+                        Matched : Match_Array (0 .. Integer'Max (Group, 0));
                      begin
                         Match (File_Regexp, Simple, Matched);
+
                         if Matched (0) /= No_Match then
                            Trace
                              (Main_Trace,
@@ -1081,6 +1097,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                                  "<dir>: Found matched group: "
                                  & Simple (Matched (Group - Group_Count).First
                                    .. Matched (Group - Group_Count).Last));
+
                               Parse_All_Dirs
                                 (Processed_Value => Processed_Value,
                                  Visited         => Visited,
@@ -1141,10 +1158,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
       use GPR2.Path_Name;
       use Ada.Directories;
 
-      Search : Search_Type;
-      File   : Directory_Entry_Type;
-
       procedure Parse_Single_File (File : GPR2.Path_Name.Object);
+      --  Parses a single .xml file containing KB chunks
 
       -----------------------
       -- Parse_Single_File --
@@ -1181,6 +1196,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
          Free (Reader);
       end Parse_Single_File;
+
+      Search : Search_Type;
+      File   : Directory_Entry_Type;
 
    begin
       if Location.Is_Directory then
@@ -1225,7 +1243,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
         (Base        : in out Object;
          Description : DOM.Core.Node);
       --  Parses a compiler description described by N. Appends the result to
-      --  Base.Compilers or Base.No_Compilers
+      --  Base.Compilers or Base.No_Compilers.
 
       procedure Parse_Configuration
         (Append_To   : in out Configuration_Lists.List;
@@ -1259,8 +1277,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
          Lang     : External_Value_Lists.List;
          C        : External_Value_Lists.Cursor;
 
-         Exec_Suffix : GNAT.OS_Lib.String_Access :=
-                         GNAT.OS_Lib.Get_Executable_Suffix;
+         Exec_Suffix : OS_Lib.String_Access :=
+                         OS_Lib.Get_Executable_Suffix;
 
          procedure Parse_External_Value
            (Value    : out External_Value;
@@ -1292,24 +1310,23 @@ package body GPR2.Project.Configuration.KB.Parsing is
            (Value    : out External_Value;
             External : Node)
          is
+            Static_Value  : constant String := Node_Value_As_String (External);
             Tmp           : Node := First_Child (External);
             External_Node : External_Value_Node;
             Is_Done       : Boolean := True;
-            Static_Value  : constant String := Node_Value_As_String (External);
             Has_Static    : Boolean := False;
 
             use External_Value_Nodes;
          begin
             for S in Static_Value'Range loop
-               if Static_Value (S) /= ' '
-                 and then Static_Value (S) /= ASCII.LF
-               then
+               if Static_Value (S) not in ' ' | ASCII.LF then
                   Has_Static := True;
                   exit;
                end if;
             end loop;
 
             --  Constant value is not within a nested node
+
             if Has_Static then
                External_Node :=
                  (Typ   => Value_Constant,
@@ -1336,8 +1353,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                elsif Node_Name (Tmp) = "directory" then
                   declare
-                     C : constant String :=
-                       Get_Attribute (Tmp, "contents", "");
+                     C        : constant String :=
+                                  Get_Attribute (Tmp, "contents", "");
                      Contents : Pattern_Matcher_Access;
                   begin
                      if C /= "" then
@@ -1347,15 +1364,16 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      External_Node :=
                        (Typ             => Value_Directory,
                         Directory       => To_Unbounded_String
-                          (Node_Value_As_String (Tmp)),
+                                             (Node_Value_As_String (Tmp)),
                         Contents        => Contents,
                         Dir_If_Match    => Null_Unbounded_String,
                         Directory_Group => 0);
                   end;
 
                   begin
-                     External_Node.Directory_Group := Integer'Value
-                       (Get_Attribute (Tmp, "group", "0"));
+                     External_Node.Directory_Group :=
+                       Integer'Value
+                         (Get_Attribute (Tmp, "group", "0"));
                   exception
                      when Constraint_Error =>
                         External_Node.Directory_Group := -1;
@@ -1387,11 +1405,13 @@ package body GPR2.Project.Configuration.KB.Parsing is
                               "environment variable '"
                               & Name & "' is not defined",
                               Sloc => Error_Sloc));
+
                         External_Node :=
-                          (Typ        => Value_Constant,
-                           Value      => Null_Unbounded_String);
+                          (Typ   => Value_Constant,
+                           Value => Null_Unbounded_String);
                      end if;
                   end;
+
                   Append (Value, External_Node);
                   Is_Done := False;
 
@@ -1413,20 +1433,22 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                elsif Node_Name (Tmp) = "grep" then
                   External_Node :=
-                    (Typ        => Value_Grep,
-                     Regexp_Re  => new Pattern_Matcher'
-                       (Compile (Get_Attribute (Tmp, "regexp", ".*"),
-                        Multiple_Lines)),
-                     Group      => Integer'Value
-                       (Get_Attribute (Tmp, "group", "0")));
+                    (Typ       => Value_Grep,
+                     Regexp_Re => new Pattern_Matcher'
+                                    (Compile
+                                      (Get_Attribute (Tmp, "regexp", ".*"),
+                                       Multiple_Lines)),
+                     Group     => Integer'Value
+                                    (Get_Attribute (Tmp, "group", "0")));
                   Append (Value, External_Node);
 
                elsif Node_Name (Tmp) = "nogrep" then
                   External_Node :=
-                    (Typ        => Value_Nogrep,
-                     Regexp_No  => new Pattern_Matcher'
-                       (Compile (Get_Attribute (Tmp, "regexp", ".*"),
-                        Multiple_Lines)));
+                    (Typ       => Value_Nogrep,
+                     Regexp_No => new Pattern_Matcher'
+                                    (Compile
+                                      (Get_Attribute (Tmp, "regexp", ".*"),
+                                       Multiple_Lines)));
                   Append (Value, External_Node);
 
                else
@@ -1515,7 +1537,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
             elsif Node_Name (N) = "variable" then
                declare
-                  Name   : constant String := Get_Attribute (N, "name", "@@");
+                  Name : constant String := Get_Attribute (N, "name", "@@");
                begin
                   Compiler.Variables.Append
                     (External_Value_Node'
@@ -1540,6 +1562,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Get_Words (Defaults, "", ' ', ',',
                                 Compiler.Default_Runtimes, False);
                   end if;
+
                   Parse_External_Value
                     (Value    => Compiler.Runtimes,
                      External => N);
@@ -1572,13 +1595,15 @@ package body GPR2.Project.Configuration.KB.Parsing is
                Error_Sloc       => Error_Sloc,
                Messages         => Base.Messages,
                Processed_Value  => Lang);
+
             C := First (Lang);
+
             while Has_Element (C) loop
                Base.No_Compilers.Append
                  (Name_Type
                     (To_Lower
-                         (To_String
-                              (External_Value_Lists.Element (C).Value))));
+                       (To_String
+                          (External_Value_Lists.Element (C).Value))));
                Next (C);
             end loop;
 
@@ -1598,10 +1623,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
             begin
                while Languages /= External_Value_Nodes.No_Element loop
                   Lang := External_Value_Nodes.Element (Languages);
-                  if Lang.Typ = Value_Constant then
 
-                     if not Base.Languages_Known.Contains (Lang.Value)
-                     then
+                  if Lang.Typ = Value_Constant then
+                     if not Base.Languages_Known.Contains (Lang.Value) then
                         Base.Languages_Known.Include (Lang.Value, Lang.Value);
                      end if;
                   end if;
@@ -1611,7 +1635,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
             end;
          end if;
 
-         GNAT.OS_Lib.Free (Exec_Suffix);
+         OS_Lib.Free (Exec_Suffix);
       end Parse_Compiler_Description;
 
       -------------------------
@@ -1626,21 +1650,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
          use GNAT.Regpat;
          use Compilers_Filter_Lists;
 
-         Config        : Configuration_Type;
-         Chunk         : Unbounded_String;
-         N             : Node := First_Child (Description);
-         N2            : Node;
-         Compilers     : Compilers_Filter;
-         Ignore_Config : Boolean := False;
-         Negate        : Boolean;
-         Filter        : Compiler_Filter;
-
-         Default_Hostname : String renames
-           System.OS_Constants.Target_Name;
-
          function Compile_And_Check
            (Name : String) return Pattern_Matcher_Access;
-         --  Compiles pattern and report illegal regexp if needed.
+         --  Compiles pattern and report illegal regexp if needed
 
          -----------------------
          -- Compile_And_Check --
@@ -1653,7 +1665,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                return null;
             else
                return new Pattern_Matcher'
-                 (Compile (Name, GNAT.Regpat.Case_Insensitive));
+                 (Compile (Name, Regpat.Case_Insensitive));
             end if;
          exception
             when Expression_Error =>
@@ -1669,6 +1681,18 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Sloc => Error_Sloc));
                raise;
          end Compile_And_Check;
+
+         Config           : Configuration_Type;
+         Chunk            : Unbounded_String;
+         N                : Node := First_Child (Description);
+         N2               : Node;
+         Compilers        : Compilers_Filter;
+         Ignore_Config    : Boolean := False;
+         Negate           : Boolean;
+         Filter           : Compiler_Filter;
+
+         Default_Hostname : String renames System.OS_Constants.Target_Name;
+
       begin
          Config.Supported := True;
 
@@ -1679,13 +1703,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
             elsif Node_Name (N) = "compilers" then
                Compilers := No_Compilers_Filter;
                N2 := First_Child (N);
+
                while N2 /= null loop
                   if Node_Type (N2) /= Element_Node then
                      null;
 
                   elsif Node_Name (N2) = "compiler" then
                      declare
-                        Name : constant String :=
+                        Name    : constant String :=
                                     Get_Attribute (N2, "name", "");
                         Version : constant String :=
                                     Get_Attribute (N2, "version", "");
@@ -1700,7 +1725,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            Runtime     => To_Unbounded_String (Runtime),
                            Runtime_Re  => Compile_And_Check (Runtime),
                            Language_LC => To_Unbounded_String
-                             (To_Lower (Get_Attribute (N2, "language", ""))));
+                                            (To_Lower
+                                               (Get_Attribute
+                                                  (N2, "language", ""))));
                      end;
 
                      Compilers.Compiler.Append (Filter);
@@ -1717,8 +1744,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
                   N2 := Next_Sibling (N2);
                end loop;
 
-               Compilers.Negate := Boolean'Value
-                 (Get_Attribute (N, "negate", "False"));
+               Compilers.Negate :=
+                 Boolean'Value (Get_Attribute (N, "negate", "False"));
                Config.Compilers_Filters.Append (Compilers);
 
             elsif Node_Name (N) = "targets" then
@@ -1729,8 +1756,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
                         "Multiple <targets> filters specified for "
                         & "configuration node, filter ignored",
                         Sloc => Error_Sloc));
+
                else
                   N2 := First_Child (N);
+
                   while N2 /= null loop
                      if Node_Type (N2) /= Element_Node then
                         null;
@@ -1745,6 +1774,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                         begin
                            Config.Targets_Filters.Append (Double_Regexp);
                         end;
+
                      else
                         Base.Messages.Append
                           (Message.Create
@@ -1756,6 +1786,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                      N2 := Next_Sibling (N2);
                   end loop;
+
                   Config.Negate_Targets := Boolean'Value
                     (Get_Attribute (N, "negate", "False"));
                end if;
@@ -1763,11 +1794,12 @@ package body GPR2.Project.Configuration.KB.Parsing is
             elsif Node_Name (N) = "hosts" then
                --  Resolve this filter immediately. This saves memory, since we
                --  don't need to store it in memory if we know it won't apply.
+
                N2 := First_Child (N);
-               Negate := Boolean'Value
-                 (Get_Attribute (N, "negate", "False"));
+               Negate := Boolean'Value (Get_Attribute (N, "negate", "False"));
 
                Ignore_Config := not Negate;
+
                while N2 /= null loop
                   if Node_Type (N2) /= Element_Node then
                      null;
@@ -1775,14 +1807,15 @@ package body GPR2.Project.Configuration.KB.Parsing is
                   elsif Node_Name (N2) = "host" then
                      declare
                         Host_Same : constant Boolean :=
-                          Match
-                            (Get_Attribute (N2, "name", ""), Default_Hostname);
+                                      Match
+                                        (Get_Attribute
+                                           (N2, "name", ""), Default_Hostname);
                         No_Except : constant Boolean :=
-                          Get_Attribute (N2, "except", "") = "";
+                                      Get_Attribute (N2, "except", "") = "";
                         Excepted  : constant Boolean :=
-                          Match
-                            (Get_Attribute (N2, "except", ""),
-                             Default_Hostname);
+                                      Match
+                                        (Get_Attribute (N2, "except", ""),
+                                         Default_Hostname);
                      begin
                         if
                           Host_Same and then (No_Except or else not Excepted)
@@ -1791,6 +1824,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            exit;
                         end if;
                      end;
+
                   else
                      Base.Messages.Append
                        (Message.Create
@@ -1828,7 +1862,6 @@ package body GPR2.Project.Configuration.KB.Parsing is
             Config.Config := Chunk;
             Append_To.Append (Config);
          end if;
-
       exception
          when Expression_Error =>
             null;
@@ -2039,6 +2072,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                end loop;
                Tmp := Tmp + 1;
                Word_End := Tmp - 2;
+
             else
                Word_Start := Pos + 1;
                Tmp := Pos + 1;
@@ -2066,6 +2100,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            & Str (Word_Start .. Word_End),
                            Sloc => Error_Sloc));
                      raise Invalid_KB;
+
                   else
                      Append
                        (Result,
@@ -2102,7 +2137,11 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Error_Sloc : Source_Reference.Object;
       Messages   : in out Log.Object) return String
    is
+
       function Callback (Var_Name, Index : String) return String;
+      --  Wraps Get_Variable_Value for <compiler_description> nodes
+      --  and aborts KB parsing in case of improper use of indexed
+      --  variables in those nodes.
 
       --------------
       -- Callback --
@@ -2124,6 +2163,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       end Callback;
 
       function Do_Substitute is new Substitute_Variables (Callback);
+
    begin
       return Do_Substitute (Str, Error_Sloc, Messages);
    end Substitute_Variables_In_Compiler_Description;
