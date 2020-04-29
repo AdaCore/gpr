@@ -1,0 +1,17 @@
+with "gnatcoll";
+with "gpr2";
+project Conversion_Tutorial is
+
+   for Main use ("conversion_tutorial.adb");
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-gnat2012", "-gnatwcfijkmqrtuvwz",
+       "-gnaty3abBcdefhiIklmnoOprstx","-Wall", "-gnata", "-gnatVa", "-gnato",
+       "-fstack-check", "-g", "-gnatQ", "-gnatwe");
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("Ada") use ("-Es");
+   end Binder;
+
+end Conversion_Tutorial;

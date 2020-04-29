@@ -1,0 +1,9 @@
+This example is provided to help programmers to replace in a program
+GNATCOLL.Projects package references by GPR2 packages use.
+
+The program loads a project using optional parameters for target, runtime,
+scenarion variables, etc...
+
+A GPR2_GNATCOLL_Projects package is provided to simplify conversion providing
+an API close to GNATCOLL.Projects API. This package can be copied and extended
+inside the source files of the project you plan to modify.
