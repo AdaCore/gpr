@@ -226,7 +226,7 @@ package body GPR2.Project.Configuration.KB is
          begin
             while Has_Element (C) loop
                if GNAT.Regpat.Match
-                 (Target_Lists.Element (C).all, Tgt) > Tgt'First - 1
+                 (Target_Lists.Element (C), Tgt) > Tgt'First - 1
                then
                   return I;
                end if;

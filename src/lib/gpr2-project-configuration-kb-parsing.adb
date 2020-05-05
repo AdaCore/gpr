@@ -22,7 +22,6 @@ with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Strings.Hash;
 with Ada.Text_IO;
-with Ada.Unchecked_Deallocation;
 
 with GNAT.Directory_Operations;
 with GNAT.Expect;
@@ -85,9 +84,6 @@ package body GPR2.Project.Configuration.KB.Parsing is
    --  runtimes
    --  If Allow_Empty_Elements is false, then empty strings are not stored in
    --  the list.
-
-   procedure Unchecked_Free is new Ada.Unchecked_Deallocation
-     (Regpat.Pattern_Matcher, Pattern_Matcher_Access);
 
    type External_Value_Item is record
       Value          : Unbounded_String;
@@ -154,7 +150,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Group           : Integer;
       Group_Match     : String := "";
       Group_Count     : Natural := 0;
-      Contents        : Pattern_Matcher_Access := null;
+      Contents        : Pattern_Matcher_Holder;
       Merge_Same_Dirs : Boolean;
       Error_Sloc      : Source_Reference.Object;
       Messages        : in out Log.Object);
@@ -474,7 +470,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Matched : Match_Array (0 .. Node.Group);
                      Tmp_Str : constant String := To_String (Tmp_Result);
                   begin
-                     Match (Node.Regexp_Re.all, Tmp_Str, Matched);
+                     Match (Node.Regexp_Re.Element, Tmp_Str, Matched);
                      if Matched (0) /= No_Match then
                         Tmp_Result := To_Unbounded_String
                           (Tmp_Str (Matched (Node.Group).First ..
@@ -494,7 +490,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Tmp_Str : constant String := To_String (Tmp_Result);
                      Matched : Match_Array (0 .. 0);
                   begin
-                     Match (Node.Regexp_No.all, Tmp_Str, Matched);
+                     Match (Node.Regexp_No.Element, Tmp_Str, Matched);
                      if Matched (0) /= No_Match then
                         Trace
                           (Main_Trace,
@@ -776,7 +772,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Group           : Integer;
       Group_Match     : String := "";
       Group_Count     : Natural := 0;
-      Contents        : Pattern_Matcher_Access := null;
+      Contents        : Pattern_Matcher_Holder;
       Merge_Same_Dirs : Boolean;
       Error_Sloc      : Source_Reference.Object;
       Messages        : in out Log.Object)
@@ -920,7 +916,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
             Val := To_Unbounded_String (Group_Match);
          end if;
 
-         if Contents /= null
+         if not Contents.Is_Empty
            and then Is_Regular_File (Current_Dir)
          then
             Trace (Main_Trace, "<dir>: Checking inside file " & Current_Dir);
@@ -938,7 +934,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                   begin
                      Trace (Main_Trace, "<dir>: read line " & Line);
 
-                     if Match (Contents.all, Line) then
+                     if Match (Contents.Element, Line) then
                         Save_File
                           (Normalize_Pathname
                              (Name => Line,
@@ -1271,6 +1267,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
          use Ada.Characters.Handling;
          use GNAT.Regpat;
          use External_Value_Lists;
+         use Pattern_Matcher_Holders;
 
          Compiler : Compiler_Description;
          N        : Node := First_Child (Description);
@@ -1355,10 +1352,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
                   declare
                      C        : constant String :=
                                   Get_Attribute (Tmp, "contents", "");
-                     Contents : Pattern_Matcher_Access;
+                     Contents : Pattern_Matcher_Holder;
                   begin
                      if C /= "" then
-                        Contents := new Pattern_Matcher'(Compile (C));
+                        Contents := To_Holder (Compile (C));
                      end if;
 
                      External_Node :=
@@ -1434,7 +1431,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                elsif Node_Name (Tmp) = "grep" then
                   External_Node :=
                     (Typ       => Value_Grep,
-                     Regexp_Re => new Pattern_Matcher'
+                     Regexp_Re => To_Holder
                                     (Compile
                                       (Get_Attribute (Tmp, "regexp", ".*"),
                                        Multiple_Lines)),
@@ -1445,7 +1442,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                elsif Node_Name (Tmp) = "nogrep" then
                   External_Node :=
                     (Typ       => Value_Nogrep,
-                     Regexp_No => new Pattern_Matcher'
+                     Regexp_No => To_Holder
                                     (Compile
                                       (Get_Attribute (Tmp, "regexp", ".*"),
                                        Multiple_Lines)));
@@ -1507,10 +1504,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      end;
 
                      if not Ends_With (Val, Exec_Suffix.all) then
-                        Compiler.Executable_Re := new Pattern_Matcher'
+                        Compiler.Executable_Re := To_Holder
                           (Compile ("^" & Val & Exec_Suffix.all & "$"));
                      else
-                        Compiler.Executable_Re := new Pattern_Matcher'
+                        Compiler.Executable_Re := To_Holder
                           (Compile ("^" & Val & "$"));
                      end if;
                      Base.Check_Executable_Regexp := True;
@@ -1524,7 +1521,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            "Invalid regular expression found in configuration:"
                            & Val,
                            Sloc => Error_Sloc));
-                     Unchecked_Free (Compiler.Executable_Re);
+                     Compiler.Executable_Re.Clear;
                end;
 
             elsif Node_Name (N) = "name" then
@@ -1651,7 +1648,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
          use Compilers_Filter_Lists;
 
          function Compile_And_Check
-           (Name : String) return Pattern_Matcher_Access;
+           (Name : String) return Pattern_Matcher_Holder;
          --  Compiles pattern and report illegal regexp if needed
 
          -----------------------
@@ -1659,12 +1656,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
          -----------------------
 
          function Compile_And_Check
-           (Name : String) return Pattern_Matcher_Access is
+           (Name : String) return Pattern_Matcher_Holder
+         is
+            use Pattern_Matcher_Holders;
          begin
             if Name = "" then
-               return null;
+               return Empty_Holder;
             else
-               return new Pattern_Matcher'
+               return To_Holder
                  (Compile (Name, Regpat.Case_Insensitive));
             end if;
          exception
@@ -1917,7 +1916,6 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Get_Attribute (Description, "canonical", "");
          Name    : Unbounded_String;
          Set     : Target_Lists.List;
-         Pattern : Pattern_Matcher_Access;
          N       : Node := First_Child (Description);
       begin
          if Canon = "" then
@@ -1942,8 +1940,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                declare
                   Val : constant String := Node_Value_As_String (N);
                begin
-                  Pattern := new Pattern_Matcher'(Compile ("^" & Val & "$"));
-                  Target_Lists.Append (Set, Pattern);
+                  Target_Lists.Append (Set, Compile ("^" & Val & "$"));
 
                   if Name = Null_Unbounded_String then
                      --  When not in pedantic mode and working with

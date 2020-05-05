@@ -24,6 +24,7 @@
 
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GNAT.Regpat;
@@ -234,7 +235,15 @@ private
       Complete         => True,
       Path_Order       => 0);
 
-   type Pattern_Matcher_Access is access all GNAT.Regpat.Pattern_Matcher;
+   function "="
+     (Dummy_Left  : GNAT.Regpat.Pattern_Matcher;
+      Dummy_Right : GNAT.Regpat.Pattern_Matcher) return Boolean is (False);
+   --  Always consideres two Pattern_Matchers different as there is no way
+   --  to actually compare them.
+
+   package Pattern_Matcher_Holders is new Ada.Containers.Indefinite_Holders
+     (GNAT.Regpat.Pattern_Matcher);
+   subtype Pattern_Matcher_Holder is Pattern_Matcher_Holders.Holder;
 
    type External_Value_Type is (Value_Constant,
                                 Value_Shell,
@@ -257,12 +266,12 @@ private
                Directory       : Unbounded_String;
                Directory_Group : Integer;
                Dir_If_Match    : Unbounded_String;
-               Contents        : Pattern_Matcher_Access;
+               Contents        : Pattern_Matcher_Holder;
             when Value_Grep       =>
-               Regexp_Re       : Pattern_Matcher_Access;
+               Regexp_Re       : Pattern_Matcher_Holder;
                Group           : Natural;
             when Value_Nogrep     =>
-               Regexp_No       : Pattern_Matcher_Access;
+               Regexp_No       : Pattern_Matcher_Holder;
             when Value_Filter     =>
                Filter          : Unbounded_String;
             when Value_Must_Match =>
@@ -285,7 +294,7 @@ private
    type Compiler_Description is record
       Name             : Unbounded_String := Null_Unbounded_String;
       Executable       : Unbounded_String := Null_Unbounded_String;
-      Executable_Re    : Pattern_Matcher_Access;
+      Executable_Re    : Pattern_Matcher_Holder;
       Prefix_Index     : Integer := -1;
       Target           : External_Value;
       Version          : External_Value;
@@ -303,17 +312,19 @@ private
 
    type Compiler_Filter is record
       Name        : Unbounded_String;
-      Name_Re     : Pattern_Matcher_Access;
+      Name_Re     : Pattern_Matcher_Holder;
       Version     : Unbounded_String;
-      Version_Re  : Pattern_Matcher_Access;
+      Version_Re  : Pattern_Matcher_Holder;
       Runtime     : Unbounded_String;
-      Runtime_Re  : Pattern_Matcher_Access;
+      Runtime_Re  : Pattern_Matcher_Holder;
       Language_LC : Unbounded_String;
    end record
      with Dynamic_Predicate =>
-       (Name = Null_Unbounded_String or else Name_Re /= null)
-       and then (Version = Null_Unbounded_String or else Version_Re /= null)
-       and then (Runtime = Null_Unbounded_String or else Runtime_Re /= null);
+       (Name = Null_Unbounded_String or else not Name_Re.Is_Empty)
+        and then (Version = Null_Unbounded_String
+                  or else not Version_Re.Is_Empty)
+        and then (Runtime = Null_Unbounded_String
+                  or else not Runtime_Re.Is_Empty);
    --  Representation for a <compiler> node (in <configuration>)
 
    package Compiler_Filter_Lists is new Ada.Containers.Doubly_Linked_Lists
@@ -355,8 +366,8 @@ private
    package Configuration_Lists is new Ada.Containers.Doubly_Linked_Lists
      (Configuration_Type);
 
-   package Target_Lists is new Ada.Containers.Doubly_Linked_Lists
-     (Pattern_Matcher_Access);
+   package Target_Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
+     (GNAT.Regpat.Pattern_Matcher);
 
    type Target_Set_Description is record
       Name     : Unbounded_String;
