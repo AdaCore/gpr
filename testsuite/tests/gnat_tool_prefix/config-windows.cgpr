@@ -1,0 +1,6 @@
+configuration project Default is
+   package Compiler is
+      for Driver ("Ada") use "c:\gnatpro\20.1\bin\powerpc-elf-gcc";
+      for Driver ("C++") use "c:\gnatpro\20.1\bin\powerpc-elf-g++";
+   end Compiler;
+end Default;

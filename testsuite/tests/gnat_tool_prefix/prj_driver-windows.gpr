@@ -1,0 +1,6 @@
+project Prj_Driver is
+   for Languages use ("C++");
+   package Compiler is
+      for Driver ("C++") use "c:\gnatpro\20.1\bin\aarch64-wrs-vxworks7r2-G++.EXE";
+   end Compiler;
+end Prj_Driver;

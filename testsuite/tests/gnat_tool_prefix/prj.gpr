@@ -1,0 +1,6 @@
+with "gpr2";
+with "gnatcoll";
+
+project Prj is
+   for Main use ("main.adb");
+end Prj;

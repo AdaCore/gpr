@@ -206,6 +206,14 @@ package GPR2.Project.Tree is
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
    --  Returns the Context for the given project tree
 
+   function Add_Tool_Prefix
+     (Self      : Object;
+      Tool_Name : Name_Type) return Name_Type
+     with Pre => Self.Is_Defined;
+   --  Returns Tool_Name for native compilation otherwise
+   --  it returns the tool prefixed with the target-triplet,
+   --  for example x86_64-linux-gnu-gcc.
+
    procedure Set_Context
      (Self    : in out Object;
       Context : GPR2.Context.Object;

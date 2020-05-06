@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Handling;
 with Ada.Containers.Ordered_Maps;
 with Ada.Environment_Variables;
 with Ada.Directories;
@@ -34,18 +35,24 @@ with GPR2.Source_Reference.Value;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
+with GNATCOLL.OS.Constants;
 with GNATCOLL.Utils;
 
 package body GPR2.Project.Tree is
 
    use GNAT;
    use type GPR2.Path_Name.Object;
+   use type GNATCOLL.OS.OS_Type;
 
    package PC renames Project.Configuration;
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
 
-   Version_Regexp : constant Regexp.Regexp :=
+   Is_Windows_Host : constant Boolean :=
+                       GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
+                         with Warnings => Off;
+
+   Version_Regexp  : constant Regexp.Regexp :=
                       Regexp.Compile (".[0-9]+(.[0-9]+)?");
 
    function Register_View
@@ -140,6 +147,113 @@ package body GPR2.Project.Tree is
    --  the common source file, otherwise Undefined is returned in Full_Path.
    --
    --  see also function Get_File
+
+   ---------------------
+   -- Add_Tool_Prefix --
+   ---------------------
+
+   function Add_Tool_Prefix
+     (Self      : Object;
+      Tool_Name : Name_Type) return Name_Type
+   is
+
+      Not_Defined : constant Optional_Name_Type := " ";
+      --  value returned when GNAT_Compilers_Prefix cannot find Compiler
+      --  Driver in View
+
+      function GNAT_Compilers_Prefix
+        (View : Project.View.Object) return Optional_Name_Type
+        with Pre => View.Is_Defined;
+      --  Returns prefix found in Compiler package's Driver attribute for gcc
+      --  or g++ tools. Returns Not_Defined if no attribute was defined.
+
+      ---------------------------
+      -- GNAT_Compilers_Prefix --
+      ---------------------------
+
+      function GNAT_Compilers_Prefix
+        (View : Project.View.Object) return Optional_Name_Type
+      is
+         package PRP renames Project.Registry.Pack;
+         package PRA renames Project.Registry.Attribute;
+      begin
+         if View.Is_Defined and then View.Has_Packages (PRP.Compiler) then
+            for Language of View.Languages loop
+               declare
+                  Driver : constant String :=
+                             (if View.Pack (PRP.Compiler).Has_Attributes
+                              (PRA.Driver, Language.Text) then
+                                 String (Path_Name.Create_File
+                                (Name_Type (View.Pack (
+                                   PRP.Compiler).Attribute
+                                     (PRA.Driver,
+                                      Language.Text).Value.Text)).Base_Name)
+                              else "");
+               begin
+                  if Driver'Length > 2 then
+                     declare
+                        subtype Last_3_Chars_Range is Positive range
+                          Driver'Last - 2 .. Driver'Last;
+                        Last_3_Chars : constant String :=
+                                         (if Is_Windows_Host
+                                          then Ada.Characters.Handling.To_Lower
+                                            (Driver (Last_3_Chars_Range))
+                                          else Driver (Last_3_Chars_Range));
+                     begin
+                        if Last_3_Chars = "gcc"
+                          or else Last_3_Chars = "g++"
+                        then
+                           if Driver'Length = 3 then
+                              return No_Name;
+                           else
+                              return Optional_Name_Type
+                                (Driver (Driver'First .. Driver'Last - 3));
+                           end if;
+                        end if;
+                     end;
+                  end if;
+               end;
+            end loop;
+         end if;
+         return Not_Defined;
+      end GNAT_Compilers_Prefix;
+
+      Prefix_From_Root : constant Optional_Name_Type :=
+                           GNAT_Compilers_Prefix (Self.Root_Project);
+      --  Try to find prefix from root project compiler package
+
+   begin
+      if Prefix_From_Root = Not_Defined then
+         if Self.Has_Configuration then
+            declare
+               Prefix_From_Config : constant Optional_Name_Type
+                 := GNAT_Compilers_Prefix
+                   (Self.Configuration.Corresponding_View);
+               --  Try to find prefix from config project compiler package
+            begin
+               if Prefix_From_Config = Not_Defined then
+                  --  Use Target as prefix if prefix not defined in project &
+                  --  configuration file.
+
+                  return Name_Type
+                    (String (Self.Target) & "-" & String (Tool_Name));
+               else
+                  return Name_Type
+                    (String (Prefix_From_Config) & String (Tool_Name));
+               end if;
+            end;
+
+         else
+            --  Use Target as prefix if not defined in project and no
+            --  configution file was loaded.
+
+            return Name_Type (String (Self.Target) & "-" & String (Tool_Name));
+         end if;
+
+      else
+         return Name_Type (String (Prefix_From_Root) & String (Tool_Name));
+      end if;
+   end Add_Tool_Prefix;
 
    --------------------
    -- Append_Message --

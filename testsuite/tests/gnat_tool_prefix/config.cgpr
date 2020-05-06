@@ -1,0 +1,5 @@
+configuration project Default is
+   package Compiler is
+      for Driver ("Ada") use "/usr/gnat/bin/powerpc-elf-gcc";
+   end Compiler;
+end Default;

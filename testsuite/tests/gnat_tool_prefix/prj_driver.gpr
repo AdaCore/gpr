@@ -1,0 +1,5 @@
+project Prj_Driver is
+   package Compiler is
+      for Driver ("Ada") use "/usr/gnat/bin/aarch64-wrs-vxworks7r2-gcc";
+   end Compiler;
+end Prj_Driver;
