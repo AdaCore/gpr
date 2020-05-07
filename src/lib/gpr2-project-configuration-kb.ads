@@ -254,8 +254,8 @@ private
                                 Value_Must_Match,
                                 Value_Variable,
                                 Value_Done);
-   type External_Value_Node
-     (Typ : External_Value_Type := Value_Constant) is
+
+   type External_Value_Node (Typ : External_Value_Type := Value_Constant) is
       record
          case Typ is
             when Value_Constant  =>
