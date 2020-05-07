@@ -27,11 +27,11 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
-with GNAT.Regpat;
-
 with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name.Set;
+
+private with GNAT.Regpat;
 
 package GPR2.Project.Configuration.KB is
 
@@ -156,6 +156,8 @@ package GPR2.Project.Configuration.KB is
 
 private
 
+   use GNAT;
+
    type Targets_Set_Id is range -1 .. Natural'Last;
 
    All_Target_Sets     : constant Targets_Set_Id := -1;
@@ -236,13 +238,14 @@ private
       Path_Order       => 0);
 
    function "="
-     (Dummy_Left  : GNAT.Regpat.Pattern_Matcher;
-      Dummy_Right : GNAT.Regpat.Pattern_Matcher) return Boolean is (False);
+     (Dummy_Left  : Regpat.Pattern_Matcher;
+      Dummy_Right : Regpat.Pattern_Matcher) return Boolean is (False);
    --  Always consideres two Pattern_Matchers different as there is no way
    --  to actually compare them.
 
    package Pattern_Matcher_Holders is new Ada.Containers.Indefinite_Holders
-     (GNAT.Regpat.Pattern_Matcher);
+     (Regpat.Pattern_Matcher);
+
    subtype Pattern_Matcher_Holder is Pattern_Matcher_Holders.Holder;
 
    type External_Value_Type is (Value_Constant,
@@ -367,7 +370,7 @@ private
      (Configuration_Type);
 
    package Target_Lists is new Ada.Containers.Indefinite_Doubly_Linked_Lists
-     (GNAT.Regpat.Pattern_Matcher);
+     (Regpat.Pattern_Matcher);
 
    type Target_Set_Description is record
       Name     : Unbounded_String;

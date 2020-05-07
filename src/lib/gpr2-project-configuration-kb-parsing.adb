@@ -48,8 +48,6 @@ pragma Warnings (On);
 
 package body GPR2.Project.Configuration.KB.Parsing is
 
-   use GNAT;
-
    function Get_Attribute
      (N         : DOM.Core.Node;
       Attribute : Value_Not_Empty;
