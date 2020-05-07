@@ -145,7 +145,7 @@ package body GPR2.Project.Configuration.KB is
       use GNATCOLL.VFS;
       use GNATCOLL.VFS_Utils;
 
-      GPRconfig : constant Filesystem_String_Access :=
+      GPRconfig : Filesystem_String_Access :=
                     Locate_Exec_On_Path ("gprconfig");
       Dir       : Virtual_File;
    begin
@@ -154,6 +154,8 @@ package body GPR2.Project.Configuration.KB is
       end if;
 
       Dir := Get_Parent (Create (Dir_Name (GPRconfig.all)));
+
+      Free (GPRconfig);
 
       if Dir = No_File then
          return GPR2.Path_Name.Undefined;
