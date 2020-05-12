@@ -57,8 +57,9 @@ package body GPR2.Project.Source.Artifact is
    function Create
      (Source : Project.Source.Object) return Artifact.Object
    is
-      Src    : constant Name_Type := Source.Source.Path_Name.Base_Name;
-      Lang   : constant Name_Type := Source.Source.Language;
+      Src    : constant GPR2.Source.Object := Source.Source;
+      BN     : constant Name_Type := Src.Path_Name.Base_Name;
+      Lang   : constant Name_Type := Src.Language;
       S_View : constant Project.View.Object :=
                  Definition.Strong (Source.View);
       O_View : constant Project.View.Object :=
@@ -78,21 +79,21 @@ package body GPR2.Project.Source.Artifact is
 
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
-                         (Source.Source.Path_Name.Simple_Name & P_Suffix,
+                         (Src.Path_Name.Simple_Name & P_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
       Callgraph    : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
-                         (Source.Source.Path_Name.Base_Name & C_Suffix,
+                         (BN & C_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
       Switches     : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
-                         (Src & S_Suffix,
+                         (BN & S_Suffix,
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
    begin
-      if not Source.Source.Has_Units or else Source.Source.Has_Single_Unit then
+      if not Src.Has_Units or else Src.Has_Single_Unit then
          --  For aggregated library the .ali is also copied into the
          --  aggregate library directory.
 
@@ -100,7 +101,7 @@ package body GPR2.Project.Source.Artifact is
             Deps_Lib.Insert
               (1,
                GPR2.Path_Name.Create_File
-                 (Src & D_Suffix,
+                 (BN & D_Suffix,
                   Optional_Name_Type
                     (Source.Aggregating_View.Library_Ali_Directory.Value)));
 
@@ -108,29 +109,29 @@ package body GPR2.Project.Source.Artifact is
             Object_Files.Insert
               (1,
                GPR2.Path_Name.Create_File
-                 (Src & O_Suffix,
+                 (BN & O_Suffix,
                   Optional_Name_Type (O_View.Object_Directory.Value)));
 
             if S_View.Is_Library and then Lang = "Ada" then
                Deps_Lib.Insert
                  (1,
                   GPR2.Path_Name.Create_File
-                    (Src & D_Suffix,
+                    (BN & D_Suffix,
                      Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
             end if;
 
             Deps_Obj.Insert
               (1,
                GPR2.Path_Name.Create_File
-                 (Src & D_Suffix,
+                 (BN & D_Suffix,
                   Optional_Name_Type (O_View.Object_Directory.Value)));
          end if;
 
       else
-         for CU of Source.Source.Units loop
+         for CU of Src.Units loop
             if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
                declare
-                  Base : constant Name_Type := Src & At_Suffix (CU.Index);
+                  Base : constant Name_Type := BN & At_Suffix (CU.Index);
                begin
                   if Source.Aggregated then
                      Deps_Lib.Insert
