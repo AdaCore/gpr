@@ -105,7 +105,8 @@ package body GPR2.Source is
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
       Units         : Unit.List.Object;
-      Is_RTS_Source : Boolean) return Object
+      Is_RTS_Source : Boolean;
+      Is_Indexed    : Boolean) return Object
    is
       use all type Unit.Library_Unit_Type;
 
@@ -138,7 +139,7 @@ package body GPR2.Source is
          Result.Language  := +"Ada";
          Result.Ada_Key   := Key;
 
-         Set_Ada (Result, Sorted_Units, Is_RTS_Source);
+         Set_Ada (Result, Sorted_Units, Is_RTS_Source, Is_Indexed);
       end return;
    end Create_Ada;
 

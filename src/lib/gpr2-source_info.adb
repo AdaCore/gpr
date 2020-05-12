@@ -157,11 +157,13 @@ package body GPR2.Source_Info is
    procedure Set_Ada
      (Self          : in out Object;
       Units         : Unit.List.Object;
-      Is_RTS_Source : Boolean) is
+      Is_RTS_Source : Boolean;
+      Is_Indexed    : Boolean) is
    begin
       Self.Is_Ada        := True;
       Self.CU_List       := Units;
       Self.Is_RTS_Source := Is_RTS_Source;
+      Self.Is_Indexed    := Is_Indexed;
 
       if Self.CU_List.Length > 0 then
          Self.Kind := Self.CU_List (1).Kind;

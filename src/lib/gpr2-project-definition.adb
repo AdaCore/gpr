@@ -948,6 +948,7 @@ package body GPR2.Project.Definition is
             declare
                Language        : constant Name_Type := Name_Type (L.Text);
                Language_Is_Ada : constant Boolean := Language = "Ada";
+               Is_Indexed      : Boolean := False;
             begin
                --  First, try naming exceptions
 
@@ -967,11 +968,19 @@ package body GPR2.Project.Definition is
 
                      for Exc of Ada_Naming_Exceptions (Basename) loop
                         declare
+                           package SR renames GPR2.Source_Reference;
                            Unit_Name : constant Name_Type :=
                                          Name_Type (Exc.Index.Text);
-                           Index     : constant Natural :=
-                                         At_Num_Or (Exc.Value, 1);
+                           Index     : Natural;
+                           Value     : constant SR.Value.Object := Exc.Value;
                         begin
+                           if Value.Has_At_Num then
+                              Index      := Value.At_Num;
+                              Is_Indexed := True;
+                           else
+                              Index := 1;
+                           end if;
+
                            Kind := (if Exc.Name.Text = PRA.Spec
                                     then Unit.S_Spec
                                     else Unit.S_Body);
@@ -992,8 +1001,7 @@ package body GPR2.Project.Definition is
                                  Lib_Item_Kind => Unit.Is_Package,
                                  Main          => Unit.None,
                                  Flags         => Unit.Default_Flags,
-                                 Dependencies  =>
-                                   Source_Reference.Identifier.Set.Empty_Set,
+                                 Dependencies  => SR.Identifier.Set.Empty_Set,
                                  Sep_From      => No_Name));
                         end;
                      end loop;
@@ -1100,7 +1108,8 @@ package body GPR2.Project.Definition is
                            Units         => Units,
                            Is_RTS_Source =>
                              (View.Tree.Has_Runtime_Project
-                              and then View = View.Tree.Runtime_Project));
+                              and then View = View.Tree.Runtime_Project),
+                           Is_Indexed    => Is_Indexed);
 
                   else
                      Source := GPR2.Source.Create (File, Language, Kind);

@@ -100,6 +100,11 @@ package GPR2.Source_Info is
      with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns true if the source contains a single unit
 
+   function Has_Index (Self : Object) return Boolean
+     with Pre => Self.Is_Defined and then Self.Has_Units;
+   --  Returns True if source contains one or more units declared in Naming
+   --  package with "at" Index.
+
    function Units
      (Self : Object) return Unit.List.Object
      with Pre  => Self.Is_Defined and then Self.Has_Units,
@@ -146,7 +151,8 @@ package GPR2.Source_Info is
    procedure Set_Ada
      (Self          : in out Object;
       Units         : Unit.List.Object;
-      Is_RTS_Source : Boolean)
+      Is_RTS_Source : Boolean;
+      Is_Indexed    : Boolean)
      with Post => Self.Is_Ada;
 
    procedure Update (Self : in out Object) is null
@@ -216,6 +222,7 @@ private
       Is_Ada        : Boolean := False;
       Parsed        : Backend := None;
       Is_RTS_Source : Boolean := False;
+      Is_Indexed    : Boolean := False;
       CU_List       : Unit.List.Object;
       Kind          : Unit.Library_Unit_Type := Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
@@ -242,6 +249,9 @@ private
 
    function Has_Single_Unit (Self : Object) return Boolean is
      (Self.CU_List.Length = 1);
+
+   function Has_Index (Self : Object) return Boolean is
+     (Self.Is_Indexed);
 
    function Is_Ada (Self : Object) return Boolean is (Self.Is_Ada);
 

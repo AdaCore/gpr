@@ -93,41 +93,7 @@ package body GPR2.Project.Source.Artifact is
                           Optional_Name_Type (O_View.Object_Directory.Value));
 
    begin
-      if not Src.Has_Units or else Src.Has_Single_Unit then
-         --  For aggregated library the .ali is also copied into the
-         --  aggregate library directory.
-
-         if Source.Aggregated then
-            Deps_Lib.Insert
-              (1,
-               GPR2.Path_Name.Create_File
-                 (BN & D_Suffix,
-                  Optional_Name_Type
-                    (Source.Aggregating_View.Library_Ali_Directory.Value)));
-
-         else
-            Object_Files.Insert
-              (1,
-               GPR2.Path_Name.Create_File
-                 (BN & O_Suffix,
-                  Optional_Name_Type (O_View.Object_Directory.Value)));
-
-            if S_View.Is_Library and then Lang = "Ada" then
-               Deps_Lib.Insert
-                 (1,
-                  GPR2.Path_Name.Create_File
-                    (BN & D_Suffix,
-                     Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
-            end if;
-
-            Deps_Obj.Insert
-              (1,
-               GPR2.Path_Name.Create_File
-                 (BN & D_Suffix,
-                  Optional_Name_Type (O_View.Object_Directory.Value)));
-         end if;
-
-      else
+      if Src.Has_Units and then Src.Has_Index then
          for CU of Src.Units loop
             if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
                declare
@@ -168,6 +134,38 @@ package body GPR2.Project.Source.Artifact is
                end;
             end if;
          end loop;
+
+      elsif Source.Aggregated then
+         --  For aggregated library the .ali is also copied into the
+         --  aggregate library directory.
+
+         Deps_Lib.Insert
+           (1,
+            GPR2.Path_Name.Create_File
+              (BN & D_Suffix,
+               Optional_Name_Type
+                 (Source.Aggregating_View.Library_Ali_Directory.Value)));
+
+      else
+         Object_Files.Insert
+           (1,
+            GPR2.Path_Name.Create_File
+              (BN & O_Suffix,
+               Optional_Name_Type (O_View.Object_Directory.Value)));
+
+         if S_View.Is_Library and then Lang = "Ada" then
+            Deps_Lib.Insert
+              (1,
+               GPR2.Path_Name.Create_File
+                 (BN & D_Suffix,
+                  Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
+         end if;
+
+         Deps_Obj.Insert
+           (1,
+            GPR2.Path_Name.Create_File
+              (BN & D_Suffix,
+               Optional_Name_Type (O_View.Object_Directory.Value)));
       end if;
 
       return Artifact.Object'

@@ -73,7 +73,8 @@ package GPR2.Source is
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
       Units         : Unit.List.Object;
-      Is_RTS_Source : Boolean) return Object
+      Is_RTS_Source : Boolean;
+      Is_Indexed    : Boolean) return Object
      with Pre  => Filename.Is_Defined and then not Units.Is_Empty,
           Post => Create_Ada'Result.Is_Defined;
    --  Constructor for an Ada source object.
