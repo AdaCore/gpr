@@ -933,14 +933,51 @@ package body GPRinstall.Install is
             is (Source.Source.Language = "ada");
             --  Returns True if Source is an Ada source
 
-            Src     : GPR2.Source.Object;
-            Atf     : GPR2.Project.Source.Artifact.Object;
-            CUs     : GPR2.Unit.List.Object;
-            Has_Atf : Boolean := False;
-            --  Has artefacts to install
+            procedure Install_Project_Source
+              (Source                : GPR2.Project.Source.Object;
+               Is_Interface_Closure  : Boolean := False);
+            --  Install the project source and possibly the corresponding
+            --  artifacts.
 
-         begin
-            for Source of Project.Sources loop
+            procedure Copy_Interface_Closure
+              (Source : GPR2.Project.Source.Object);
+            --  Copy all sources and artifacts part of the close of Source
+
+            ----------------------------
+            -- Copy_Interface_Closure --
+            ----------------------------
+
+            procedure Copy_Interface_Closure
+              (Source : GPR2.Project.Source.Object) is
+            begin
+               --  Note that we only install the interface from the same view
+               --  to avoid installing the runtime file for example.
+
+               for D of Source.Dependencies (Closure => True) loop
+                  if not Source_Copied.Contains (D)
+                    and then (D.Source.Kind in Unit.Spec_Kind
+                              or else D.Source.Is_Implementation_Required)
+                    and then Source.View = D.View
+                  then
+                     Install_Project_Source (D, Is_Interface_Closure => True);
+                  end if;
+               end loop;
+            end Copy_Interface_Closure;
+
+            ----------------------------
+            -- Install_Project_Source --
+            ----------------------------
+
+            procedure Install_Project_Source
+              (Source                : GPR2.Project.Source.Object;
+               Is_Interface_Closure  : Boolean := False)
+            is
+               Src     : GPR2.Source.Object;
+               Atf     : GPR2.Project.Source.Artifact.Object;
+               CUs     : GPR2.Unit.List.Object;
+               Has_Atf : Boolean := False;
+               --  Has artefacts to install
+            begin
                --  Skip sources that are removed/excluded and sources not
                --  part of the interface for standalone libraries.
 
@@ -949,20 +986,27 @@ package body GPRinstall.Install is
 
                if not Project.Is_Library
                  or else Project.Library_Standalone = No
-                 or else Source.Is_Interface
+                 or else (Source.Is_Interface or else Is_Interface_Closure)
                then
                   if Src.Has_Units then
                      CUs := Src.Units;
                   end if;
 
                   if Options.All_Sources
-                    or else (Source.Is_Interface
+                    or else ((Source.Is_Interface or else Is_Interface_Closure)
                              and then Src.Kind in Unit.Spec_Kind)
                     or else Src.Is_Generic
                     or else (Src.Kind = S_Separate
                              and then Source.Separate_From.Source.Is_Generic)
                   then
                      Copy_Source (Source);
+
+                     --  This if a source is an interface of the project we
+                     --  need to also install the full-closure for this source.
+
+                     if Source.Is_Interface then
+                        Copy_Interface_Closure (Source);
+                     end if;
 
                   elsif Source.Has_Naming_Exception then
                      --  When a naming exception is present for a body which
@@ -1049,6 +1093,11 @@ package body GPRinstall.Install is
                      end if;
                   end if;
                end if;
+            end Install_Project_Source;
+
+         begin
+            for Source of Project.Sources loop
+               Install_Project_Source (Source);
             end loop;
          end Copy_Project_Sources;
 
