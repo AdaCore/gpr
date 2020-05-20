@@ -929,18 +929,9 @@ package body GPRinstall.Install is
             use all type GPR2.Project.Standalone_Library_Kind;
 
             function Is_Ada
-              (Source : GPR2.Project.Source.Object) return Boolean with Inline;
+              (Source : GPR2.Project.Source.Object) return Boolean
+            is (Source.Source.Language = "ada");
             --  Returns True if Source is an Ada source
-
-            ------------
-            -- Is_Ada --
-            ------------
-
-            function Is_Ada
-              (Source : GPR2.Project.Source.Object) return Boolean is
-            begin
-               return Source.Source.Language = "ada";
-            end Is_Ada;
 
             Src     : GPR2.Source.Object;
             Atf     : GPR2.Project.Source.Artifact.Object;
