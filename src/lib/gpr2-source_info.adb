@@ -115,6 +115,17 @@ package body GPR2.Source_Info is
         and then Self.CU_List (Positive (Index)).Is_Generic;
    end Is_Generic;
 
+   --------------------------------
+   -- Is_Implementation_Required --
+   --------------------------------
+
+   function Is_Implementation_Required
+     (Self : Object; Index : Unit_Index := 1) return Boolean is
+   begin
+      return Self.CU_List
+        (Positive (Index)).Is_Flag_Set (Unit.Body_Needed_For_SAL);
+   end Is_Implementation_Required;
+
    ----------
    -- Kind --
    ----------

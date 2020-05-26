@@ -125,6 +125,14 @@ package GPR2.Source_Info is
                   or else Self.Has_Unit_At (Index));
    --  Returns True if the source Self has the generic unit at Index
 
+   function Is_Implementation_Required
+     (Self : Object; Index : Unit_Index := 1) return Boolean
+     with Pre => Self.Is_Defined
+                 and then Self.Has_Unit_At (Index);
+   --  Returns True if the source for the implementation is required for the
+   --  compilation. This is the case for a generic package or a package having
+   --  inlined routines.
+
    function Context_Clause_Dependencies
      (Self  : Object;
       Index : Unit_Index := 1) return Source_Reference.Identifier.Set.Object
