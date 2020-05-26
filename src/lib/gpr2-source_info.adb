@@ -114,6 +114,7 @@ package body GPR2.Source_Info is
       return Self.Has_Units
         and then Self.CU_List (Positive (Index)).Is_Generic;
    end Is_Generic;
+
    ----------
    -- Kind --
    ----------
