@@ -4,7 +4,7 @@ import os.path
 from e3.env import Env
 from e3.fs import mkdir
 from e3.testsuite.driver.classic import TestAbortWithError
-from e3.testsuite.driver.diff import DiffTestDriver
+from e3.testsuite.driver.diff import DiffTestDriver, Substitute
 
 
 # create_fake_ada_compiler routine copied from gprbuild-internal testsuite
@@ -145,6 +145,12 @@ class BaseDriver(DiffTestDriver):
             raise TestAbortWithError(
                 'test.yaml: missing "description" field'
             )
+
+    @property
+    def output_refiners(self):
+        # Make all filenames look like Unix ones (forward slashes for directory
+        # separators).
+        return [Substitute('\\', '/')]
 
     # Convenience path builders
 
