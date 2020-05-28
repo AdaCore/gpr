@@ -1,7 +1,6 @@
 import os
 import os.path
 
-from e3.env import Env
 from e3.testsuite.driver.classic import TestAbortWithError
 
 from testsuite_support.base_driver import BaseDriver, create_fake_ada_compiler
@@ -55,7 +54,8 @@ class BuildAndRunDriver(BaseDriver):
                comp_dir=fake_dir, comp_target=self.fake_ada_target,
                gnat_version="21.0w", gcc_version="8.4.3", runtimes=["rtp"],
                comp_is_cross=True)
-            Env().add_path(os.path.join(fake_dir, 'bin'))
+            env['PATH'] = (
+                os.path.join(fake_dir, 'bin') + os.path.pathsep + env['PATH'])
 
         # Build the program and run it
         self.shell(['gprbuild', '-g1', '-q', '-p', '-P', self.project_file,
