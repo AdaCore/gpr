@@ -25,7 +25,9 @@ with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 
+pragma Warnings (Off);
 with System.OS_Constants;
+pragma Warnings (On);
 
 procedure Main is
 
