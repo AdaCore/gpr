@@ -65,6 +65,7 @@ RBD=--relocate-build-tree
 GPR2=$(SOURCE_DIR)/gpr2.gpr
 GPR2LAL=$(SOURCE_DIR)/gpr2-lal.gpr
 GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
+GPR2KB=$(SOURCE_DIR)/src/kb/collect_kb.gpr
 MAKEPREFIX=$(SOURCE_DIR)/
 LANGKIT_GENERATED_SRC=$(shell pwd)/langkit/build
 endif
@@ -98,7 +99,12 @@ UNINSTALLER=$(INSTALLER) -p -f --uninstall
 # build #
 #########
 
-all: build build-tools
+all: kb build build-tools
+
+kb:
+	gprbuild -p $(GPR2KB)
+	$(SOURCE_DIR)/src/kb/collect_kb -o $(SOURCE_DIR)/src/kb/config.kb \
+		$(SOURCE_DIR)/src/kb/gprconfig_kb
 
 build: ${LIBGPR2_TYPES:%=build-%} ${LIBGPR2_TYPES:%=buildlal-%}
 

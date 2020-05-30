@@ -65,11 +65,6 @@ package GPR2.Project.Configuration.KB is
    --  Returns the default location of the knowledge database. This is based on
    --  the location of gprconfig in path.
 
-   function Default_Content return GPR2.Containers.Value_List
-     with Post => not Default_Content'Result.Is_Empty;
-   --  Returns defalut contents of the knowledge base embedded
-   --  into the library.
-
    function Create
      (Location : GPR2.Path_Name.Object;
       Flags    : Parsing_Flags) return Object
@@ -91,6 +86,12 @@ package GPR2.Project.Configuration.KB is
       Flags   : Parsing_Flags) return Object
      with Post => Create'Result.Is_Defined;
    --  Same as above, but the knowledge base is parsed from a list of Values
+
+   function Create_Default
+     (Flags : Parsing_Flags) return Object
+     with Post => Create_Default'Result.Is_Defined;
+   --  Parses default contents of the knowledge base embedded
+   --  into the library.
 
    function Create_Empty return Object
      with Post => Create_Empty'Result.Is_Defined;

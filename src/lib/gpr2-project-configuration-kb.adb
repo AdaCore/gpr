@@ -112,6 +112,16 @@ package body GPR2.Project.Configuration.KB is
       return Result;
    end Create;
 
+   --------------------
+   -- Create_Default --
+   --------------------
+
+   function Create_Default
+     (Flags : Parsing_Flags) return Object is
+   begin
+      return Parsing.Parse_Default_Knowledge_Base (Flags);
+   end Create_Default;
+
    ------------------
    -- Create_Empty --
    ------------------
@@ -123,19 +133,6 @@ package body GPR2.Project.Configuration.KB is
       Result.Initialized := True;
       return Result;
    end Create_Empty;
-
-   ---------------------
-   -- Default_Content --
-   ---------------------
-
-   function Default_Content return GPR2.Containers.Value_List is
-      use GPR2.Containers;
-
-      Result : Value_List;
-   begin
-      Result.Append ("</configuration>");
-      return Result;
-   end Default_Content;
 
    --------------------------------------
    -- Default_Knowledge_Base_Directory --

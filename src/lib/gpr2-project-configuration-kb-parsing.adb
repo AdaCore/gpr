@@ -20,6 +20,7 @@ with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Directories;
 with Ada.Environment_Variables;
+with Ada.Strings.Fixed;
 with Ada.Strings.Hash;
 with Ada.Text_IO;
 
@@ -48,6 +49,14 @@ pragma Warnings (On);
 
 package body GPR2.Project.Configuration.KB.Parsing is
 
+   function Default_Content return GPR2.Containers.Name_Value_Map
+     with Post => not Default_Content'Result.Is_Empty;
+   --  Returns default contents of the knowledge base embedded
+   --  into the library. Result maps name of the file used for embedding
+   --  to its contents.
+   --  Result maps base names of files used to create the embedded knowledge
+   --  base to their contents.
+
    function Get_Attribute
      (N         : DOM.Core.Node;
       Attribute : Value_Not_Empty;
@@ -66,7 +75,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
      (Base      : in out Object;
       Root_Node : DOM.Core.Node;
       Flags     : Parsing_Flags;
-      From_File : String := "")
+      From_File : Value_Not_Empty)
      with Pre => Base.Is_Defined and then DOM.Core."/=" (Root_Node, null);
    --  Parses a single top-level KB node. From_File used for diagnostics
 
@@ -202,6 +211,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
    function Get_String_No_Adalib (Str : String) return String;
    --  Returns the name without "adalib" at the end
 
+   Embed_Pseudo_Dir : constant String :=
+                        "embedded_kb" & Directory_Operations.Dir_Separator;
+   --  Used for reporting potential errors in the embeded base
+
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE.PARSING_TRACE",
@@ -231,6 +244,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
       Reader : Schema.Dom_Readers.Tree_Reader;
       Input  : String_Input;
+
+      String_Argument : constant String := "string_argument";
    begin
       Trace (Main_Trace, "Parsing string");
       Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
@@ -243,7 +258,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Close (Input);
 
       Parse_Knowledge_Base
-        (Self, DOM.Core.Documents.Get_Element (Get_Tree (Reader)), Flags);
+        (Self,
+         DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
+         Flags,
+         Embed_Pseudo_Dir & String_Argument);
 
       declare
          Doc : Document := Get_Tree (Reader);
@@ -253,6 +271,71 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
       Free (Reader);
    end Add;
+
+   ---------------------
+   -- Default_Content --
+   ---------------------
+
+   function Default_Content return GPR2.Containers.Name_Value_Map is
+      use Ada.Strings.Fixed;
+      use GPR2.Containers;
+
+      Result      : Name_Value_Map;
+
+      KB_Start    : constant Character
+        with Import     => True,
+             Convention => C,
+             Link_Name  => "_binary_config_kb_start";
+      KB_Length   : constant Integer
+        with Import     => True,
+             Convention => C,
+             Link_Name => "_binary_config_kb_size";
+      KB          : String (1 .. KB_Length) with Address => KB_Start'Address;
+
+      Idx1        : Integer;
+      Idx2        : Integer;
+      Idx3        : Integer;
+
+      File_Length : Positive;
+   begin
+      --  Embedded knowledge base is expected to be a string representing all
+      --  individual files forming the knowledge base in the following format:
+      --
+      --  <file_name>:<length>:<content>{<file_name>:<length>:<content>}
+      --
+      --  where <length> indicates the length of the <content> field and
+      --  <file_name> is the base name of the file included in the base.
+
+      Idx1 := KB'First;
+
+      while Idx1 in KB'First .. KB'Last - 2 loop
+         Idx2 := Index (KB, ":", Idx1);
+         if Idx2 <= Idx1 or else Idx2 = KB'Last then
+            raise Invalid_KB with "malformed default knowledge base at"
+              & Idx1'Img;
+         end if;
+
+         Idx3 := Index (KB, ":", Idx2 + 1);
+         if Idx3 <= Idx2 then
+            raise Invalid_KB with "malformed default knowledge base at"
+              & Idx2'Img;
+         end if;
+
+         File_Length := Positive'Value (KB (Idx2 + 1 .. Idx3 - 1));
+         if Idx3 + File_Length > KB'Last then
+            raise Invalid_KB with "malformed default knowledge base at"
+              & Idx3'Img;
+         end if;
+
+         Result.Include
+           (Name_Type (KB (Idx1 .. Idx2 - 1)),
+            Value_Type (KB (Idx3 + 1 .. Idx3  + File_Length)));
+
+         Idx1 := Idx3 + File_Length + 1;
+      end loop;
+
+      return Result;
+   end Default_Content;
 
    -------------------
    -- Get_Attribute --
@@ -1140,6 +1223,126 @@ package body GPR2.Project.Configuration.KB.Parsing is
       end if;
    end Parse_All_Dirs;
 
+   ----------------------------------
+   -- Parse_Default_Knowledge_Base --
+   ----------------------------------
+
+   function Parse_Default_Knowledge_Base
+     (Flags : Parsing_Flags) return Object
+   is
+      use GNAT.Directory_Operations;
+      use GNATCOLL.Traces;
+      use DOM.Core, DOM.Core.Nodes;
+      use Input_Sources.Strings;
+      use Schema.Dom_Readers;
+      use Sax.Readers;
+      use GPR2.Containers.Name_Value_Map_Package;
+
+      KB_Content : GPR2.Containers.Name_Value_Map;
+      Result     : Object;
+
+      type Resolving_Reader is new Schema.Dom_Readers.Tree_Reader with record
+         Current_Source : Unbounded_String;
+      end record;
+
+      overriding function Resolve_Entity
+        (Handler   : Resolving_Reader;
+         Public_Id : Unicode.CES.Byte_Sequence;
+         System_Id : Unicode.CES.Byte_Sequence)
+         return Input_Sources.Input_Source_Access;
+      --  Resolves entities from knowledge base
+
+      --------------------
+      -- Resolve_Entity --
+      --------------------
+
+      overriding function Resolve_Entity
+        (Handler   : Resolving_Reader;
+         Public_Id : Unicode.CES.Byte_Sequence;
+         System_Id : Unicode.CES.Byte_Sequence)
+         return Input_Sources.Input_Source_Access
+      is
+         Pub_Id : constant Optional_Name_Type :=
+                    Optional_Name_Type (Public_Id);
+         Sys_Id : constant Optional_Name_Type :=
+                    Optional_Name_Type (System_Id);
+         Input  : constant String_Input_Access :=
+                    (if Pub_Id /= "" or else Sys_Id /= "" then new String_Input
+                     else null);
+      begin
+         Trace (Main_Trace, "Public_Id=""" & Public_Id & """");
+         Trace (Main_Trace, "System_Id=""" & System_Id & """");
+
+         if Pub_Id /= "" and then KB_Content.Contains (Pub_Id) then
+            Open
+              (KB_Content.Element (Pub_Id),
+               Unicode.CES.Utf8.Utf8_Encoding,
+               Input.all);
+         elsif Sys_Id /= "" and then KB_Content.Contains (Sys_Id) then
+            Open
+              (KB_Content.Element (Sys_Id),
+               Unicode.CES.Utf8.Utf8_Encoding,
+               Input.all);
+         else
+            Result.Messages.Append
+              (Message.Create
+                 (Message.Error,
+                  "entity not found for Public_Id="""
+                  & Public_Id
+                  & """, System_Id="""
+                  & System_Id
+                  & """",
+                  Source_Reference.Create
+                    (Embed_Pseudo_Dir & To_String (Handler.Current_Source),
+                     0, 0)));
+         end if;
+
+         return Input_Sources.Input_Source_Access (Input);
+      end Resolve_Entity;
+
+      Reader : Resolving_Reader;
+      Input  : String_Input;
+      Cur    : Containers.Name_Value_Map_Package.Cursor;
+   begin
+      Result.Initialized := True;
+      KB_Content := Default_Content;
+
+      Cur := KB_Content.First;
+
+      while Cur /= No_Element loop
+         if File_Extension (String (Key (Cur))) = ".xml" then
+            Trace (Main_Trace, "Parsing embedded file " & String (Key (Cur)));
+            Reader.Current_Source := To_Unbounded_String (String (Key (Cur)));
+            Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
+            Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
+            Open
+              (Containers.Name_Value_Map_Package.Element (Cur),
+               Unicode.CES.Utf8.Utf8_Encoding,
+               Input);
+            Parse (Reader, Input);
+            Close (Input);
+
+            Parse_Knowledge_Base
+              (Result,
+               DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
+               Flags,
+               Embed_Pseudo_Dir & String (Key (Cur)));
+
+            declare
+               Doc : Document := Get_Tree (Reader);
+            begin
+               Free (Doc);
+            end;
+
+            Free (Reader);
+         end if;
+
+         Next (Cur);
+      end loop;
+
+      return Result;
+   end Parse_Default_Knowledge_Base;
+
    --------------------------
    -- Parse_Knowledge_Base --
    --------------------------
@@ -1223,15 +1426,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
      (Base      : in out Object;
       Root_Node : DOM.Core.Node;
       Flags     : Parsing_Flags;
-      From_File : String := "")
+      From_File : Value_Not_Empty)
    is
       use DOM.Core;
       use DOM.Core.Nodes;
 
       Error_Sloc : constant Source_Reference.Object :=
-                     (if From_File = ""
-                      then Source_Reference.Builtin
-                      else Source_Reference.Create (From_File, 0, 0));
+                     Source_Reference.Object
+                       (Source_Reference.Create (From_File, 0, 0));
 
       procedure Parse_Compiler_Description
         (Base        : in out Object;
