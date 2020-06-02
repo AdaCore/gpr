@@ -760,15 +760,33 @@ begin
                            --  time for the imported project. Besides that we
                            --  can have the same source in the aggregated
                            --  project and in the aggregating library project.
+                           --  Also same sources could be from extended and
+                           --  extending projects.
 
-                           if not OK
-                             and then Element (S_Cur).Is_Aggregated
-                                    < Element (D_Cur).Is_Aggregated
-                           then
-                              --  We prefer Is_Aggregated = False because it
-                              --  has object files.
+                           if not OK then
+                              declare
+                                 VE : Project.View.Object :=
+                                        Element (S_Cur).View;
+                              begin
+                                 while VE.Is_Extending loop
+                                    if VE.Extended = Element (D_Cur).View then
+                                       Sources.Replace
+                                         (D_Cur, Element (S_Cur));
+                                       exit;
+                                    end if;
 
-                              Sources.Replace (D_Cur, Element (S_Cur));
+                                    VE := VE.Extended;
+                                 end loop;
+                              end;
+
+                              if Element (S_Cur).Is_Aggregated
+                                < Element (D_Cur).Is_Aggregated
+                              then
+                                 --  We prefer Is_Aggregated = False because it
+                                 --  has object files.
+
+                                 Sources.Replace (D_Cur, Element (S_Cur));
+                              end if;
                            end if;
                         end;
                      end if;
