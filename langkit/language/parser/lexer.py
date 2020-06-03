@@ -1,6 +1,13 @@
 from langkit.lexer import (
-    Lexer, LexerToken, Literal, NoCaseLit, Pattern, WithSymbol, WithText,
-    WithTrivia, TokenFamily
+    Lexer,
+    LexerToken,
+    Literal,
+    NoCaseLit,
+    Pattern,
+    WithSymbol,
+    WithText,
+    WithTrivia,
+    TokenFamily,
 )
 
 
@@ -16,17 +23,18 @@ class Token(LexerToken):
     For = WithSymbol()
     Is = WithSymbol()
     Limited = WithSymbol()
+    Private = WithSymbol()
     Null = WithSymbol()
     Others = WithSymbol()
     Package = WithSymbol()
     Renames = WithSymbol()
     Type = WithSymbol()
     Use = WithSymbol()
+    Pragma = WithSymbol()
     When = WithSymbol()
     With = WithSymbol()
 
     # GPR Keywords
-    Project = WithSymbol()
     Extends = WithSymbol()
 
     # Punctuation
@@ -70,66 +78,61 @@ class Token(LexerToken):
         Renames,
         Type,
         Use,
+        Pragma,
         When,
         With,
-        Project,
         Extends,
         String,
         Number,
         Label,
-        Char
+        Char,
     )
 
 
 gpr_lexer = Lexer(Token)
 
 gpr_lexer.add_patterns(
-    ('p_string', r"\"(\"\"|[^\n\"])*\""),
-    ('digit', r"[0-9]"),
-    ('integer', r"({digit}(_?{digit})*)"),
+    ("p_string", r"\"(\"\"|[^\n\"])*\""),
+    ("digit", r"[0-9]"),
+    ("integer", r"({digit}(_?{digit})*)"),
 )
 
 gpr_lexer.add_rules(
-    (Pattern(r"[ \t\r\n]+"),             Token.Whitespace),
-    (Pattern(r"--(.?)+"),                Token.Comment),
-    (NoCaseLit("all"),                   Token.All),
-    (NoCaseLit("abstract"),              Token.Abstract),
-    (NoCaseLit("at"),                    Token.At),
-    (NoCaseLit("case"),                  Token.Case),
-    (NoCaseLit("end"),                   Token.End),
-    (NoCaseLit("for"),                   Token.For),
-    (NoCaseLit("is"),                    Token.Is),
-    (NoCaseLit("limited"),               Token.Limited),
-    (NoCaseLit("null"),                  Token.Null),
-    (NoCaseLit("others"),                Token.Others),
-    (NoCaseLit("package"),               Token.Package),
-    (NoCaseLit("renames"),               Token.Renames),
-    (NoCaseLit("type"),                  Token.Type),
-    (NoCaseLit("use"),                   Token.Use),
-    (NoCaseLit("when"),                  Token.When),
-    (NoCaseLit("with"),                  Token.With),
-
-    (NoCaseLit("project"),               Token.Project),
-    (NoCaseLit("extends"),               Token.Extends),
-    (Literal("("),                       Token.ParOpen),
-    (Literal(")"),                       Token.ParClose),
-    (Literal(";"),                       Token.Semicolon),
-    (Literal(":"),                       Token.Colon),
-    (Literal(","),                       Token.Comma),
-    (Literal("."),                       Token.Dot),
-
-    (Literal("&"),                       Token.Amp),
-    (Literal("'"),                       Token.Tick),
-    (Literal("|"),                       Token.Pipe),
-
-    (Literal(":="),                      Token.Assign),
-    (Literal("=>"),                      Token.Arrow),
-
-    (Pattern('{integer}'),               Token.Number),
-
+    (Pattern(r"[ \t\r\n]+"), Token.Whitespace),
+    (Pattern(r"--(.?)+"), Token.Comment),
+    (NoCaseLit("all"), Token.All),
+    (NoCaseLit("abstract"), Token.Abstract),
+    (NoCaseLit("at"), Token.At),
+    (NoCaseLit("case"), Token.Case),
+    (NoCaseLit("end"), Token.End),
+    (NoCaseLit("for"), Token.For),
+    (NoCaseLit("is"), Token.Is),
+    (NoCaseLit("limited"), Token.Limited),
+    (NoCaseLit("private"), Token.Private),
+    (NoCaseLit("null"), Token.Null),
+    (NoCaseLit("others"), Token.Others),
+    (NoCaseLit("package"), Token.Package),
+    (NoCaseLit("renames"), Token.Renames),
+    (NoCaseLit("type"), Token.Type),
+    (NoCaseLit("use"), Token.Use),
+    (NoCaseLit("pragma"), Token.Pragma),
+    (NoCaseLit("when"), Token.When),
+    (NoCaseLit("with"), Token.With),
+    (NoCaseLit("extends"), Token.Extends),
+    (Literal("("), Token.ParOpen),
+    (Literal(")"), Token.ParClose),
+    (Literal(";"), Token.Semicolon),
+    (Literal(":"), Token.Colon),
+    (Literal(","), Token.Comma),
+    (Literal("."), Token.Dot),
+    (Literal("&"), Token.Amp),
+    (Literal("'"), Token.Tick),
+    (Literal("|"), Token.Pipe),
+    (Literal(":="), Token.Assign),
+    (Literal("=>"), Token.Arrow),
+    (Pattern("{integer}"), Token.Number),
     (Pattern(r"[_a-zA-Z][_a-zA-Z0-9]*"), Token.Identifier),
-
-    (Pattern('{p_string}'),              Token.String),
+    (Pattern("{p_string}"), Token.String),
 )
 
 gpr_lexer.add_spacing((Token.Alphanumericals, Token.Alphanumericals))

@@ -28,7 +28,9 @@ private with Ada.Finalization;
 
 package GPR2.Compilation.Protocol is
 
+   pragma Warnings (Off, "already use-visible");
    use Ada.Strings.Unbounded;
+   pragma Warnings (On, "already use-visible");
 
    use GNAT;
    use GNAT.Sockets;

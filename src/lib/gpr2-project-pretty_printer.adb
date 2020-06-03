@@ -227,25 +227,18 @@ package body GPR2.Project.Pretty_Printer is
                Print (F_End_Name (Node.As_Project_Declaration), Indent);
                Write_Token (";", Indent, End_Line => True);
 
-            when GPR_Project_Qualifier =>
-               Print (F_Qualifier (Node.As_Project_Qualifier), Indent);
-
-            when GPR_Abstract_Present =>
+            when GPR_Project_Qualifier_Abstract =>
                Write_Token ("abstract", Indent);
-
-            when GPR_Qualifier_Names =>
-               --  qualifier1 [qualifier2]
-
-               Write_Token
-                 (To_UTF8 (F_Qualifier_Id1 (Node.As_Qualifier_Names).Text),
-                  Indent);
-
-               if F_Qualifier_Id2 (Node.As_Qualifier_Names) /= No_GPR_Node then
-                  Write_Token (" ", Indent);
-                  Write_Token
-                    (To_UTF8 (F_Qualifier_Id2 (Node.As_Qualifier_Names).Text),
-                     Indent);
-               end if;
+            when GPR_Project_Qualifier_Library =>
+               Write_Token ("library", Indent);
+            when GPR_Project_Qualifier_Aggregate =>
+               Write_Token ("aggregate", Indent);
+            when GPR_Project_Qualifier_Aggregate_Library =>
+               Write_Token ("aggregate", Indent);
+               Write_Token (" ", Indent);
+               Write_Token ("library", Indent);
+            when GPR_Project_Qualifier_Configuration =>
+               Write_Token ("configuration", Indent);
 
             when GPR_Prefix =>
                --  prefix[.suffix] (e.g. parent/child projects)
@@ -351,7 +344,7 @@ package body GPR2.Project.Pretty_Printer is
                   end loop;
                end;
 
-            when GPR_Expr_List =>
+            when GPR_Terms =>
                --  List of expressions, enclosed with parenthesis and separated
                --  by commas.
 
@@ -360,11 +353,11 @@ package body GPR2.Project.Pretty_Printer is
                begin
                   Write_Token ("(", Indent);
 
-                  for C of F_Exprs (Node.As_Expr_List).Children loop
+                  for C of F_Terms (Node.As_Terms).Children loop
                      Count := Count + 1;
                      Print (C, Indent);
 
-                     if Count < F_Exprs (Node.As_Expr_List).Children_Count then
+                     if Count < F_Terms (Node.As_Terms).Children_Count then
                         Write_Token (", ", Indent, Auto_EOL => False);
                      end if;
                   end loop;

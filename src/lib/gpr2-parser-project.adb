@@ -541,8 +541,8 @@ package body GPR2.Parser.Project is
             procedure Parse_External_As_List_Reference
               (N : Builtin_Function_Call)
             is
-               Parameters : constant Expr_List := F_Parameters (N);
-               Exprs      : constant Term_List_List := F_Exprs (Parameters);
+               Exprs : constant Term_List_List :=
+                 F_Terms (F_Parameters (N));
             begin
                --  Note that this routine is only validating the syntax
                --  of the external_as_list built-in. It does not add the
@@ -645,8 +645,8 @@ package body GPR2.Parser.Project is
             procedure Parse_External_Reference
               (N : Builtin_Function_Call)
             is
-               Parameters : constant Expr_List := F_Parameters (N);
-               Exprs      : constant Term_List_List := F_Exprs (Parameters);
+               Exprs : constant Term_List_List :=
+                 F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null then
                   Messages.Append
@@ -700,8 +700,8 @@ package body GPR2.Parser.Project is
             ---------------------------
 
             procedure Parse_Split_Reference (N : Builtin_Function_Call) is
-               Parameters : constant Expr_List := F_Parameters (N);
-               Exprs      : constant Term_List_List := F_Exprs (Parameters);
+               Exprs : constant Term_List_List :=
+                 F_Terms (F_Parameters (N));
             begin
                --  Note that this routine is only validating the syntax
                --  of the split built-in.
@@ -842,61 +842,16 @@ package body GPR2.Parser.Project is
             --  pass.
 
             if Present (Qual) then
-               case Kind (F_Qualifier (Qual)) is
-                  when GPR_Abstract_Present =>
-                     Project.Qualifier := K_Abstract;
-
-                  when GPR_Qualifier_Names =>
-                     declare
-                        Not_Present : constant Name_Type := "@";
-
-                        Names  : constant Qualifier_Names :=
-                                   Qual.F_Qualifier.As_Qualifier_Names;
-                        Name_1 : constant Identifier :=
-                                   F_Qualifier_Id1 (Names);
-                        Str_1  : constant Name_Type :=
-                                   (if Name_1.Is_Null
-                                    then Not_Present
-                                    else Get_Name_Type
-                                      (Name_1.As_Single_Tok_Node));
-                        Name_2 : constant Identifier :=
-                                   F_Qualifier_Id2 (Names);
-                        Str_2  : constant Name_Type :=
-                                   (if Name_2.Is_Null
-                                    then Not_Present
-                                    else Get_Name_Type
-                                      (Name_2.As_Single_Tok_Node));
-                     begin
-                        if Str_1 = "library"
-                          and then Str_2 = Not_Present
-                        then
-                           Project.Qualifier := K_Library;
-
-                        elsif Str_1 = "aggregate"
-                          and then Str_2 = Not_Present
-                        then
-                           Project.Qualifier := K_Aggregate;
-
-                        elsif Str_1 = "aggregate"
-                          and then Str_2 = "library"
-                        then
-                           Project.Qualifier := K_Aggregate_Library;
-
-                        elsif Str_1 = "configuration"
-                          and then Str_2 = Not_Present
-                        then
-                           Project.Qualifier := K_Configuration;
-
-                        else
-                           --  ?? an error
-                           null;
-                        end if;
-                     end;
-
-                  when others =>
-                     --  ?? an error
-                     null;
-               end case;
+               Project.Qualifier :=
+                 (case Kind (Qual) is
+                    when GPR_Project_Qualifier_Abstract => K_Abstract,
+                    when GPR_Project_Qualifier_Library => K_Library,
+                    when GPR_Project_Qualifier_Aggregate => K_Aggregate,
+                    when GPR_Project_Qualifier_Aggregate_Library =>
+                      K_Aggregate_Library,
+                    when GPR_Project_Qualifier_Configuration =>
+                      K_Configuration,
+                    when others => raise Program_Error with "Unreachable");
             end if;
 
             --  Check if we have an extends declaration
@@ -1674,7 +1629,7 @@ package body GPR2.Parser.Project is
                  (Node : Builtin_Function_Call)
                is
                   Parameters : constant Term_List_List :=
-                                 F_Exprs (F_Parameters (Node));
+                                 F_Terms (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
                   Var        : constant Name_Type :=
                                  Name_Type
@@ -1708,7 +1663,7 @@ package body GPR2.Parser.Project is
                   use Ada.Exceptions;
 
                   Parameters : constant Term_List_List :=
-                                 F_Exprs (F_Parameters (Node));
+                                 F_Terms (F_Parameters (Node));
                   Error      : Boolean;
                   Var        : constant Name_Type :=
                                  Name_Type
@@ -1775,7 +1730,7 @@ package body GPR2.Parser.Project is
 
                procedure Handle_Split (Node : Builtin_Function_Call) is
                   Parameters : constant Term_List_List :=
-                                 F_Exprs (F_Parameters (Node));
+                                 F_Terms (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
                   Str        : constant Name_Type :=
                                  Name_Type
@@ -1857,7 +1812,7 @@ package body GPR2.Parser.Project is
 
          begin
             case Kind (Node) is
-               when GPR_Expr_List =>
+               when GPR_Terms =>
                   --  We are opening not a single element but an expression
                   --  list.
                   Result.Single := False;
