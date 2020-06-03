@@ -64,6 +64,10 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
 
    Tree : Project.Tree.Object renames Opt.Tree.all;
 
+   function "&" (Left, Right : Optional_Name_Type) return Optional_Name_Type is
+     (GPR2."&" (Left, Right));
+   --  Workaround for GNAT visibility issue
+
    procedure Display_Paths;
 
    procedure Put (Str : String; Lvl : Verbosity_Level);
@@ -630,10 +634,11 @@ begin
 
       --  Fill the various caches
 
-      for V of Tree loop
-         All_Views.Append (V);
+      for CV in Tree.Iterate ((Project.I_Extended => False, others => True))
+      loop
+         All_Views.Append (Project.Tree.Element (CV));
 
-         for S of V.Sources (Need_Update => False) loop
+         for S of Project.Tree.Element (CV).Sources (Need_Update => False) loop
             All_Sources.Append (S);
 
             Src_Simple_Names.Include
@@ -763,30 +768,14 @@ begin
                            --  Also same sources could be from extended and
                            --  extending projects.
 
-                           if not OK then
-                              declare
-                                 VE : Project.View.Object :=
-                                        Element (S_Cur).View;
-                              begin
-                                 while VE.Is_Extending loop
-                                    if VE.Extended = Element (D_Cur).View then
-                                       Sources.Replace
-                                         (D_Cur, Element (S_Cur));
-                                       exit;
-                                    end if;
+                           if not OK
+                             and then Element (S_Cur).Is_Aggregated
+                                    < Element (D_Cur).Is_Aggregated
+                           then
+                              --  We prefer Is_Aggregated = False because it
+                              --  has object files.
 
-                                    VE := VE.Extended;
-                                 end loop;
-                              end;
-
-                              if Element (S_Cur).Is_Aggregated
-                                < Element (D_Cur).Is_Aggregated
-                              then
-                                 --  We prefer Is_Aggregated = False because it
-                                 --  has object files.
-
-                                 Sources.Replace (D_Cur, Element (S_Cur));
-                              end if;
+                              Sources.Replace (D_Cur, Element (S_Cur));
                            end if;
                         end;
                      end if;
@@ -822,11 +811,10 @@ begin
                Full_Closure := False;
                Text_IO.Put_Line
                  ("Can't find ALI "
-                  & (if CU.Index > 1
-                    then String (S.Artifacts.Dependency (CU.Index).Simple_Name)
-                         & ' '
-                    else "")
-                  & "file for " & S.Source.Path_Name.Value);
+                  & String
+                    (if CU.Index > 1
+                     then S.Artifacts.Dependency (CU.Index).Simple_Name & " "
+                     else "") & "file for " & S.Source.Path_Name.Value);
             end if;
          end loop;
       end loop;

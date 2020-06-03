@@ -490,10 +490,12 @@ package body GPR2.Project.Definition is
                            else Dir);
          Dir_Search   : Directories.Search_Type;
          Dir_Entry    : Directories.Directory_Entry_Type;
+         Inserted     : Boolean;
+         Position     : Containers.Value_Type_Set.Cursor;
       begin
-         if not Visited_Dirs.Contains (Dir) then
-            Visited_Dirs.Insert (Dir);
+         Visited_Dirs.Insert (Dir, Position, Inserted);
 
+         if Inserted then
             begin
                Directories.Start_Search (Dir_Search, Dir_Name, "*");
             exception
@@ -1304,7 +1306,9 @@ package body GPR2.Project.Definition is
                      null;
                end case;
 
-            else
+            elsif not Excluded_Sources.Contains
+                        (Value_Type (Source.Path_Name.Simple_Name))
+            then
                --  Do not just insert into Def.Sources: we need to do the same
                --  operations as in Handle_File, except that the Source object
                --  is already constructed here.
