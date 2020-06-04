@@ -22,7 +22,7 @@ with "libadalang";
 
 project GPR2.Tools is
 
-   type Build_Type is ("debug", "release");
+   type Build_Type is ("debug", "release", "release_checks");
    Build : Build_Type := external ("BUILD", "debug");
 
    type Target_type is ("Windows_NT", "UNIX");
@@ -41,12 +41,17 @@ project GPR2.Tools is
    --------------
 
    Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx");
+     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
+      "-Wall");
    --  Common options used for the Debug and Release modes
 
+   Checks_Options :=
+     ("-gnata", "-gnatVa", "-gnato", "-fstack-check");
+   --  Common options used to enable checking for the Debug and Release_Checks
+   --  modes
+
    Debug_Options :=
-     ("-g", "-gnata", "-gnatVa", "-gnatQ", "-gnato", "-gnatwe", "-Wall",
-      "-fstack-check");
+     ("-g", "-gnatQ", "-gnatwe");
 
    Release_Options :=
      ("-O2", "-gnatn");
@@ -55,7 +60,12 @@ project GPR2.Tools is
 
       case Build is
          when "debug" =>
-            for Default_Switches ("Ada") use Common_Options & Debug_Options;
+            for Default_Switches ("Ada") use Common_Options & Checks_Options
+            & Debug_Options;
+
+         when "release_checks" =>
+            for Default_Switches ("Ada") use Common_Options & Release_Options
+            & Checks_Options;
 
          when "release" =>
             for Default_Switches ("Ada") use Common_Options & Release_Options;
