@@ -1007,6 +1007,7 @@ package body GPRinstall.Install is
 
                      if Source.Is_Interface
                        and then Source.Source.Has_Units
+                       and then not Is_Interface_Closure
                      then
                         Copy_Interface_Closure (Source);
                      end if;
