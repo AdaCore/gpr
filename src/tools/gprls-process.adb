@@ -765,8 +765,6 @@ begin
                            --  time for the imported project. Besides that we
                            --  can have the same source in the aggregated
                            --  project and in the aggregating library project.
-                           --  Also same sources could be from extended and
-                           --  extending projects.
 
                            if not OK
                              and then Element (S_Cur).Is_Aggregated
