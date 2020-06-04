@@ -940,7 +940,8 @@ package body GPRinstall.Install is
             --  artifacts.
 
             procedure Copy_Interface_Closure
-              (Source : GPR2.Project.Source.Object);
+              (Source : GPR2.Project.Source.Object)
+            with Pre => Source.Source.Has_Units;
             --  Copy all sources and artifacts part of the close of Source
 
             ----------------------------
@@ -1004,7 +1005,9 @@ package body GPRinstall.Install is
                      --  This if a source is an interface of the project we
                      --  need to also install the full-closure for this source.
 
-                     if Source.Is_Interface then
+                     if Source.Is_Interface
+                       and then Source.Source.Has_Units
+                     then
                         Copy_Interface_Closure (Source);
                      end if;
 
