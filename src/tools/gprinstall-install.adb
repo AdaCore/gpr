@@ -831,7 +831,9 @@ package body GPRinstall.Install is
          procedure Copy_Project_Sources (Project : GPR2.Project.View.Object);
          --  Copy sources from the given project
 
-         procedure Copy_Source (Source : GPR2.Project.Source.Object);
+         function Copy_Source
+           (Source : GPR2.Project.Source.Object) return Boolean;
+         --  Copy Source and returns either artefactes need to be copied too
 
          procedure Copy_Artifacts
            (Pathname    : Path_Name.Object;
@@ -976,6 +978,7 @@ package body GPRinstall.Install is
                Src     : GPR2.Source.Object;
                Atf     : GPR2.Project.Source.Artifact.Object;
                CUs     : GPR2.Unit.List.Object;
+               Done    : Boolean := True;
                Has_Atf : Boolean := False;
                --  Has artefacts to install
             begin
@@ -1000,7 +1003,7 @@ package body GPRinstall.Install is
                     or else (Src.Kind = S_Separate
                              and then Source.Separate_From.Source.Is_Generic)
                   then
-                     Copy_Source (Source);
+                     Done := Copy_Source (Source);
 
                      --  This if a source is an interface of the project we
                      --  need to also install the full-closure for this source.
@@ -1031,7 +1034,10 @@ package body GPRinstall.Install is
                      end if;
                   end loop;
 
-                  if not Options.Sources_Only and then Has_Atf then
+                  if Done
+                    and then not Options.Sources_Only
+                    and then Has_Atf
+                  then
                      if Copy (Object) then
                         for CU of CUs loop
                            if CU.Kind not in S_Spec | S_Separate
@@ -1109,27 +1115,34 @@ package body GPRinstall.Install is
          -- Copy_Source --
          -----------------
 
-         procedure Copy_Source (Source : GPR2.Project.Source.Object) is
+         function Copy_Source
+           (Source : GPR2.Project.Source.Object) return Boolean
+         is
+            Position : GPR2.Project.Source.Set.Cursor;
+            Inserted : Boolean := False;
          begin
-            if Copy (Process.Source)
-              and then Is_Install_Active (Source.View)
-            then
-               declare
-                  Art : constant GPR2.Project.Source.Artifact.Object :=
-                          Source.Artifacts;
-               begin
-                  if not Source_Copied.Contains (Source) then
-                     Source_Copied.Insert (Source);
+            Source_Copied.Insert (Source, Position, Inserted);
 
-                     Copy_File
-                       (From => (if Art.Preprocessed_Source.Exists
-                                 then Art.Preprocessed_Source
-                                 else Source.Source.Path_Name),
-                        To   => Sources_Dir,
-                        File => Source.Source.Path_Name.Simple_Name);
-                  end if;
-               end;
+            if not Inserted or else not Is_Install_Active (Source.View) then
+               return False;
+
+            elsif not Copy (Process.Source) then
+               return Inserted;
             end if;
+
+            declare
+               Art : constant GPR2.Project.Source.Artifact.Object :=
+                       Source.Artifacts;
+            begin
+               Copy_File
+                 (From => (if Art.Preprocessed_Source.Exists
+                           then Art.Preprocessed_Source
+                           else Source.Source.Path_Name),
+                  To   => Sources_Dir,
+                  File => Source.Source.Path_Name.Simple_Name);
+            end;
+
+            return True;
          end Copy_Source;
 
       begin
