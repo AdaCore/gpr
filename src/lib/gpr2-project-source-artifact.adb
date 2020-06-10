@@ -57,18 +57,14 @@ package body GPR2.Project.Source.Artifact is
    function Create
      (Source : Project.Source.Object) return Artifact.Object
    is
-      Src    : constant GPR2.Source.Object := Source.Source;
-      BN     : constant Name_Type := Src.Path_Name.Base_Name;
-      Lang   : constant Name_Type := Src.Language;
-      S_View : constant Project.View.Object :=
-                 Definition.Strong (Source.View);
-      O_View : constant Project.View.Object :=
-                 (if S_View.Is_Extended and then not S_View.Is_Externally_Built
-                  then S_View.Extending
-                  else S_View);
+      Src  : constant GPR2.Source.Object := Source.Source;
+      BN   : constant Name_Type := Src.Path_Name.Base_Name;
+      Lang : constant Name_Type := Src.Language;
+      View : constant Project.View.Object :=
+               Definition.Strong (Source.View);
 
-      O_Suffix : constant Name_Type := S_View.Tree.Object_Suffix (Lang);
-      D_Suffix : constant Name_Type := S_View.Tree.Dependency_Suffix (Lang);
+      O_Suffix : constant Name_Type := View.Tree.Object_Suffix (Lang);
+      D_Suffix : constant Name_Type := View.Tree.Dependency_Suffix (Lang);
       C_Suffix : constant Name_Type := ".ci";
       P_Suffix : constant Name_Type := ".prep";
       S_Suffix : constant Name_Type := ".cswi";
@@ -80,17 +76,17 @@ package body GPR2.Project.Source.Artifact is
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (Src.Path_Name.Simple_Name & P_Suffix,
-                          Optional_Name_Type (O_View.Object_Directory.Value));
+                          Optional_Name_Type (View.Object_Directory.Value));
 
       Callgraph    : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (BN & C_Suffix,
-                          Optional_Name_Type (O_View.Object_Directory.Value));
+                          Optional_Name_Type (View.Object_Directory.Value));
 
       Switches     : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (BN & S_Suffix,
-                          Optional_Name_Type (O_View.Object_Directory.Value));
+                          Optional_Name_Type (View.Object_Directory.Value));
 
    begin
       if Src.Has_Units and then Src.Has_Index then
@@ -114,14 +110,14 @@ package body GPR2.Project.Source.Artifact is
                         GPR2.Path_Name.Create_File
                           (Base & O_Suffix,
                            Optional_Name_Type
-                             (O_View.Object_Directory.Value)));
+                             (View.Object_Directory.Value)));
 
-                     if S_View.Is_Library and then Lang = "Ada" then
+                     if View.Is_Library and then Lang = "Ada" then
                         Deps_Lib.Insert
                           (CU.Index,
                            GPR2.Path_Name.Create_File
                              (Base & D_Suffix,
-                              Name_Type (O_View.Library_Ali_Directory.Value)));
+                              Name_Type (View.Library_Ali_Directory.Value)));
                      end if;
 
                      Deps_Obj.Insert
@@ -129,7 +125,7 @@ package body GPR2.Project.Source.Artifact is
                         GPR2.Path_Name.Create_File
                           (Base & D_Suffix,
                            Optional_Name_Type
-                             (O_View.Object_Directory.Value)));
+                             (View.Object_Directory.Value)));
                   end if;
                end;
             end if;
@@ -151,21 +147,21 @@ package body GPR2.Project.Source.Artifact is
            (1,
             GPR2.Path_Name.Create_File
               (BN & O_Suffix,
-               Optional_Name_Type (O_View.Object_Directory.Value)));
+               Optional_Name_Type (View.Object_Directory.Value)));
 
-         if S_View.Is_Library and then Lang = "Ada" then
+         if View.Is_Library and then Lang = "Ada" then
             Deps_Lib.Insert
               (1,
                GPR2.Path_Name.Create_File
                  (BN & D_Suffix,
-                  Optional_Name_Type (O_View.Library_Ali_Directory.Value)));
+                  Optional_Name_Type (View.Library_Ali_Directory.Value)));
          end if;
 
          Deps_Obj.Insert
            (1,
             GPR2.Path_Name.Create_File
               (BN & D_Suffix,
-               Optional_Name_Type (O_View.Object_Directory.Value)));
+               Optional_Name_Type (View.Object_Directory.Value)));
       end if;
 
       return Artifact.Object'
@@ -267,16 +263,12 @@ package body GPR2.Project.Source.Artifact is
       P_Source : constant GPR2.Project.Source.Object := Self.Source;
       Source   : constant GPR2.Source.Object := P_Source.Source;
       Lang     : constant Name_Type := Source.Language;
-      C_View   : constant Project.View.Object :=
+      View     : constant Project.View.Object :=
                    Definition.Strong (P_Source.View);
-      O_View   : constant Project.View.Object :=
-                   (if P_Source.Has_Extending_View
-                    then P_Source.Extending_View
-                    else C_View);
       Result   : GPR2.Path_Name.Set.Object;
       Name     : constant Name_Type := Source.Path_Name.Simple_Name;
       O_Dir    : constant Optional_Name_Type :=
-                   Optional_Name_Type (O_View.Object_Directory.Value);
+                   Optional_Name_Type (View.Object_Directory.Value);
 
       procedure Append_File (Name : Name_Type);
       --  Append full filename constructed from Name and Object_Dir to result
@@ -291,7 +283,7 @@ package body GPR2.Project.Source.Artifact is
       end Append_File;
 
    begin
-      for E of C_View.Source_Artifact_Extensions (Lang) loop
+      for E of View.Source_Artifact_Extensions (Lang) loop
          Append_File (Name & Name_Type (E));
       end loop;
 
@@ -309,7 +301,7 @@ package body GPR2.Project.Source.Artifact is
 
          Append_File (Source.Path_Name.Base_Name & ".adt");
 
-         for E of C_View.Object_Artifact_Extensions (Lang) loop
+         for E of View.Object_Artifact_Extensions (Lang) loop
             Append_File (Source.Path_Name.Base_Name & Name_Type (E));
          end loop;
       end if;

@@ -155,6 +155,9 @@ private package GPR2.Project.Definition is
       VDD  : Data;
       Pack : Optional_Name_Type);
 
+   Change_Actual_View : access function
+     (Self : Source.Object; View : Project.View.Object) return Source.Object;
+
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------

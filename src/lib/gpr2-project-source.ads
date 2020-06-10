@@ -88,14 +88,6 @@ package GPR2.Project.Source is
      with Pre => Self.Is_Defined;
    --  Returns whether the source comes from a naming exception
 
-   function Has_Extending_View (Self : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True if Self has an extending view defined
-
-   function Extending_View (Self : Object) return Project.View.Object
-     with Pre => Self.Is_Defined and then Self.Has_Extending_View;
-   --  Returns the extending view
-
    function Has_Aggregating_View (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self has an aggregating view defined, that is source

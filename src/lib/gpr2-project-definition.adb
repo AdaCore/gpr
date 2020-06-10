@@ -301,11 +301,11 @@ package body GPR2.Project.Definition is
       --  Libadalang for example. And in this case the units name could be non
       --  matching. This is true for the initial call in Handle_File.
 
-      type Insert_Mode is (Skip, Error);
+      type Insert_Mode is (Extended_Copy, Aggregated_Copy);
       --  Controls behavior when a duplicated unit/filename is found
       --
-      --  Skip    : the new source is ignored
-      --  Error   : an error is raised
+      --  Extended_Copy   : the new source is ignored
+      --  Aggregated_Copy : an error is raised
 
       package Source_Set renames Containers.Value_Type_Set;
 
@@ -1290,7 +1290,7 @@ package body GPR2.Project.Definition is
 
             if Project.Source.Set.Has_Element (C) then
                case Mode is
-                  when Error =>
+                  when Aggregated_Copy =>
                      Tree.Append_Message
                        (Message.Create
                           (Message.Error,
@@ -1302,7 +1302,7 @@ package body GPR2.Project.Definition is
                      Source_Message (Project.Source.Set.Element (C));
                      Source_Message (Source);
 
-                  when Skip =>
+                  when Extended_Copy =>
                      null;
                end case;
 
@@ -1313,7 +1313,10 @@ package body GPR2.Project.Definition is
                --  operations as in Handle_File, except that the Source object
                --  is already constructed here.
 
-               Add_Source (Source);
+               Add_Source
+                 (if Mode = Extended_Copy
+                  then Change_Actual_View (Source, View)
+                  else Source);
             end if;
          end loop;
       end Insert;
@@ -1755,7 +1758,7 @@ package body GPR2.Project.Definition is
 
                   Insert
                     (A_Set,
-                     Error,
+                     Aggregated_Copy,
                      (if DA.Attrs.Has_Source_Dirs
                       then DA.Attrs.Source_Dirs
                       else Source_Reference.Create
@@ -1816,7 +1819,8 @@ package body GPR2.Project.Definition is
       --  only add the sources not already defined in the current set.
 
       if Def.Extended.Is_Defined then
-         Insert (Def.Extended.Sources, Skip, Source_Reference.Undefined);
+         Insert
+           (Def.Extended.Sources, Extended_Copy, Source_Reference.Undefined);
       end if;
 
       if Def.Attrs.Languages.Is_Defined and then Def.Kind /= K_Abstract then

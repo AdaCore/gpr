@@ -39,6 +39,12 @@ package body GPR2.Project.Source is
    --  (potentially transitively). The dependence built on top of Ada "with"
    --  statements.
 
+   function Change_Actual_View
+     (Self : Object; View : Project.View.Object) return Object
+     with Pre => Self.Is_Defined and then View.Is_Defined;
+   --  Returns Object with changed actual view for the case when source was
+   --  derived from extended project.
+
    ----------------------
    -- Aggregating_View --
    ----------------------
@@ -57,6 +63,18 @@ package body GPR2.Project.Source is
       return Artifact.Create (Self);
    end Artifacts;
 
+   ------------------------
+   -- Change_Actual_View --
+   ------------------------
+
+   function Change_Actual_View
+     (Self : Object; View : Project.View.Object) return Object is
+   begin
+      return Result : Object := Self do
+         Result.View := Definition.Weak (View);
+      end return;
+   end Change_Actual_View;
+
    ---------------------------------
    -- Context_Clause_Dependencies --
    ---------------------------------
@@ -68,7 +86,6 @@ package body GPR2.Project.Source is
       Closure  : Boolean := False)
    is
       Tree : constant not null access Project.Tree.Object := View (Self).Tree;
-
       Done : Containers.Name_Set;
       --  Fast look-up table to avoid analysing the same unit multiple time and
       --  more specifically avoid circularities.
@@ -231,7 +248,8 @@ package body GPR2.Project.Source is
       Is_Interface         : Boolean;
       Has_Naming_Exception : Boolean;
       Is_Compilable        : Boolean;
-      Aggregated           : Boolean := False) return Object is
+      Aggregated           : Boolean := False) return Object
+   is
    begin
       return Object'
         (Source,
@@ -320,15 +338,6 @@ package body GPR2.Project.Source is
       end if;
    end Dependencies;
 
-   --------------------
-   -- Extending_View --
-   --------------------
-
-   function Extending_View (Self : Object) return Project.View.Object is
-   begin
-      return Definition.Strong (Self.View).Extending;
-   end Extending_View;
-
    --------------------------
    -- Has_Aggregating_View --
    --------------------------
@@ -337,15 +346,6 @@ package body GPR2.Project.Source is
    begin
       return Definition.Strong (Self.View).Is_Aggregated_In_Library;
    end Has_Aggregating_View;
-
-   ------------------------
-   -- Has_Extending_View --
-   ------------------------
-
-   function Has_Extending_View (Self : Object) return Boolean is
-   begin
-      return Definition.Strong (Self.View).Is_Extended;
-   end Has_Extending_View;
 
    --------------------
    -- Has_Other_Part --
@@ -357,9 +357,10 @@ package body GPR2.Project.Source is
    is
       use all type GPR2.Unit.Library_Unit_Type;
 
-      View   : constant Project.View.Object  := Definition.Strong (Self.View);
+      View   : constant Project.View.Object  :=
+                 Definition.Strong (Self.View);
       Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
-      Source : constant GPR2.Source.Object := Self.Source;
+      Source : constant GPR2.Source.Object   := Self.Source;
    begin
       if Source.Is_Defined
         and then Source.Has_Units
@@ -588,4 +589,6 @@ package body GPR2.Project.Source is
       return Definition.Strong (Self.View);
    end View;
 
+begin
+   Definition.Change_Actual_View := Change_Actual_View'Access;
 end GPR2.Project.Source;
