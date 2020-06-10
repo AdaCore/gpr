@@ -23,12 +23,9 @@ with GPR2.Project.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
-with GPR2.Project.Unit_Info;
-with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference;
-with GPR2.Source_Reference.Identifier;
-with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Project.Unit_Info.Set;
+with GPR2.Source_Info.Parser.Registry;
+with GPR2.Source_Reference.Identifier.Set;
 
 package body GPR2.Project.Source is
 
@@ -369,18 +366,19 @@ package body GPR2.Project.Source is
         and then Source.Units.Length >= Containers.Count_Type (Index)
       then
          declare
-            CU        : constant GPR2.Unit.Object :=
-                          Source.Units.Element (Positive (Index));
-            Kind      : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
-            Unit_Name : constant Name_Type :=
-                          (if Kind = S_Separate
-                           then CU.Separate_From
-                           else CU.Name);
+            CU     : constant GPR2.Unit.Object :=
+                       Source.Units.Element (Positive (Index));
+            Kind   : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
+            C_Unit : constant Unit_Info.Set.Cursor :=
+                       Data.Units.Find
+                         (if Kind = S_Separate
+                          then CU.Separate_From
+                          else CU.Name);
          begin
-            if Data.Units.Contains (Unit_Name) then
+            if Unit_Info.Set.Set.Has_Element (C_Unit) then
                declare
-                  Unit : constant Unit_Info.Object :=
-                           View.Unit (Unit_Name);
+                  Unit : constant Unit_Info.Set.Set.Constant_Reference_Type :=
+                           Data.Units (C_Unit);
                begin
                   case Kind is
                      when GPR2.Unit.Body_Kind =>
