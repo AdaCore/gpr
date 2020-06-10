@@ -1,4 +1,0 @@
-description: investigate test failure on win-2016. temporary xfail test
-driver: python_script
-control:
-    - [XFAIL, "True", "TODO: remove test when resolved"]
