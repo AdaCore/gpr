@@ -70,8 +70,7 @@ package body GPR2.Project.Source is
                    (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
    is
-      View : constant Project.View.Object := Definition.Strong (Self.View);
-      Tree : constant not null access Project.Tree.Object := View.Tree;
+      Tree : constant not null access Project.Tree.Object := View (Self).Tree;
 
       Done : Containers.Name_Set;
       --  Fast look-up table to avoid analysing the same unit multiple time and
@@ -152,8 +151,6 @@ package body GPR2.Project.Source is
          end loop;
       end To_Analyze;
 
-      Data : constant Definition.Const_Ref := Definition.Get_RO (View);
-
    begin
       if Self.Has_Other_Part then
          To_Analyze (Self.Other_Part);
@@ -165,16 +162,15 @@ package body GPR2.Project.Source is
          declare
             W    : constant Source_Reference.Identifier.Object'Class :=
                      Buf.First_Element;
-            View : Project.View.Object;
+            View : constant Project.View.Object :=
+                     Tree.Get_View (Unit => W.Text);
          begin
             --  Remove the unit just taken from the list
 
             Buf.Delete_First;
 
-            View := Data.Tree.Get_View (Unit => W.Text);
-
             if not View.Is_Defined then
-               Data.Tree.Log_Messages.Append
+               Tree.Log_Messages.Append
                  (Message.Create
                     (Message.Warning,
                      "withed unit " & String (W.Text) & " not found",
@@ -278,8 +274,7 @@ package body GPR2.Project.Source is
                    (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
    is
-      Tree : constant not null access Project.Tree.Object :=
-               Definition.Strong (Self.View).Tree;
+      Tree : constant not null access Project.Tree.Object := View (Self).Tree;
       Done : Containers.Name_Set;
 
       procedure Collect_Source (Source : Source_Info.Object'Class);
