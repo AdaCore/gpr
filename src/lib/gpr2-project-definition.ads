@@ -249,4 +249,8 @@ private package GPR2.Project.Definition is
       Src : Project.Source.Object);
    --  Insert source into simple filename index if it is not yet inserted
 
+   function Is_Sources_Loaded (View : Project.View.Object) return Boolean
+     with Pre => View.Is_Defined;
+   --  Return True if Sources already updated once.
+
 end GPR2.Project.Definition;

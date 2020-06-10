@@ -142,6 +142,15 @@ package body GPR2.Project.Definition is
       return True;
    end Check_Circular_References;
 
+   -----------------------
+   -- Is_Sources_Loaded --
+   -----------------------
+
+   function Is_Sources_Loaded (View : Project.View.Object) return Boolean is
+   begin
+      return not Get_RO (View).Sources_Map.Is_Empty;
+   end Is_Sources_Loaded;
+
    --------------------
    -- Naming_Package --
    --------------------

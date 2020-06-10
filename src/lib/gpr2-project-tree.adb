@@ -794,7 +794,10 @@ package body GPR2.Project.Tree is
 
          procedure Handle_Source_File_In_View (View : Project.View.Object) is
             Full_Path : constant Path_Name.Object :=
-                          View.Source_Path (Base_Name, Need_Update => False);
+                          View.Source_Path
+                            (Base_Name,
+                             Need_Update =>
+                                not Definition.Is_Sources_Loaded (View));
          begin
             if Full_Path /= Path_Name.Undefined then
                Add_File (Full_Path, False);
