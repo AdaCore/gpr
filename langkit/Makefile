@@ -2,7 +2,7 @@
 ##                                                                          ##
 ##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
-##          Copyright (C) 2017-2018, Free Software Foundation, Inc.         ##
+##          Copyright (C) 2017-2020, Free Software Foundation, Inc.         ##
 ##                                                                          ##
 ## This library is free software;  you can redistribute it and/or modify it ##
 ## under terms of the  GNU General Public License  as published by the Free ##
@@ -38,10 +38,12 @@ else
 MANAGE_ARGS=
 endif
 
+PYTHONEXE=python
+
 setup:
 	mkdir -p ${DEST}
-	python manage.py --build-dir=${DEST} $(MANAGE_ARGS) generate \
-		--generate-unparser
+	$(PYTHONEXE) manage.py --build-dir=${DEST} $(MANAGE_ARGS) generate \
+		--generate-unparser --disable-warning undocumented-nodes
 
 clean:
 	rm -fr build
