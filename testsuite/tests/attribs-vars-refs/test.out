@@ -3,7 +3,7 @@ A:   Main -> one.adb two.adb
 A:   Object_Dir -> shared_obj
 A:   Source_Dirs -> . toto Linux here there
 A2:  Object_Dir -> shared_obj
-A3:  Object_Dir
+A3:  Object_Dir -> shared_obj
 V:   Demo_Name -> demo
 V:   Demo_Proj_Dir -> {Current_Directory}
 V:   Dir1 -> toto

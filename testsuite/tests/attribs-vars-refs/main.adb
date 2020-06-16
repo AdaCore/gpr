@@ -72,7 +72,8 @@ procedure Main is
             end loop;
 
             for A of Prj.Attributes.Filter ("Object_Dir") loop
-               Text_IO.Put_Line ("A3:  " & String (A.Name.Text));
+               Text_IO.Put_Line
+                 ("A3:  " & String (A.Name.Text) & " -> " & A.Value.Text);
             end loop;
 
          end if;
