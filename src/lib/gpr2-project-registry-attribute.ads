@@ -47,6 +47,9 @@ package GPR2.Project.Registry.Attribute is
       Pack : Optional_Name_Type := No_Name) return Qualified_Name;
    --  Returns a fully qualified name for the given attribute and package names
 
+   function Image (Name : Qualified_Name) return String;
+   --  Returns quailified name image
+
    type Allowed_In is array (Project_Kind) of Boolean with Pack;
 
    Everywhere : constant Allowed_In := (others => True);
@@ -334,6 +337,9 @@ package GPR2.Project.Registry.Attribute is
 private
 
    type Qualified_Name is new Name_Type;
+
+   function Image (Name : Qualified_Name) return String is
+     (String (Name));
 
    package Attribute_Definitions is new Ada.Containers.Indefinite_Ordered_Maps
      (Qualified_Name, Def);

@@ -1948,10 +1948,6 @@ package body GPR2.Parser.Project is
                   declare
                      Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
 
-                     function Attr_Name_Image return String is
-                       ((if Pack_Name = Null_Unbounded_String then ""
-                         else To_String (Pack_Name) & '.') & String (N_Str));
-
                      function Sloc return Source_Reference.Object is
                        (Get_Source_Reference (Self.File, Node));
                      --  Use function instead of constant because Sloc need
@@ -1974,7 +1970,7 @@ package body GPR2.Parser.Project is
                                    (Level   => Message.Warning,
                                     Sloc    => Sloc,
                                     Message => "Empty attribute "
-                                    & Attr_Name_Image & " ignored"));
+                                    & A_Reg.Image (Q_Name) & " ignored"));
                               Is_Valid := False;
 
                            when A_Reg.Error =>
@@ -1982,8 +1978,9 @@ package body GPR2.Parser.Project is
                                 (Message.Create
                                    (Level   => Message.Error,
                                     Sloc    => Sloc,
-                                    Message => "Attribute " & Attr_Name_Image
-                                    & " can't be empty"));
+                                    Message => "Attribute "
+                                               & A_Reg.Image (Q_Name)
+                                               & " can't be empty"));
                         end case;
                      end if;
 
