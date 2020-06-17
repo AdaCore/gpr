@@ -2514,15 +2514,15 @@ package body GPR2.Project.Tree is
                Check_Directory
                  (PRA.Library_Dir, "library",
                   Project.View.Library_Directory'Access);
+
+               Check_Directory
+                 (PRA.Library_Ali_Dir, "library ALI",
+                  Project.View.Library_Ali_Directory'Access);
+
+               Check_Directory
+                 (PRA.Library_Src_Dir, "",
+                  Project.View.Library_Src_Directory'Access);
             end if;
-
-            Check_Directory
-              (PRA.Library_Ali_Dir, "library ALI",
-               Project.View.Library_Ali_Directory'Access);
-
-            Check_Directory
-              (PRA.Library_Src_Dir, "",
-               Project.View.Library_Src_Directory'Access);
          end;
       end Validity_Check;
 
