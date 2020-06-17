@@ -43,6 +43,8 @@ package body GPR2.Parser.Project is
    use Langkit_Support.Text;
    use type Ada.Containers.Count_Type;
 
+   package PRA renames GPR2.Project.Registry.Attribute;
+
    --  Some helpers routines for the parser
 
    function Get_Value_Type
@@ -1094,7 +1096,7 @@ package body GPR2.Parser.Project is
          Node    : Attribute_Reference;
          Pack    : Optional_Name_Type := "") return Item_Values
       is
-         use type GPR2.Project.Registry.Attribute.Value_Kind;
+         use type PRA.Value_Kind;
 
          Sloc   : constant Source_Reference.Object :=
                     Get_Source_Reference (Self.File, Node);
@@ -1135,14 +1137,10 @@ package body GPR2.Parser.Project is
          --  definition to know wether the result is multi-valued or not.
 
          declare
-            use GPR2.Project.Registry;
-
-            Attrib : constant Attribute.Qualified_Name :=
-                       Attribute.Create (Name, Pack);
+            Attrib : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
          begin
-            if Attribute.Exists (Attrib) then
-               Result.Single :=
-                 Attribute.Get (Attrib).Value = Attribute.Single;
+            if PRA.Exists (Attrib) then
+               Result.Single := PRA.Get (Attrib).Value = PRA.Single;
 
             else
                Tree.Log_Messages.Append
@@ -1180,7 +1178,7 @@ package body GPR2.Parser.Project is
                --  Special cases for some built-in references
 
                elsif Index = "" then
-                  if Name = GPR2.Project.Registry.Attribute.Target then
+                  if Name = PRA.Target then
                      --  Project'Target
 
                      return R : Item_Values do
@@ -1192,9 +1190,7 @@ package body GPR2.Parser.Project is
                      end return;
                   end if;
 
-               elsif Index /= ""
-                 and then Name = GPR2.Project.Registry.Attribute.Runtime
-               then
+               elsif Index /= "" and then Name = PRA.Runtime then
                   --  Project'Runtime ("<lang>")
 
                   return R : Item_Values do
@@ -1261,9 +1257,7 @@ package body GPR2.Parser.Project is
             Result.Single := False;
 
          else
-            Result :=
-              (Attr.Values,
-               Attr.Kind = GPR2.Project.Registry.Attribute.Single);
+            Result := (Attr.Values, Attr.Kind = PRA.Single);
          end if;
 
          return Result;
@@ -1645,7 +1639,7 @@ package body GPR2.Parser.Project is
          Node    : Identifier;
          Pack    : Identifier := No_Identifier) return Item_Values
       is
-         use type GPR2.Project.Registry.Attribute.Value_Kind;
+         use type PRA.Value_Kind;
 
          function Get_Pack_Var
            (Pack : GPR2.Project.Pack.Object;
@@ -1665,8 +1659,7 @@ package body GPR2.Parser.Project is
                   V : constant GPR2.Project.Variable.Object :=
                         Pack.Variable (Name);
                begin
-                  return (V.Values,
-                          V.Kind = GPR2.Project.Registry.Attribute.Single);
+                  return (V.Values, V.Kind = PRA.Single);
                end;
 
             else
@@ -1717,9 +1710,7 @@ package body GPR2.Parser.Project is
                   V : constant GPR2.Project.Variable.Object :=
                         View.Variable (Name);
                begin
-                  Result :=
-                    (V.Values,
-                     V.Kind = GPR2.Project.Registry.Attribute.Single);
+                  Result := (V.Values, V.Kind = PRA.Single);
                end;
             end if;
          end if;
@@ -1734,7 +1725,7 @@ package body GPR2.Parser.Project is
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values
       is
-         use type GPR2.Project.Registry.Attribute.Value_Kind;
+         use type PRA.Value_Kind;
 
          Name_1  : constant Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
@@ -1899,12 +1890,10 @@ package body GPR2.Parser.Project is
                       Get_Name_Type (Name.As_Single_Tok_Node);
          begin
             declare
-               package A_Reg renames GPR2.Project.Registry.Attribute;
-
-               Q_Name : constant A_Reg.Qualified_Name :=
-                             A_Reg.Create
-                               (N_Str,
-                                Optional_Name_Type (To_String (Pack_Name)));
+               Q_Name : constant PRA.Qualified_Name :=
+                          PRA.Create
+                            (N_Str,
+                             Optional_Name_Type (To_String (Pack_Name)));
 
                Values   : constant Item_Values := Get_Term_List (Expr);
                A        : GPR2.Project.Attribute.Object;
@@ -1962,9 +1951,9 @@ package body GPR2.Parser.Project is
 
                --  Record attribute with proper casing definition if found
 
-               if A_Reg.Exists (Q_Name) then
+               if PRA.Exists (Q_Name) then
                   declare
-                     Def : constant A_Reg.Def := A_Reg.Get (Q_Name);
+                     Def : constant PRA.Def := PRA.Get (Q_Name);
 
                      function Sloc return Source_Reference.Object is
                        (Get_Source_Reference (Self.File, Node));
@@ -1979,25 +1968,25 @@ package body GPR2.Parser.Project is
                                 and then Values.Values.Length = 0)
                      then
                         case Def.Empty_Value is
-                           when A_Reg.Allow =>
+                           when PRA.Allow =>
                               null;
 
-                           when A_Reg.Ignore =>
+                           when PRA.Ignore =>
                               Tree.Log_Messages.Append
                                 (Message.Create
                                    (Level   => Message.Warning,
                                     Sloc    => Sloc,
                                     Message => "Empty attribute "
-                                    & A_Reg.Image (Q_Name) & " ignored"));
+                                    & PRA.Image (Q_Name) & " ignored"));
                               Is_Valid := False;
 
-                           when A_Reg.Error =>
+                           when PRA.Error =>
                               Tree.Log_Messages.Append
                                 (Message.Create
                                    (Level   => Message.Error,
                                     Sloc    => Sloc,
                                     Message => "Attribute "
-                                               & A_Reg.Image (Q_Name)
+                                               & PRA.Image (Q_Name)
                                                & " can't be empty"));
                         end case;
                      end if;
@@ -2573,7 +2562,6 @@ package body GPR2.Parser.Project is
       --  Insert intrinsic attributes Name and Project_Dir
 
       declare
-         package PRA renames GPR2.Project.Registry.Attribute;
          use Characters.Handling;
          Sloc : constant Source_Reference.Object :=
                   Source_Reference.Object
