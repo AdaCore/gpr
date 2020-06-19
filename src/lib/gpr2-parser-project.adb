@@ -1221,22 +1221,40 @@ package body GPR2.Parser.Project is
                  (Name_Type (Pack)).Attributes.Element (Name, Index);
             end if;
 
-         else
-            if View.Is_Defined then
-               if Pack = "" then
-                  Attr := View.Attributes.Element (Name, Index);
-
-               else
-                  if View.Has_Packages (Pack) then
-                     declare
-                        P : constant GPR2.Project.Pack.Object :=
-                              View.Packages.Element (Name_Type (Pack));
-                     begin
-                        Attr := P.Attributes.Element (Name, Index);
-                     end;
-                  end if;
+         elsif View.Is_Defined then
+            if Pack = "" then
+               if not View.Check_Attribute (Name, Index, Result => Attr) then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "attribute """ & String (Name)
+                        & """ is not defined in project """ & String (Project)
+                        & '"',
+                        Get_Source_Reference (Self.File, Node)));
                end if;
+
+            elsif View.Has_Packages (Pack)
+              and then not View.Pack (Pack).Check_Attribute
+                             (Name, Index, Result => Attr)
+            then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute """ & String (Name)
+                     & """ is not defined in project """
+                     & String (Project) & """ package """ & String (Pack)
+                     & '"',
+                     Get_Source_Reference (Self.File, Node)));
             end if;
+
+         elsif Project /= "Config" then
+            --  Config project can be undefined at this stage
+
+            Tree.Log_Messages.Append
+              (Message.Create
+                 (Message.Error,
+                  "Project """ & String (Project) & """ not found",
+                  Get_Source_Reference (Self.File, Node)));
          end if;
 
          if not Attr.Is_Defined then
