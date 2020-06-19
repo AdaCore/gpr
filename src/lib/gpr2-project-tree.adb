@@ -2383,8 +2383,7 @@ package body GPR2.Project.Tree is
                               (if Human_Name = ""
                                then "D"
                                else Human_Name & " d") & "irectory """
-                              & AV.Text
-                              & """ not found",
+                              & AV.Text & """ not found",
                               Sloc => AV));
 
                      elsif Self.Build_Path.Is_Defined

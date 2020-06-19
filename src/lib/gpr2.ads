@@ -49,6 +49,7 @@
 --        A unit with its spec and possible bodies (main body and separates)
 
 private with Ada.Calendar;
+private with Ada.Characters.Handling;
 private with Ada.Strings.Unbounded;
 private with GNATCOLL.Utils;
 
@@ -101,6 +102,10 @@ package GPR2 is
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
+
+   function To_Lower (Name : Name_Type) return Value_Not_Empty;
+   --  Convert name to lowercased String. Need to be able to use "in" operator
+   --  because of predefined equality used, see ARM 2012 4.5.2 28.1/4.
 
    No_Value : constant Value_Type;
 
@@ -172,5 +177,8 @@ private
 
    function Get_Tools_Directory return String;
    --  Get the GNAT prefix
+
+   function To_Lower (Name : Name_Type) return Value_Not_Empty is
+      (Ada.Characters.Handling.To_Lower (String (Name)));
 
 end GPR2;

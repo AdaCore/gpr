@@ -1112,16 +1112,13 @@ package body GPR2.Parser.Project is
                     Process.View.View_For (Project);
 
          Attr   : GPR2.Project.Attribute.Object;
-         Result : Item_Values;
 
       begin
          --  We do not want to have a reference to a limited import, we do not
          --  check when a special project reference is found Project'Name or
          --  Config'Name.
 
-         if Project /= "project"
-           and then Project /= "config"
-           and then Project /= "runtime"
+         if To_Lower (Project) not in "project" | "config" | "runtime"
            and then Is_Limited_Import (Self, Project)
          then
             Tree.Log_Messages.Append
@@ -1136,22 +1133,15 @@ package body GPR2.Parser.Project is
          --  For a project/attribute reference we need to check the attribute
          --  definition to know wether the result is multi-valued or not.
 
-         declare
-            Attrib : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
-         begin
-            if PRA.Exists (Attrib) then
-               Result.Single := PRA.Get (Attrib).Value = PRA.Single;
+         if not PRA.Exists (PRA.Create (Name, Pack)) then
+            Tree.Log_Messages.Append
+              (Message.Create
+                 (Message.Error,
+                  "attribute """ & String (Name) & """ is not defined",
+                  Get_Source_Reference (Self.File, Node)));
 
-            else
-               Tree.Log_Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "attribute """ & String (Name) & """ is not defined",
-                     Get_Source_Reference (Self.File, Node)));
-
-               return Empty_Item_Values;
-            end if;
-         end;
+            return Empty_Item_Values;
+         end if;
 
          --  If the attribute is not found or not yet resolved we need
          --  to ensure that the Values list respect the post
@@ -1253,14 +1243,9 @@ package body GPR2.Parser.Project is
                   Get_Source_Reference (Self.File, Node)));
          end if;
 
-         if not Attr.Is_Defined then
-            Result.Single := False;
-
-         else
-            Result := (Attr.Values, Attr.Kind = PRA.Single);
-         end if;
-
-         return Result;
+         return (if Attr.Is_Defined
+                 then (Attr.Values, Attr.Kind = PRA.Single)
+                 else Empty_Item_Values);
       end Get_Attribute_Ref;
 
       -------------------
@@ -1750,8 +1735,7 @@ package body GPR2.Parser.Project is
                             and then
                           Optional_Name_Type
                             (Self.Extended.Path_Name.Base_Name) = Name)
-                 or else Name = "config"
-                 or else Name = "runtime"
+                 or else To_Lower (Name) in "config" | "runtime"
                then
                   --  This is a project reference: <project>'<attribute>
                   return Get_Attribute_Ref
