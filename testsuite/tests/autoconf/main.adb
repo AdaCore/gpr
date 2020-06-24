@@ -61,11 +61,18 @@ procedure Main is
                                           (Name  => "Runtime_Dir",
                                            Index => "Ada").Value.Text));
       Target : constant String := Config_View.Attribute ("Target").Value.Text;
+      Canonical_Target : constant String :=
+                           Config_View.Attribute
+                             ("Canonical_Target").Value.Text;
    begin
       Text_IO.Put_Line ("target = "
                         & (if Target = This_Target
                            then "this-target"
                            else Target));
+      if Target /= This_Target then
+         Text_IO.Put_Line ("canonical_target = " & Canonical_Target);
+      end if;
+
       Text_IO.Put_Line ("compiler driver = "
                         & String (Compiler_Driver.Base_Name));
 
@@ -96,7 +103,7 @@ begin
    Project_Tree.Load_Autoconf
      (Filename          => Project.Create ("projects/a.gpr"),
       Context           => Ctx,
-      Target            => "x86_64-vx7",
+      Target            => "x86_64-wrs-vxworks7",
       Language_Runtimes => RTS);
 
    Print_Config_Info;
