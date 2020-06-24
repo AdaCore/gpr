@@ -45,6 +45,9 @@ package body GPR2.Parser.Project is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
+   function Is_Builtin_Project_Name (Name : Name_Type) return Boolean is
+     (To_Lower (Name) in "project" | "config" | "runtime");
+
    --  Some helpers routines for the parser
 
    function Get_Value_Type
@@ -1118,7 +1121,7 @@ package body GPR2.Parser.Project is
          --  check when a special project reference is found Project'Name or
          --  Config'Name.
 
-         if To_Lower (Project) not in "project" | "config" | "runtime"
+         if not Is_Builtin_Project_Name (Project)
            and then Is_Limited_Import (Self, Project)
          then
             Tree.Log_Messages.Append
@@ -1662,20 +1665,16 @@ package body GPR2.Parser.Project is
          if not View.Is_Defined then
             --  Some maybe Project is actually a local package
 
-            declare
-               P_Name : Name_Type renames Project;
-            begin
-               if Packs.Contains (P_Name) then
-                  Result := Get_Pack_Var (Packs.Element (P_Name), Name);
+            if Packs.Contains (Project) then
+               Result := Get_Pack_Var (Packs.Element (Project), Name);
 
-               elsif Project /= "config" and then Project /= "runtime" then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "project " & String (Project) & " is undefined",
-                        Get_Source_Reference (Self.File, Node)));
-               end if;
-            end;
+            elsif not Is_Builtin_Project_Name (Project) then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "project " & String (Project) & " is undefined",
+                     Get_Source_Reference (Self.File, Node)));
+            end if;
 
          else
             if Present (Pack) then
@@ -1735,7 +1734,7 @@ package body GPR2.Parser.Project is
                             and then
                           Optional_Name_Type
                             (Self.Extended.Path_Name.Base_Name) = Name)
-                 or else To_Lower (Name) in "config" | "runtime"
+                 or else Is_Builtin_Project_Name (Name)
                then
                   --  This is a project reference: <project>'<attribute>
                   return Get_Attribute_Ref
@@ -2036,21 +2035,13 @@ package body GPR2.Parser.Project is
                null;
 
             else
-               declare
-                  Sloc  : constant Source_Reference.Object :=
-                            Get_Source_Reference (Self.File, Node);
-                  Name  : constant Identifier :=
-                            F_Variable_Name1 (Var);
-               begin
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => Sloc,
-                        Message =>
-                          "variable '"
-                          & Get_Value_Type (Single_Tok_Node (Name))
-                          & "' must be a simple value"));
-               end;
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Get_Source_Reference (Self.File, Node),
+                     Message => "variable '"
+                       & Get_Value_Type (F_Variable_Name1 (Var))
+                       & "' must be a simple value"));
             end if;
          end Parse_Case_Construction;
 

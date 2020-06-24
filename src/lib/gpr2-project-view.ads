@@ -51,7 +51,7 @@ package GPR2.Project.View is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
-   function "<" (Left, Right : View.Object) return Boolean;
+   function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object
@@ -89,8 +89,7 @@ package GPR2.Project.View is
    --  Returns True if the project has some imports
 
    function Imports
-     (Self      : Object;
-      Recursive : Boolean := False) return GPR2.Project.View.Set.Object
+     (Self : Object; Recursive : Boolean := False) return Set.Object
      with Pre => Self.Is_Defined and then Self.Has_Imports;
    --  Returns all imported project views
 
@@ -120,10 +119,10 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the source is the main unit of the view
 
-   function Aggregated (Self : Object) return GPR2.Project.View.Set.Object
+   function Aggregated (Self : Object) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
 
-   function Aggregate (Self : Object) return GPR2.Project.View.Object
+   function Aggregate (Self : Object) return Object
      with Pre  => Self.Is_Defined and then Self.Is_Aggregated,
           Post => Aggregate'Result.Kind in Aggregate_Kind;
 
@@ -135,7 +134,7 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if Self is part of an aggregate library project
 
-   function View_For (Self : Object; Name : Name_Type) return View.Object
+   function View_For (Self : Object; Name : Name_Type) return Object
      with Pre => Self.Is_Defined;
    --  Returns the view for the given name accessible from Self context. This
    --  can be either an import project, an extends project or the special

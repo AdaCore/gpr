@@ -102,7 +102,7 @@ package body GPR2.Project.View is
    -- Aggregated --
    ----------------
 
-   function Aggregated (Self : Object) return GPR2.Project.View.Set.Object is
+   function Aggregated (Self : Object) return Set.Object is
    begin
       return Set : GPR2.Project.View.Set.Object do
          for Agg of Definition.Get_RO (Self).Aggregated loop
@@ -686,8 +686,7 @@ package body GPR2.Project.View is
    -------------
 
    function Imports
-     (Self      : Object;
-      Recursive : Boolean := False) return GPR2.Project.View.Set.Object
+     (Self : Object; Recursive : Boolean := False) return Set.Object
    is
       Result : GPR2.Project.View.Set.Object;
 
