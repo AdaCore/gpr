@@ -1405,17 +1405,16 @@ package body GPR2.Project.Tree is
      (Self     : in out Object;
       Filename : Path_Name.Object) is
    begin
-      Self.Self := Self'Unchecked_Access;
+      pragma Assert (Self.Self = Self'Unrestricted_Access);
 
       Self.Conf := PC.Load (Filename);
       Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
 
-      if Self.Conf.Has_Messages then
-         for M of Self.Conf.Log_Messages loop
-            Self.Messages.Append (M);
-         end loop;
+      for M of Self.Conf.Log_Messages loop
+         Self.Messages.Append (M);
+      end loop;
 
-      else
+      if not Self.Messages.Has_Error then
          Set_Context (Self);
       end if;
    end Load_Configuration;
