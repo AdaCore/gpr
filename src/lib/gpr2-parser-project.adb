@@ -18,6 +18,7 @@
 
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
+with Ada.Containers;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Wide_Unbounded;
 
