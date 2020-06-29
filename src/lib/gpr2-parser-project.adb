@@ -1172,7 +1172,9 @@ package body GPR2.Parser.Project is
                --  Special cases for some built-in references
 
                elsif Index = "" then
-                  if Name = PRA.Target then
+                  if Name_Type (To_Lower (Name))
+                    in PRA.Target | PRA.Canonical_Target
+                  then
                      --  Project'Target
 
                      return R : Item_Values do
