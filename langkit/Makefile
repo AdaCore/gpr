@@ -27,11 +27,8 @@ CURRENT_DIR := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
 DEST := "build"
 
-# Should we generate langkit_support.gpr? Doing so is convenient during
-# development, but in production, it is up to packagers to make it available to
-# GPR2, as other projects than GPR2 depend on it: for insance our own
-# dependency, Libadalang.
-GENERATE_LANGKIT_SUPPORT = yes
+GENERATE_LANGKIT_SUPPORT = no
+
 ifeq ($(GENERATE_LANGKIT_SUPPORT), no)
 MANAGE_ARGS=--no-langkit-support
 else
