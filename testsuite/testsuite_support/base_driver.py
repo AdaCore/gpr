@@ -4,7 +4,7 @@ import os.path
 from e3.env import Env
 from e3.fs import mkdir
 from e3.testsuite.driver.classic import TestAbortWithError
-from e3.testsuite.driver.diff import DiffTestDriver, Substitute
+from e3.testsuite.driver.diff import DiffTestDriver, ReplacePath, Substitute
 
 
 # create_fake_ada_compiler routine copied from gprbuild-internal testsuite
@@ -148,9 +148,11 @@ class BaseDriver(DiffTestDriver):
 
     @property
     def output_refiners(self):
-        # Make all filenames look like Unix ones (forward slashes for directory
+        # Remove working directory from output and
+        # make all filenames look like Unix ones (forward slashes for directory
         # separators).
-        return [Substitute('\\', '/')]
+        return [ReplacePath(self.working_dir(), replacement=""),
+                Substitute('\\', '/')]
 
     # Convenience path builders
 

@@ -1,6 +1,3 @@
-import os
-
-from e3.env import Env
 import e3.testsuite
 
 from testsuite_support.build_and_run import BuildAndRunDriver
@@ -23,7 +20,4 @@ class Testsuite(e3.testsuite.Testsuite):
 
     def set_up(self):
         super(Testsuite, self).set_up()
-
-        Env().add_search_path('PYTHONPATH',
-                              os.path.join(self.root_dir, 'testsuite_support'))
         self.env.valgrind = self.main.args.valgrind
