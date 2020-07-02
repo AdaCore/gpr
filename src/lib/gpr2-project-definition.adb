@@ -1720,59 +1720,56 @@ package body GPR2.Project.Definition is
 
          for Agg of Def.Aggregated loop
             declare
-               DA : constant Const_Ref := Get_RO (Agg);
+               DA           : constant Const_Ref := Get_RO (Agg);
+               In_Interface : Boolean            := False;
+               A_Set        : Project.Source.Set.Object;
             begin
-               declare
-                  In_Interface : Boolean := False;
-                  A_Set        : Project.Source.Set.Object;
-               begin
-                  for P of Agg.Sources loop
-                     In_Interface :=
-                       Interface_Sources.Contains
-                         (String (P.Source.Path_Name.Base_Name));
+               for P of Agg.Sources loop
+                  In_Interface :=
+                    Interface_Sources.Contains
+                      (String (P.Source.Path_Name.Base_Name));
 
-                     if P.Source.Has_Units then
-                        for CU of P.Source.Units loop
-                           if Interface_Units.Contains (CU.Name) then
-                              Interface_Units_Found.Include (CU.Name);
-                              In_Interface := True;
-                           end if;
-                        end loop;
-                     end if;
+                  if P.Source.Has_Units then
+                     for CU of P.Source.Units loop
+                        if Interface_Units.Contains (CU.Name) then
+                           Interface_Units_Found.Include (CU.Name);
+                           In_Interface := True;
+                        end if;
+                     end loop;
+                  end if;
 
-                     declare
-                        use all type Unit.Library_Unit_Type;
+                  declare
+                     use all type Unit.Library_Unit_Type;
 
-                        Is_Interface : constant Boolean :=
-                                         In_Interface
-                                             or else
-                                         (not Interface_Found
-                                          and then P.Source.Kind
+                     Is_Interface : constant Boolean :=
+                                      In_Interface
+                                          or else
+                                            (not Interface_Found
+                                             and then P.Source.Kind
                                                       in Unit.Spec_Kind);
-                     begin
-                        --  An aggregate library project does not allow naming
-                        --  exception. So the source naming exception status is
-                        --  the one from the aggregated project.
+                  begin
+                     --  An aggregate library project does not allow naming
+                     --  exception. So the source naming exception status is
+                     --  the one from the aggregated project.
 
-                        A_Set.Insert
-                          (Project.Source.Create
-                             (Source               => P.Source,
-                              View                 => P.View,
-                              Is_Interface         => Is_Interface,
-                              Has_Naming_Exception => P.Has_Naming_Exception,
-                              Is_Compilable        => P.Is_Compilable,
-                              Aggregated           => True));
-                     end;
-                  end loop;
+                     A_Set.Insert
+                       (Project.Source.Create
+                          (Source               => P.Source,
+                           View                 => P.View,
+                           Is_Interface         => Is_Interface,
+                           Has_Naming_Exception => P.Has_Naming_Exception,
+                           Is_Compilable        => P.Is_Compilable,
+                           Aggregated           => True));
+                  end;
+               end loop;
 
-                  Insert
-                    (A_Set,
-                     Aggregated_Copy,
-                     (if DA.Attrs.Has_Source_Dirs
-                      then DA.Attrs.Source_Dirs
-                      else Source_Reference.Create
-                        (DA.Trees.Project.Path_Name.Value, 0, 0)));
-               end;
+               Insert
+                 (A_Set,
+                  Aggregated_Copy,
+                  (if DA.Attrs.Has_Source_Dirs
+                   then DA.Attrs.Source_Dirs
+                   else Source_Reference.Create
+                     (DA.Trees.Project.Path_Name.Value, 0, 0)));
             end;
          end loop;
 
