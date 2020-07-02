@@ -325,24 +325,23 @@ procedure GPRclean.Main is
             if Is_Main or else In_Mains then
                if Is_Main and then Opts.Arg_Mains and then not In_Mains then
                   Cleanup := False;
-               else
-                  if S.Source.Language = "Ada"
-                    and then not S.Source.Has_Single_Unit
-                  then
-                     for CU of S.Source.Units loop
-                        if CU.Kind in Unit.Body_Kind then
-                           Binder_Artifacts
-                             (S.Source.Path_Name.Base_Name
-                              & Name_Type ('~' & Image (CU.Index, 1)),
-                              Language => S.Source.Language);
-                        end if;
-                     end loop;
 
-                  else
-                     Binder_Artifacts
-                       (S.Source.Path_Name.Base_Name,
-                        Language => S.Source.Language);
-                  end if;
+               elsif S.Source.Language = "Ada"
+                 and then not S.Source.Has_Single_Unit
+               then
+                  for CU of S.Source.Units loop
+                     if CU.Kind in Unit.Body_Kind then
+                        Binder_Artifacts
+                          (S.Source.Path_Name.Base_Name
+                           & Name_Type ('~' & Image (CU.Index, 1)),
+                           Language => S.Source.Language);
+                     end if;
+                  end loop;
+
+               elsif not View.Is_Library then
+                  Binder_Artifacts
+                    (S.Source.Path_Name.Base_Name,
+                     Language => S.Source.Language);
                end if;
             end if;
 
