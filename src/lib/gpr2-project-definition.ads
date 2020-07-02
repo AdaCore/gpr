@@ -171,7 +171,8 @@ private package GPR2.Project.Definition is
    -------------------------------------------
 
    function Has_Packages
-     (Def : Data; Name : Optional_Name_Type) return Boolean
+     (Def  : Data;
+      Name : Optional_Name_Type) return Boolean
    is
      (if Name = No_Name
       then not Def.Packs.Is_Empty
@@ -179,7 +180,8 @@ private package GPR2.Project.Definition is
    --  Returns true if the project view definition has some packages defined
 
    function Has_Types
-     (Def : Data; Name : Optional_Name_Type) return Boolean
+     (Def  : Data;
+      Name : Optional_Name_Type) return Boolean
    is
      (if Name = No_Name
       then not Def.Types.Is_Empty
@@ -206,7 +208,9 @@ private package GPR2.Project.Definition is
    --  package.
 
    procedure Update_Sources
-     (Def : in out Data; View : Project.View.Object; Stop_On_Error : Boolean);
+     (Def           : in out Data;
+      View          : Project.View.Object;
+      Stop_On_Error : Boolean);
    --  Ensure that the view definition sources are up-to-date. This is needed
    --  before computing the dependencies of a source in the project tree. This
    --  routine is called where needed and is there for internal use only.
@@ -225,7 +229,8 @@ private package GPR2.Project.Definition is
    --  Return value need to use this function in pragma Assert.
 
    procedure Sources_Map_Insert
-     (Def : in out Data; Src : Project.Source.Object);
+     (Def : in out Data;
+      Src : Project.Source.Object);
    --  Insert source into simple filename index if it is not yet inserted
 
 end GPR2.Project.Definition;

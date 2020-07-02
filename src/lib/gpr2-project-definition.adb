@@ -233,7 +233,8 @@ package body GPR2.Project.Definition is
    -----------------------
 
    procedure Sources_Map_Insert
-     (Def : in out Data; Src : Project.Source.Object)
+     (Def : in out Data;
+      Src : Project.Source.Object)
    is
       Position : Simple_Name_Source.Cursor;
       Inserted : Boolean;
@@ -310,7 +311,8 @@ package body GPR2.Project.Definition is
       package Source_Set renames Containers.Value_Type_Set;
 
       procedure Handle_Directory
-        (Dir : GPR2.Path_Name.Full_Name; Recursive : Boolean);
+        (Dir       : GPR2.Path_Name.Full_Name;
+         Recursive : Boolean);
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
       --  is specified.
@@ -476,7 +478,8 @@ package body GPR2.Project.Definition is
       ----------------------
 
       procedure Handle_Directory
-        (Dir : GPR2.Path_Name.Full_Name; Recursive : Boolean)
+        (Dir       : GPR2.Path_Name.Full_Name;
+         Recursive : Boolean)
       is
          use all type Directories.File_Kind;
 
@@ -970,12 +973,11 @@ package body GPR2.Project.Definition is
                                          Name_Type (Exc.Index.Text);
                            Index     : Natural;
                            Value     : constant SR.Value.Object := Exc.Value;
-                           Exc_Pos   : Naming_Exceptions_Usage.Cursor :=
+                           Pos       : Naming_Exceptions_Usage.Cursor :=
                                          Ada_Except_Usage.Find
                                            (Ada_Use_Index (Exc));
                         begin
-                           if Naming_Exceptions_Usage.Has_Element (Exc_Pos)
-                           then
+                           if Naming_Exceptions_Usage.Has_Element (Pos) then
                               if Value.Has_At_Num then
                                  Index      := Value.At_Num;
                                  Is_Indexed := True;
@@ -989,7 +991,7 @@ package body GPR2.Project.Definition is
                               --  May actually be a Separate, we cannot know
                               --  until we parse the file.
 
-                              Ada_Except_Usage.Delete (Exc_Pos);
+                              Ada_Except_Usage.Delete (Pos);
 
                               --  We know only Name, Index and Kind unit
                               --  properties for now. Others will be taken on
