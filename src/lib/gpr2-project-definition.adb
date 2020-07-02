@@ -1870,9 +1870,7 @@ package body GPR2.Project.Definition is
             Tree.Append_Message
               (Message.Create
                  (Message.Error,
-                  "source for interface unit"
-                  & " '"
-                  & String (Unit_Name)
+                  "source for interface unit '" & String (Unit_Name)
                   & "' not found",
                   Sloc));
          end;
@@ -1888,10 +1886,7 @@ package body GPR2.Project.Definition is
             Tree.Append_Message
               (Message.Create
                  (Message.Error,
-                  "source for "
-                  & " '"
-                  & String (Source_Path)
-                  & "' not found",
+                  "source for '" & String (Source_Path) & "' not found",
                   Sloc));
          end;
       end loop;
