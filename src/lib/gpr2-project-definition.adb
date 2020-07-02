@@ -309,7 +309,8 @@ package body GPR2.Project.Definition is
 
       package Source_Set renames Containers.Value_Type_Set;
 
-      procedure Handle_Directory (Dir : GPR2.Path_Name.Full_Name);
+      procedure Handle_Directory
+        (Dir : GPR2.Path_Name.Full_Name; Recursive : Boolean);
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
       --  is specified.
@@ -474,20 +475,11 @@ package body GPR2.Project.Definition is
       -- Handle_Directory --
       ----------------------
 
-      procedure Handle_Directory (Dir : GPR2.Path_Name.Full_Name) is
+      procedure Handle_Directory
+        (Dir : GPR2.Path_Name.Full_Name; Recursive : Boolean)
+      is
          use all type Directories.File_Kind;
 
-         Is_Recursive : constant Boolean :=
-                          Dir'Length > 2
-                          and then Dir (Dir'Last) = '*'
-                          and then Dir (Dir'Last - 1) = '*';
-         --  Recursivity is controlled by a double * at the end of the
-         --  directory.
-
-         Dir_Name     : constant GPR2.Path_Name.Full_Name :=
-                          (if Is_Recursive
-                           then Dir (Dir'First .. Dir'Last - 2)
-                           else Dir);
          Dir_Search   : Directories.Search_Type;
          Dir_Entry    : Directories.Directory_Entry_Type;
          Inserted     : Boolean;
@@ -495,36 +487,39 @@ package body GPR2.Project.Definition is
       begin
          Visited_Dirs.Insert (Dir, Position, Inserted);
 
-         if Inserted then
+         if Inserted or else Recursive then
             begin
-               Directories.Start_Search (Dir_Search, Dir_Name, "*");
+               Directories.Start_Search
+                 (Dir_Search, Dir, "",
+                  Filter => (Directory     => Recursive,
+                             Ordinary_File => Inserted,
+                             Special_File  => False));
             exception
                when Ada.IO_Exceptions.Name_Error =>
                   Tree.Append_Message
                     (Message.Create
                        (Message.Error,
-                        """" & Dir_Name & """ is not a valid directory",
+                        """" & Dir & """ is not a valid directory",
                         Source_Dir_Ref));
             end;
 
             while Directories.More_Entries (Dir_Search) loop
                Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
 
-               if Directories.Kind (Dir_Entry) = Ordinary_File then
-                  Handle_File (Directories.Full_Name (Dir_Entry));
+               case Directories.Kind (Dir_Entry) is
+                  when Ordinary_File =>
+                     Handle_File (Directories.Full_Name (Dir_Entry));
 
-               elsif Directories.Kind (Dir_Entry) = Directory
-                 and then Is_Recursive
-               then
-                  Handle_Sub_Directory : declare
-                     New_Dir : constant String :=
-                                 Directories.Simple_Name (Dir_Entry);
-                  begin
-                     if New_Dir not in "." | ".." then
-                        Handle_Directory (Directories.Full_Name (Dir_Entry));
+                  when Directory =>
+                     if Directories.Simple_Name (Dir_Entry) not in "." | ".."
+                     then
+                        Handle_Directory
+                          (Directories.Full_Name (Dir_Entry), Recursive);
                      end if;
-                  end Handle_Sub_Directory;
-               end if;
+
+                  when Special_File =>
+                     raise Program_Error;
+               end case;
             end loop;
 
             Directories.End_Search (Dir_Search);
@@ -975,36 +970,48 @@ package body GPR2.Project.Definition is
                                          Name_Type (Exc.Index.Text);
                            Index     : Natural;
                            Value     : constant SR.Value.Object := Exc.Value;
+                           Exc_Pos   : Naming_Exceptions_Usage.Cursor :=
+                                         Ada_Except_Usage.Find
+                                           (Ada_Use_Index (Exc));
                         begin
-                           if Value.Has_At_Num then
-                              Index      := Value.At_Num;
-                              Is_Indexed := True;
+                           if Naming_Exceptions_Usage.Has_Element (Exc_Pos)
+                           then
+                              if Value.Has_At_Num then
+                                 Index      := Value.At_Num;
+                                 Is_Indexed := True;
+                              else
+                                 Index := 1;
+                              end if;
+
+                              Kind := (if Exc.Name.Text = PRA.Spec
+                                       then Unit.S_Spec
+                                       else Unit.S_Body);
+                              --  May actually be a Separate, we cannot know
+                              --  until we parse the file.
+
+                              Ada_Except_Usage.Delete (Exc_Pos);
+
+                              --  We know only Name, Index and Kind unit
+                              --  properties for now. Others will be taken on
+                              --  source parsing.
+
+                              Units.Append
+                                (Unit.Create
+                                   (Name          => Unit_Name,
+                                    Index         => Index,
+                                    Lib_Unit_Kind => Kind,
+                                    Lib_Item_Kind => Unit.Is_Package,
+                                    Main          => Unit.None,
+                                    Flags         => Unit.Default_Flags,
+                                    Dependencies  => SR.Identifier.Set
+                                                     .Empty_Set,
+                                    Sep_From      => No_Name));
+
                            else
-                              Index := 1;
+                              --  Duplicated source file in naming exception
+
+                              Match := False;
                            end if;
-
-                           Kind := (if Exc.Name.Text = PRA.Spec
-                                    then Unit.S_Spec
-                                    else Unit.S_Body);
-                           --  May actually be a Separate, we cannot know until
-                           --  we parse the file.
-
-                           Ada_Except_Usage.Delete (Ada_Use_Index (Exc));
-
-                           --  We know only Name, Index and Kind unit
-                           --  properties for now. Others will be taken on
-                           --  source parsing.
-
-                           Units.Append
-                             (Unit.Create
-                                (Name          => Unit_Name,
-                                 Index         => Index,
-                                 Lib_Unit_Kind => Kind,
-                                 Lib_Item_Kind => Unit.Is_Package,
-                                 Main          => Unit.None,
-                                 Flags         => Unit.Default_Flags,
-                                 Dependencies  => SR.Identifier.Set.Empty_Set,
-                                 Sep_From      => No_Name));
                         end;
                      end loop;
                   end if;
@@ -1775,11 +1782,20 @@ package body GPR2.Project.Definition is
 
             Source_Dir_Ref := Source_Reference.Object (Dir);
 
-            if OS_Lib.Is_Absolute_Path (Dir.Text) then
-               Handle_Directory (Dir.Text);
-            else
-               Handle_Directory (Root & OS_Lib.Directory_Separator & Dir.Text);
-            end if;
+            declare
+               use GNAT.OS_Lib;
+               Dir_Name  : constant String  := Dir.Text;
+               Recursive : constant Boolean :=
+                             GNATCOLL.Utils.Ends_With (Dir_Name, "**");
+               Last      : constant Positive :=
+                             Dir_Name'Last - (if Recursive then 2 else 0);
+            begin
+               Handle_Directory
+                 ((if Is_Absolute_Path (Dir_Name)
+                   then ""
+                   else Root & Directory_Separator) & Dir_Name (1 .. Last),
+                  Recursive => Recursive);
+            end;
 
             Def.Sources.Union (Src_Dir_Set);
             for S of Src_Dir_Set loop
