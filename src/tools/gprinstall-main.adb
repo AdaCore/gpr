@@ -453,6 +453,10 @@ procedure GPRinstall.Main is
    Config  : Project.Configuration.Object;
    Options : GPRinstall.Options.Object;
 
+   subtype ONT is Optional_Name_Type;
+
+   use Ada.Strings.Unbounded;
+
 begin
    GPRtools.Util.Set_Program_Name ("gprinstall");
 
@@ -503,9 +507,10 @@ begin
             Tree.Load
               (Options.Project_File, Options.Context, Config,
                Options.Build_Path,
-               (if Options.Subdirs = null
-                then ""
-                else Optional_Name_Type (Options.Subdirs.all)),
+               Subdirs          => (if Options.Subdirs = null
+                                    then ""
+                                    else ONT (Options.Subdirs.all)),
+               Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
                Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
          else
             --  No configuration, go with auto-configuration
@@ -515,6 +520,7 @@ begin
                (if Options.Subdirs = null
                 then ""
                 else Optional_Name_Type (Options.Subdirs.all)),
+               Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
                Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
          end if;
 
