@@ -248,7 +248,9 @@ package body GPR2.Project.Definition is
    --------------------
 
    procedure Update_Sources
-     (Def : in out Data; View : Project.View.Object; Stop_On_Error : Boolean)
+     (Def           : in out Data;
+      View          : Project.View.Object;
+      Stop_On_Error : Boolean)
    is
       use type MD5.Binary_Message_Digest;
       use type Project.Attribute.Object;
@@ -483,10 +485,10 @@ package body GPR2.Project.Definition is
       is
          use all type Directories.File_Kind;
 
-         Dir_Search   : Directories.Search_Type;
-         Dir_Entry    : Directories.Directory_Entry_Type;
-         Inserted     : Boolean;
-         Position     : Containers.Value_Type_Set.Cursor;
+         Dir_Search : Directories.Search_Type;
+         Dir_Entry  : Directories.Directory_Entry_Type;
+         Inserted   : Boolean;
+         Position   : Containers.Value_Type_Set.Cursor;
       begin
          Visited_Dirs.Insert (Dir, Position, Inserted);
 
@@ -1017,6 +1019,7 @@ package body GPR2.Project.Definition is
                         end;
                      end loop;
                   end if;
+
                else
                   --  If no naming exception matched, try with naming scheme
 
@@ -1151,8 +1154,8 @@ package body GPR2.Project.Definition is
                                            Is_Compilable        =>
                                              Is_Compilable (Language));
 
-                  --  Check source duplication and insert if possible or
-                  --  replace if necessary.
+                     --  Check source duplication and insert if possible or
+                     --  replace if necessary.
 
                      CS : constant Project.Source.Set.Cursor :=
                             Src_Dir_Set.Find (Project_Source);
@@ -1797,9 +1800,11 @@ package body GPR2.Project.Definition is
             end;
 
             Def.Sources.Union (Src_Dir_Set);
+
             for S of Src_Dir_Set loop
                Def.Sources_Map_Insert (S);
             end loop;
+
             Src_Dir_Set.Clear;
          end loop;
 

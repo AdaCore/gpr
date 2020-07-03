@@ -1291,8 +1291,7 @@ package body GPR2.Project.View is
 
                for S of Data.Sources loop
                   if not S.Source.Check_Timestamp then
-                     Data.Sources_Signature :=
-                       GPR2.Context.Default_Signature;
+                     Data.Sources_Signature := GPR2.Context.Default_Signature;
                      Self.Update_Sources;
                      exit;
                   end if;

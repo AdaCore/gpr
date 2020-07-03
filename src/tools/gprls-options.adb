@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -36,6 +36,7 @@ package body GPRls.Options is
    procedure Print (Self : Object) is
    begin
       Text_IO.Put_Line ("Files:");
+
       for F of Self.Files loop
          Text_IO.Put_Line ("   " & F);
       end loop;
@@ -44,6 +45,7 @@ package body GPRls.Options is
         ("Project file: " & Self.Tree.Root_Project.Path_Name.Value);
 
       Text_IO.Put_Line ("Project search path:");
+
       for P of Self.Tree.Project_Search_Paths loop
          Text_IO.Put_Line ("   " & P.Value);
       end loop;
@@ -67,6 +69,7 @@ package body GPRls.Options is
       end if;
 
       Text_IO.Put_Line ("Project context:");
+
       for Curs in Self.Project_Context.Iterate loop
          declare
             K : constant Name_Type := Context.Key_Value.Key (Curs);

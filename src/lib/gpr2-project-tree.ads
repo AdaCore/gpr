@@ -416,8 +416,8 @@ private
       Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
       Implicit_With    : Containers.Name_Set;
       Build_Path       : Path_Name.Object;
-      Subdirs          : Ada.Strings.Unbounded.Unbounded_String;
-      Src_Subdirs      : Ada.Strings.Unbounded.Unbounded_String;
+      Subdirs          : Unbounded_String;
+      Src_Subdirs      : Unbounded_String;
       Check_Shared_Lib : Boolean := True;
       Absent_Dir_Error : Boolean := False;
       Views            : aliased View_Maps.Map;
