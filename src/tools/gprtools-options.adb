@@ -309,6 +309,15 @@ package body GPRtools.Options is
               "Use a specific slave's environment",
             Argument    => "<name>");
       end if;
+
+      if Tool in Build | Clean | Install then
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--src-subdirs:",
+            Help        => "Prepend <obj>/dir to the list of source"
+                           & " dirs for each project",
+            Argument    => "<dir>");
+      end if;
    end Setup;
 
    --------------------
@@ -426,6 +435,9 @@ package body GPRtools.Options is
          else
             Self.Slave_Env := To_Unbounded_String (Normalize_Value);
          end if;
+
+      elsif Switch = "--src-subdirs" then
+         Self.Src_Subdirs := To_Unbounded_String (Normalize_Value);
       end if;
    end Value_Callback;
 

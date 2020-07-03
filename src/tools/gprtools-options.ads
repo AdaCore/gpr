@@ -67,6 +67,7 @@ package GPRtools.Options is
       Verbosity                : Verbosity_Level := Regular;
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;
+      Src_Subdirs              : Unbounded_String;
       Implicit_With            : GPR2.Containers.Name_Set;
       Maximum_Processes        : Natural := 0;
    end record;

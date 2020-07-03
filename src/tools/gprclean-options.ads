@@ -47,7 +47,6 @@ package GPRclean.Options is
       Config_File   : Path_Name.Object;
       Remove_Config : Boolean := False;
       Subdirs       : Unbounded_String;
-      Src_Subdirs   : Unbounded_String;
    end record;
 
    procedure Parse_Command_Line
