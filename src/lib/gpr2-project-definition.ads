@@ -158,6 +158,9 @@ private package GPR2.Project.Definition is
    Change_Actual_View : access function
      (Self : Source.Object; View : Project.View.Object) return Source.Object;
 
+   Apply_Root_And_Subdirs : access function
+     (Self : View.Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------

@@ -66,9 +66,9 @@ package body GPR2.Project.View is
    --  is called where needed and is there for internal use only.
 
    function Apply_Root_And_Subdirs
-     (Self : Object; Dir : Value_Type) return GPR2.Path_Name.Object;
+     (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
    --  Apply project path and subdir option for library, object and executable
-   --  directories.
+   --  directories defined in attribute Dir_Attr.
 
    function Weak (View : Object) return Weak_Reference is
      (Definition_References.Weak (View));
@@ -116,8 +116,9 @@ package body GPR2.Project.View is
    ----------------------------
 
    function Apply_Root_And_Subdirs
-     (Self : Object; Dir : Value_Type) return GPR2.Path_Name.Object
+     (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object
    is
+      Dir      : constant Value_Type := Self.Attribute (Dir_Attr).Value.Text;
       Subdirs  : constant Optional_Name_Type := Self.Tree.Subdirs;
       Dir_Name : constant Name_Type :=
                    (if Dir = "" then "." else Name_Type (Dir));
@@ -466,8 +467,7 @@ package body GPR2.Project.View is
    function Executable_Directory
      (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Self.Apply_Root_And_Subdirs
-        (Self.Attribute (Registry.Attribute.Exec_Dir).Value.Text);
+      return Self.Apply_Root_And_Subdirs (PRA.Exec_Dir);
    end Executable_Directory;
 
    -----------------------
@@ -846,12 +846,9 @@ package body GPR2.Project.View is
    ---------------------------
 
    function Library_Ali_Directory
-     (Self : Object) return GPR2.Path_Name.Object
-   is
-      package A renames GPR2.Project.Registry.Attribute;
+     (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Self.Apply_Root_And_Subdirs
-        (Self.Attribute (A.Library_Ali_Dir).Value.Text);
+      return Self.Apply_Root_And_Subdirs (PRA.Library_Ali_Dir);
    end Library_Ali_Directory;
 
    -----------------------
@@ -860,8 +857,7 @@ package body GPR2.Project.View is
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Self.Apply_Root_And_Subdirs
-        (Self.Attribute (Project.Registry.Attribute.Library_Dir).Value.Text);
+      return Self.Apply_Root_And_Subdirs (PRA.Library_Dir);
    end Library_Directory;
 
    ----------------------
@@ -971,8 +967,7 @@ package body GPR2.Project.View is
    function Library_Src_Directory
      (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Self.Apply_Root_And_Subdirs
-        (Self.Attribute (Registry.Attribute.Library_Src_Dir).Value.Text);
+      return Self.Apply_Root_And_Subdirs (PRA.Library_Src_Dir);
    end Library_Src_Directory;
 
    ------------------------
@@ -1138,8 +1133,7 @@ package body GPR2.Project.View is
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object is
    begin
-      return Self.Apply_Root_And_Subdirs
-        (Self.Attribute (Registry.Attribute.Object_Dir).Value.Text);
+      return Self.Apply_Root_And_Subdirs (PRA.Object_Dir);
    end Object_Directory;
 
    ----------
@@ -1501,11 +1495,12 @@ package body GPR2.Project.View is
    end View_For;
 
 begin
-   Definition.Get_RO   := Get_RO'Access;
-   Definition.Get_RW   := Get_RW'Access;
-   Definition.Get      := Get_Ref'Access;
-   Definition.Set      := Set_Def'Access;
-   Definition.Refcount := Refcount'Access;
-   Definition.Weak     := Weak'Access;
-   Definition.Strong   := Strong'Access;
+   Definition.Get_RO                 := Get_RO'Access;
+   Definition.Get_RW                 := Get_RW'Access;
+   Definition.Get                    := Get_Ref'Access;
+   Definition.Set                    := Set_Def'Access;
+   Definition.Refcount               := Refcount'Access;
+   Definition.Weak                   := Weak'Access;
+   Definition.Strong                 := Strong'Access;
+   Definition.Apply_Root_And_Subdirs := Apply_Root_And_Subdirs'Access;
 end GPR2.Project.View;

@@ -71,7 +71,8 @@ package body GPR2.Project.Source is
      (Self : Object; View : Project.View.Object) return Object is
    begin
       return Result : Object := Self do
-         Result.View := Definition.Weak (View);
+         Result.View      := Definition.Weak (View);
+         Result.Inherited := True;
       end return;
    end Change_Actual_View;
 
@@ -254,7 +255,7 @@ package body GPR2.Project.Source is
       return Object'
         (Source,
          Definition.Weak (View),
-         Is_Interface, Has_Naming_Exception, Is_Compilable, Aggregated);
+         Is_Interface, Has_Naming_Exception, Is_Compilable, Aggregated, False);
    end Create;
 
    ------------------

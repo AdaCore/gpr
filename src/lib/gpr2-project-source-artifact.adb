@@ -17,11 +17,14 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Project.Attribute;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
 with GPR2.Source;
 
 package body GPR2.Project.Source.Artifact is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
    --  ??? work around a strange visibility issue
@@ -73,6 +76,11 @@ package body GPR2.Project.Source.Artifact is
       Deps_Lib     : Index_Path_Name_Map.Map;
       Deps_Obj     : Index_Path_Name_Map.Map;
 
+      function From_Hierarchy
+        (Filename, Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+      --  Find Filename in directory defined in attribute Dir_Attr in this
+      --  source view and in the extended views if the Source is inherited.
+
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (Src.Path_Name.Simple_Name & P_Suffix,
@@ -87,6 +95,35 @@ package body GPR2.Project.Source.Artifact is
                        GPR2.Path_Name.Create_File
                          (BN & S_Suffix,
                           Optional_Name_Type (View.Object_Directory.Value));
+
+      -------------------
+      -- From_Hierarhy --
+      -------------------
+
+      function From_Hierarchy
+        (Filename, Dir_Attr : Name_Type) return GPR2.Path_Name.Object
+      is
+         View      : Project.View.Object   := Create.View;
+         Source    : Project.Source.Object := Create.Source;
+         Candidate : GPR2.Path_Name.Object;
+      begin
+         loop
+            Candidate :=
+              GPR2.Path_Name.Create_File
+                (Filename,
+                 Optional_Name_Type
+                   (Definition.Apply_Root_And_Subdirs
+                      (View, Dir_Attr).Value));
+
+            exit when not Source.Inherited or else Candidate.Exists;
+            View := View.Extended;
+
+            exit when not View.Has_Attributes (Dir_Attr);
+            Source := View.Source (Source.Path_Name, Need_Update => False);
+         end loop;
+
+         return Candidate;
+      end From_Hierarchy;
 
    begin
       if Src.Has_Units and then Src.Has_Index then
@@ -107,25 +144,18 @@ package body GPR2.Project.Source.Artifact is
                   else
                      Object_Files.Insert
                        (CU.Index,
-                        GPR2.Path_Name.Create_File
-                          (Base & O_Suffix,
-                           Optional_Name_Type
-                             (View.Object_Directory.Value)));
+                        From_Hierarchy (Base & O_Suffix, PRA.Object_Dir));
 
                      if View.Is_Library and then Lang = "Ada" then
                         Deps_Lib.Insert
                           (CU.Index,
-                           GPR2.Path_Name.Create_File
-                             (Base & D_Suffix,
-                              Name_Type (View.Library_Ali_Directory.Value)));
+                           From_Hierarchy
+                             (Base & D_Suffix, PRA.Library_Ali_Dir));
                      end if;
 
                      Deps_Obj.Insert
                        (CU.Index,
-                        GPR2.Path_Name.Create_File
-                          (Base & D_Suffix,
-                           Optional_Name_Type
-                             (View.Object_Directory.Value)));
+                        From_Hierarchy (Base & D_Suffix, PRA.Object_Dir));
                   end if;
                end;
             end if;
@@ -144,24 +174,15 @@ package body GPR2.Project.Source.Artifact is
 
       else
          Object_Files.Insert
-           (1,
-            GPR2.Path_Name.Create_File
-              (BN & O_Suffix,
-               Optional_Name_Type (View.Object_Directory.Value)));
+           (1, From_Hierarchy (BN & O_Suffix, PRA.Object_Dir));
 
          if View.Is_Library and then Lang = "Ada" then
             Deps_Lib.Insert
-              (1,
-               GPR2.Path_Name.Create_File
-                 (BN & D_Suffix,
-                  Optional_Name_Type (View.Library_Ali_Directory.Value)));
+              (1, From_Hierarchy (BN & D_Suffix, PRA.Library_Ali_Dir));
          end if;
 
          Deps_Obj.Insert
-           (1,
-            GPR2.Path_Name.Create_File
-              (BN & D_Suffix,
-               Optional_Name_Type (View.Object_Directory.Value)));
+           (1, From_Hierarchy (BN & D_Suffix, PRA.Object_Dir));
       end if;
 
       return Artifact.Object'

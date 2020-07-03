@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with "gpr2";
+with "demo";
 
 project ExtLib is
    for Object_Dir use "obj";

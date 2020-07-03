@@ -170,6 +170,7 @@ private
       Has_Naming_Exception : Boolean := False;
       Is_Compilable        : Boolean := False;
       Aggregated           : Boolean := False;
+      Inherited            : Boolean := False; -- From extended project
    end record;
 
    Undefined : constant Object :=
