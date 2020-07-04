@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 --  We must include here all the parser engine for them to be registered as
@@ -35,8 +34,7 @@ package body GPR2.Source_Info.Parser.Registry is
    --  Record all parser for given language and kind
 
    function Key (Language : Name_Type; Kind : Backend) return Name_Type is
-     (Name_Type (Characters.Handling.To_Lower (String (Language))
-                 & '@' & Backend'Image (Kind)));
+     (Name_Type (To_Lower (Language) & '@' & Backend'Image (Kind)));
    --  The key used in the parser store
 
    -----------------

@@ -1180,9 +1180,7 @@ package body GPR2.Parser.Project is
                      return R : Item_Values do
                         R.Single := True;
                         R.Values.Append
-                          (Get_Value_Reference
-                             (Characters.Handling.To_Lower
-                                (String (Tree.Target)), Sloc));
+                          (Get_Value_Reference (To_Lower (Tree.Target), Sloc));
                      end return;
                   end if;
 
@@ -1193,9 +1191,9 @@ package body GPR2.Parser.Project is
                      R.Single := True;
                      R.Values.Append
                        (Get_Value_Reference
-                          (Characters.Handling.To_Lower
-                             (String (Tree.Runtime
-                              (Optional_Name_Type (Index)))), Sloc));
+                          (To_Lower
+                             (Tree.Runtime (Optional_Name_Type (Index))),
+                           Sloc));
                   end return;
                end if;
 

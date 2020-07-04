@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Conversions;
-with Ada.Characters.Handling;
 with Ada.Directories;
 
 with Interfaces.C;
@@ -128,9 +127,7 @@ package body GPR2.Source is
 
       for CU of Sorted_Units loop
          Append
-           (Key,
-            Characters.Handling.To_Lower (String (CU.Name))
-            & (if CU.Kind = S_Spec then 'S' else 'B'));
+           (Key, To_Lower (CU.Name) & (if CU.Kind = S_Spec then 'S' else 'B'));
       end loop;
 
       return Result : Object do

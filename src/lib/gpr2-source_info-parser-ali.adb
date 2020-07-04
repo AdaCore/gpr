@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Formatting;
-with Ada.Characters.Handling;
 with Ada.Streams.Stream_IO;
 
 with GNATCOLL.Utils;
@@ -461,9 +460,7 @@ package body GPR2.Source_Info.Parser.ALI is
             Kind := S_Separate;
 
             if GNATCOLL.Utils.Starts_With
-              (Name,
-               Prefix => Ada.Characters.Handling.To_Lower
-                 (String (CUs (1).Name)) & '.')
+                 (Name, Prefix => To_Lower (CUs (1).Name) & '.')
             then
                H_Cache :=
                  (Create
