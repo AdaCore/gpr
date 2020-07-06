@@ -1099,6 +1099,17 @@ package body GPRinstall.Install is
                                           else Lib_Dir),
                                  File => Ssrc.Artifacts.Callgraph.Simple_Name);
                            end if;
+
+                           if Atf.Has_Coverage
+                             and then Atf.Coverage.Exists
+                           then
+                              Copy_File
+                                (From => Atf.Coverage,
+                                 To   => (if Proj.Kind = K_Library
+                                          then ALI_Dir
+                                          else Lib_Dir),
+                                 File => Ssrc.Artifacts.Coverage.Simple_Name);
+                           end if;
                         end;
                      end if;
                   end if;

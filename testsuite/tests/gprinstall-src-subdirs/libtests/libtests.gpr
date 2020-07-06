@@ -1,0 +1,10 @@
+
+with "../inst/share/gpr/mylib.gpr";
+
+project libtests is
+  for source_dirs use ("src");
+  for object_dir use "obj";
+
+  for Main use ("main.adb");
+
+end libtests;

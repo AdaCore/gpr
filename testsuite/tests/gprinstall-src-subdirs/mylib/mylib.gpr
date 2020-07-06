@@ -1,0 +1,9 @@
+library project mylib is
+  library_kind := external ("LIBRARY_KIND", "static");
+  for library_kind use library_kind;
+  for library_name use "mylib";
+
+  for source_dirs use ("src");
+  for object_dir use "obj";  
+  for library_dir use "lib";
+end mylib;
