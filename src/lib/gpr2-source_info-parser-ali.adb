@@ -1007,6 +1007,7 @@ package body GPR2.Source_Info.Parser.ALI is
             Info : Source_Info.Object'Class := Src.Source;
             Dep  : Path_Name.Object;
          begin
+            Info.Dependencies.Clear;
             for CU of Info.CU_List loop
                if CU.Kind in GPR2.Unit.Body_Kind
                  and then CU.Name = FU.Name
@@ -1032,6 +1033,8 @@ package body GPR2.Source_Info.Parser.ALI is
       end Check_Separated;
 
    begin
+      Data.Dependencies.Clear;
+
       for CU of Data.CU_List loop
          if Arts.Has_Dependency (Index => CU.Index) then
             LI := Arts.Dependency (CU.Index);
