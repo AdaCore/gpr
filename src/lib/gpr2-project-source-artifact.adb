@@ -53,6 +53,15 @@ package body GPR2.Project.Source.Artifact is
       return Self.Callgraph;
    end Callgraph;
 
+   --------------
+   -- Coverage --
+   --------------
+
+   function Coverage (Self : Object) return GPR2.Path_Name.Object is
+   begin
+      return Self.Coverage;
+   end Coverage;
+
    ------------
    -- Create --
    ------------
@@ -66,11 +75,12 @@ package body GPR2.Project.Source.Artifact is
       View : constant Project.View.Object :=
                Definition.Strong (Source.View);
 
-      O_Suffix : constant Name_Type := View.Tree.Object_Suffix (Lang);
-      D_Suffix : constant Name_Type := View.Tree.Dependency_Suffix (Lang);
-      C_Suffix : constant Name_Type := ".ci";
-      P_Suffix : constant Name_Type := ".prep";
-      S_Suffix : constant Name_Type := ".cswi";
+      O_Suffix   : constant Name_Type := View.Tree.Object_Suffix (Lang);
+      D_Suffix   : constant Name_Type := View.Tree.Dependency_Suffix (Lang);
+      C_Suffix   : constant Name_Type := ".ci";
+      P_Suffix   : constant Name_Type := ".prep";
+      S_Suffix   : constant Name_Type := ".cswi";
+      Cov_Suffix : constant Name_Type := ".sid";
 
       Object_Files : Index_Path_Name_Map.Map;
       Deps_Lib     : Index_Path_Name_Map.Map;
@@ -89,6 +99,11 @@ package body GPR2.Project.Source.Artifact is
       Callgraph    : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (BN & C_Suffix,
+                          Optional_Name_Type (View.Object_Directory.Value));
+
+      Coverage     : constant GPR2.Path_Name.Object :=
+                       GPR2.Path_Name.Create_File
+                         (BN & Cov_Suffix,
                           Optional_Name_Type (View.Object_Directory.Value));
 
       Switches     : constant GPR2.Path_Name.Object :=
@@ -192,7 +207,8 @@ package body GPR2.Project.Source.Artifact is
          Deps_Obj_Files   => Deps_Obj,
          Switches         => Switches,
          Preprocessed_Src => Preprocessed,
-         Callgraph        => Callgraph);
+         Callgraph        => Callgraph,
+         Coverage         => Coverage);
    end Create;
 
    ----------------
@@ -349,6 +365,10 @@ package body GPR2.Project.Source.Artifact is
 
       if Self.Has_Callgraph then
          Result.Append (Self.Callgraph);
+      end if;
+
+      if Self.Has_Coverage then
+         Result.Append (Self.Coverage);
       end if;
 
       return Result;

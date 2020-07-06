@@ -101,6 +101,14 @@ package GPR2.Project.Source.Artifact is
      with Pre => Self.Is_Defined;
    --  Returns the callgraph file
 
+   function Has_Coverage (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if a coverage is defined
+
+   function Coverage (Self : Object) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Returns the coverage file
+
    function List (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all artifacts
@@ -120,6 +128,7 @@ private
       Callgraph        : GPR2.Path_Name.Object;
       Switches         : GPR2.Path_Name.Object;
       Preprocessed_Src : GPR2.Path_Name.Object;
+      Coverage         : GPR2.Path_Name.Object;
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -139,5 +148,8 @@ private
 
    function Has_Callgraph (Self : Object) return Boolean is
      (Self.Callgraph.Is_Defined);
+
+   function Has_Coverage (Self : Object) return Boolean is
+     (Self.Coverage.Is_Defined);
 
 end GPR2.Project.Source.Artifact;

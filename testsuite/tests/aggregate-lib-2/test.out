@@ -5,12 +5,14 @@ Demo     K_AGGREGATE_LIBRARY
        > agg-lib/pcka.ali
        > a-obj/pcka.ads.prep
        > a-obj/pcka.ci
+       > a-obj/pcka.sid
    pckb
        > b-obj/pckb.ads.dg
        > b-obj/pckb.ads.rep
        > agg-lib/pckb.ali
        > b-obj/pckb.ads.prep
        > b-obj/pckb.ci
+       > b-obj/pckb.sid
 A        K_STANDARD
    pcka
        > a-obj/pcka.ads.dg
@@ -26,6 +28,7 @@ A        K_STANDARD
        > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
        > a-obj/pcka.ci
+       > a-obj/pcka.sid
 B        K_LIBRARY
    pckb
        > b-obj/pckb.ads.dg
@@ -42,3 +45,4 @@ B        K_LIBRARY
        > b-obj/pckb.ali
        > b-obj/pckb.ads.prep
        > b-obj/pckb.ci
+       > b-obj/pckb.sid
