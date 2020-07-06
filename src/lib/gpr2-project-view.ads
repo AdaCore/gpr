@@ -441,7 +441,7 @@ package GPR2.Project.View is
      with Pre =>
        Self.Is_Defined
        and then Self.Kind not in K_Configuration | K_Abstract;
-   --  Returns source subdirectory in object directory if parameter Src_Subdir
+   --  Returns source subdirectory in object directory if parameter Src_Subdirs
    --  is defined on Tree.Load call.
 
    function Executable_Directory (Self : Object) return GPR2.Path_Name.Object
