@@ -1965,6 +1965,7 @@ package body GPR2.Project.Tree is
 
          if Src_Subdirs /= ""
            and then V.Kind not in K_Configuration | K_Abstract
+           and then V /= Self.Runtime
          then
             declare
                Def : constant Definition.Ref := Definition.Get (V);
