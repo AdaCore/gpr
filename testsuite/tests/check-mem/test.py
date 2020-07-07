@@ -41,7 +41,7 @@ first_final = False
 for r in range(0, 2):
     subprocess.call([EXEC, str(r * 2 + 1)])
     with open("run%d.out" % r, "w+") as ofn:
-        subprocess.call(["gnatmem", "0", EXEC], stdout=ofn)
+        subprocess.call(["gnatmem", "-t", "0", EXEC], stdout=ofn)
         ofn.seek(0)
         for line in ofn:
             if line[0:8] == "   Final":
@@ -52,13 +52,3 @@ for r in range(0, 2):
                         print(first_final + line)
                 else:
                     first_final = line
-
-            elif line[0:7] == "   High":
-                if first_high:
-                    if first_high == line:
-                        print("OK high water mark")
-                    else:
-                        print(first_high + line)
-                    break
-                else:
-                    first_high = line

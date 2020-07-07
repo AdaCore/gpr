@@ -51,15 +51,19 @@ package body GPR2 is
    function Get_Tools_Directory return String is
       use type GNAT.OS_Lib.String_Access;
 
-      GPRls : constant GNAT.OS_Lib.String_Access :=
+      GPRls : GNAT.OS_Lib.String_Access :=
                 GNAT.OS_Lib.Locate_Exec_On_Path ("gprls");
       --  Check for GPRls executable
    begin
       if GPRls = null then
          return "";
       else
-         return Directories.Containing_Directory
-                  (Directories.Containing_Directory (GPRls.all));
+         return Result : constant String :=
+                           Directories.Containing_Directory
+                             (Directories.Containing_Directory (GPRls.all))
+         do
+            GNAT.OS_Lib.Free (GPRls);
+         end return;
       end if;
    end Get_Tools_Directory;
 

@@ -1,4 +1,2 @@
 description: Check memory leaks
 driver: python_script
-control:
-    - [XFAIL, "True", "TODO: Memory leak, need to create reproducer"]
