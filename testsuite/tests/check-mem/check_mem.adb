@@ -40,7 +40,8 @@ begin
       declare
          T : Project.Tree.Object;
       begin
-         T.Load (Path_Name.Create_File ("check_mem.gpr"), Context.Empty);
+         T.Load_Autoconf
+           (Path_Name.Create_File ("check_mem.gpr"), Context.Empty);
 
          for J of T.Root_Project.Sources loop
             exit;

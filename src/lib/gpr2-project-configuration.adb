@@ -149,7 +149,7 @@ package body GPR2.Project.Configuration is
                               (Process_Id & "-gpr2_tmp_conf_"
                                & Trim (Key, Left) & ".cgpr")).Value);
 
-      GPRconfig     : constant OS_Lib.String_Access :=
+      GPRconfig     : OS_Lib.String_Access :=
                         OS_Lib.Locate_Exec_On_Path ("gprconfig");
       Native_Target : constant Boolean := Target = "all";
 
@@ -258,6 +258,7 @@ package body GPR2.Project.Configuration is
       --  Execute external GPRconfig tool
 
       OS_Lib.Spawn (GPRconfig.all, Args, Out_Filename, Success, Ret_Code);
+      OS_Lib.Free (GPRconfig);
 
       --  Free arguments
 
