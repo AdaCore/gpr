@@ -420,7 +420,8 @@ package body GPR2.Project.View is
 
       function Recursive_Context (Self : Object) return GPR2.Context.Object is
 
-         Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
+         Data    : constant Definition.Const_Ref := Definition.Get_RO (Self);
+         Context : constant Object := Strong (Data.Context_View);
 
          function Root_Context return GPR2.Context.Object;
          --  Returns the constext of the root project
@@ -437,7 +438,7 @@ package body GPR2.Project.View is
          end Root_Context;
 
       begin
-         if not Data.Context_View.Is_Defined then
+         if not Context.Is_Defined then
             --  Let's return the Root_Project context and possibly the
             --  aggregate context if any.
 
@@ -452,7 +453,7 @@ package body GPR2.Project.View is
             end return;
 
          else
-            return Recursive_Context (Data.Context_View);
+            return Recursive_Context (Context);
          end if;
       end Recursive_Context;
 
@@ -560,7 +561,8 @@ package body GPR2.Project.View is
 
       function Recursive_Has_Context (Self : Object) return Boolean is
 
-         Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
+         Data    : constant Definition.Const_Ref := Definition.Get_RO (Self);
+         Context : constant Object := Strong (Data.Context_View);
 
          function Root_Has_Context return Boolean;
          --  Returns wether the root project has a context
@@ -577,7 +579,7 @@ package body GPR2.Project.View is
          end Root_Has_Context;
 
       begin
-         if not Data.Context_View.Is_Defined then
+         if not Context.Is_Defined then
             --  Let's return the Root_Project context and possibly the
             --  aggregate context if any.
 
@@ -588,7 +590,7 @@ package body GPR2.Project.View is
             end return;
 
          else
-            return Recursive_Has_Context (Data.Context_View);
+            return Recursive_Has_Context (Context);
          end if;
       end Recursive_Has_Context;
 

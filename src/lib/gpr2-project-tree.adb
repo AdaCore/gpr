@@ -610,7 +610,7 @@ package body GPR2.Project.Tree is
             begin
                pragma Assert (Defs.Tree.all = Tree);
 
-               if Defs.Context_View = Context_View
+               if Definition.Strong (Defs.Context_View) = Context_View
                  and then (Defs.Status = Status or else Status /= Aggregated)
                then
                   return V;
@@ -634,7 +634,7 @@ package body GPR2.Project.Tree is
             begin
                pragma Assert (Defs.Tree.all = Tree);
 
-               if Defs.Context_View = Context_View then
+               if Definition.Strong (Defs.Context_View) = Context_View then
                   return V;
                end if;
             end;
@@ -1575,7 +1575,7 @@ package body GPR2.Project.Tree is
                --  Create the view, needed to be able to reference it if it is
                --  an aggregate project as it becomes the new View_Context.
 
-               Data.Context_View := Context_View;
+               Data.Context_View := Definition.Weak (Context_View);
                Data.Status       := Status;
 
                View := Register_View (Data);

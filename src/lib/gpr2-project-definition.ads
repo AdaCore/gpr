@@ -72,6 +72,7 @@ private package GPR2.Project.Definition is
       Trees        : Tree;
 
       --  Actual values for the view
+
       Extending    : Weak_Reference;
       Extended     : View.Object;
       Aggregate    : Weak_Reference;
@@ -88,7 +89,8 @@ private package GPR2.Project.Definition is
       Units        : Unit_Info.Set.Object;
 
       --  Some general information
-      Context_View : View.Object;
+
+      Context_View : Weak_Reference;
       --  The context view is the view that has context for this project. That
       --  is, Context_View will always point to a view with a context, either
       --  the Undefined view (means root project) which contains the context
@@ -96,17 +98,16 @@ private package GPR2.Project.Definition is
       --  a context from the External attribute. Undefined is used for the
       --  root view to differentiate a root context from a root and aggregate
       --  project.
-      --  ToDo: Context view makes reference circle, but current GPR2
-      --  testsuite is OK with it in Valgrind mode.
 
+      Tree : access Project.Tree.Object;
       --  The project tree for this view
-      Tree         : access Project.Tree.Object;
+
    end record
      with Dynamic_Predicate =>
             --  Only a root-aggregate project can have a context defined via
             --  the External attribute.
             not Data.Has_Context
-            or else (not Data.Context_View.Is_Defined
+            or else (not Strong (Data.Context_View).Is_Defined
                      and then Data.Status = Root)
             or else Data.A_Context.Is_Empty;
 
