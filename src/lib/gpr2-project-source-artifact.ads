@@ -57,7 +57,7 @@ package GPR2.Project.Source.Artifact is
 
    function Object_Code
      (Self : Object; Index : Natural) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Has_Object_Code (Index);
    --  The target-dependent code (generally .o or .obj).
    --  If Index = 0 then returns first available object file path.
 
@@ -90,7 +90,7 @@ package GPR2.Project.Source.Artifact is
    --  Returns True if a preprocessed-source is defined
 
    function Preprocessed_Source (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Has_Preprocessed_Source;
    --  Returns the file containing the pre-processed source
 
    function Has_Callgraph (Self : Object) return Boolean
@@ -98,7 +98,7 @@ package GPR2.Project.Source.Artifact is
    --  Returns True if a callgraph is defined
 
    function Callgraph (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Has_Callgraph;
    --  Returns the callgraph file
 
    function Has_Coverage (Self : Object) return Boolean
@@ -106,7 +106,7 @@ package GPR2.Project.Source.Artifact is
    --  Returns True if a coverage is defined
 
    function Coverage (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Has_Coverage;
    --  Returns the coverage file
 
    function List (Self : Object) return GPR2.Path_Name.Set.Object
