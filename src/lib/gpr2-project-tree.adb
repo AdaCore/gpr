@@ -396,7 +396,11 @@ package body GPR2.Project.Tree is
             File      => Path_Name.Create_File ("runtime.gpr"),
             Qualifier => K_Standard);
 
-         return Register_View (Data);
+         return Result : constant View.Object := Register_View (Data) do
+            --  If we simply return Register_View (Data) the reference counter
+            --  will be one more than should be, see T709-001.
+            null;
+         end return;
 
       else
          return Project.View.Undefined;
