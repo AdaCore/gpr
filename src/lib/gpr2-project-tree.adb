@@ -349,6 +349,26 @@ package body GPR2.Project.Tree is
       DS   : Character renames OS_Lib.Directory_Separator;
       Data : Project.Definition.Data (Has_Context => False);
       RTD  : Attribute.Object;
+
+      procedure Add_Attribute (Name : Name_Type; Value : Value_Type);
+      --  Add builtin attribute into Data.Attrs
+
+      -------------------
+      -- Add_Attribute --
+      -------------------
+
+      procedure Add_Attribute (Name : Name_Type; Value : Value_Type) is
+      begin
+         Data.Attrs.Insert
+           (Project.Attribute.Create
+              (Name  => Source_Reference.Identifier.Object
+                          (Source_Reference.Identifier.Create
+                             (Source_Reference.Builtin, Name)),
+               Value => Source_Reference.Value.Object
+                          (Source_Reference.Value.Create
+                             (Source_Reference.Builtin, Value))));
+      end Add_Attribute;
+
    begin
       --  Check runtime path
 
@@ -358,42 +378,12 @@ package body GPR2.Project.Tree is
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
          --  and Object_Dir for the Runtime project view.
 
-         Data.Attrs.Insert
-           (Project.Attribute.Create
-              (Name  =>
-                   Source_Reference.Identifier.Object
-                     (Source_Reference.Identifier.Create
-                        (Source_Reference.Builtin, PRA.Source_Dirs)),
-               Value =>
-                 Source_Reference.Value.Object
-                   (Source_Reference.Value.Create
-                        (Source_Reference.Builtin,
-                         RTD.Value.Text & DS & "adainclude"))));
-
-         Data.Attrs.Insert
-           (Project.Attribute.Create
-              (Name  =>
-                   Source_Reference.Identifier.Object
-                     (Source_Reference.Identifier.Create
-                        (Source_Reference.Builtin, PRA.Object_Dir)),
-               Value =>
-                 Source_Reference.Value.Object
-                   (Source_Reference.Value.Create
-                        (Source_Reference.Builtin,
-                         RTD.Value.Text & DS & "adalib"))));
+         Add_Attribute (PRA.Source_Dirs, RTD.Value.Text & DS & "adainclude");
+         Add_Attribute (PRA.Object_Dir,  RTD.Value.Text & DS & "adalib");
 
          --  The only language supported is Ada
 
-         Data.Attrs.Insert
-           (Project.Attribute.Create
-              (Name  =>
-                   Source_Reference.Identifier.Object
-                     (Source_Reference.Identifier.Create
-                       (Source_Reference.Builtin, PRA.Languages)),
-               Value =>
-                    Source_Reference.Value.Object
-                      (Source_Reference.Value.Create
-                         (Source_Reference.Builtin, "ada"))));
+         Add_Attribute (PRA.Languages, "ada");
 
          Data.Tree   := Self.Self;
          Data.Status := Root;
