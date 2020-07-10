@@ -1,4 +1,5 @@
 import os
+import sys
 
 from e3.os.process import Run
 
@@ -37,13 +38,13 @@ if os.path.exists('inst/lib/mylib.instr/counters.sid'):
 else:
     print("NOK instrumented counters.sid")
 
+sys.stdout.flush()
+
 # And now tests building two test driver
 
 p = Run(['gprbuild', '-p', 'libtests/libtests.gpr'])
-p = Run(['libtests/obj/main'])
-print(p.out)
+p = Run(['libtests/obj/main'], output=None)
 
 p = Run(['gprbuild', '-p', '-f',
          '-XMYLIB_BUILD=instr', 'libtests/libtests.gpr'])
-p = Run(['libtests/obj/main'])
-print(p.out)
+p = Run(['libtests/obj/main'], output=None)
