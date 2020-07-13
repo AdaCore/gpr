@@ -1,0 +1,4 @@
+project P is
+   for Source_Dirs use (".");
+   for Languages use ("ada");
+end P;

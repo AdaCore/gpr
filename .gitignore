@@ -25,3 +25,10 @@ makefile.setup
 
 # Vim swap files
 *.swp
+
+# Python binding artifacts
+bindings/python/.coverage
+bindings/python/.coveragerc
+bindings/python/.tox
+bindings/python/htmlcov
+bindings/python/src/*egg*
