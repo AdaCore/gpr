@@ -1553,10 +1553,9 @@ package body GPRinstall.Install is
                   V.Append (-Line);
                end if;
 
-               Line := +"         for Library_Kind use """;
-               Line := Line & String (Project.Library_Kind);
-               Line := Line & """;";
-               V.Append (-Line);
+               V.Append
+                 ("         for Library_Kind use """
+                  & String (Project.Library_Kind) & """;");
 
                Attr := Project.Attribute (A.Library_Standalone);
 
@@ -1576,17 +1575,15 @@ package body GPRinstall.Install is
                      use all type GPR2.Project.View.Source_Kind;
                      First : Boolean := True;
                   begin
-                     if Project.Attributes.Contains (A.Library_Interface) then
-                        Attr := Project.Attribute (A.Library_Interface);
-
+                     if Project.Check_Attribute
+                          (A.Library_Interface, Result => Attr)
+                     then
                         for V of Attr.Values loop
                            if not First then
                               Append (Line, ", ");
                            end if;
 
-                           Append (Line, """");
-                           Append (Line, String (V.Text));
-                           Append (Line, """");
+                           Append (Line, Quote (V.Text));
                            First := False;
                         end loop;
 
@@ -1603,9 +1600,7 @@ package body GPRinstall.Install is
                                        Append (Line, ", ");
                                     end if;
 
-                                    Append (Line, """");
-                                    Append (Line, String (CU.Name));
-                                    Append (Line, """");
+                                    Append (Line, Quote (String (CU.Name)));
                                     First := False;
                                  end if;
                               end loop;
