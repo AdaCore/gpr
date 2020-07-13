@@ -15,3 +15,28 @@ Project: Demo
  > src/api.adb        Kind: S_BODY                         unit: Api
  > src/pck.adb        Kind: S_BODY                         unit: Pck
  > src/pck.ads        Kind: S_SPEC                         unit: Pck
+Messages found:
+> /source-interface/demo.gpr
+WARNING
+demo.gpr:11:08: warning: duplicate source 'api.ads' in interfaces attribute
+Project: Demo2
+
+---------- ALL
+ > src/api.adb        language: Ada   Kind: S_BODY         unit: Api
+ > src/api.ads        language: Ada   Kind: S_SPEC         unit: Api
+ > src/data.ads       language: Ada   Kind: S_SPEC_ONLY    unit: Data
+ > src/pck.adb        language: Ada   Kind: S_BODY         unit: Pck
+ > src/pck.ads        language: Ada   Kind: S_SPEC         unit: Pck
+
+---------- INTERFACE ONLY
+ > src/api.adb        Kind: S_BODY                         unit: Api
+ > src/api.ads        Kind: S_SPEC                         unit: Api
+ > src/data.ads       Kind: S_SPEC_ONLY                    unit: Data
+
+---------- NOT INTERFACE
+ > src/pck.adb        Kind: S_BODY                         unit: Pck
+ > src/pck.ads        Kind: S_SPEC                         unit: Pck
+Messages found:
+> /source-interface/demo2.gpr
+WARNING
+demo2.gpr:11:08: warning: duplicate unit 'data' in library_interface attribute

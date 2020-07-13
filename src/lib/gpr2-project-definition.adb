@@ -383,9 +383,12 @@ package body GPR2.Project.Definition is
       Excluded_Sources  : Source_Set.Set;
 
       Interface_Units       : Unit_Name_To_Sloc.Map;
+      Position_In_Units     : Unit_Name_To_Sloc.Cursor;
+      Inserted              : Boolean;
       Interface_Units_Found : Name_Set;
       Interface_Found       : Boolean := False;
       Interface_Sources     : Source_Path_To_Sloc.Map;
+      Position_In_Sources   : Source_Path_To_Sloc.Cursor;
       Language_Compilable   : Name_Boolean_Map.Map;
       Src_Dir_Set           : Source.Set.Object;
       --  Sources from one directory defined in one item of the Source_Dirs
@@ -1624,16 +1627,17 @@ package body GPR2.Project.Definition is
          Interface_Found := True;
 
          for Unit of Def.Attrs.Library_Interface.Values loop
-            if Interface_Units.Contains (Name_Type (Unit.Text)) then
+            Interface_Units.Insert
+              (Name_Type (Unit.Text), Source_Reference.Object (Unit),
+               Position_In_Units, Inserted);
+
+            if not Inserted then
                Tree.Append_Message
                  (Message.Create
                     (Message.Warning,
                      "duplicate unit '" & Unit.Text
                      & "' in library_interface attribute",
-                     Def.Attrs.Library_Interface));
-            else
-               Interface_Units.Insert
-                 (Name_Type (Unit.Text), Source_Reference.Object (Unit));
+                     Unit));
             end if;
          end loop;
       end if;
@@ -1644,16 +1648,17 @@ package body GPR2.Project.Definition is
          Interface_Found := True;
 
          for Source of Def.Attrs.Interfaces.Values loop
-            if Interface_Sources.Contains (Source.Text) then
+            Interface_Sources.Insert
+              (Source.Text, Source_Reference.Object (Source),
+               Position_In_Sources, Inserted);
+
+            if not Inserted then
                Tree.Append_Message
                  (Message.Create
                     (Message.Warning,
                      "duplicate source '" & Source.Text
                      & "' in interfaces attribute",
-                     Def.Attrs.Interfaces));
-            else
-               Interface_Sources.Insert
-                 (Source.Text, Source_Reference.Object (Source));
+                     Source));
             end if;
          end loop;
       end if;

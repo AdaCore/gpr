@@ -21,6 +21,7 @@ with Ada.Text_IO;
 
 with GPR2.Unit;
 with GPR2.Context;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
@@ -139,20 +140,14 @@ procedure Main is
       Ctx  : Context.Object;
       View : Project.View.Object;
 
-   begin
-      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
-
-      View := Prj.Root_Project;
-      Text_IO.Put_Line ("Project: " & String (View.Name));
-
-      List_Sources (View);
-   exception
-      when GPR2.Project_Error =>
-         if Prj.Has_Messages then
+      procedure Print_Messages (Info : Boolean) is
+      begin
+         if Prj.Log_Messages.Has_Element (Information => Info) then
             Text_IO.Put_Line ("Messages found:");
 
-            for M of Prj.Log_Messages.all loop
+            for J in Prj.Log_Messages.Iterate (Information => Info) loop
                declare
+                  M : constant Message.Object := Prj.Log_Messages.all (J);
                   F : constant String := M.Sloc.Filename;
                   I : constant Natural :=
                         Strings.Fixed.Index (F, "/source-interface");
@@ -163,6 +158,19 @@ procedure Main is
                end;
             end loop;
          end if;
+      end Print_Messages;
+
+   begin
+      Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+
+      View := Prj.Root_Project;
+      Text_IO.Put_Line ("Project: " & String (View.Name));
+
+      List_Sources (View);
+      Print_Messages (False);
+   exception
+      when GPR2.Project_Error =>
+         Print_Messages (True);
    end Check;
 
    ---------------------
@@ -177,5 +185,6 @@ procedure Main is
    end Output_Filename;
 
 begin
-   Check ("demo.gpr");
+    Check ("demo.gpr");
+    Check ("demo2.gpr");
 end Main;
