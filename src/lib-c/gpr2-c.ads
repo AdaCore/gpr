@@ -53,14 +53,14 @@
 --  answer.
 
 with GPR2.Project.Tree;
-with System;
+with Interfaces.C.Strings;
 
 package GPR2.C is
 
-   type C_Request is new System.Address;
+   type C_Request is new Interfaces.C.Strings.chars_ptr;
    --  Request C null terminated string
 
-   type C_Answer  is new System.Address;
+   type C_Answer is new Interfaces.C.Strings.chars_ptr;
    --  Answer C null terminater string
 
    type C_Status is new Integer;
@@ -70,6 +70,9 @@ package GPR2.C is
    Invalid_Request : constant C_Status := 1;
    Call_Error      : constant C_Status := 2;
    Unknown_Error   : constant C_Status := 3;
+
+   procedure GPR2_Free_Answer (Answer : C_Answer);
+   --  Releases the memory held by an answer
 
    function GPR2_Project_Tree_Load_Autoconf
       (Request : C_Request; Answer : out C_Answer) return C_Status;
@@ -125,6 +128,8 @@ package GPR2.C is
    --  Answer:
    --      {'attr': Any}
 private
+
+   pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
 
    pragma Export (C,
                   GPR2_Project_Tree_Load_Autoconf,

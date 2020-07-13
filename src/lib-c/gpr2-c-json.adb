@@ -16,10 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 with Ada.Unchecked_Conversion;
-with GNAT.Strings;
-with Interfaces.C.Pointers;
+with Interfaces.C.Strings;
 with GPR2.Project.Registry.Attribute;
 with System.Storage_Elements;
 
@@ -27,18 +25,8 @@ package body GPR2.C.JSON is
 
    use type GPR2.Project.Registry.Attribute.Value_Kind;
 
-   --  The following declaration are mainly by Decode function to avoid
-   --  creating an intermediate string wiht potential stack size issues.
-   type Character_Array is array (Natural range <>) of aliased Character;
-
-   package C_Strings is new Interfaces.C.Pointers
-      (Index => Natural,
-       Element => Character,
-       Element_Array => Character_Array,
-       Default_Terminator => ASCII.NUL);
-
    function Convert is new Ada.Unchecked_Conversion
-      (C_Request, C_Strings.Pointer);
+      (Interfaces.C.Strings.chars_ptr, C_Answer);
 
    procedure Set_Address
       (Obj : JSON_Value; Key : String; Addr : System.Address);
@@ -52,15 +40,8 @@ package body GPR2.C.JSON is
 
    function Decode (Request : C_Request) return JSON_Value
    is
-      use C_Strings;
-      C_Str : Pointer := Convert (Request);
-      Result : Unbounded_String;
    begin
-      while C_Str.all /= ASCII.NUL loop
-         Append (Result, C_Str.all);
-         Increment (C_Str);
-      end loop;
-      return GNATCOLL.JSON.Read (Result);
+      return GNATCOLL.JSON.Read (Value (Request));
    end Decode;
 
    ------------
@@ -69,10 +50,11 @@ package body GPR2.C.JSON is
 
    function Encode (Answer : JSON.JSON_Value) return C_Answer
    is
-      Result : constant GNAT.Strings.String_Access := new String'
-         (GNATCOLL.JSON.Write (Answer) & ASCII.NUL);
+      use Interfaces.C.Strings;
+      Result : constant chars_ptr :=
+         New_String (GNATCOLL.JSON.Write (Answer));
    begin
-      return C_Answer (Result.all'Address);
+      return Convert (Result);
    end Encode;
 
    -----------------
@@ -300,6 +282,10 @@ package body GPR2.C.JSON is
    is
       use System.Storage_Elements;
       Addr_Int : constant Integer_Address := To_Integer (Addr);
+
+      --  When compiling with -fstack-usage, the following call is marked as
+      --  "dynamic". Nevertheless we know that max integer for a given address
+      --  is in fact bounded thus we can ignore the issue.
       Addr_Img : constant String := Addr_Int'Img;
    begin
       GNATCOLL.JSON.Set_Field
@@ -325,10 +311,9 @@ package body GPR2.C.JSON is
          begin
             for Index in 1 .. Value.Count_Values loop
                declare
-                  S : constant String :=
-                     Value.Values.Element (Integer (Index)).Text;
                   JSON_Str : constant JSON_Value :=
-                     GNATCOLL.JSON.Create (S);
+                     GNATCOLL.JSON.Create
+                        (Value.Values.Element (Integer (Index)).Text);
                begin
                   GNATCOLL.JSON.Append (Value_Array, JSON_Str);
                end;

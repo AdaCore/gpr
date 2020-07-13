@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Unchecked_Conversion;
 with GPR2.C.JSON; use GPR2.C.JSON;
 with GPR2.Project.View;
 with GPR2.Project.Attribute;
@@ -76,6 +77,18 @@ package body GPR2.C is
       Answer := Encode (Answer_Obj);
       return Get_Status (Answer_Obj);
    end Bind;
+
+   ----------------------
+   -- GPR2_Free_Answer --
+   ----------------------
+
+   procedure GPR2_Free_Answer (Answer : C_Answer)
+   is
+      use Interfaces.C.Strings;
+      Tmp : chars_ptr := chars_ptr (Answer);
+   begin
+      Free (Tmp);
+   end GPR2_Free_Answer;
 
    --------------------------------
    -- GPR2_Project_Tree_Get_View --
@@ -195,4 +208,5 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Attribute;
+
 end GPR2.C;
