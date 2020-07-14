@@ -49,7 +49,8 @@ package body GPR2.C is
    is
       Request_Obj : JSON.JSON_Value;
       Answer_Obj  : constant JSON_Value := Initialize_Answer;
-      Result_Obj : JSON_Value;
+      Result_Obj  : JSON_Value;
+      Can_Decode  : Boolean := True;
    begin
 
       Result_Obj := Get_Result (Answer_Obj);
@@ -62,15 +63,18 @@ package body GPR2.C is
          when E : others =>
             --  Error detected during parsing of the request JSON.
             Set_Status (Answer_Obj, Invalid_Request, E);
+            Can_Decode := False;
       end;
 
-      begin
-         Handler (Request => Request_Obj,
-                  Result  => Result_Obj);
-      exception
-         when E : others =>
-            Set_Status (Answer_Obj, Call_Error, E);
-      end;
+      if Can_Decode then
+         begin
+            Handler (Request => Request_Obj,
+                     Result  => Result_Obj);
+         exception
+            when E : others =>
+               Set_Status (Answer_Obj, Call_Error, E);
+         end;
+      end if;
 
       --  Unless there is a bug in the GNATCOLL.JSON library, all relevant
       --  errors have been catched. No exception is expected from here.
