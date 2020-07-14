@@ -66,6 +66,8 @@ package GPR2.C is
    type C_Status is new Integer;
    --  Integer status
 
+   GPR2_C_Exception : exception;
+
    OK              : constant C_Status := 0;
    Invalid_Request : constant C_Status := 1;
    Call_Error      : constant C_Status := 2;

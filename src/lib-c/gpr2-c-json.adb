@@ -241,6 +241,10 @@ package body GPR2.C.JSON is
    is
    begin
       return GNATCOLL.JSON.Get (Val => Obj, Field => Key);
+   exception
+      when Constraint_Error =>
+         raise GPR2_C_Exception
+            with "missing string parameter: '" & Key & "'";
    end Get_String;
 
    function Get_String
