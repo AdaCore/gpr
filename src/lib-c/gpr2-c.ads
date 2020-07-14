@@ -93,14 +93,27 @@ package GPR2.C is
    --       'language_runtimes': Optional[Dict[str, str]]}
    --
    --  Answer:
-   --      {'project_id': str},
+   --      {'tree_id': str},
+
+   function GPR2_Project_Tree_Unload
+      (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.Tree.Unload binding.
+   --
+   --  After a call to that function, tree_id should not be used
+   --  in any further calls.
+   --
+   --  Request:
+   --      {'tree_id': str}
+   --
+   --  Answer:
+   --      {}
 
    function GPR2_Project_Tree_Root_Project
       (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.Tree.Root_Project
    --
    --  Request:
-   --      {'project_id': str}
+   --      {'tree_id': str}
    --
    --  Answer:
    --      {'view_id': str}
@@ -110,7 +123,7 @@ package GPR2.C is
    --  GPR2.Project.Tree.Get_View binding
    --
    --  Request:
-   --      {'project_id': str,
+   --      {'tree_id': str,
    --       'unit':       str}
    --
    --  Answer:
@@ -145,5 +158,7 @@ private
    pragma Export (C,
                   GPR2_Project_Tree_Root_Project,
                   "gpr2_prj_tree_root_project");
-
+   pragma Export (C,
+                  GPR2_Project_Tree_Unload,
+                  "gpr2_prj_tree_unload");
 end GPR2.C;

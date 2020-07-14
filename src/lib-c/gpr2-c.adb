@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
 with GPR2.C.JSON; use GPR2.C.JSON;
 with GPR2.Project.View;
 with GPR2.Project.Attribute;
@@ -113,7 +114,7 @@ package body GPR2.C is
          Tree : Project_Tree_Access;
          View : constant Project_View_Access := new GPR2.Project.View.Object;
       begin
-         Tree := Get_Project_Tree (Request, "project_id");
+         Tree := Get_Project_Tree (Request, "tree_id");
          View.all := GPR2.Project.Tree.Get_View (
             Tree.all,
             GPR2.Name_Type (Get_String (Request, "unit")));
@@ -154,7 +155,7 @@ package body GPR2.C is
              Absent_Dir_Error =>
                Get_Boolean (Request, "absent_dir_error", False));
 
-         Set_Project_Tree (Result, "project_id", Tree);
+         Set_Project_Tree (Result, "tree_id", Tree);
       end Handler;
 
    begin
@@ -178,13 +179,39 @@ package body GPR2.C is
          Tree : Project_Tree_Access;
          View : constant Project_View_Access := new GPR2.Project.View.Object;
       begin
-         Tree := Get_Project_Tree (Request, "project_id");
+         Tree := Get_Project_Tree (Request, "tree_id");
          View.all := GPR2.Project.Tree.Root_Project (Tree.all);
          Set_Project_View (Result, "view_id", View);
       end Handler;
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Root_Project;
+
+   ------------------------------
+   -- GPR2_Project_Tree_Unload --
+   ------------------------------
+
+   function GPR2_Project_Tree_Unload
+      (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Tree : Project_Tree_Access;
+         pragma Unreferenced (Result);
+
+         procedure Free is new Ada.Unchecked_Deallocation
+            (GPR2.Project.Tree.Object, Project_Tree_Access);
+
+      begin
+         Tree := Get_Project_Tree (Request, "tree_id");
+         GPR2.Project.Tree.Unload (Tree.all);
+         Free (Tree);
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Unload;
 
    ---------------------------------
    -- GPR2_Project_View_Attribute --
