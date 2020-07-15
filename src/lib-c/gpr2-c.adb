@@ -240,4 +240,27 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Attribute;
 
+   -----------------------------------
+   -- GPR2_Project_View_Information --
+   -----------------------------------
+
+   function GPR2_Project_View_Information
+      (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+            Get_Project_View (Request, "view_id");
+      begin
+         Set_String (Result, "path_name", View.all.Path_Name.Value);
+         Set_String (Result, "dir_name", View.all.Dir_Name.Value);
+         Set_String (Result, "name", String (View.all.Name));
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Information;
+
 end GPR2.C;

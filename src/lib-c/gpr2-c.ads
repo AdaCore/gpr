@@ -130,6 +130,18 @@ package GPR2.C is
    --      {'view_id': str}
    --
 
+   function GPR2_Project_View_Information
+      (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  Returns in one call several information about the selected view
+   --
+   --  Request:
+   --      {'view_id': str}
+   --
+   --  Answer:
+   --      {'path_name': str,   # GPR2.Project.View.Path_Name
+   --       'dir_name':  str,   # GPR2.Project.View.Dir_Name
+   --       'name':      str}   # GPR2.Project.View.Name
+
    function GPR2_Project_View_Attribute
       (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.View.Attribute binding
@@ -155,6 +167,9 @@ private
    pragma Export (C,
                   GPR2_Project_View_Attribute,
                   "gpr2_prj_view_attribute");
+   pragma Export (C,
+                  GPR2_Project_View_Information,
+                  "gpr2_prj_view_information");
    pragma Export (C,
                   GPR2_Project_Tree_Root_Project,
                   "gpr2_prj_tree_root_project");
