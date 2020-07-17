@@ -1752,9 +1752,9 @@ package body GPR2.Project.Tree is
                         Messages.Append
                           (GPR2.Message.Create
                              (Level   => Message.Error,
-                              Message => "extended project file "
+                              Message => "extended project file """
                               & String (Path_Name.Name)
-                              & " not found",
+                              & """ not found",
                               Sloc    => Data.Trees.Project.Extended));
                      end if;
                   end;
@@ -1815,9 +1815,9 @@ package body GPR2.Project.Tree is
                      Messages.Append
                        (GPR2.Message.Create
                           (Level   => Message.Error,
-                           Message => "imported project file "
+                           Message => "imported project file """
                                         & String (Import.Path_Name.Name)
-                                        & " not found",
+                                        & """ not found",
                            Sloc    => Import));
                      exit;
                   end if;

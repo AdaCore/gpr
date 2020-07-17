@@ -1,8 +1,8 @@
 === Prj1
 Messages found:
-demo.gpr:2:06: error: imported project file first.gpr not found
+demo.gpr:2:06: error: imported project file "first.gpr" not found
 === Prj2
 Messages found:
 project-paths/one/first.gpr
-first.gpr:2:06: error: imported project file second.gpr not found
+first.gpr:2:06: error: imported project file "second.gpr" not found
 === Prj3
