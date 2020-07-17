@@ -189,8 +189,8 @@ package body GPR2.Project.Configuration is
                Result.Messages.Append
                  (Message.Create
                     ((if Starts_With (Line, "gprconfig: ")
-                     then Message.Warning
-                     else Message.Information),
+                      then Message.Warning
+                      else Message.Information),
                      Line,
                      Sloc => Source_Reference.Create (Project.Value, 0, 0),
                      Raw  => True));
@@ -285,7 +285,7 @@ package body GPR2.Project.Configuration is
          Load_Messages;
 
       else
-         Load_Messages;
+         --  If not Success, than the Out_Filename file was not created
 
          Result.Messages.Append
            (Message.Create

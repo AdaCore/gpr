@@ -27,7 +27,7 @@ with GPR2.Project;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 
-procedure main is
+procedure Main is
 
    use Ada.Strings.Unbounded;
 
@@ -98,4 +98,10 @@ begin
 
       Ada.Text_IO.Put_Line (String (Project_Tree.Add_Tool_Prefix ("a")));
    end if;
-end main;
+
+exception
+   when GPR2.Project_Error =>
+      for J in Project_Tree.Log_Messages.Iterate (Information => False) loop
+         Ada.Text_IO.Put_Line (Project_Tree.Log_Messages.all (J).Format);
+      end loop;
+end Main;
