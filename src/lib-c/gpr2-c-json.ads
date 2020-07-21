@@ -19,10 +19,12 @@
 with Ada.Exceptions;
 with GNATCOLL.JSON;
 with GPR2.Context;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
+with GPR2.Source_Reference;
 
 package GPR2.C.JSON is
 
@@ -140,6 +142,16 @@ package GPR2.C.JSON is
    --  Returns the "result" member of an answer JSON object. Note that the
    --  returned value is mutable.
 
+   function Get_Level_Format
+     (Obj : JSON_Value; Key : String; Default : GPR2.Message.Level_Format)
+      return GPR2.Message.Level_Format;
+   --  Return the Level_Format corresponding to value found in JSON at 'Key'
+
+   function Get_Level_Output
+     (Obj : JSON_Value; Default : GPR2.Message.Level_Output)
+      return GPR2.Message.Level_Output;
+   --  Return the Level_Output encoded in JSON.
+
    ---------------------
    -- Encoding answer --
    ---------------------
@@ -187,5 +199,17 @@ package GPR2.C.JSON is
    --  Sets member Key of Obj to the GPR2 attribute. The attribute is
    --  serialized as string for single project values or to a list of
    --  string.
+
+   procedure Set_Message
+     (Obj            : JSON_Value;
+      Message        : GPR2.Message.Object;
+      Full_Path_Name : Boolean;
+      Levels         : GPR2.Message.Level_Output);
+   --  Sets message object's members in Obj
+
+   procedure Set_Source_Reference
+     (Obj              : JSON_Value;
+      Source_Reference : GPR2.Source_Reference.Object);
+   --  Sets source reference object's members in Obj
 
 end GPR2.C.JSON;

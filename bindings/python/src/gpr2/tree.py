@@ -2,6 +2,7 @@ from __future__ import annotations
 from gpr2 import GPR2Error
 from gpr2.capi import LibGPR2
 from gpr2.view import ProjectView
+from gpr2.level_format import LevelFormat
 from typing import TYPE_CHECKING
 import os
 
@@ -41,6 +42,38 @@ class ProjectTree:
         """
         answer = LibGPR2.gpr2_prj_tree_root_project({"tree_id": self.id})
         return ProjectView(id=answer["view_id"])
+
+    def log_messages(self,
+                     information = True,
+                     warning = True,
+                     error = True,
+                     read = True,
+                     unread = True,
+                     full_path_name = False,
+                     information_output_level = LevelFormat.LONG,
+                     warning_output_level = LevelFormat.LONG,
+                     error_output_level = LevelFormat.LONG):
+        """Return the messages in tree's log.
+        use information/warning/error/read/unread parameters to filter messages
+        use others parameters to get expected formatted_message
+
+        :return: the Message objects array
+        """
+        answer = LibGPR2.gpr2_prj_tree_log_messages(
+            {"tree_id": self.id,
+             "information": information,
+             "warning": warning,
+             "error": error,
+             "read": read,
+             "unread": unread,
+             "information_output_level": information_output_level,
+             "warning_output_level": warning_output_level,
+             "error_output_level": error_output_level,
+             })
+        messages = []
+        for message in answer['messages']:
+            messages.append(Message(message=message))
+        return messages
 
     def close(self) -> None:
         """Unload a project tree."""

@@ -18,9 +18,15 @@
 
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
+
+with GNATCOLL.JSON;
+
 with GPR2.C.JSON; use GPR2.C.JSON;
+with GPR2.Log;
+with GPR2.Message;
 with GPR2.Project.View;
 with GPR2.Project.Attribute;
+with GPR2.Source_Reference;
 
 package body GPR2.C is
 
@@ -162,6 +168,61 @@ package body GPR2.C is
 
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Load_Autoconf;
+
+   ------------------------------------
+   -- GPR2_Project_Tree_Log_Messages --
+   ------------------------------------
+
+   function GPR2_Project_Tree_Log_Messages
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Tree                   : constant Project_Tree_Access :=
+                                  Get_Project_Tree (Request, "tree_id");
+         Information            : constant Boolean :=
+                                  Get_Boolean (Request, "information", True);
+         Warning                : constant Boolean :=
+                                  Get_Boolean (Request, "warning", True);
+         Error                  : constant Boolean :=
+                                  Get_Boolean (Request, "error", True);
+         Read                   : constant Boolean :=
+                                  Get_Boolean (Request, "read", True);
+         Unread               : constant Boolean :=
+                                  Get_Boolean (Request, "unread", True);
+         Full_Path_Name       : constant Boolean :=
+                                  Get_Boolean (Request, "full_path_name",
+                                               True);
+         Levels                 : constant GPR2.Message.Level_Output :=
+                                    Get_Level_Output (Request,
+                                                      (GPR2.Message.Long,
+                                                       GPR2.Message.Long,
+                                                       GPR2.Message.Long));
+         Messages     : GNATCOLL.JSON.JSON_Array;
+      begin
+         if Tree.all.Has_Messages then
+            for C in Tree.all.Log_Messages.Iterate (Information => Information,
+                                                    Warning     => Warning,
+                                                    Error       => Error,
+                                                    Read        => Read,
+                                                    Unread      => Unread)
+            loop
+               declare
+                  Message  : JSON_Value;
+               begin
+                  Set_Message (Message, GPR2.Log.Element (C), Full_Path_Name,
+                              Levels);
+                  GNATCOLL.JSON.Append (Messages, Message);
+               end;
+            end loop;
+         end if;
+         GNATCOLL.JSON.Set_Field (Result, "messages", Messages);
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Log_Messages;
 
    ------------------------------------
    -- GPR2_Project_Tree_Root_Project --

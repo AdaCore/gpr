@@ -118,6 +118,36 @@ package GPR2.C is
    --  Answer:
    --      {'view_id': str}
 
+   function GPR2_Project_Tree_Log_Messages
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.Tree.Log_Messages
+   --
+   --  Request:
+   --      {'tree_id':                  str,
+   --       'information':              Optional[bool] = True,
+   --       'warning':                  Optional[bool] = True,
+   --       'error':                    Optional[bool] = True,
+   --       'read':                     Optional[bool] = True,
+   --       'unread':                   Optional[bool] = True,
+   --       'full_path_name':           Optional[bool] = False,
+   --       'information_output_level': Optional[str] = 'long',
+   --       'warning_output_level':     Optional[str] = 'long',
+   --       'error_output_level':       Optional[str] = 'long'}
+   --
+   --       output level can be 'none', 'short' or 'long'
+   --       all returned messages are automatically marked read
+   --       information/warning/error/read/unread controls what messages are
+   --       returned
+   --
+   --  Answer:
+   --      {'messages':
+   --          ['level':            str,
+   --           'message':          str,
+   --           'formatted_message: str,'
+   --           'filename':         str,
+   --           'line':             Optional[int],
+   --           'column':           Optional[int]]}
+
    function GPR2_Project_Tree_Get_View
       (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.Tree.Get_View binding
@@ -176,4 +206,7 @@ private
    pragma Export (C,
                   GPR2_Project_Tree_Unload,
                   "gpr2_prj_tree_unload");
+   pragma Export (C,
+                  GPR2_Project_Tree_Log_Messages,
+                  "gpr2_prj_tree_log_messages");
 end GPR2.C;

@@ -163,6 +163,54 @@ package body GPR2.C.JSON is
       end if;
    end Get_File_Path;
 
+   ----------------------
+   -- Get_Level_Format --
+   ----------------------
+
+   function Get_Level_Format
+     (Obj : JSON_Value; Key : String; Default : GPR2.Message.Level_Format)
+      return GPR2.Message.Level_Format
+   is
+   begin
+      if not GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) then
+         return Default;
+      else
+         declare
+            Value : constant String := Get_String (Obj, Key);
+         begin
+            if Value = "short" then
+               return GPR2.Message.Short;
+            elsif Value = "none" then
+                  return GPR2.Message.None;
+            else
+               return GPR2.Message.Long;
+            end if;
+         end;
+      end if;
+   end Get_Level_Format;
+
+   ----------------------
+   -- Get_Level_Output --
+   ----------------------
+
+   function Get_Level_Output
+     (Obj : JSON_Value; Default : GPR2.Message.Level_Output)
+      return GPR2.Message.Level_Output
+   is
+      Level_Output : GPR2.Message.Level_Output;
+   begin
+      Level_Output (GPR2.Message.Information) :=
+        Get_Level_Format (Obj, "information_level_output",
+                          Default (GPR2.Message.Information));
+      Level_Output (GPR2.Message.Warning) :=
+        Get_Level_Format (Obj, "warning_level_output",
+                          Default (GPR2.Message.Warning));
+      Level_Output (GPR2.Message.Error) :=
+        Get_Level_Format (Obj, "error_level_output",
+                          Default (GPR2.Message.Error));
+      return Level_Output;
+   end Get_Level_Output;
+
    ----------------------------
    -- Get_Optional_Dir_Path --
    ----------------------------
@@ -297,6 +345,27 @@ package body GPR2.C.JSON is
           Addr_Img (Addr_Img'First + 1 .. Addr_Img'Last));
    end Set_Address;
 
+   -----------------
+   -- Set_Message --
+   -----------------
+
+   procedure Set_Message
+     (Obj            : JSON_Value;
+      Message        : GPR2.Message.Object;
+      Full_Path_Name : Boolean;
+      Levels         : GPR2.Message.Level_Output)
+   is
+   begin
+      Set_String (Obj, "level", Message.Level'Img);
+      Set_String (Obj, "message", Message.Message);
+      Set_String (Obj, "formatted_message",
+                  GPR2.Message.Format (Self           => Message,
+                                       Full_Path_Name => Full_Path_Name,
+                                       Levels         => Levels));
+
+      Set_Source_Reference (Obj, Message.Sloc);
+   end Set_Message;
+
    ---------------------------
    -- Set_Project_Attribute --
    ---------------------------
@@ -355,6 +424,21 @@ package body GPR2.C.JSON is
    begin
       Set_Address (Obj, Key, Value.all'Address);
    end Set_Project_View;
+
+   --------------------------
+   -- Set_Source_Reference --
+   --------------------------
+
+   procedure Set_Source_Reference
+     (Obj              : JSON_Value;
+      Source_Reference : GPR2.Source_Reference.Object) is
+   begin
+      Set_String (Obj, "filename", Source_Reference.Filename);
+      if Source_Reference.Has_Source_Reference then
+         GNATCOLL.JSON.Set_Field (Obj, "line", Source_Reference.Line);
+         GNATCOLL.JSON.Set_Field (Obj, "column", Source_Reference.Column);
+      end if;
+   end Set_Source_Reference;
 
    ----------------
    -- Set_Status --
