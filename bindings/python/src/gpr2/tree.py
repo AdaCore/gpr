@@ -35,6 +35,9 @@ class ProjectTree:
         answer = LibGPR2.gpr2_prj_tree_load_autoconf(request)
         self.id = answer["tree_id"]
 
+        request = {"view_id": self.id}
+        self.properties = LibGPR2.gpr2_prj_tree_properties(request)
+
     @property
     def root_view(self) -> ProjectView:
         """Return the root project view of the tree.
@@ -75,6 +78,46 @@ class ProjectTree:
         for message in answer['messages']:
             messages.append(Message(message=message))
         return messages
+
+    @property
+    def target(self):
+        """Returns the target for the project tree
+
+        :return: the target
+        """
+        return properties["target"]
+
+    @property
+    def build_path(self):
+        """Returns the build path for the project tree
+
+        :return: the build path
+        """
+        return properties["build_path"]
+
+    @property
+    def archive_suffix(self):
+        """Returns the archive suffix for the project tree
+
+        :return: the archive suffix
+        """
+        return properties["archive_suffix"]
+
+    @property
+    def subdirs(self):
+        """Returns the subdirs for the project tree
+
+        :return: the subdirs
+        """
+        return properties["subdirs"]
+
+    @property
+    def src_subdirs(self):
+        """Returns the src subdirs for the project tree
+
+        :return: the src subdirs
+        """
+        return properties["src_subdirs"]
 
     def close(self) -> None:
         """Unload a project tree."""

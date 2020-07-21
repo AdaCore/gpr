@@ -224,6 +224,38 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Log_Messages;
 
+   ----------------------------------
+   -- GPR2_Project_Tree_Properties --
+   ----------------------------------
+
+   function GPR2_Project_Tree_Properties
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Tree           : constant Project_Tree_Access :=
+                            Get_Project_Tree (Request, "tree_id");
+      begin
+         Set_String (Result, "target",
+                     String (GPR2.Project.Tree.Target (Tree.all)));
+         Set_String (Result, "archive_suffix",
+                     String (GPR2.Project.Tree.Archive_Suffix (Tree.all)));
+         Set_String (Result, "src_subdirs",
+                     String (GPR2.Project.Tree.Src_Subdirs (Tree.all)));
+         if Tree.all.Is_Defined then
+            Set_String (Result, "subdirs",
+                        String (GPR2.Project.Tree.Subdirs (Tree.all)));
+            Set_String
+              (Result, "build_path",
+               String (GPR2.Project.Tree.Build_Path (Tree.all).Value));
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Properties;
+
    ------------------------------------
    -- GPR2_Project_Tree_Root_Project --
    ------------------------------------

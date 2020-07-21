@@ -12,6 +12,7 @@ class LibGPR2:
         "gpr2_prj_tree_load_autoconf",
         "gpr2_prj_tree_log_messages",
         "gpr2_prj_tree_root_project",
+        "gpr2_prj_tree_target",
         "gpr2_prj_tree_unload",
         "gpr2_prj_tree_get_view",
         "gpr2_prj_view_attribute",

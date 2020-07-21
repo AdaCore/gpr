@@ -109,7 +109,7 @@ package GPR2.C is
    --      {}
 
    function GPR2_Project_Tree_Root_Project
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.Tree.Root_Project
    --
    --  Request:
@@ -147,6 +147,24 @@ package GPR2.C is
    --           'filename':         str,
    --           'line':             Optional[int],
    --           'column':           Optional[int]]}
+
+   function GPR2_Project_Tree_Properties
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.Tree.Target
+   --  GPR2.Project.Tree.Archive_Suffix
+   --  GPR2.Project.Tree.Subdirs
+   --  GPR2.Project.Tree.Src_Subdirs
+   --  GPR2.Project.Tree.Build_Path
+   --
+   --  Request:
+   --      {'tree_id': str}
+   --
+   --  Answer:
+   --      {'target':         str}
+   --      {'archive_suffix': str}
+   --      {'subdirs':        str}
+   --      {'src_subdirs':    str}
+   --      {'build_path':     str}
 
    function GPR2_Project_Tree_Get_View
       (Request : C_Request; Answer : out C_Answer) return C_Status;
@@ -203,6 +221,9 @@ private
    pragma Export (C,
                   GPR2_Project_Tree_Root_Project,
                   "gpr2_prj_tree_root_project");
+   pragma Export (C,
+                  GPR2_Project_Tree_Properties,
+                  "gpr2_prj_tree_properties");
    pragma Export (C,
                   GPR2_Project_Tree_Unload,
                   "gpr2_prj_tree_unload");
