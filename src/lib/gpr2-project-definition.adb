@@ -1843,7 +1843,9 @@ package body GPR2.Project.Definition is
            (Def.Extended.Sources, Extended_Copy, Source_Reference.Undefined);
       end if;
 
-      if Def.Attrs.Languages.Is_Defined and then Def.Kind /= K_Abstract then
+      if Def.Attrs.Languages.Is_Defined
+        and then Def.Kind not in K_Abstract | K_Configuration
+      then
          for L of Def.Languages loop
             if not Has_Src_In_Lang.Contains (Name_Type (L.Text)) then
                Tree.Append_Message
