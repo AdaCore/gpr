@@ -347,7 +347,9 @@ package body GPRtools.Options is
          else
             raise GPRtools.Usage_Error with
               '"' & Normalize_Value & """, project already """
-              & Self.Project_File.Value & '"';
+              & (if Self.Project_File.Has_Dir_Name
+                 then Self.Project_File.Value
+                 else String (Self.Project_File.Name)) & '"';
          end if;
 
       elsif Switch = "--relocate-build-tree" then
