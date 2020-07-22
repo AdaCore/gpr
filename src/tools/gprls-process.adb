@@ -30,6 +30,7 @@ with GPR.Snames;
 with GPR2.Unit;
 with GPR2.Context;
 with GPR2.Log;
+with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute.Set;
@@ -106,10 +107,12 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
             end if;
          end loop;
 
-         for D of Tree.Runtime_Project.Source_Directories.Values loop
-            Src_Path.Append
-              (Path_Name.Create_Directory (Optional_Name_Type (D.Text)));
-         end loop;
+         if Tree.Has_Runtime_Project then
+            for D of Tree.Runtime_Project.Source_Directories.Values loop
+               Src_Path.Append
+                 (Path_Name.Create_Directory (Optional_Name_Type (D.Text)));
+            end loop;
+         end if;
 
          Text_IO.New_Line;
          Text_IO.Put_Line ("Source Search Path:");
@@ -126,7 +129,9 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
             end if;
          end loop;
 
-         Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
+         if Tree.Has_Runtime_Project then
+            Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
+         end if;
 
          Text_IO.New_Line;
          Text_IO.Put_Line ("Object Search Path:");
