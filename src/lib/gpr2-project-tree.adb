@@ -2513,9 +2513,13 @@ package body GPR2.Project.Tree is
                  (PRA.Library_Ali_Dir, "library ALI",
                   Project.View.Library_Ali_Directory'Access);
 
-               Check_Directory
-                 (PRA.Library_Src_Dir, "",
-                  Project.View.Library_Src_Directory'Access);
+               if View.Has_Library_Interface
+                 or else View.Has_Attributes (PRA.Interfaces)
+               then
+                  Check_Directory
+                    (PRA.Library_Src_Dir, "",
+                     Project.View.Library_Src_Directory'Access);
+               end if;
             end if;
          end;
       end Validity_Check;
