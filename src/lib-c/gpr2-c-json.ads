@@ -29,6 +29,7 @@ with GPR2.Source_Reference;
 package GPR2.C.JSON is
 
    subtype JSON_Value is GNATCOLL.JSON.JSON_Value;
+   subtype JSON_Array is GNATCOLL.JSON.JSON_Array;
 
    function Decode (Request : C_Request) return JSON_Value;
    --  Decodes a C_Request (char * in C) into a JSON_Value
@@ -211,5 +212,11 @@ package GPR2.C.JSON is
      (Obj              : JSON_Value;
       Source_Reference : GPR2.Source_Reference.Object);
    --  Sets source reference object's members in Obj
+
+   procedure Set_Context
+     (Obj     : JSON_Value;
+      Key     : String;
+      Context : GPR2.Context.Object);
+   --  Fill Obj-s Key member with Context content.
 
 end GPR2.C.JSON;

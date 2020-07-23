@@ -346,6 +346,31 @@ package body GPR2.C.JSON is
    end Set_Address;
 
    -----------------
+   -- Set_Context --
+   -----------------
+
+   procedure Set_Context
+     (Obj     : JSON_Value;
+      Key     : String;
+      Context : GPR2.Context.Object)
+   is
+      Elements : JSON_Array;
+   begin
+      for C in Context.Iterate loop
+         declare
+            Element : JSON_Value;
+         begin
+            Set_String
+              (Element, "name", String (GPR2.Context.Key_Value.Key (C)));
+            Set_String
+              (Element, "value", GPR2.Context.Key_Value.Element (C));
+            GNATCOLL.JSON.Append (Elements, Element);
+         end;
+      end loop;
+      GNATCOLL.JSON.Set_Field (Obj, Key, Elements);
+   end Set_Context;
+
+   -----------------
    -- Set_Message --
    -----------------
 

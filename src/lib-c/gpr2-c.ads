@@ -202,6 +202,19 @@ package GPR2.C is
    --
    --  Answer:
    --      {'attr': Any}
+
+   function GPR2_Project_Tree_Context
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.Tree.Context
+   --
+   --  Request:
+   --      {'tree_id': str}
+   --
+   --  Answer:
+   --      {'context':
+   --          ['name':  str,
+   --           'value': str]}
+
 private
 
    pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
@@ -230,4 +243,7 @@ private
    pragma Export (C,
                   GPR2_Project_Tree_Log_Messages,
                   "gpr2_prj_tree_log_messages");
+   pragma Export (C,
+                  GPR2_Project_Tree_Context,
+                  "gpr2_prj_tree_context");
 end GPR2.C;

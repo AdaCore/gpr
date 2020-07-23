@@ -101,6 +101,32 @@ package body GPR2.C is
       Free (Tmp);
    end GPR2_Free_Answer;
 
+   -------------------------------
+   -- GPR2_Project_Tree_Context --
+   -------------------------------
+
+   function GPR2_Project_Tree_Context
+     (Request : C_Request;
+      Answer  : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      -------------
+      -- Handler --
+      -------------
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Tree : constant Project_Tree_Access :=
+                  Get_Project_Tree (Request, "tree_id");
+      begin
+         Set_Context (Result, "context", Tree.all.Context);
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Context;
+
    --------------------------------
    -- GPR2_Project_Tree_Get_View --
    --------------------------------

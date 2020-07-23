@@ -39,6 +39,18 @@ class ProjectTree:
         self.properties = LibGPR2.gpr2_prj_tree_properties(request)
 
     @property
+    def context(self):
+        """Return the context of the tree.
+
+        :return: the context
+        """
+        answer = LibGPR2.gpr2_prj_tree_context({"tree_id": self.id})
+        context = {}
+        for element in answer['context']:
+            context[element['name']] = element['value']
+        return context
+
+    @property
     def root_view(self) -> ProjectView:
         """Return the root project view of the tree.
 

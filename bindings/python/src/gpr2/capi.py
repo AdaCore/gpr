@@ -9,6 +9,7 @@ import os
 class LibGPR2:
 
     METHOD_LIST = [
+        "gpr2_prj_tree_context",
         "gpr2_prj_tree_load_autoconf",
         "gpr2_prj_tree_log_messages",
         "gpr2_prj_tree_root_project",
