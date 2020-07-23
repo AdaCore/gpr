@@ -142,6 +142,9 @@ package GPR2 is
 
    function To_Hex_String (Num : Word) return String;
 
+   function Has_Directory_Separator (Name : String) return Boolean;
+   --  Returns True if Name contains directory separator character
+
 private
 
    use Ada;
@@ -179,6 +182,9 @@ private
    --  Get the GNAT prefix
 
    function To_Lower (Name : Name_Type) return Value_Not_Empty is
-      (Ada.Characters.Handling.To_Lower (String (Name)));
+     (Ada.Characters.Handling.To_Lower (String (Name)));
+
+   function Has_Directory_Separator (Name : String) return Boolean is
+      (for some Char of Name => GNATCOLL.Utils.Is_Directory_Separator (Char));
 
 end GPR2;

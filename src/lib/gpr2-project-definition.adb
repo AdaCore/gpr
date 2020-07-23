@@ -260,6 +260,8 @@ package body GPR2.Project.Definition is
 
       use type Source_Reference.Object;
 
+      Root : constant GPR2.Path_Name.Full_Name := Def.Path.Value;
+
       package Name_Boolean_Map is new Ada.Containers.Indefinite_Ordered_Maps
         (Name_Type, Boolean);
 
@@ -329,9 +331,10 @@ package body GPR2.Project.Definition is
       --  need to be recomputed.
 
       procedure Read_File
-        (Filename : GPR2.Path_Name.Full_Name;
-         Set      : in out Source_Set.Set);
-      --  Read Filename and insert each line in Set
+        (Attr_Name : Name_Type;
+         Set       : in out Source_Set.Set);
+      --  Read from file defined in project attribute Attr_Name and insert each
+      --  line into Set
 
       procedure Insert
         (Sources : Project.Source.Set.Object;
@@ -341,6 +344,13 @@ package body GPR2.Project.Definition is
       --  Def.Sources. Mode is Skip for extended projects (ignore sources from
       --  the extended project that have been replaced in the extending one),
       --  or Error for aggregated projects (reject duplicate sources).
+
+      procedure Include_Simple_Filename
+        (Set   : in out Source_Set.Set;
+         Value : Value_Type;
+         Sloc  : Source_Reference.Value.Object);
+      --  Includes Value into Set. If Value contains directory separator put
+      --  error message into log.
 
       procedure Fill_Ada_Naming_Exceptions (Attr : Name_Type)
         with Pre => Attr in  PRA.Spec | PRA.Body_N;
@@ -1218,6 +1228,30 @@ package body GPR2.Project.Definition is
          end loop;
       end Handle_File;
 
+      -----------------------------
+      -- Include_Simple_Filename --
+      -----------------------------
+
+      procedure Include_Simple_Filename
+        (Set   : in out Source_Set.Set;
+         Value : Value_Type;
+         Sloc  : Source_Reference.Value.Object)
+      is
+         Position : Source_Set.Cursor;
+         Inserted : Boolean;
+      begin
+         if Has_Directory_Separator (Value) then
+            Tree.Append_Message
+              (Message.Create
+                 (Message.Error,
+                  "file name cannot include directory information (""" & Value
+                  & """)",
+                  Sloc));
+         else
+            Set.Insert (Value, Position, Inserted);
+         end if;
+      end Include_Simple_Filename;
+
       ------------
       -- Insert --
       ------------
@@ -1402,18 +1436,23 @@ package body GPR2.Project.Definition is
       ---------------
 
       procedure Read_File
-        (Filename : GPR2.Path_Name.Full_Name;
-         Set      : in out Source_Set.Set)
+        (Attr_Name : Name_Type;
+         Set       : in out Source_Set.Set)
       is
-         F      : Text_IO.File_Type;
-         Buffer : String (1 .. 1_024);
-         Last   : Natural;
+         Attr_Value : constant GPR2.Source_Reference.Value.Object :=
+                        Def.Attrs.Element (Attr_Name).Value;
+         Filename   : constant GPR2.Path_Name.Full_Name :=
+                        Directories.Compose (Root, Attr_Value.Text);
+         F          : Text_IO.File_Type;
+         Buffer     : String (1 .. 1_024);
+         Last       : Natural;
       begin
          Text_IO.Open (F, Text_IO.In_File, Filename);
 
          while not Text_IO.End_Of_File (F) loop
             Text_IO.Get_Line (F, Buffer, Last);
-            Set.Include (Buffer (Buffer'First .. Last));
+            Include_Simple_Filename
+              (Set, Buffer (Buffer'First .. Last), Attr_Value);
          end loop;
 
          Text_IO.Close (F);
@@ -1594,8 +1633,6 @@ package body GPR2.Project.Definition is
 
       Current_Signature : MD5.Binary_Message_Digest;
 
-      Root              : constant GPR2.Path_Name.Full_Name := Def.Path.Value;
-
    begin
       --  Check if up-to-date using signature for source_dirs, source_files...
       --  An abstract or aggregate project has no sources.
@@ -1682,43 +1719,28 @@ package body GPR2.Project.Definition is
       --  If we have attribute Excluded_Source_List_File
 
       if Def.Attrs.Has_Excluded_Source_List_File then
-         declare
-            File : constant GPR2.Path_Name.Full_Name :=
-                     Directories.Compose
-                       (Root,
-                        Def.Attrs.Element (PRA.Excluded_Source_List_File)
-                        .Value.Text);
-         begin
-            Read_File (File, Excluded_Sources);
-         end;
+         Read_File (PRA.Excluded_Source_List_File, Excluded_Sources);
       end if;
 
       --  If we have attribute Excluded_Source_Files
 
       if Def.Attrs.Has_Excluded_Source_Files then
          for File of Def.Attrs.Excluded_Source_Files.Values loop
-            Excluded_Sources.Include (File.Text);
+            Include_Simple_Filename (Excluded_Sources, File.Text, File);
          end loop;
       end if;
 
       --  If we have attribute Source_List_File
 
       if Def.Attrs.Has_Source_List_File then
-         declare
-            File : constant GPR2.Path_Name.Full_Name :=
-                     Directories.Compose
-                       (Root,
-                        Def.Attrs.Element (PRA.Source_List_File).Value.Text);
-         begin
-            Read_File (File, Included_Sources);
-         end;
+         Read_File (PRA.Source_List_File, Included_Sources);
       end if;
 
       --  If we have attribute Source_Files
 
       if Def.Attrs.Has_Source_Files then
          for File of Def.Attrs.Source_Files.Values loop
-            Included_Sources.Include (File.Text);
+            Include_Simple_Filename (Included_Sources, File.Text, File);
          end loop;
       end if;
 
