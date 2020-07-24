@@ -31,7 +31,7 @@ package body GPR2.Compilation is
    use GNAT;
    use GNAT.String_Split;
 
-   Last_Env_MD5 : MD5.Message_Digest := (others => <>);
+   Last_Env_MD5 : MD5.Message_Digest := (others => ASCII.NUL);
    --  Keep last environment variable set to avoid too many system calls.
    --  ??? Ideally, we should set them when spawning the process, in
    --  which case it would be less expensive to set and could be set
