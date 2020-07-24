@@ -1637,7 +1637,7 @@ package body GPR2.Project.Definition is
       --  Check if up-to-date using signature for source_dirs, source_files...
       --  An abstract or aggregate project has no sources.
 
-      if Def.Kind in K_Abstract | K_Aggregate then
+      if Def.Kind in K_Abstract | K_Configuration | K_Aggregate then
          return;
       end if;
 
