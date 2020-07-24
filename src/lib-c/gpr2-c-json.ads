@@ -18,15 +18,19 @@
 
 with Ada.Exceptions;
 with GNATCOLL.JSON;
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
+with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Reference;
 
 package GPR2.C.JSON is
+
+   use GNATCOLL.JSON;
 
    subtype JSON_Value is GNATCOLL.JSON.JSON_Value;
    subtype JSON_Array is GNATCOLL.JSON.JSON_Array;
@@ -46,6 +50,10 @@ package GPR2.C.JSON is
 
    type Project_View_Access is access all GPR2.Project.View.Object;
    pragma No_Strict_Aliasing (Project_View_Access);
+
+   type Project_Configuration_Access is access all
+     GPR2.Project.Configuration.Object;
+   pragma No_Strict_Aliasing (Project_Configuration_Access);
 
    function Get_String
       (Obj : JSON_Value; Key : String) return String;
@@ -152,6 +160,25 @@ package GPR2.C.JSON is
      (Obj : JSON_Value; Default : GPR2.Message.Level_Output)
       return GPR2.Message.Level_Output;
    --  Return the Level_Output encoded in JSON.
+
+   function Get_Name_Set
+     (Obj : JSON_Value; Key : String) return GPR2.Containers.Name_Set;
+   --  Return the strings defined in Key string array
+
+   function Get_Name_Value_Map
+     (Obj : JSON_Value; Key : String) return GPR2.Containers.Name_Value_Map;
+   --  Return the name value map defined in Key dictionnary
+
+   function Get_Project_Configuration
+     (Obj : JSON_Value; Key : String := "configuration_id")
+      return GPR2.Project.Configuration.Object;
+   --  Return configuration defined in Key member
+
+   function Has_Non_Null_Field
+     (Obj : JSON_Value; Key : String) return Boolean is
+     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) and then
+      GNATCOLL.JSON.Get (Val => Obj, Field => Key) /= GNATCOLL.JSON.JSON_Null);
+   --  Return True if Obj contains a non null field named Key
 
    ---------------------
    -- Encoding answer --

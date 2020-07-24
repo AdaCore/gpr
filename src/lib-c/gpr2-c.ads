@@ -76,17 +76,19 @@ package GPR2.C is
    procedure GPR2_Free_Answer (Answer : C_Answer);
    --  Releases the memory held by an answer
 
-   function GPR2_Project_Tree_Load_Autoconf
+   function GPR2_Project_Tree_Load
       (Request : C_Request; Answer : out C_Answer) return C_Status;
-   --  GPR2.Project.Tree.Load_Autoconf binding
+   --  GPR2.Project.Tree.Load/Load_Autoconf binding
    --
    --  Request:
-   --      {'filename':          str,
+   --      {'tree_id'            Optional[str],
+   --       'filename':          Optional[str],
    --       'context':           Dict[str, str],
+   --       'configuration_id':  Optional[str],
+   --       'build_path':        Optional[str],
    --       'subdirs':           Optional[str],
    --       'src_subdirs':       Optional[str],
    --       'check_shared_lib':  Optional[bool] = True,
-   --       'implicit_project':  Optional[bool] = False,
    --       'absent_dir_error':  Optional[bool] = False,
    --       'implicit_with':     List[str],
    --       'target':            Optional[str],
@@ -94,6 +96,10 @@ package GPR2.C is
    --
    --  Answer:
    --      {'tree_id': str},
+   --  If tree_id is None then a tree object is allocated
+   --  If config_id is provided target & language_runtimes parameters are not
+   --  used. If filename is not provided an implicit project file is looked
+   --  for in current working directory.
 
    function GPR2_Project_Tree_Unload
       (Request : C_Request; Answer : out C_Answer) return C_Status;
@@ -232,8 +238,8 @@ private
    pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
 
    pragma Export (C,
-                  GPR2_Project_Tree_Load_Autoconf,
-                  "gpr2_prj_tree_load_autoconf");
+                  GPR2_Project_Tree_Load,
+                  "gpr2_prj_tree_load");
    pragma Export (C,
                   GPR2_Project_Tree_Get_View,
                   "gpr2_prj_tree_get_view");

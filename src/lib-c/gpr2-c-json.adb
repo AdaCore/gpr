@@ -81,7 +81,7 @@ package body GPR2.C.JSON is
        Default : Boolean) return Boolean
    is
    begin
-      if GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) then
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GNATCOLL.JSON.Get (Val => Obj, Field => Key);
       else
          return Default;
@@ -130,7 +130,7 @@ package body GPR2.C.JSON is
        Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object
    is
    begin
-      if GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) then
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GPR2.Path_Name.Create_Directory
             (Name => GPR2.Name_Type (Get_String (Obj, Key)));
       else
@@ -156,7 +156,7 @@ package body GPR2.C.JSON is
        Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object
    is
    begin
-      if GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) then
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GPR2.Path_Name.Create_File
             (Name => GPR2.Name_Type (Get_String (Obj, Key)));
       else
@@ -173,7 +173,7 @@ package body GPR2.C.JSON is
       return GPR2.Message.Level_Format
    is
    begin
-      if not GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) then
+      if not Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return Default;
       else
          declare
@@ -212,6 +212,61 @@ package body GPR2.C.JSON is
       return Level_Output;
    end Get_Level_Output;
 
+   ------------------
+   -- Get_Name_Set --
+   ------------------
+
+   function Get_Name_Set
+     (Obj : JSON_Value; Key : String) return GPR2.Containers.Name_Set
+   is
+      Result : GPR2.Containers.Name_Set;
+   begin
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
+         for Value of JSON_Array'
+           (GNATCOLL.JSON.Get (Val => Obj, Field => Key)) loop
+            declare
+               Element : constant String := Value.Get;
+            begin
+               Result.Insert (Optional_Name_Type (Element));
+            end;
+         end loop;
+      end if;
+      return Result;
+   end Get_Name_Set;
+
+   ------------------------
+   -- Get_Name_Value_Map --
+   ------------------------
+
+   function Get_Name_Value_Map
+     (Obj : JSON_Value; Key : String) return GPR2.Containers.Name_Value_Map
+   is
+      Result : GPR2.Containers.Name_Value_Map;
+
+      procedure CB
+        (Name  : GNATCOLL.JSON.UTF8_String;
+         Value : GNATCOLL.JSON.JSON_Value);
+
+      --------
+      -- CB --
+      --------
+
+      procedure CB
+        (Name  : GNATCOLL.JSON.UTF8_String;
+         Value : GNATCOLL.JSON.JSON_Value)
+      is
+      begin
+         Result.Insert (Optional_Name_Type (Name), Value.Get);
+      end CB;
+
+   begin
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
+         GNATCOLL.JSON.Map_JSON_Object (Val => GNATCOLL.JSON.Get (Obj, Key),
+                                        CB  => CB'Unrestricted_Access);
+      end if;
+      return Result;
+   end Get_Name_Value_Map;
+
    ----------------------------
    -- Get_Optional_Dir_Path --
    ----------------------------
@@ -233,6 +288,24 @@ package body GPR2.C.JSON is
    begin
       return Get_File_Path (Obj, Key, GPR2.Path_Name.Undefined);
    end Get_Optional_File_Path;
+
+   -------------------------------
+   -- Get_Project_Configuration --
+   -------------------------------
+
+   function Get_Project_Configuration
+     (Obj : JSON_Value; Key : String := "configuration_id")
+      return GPR2.Project.Configuration.Object
+   is
+      function Convert is new Ada.Unchecked_Conversion
+        (System.Address, Project_Configuration_Access);
+   begin
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
+         return Convert (Get_Address (Obj, Key)).all;
+      else
+         return GPR2.Project.Configuration.Undefined;
+      end if;
+   end Get_Project_Configuration;
 
    ----------------------
    -- Get_Project_Tree --
@@ -303,7 +376,7 @@ package body GPR2.C.JSON is
       return String
    is
    begin
-      if GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) then
+      if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GNATCOLL.JSON.Get (Val => Obj, Field => Key);
       else
          return Default;
