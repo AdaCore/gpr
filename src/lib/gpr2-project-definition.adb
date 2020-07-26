@@ -1872,17 +1872,25 @@ package body GPR2.Project.Definition is
 
       if Def.Attrs.Languages.Is_Defined
         and then Def.Kind not in K_Abstract | K_Configuration
+        and then not Def.Attrs.Source_Dirs.Values.Is_Empty
+        and then Excluded_Sources.Is_Empty
       then
-         for L of Def.Languages loop
-            if not Has_Src_In_Lang.Contains (Name_Type (L.Text)) then
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Warning,
-                     "there are no sources of language """ & L.Text
-                     & """ in this project",
-                     L));
+         declare
+            SF : constant Attribute.Object := Def.Attrs.Source_Files;
+         begin
+            if not SF.Is_Defined or else not SF.Values.Is_Empty then
+               for L of Def.Languages loop
+                  if not Has_Src_In_Lang.Contains (Name_Type (L.Text)) then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Warning,
+                           "there are no sources of language """ & L.Text
+                           & """ in this project",
+                           L));
+                  end if;
+               end loop;
             end if;
-         end loop;
+         end;
       end if;
 
       --  And update the interface units bookkeeping
