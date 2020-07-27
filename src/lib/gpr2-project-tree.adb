@@ -349,6 +349,7 @@ package body GPR2.Project.Tree is
       DS   : Character renames OS_Lib.Directory_Separator;
       Data : Project.Definition.Data (Has_Context => False);
       RTD  : Attribute.Object;
+      RTF  : Path_Name.Object;
 
       procedure Add_Attribute (Name : Name_Type; Value : Value_Type);
       --  Add builtin attribute into Data.Attrs
@@ -366,7 +367,9 @@ package body GPR2.Project.Tree is
                              (Source_Reference.Builtin, Name)),
                Value => Source_Reference.Value.Object
                           (Source_Reference.Value.Create
-                             (Source_Reference.Builtin, Value))));
+                             (GPR2.Source_Reference.Object
+                                (Source_Reference.Create (RTF.Value, 0, 0)),
+                              Value))));
       end Add_Attribute;
 
    begin
@@ -377,6 +380,9 @@ package body GPR2.Project.Tree is
       then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
          --  and Object_Dir for the Runtime project view.
+
+         RTF := Path_Name.Create_File
+           ("runtime.gpr", Directory => Optional_Name_Type (RTD.Value.Text));
 
          Add_Attribute (PRA.Source_Dirs, RTD.Value.Text & DS & "adainclude");
          Add_Attribute (PRA.Object_Dir,  RTD.Value.Text & DS & "adalib");
@@ -393,7 +399,7 @@ package body GPR2.Project.Tree is
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => PRA.Runtime,
-            File      => Path_Name.Create_File ("runtime.gpr"),
+            File      => RTF,
             Qualifier => K_Standard);
 
          return Result : constant View.Object := Register_View (Data) do
