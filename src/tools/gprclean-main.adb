@@ -300,7 +300,7 @@ procedure GPRclean.Main is
          end if;
       end if;
 
-      for C in View.Sources.Iterate loop
+      for C in View.Sources (Need_Update => False).Iterate loop
          declare
             S       : constant Project.Source.Object :=
                         Project.Source.Set.Element (C);
@@ -639,6 +639,8 @@ begin
 
       GPRtools.Util.Fail_Program ("problems with main sources");
    end if;
+
+   Project_Tree.Update_Sources;
 
    --  Iterate on all view, and clean them
 

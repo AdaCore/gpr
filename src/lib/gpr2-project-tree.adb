@@ -31,6 +31,7 @@ with GPR2.Project.Source;
 with GPR2.Project.Source.Set;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
+with GPR2.Unit;
 
 with GNAT.OS_Lib;
 with GNAT.Regexp;
@@ -2367,10 +2368,6 @@ package body GPR2.Project.Tree is
          --  Check Library_Version attribute format
 
          declare
-            procedure Check_Shared_Lib (PV : Project.View.Object);
-            --  Check that shared library project does not have in imports
-            --  static library or standard projects.
-
             procedure Check_Directory
               (Attr_Name     : Name_Type;
                Human_Name    : String;
@@ -2428,61 +2425,6 @@ package body GPR2.Project.Tree is
                end if;
             end Check_Directory;
 
-            ----------------------
-            -- Check_Shared_Lib --
-            ----------------------
-
-            procedure Check_Shared_Lib (PV : Project.View.Object) is
-               P_Data : constant Definition.Const_Ref :=
-                          Definition.Get_RO (PV);
-            begin
-               for Imp of P_Data.Imports loop
-                  if Imp.Kind = K_Abstract then
-                     --  Check imports further in recursion
-
-                     Check_Shared_Lib (Imp);
-
-                  elsif not Imp.Is_Library then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "shared library project """ & String (View.Name)
-                           & """ cannot import project """
-                           & String (Imp.Name)
-                           & """ that is not a shared library project",
-                           P_Data.Trees.Project.Imports.Element
-                             (Imp.Path_Name)));
-
-                  elsif Imp.Is_Static_Library
-                    and then (not PV.Is_Library
-                              or else PV.Library_Standalone /= Encapsulated)
-                  then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "shared library project """ & String (View.Name)
-                           & """ cannot import static library project """
-                           & String (Imp.Name) & '"',
-                           P_Data.Trees.Project.Imports.Element
-                             (Imp.Path_Name)));
-
-                  elsif Imp.Is_Shared_Library
-                    and then PV.Is_Library
-                    and then PV.Library_Standalone = Encapsulated
-                  then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "encapsulated library project """
-                           & String (View.Name)
-                           & """ cannot import shared library project """
-                           & String (Imp.Name) & '"',
-                           P_Data.Trees.Project.Imports.Element
-                             (Imp.Path_Name)));
-                  end if;
-               end loop;
-            end Check_Shared_Lib;
-
          begin
             if View.Is_Library and then View.Is_Shared_Library then
                if View.Check_Attribute (PRA.Library_Version, Result => Attr)
@@ -2510,10 +2452,6 @@ package body GPR2.Project.Tree is
                               Sloc => AV));
                      end if;
                   end;
-               end if;
-
-               if Self.Check_Shared_Lib then
-                  Check_Shared_Lib (View);
                end if;
             end if;
 
@@ -2660,6 +2598,105 @@ package body GPR2.Project.Tree is
       for V of Self.Views_Set loop
          Definition.Get (V).Update_Sources (V, Stop_On_Error);
       end loop;
+
+      if Self.Check_Shared_Lib then
+         for View of Self.Views_Set loop
+            declare
+               procedure Check_Shared_Lib (PV : Project.View.Object);
+               --  Check that shared library project does not have in imports
+               --  static library or standard projects.
+
+               ----------------------
+               -- Check_Shared_Lib --
+               ----------------------
+
+               procedure Check_Shared_Lib (PV : Project.View.Object) is
+                  P_Data : constant Definition.Const_Ref :=
+                             Definition.Get_RO (PV);
+
+                  function Has_Essential_Sources
+                    (V : Project.View.Object) return Boolean;
+                  --  Returns True if V has Ada sources or non ada bodies.
+
+                  ---------------------------
+                  -- Has_Essential_Sources --
+                  ---------------------------
+
+                  function Has_Essential_Sources
+                    (V : Project.View.Object) return Boolean is
+                  begin
+                     for S of V.Sources (Need_Update => False) loop
+                        if S.Source.Language = "Ada"
+                          or else S.Source.Kind not in GPR2.Unit.Spec_Kind
+                        then
+                           return True;
+                        end if;
+                     end loop;
+
+                     return False;
+                  end Has_Essential_Sources;
+
+               begin
+                  for Imp of P_Data.Imports loop
+                     if Imp.Kind = K_Abstract
+                       or else not Has_Essential_Sources (Imp)
+                     then
+                        --  Check imports further in recursion
+
+                        Check_Shared_Lib (Imp);
+
+                     elsif not Imp.Is_Library then
+                        Self.Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "shared library project """ & String (View.Name)
+                              & """ cannot import project """
+                              & String (Imp.Name)
+                              & """ that is not a shared library project",
+                              P_Data.Trees.Project.Imports.Element
+                                (Imp.Path_Name)));
+
+                     elsif Imp.Is_Static_Library
+                       and then (not PV.Is_Library
+                                 or else PV.Library_Standalone /= Encapsulated)
+                     then
+                        Self.Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "shared library project """ & String (View.Name)
+                              & """ cannot import static library project """
+                              & String (Imp.Name) & '"',
+                              P_Data.Trees.Project.Imports.Element
+                                (Imp.Path_Name)));
+
+                     elsif Imp.Is_Shared_Library
+                       and then PV.Is_Library
+                       and then PV.Library_Standalone = Encapsulated
+                     then
+                        Self.Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "encapsulated library project """
+                              & String (View.Name)
+                              & """ cannot import shared library project """
+                              & String (Imp.Name) & '"',
+                              P_Data.Trees.Project.Imports.Element
+                                (Imp.Path_Name)));
+                     end if;
+                  end loop;
+               end Check_Shared_Lib;
+
+            begin
+               if View.Is_Library and then View.Is_Shared_Library then
+                  Check_Shared_Lib (View);
+               end if;
+            end;
+         end loop;
+
+         if Stop_On_Error and then Self.Messages.Has_Error then
+            raise Project_Error;
+         end if;
+      end if;
    end Update_Sources;
 
    --------------

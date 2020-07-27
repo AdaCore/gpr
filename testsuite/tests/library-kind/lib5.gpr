@@ -1,2 +1,4 @@
 library project lib5 is
+   for Library_Name use "lib5";
+   for Library_Dir use "obj";
 end lib5;
