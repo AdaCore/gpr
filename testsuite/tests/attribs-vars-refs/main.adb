@@ -116,4 +116,10 @@ begin
    Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
    Display (Prj.Root_Project);
+
+exception
+   when Project_Error =>
+      for M of Prj.Log_Messages.all loop
+         Text_IO.Put_Line (M.Format);
+      end loop;
 end Main;

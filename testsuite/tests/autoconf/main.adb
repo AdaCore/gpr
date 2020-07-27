@@ -119,4 +119,10 @@ begin
       Context  => Ctx);
 
    Print_Config_Info;
+
+exception
+   when Project_Error =>
+      for M of Project_Tree.Log_Messages.all loop
+         Text_IO.Put_Line (M.Format);
+      end loop;
 end Main;
