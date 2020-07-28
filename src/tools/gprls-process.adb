@@ -450,19 +450,22 @@ begin
 
          for S of Sources loop
             declare
-               View       : constant Project.View.Object := S.View;
-               ALI_File   : Path_Name.Object;
-               Obj_File   : Path_Name.Object;
-               Unit_Info  : Project.Unit_Info.Object;
-               Artifacts  : constant Project.Source.Artifact.Object :=
-                              S.Artifacts;
-               Main_Unit  : Unit.Object;
+               View      : constant Project.View.Object := S.View;
+               Obj_File  : Path_Name.Object;
+               Unit_Info : Project.Unit_Info.Object;
+               Artifacts : constant Project.Source.Artifact.Object :=
+                             S.Artifacts;
+               Main_Unit : Unit.Object;
 
                procedure Print_Unit_From (Src : Path_Name.Object);
                function  Print_Unit (U_Sec : Unit.Object) return Boolean;
 
                procedure Dependence_Output
                  (Dep_Source : Project.Source.Object);
+
+               -----------------------
+               -- Dependence_Output --
+               -----------------------
 
                procedure Dependence_Output
                  (Dep_Source : Project.Source.Object) is
@@ -540,9 +543,9 @@ begin
 
             begin
                for U_Sec of S.Source.Units loop
-                  ALI_File := Artifacts.Dependency (U_Sec.Index);
-
-                  if ALI_File.Is_Defined and then ALI_File.Exists then
+                  if Artifacts.Has_Dependency (U_Sec.Index)
+                    and then Artifacts.Dependency (U_Sec.Index).Exists
+                  then
                      if Opt.Print_Object_Files
                        and then not S.Is_Aggregated
                      then
@@ -685,7 +688,7 @@ begin
             begin
                if S.Source.Has_Units then
                   for CU of S.Source.Units loop
-                     if Artifacts.Has_Dependency then
+                     if Artifacts.Has_Dependency (CU.Index) then
                         Insert_Prefer_Body
                           (Dep_Simple_Names,
                            Artifacts.Dependency (CU.Index).Simple_Name,
