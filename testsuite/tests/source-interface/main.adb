@@ -66,17 +66,14 @@ procedure Main is
             begin
                Output_Filename (S.Path_Name.Value);
 
-               Text_IO.Set_Col (20);
-               Text_IO.Put ("   language: " & String (S.Language));
+               Text_IO.Put (",language: " & String (S.Language));
 
-               Text_IO.Set_Col (36);
                Text_IO.Put
-                 ("   Kind: "
+                 (",Kind: "
                   & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
 
                if U /= "" then
-                  Text_IO.Set_Col (60);
-                  Text_IO.Put ("unit: " & String (U));
+                  Text_IO.Put (",unit: " & String (U));
                end if;
 
                Text_IO.New_Line;
@@ -95,14 +92,12 @@ procedure Main is
             begin
                Output_Filename (S.Path_Name.Value);
 
-               Text_IO.Set_Col (20);
                Text_IO.Put
-                 ("   Kind: "
+                 (",Kind: "
                   & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
 
                if U /= "" then
-                  Text_IO.Set_Col (60);
-                  Text_IO.Put ("unit: " & String (U));
+                  Text_IO.Put (",unit: " & String (U));
                end if;
 
                Text_IO.New_Line;
@@ -121,14 +116,12 @@ procedure Main is
             begin
                Output_Filename (S.Path_Name.Value);
 
-               Text_IO.Set_Col (20);
                Text_IO.Put
-                 ("   Kind: "
+                 (",Kind: "
                   & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
 
                if U /= "" then
-                  Text_IO.Set_Col (60);
-                  Text_IO.Put ("unit: " & String (U));
+                  Text_IO.Put (",unit: " & String (U));
                end if;
 
                Text_IO.New_Line;
@@ -148,12 +141,7 @@ procedure Main is
             for J in Prj.Log_Messages.Iterate (Information => Info) loop
                declare
                   M : constant Message.Object := Prj.Log_Messages.all (J);
-                  F : constant String := M.Sloc.Filename;
-                  I : constant Natural :=
-                        Strings.Fixed.Index (F, "/source-interface");
                begin
-                  Text_IO.Put_Line ("> " & F (I .. F'Last));
-                  Text_IO.Put_Line (M.Level'Img);
                   Text_IO.Put_Line (M.Format);
                end;
             end loop;
@@ -178,10 +166,8 @@ procedure Main is
    ---------------------
 
    procedure Output_Filename (Filename : Path_Name.Full_Name) is
-      I : constant Positive :=
-            Strings.Fixed.Index (Filename, "source-interface");
    begin
-      Text_IO.Put (" > " & Filename (I + 17 .. Filename'Last));
+      Text_IO.Put (" > " & Filename);
    end Output_Filename;
 
 begin
