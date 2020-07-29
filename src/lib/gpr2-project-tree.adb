@@ -1783,11 +1783,11 @@ package body GPR2.Project.Tree is
                      Parser.Project.Parse
                        (Filename, Self.Implicit_With, Messages);
          Data    : Definition.Data
-                       (Has_Context =>
-                          Project.Is_Defined
-                            and then
-                          (not Context_View.Is_Defined
-                           or else Project.Qualifier = K_Aggregate));
+                     (Has_Context =>
+                        Project.Is_Defined
+                          and then
+                        (not Context_View.Is_Defined
+                         or else Project.Qualifier in Aggregate_Kind));
       begin
          Data.Trees.Project := Project;
 

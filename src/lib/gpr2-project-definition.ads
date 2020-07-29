@@ -109,7 +109,8 @@ private package GPR2.Project.Definition is
             not Data.Has_Context
             or else (not Strong (Data.Context_View).Is_Defined
                      and then Data.Status = Root)
-            or else Data.A_Context.Is_Empty;
+            or else Data.A_Context.Is_Empty
+            or else Data.Kind in Aggregate_Kind;
 
    type Ref is access all Data;
 
