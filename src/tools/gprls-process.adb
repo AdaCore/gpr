@@ -242,8 +242,6 @@ begin
         (Index_Type   => Ada.Containers.Count_Type,
          Element_Type => Project.View.Object);
 
-      All_Views : View_List_Package.Vector;
-
       use type Project.Source.Object;
 
       package Source_Vector_Package is new Ada.Containers.Vectors
@@ -282,9 +280,7 @@ begin
 
       procedure Display_Normal;
 
-      function Source_For
-        (File                 : String;
-         File_May_Be_Artifact : Boolean) return Project.Source.Object;
+      function Source_For (File : String) return Project.Source.Object;
       --  Given a file basename and a project view, tries to find a
       --  compilable source from this view that is associated with the
       --  file.
@@ -600,10 +596,7 @@ begin
       -- Source_For --
       ----------------
 
-      function Source_For
-        (File                 : String;
-         File_May_Be_Artifact : Boolean) return Project.Source.Object
-      is
+      function Source_For (File : String) return Project.Source.Object is
          CN : String_To_Positive_Maps.Cursor;
 
          function Search_In (Map : String_To_Positive_Maps.Map) return Boolean;
@@ -622,14 +615,14 @@ begin
          if Search_In (Src_Simple_Names) then
             return Result;
 
-         elsif File_May_Be_Artifact then
-            if Search_In (Dep_Simple_Names) then
-               return Result;
-            elsif Search_In (Dep_Base_Names) then
-               return Result;
-            elsif Search_In (Obj_Simple_Names) then
-               return Result;
-            end if;
+         elsif Search_In (Dep_Simple_Names) then
+            return Result;
+
+         elsif Search_In (Dep_Base_Names) then
+            return Result;
+
+         elsif Search_In (Obj_Simple_Names) then
+            return Result;
          end if;
 
          return Project.Source.Undefined;
@@ -640,165 +633,161 @@ begin
          Display_Paths;
       end if;
 
-      --  Fill the various caches
+      if not Opt.Files.Is_Empty then
+         --  Fill the various caches to get the sources from simple filenames
+         --  and artefacts
 
-      for CV in Tree.Iterate ((Project.I_Extended => False, others => True))
-      loop
-         All_Views.Append (Project.Tree.Element (CV));
+         for CV in Tree.Iterate ((Project.I_Extended => False, others => True))
+         loop
+            for S of Project.Tree.Element (CV).Sources (Need_Update => False)
+            loop
+               All_Sources.Append (S);
 
-         for S of Project.Tree.Element (CV).Sources (Need_Update => False) loop
-            All_Sources.Append (S);
+               Src_Simple_Names.Include
+                 (String (S.Source.Path_Name.Simple_Name),
+                  Positive (All_Sources.Length));
 
-            Src_Simple_Names.Include
-              (String (S.Source.Path_Name.Simple_Name),
-               Positive (All_Sources.Length));
+               declare
+                  Artifacts : constant Project.Source.Artifact.Object :=
+                                S.Artifacts;
 
-            declare
-               Artifacts : constant Project.Source.Artifact.Object :=
-                             S.Artifacts;
+                  procedure Insert_Prefer_Body
+                    (Map  : in out String_To_Positive_Maps.Map;
+                     Key  : Name_Type;
+                     Kind : GPR2.Unit.Library_Unit_Type);
 
-               procedure Insert_Prefer_Body
-                 (Map  : in out String_To_Positive_Maps.Map;
-                  Key  : Name_Type;
-                  Kind : GPR2.Unit.Library_Unit_Type);
+                  ------------------------
+                  -- Insert_Prefer_Body --
+                  ------------------------
 
-               ------------------------
-               -- Insert_Prefer_Body --
-               ------------------------
+                  procedure Insert_Prefer_Body
+                    (Map  : in out String_To_Positive_Maps.Map;
+                     Key  : Name_Type;
+                     Kind : GPR2.Unit.Library_Unit_Type)
+                  is
+                     Position : String_To_Positive_Maps.Cursor;
+                     Inserted : Boolean;
+                  begin
+                     Map.Insert
+                       (String (Key), Positive (All_Sources.Length), Position,
+                        Inserted);
 
-               procedure Insert_Prefer_Body
-                 (Map  : in out String_To_Positive_Maps.Map;
-                  Key  : Name_Type;
-                  Kind : GPR2.Unit.Library_Unit_Type)
-               is
-                  Position : String_To_Positive_Maps.Cursor;
-                  Inserted : Boolean;
+                     if not Inserted and then Kind = GPR2.Unit.S_Body then
+                        --  Body has a preference
+
+                        Map (Position) := Positive (All_Sources.Length);
+                     end if;
+                  end Insert_Prefer_Body;
+
                begin
-                  Map.Insert
-                    (String (Key), Positive (All_Sources.Length), Position,
-                     Inserted);
+                  if S.Source.Has_Units then
+                     for CU of S.Source.Units loop
+                        if Artifacts.Has_Dependency (CU.Index) then
+                           Insert_Prefer_Body
+                             (Dep_Simple_Names,
+                              Artifacts.Dependency (CU.Index).Simple_Name,
+                              CU.Kind);
+                           Insert_Prefer_Body
+                             (Dep_Base_Names,
+                              Artifacts.Dependency (CU.Index).Base_Name,
+                              CU.Kind);
+                        end if;
 
-                  if not Inserted and then Kind = GPR2.Unit.S_Body then
-                     --  Body has a preference
-
-                     Map (Position) := Positive (All_Sources.Length);
+                        if Artifacts.Has_Object_Code (CU.Index) then
+                           Insert_Prefer_Body
+                             (Obj_Simple_Names,
+                              Artifacts.Object_Code (CU.Index).Simple_Name,
+                              CU.Kind);
+                        end if;
+                     end loop;
                   end if;
-               end Insert_Prefer_Body;
+               end;
+            end loop;
+         end loop;
 
+         --
+         --  All along, we will exclude non-ada sources.
+         --
+
+         --  Fill the Sources set with the files given on the CL.
+         --  Print "Can't find source for ..." if a file can't be matched with
+         --  a compilable source from the root project (or from the project
+         --   tree if All_Projects is set).
+
+         for F of Opt.Files loop
+            declare
+               Source : constant Project.Source.Object := Source_For (F);
             begin
-               if S.Source.Has_Units then
-                  for CU of S.Source.Units loop
-                     if Artifacts.Has_Dependency (CU.Index) then
-                        Insert_Prefer_Body
-                          (Dep_Simple_Names,
-                           Artifacts.Dependency (CU.Index).Simple_Name,
-                           CU.Kind);
-                        Insert_Prefer_Body
-                          (Dep_Base_Names,
-                           Artifacts.Dependency (CU.Index).Base_Name,
-                           CU.Kind);
-                     end if;
+               if not Source.Is_Defined then
+                  Text_IO.Put_Line ("Can't find source for " & F);
 
-                     if Artifacts.Has_Object_Code (CU.Index) then
-                        Insert_Prefer_Body
-                          (Obj_Simple_Names,
-                           Artifacts.Object_Code (CU.Index).Simple_Name,
-                           CU.Kind);
-                     end if;
-                  end loop;
+               elsif Source.Source.Language = Name_Type (Ada_Lang) then
+                  Sources.Insert (Source);
                end if;
             end;
          end loop;
-      end loop;
 
-      --
-      --  All along, we will exclude non-ada sources.
-      --
+      elsif Opt.Closure_Mode then
+         --  If none was provided, then:
+         --     - Either we're in closure mode, and we want to use the mains
+         --       from the root project.
 
-      --  Fill the Sources set with the files given on the CL.
-      --  Print "Can't find source for ..." if a file can't be matched with a
-      --  compilable source from the root project (or from the project tree if
-      --  All_Projects is set).
-
-      for F of Opt.Files loop
-         declare
-            Source : constant Project.Source.Object :=
-                       Source_For
-                         (File                 => F,
-                          File_May_Be_Artifact => True);
-         begin
-            if not Source.Is_Defined then
-               Text_IO.Put_Line ("Can't find source for " & F);
-
-            elsif Source.Source.Language = Name_Type (Ada_Lang) then
-               Sources.Insert (Source);
+         for S of Tree.Root_Project.Sources (Need_Update => False) loop
+            if Tree.Root_Project.Has_Mains
+              and then S.Is_Main
+              and then S.Source.Language = Name_Type (Ada_Lang)
+            then
+               Sources.Insert (S);
             end if;
-         end;
-      end loop;
+         end loop;
 
-      --  If none was provided, then:
-      --     - Either we're in closure mode, and we want to use the mains from
-      --       the root project.
-      --     - Or we're not, and we will use all the compilable sources (from
-      --       the root project or the entire tree, depending on All_Sources).
+      elsif Opt.All_Projects then
+         --  - Or we're not, and we will use all the compilable sources (from
+         --    the root project or the entire tree, depending on All_Sources).
 
-      if Opt.Files.Is_Empty then
-         if Opt.Closure_Mode then
-            for S of Tree.Root_Project.Sources (Need_Update => False) loop
-               if Tree.Root_Project.Has_Mains
-                 and then S.Is_Main
-                 and then S.Source.Language = Name_Type (Ada_Lang)
+         for CV in Tree.Iterate ((Project.I_Extended => False, others => True))
+         loop
+            for S_Cur in Project.Tree.Element (CV).Sources
+              (Need_Update => False).Iterate (Filter => S_Compilable)
+            loop
+               if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
                then
-                  Sources.Insert (S);
+                  declare
+                     D_Cur : Project.Source.Set.Cursor;
+                     OK    : Boolean;
+                  begin
+                     Sources.Insert (Element (S_Cur), D_Cur, OK);
+
+                     --  Source could be already in the set because we
+                     --  can have the same project in the All_Views
+                     --  twice, one time for aggregated project another
+                     --  time for the imported project. Besides that we
+                     --  can have the same source in the aggregated
+                     --  project and in the aggregating library project.
+
+                     if not OK
+                       and then Element (S_Cur).Is_Aggregated
+                       < Element (D_Cur).Is_Aggregated
+                     then
+                        --  We prefer Is_Aggregated = False because it
+                        --  has object files.
+
+                        Sources.Replace (D_Cur, Element (S_Cur));
+                     end if;
+                  end;
                end if;
             end loop;
+         end loop;
 
-         else
-            if Opt.All_Projects then
-               for V of All_Views loop
-                  for S_Cur in V.Sources (Need_Update => False).Iterate
-                    (Filter => S_Compilable)
-                  loop
-                     if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
-                     then
-                        declare
-                           D_Cur : Project.Source.Set.Cursor;
-                           OK    : Boolean;
-                        begin
-                           Sources.Insert (Element (S_Cur), D_Cur, OK);
-
-                           --  Source could be already in the set because we
-                           --  can have the same project in the All_Views
-                           --  twice, one time for aggregated project another
-                           --  time for the imported project. Besides that we
-                           --  can have the same source in the aggregated
-                           --  project and in the aggregating library project.
-
-                           if not OK
-                             and then Element (S_Cur).Is_Aggregated
-                                    < Element (D_Cur).Is_Aggregated
-                           then
-                              --  We prefer Is_Aggregated = False because it
-                              --  has object files.
-
-                              Sources.Replace (D_Cur, Element (S_Cur));
-                           end if;
-                        end;
-                     end if;
-                  end loop;
-               end loop;
-
-            else
-               for S_Cur in Tree.Root_Project.Sources
-                 (Need_Update => False).Iterate (Filter => S_Compilable)
-               loop
-                  if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
-                  then
-                     Sources.Insert (Element (S_Cur));
-                  end if;
-               end loop;
+      else
+         for S_Cur in Tree.Root_Project.Sources
+           (Need_Update => False).Iterate (Filter => S_Compilable)
+         loop
+            if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
+            then
+               Sources.Insert (Element (S_Cur));
             end if;
-         end if;
+         end loop;
       end if;
 
       --  Do nothing if no source was found
