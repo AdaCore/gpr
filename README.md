@@ -84,8 +84,8 @@ See the LibGPR2 [examples](examples).
 TESTING THE LIBRARY
 -------------------
 
-To run the testsuite [GNATpython](https://github.com/Nikokrock/gnatpython) is
-required:
+To run the testsuite [e3-core(https://github.com/AdaCore/e3-core) and
+[e3-testsuite(https://github.com/AdaCore/e3-testsuite) are required:
 
 ```sh
 $ cd testsuite
