@@ -213,6 +213,20 @@ package GPR2.C is
    --  Answer:
    --      {'context': Dict[str, str]}
 
+   function GPR2_Project_Tree_Language_Properties
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.Tree.Runtime, Object_Suffix, Dependency_Suffix  binding
+   --
+   --  Request:
+   --
+   --      {'tree_id':  str,
+   --       'language': str}
+   --
+   --  Answer:
+   --      {'runtime':           str,
+   --       'object_suffix':     str,
+   --       'dependency_suffix': str}
+
 private
 
    pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
@@ -244,4 +258,7 @@ private
    pragma Export (C,
                   GPR2_Project_Tree_Context,
                   "gpr2_prj_tree_context");
+   pragma Export (C,
+                  GPR2_Project_Tree_Language_Properties,
+                  "gpr2_prj_tree_language_properties");
 end GPR2.C;

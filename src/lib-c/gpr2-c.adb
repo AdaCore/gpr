@@ -157,6 +157,33 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Get_View;
 
+   -------------------------------------------
+   -- GPR2_Project_Tree_Language_Properties --
+   -------------------------------------------
+
+   function GPR2_Project_Tree_Language_Properties
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Tree     : constant Project_Tree_Access :=
+                      Get_Project_Tree (Request, "tree_id");
+         Language : constant Optional_Name_Type :=
+                      Optional_Name_Type (Get_String (Obj => Request,
+                                                      Key => "language",
+                                                      Default => "ada"));
+      begin
+         Set_Optional_Name (Result, "runtime", Tree.Runtime (Language));
+         Set_Name (Result, "object_suffix", Tree.Object_Suffix (Language));
+         Set_Name (Result, "dependency_suffix",
+                   Tree.Dependency_Suffix (Language));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Language_Properties;
+
    --------------------------------
    -- GPR2_Project_Load_Autoconf --
    --------------------------------

@@ -34,6 +34,14 @@ class ProjectTree:
         request = {"filename": project_file, "context": context if context else {}}
         answer = LibGPR2.gpr2_prj_tree_load_autoconf(request)
         self.id = answer["tree_id"]
+        self.properties_for_languages = {}
+
+    def language_properties(self, language: Optional [str] = None):
+        if self.properties_for_languages[language] is None:
+            request = {"tree_id": self.id, "language": language}
+            answer = LibGPR2.gpr2_prj_config_language_properties(request)
+            self.properties_for_languages[language] = answer
+        return self.properties_for_languages[language]
 
         request = {"view_id": self.id}
         self.properties = LibGPR2.gpr2_prj_tree_properties(request)
@@ -58,6 +66,15 @@ class ProjectTree:
         """
         answer = LibGPR2.gpr2_prj_tree_root_project({"tree_id": self.id})
         return ProjectView(id=answer["view_id"])
+
+    def runtime(self, language: Optional [str] = None):
+        return self.language_properties(language)["runtime"]
+
+    def object_suffix(self, language: Optional [str] = None):
+        return self.language_properties(language)["object_suffix"]
+
+    def dependency_suffix(self, language: Optional [str] = None):
+        return self.language_properties(language)["dependency_suffix"]
 
     def log_messages(self,
                      information = True,
