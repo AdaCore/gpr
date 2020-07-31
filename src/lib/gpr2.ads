@@ -156,12 +156,12 @@ private
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
-         when K_Standard          => "a standard",
-         when K_Configuration     => "a configuration",
-         when K_Abstract          => "an abstract",
-         when K_Library           => "a library",
-         when K_Aggregate         => "an aggregate",
-         when K_Aggregate_Library => "an aggregate library") & " project");
+         when K_Standard          => "standard",
+         when K_Configuration     => "configuration",
+         when K_Abstract          => "abstract",
+         when K_Library           => "library",
+         when K_Aggregate         => "aggregate",
+         when K_Aggregate_Library => "aggregate library") & " project");
 
    Debug : Boolean := False;
 
