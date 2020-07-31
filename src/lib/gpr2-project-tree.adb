@@ -2048,11 +2048,30 @@ package body GPR2.Project.Tree is
             end loop;
          end if;
 
-         --  Now we can record the aggregated projects based on the possibly
-         --  new Project_Files attribute value. This attribute may be set
-         --  depending on the parsing of the imported projects.
+         if View.Qualifier not in Aggregate_Kind then
+            if P_Data.Attrs.Contains (PRA.Project_Files) then
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     """project_files"" is only valid in aggregate projects",
+                     P_Data.Attrs.Element (PRA.Project_Files)));
+            end if;
 
-         if View.Qualifier in Aggregate_Kind then
+         elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
+            --  Aggregate project can't have Project_Files attribute
+
+            Self.Messages.Append
+              (Message.Create
+                 (Message.Error,
+                  "Attribute ""project_files"" must be specified in"
+                  & " aggregate project",
+                  Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+
+         else
+            --  Now we can record the aggregated projects based on the possibly
+            --  new Project_Files attribute value. This attribute may be set
+            --  depending on the parsing of the imported projects.
+
             P_Data.Aggregated.Clear;
 
             --  Pathname for Project_Files projects are relative to the
