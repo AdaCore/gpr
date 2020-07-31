@@ -3,6 +3,7 @@ from gpr2 import GPR2Error
 from gpr2.capi import LibGPR2
 from gpr2.view import ProjectView
 from gpr2.level_format import LevelFormat
+from gpr2.message import Message
 from typing import TYPE_CHECKING
 import os
 

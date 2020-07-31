@@ -1,7 +1,7 @@
 from gpr2.capi import LibGPR2
 
 
-class ProjectView:
+class Message:
     def __init__(self, message):
         self.message = message
  
