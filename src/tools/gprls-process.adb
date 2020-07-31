@@ -18,8 +18,7 @@
 
 with Ada.Calendar;
 with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Vectors;
+with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Text_IO;
 
 with GPR.Err;
@@ -28,6 +27,7 @@ with GPR.Sinput;
 with GPR.Snames;
 
 with GPR2.Unit;
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
@@ -244,17 +244,16 @@ begin
 
       use type Project.Source.Object;
 
-      package Source_Vector_Package is new Ada.Containers.Vectors
-        (Positive, Project.Source.Object);
+      function Path_Equal (Left, Right : Project.Source.Object) return Boolean
+      is (Left = Right and then Left.Path_Name.Value = Right.Path_Name.Value);
 
-      package String_To_Positive_Maps is new
-        Ada.Containers.Indefinite_Ordered_Maps (String, Positive);
+      function Path_Less (Left, Right : Project.Source.Object) return Boolean
+      is (Left < Right
+          or else (Left = Right
+                   and then Left.Path_Name.Value < Right.Path_Name.Value));
 
-      All_Sources      : Source_Vector_Package.Vector;
-      Src_Simple_Names : String_To_Positive_Maps.Map;
-      Dep_Simple_Names : String_To_Positive_Maps.Map;
-      Dep_Base_Names   : String_To_Positive_Maps.Map;
-      Obj_Simple_Names : String_To_Positive_Maps.Map;
+      package Sources_By_Path is new Ada.Containers.Indefinite_Ordered_Sets
+        (Project.Source.Object, "<" => Path_Less, "=" => Path_Equal);
 
       type File_Status is
         (OK,          --  matching timestamp
@@ -263,7 +262,11 @@ begin
 
       No_Obj : constant String := "<no_obj>";
 
-      Sources : Project.Source.Set.Object;
+      Position : Sources_By_Path.Cursor;
+      Inserted : Boolean;
+
+      Remains : GPR2.Containers.Value_Set := Opt.Files;
+      Sources : Sources_By_Path.Set;
       --  The sources that we will browse. This set may be:
       --     - All the project sources when not in closure mode, possibly from
       --       the full project tree if All_Projects is True
@@ -279,11 +282,6 @@ begin
       procedure Display_Closures;
 
       procedure Display_Normal;
-
-      function Source_For (File : String) return Project.Source.Object;
-      --  Given a file basename and a project view, tries to find a
-      --  compilable source from this view that is associated with the
-      --  file.
 
       --------------
       -- Checksum --
@@ -592,42 +590,6 @@ begin
          end loop;
       end Display_Normal;
 
-      ----------------
-      -- Source_For --
-      ----------------
-
-      function Source_For (File : String) return Project.Source.Object is
-         CN : String_To_Positive_Maps.Cursor;
-
-         function Search_In (Map : String_To_Positive_Maps.Map) return Boolean;
-
-         function Search_In (Map : String_To_Positive_Maps.Map) return Boolean
-         is
-         begin
-            CN := Map.Find (File);
-            return String_To_Positive_Maps.Has_Element (CN);
-         end Search_In;
-
-         function Result return Project.Source.Object is
-           (All_Sources (String_To_Positive_Maps.Element (CN)));
-
-      begin
-         if Search_In (Src_Simple_Names) then
-            return Result;
-
-         elsif Search_In (Dep_Simple_Names) then
-            return Result;
-
-         elsif Search_In (Dep_Base_Names) then
-            return Result;
-
-         elsif Search_In (Obj_Simple_Names) then
-            return Result;
-         end if;
-
-         return Project.Source.Undefined;
-      end Source_For;
-
    begin
       if Opt.Verbose then
          Display_Paths;
@@ -641,64 +603,60 @@ begin
          loop
             for S of Project.Tree.Element (CV).Sources (Need_Update => False)
             loop
-               All_Sources.Append (S);
-
-               Src_Simple_Names.Include
-                 (String (S.Source.Path_Name.Simple_Name),
-                  Positive (All_Sources.Length));
-
                declare
-                  Artifacts : constant Project.Source.Artifact.Object :=
-                                S.Artifacts;
+                  Artifacts : Project.Source.Artifact.Object;
 
-                  procedure Insert_Prefer_Body
-                    (Map  : in out String_To_Positive_Maps.Map;
-                     Key  : Name_Type;
-                     Kind : GPR2.Unit.Library_Unit_Type);
+                  function Insert_Prefer_Body
+                    (Key  : Name_Type;
+                     Kind : GPR2.Unit.Library_Unit_Type) return Boolean;
 
                   ------------------------
                   -- Insert_Prefer_Body --
                   ------------------------
 
-                  procedure Insert_Prefer_Body
-                    (Map  : in out String_To_Positive_Maps.Map;
-                     Key  : Name_Type;
-                     Kind : GPR2.Unit.Library_Unit_Type)
+                  function Insert_Prefer_Body
+                    (Key  : Name_Type;
+                     Kind : GPR2.Unit.Library_Unit_Type) return Boolean
                   is
-                     Position : String_To_Positive_Maps.Cursor;
+                     Position : Sources_By_Path.Cursor;
                      Inserted : Boolean;
                   begin
-                     Map.Insert
-                       (String (Key), Positive (All_Sources.Length), Position,
-                        Inserted);
+                     if Kind /= GPR2.Unit.S_Spec
+                       and then Opt.Files.Contains (String (Key))
+                     then
+                        Remains.Exclude (String (Key));
 
-                     if not Inserted and then Kind = GPR2.Unit.S_Body then
-                        --  Body has a preference
+                        Sources.Insert (S, Position, Inserted);
 
-                        Map (Position) := Positive (All_Sources.Length);
+                        return True;
                      end if;
+
+                     return False;
                   end Insert_Prefer_Body;
 
                begin
-                  if S.Source.Has_Units then
-                     for CU of S.Source.Units loop
-                        if Artifacts.Has_Dependency (CU.Index) then
-                           Insert_Prefer_Body
-                             (Dep_Simple_Names,
-                              Artifacts.Dependency (CU.Index).Simple_Name,
-                              CU.Kind);
-                           Insert_Prefer_Body
-                             (Dep_Base_Names,
-                              Artifacts.Dependency (CU.Index).Base_Name,
-                              CU.Kind);
-                        end if;
+                  if not Insert_Prefer_Body
+                           (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body)
+                    and then S.Source.Has_Units
+                  then
+                     Artifacts := S.Artifacts;
 
-                        if Artifacts.Has_Object_Code (CU.Index) then
+                     for CU of S.Source.Units loop
+                        exit when Artifacts.Has_Dependency (CU.Index)
+                          and then
+                            (Insert_Prefer_Body
+                               (Artifacts.Dependency (CU.Index).Simple_Name,
+                                CU.Kind)
+                             or else
+                             Insert_Prefer_Body
+                               (Artifacts.Dependency (CU.Index).Base_Name,
+                                CU.Kind));
+
+                        exit when Artifacts.Has_Object_Code (CU.Index)
+                          and then
                            Insert_Prefer_Body
-                             (Obj_Simple_Names,
-                              Artifacts.Object_Code (CU.Index).Simple_Name,
+                             (Artifacts.Object_Code (CU.Index).Simple_Name,
                               CU.Kind);
-                        end if;
                      end loop;
                   end if;
                end;
@@ -714,17 +672,8 @@ begin
          --  a compilable source from the root project (or from the project
          --   tree if All_Projects is set).
 
-         for F of Opt.Files loop
-            declare
-               Source : constant Project.Source.Object := Source_For (F);
-            begin
-               if not Source.Is_Defined then
-                  Text_IO.Put_Line ("Can't find source for " & F);
-
-               elsif Source.Source.Language = Name_Type (Ada_Lang) then
-                  Sources.Insert (Source);
-               end if;
-            end;
+         for F of Remains loop
+            Text_IO.Put_Line ("Can't find source for " & F);
          end loop;
 
       elsif Opt.Closure_Mode then
@@ -752,29 +701,24 @@ begin
             loop
                if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
                then
-                  declare
-                     D_Cur : Project.Source.Set.Cursor;
-                     OK    : Boolean;
-                  begin
-                     Sources.Insert (Element (S_Cur), D_Cur, OK);
+                  Sources.Insert (Element (S_Cur), Position, Inserted);
 
-                     --  Source could be already in the set because we
-                     --  can have the same project in the All_Views
-                     --  twice, one time for aggregated project another
-                     --  time for the imported project. Besides that we
-                     --  can have the same source in the aggregated
-                     --  project and in the aggregating library project.
+                  --  Source could be already in the set because we
+                  --  can have the same project in the All_Views
+                  --  twice, one time for aggregated project another
+                  --  time for the imported project. Besides that we
+                  --  can have the same source in the aggregated
+                  --  project and in the aggregating library project.
 
-                     if not OK
-                       and then Element (S_Cur).Is_Aggregated
-                       < Element (D_Cur).Is_Aggregated
-                     then
-                        --  We prefer Is_Aggregated = False because it
-                        --  has object files.
+                  if not Inserted
+                    and then Element (S_Cur).Is_Aggregated
+                    < Sources_By_Path.Element (Position).Is_Aggregated
+                  then
+                     --  We prefer Is_Aggregated = False because it
+                     --  has object files.
 
-                        Sources.Replace (D_Cur, Element (S_Cur));
-                     end if;
-                  end;
+                     Sources.Replace (Element (S_Cur));
+                  end if;
                end if;
             end loop;
          end loop;
