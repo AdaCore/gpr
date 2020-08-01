@@ -1470,6 +1470,8 @@ package body GPR2.Project.Tree is
       Starting_From    : View.Object := View.Undefined;
       Implicit_Project : Boolean := False) return View.Object
    is
+      Search_Path : Path_Name.Set.Object := Self.Search_Paths;
+      PP          : Attribute.Object;
 
       function Load (Filename : Path_Name.Object) return Definition.Data;
       --  Returns the Data definition for the given project
@@ -1763,7 +1765,7 @@ package body GPR2.Project.Tree is
       function Load (Filename : Path_Name.Object) return Definition.Data is
 
          Paths   : constant Path_Name.Set.Object :=
-                     GPR2.Project.Search_Paths (Filename, Self.Search_Paths);
+                     GPR2.Project.Search_Paths (Filename, Search_Path);
          Project : constant Parser.Project.Object :=
                      Parser.Project.Parse
                        (Filename, Self.Implicit_With, Messages);
@@ -1820,6 +1822,17 @@ package body GPR2.Project.Tree is
       end Load;
 
    begin
+      if Starting_From.Is_Defined
+        and then Starting_From.Check_Attribute (PRA.Project_Path, Result => PP)
+      then
+         for P of PP.Values loop
+            Search_Path.Append
+              (Path_Name.Create_Directory
+                 (Name_Type (P.Text),
+                  Name_Type (Starting_From.Dir_Name.Value)));
+         end loop;
+      end if;
+
       Circularities := False;
 
       return Internal (Filename, Status, Starting_From);
