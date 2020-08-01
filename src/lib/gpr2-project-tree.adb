@@ -2108,7 +2108,7 @@ package body GPR2.Project.Tree is
                               Project));
                      end if;
 
-                  else
+                  elsif Pathname.Exists then
                      declare
                         Ctx           : GPR2.Context.Object;
                         Messages      : Log.Object;
@@ -2157,6 +2157,14 @@ package body GPR2.Project.Tree is
                         P_Data.Aggregated.Insert
                           (Name_Type (Pathname.Value), A_View);
                      end;
+
+                  else
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "file """ & Project.Text & """ not found",
+                           Project));
+                     exit;
                   end if;
                end;
             end loop;
