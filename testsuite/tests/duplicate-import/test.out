@@ -1,4 +1,3 @@
 Messages found:
 demo.gpr:3:06: warning: duplicate with clause 'first'
 demo.gpr:8:22: error: undefined external reference "UNSET_ENVIRONMENT_VARIABLE"
-first.gpr:4:24: warning: library directory "lib" not found

@@ -60,11 +60,6 @@ package body GPR2.Project.Tree is
      with Post => Register_View'Result.Is_Defined;
    --  Register view definition in the Tree and return the View object
 
-   procedure Copy_Definition
-     (Target : Definition.Ref; Source : Definition.Data)
-     with Inline, Pre => Target.Id = Source.Id;
-   --  Copy definition fields
-
    procedure Set_Context
      (Self    : in out Object;
       Changed : access procedure (Project : View.Object) := null);
@@ -329,16 +324,6 @@ package body GPR2.Project.Tree is
    begin
       return Self.Root_Project.Context;
    end Context;
-
-   ---------------------
-   -- Copy_Definition --
-   ---------------------
-
-   procedure Copy_Definition
-     (Target : Definition.Ref; Source : Definition.Data) is
-   begin
-      Target.all := Source;
-   end Copy_Definition;
 
    -------------------------
    -- Create_Runtime_View --
@@ -2012,7 +1997,7 @@ package body GPR2.Project.Tree is
       is
          use type GPR2.Context.Binary_Signature;
 
-         P_Data        : Definition.Data := Definition.Get_RO (View).all;
+         P_Data        : constant Definition.Ref := Definition.Get (View);
          Old_Signature : constant GPR2.Context.Binary_Signature :=
                            P_Data.Signature;
          New_Signature : constant GPR2.Context.Binary_Signature :=
@@ -2208,8 +2193,6 @@ package body GPR2.Project.Tree is
                   P_Data.Kind := K_Library;
                end if;
             end if;
-
-            Copy_Definition (Definition.Get (View), P_Data);
 
             --  Signal project change only if we have different and non default
             --  signature. That is if there is at least some external used
@@ -2587,7 +2570,9 @@ package body GPR2.Project.Tree is
          for View of Self loop
             Set_View (View);
          end loop;
+      end if;
 
+      if not Has_Error then
          --  We now have an up-to-date tree, do some validity checks if there
          --  is no issue detected yet.
 
