@@ -1455,7 +1455,7 @@ package body GPR2.Project.View is
       --  Lookup in the ancestors first
 
       while Dad.Is_Defined loop
-         if Definition.Get_RO (Dad).Trees.Project.Name = Name then
+         if Dad.Name = Name then
             return Dad;
          end if;
 
