@@ -30,10 +30,6 @@ pragma Warnings (On);
 
 package body GPR2.Source is
 
-   One_Second : constant Duration :=
-                  Calendar.Conversions.To_Duration
-                    (tv_sec => 1, tv_nsec => 0);
-
    function Get_ALI_Timestamp
      (File : GPR2.Path_Name.Object) return Calendar.Time
      with Pre => File.Is_Defined;
@@ -147,43 +143,21 @@ package body GPR2.Source is
    function Get_ALI_Timestamp
      (File : GPR2.Path_Name.Object) return Ada.Calendar.Time
    is
-      use type Calendar.Time;
+      use Interfaces;
+      use Ada.Calendar;
+      use type C.long;
 
-      Timestamp : Calendar.Time :=
-                    Directories.Modification_Time (File.Value);
+      Timestamp : constant C.long :=
+                    Conversions.To_Unix_Time
+                      (Directories.Modification_Time (File.Value));
+      --  File modification time rounded to one second
       use System.OS_Constants;
    begin
-      pragma Warnings (Off, "*this code can never be executed*");
-
-      if Target_OS = Windows then
-         declare
-            use type Interfaces.C.int;
-
-            Year   : Interfaces.C.int;
-            Month  : Interfaces.C.int;
-            Day    : Interfaces.C.int;
-            Hour   : Interfaces.C.int;
-            Minute : Interfaces.C.int;
-            Second : Interfaces.C.int;
-         begin
-            Calendar.Conversions.To_Struct_Tm
-              (T       => Timestamp,
-               tm_year => Year,
-               tm_mon  => Month,
-               tm_day  => Day,
-               tm_hour => Hour,
-               tm_min  => Minute,
-               tm_sec  => Second);
-
-            if Second mod 2 > 0 then
-               Timestamp := Timestamp + One_Second;
-            end if;
-         end;
-      end if;
-
-      pragma Warnings (On, "*this code can never be executed*");
-
-      return Timestamp;
+      return Conversions.To_Ada_Time
+        (Timestamp
+         + (if Target_OS = Windows and then Timestamp mod 2 > 0
+            then 1
+            else 0));
    end Get_ALI_Timestamp;
 
    ---------
