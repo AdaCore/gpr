@@ -105,6 +105,28 @@ package body GPR2.C is
       Free (Tmp);
    end GPR2_Free_Answer;
 
+   ---------------------------------------
+   -- GPR2_Project_Tree_Add_Tool_Prefix --
+   ---------------------------------------
+
+   function GPR2_Project_Tree_Add_Tool_Prefix
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Full_Tool_Name : constant Name_Type :=
+                            GPR2.Project.Tree.Add_Tool_Prefix
+                              (Get_Project_Tree (Request, "tree_id").all,
+                               Name_Type (Get_String (Request, "tool_name")));
+      begin
+         Set_String (Result, "full_tool_name", String (Full_Tool_Name));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Add_Tool_Prefix;
+
    -------------------------------
    -- GPR2_Project_Tree_Context --
    -------------------------------
@@ -130,6 +152,58 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Context;
+
+   --------------------------------
+   -- GPR2_Project_Tree_Get_File --
+   --------------------------------
+
+   function GPR2_Project_Tree_Get_File
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         Tree             : constant Project_Tree_Access :=
+                              Get_Project_Tree (Request, "tree_id");
+         Base_Name        : constant Simple_Name :=
+                              Simple_Name (Get_String (Request, "base_name"));
+         View             : constant Project_View_Access :=
+                              Get_Optional_Project_View (Request, "view_id");
+         Use_Source_Path  : constant Boolean :=
+                              Get_Boolean (Request, "use_source_path", True);
+         Use_Object_Path  : constant Boolean :=
+                              Get_Boolean (Request, "use_object_path", True);
+         Predefined_Only  : constant Boolean :=
+                              Get_Boolean (Request, "predefined_only", False);
+         Return_Ambiguous : constant Boolean :=
+                              Get_Boolean (Request, "return_ambiguous", True);
+         File             : GPR2.Path_Name.Object;
+      begin
+         if View = null then
+            File := GPR2.Project.Tree.Get_File
+              (Self             => Tree.all,
+               Base_Name        => Base_Name,
+               Use_Source_Path  => Use_Source_Path,
+               Use_Object_Path  => Use_Object_Path,
+               Predefined_Only  => Predefined_Only,
+               Return_Ambiguous => Return_Ambiguous);
+         else
+            File := GPR2.Project.Tree.Get_File
+              (Self             => Tree.all,
+               Base_Name        => Base_Name,
+               View             => View.all,
+               Use_Source_Path  => Use_Source_Path,
+               Use_Object_Path  => Use_Object_Path,
+               Predefined_Only  => Predefined_Only,
+               Return_Ambiguous => Return_Ambiguous);
+         end if;
+
+         Set_String (Result, "filename", String (File.Value));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Get_File;
 
    --------------------------------
    -- GPR2_Project_Tree_Get_View --
@@ -160,6 +234,35 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Get_View;
+
+   ------------------------------------------
+   -- GPR2_Project_Tree_Invalidate_Sources --
+   ------------------------------------------
+
+   function GPR2_Project_Tree_Invalidate_Sources
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         pragma Unreferenced (Result);
+         Tree : constant Project_Tree_Access :=
+                  Get_Project_Tree (Request, "tree_id");
+         View : constant Project_View_Access :=
+                  Get_Optional_Project_View (Request, "view_id");
+      begin
+         if View = null then
+            GPR2.Project.Tree.Invalidate_Sources (Self => Tree.all);
+         else
+            GPR2.Project.Tree.Invalidate_Sources (Self => Tree.all,
+                                                  View => View.all);
+         end if;
+
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Invalidate_Sources;
 
    -------------------------------------------
    -- GPR2_Project_Tree_Language_Properties --
@@ -327,6 +430,28 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Log_Messages;
 
+   --------------------------------------------
+   -- GPR2_Project_Tree_Project_Search_Paths --
+   --------------------------------------------
+
+   function GPR2_Project_Tree_Project_Search_Paths
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+      begin
+         Set_Path_Name_Set_Object
+           (Obj => Result,
+            Key => "project_search_paths",
+            Set => GPR2.Project.Tree.Project_Search_Paths
+              (Self => Get_Project_Tree (Request, "tree_id").all));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Project_Search_Paths;
+
    ----------------------------------
    -- GPR2_Project_Tree_Properties --
    ----------------------------------
@@ -356,6 +481,27 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Properties;
 
+   ----------------------------------------------------
+   -- GPR2_Project_Tree_Register_Project_Search_Path --
+   ----------------------------------------------------
+
+   function GPR2_Project_Tree_Register_Project_Search_Path
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         pragma Unreferenced (Result);
+      begin
+         GPR2.Project.Tree.Register_Project_Search_Path
+           (Self => Get_Project_Tree (Request, "tree_id").all,
+            Dir  => Get_File_Path (Request, "dir"));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Register_Project_Search_Path;
+
    ------------------------------------
    -- GPR2_Project_Tree_Root_Project --
    ------------------------------------
@@ -379,6 +525,27 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Root_Project;
+
+   -----------------------------------
+   -- GPR2_Project_Tree_Set_Context --
+   -----------------------------------
+
+   function GPR2_Project_Tree_Set_Context
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         pragma Unreferenced (Result);
+      begin
+         GPR2.Project.Tree.Set_Context
+           (Self    => Get_Project_Tree (Request, "tree_id").all,
+            Context => Get_Context (Request, "context"));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Set_Context;
 
    ------------------------------
    -- GPR2_Project_Tree_Unload --
@@ -405,6 +572,27 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Unload;
+
+   --------------------------------------
+   -- GPR2_Project_Tree_Update_Sources --
+   --------------------------------------
+
+   function GPR2_Project_Tree_Update_Sources
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         pragma Unreferenced (Result);
+      begin
+         GPR2.Project.Tree.Update_Sources
+           (Self          => Get_Project_Tree (Request, "tree_id").all,
+            Stop_On_Error => Get_Boolean (Request, "stop_on_error", True));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_Tree_Update_Sources;
 
    ---------------------------------
    -- GPR2_Project_View_Attribute --

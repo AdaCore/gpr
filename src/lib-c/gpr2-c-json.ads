@@ -22,6 +22,7 @@ with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Message;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
@@ -29,8 +30,6 @@ with GPR2.Project.View;
 with GPR2.Source_Reference;
 
 package GPR2.C.JSON is
-
-   use GNATCOLL.JSON;
 
    subtype JSON_Value is GNATCOLL.JSON.JSON_Value;
    subtype JSON_Array is GNATCOLL.JSON.JSON_Array;
@@ -137,12 +136,18 @@ package GPR2.C.JSON is
    --  expected structure an exception is raised.
 
    function Get_Project_View
-      (Obj : JSON_Value; Key : String) return Project_View_Access;
+     (Obj : JSON_Value; Key : String) return Project_View_Access;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a JSON string representing a project view id. The returned object is an
    --  access to a GPR2.Project.Tree.Object.
    --  If the member does not exist or its value does not comply with the
    --  expected structure an exception is raised.
+
+   function Get_Optional_Project_View
+     (Obj : JSON_Value; Key : String) return Project_View_Access;
+   --  Returns member Key of JSON object Obj, assuming that member's value is
+   --  a JSON string representing a project view id. If no value is provide
+   --  null is returned
 
    function Get_Status (Obj : JSON_Value) return C_Status;
    --  Returns the "status" member of an answer JSON object.
@@ -173,12 +178,6 @@ package GPR2.C.JSON is
      (Obj : JSON_Value; Key : String := "configuration_id")
       return GPR2.Project.Configuration.Object;
    --  Return configuration defined in Key member
-
-   function Has_Non_Null_Field
-     (Obj : JSON_Value; Key : String) return Boolean is
-     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) and then
-      GNATCOLL.JSON.Get (Val => Obj, Field => Key) /= GNATCOLL.JSON.JSON_Null);
-   --  Return True if Obj contains a non null field named Key
 
    ---------------------
    -- Encoding answer --
@@ -266,5 +265,11 @@ package GPR2.C.JSON is
        Key  : String;
        Name : GPR2.Name_Type);
    --  Set member Key of Obj to Name.
+
+   procedure Set_Path_Name_Set_Object
+     (Obj : JSON_Value;
+      Key : String;
+      Set : GPR2.Path_Name.Set.Object);
+   --  Set member Key of Obj with path name set full names.
 
 end GPR2.C.JSON;

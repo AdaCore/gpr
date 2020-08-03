@@ -24,6 +24,7 @@ with System.Storage_Elements;
 package body GPR2.C.JSON is
 
    use type GPR2.Project.Registry.Attribute.Value_Kind;
+   use type GNATCOLL.JSON.JSON_Value;
 
    function Convert is new Ada.Unchecked_Conversion
       (Interfaces.C.Strings.chars_ptr, C_Answer);
@@ -33,6 +34,12 @@ package body GPR2.C.JSON is
 
    function Get_Address
       (Obj : JSON_Value; Key : String) return System.Address;
+
+   function Has_Non_Null_Field
+     (Obj : JSON_Value; Key : String) return Boolean is
+     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) and then
+      GNATCOLL.JSON.Get (Val => Obj, Field => Key) /= GNATCOLL.JSON.JSON_Null);
+   --  Return True if Obj contains a non null field named Key
 
    ------------
    -- Decode --
@@ -290,6 +297,21 @@ package body GPR2.C.JSON is
    end Get_Optional_File_Path;
 
    -------------------------------
+   -- Get_Optional_Project_View --
+   -------------------------------
+
+   function Get_Optional_Project_View
+     (Obj : JSON_Value; Key : String) return Project_View_Access
+   is
+   begin
+      if Has_Non_Null_Field (Obj, Key) then
+         return Get_Project_View (Obj, Key);
+      else
+         return null;
+      end if;
+   end Get_Optional_Project_View;
+
+   -------------------------------
    -- Get_Project_Configuration --
    -------------------------------
 
@@ -507,6 +529,24 @@ package body GPR2.C.JSON is
          GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
       end if;
    end Set_Path;
+
+   ------------------------------
+   -- Set_Path_Name_Set_Object --
+   ------------------------------
+
+   procedure Set_Path_Name_Set_Object
+     (Obj : JSON_Value;
+      Key : String;
+      Set : GPR2.Path_Name.Set.Object)
+   is
+      Elements : JSON_Array;
+   begin
+      for Path of Set loop
+         GNATCOLL.JSON.Append
+           (Elements, GNATCOLL.JSON.Create (String (Path.Value)));
+      end loop;
+      GNATCOLL.JSON.Set_Field (Obj, Key, Elements);
+   end Set_Path_Name_Set_Object;
 
    ---------------------------
    -- Set_Project_Attribute --

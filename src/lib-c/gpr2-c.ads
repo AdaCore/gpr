@@ -197,7 +197,7 @@ package GPR2.C is
    --       'name':      str}   # GPR2.Project.View.Name
 
    function GPR2_Project_View_Attribute
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.View.Attribute binding
    --
    --  Request:
@@ -233,6 +233,96 @@ package GPR2.C is
    --       'object_suffix':     str,
    --       'dependency_suffix': str}
 
+   function GPR2_Project_Tree_Add_Tool_Prefix
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id'   : str,
+   --       'tool_name' : str}
+   --
+   --  Answer:
+   --      {'full_tool_name' : str}
+
+   function GPR2_Project_Tree_Set_Context
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id': str,
+   --      {'context':
+   --          ['name':  str,
+   --           'value': str]}
+   --
+   --  Answer:
+   --      {}
+
+   function GPR2_Project_Tree_Invalidate_Sources
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id': str,
+   --       'view_id': Optional[str] = none}
+   --
+   --  Answer:
+   --      {}
+
+   function GPR2_Project_Tree_Update_Sources
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id'       : str,
+   --       'stop_on_error' : Optional[bool] = true}
+   --
+   --  Answer:
+   --      {}
+
+   function GPR2_Project_Tree_Register_Project_Search_Path
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id': str,
+   --       'dir'    : str}
+   --
+   --  Answer:
+   --      {}
+
+   function GPR2_Project_Tree_Project_Search_Paths
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id': str,}
+   --
+   --  Answer:
+   --      {'project_search_paths' : [str]}
+
+   function GPR2_Project_Tree_Get_File
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attribute binding
+   --
+   --  Request:
+   --
+   --      {'tree_id'          : str,
+   --       'base_name'        : str,
+   --       'view'             : Optional[ProjectView] = None,
+   --       'use_source_path'  : Optional[bool] = true,
+   --       'use_object_path'  : Optional[bool] = true,
+   --       'predefined_only'  : Optional[bool] = false,
+   --       'return_ambiguous' : Optional[bool] = true}
+   --
+   --  Answer:
+   --      {'filename'         : str}
+
 private
 
    pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
@@ -267,4 +357,25 @@ private
    pragma Export (C,
                   GPR2_Project_Tree_Language_Properties,
                   "gpr2_prj_tree_language_properties");
+   pragma Export (C,
+                  GPR2_Project_Tree_Add_Tool_Prefix,
+                  "gpr2_prj_tree_add_tool_prefix");
+   pragma Export (C,
+                  GPR2_Project_Tree_Set_Context,
+                  "gpr2_prj_tree_set_context");
+   pragma Export (C,
+                  GPR2_Project_Tree_Invalidate_Sources,
+                  "gpr2_prj_tree_invalidate_src");
+   pragma Export (C,
+                  GPR2_Project_Tree_Update_Sources,
+                  "gpr2_prj_tree_update_src");
+   pragma Export (C,
+                  GPR2_Project_Tree_Register_Project_Search_Path,
+                  "gpr2_prj_tree_register_prj_search_path");
+   pragma Export (C,
+                  GPR2_Project_Tree_Project_Search_Paths,
+                  "gpr2_prj_tree_prj_search_paths");
+   pragma Export (C,
+                  GPR2_Project_Tree_Get_File,
+                  "gpr2_prj_tree_get_file");
 end GPR2.C;
