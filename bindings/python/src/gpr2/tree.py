@@ -35,6 +35,9 @@ class ProjectTree:
         answer = LibGPR2.gpr2_prj_tree_load_autoconf(request)
         self.id = answer["tree_id"]
         self.properties_for_languages = {}
+        request = {"tree_id": self.id}
+        self.properties = LibGPR2.gpr2_prj_tree_properties(request)
+
 
     def language_properties(self, language: Optional [str] = None):
         if self.properties_for_languages[language] is None:
@@ -43,9 +46,6 @@ class ProjectTree:
             self.properties_for_languages[language] = answer
         return self.properties_for_languages[language]
 
-        request = {"view_id": self.id}
-        self.properties = LibGPR2.gpr2_prj_tree_properties(request)
-
     @property
     def context(self):
         """Return the context of the tree.
@@ -53,9 +53,7 @@ class ProjectTree:
         :return: the context
         """
         answer = LibGPR2.gpr2_prj_tree_context({"tree_id": self.id})
-        context = {}
-        for element in answer['context']:
-            context[element['name']] = element['value']
+        context = answer["context"]
         return context
 
     @property
@@ -76,77 +74,82 @@ class ProjectTree:
     def dependency_suffix(self, language: Optional [str] = None):
         return self.language_properties(language)["dependency_suffix"]
 
-    def log_messages(self,
-                     information = True,
-                     warning = True,
-                     error = True,
-                     read = True,
-                     unread = True,
-                     full_path_name = False,
-                     information_output_level = LevelFormat.LONG,
-                     warning_output_level = LevelFormat.LONG,
-                     error_output_level = LevelFormat.LONG):
+    def log_messages(
+        self,
+        information=True,
+        warning=True,
+        error=True,
+        read=True,
+        unread=True,
+        full_path_name=False,
+        information_output_level=LevelFormat.LONG,
+        warning_output_level=LevelFormat.LONG,
+        error_output_level=LevelFormat.LONG,
+    ):
         """Return the messages in tree's log.
+
         use information/warning/error/read/unread parameters to filter messages
         use others parameters to get expected formatted_message
 
         :return: the Message objects array
         """
         answer = LibGPR2.gpr2_prj_tree_log_messages(
-            {"tree_id": self.id,
-             "information": information,
-             "warning": warning,
-             "error": error,
-             "read": read,
-             "unread": unread,
-             "information_output_level": information_output_level,
-             "warning_output_level": warning_output_level,
-             "error_output_level": error_output_level,
-             })
+            {
+                "tree_id": self.id,
+                "information": information,
+                "warning": warning,
+                "error": error,
+                "read": read,
+                "unread": unread,
+                "information_output_level": information_output_level,
+                "warning_output_level": warning_output_level,
+                "error_output_level": error_output_level,
+            }
+        )
         messages = []
-        for message in answer['messages']:
+        for message in answer["messages"]:
             messages.append(Message(message=message))
         return messages
 
     @property
     def target(self):
-        """Returns the target for the project tree
+        """Return the target for the project tree.
 
         :return: the target
         """
-        return properties["target"]
+        return self.properties["target"]
 
     @property
     def build_path(self):
-        """Returns the build path for the project tree
+        """Return the build path for the project tree.
 
         :return: the build path
         """
-        return properties["build_path"]
+        return self.properties["build_path"]
 
     @property
     def archive_suffix(self):
-        """Returns the archive suffix for the project tree
+        """Return the archive suffix for the project tree.
 
         :return: the archive suffix
         """
-        return properties["archive_suffix"]
+        return self.properties["archive_suffix"]
 
     @property
     def subdirs(self):
-        """Returns the subdirs for the project tree
+        """Return the subdirs for the project tree.
 
         :return: the subdirs
         """
-        return properties["subdirs"]
+        return self.properties["subdirs"]
 
     @property
     def src_subdirs(self):
-        """Returns the src subdirs for the project tree
+        """Return the src subdirs for the project tree.
 
         :return: the src subdirs
         """
-        return properties["src_subdirs"]
+        return self.properties["src_subdirs"]
 
     def close(self) -> None:
         """Unload a project tree."""
