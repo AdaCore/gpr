@@ -388,6 +388,53 @@ package body GPR2.C.JSON is
       Set_Source_Reference (Obj, Message.Sloc);
    end Set_Message;
 
+   --------------
+   -- Set_Name --
+   --------------
+
+   procedure Set_Name
+      (Obj  : JSON_Value;
+       Key  : String;
+       Name : GPR2.Name_Type)
+   is
+   begin
+      Set_String (Obj, Key, String (Name));
+   end Set_Name;
+
+   -----------------------
+   -- Set_Optional_Name --
+   -----------------------
+
+   procedure Set_Optional_Name
+      (Obj  : JSON_Value;
+       Key  : String;
+       Name : GPR2.Optional_Name_Type)
+   is
+   begin
+      if Name = GPR2.No_Name then
+         GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
+      else
+         Set_String (Obj, Key, String (Name));
+      end if;
+   end Set_Optional_Name;
+
+   --------------
+   -- Set_Path --
+   --------------
+
+   procedure Set_Path
+      (Obj  : JSON_Value;
+       Key  : String;
+       Path : GPR2.Path_Name.Object)
+   is
+   begin
+      if Path.Is_Defined then
+         Set_String (Obj, Key, Path.Value);
+      else
+         GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
+      end if;
+   end Set_Path;
+
    ---------------------------
    -- Set_Project_Attribute --
    ---------------------------

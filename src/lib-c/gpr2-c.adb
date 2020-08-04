@@ -264,19 +264,16 @@ package body GPR2.C is
          Tree           : constant Project_Tree_Access :=
                             Get_Project_Tree (Request, "tree_id");
       begin
-         Set_String (Result, "target",
-                     String (GPR2.Project.Tree.Target (Tree.all)));
-         Set_String (Result, "archive_suffix",
-                     String (GPR2.Project.Tree.Archive_Suffix (Tree.all)));
-         Set_String (Result, "src_subdirs",
-                     String (GPR2.Project.Tree.Src_Subdirs (Tree.all)));
-         if Tree.all.Is_Defined then
-            Set_String (Result, "subdirs",
-                        String (GPR2.Project.Tree.Subdirs (Tree.all)));
-            Set_String
-              (Result, "build_path",
-               String (GPR2.Project.Tree.Build_Path (Tree.all).Value));
-         end if;
+         --  By construction the tree is always defined
+         Set_Name (Result, "target", GPR2.Project.Tree.Target (Tree.all));
+         Set_Name (Result, "archive_suffix",
+                   GPR2.Project.Tree.Archive_Suffix (Tree.all));
+         Set_Optional_Name (Result, "src_subdirs",
+                            GPR2.Project.Tree.Src_Subdirs (Tree.all));
+         Set_Optional_Name (Result, "subdirs",
+                            GPR2.Project.Tree.Subdirs (Tree.all));
+         Set_Path (Result, "build_path",
+                   GPR2.Project.Tree.Build_Path (Tree.all));
       end Handler;
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);

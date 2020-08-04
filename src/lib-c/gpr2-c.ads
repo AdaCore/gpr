@@ -162,9 +162,9 @@ package GPR2.C is
    --  Answer:
    --      {'target':         str,
    --       'archive_suffix': str,
-   --       'subdirs':        str,
-   --       'src_subdirs':    str,
-   --       'build_path':     str}
+   --       'subdirs':        Optional[str],
+   --       'src_subdirs':    Optional[str],
+   --       'build_path':     Optional[str]}
 
    function GPR2_Project_Tree_Get_View
       (Request : C_Request; Answer : out C_Answer) return C_Status;

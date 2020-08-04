@@ -220,4 +220,24 @@ package GPR2.C.JSON is
    --  Set member Key of Obj to context Context. A context is serialized as
    --  a JSON object.
 
+   procedure Set_Path
+      (Obj  : JSON_Value;
+       Key  : String;
+       Path : GPR2.Path_Name.Object);
+   --  Set member Key of Obj to Path. In case Path is not defined then set the
+   --  value to null.
+
+   procedure Set_Optional_Name
+      (Obj  : JSON_Value;
+       Key  : String;
+       Name : GPR2.Optional_Name_Type);
+   --  Set member Key of Obj to Name. In case Name = No_Name then set the
+   --  value to null.
+
+   procedure Set_Name
+      (Obj  : JSON_Value;
+       Key  : String;
+       Name : GPR2.Name_Type);
+   --  Set member Key of Obj to Name.
+
 end GPR2.C.JSON;
