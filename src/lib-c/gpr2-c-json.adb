@@ -110,7 +110,8 @@ package body GPR2.C.JSON is
           Value : GNATCOLL.JSON.JSON_Value)
       is
       begin
-         null;
+         Result.Insert (Optional_Name_Type (Name),
+                        GNATCOLL.JSON.Get (Value));
       end CB;
 
    begin
@@ -354,20 +355,16 @@ package body GPR2.C.JSON is
       Key     : String;
       Context : GPR2.Context.Object)
    is
-      Elements : JSON_Array;
+      JSON_Context : constant JSON_Value := GNATCOLL.JSON.Create_Object;
    begin
       for C in Context.Iterate loop
-         declare
-            Element : JSON_Value;
-         begin
-            Set_String
-              (Element, "name", String (GPR2.Context.Key_Value.Key (C)));
-            Set_String
-              (Element, "value", GPR2.Context.Key_Value.Element (C));
-            GNATCOLL.JSON.Append (Elements, Element);
-         end;
+         GNATCOLL.JSON.Set_Field
+            (JSON_Context,
+             String (GPR2.Context.Key_Value.Key (C)),
+             GPR2.Context.Key_Value.Element (C));
       end loop;
-      GNATCOLL.JSON.Set_Field (Obj, Key, Elements);
+
+      GNATCOLL.JSON.Set_Field (Obj, Key, JSON_Context);
    end Set_Context;
 
    -----------------

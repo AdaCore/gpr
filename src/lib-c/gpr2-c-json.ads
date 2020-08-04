@@ -217,6 +217,7 @@ package GPR2.C.JSON is
      (Obj     : JSON_Value;
       Key     : String;
       Context : GPR2.Context.Object);
-   --  Fill Obj-s Key member with Context content.
+   --  Set member Key of Obj to context Context. A context is serialized as
+   --  a JSON object.
 
 end GPR2.C.JSON;

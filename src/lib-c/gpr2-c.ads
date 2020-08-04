@@ -160,11 +160,11 @@ package GPR2.C is
    --      {'tree_id': str}
    --
    --  Answer:
-   --      {'target':         str}
-   --      {'archive_suffix': str}
-   --      {'subdirs':        str}
-   --      {'src_subdirs':    str}
-   --      {'build_path':     str}
+   --      {'target':         str,
+   --       'archive_suffix': str,
+   --       'subdirs':        str,
+   --       'src_subdirs':    str,
+   --       'build_path':     str}
 
    function GPR2_Project_Tree_Get_View
       (Request : C_Request; Answer : out C_Answer) return C_Status;
@@ -211,9 +211,7 @@ package GPR2.C is
    --      {'tree_id': str}
    --
    --  Answer:
-   --      {'context':
-   --          ['name':  str,
-   --           'value': str]}
+   --      {'context': Dict[str, str]}
 
 private
 
