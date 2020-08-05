@@ -738,10 +738,14 @@ package body GPR2.Source_Info.Parser.ALI is
          begin
             IO.Next_Line (A_Handle, Header);
 
-            if (Expected /= ASCII.NUL and then Header /= Expected)
-              or else (not Allow_EOF and then Header = ASCII.NUL)
-            then
-               raise Scan_ALI_Error;
+            if Expected /= ASCII.NUL and then Header /= Expected then
+               raise Scan_ALI_Error with
+                 "Expected '" & Expected & "' but got '" & Header & ''';
+            end if;
+
+            if not Allow_EOF and then Header = ASCII.NUL then
+               raise Scan_ALI_Error with
+                 "Unexpected end of file in " & LI.Value;
             end if;
          end Next_Line;
 
@@ -871,12 +875,6 @@ package body GPR2.Source_Info.Parser.ALI is
          while Header = 'D' loop
             Fill_Dep;
             Next_Line (Allow_EOF => True);  --  Only here we allow EOF
-         end loop;
-
-         --  Look for X (cross-references) lines
-
-         while Header not in 'X' loop
-            Next_Line;
          end loop;
 
          IO.Close (A_Handle);
