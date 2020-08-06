@@ -227,16 +227,15 @@ package GPR2.C.JSON is
    --  serialized as string for single project values or to a list of
    --  string.
 
-   procedure Set_Message
-     (Obj            : JSON_Value;
-      Message        : GPR2.Message.Object;
-      Full_Path_Name : Boolean;
-      Levels         : GPR2.Message.Level_Output);
-   --  Sets message object's members in Obj
+   procedure Add_Message
+     (Obj     : JSON_Value;
+      Message : GPR2.Message.Object);
+   --  Add message to JSON array Obj
 
    procedure Set_Source_Reference
-     (Obj              : JSON_Value;
-      Source_Reference : GPR2.Source_Reference.Object);
+     (Obj  : JSON_Value;
+      Key  : String;
+      Sloc : GPR2.Source_Reference.Object);
    --  Sets source reference object's members in Obj
 
    procedure Set_Context

@@ -398,15 +398,9 @@ package body GPR2.C is
                                   Get_Boolean (Request, "read", True);
          Unread               : constant Boolean :=
                                   Get_Boolean (Request, "unread", True);
-         Full_Path_Name       : constant Boolean :=
-                                  Get_Boolean (Request, "full_path_name",
-                                               True);
-         Levels                 : constant GPR2.Message.Level_Output :=
-                                    Get_Level_Output (Request,
-                                                      (GPR2.Message.Long,
-                                                       GPR2.Message.Long,
-                                                       GPR2.Message.Long));
-         Messages     : GNATCOLL.JSON.JSON_Array;
+         Message_Array : GNATCOLL.JSON.JSON_Array;
+         Messages : constant GNATCOLL.JSON.JSON_Value :=
+            GNATCOLL.JSON.Create (Message_Array);
       begin
          if Tree.all.Has_Messages then
             for C in Tree.all.Log_Messages.Iterate (Information => Information,
@@ -415,13 +409,7 @@ package body GPR2.C is
                                                     Read        => Read,
                                                     Unread      => Unread)
             loop
-               declare
-                  Message  : JSON_Value;
-               begin
-                  Set_Message (Message, GPR2.Log.Element (C), Full_Path_Name,
-                              Levels);
-                  GNATCOLL.JSON.Append (Messages, Message);
-               end;
+               Add_Message (Messages, GPR2.Log.Element (C));
             end loop;
          end if;
          GNATCOLL.JSON.Set_Field (Result, "messages", Messages);

@@ -134,13 +134,8 @@ package GPR2.C is
    --       'warning':                  Optional[bool] = True,
    --       'error':                    Optional[bool] = True,
    --       'read':                     Optional[bool] = True,
-   --       'unread':                   Optional[bool] = True,
-   --       'full_path_name':           Optional[bool] = False,
-   --       'information_output_level': Optional[str] = 'long',
-   --       'warning_output_level':     Optional[str] = 'long',
-   --       'error_output_level':       Optional[str] = 'long'}
+   --       'unread':                   Optional[bool] = True}
    --
-   --       output level can be 'none', 'short' or 'long'
    --       all returned messages are automatically marked read
    --       information/warning/error/read/unread controls what messages are
    --       returned

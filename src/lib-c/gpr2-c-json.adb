@@ -41,6 +41,23 @@ package body GPR2.C.JSON is
       GNATCOLL.JSON.Get (Val => Obj, Field => Key) /= GNATCOLL.JSON.JSON_Null);
    --  Return True if Obj contains a non null field named Key
 
+   -----------------
+   -- Add_Message --
+   -----------------
+
+   procedure Add_Message
+     (Obj            : JSON_Value;
+      Message        : GPR2.Message.Object)
+   is
+      JSON_Message : constant GNATCOLL.JSON.JSON_Value :=
+         GNATCOLL.JSON.Create_Object;
+   begin
+      Set_String (JSON_Message, "level", Message.Level'Img);
+      Set_String (JSON_Message, "message", Message.Message);
+      Set_Source_Reference (JSON_Message, "sloc", Message.Sloc);
+      Obj.Append (JSON_Message);
+   end Add_Message;
+
    ------------
    -- Decode --
    ------------
@@ -462,27 +479,6 @@ package body GPR2.C.JSON is
       GNATCOLL.JSON.Set_Field (Obj, Key, JSON_Context);
    end Set_Context;
 
-   -----------------
-   -- Set_Message --
-   -----------------
-
-   procedure Set_Message
-     (Obj            : JSON_Value;
-      Message        : GPR2.Message.Object;
-      Full_Path_Name : Boolean;
-      Levels         : GPR2.Message.Level_Output)
-   is
-   begin
-      Set_String (Obj, "level", Message.Level'Img);
-      Set_String (Obj, "message", Message.Message);
-      Set_String (Obj, "formatted_message",
-                  GPR2.Message.Format (Self           => Message,
-                                       Full_Path_Name => Full_Path_Name,
-                                       Levels         => Levels));
-
-      Set_Source_Reference (Obj, Message.Sloc);
-   end Set_Message;
-
    --------------
    -- Set_Name --
    --------------
@@ -612,14 +608,23 @@ package body GPR2.C.JSON is
    --------------------------
 
    procedure Set_Source_Reference
-     (Obj              : JSON_Value;
-      Source_Reference : GPR2.Source_Reference.Object) is
+     (Obj  : JSON_Value;
+      Key  : String;
+      Sloc : GPR2.Source_Reference.Object)
+   is
+      JSON_Sloc : constant GNATCOLL.JSON.JSON_Value :=
+         GNATCOLL.JSON.Create_Object;
    begin
-      Set_String (Obj, "filename", Source_Reference.Filename);
-      if Source_Reference.Has_Source_Reference then
-         GNATCOLL.JSON.Set_Field (Obj, "line", Source_Reference.Line);
-         GNATCOLL.JSON.Set_Field (Obj, "column", Source_Reference.Column);
+      Set_String (JSON_Sloc, "filename", Sloc.Filename);
+      if Sloc.Has_Source_Reference then
+         GNATCOLL.JSON.Set_Field (JSON_Sloc, "line", Sloc.Line);
+         GNATCOLL.JSON.Set_Field (JSON_Sloc, "column", Sloc.Column);
+      else
+         GNATCOLL.JSON.Set_Field (JSON_Sloc, "line", GNATCOLL.JSON.JSON_Null);
+         GNATCOLL.JSON.Set_Field
+            (JSON_Sloc, "column", GNATCOLL.JSON.JSON_Null);
       end if;
+      GNATCOLL.JSON.Set_Field (Obj, Key, JSON_Sloc);
    end Set_Source_Reference;
 
    ----------------
