@@ -35,8 +35,7 @@ private package GPR2.Project.Configuration.KB.Parsing is
      with Pre => Self.Is_Defined;
    --  Implementation of Knowledge_Base.Add
 
-   function Parse_Default_Knowledge_Base
-     (Flags : Parsing_Flags) return Object;
+   function Parse_Default_Knowledge_Base (Flags : Parsing_Flags) return Object;
    --  Implementation of Knowledge_Base.Create_Default
 
 end GPR2.Project.Configuration.KB.Parsing;

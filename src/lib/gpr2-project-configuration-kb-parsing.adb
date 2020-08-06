@@ -242,10 +242,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
       use GNATCOLL.Traces;
 
-      Reader : Schema.Dom_Readers.Tree_Reader;
-      Input  : String_Input;
-
       String_Argument : constant String := "string_argument";
+      Reader          : Schema.Dom_Readers.Tree_Reader;
+      Input           : String_Input;
+
    begin
       Trace (Main_Trace, "Parsing string");
       Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
@@ -280,23 +280,22 @@ package body GPR2.Project.Configuration.KB.Parsing is
       use Ada.Strings.Fixed;
       use GPR2.Containers;
 
-      Result      : Name_Value_Map;
-
       KB_Start    : constant Character
-        with Import     => True,
-             Convention => C,
-             Link_Name  => "_binary_config_kb_start";
+                      with Import     => True,
+                           Convention => C,
+                           Link_Name  => "_binary_config_kb_start";
       KB_Length   : constant Integer
-        with Import     => True,
-             Convention => C,
-             Link_Name => "_binary_config_kb_size";
-      KB          : String (1 .. KB_Length) with Address => KB_Start'Address;
+                      with Import     => True,
+                           Convention => C,
+                           Link_Name => "_binary_config_kb_size";
 
+      Result      : Name_Value_Map;
+      KB          : String (1 .. KB_Length) with Address => KB_Start'Address;
       Idx1        : Integer;
       Idx2        : Integer;
       Idx3        : Integer;
-
       File_Length : Positive;
+
    begin
       --  Embedded knowledge base is expected to be a string representing all
       --  individual files forming the knowledge base in the following format:
@@ -310,18 +309,21 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
       while Idx1 in KB'First .. KB'Last - 2 loop
          Idx2 := Index (KB, ":", Idx1);
+
          if Idx2 <= Idx1 or else Idx2 = KB'Last then
             raise Invalid_KB with "malformed default knowledge base at"
               & Idx1'Img;
          end if;
 
          Idx3 := Index (KB, ":", Idx2 + 1);
+
          if Idx3 <= Idx2 then
             raise Invalid_KB with "malformed default knowledge base at"
               & Idx2'Img;
          end if;
 
          File_Length := Positive'Value (KB (Idx2 + 1 .. Idx3 - 1));
+
          if Idx3 + File_Length > KB'Last then
             raise Invalid_KB with "malformed default knowledge base at"
               & Idx3'Img;
@@ -346,7 +348,9 @@ package body GPR2.Project.Configuration.KB.Parsing is
       Attribute : Value_Not_Empty;
       Default   : Value_Type) return Value_Type
    is
-      use DOM.Core, DOM.Core.Nodes;
+      use DOM.Core;
+      use DOM.Core.Nodes;
+
       Attr : constant Node := Get_Named_Item (Attributes (N), Attribute);
    begin
       if Attr = null then
@@ -418,6 +422,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                Calls_Cache.Include (Key, To_String (Tmp_Result));
                return Tmp_Result;
             end;
+
          else
             return To_Unbounded_String (Calls_Cache.Element (Key));
          end if;
@@ -454,6 +459,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            Error_Sloc,
                            Messages));
                   end if;
+
                   From_Static := True;
                   Trace
                     (Main_Trace,
@@ -467,15 +473,15 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                   declare
                      Command : constant String :=
-                       Substitute_Variables_In_Compiler_Description
-                         (To_String (Node.Command),
-                          Comp,
-                          Error_Sloc,
-                          Messages);
+                                 Substitute_Variables_In_Compiler_Description
+                                   (To_String (Node.Command),
+                                    Comp,
+                                    Error_Sloc,
+                                    Messages);
                   begin
                      Tmp_Result := Null_Unbounded_String;
-                     Tmp_Result := Get_Command_Output_Cache
-                       (Comp.Path.Value, Command);
+                     Tmp_Result :=
+                       Get_Command_Output_Cache (Comp.Path.Value, Command);
                      Ada.Environment_Variables.Set ("PATH", Saved_Path);
 
                      Trace (Main_Trace,
@@ -494,11 +500,11 @@ package body GPR2.Project.Configuration.KB.Parsing is
                when Value_Directory =>
                   declare
                      Search : constant String :=
-                       Substitute_Variables_In_Compiler_Description
-                         (To_String (Node.Directory),
-                          Comp,
-                          Error_Sloc,
-                          Messages);
+                                Substitute_Variables_In_Compiler_Description
+                                  (To_String (Node.Directory),
+                                   Comp,
+                                   Error_Sloc,
+                                   Messages);
                   begin
                      if Search (Search'First) = '/' then
                         Increase_Indent
@@ -542,16 +548,18 @@ package body GPR2.Project.Configuration.KB.Parsing is
                            Error_Sloc      => Error_Sloc,
                            Messages        => Messages);
                      end if;
+
                      Decrease_Indent
                        (Main_Trace, "Done search directories");
                   end;
 
                when Value_Grep =>
                   declare
-                     Matched : Match_Array (0 .. Node.Group);
                      Tmp_Str : constant String := To_String (Tmp_Result);
+                     Matched : Match_Array (0 .. Node.Group);
                   begin
                      Match (Node.Regexp_Re.Element, Tmp_Str, Matched);
+
                      if Matched (0) /= No_Match then
                         Tmp_Result := To_Unbounded_String
                           (Tmp_Str (Matched (Node.Group).First ..
@@ -572,6 +580,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Matched : Match_Array (0 .. 0);
                   begin
                      Match (Node.Regexp_No.Element, Tmp_Str, Matched);
+
                      if Matched (0) /= No_Match then
                         Trace
                           (Main_Trace,
@@ -597,10 +606,10 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Tmp_Result := Null_Unbounded_String;
                      raise Ignore_Compiler;
                   end if;
+
                   exit;
 
-               when Value_Done
-                 | Value_Filter =>
+               when Value_Done | Value_Filter =>
                   exit;
             end case;
 
@@ -621,11 +630,11 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
                elsif Split_Into_Words then
                   declare
-                     Split  : Containers.Name_List;
                      Filter : constant String :=
                                 (if Node.Typ = Value_Filter
                                  then To_String (Node.Filter)
                                  else "");
+                     Split  : Containers.Name_List;
                   begin
                      --  When an external value is defined as a static string,
                      --  the only valid separator is ','. When computed
@@ -824,7 +833,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
    --------------------------
 
    function Node_Value_As_String (N : DOM.Core.Node) return String is
-      use DOM.Core, DOM.Core.Nodes;
+      use DOM.Core;
+      use DOM.Core.Nodes;
 
       Result : Unbounded_String;
       Child  : Node := First_Child (N);
@@ -911,6 +921,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
          else
             declare
                use String_To_External_Value;
+
                Normalized : constant String := Normalize_Pathname
                               (Name           => Current_Dir,
                                Directory      => "",
@@ -1036,7 +1047,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
       else
          --  Do not split on '\', since we document we only accept UNIX paths
-         --  anyway. This leaves \ for regexp quotes
+         --  anyway. This leaves \ for regexp quotes.
          Last := First + 1;
 
          while Last <= Path_To_Check'Last
@@ -1232,10 +1243,12 @@ package body GPR2.Project.Configuration.KB.Parsing is
    is
       use GNAT.Directory_Operations;
       use GNATCOLL.Traces;
-      use DOM.Core, DOM.Core.Nodes;
+      use DOM.Core;
+      use DOM.Core.Nodes;
       use Input_Sources.Strings;
       use Schema.Dom_Readers;
       use Sax.Readers;
+
       use GPR2.Containers.Name_Value_Map_Package;
 
       KB_Content : GPR2.Containers.Name_Value_Map;
@@ -1278,6 +1291,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
               (KB_Content.Element (Pub_Id),
                Unicode.CES.Utf8.Utf8_Encoding,
                Input.all);
+
          elsif Sys_Id /= "" and then KB_Content.Contains (Sys_Id) then
             Open
               (KB_Content.Element (Sys_Id),
@@ -1315,6 +1329,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
             Reader.Current_Source := To_Unbounded_String (String (Key (Cur)));
             Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
             Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
+
             Open
               (Containers.Name_Value_Map_Package.Element (Cur),
                Unicode.CES.Utf8.Utf8_Encoding,
@@ -1468,14 +1483,6 @@ package body GPR2.Project.Configuration.KB.Parsing is
          use GNAT.Regpat;
          use External_Value_Lists;
          use Pattern_Matcher_Holders;
-
-         Compiler : Compiler_Description;
-         N        : Node := First_Child (Description);
-         Lang     : External_Value_Lists.List;
-         C        : External_Value_Lists.Cursor;
-
-         Exec_Suffix : OS_Lib.String_Access :=
-                         OS_Lib.Get_Executable_Suffix;
 
          procedure Parse_External_Value
            (Value    : out External_Value;
@@ -1675,6 +1682,15 @@ package body GPR2.Project.Configuration.KB.Parsing is
                      Sloc => Error_Sloc));
                Value := Null_External_Value;
          end Parse_External_Value;
+
+         Compiler    : Compiler_Description;
+         N           : Node := First_Child (Description);
+         Lang        : External_Value_Lists.List;
+         C           : External_Value_Lists.Cursor;
+
+         Exec_Suffix : OS_Lib.String_Access :=
+                         OS_Lib.Get_Executable_Suffix;
+
       begin
          while N /= null loop
             if Node_Type (N) /= Element_Node then
@@ -1710,6 +1726,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                         Compiler.Executable_Re := To_Holder
                           (Compile ("^" & Val & "$"));
                      end if;
+
                      Base.Check_Executable_Regexp := True;
                   end if;
 
@@ -1815,8 +1832,8 @@ package body GPR2.Project.Configuration.KB.Parsing is
                use External_Value_Nodes;
 
                Languages : External_Value_Nodes.Cursor :=
-                 Compiler.Languages.First;
-               Lang : External_Value_Node;
+                             Compiler.Languages.First;
+               Lang      : External_Value_Node;
             begin
                while Languages /= External_Value_Nodes.No_Element loop
                   Lang := External_Value_Nodes.Element (Languages);
@@ -2085,6 +2102,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
 
             elsif Node_Name (N) = "target" then
                Set.Append (Optional_Name_Type (Node_Value_As_String (N)));
+
             else
                Base.Messages.Append
                  (Message.Create
@@ -2112,11 +2130,11 @@ package body GPR2.Project.Configuration.KB.Parsing is
       is
          use GNAT.Regpat;
 
-         Canon   : constant String :=
-                     Get_Attribute (Description, "canonical", "");
-         Name    : Unbounded_String;
-         Set     : Target_Lists.List;
-         N       : Node := First_Child (Description);
+         Canon : constant String :=
+                   Get_Attribute (Description, "canonical", "");
+         Name  : Unbounded_String;
+         Set   : Target_Lists.List;
+         N     : Node := First_Child (Description);
       begin
          if Canon = "" then
             if Flags (Pedantic) then
@@ -2246,12 +2264,14 @@ package body GPR2.Project.Configuration.KB.Parsing is
    is
       use Ada.Characters.Handling;
 
-      Str_Len                   : constant Natural := Str'Last;
-      Pos                       : Natural := Str'First;
-      Last                      : Natural := Pos;
-      Result                    : Unbounded_String;
-      Word_Start, Word_End, Tmp : Natural;
-      Has_Index                 : Boolean;
+      Str_Len              : constant Natural := Str'Last;
+      Pos                  : Natural := Str'First;
+      Last                 : Natural := Pos;
+      Result               : Unbounded_String;
+      Word_Start, Word_End : Natural;
+      Tmp                  : Natural;
+      Has_Index            : Boolean;
+
    begin
       while Pos < Str_Len loop
          if Str (Pos) = '$' and then Str (Pos + 1) = '$' then
@@ -2264,20 +2284,24 @@ package body GPR2.Project.Configuration.KB.Parsing is
             if Str (Pos + 1)  = '{' then
                Word_Start := Pos + 2;
                Tmp := Pos + 2;
+
                while Tmp <= Str_Len and then Str (Tmp) /= '}' loop
                   Tmp := Tmp + 1;
                end loop;
+
                Tmp := Tmp + 1;
                Word_End := Tmp - 2;
 
             else
                Word_Start := Pos + 1;
                Tmp := Pos + 1;
+
                while Tmp <= Str_Len
                  and then (Is_Alphanumeric (Str (Tmp)) or else Str (Tmp) = '_')
                loop
                   Tmp := Tmp + 1;
                end loop;
+
                Word_End := Tmp - 1;
             end if;
 
@@ -2305,6 +2329,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
                           (Var_Name => Str (Word_Start .. W - 1),
                            Index    => Str (W + 1 .. Word_End - 1)));
                   end if;
+
                   exit;
                end if;
             end loop;

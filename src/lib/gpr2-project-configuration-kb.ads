@@ -170,8 +170,8 @@ private
       Validation    => False);
 
    package Variables_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Key_Type        => Unbounded_String,
-      Element_Type    => Unbounded_String);
+     (Key_Type     => Unbounded_String,
+      Element_Type => Unbounded_String);
 
    type Compiler is record
       Name        : Unbounded_String := Null_Unbounded_String;
@@ -217,26 +217,26 @@ private
               and then Executable /= Null_Unbounded_String);
 
    No_Compiler : constant Compiler :=
-     (Name             => Null_Unbounded_String,
-      Target           => Null_Unbounded_String,
-      Targets_Set      => Unknown_Targets_Set,
-      Executable       => Null_Unbounded_String,
-      Base_Name        => Null_Unbounded_String,
-      Path             => GPR2.Path_Name.Undefined,
-      Variables        => Variables_Maps.Empty_Map,
-      Version          => Null_Unbounded_String,
-      Prefix           => Null_Unbounded_String,
-      Runtime          => Null_Unbounded_String,
-      Alt_Runtime      => Null_Unbounded_String,
-      Default_Runtime  => False,
-      Any_Runtime      => False,
-      Runtime_Dir      => Null_Unbounded_String,
-      Language_Case    => Null_Unbounded_String,
-      Language_LC      => Null_Unbounded_String,
-      Selectable       => False,
-      Selected         => False,
-      Complete         => True,
-      Path_Order       => 0);
+                   (Name            => Null_Unbounded_String,
+                    Target          => Null_Unbounded_String,
+                    Targets_Set     => Unknown_Targets_Set,
+                    Executable      => Null_Unbounded_String,
+                    Base_Name       => Null_Unbounded_String,
+                    Path            => GPR2.Path_Name.Undefined,
+                    Variables       => Variables_Maps.Empty_Map,
+                    Version         => Null_Unbounded_String,
+                    Prefix          => Null_Unbounded_String,
+                    Runtime         => Null_Unbounded_String,
+                    Alt_Runtime     => Null_Unbounded_String,
+                    Default_Runtime => False,
+                    Any_Runtime     => False,
+                    Runtime_Dir     => Null_Unbounded_String,
+                    Language_Case   => Null_Unbounded_String,
+                    Language_LC     => Null_Unbounded_String,
+                    Selectable      => False,
+                    Selected        => False,
+                    Complete        => True,
+                    Path_Order      => 0);
 
    function "="
      (Dummy_Left  : Regpat.Pattern_Matcher;
