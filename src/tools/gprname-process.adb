@@ -247,11 +247,15 @@ begin
    --  Load the raw project, as it may define config-relevant attributes
 
    begin
-      Tree.Load (Project_Path, Context, Check_Shared_Lib => False);
+      Tree.Load_Autoconf (Project_Path, Context, Check_Shared_Lib => False);
    exception
-      when others =>
+      when Project_Error  | Processing_Error =>
          Show_Tree_Load_Errors (Tree);
          raise GPRname_Exception with "failed to load project tree";
+
+      when E : others =>
+         Show_Tree_Load_Errors (Tree);
+         raise GPRname_Exception with Exception_Information (E);
    end;
 
    --  Some project kinds are not supported in gprname
@@ -263,63 +267,6 @@ begin
       raise GPRname_Exception with
         "aggregate library projects are not supported";
    end if;
-
-   declare
-      --  Find the right values for Target, Runtime, Path, and Name,
-      --  either from the command-line or the main project's attributes.
-
-      Tmp_Attr : Attribute.Object;
-      Target   : constant Name_Type :=
-                   Optional_Name_Type
-                     (if Opt.Target /= No_String then Opt.Target
-                      elsif Tree.Root_Project.Check_Attribute
-                              (PRA.Target, Result => Tmp_Attr)
-                      then Tmp_Attr.Value.Text
-                      else "all");
-
-      Runtime : constant Optional_Name_Type :=
-                  Optional_Name_Type
-                    (if Opt.RTS /= No_String
-                     then Opt.RTS
-                     elsif Tree.Root_Project.Check_Attribute
-                             (PRA.Runtime, "Ada", Result => Tmp_Attr)
-                     then Tmp_Attr.Value.Text
-                     else No_Value);
-
-      --  Name/Path of the compiler: see IDE.Compiler_Command, and GPR.Conf
-      --  (Get_Or_Create_Configuration_File.Get_Config_Switches)
-
-      Path     : constant Optional_Name_Type := No_Name;
-      Name     : constant Optional_Name_Type := No_Name;
-
-      Language : constant Name_Type := Optional_Name_Type (Ada_Lang);
-      Version  : constant Optional_Name_Type := No_Name;
-
-      Des : Configuration.Description;
-      Cnf : Configuration.Object;
-
-   begin
-      --  Set the configuration description object
-
-      Des := Configuration.Create (Language, Version, Runtime, Path, Name);
-
-      --  Set the configuration object to be attached to the main project
-
-      Cnf := Configuration.Create
-        (Configuration.Description_Set'(1 => Des), Target, Project_Path);
-
-      --  Finally, reload the project with the configuration
-
-      Tree.Load (Project_Path, Context, Cnf, Check_Shared_Lib => False);
-
-   exception
-      when Project_Error  | Processing_Error =>
-         Show_Tree_Load_Errors (Tree);
-         raise GPRname_Exception with "failed to load project tree";
-
-      when E : others =>
-         raise GPRname_Exception with Exception_Information (E);
-   end;
 
    if not Tree.Has_Configuration then
       raise GPRname_Exception with "no configuration loaded for the project";
