@@ -46,11 +46,31 @@
 --  answer object contains the error name and message in 'error_msg' and
 --  'error_name'.
 --
+--  In the documentation Python type hinting annotations are used. Note that
+--  in a request, if a JSON object member type is set to Optional it means
+--  that the member is not mandatory in the request and that the default value
+--  is used. For answers optional members are always set. If no default value
+--  is provided then the value of the member is set to null.
+--
 --  -- Memory management --
 --
 --  Memory allocation/deallocation of the request is managed by the caller.
 --  Caller should call gpr2_free_answer to release memory allocated for the
 --  answer.
+--
+--  -- Complex structure JSON formats --
+--
+--  Message: represent GPR2 log messages
+--
+--     {'level':   str,
+--      'message': str,
+--      'sloc':    Sloc}
+--
+--  Sloc: represent a reference to/in a file
+--
+--     {'filename': str,
+--      'line':     Optional[int],
+--      'column':   Optional[int]}
 
 with GPR2.Project.Tree;
 with Interfaces.C.Strings;
@@ -126,7 +146,15 @@ package GPR2.C is
 
    function GPR2_Project_Tree_Log_Messages
      (Request : C_Request; Answer : out C_Answer) return C_Status;
-   --  GPR2.Project.Tree.Log_Messages
+   --  Return messages associated with the project tree.
+   --
+   --  tree_id: gpr2 tree id
+   --  information: if True select messages for which level is Information
+   --  warning: if True select messages for which level is Warning
+   --  error: if True select messages for which level is Error
+   --  read: if set to True return already read messages
+   --  unread: if set to True return unread messages. Note that all returned
+   --      unread messages are marked read after this call.
    --
    --  Request:
    --      {'tree_id':                  str,
@@ -136,18 +164,8 @@ package GPR2.C is
    --       'read':                     Optional[bool] = True,
    --       'unread':                   Optional[bool] = True}
    --
-   --       all returned messages are automatically marked read
-   --       information/warning/error/read/unread controls what messages are
-   --       returned
-   --
    --  Answer:
-   --      {'messages':
-   --          ['level':            str,
-   --           'message':          str,
-   --           'formatted_message: str,'
-   --           'filename':         str,
-   --           'line':             Optional[int],
-   --           'column':           Optional[int]]}
+   --      {'messages': List[Message]}
 
    function GPR2_Project_Tree_Properties
      (Request : C_Request; Answer : out C_Answer) return C_Status;
