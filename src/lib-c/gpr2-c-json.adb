@@ -17,8 +17,12 @@
 ------------------------------------------------------------------------------
 
 with Ada.Unchecked_Conversion;
+with Ada.Unchecked_Deallocation;
+
 with Interfaces.C.Strings;
+
 with GPR2.Project.Registry.Attribute;
+
 with System.Storage_Elements;
 
 package body GPR2.C.JSON is
@@ -28,6 +32,8 @@ package body GPR2.C.JSON is
 
    function Convert is new Ada.Unchecked_Conversion
       (Interfaces.C.Strings.chars_ptr, C_Answer);
+
+   function Get_Id (Addr : System.Address) return String;
 
    procedure Set_Address
       (Obj : JSON_Value; Key : String; Addr : System.Address);
@@ -187,6 +193,23 @@ package body GPR2.C.JSON is
          return Default;
       end if;
    end Get_File_Path;
+
+   ------------
+   -- Get_Id --
+   ------------
+
+   function Get_Id (Addr : System.Address) return String
+   is
+      use System.Storage_Elements;
+      Addr_Int : constant Integer_Address := To_Integer (Addr);
+
+      --  When compiling with -fstack-usage, the following call is marked as
+      --  "dynamic". Nevertheless we know that max integer for a given address
+      --  is in fact bounded thus we can ignore the issue.
+      Addr_Img : constant String := Addr_Int'Img;
+   begin
+      return Addr_Img (Addr_Img'First + 1 .. Addr_Img'Last);
+   end Get_Id;
 
    ----------------------
    -- Get_Level_Format --
@@ -457,17 +480,8 @@ package body GPR2.C.JSON is
        Key  : String;
        Addr : System.Address)
    is
-      use System.Storage_Elements;
-      Addr_Int : constant Integer_Address := To_Integer (Addr);
-
-      --  When compiling with -fstack-usage, the following call is marked as
-      --  "dynamic". Nevertheless we know that max integer for a given address
-      --  is in fact bounded thus we can ignore the issue.
-      Addr_Img : constant String := Addr_Int'Img;
    begin
-      GNATCOLL.JSON.Set_Field
-         (Obj, Key,
-          Addr_Img (Addr_Img'First + 1 .. Addr_Img'Last));
+      GNATCOLL.JSON.Set_Field (Obj, Key, Get_Id (Addr));
    end Set_Address;
 
    -----------------
@@ -553,7 +567,7 @@ package body GPR2.C.JSON is
          GNATCOLL.JSON.Append
            (Elements, GNATCOLL.JSON.Create (String (Path.Value)));
       end loop;
-      GNATCOLL.JSON.Set_Field (Obj, Key, Elements);
+      GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.Create (Elements));
    end Set_Path_Name_Set_Object;
 
    ---------------------------
@@ -607,13 +621,47 @@ package body GPR2.C.JSON is
    ----------------------
 
    procedure Set_Project_View
-      (Obj   : JSON_Value;
-       Key   : String;
-       Value : Project_View_Access)
+      (Obj  : JSON_Value;
+       Key  : String;
+       View : in out Project_View_Access)
    is
+      procedure Free is new Ada.Unchecked_Deallocation
+        (GPR2.Project.View.Object, Project_View_Access);
+
    begin
-      Set_Address (Obj, Key, Value.all'Address);
+      if View.Is_Defined then
+         Set_Address (Obj, Key, View.all'Address);
+      else
+         Free (View);
+         GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
+      end if;
    end Set_Project_View;
+
+   -----------------------
+   -- Set_Project_Views --
+   -----------------------
+
+   procedure Set_Project_Views
+     (Obj   : JSON_Value;
+      Key   : String;
+      Views : GPR2.Project.View.Set.Object) is
+      View_Ids : GNATCOLL.JSON.JSON_Array;
+   begin
+      for View of Views loop
+         if View.Is_Defined then
+            declare
+               View_Access : constant Project_View_Access :=
+                               new GPR2.Project.View.Object;
+            begin
+               View_Access.all := View;
+               GNATCOLL.JSON.Append
+                 (View_Ids, GNATCOLL.JSON.Create
+                    (Get_Id (View_Access.all'Address)));
+            end;
+         end if;
+      end loop;
+      GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.Create (View_Ids));
+   end Set_Project_Views;
 
    --------------------------
    -- Set_Source_Reference --

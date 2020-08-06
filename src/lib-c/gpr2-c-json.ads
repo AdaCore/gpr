@@ -27,6 +27,7 @@ with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
+with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package GPR2.C.JSON is
@@ -217,10 +218,11 @@ package GPR2.C.JSON is
    --  Sets member Key of Obj to the project tree id of Value.
 
    procedure Set_Project_View
-      (Obj   : JSON_Value;
-       Key   : String;
-       Value : Project_View_Access);
+      (Obj  : JSON_Value;
+       Key  : String;
+       View : in out Project_View_Access);
    --  Sets member Key of Obj to the project view id of Value.
+   --  If View is undefined, it is deallocated.
 
    procedure Set_String
       (Obj   : JSON_Value;
@@ -279,5 +281,11 @@ package GPR2.C.JSON is
       Key : String;
       Set : GPR2.Path_Name.Set.Object);
    --  Set member Key of Obj with path name set full names.
+
+   procedure Set_Project_Views
+     (Obj   : JSON_Value;
+      Key   : String;
+      Views : GPR2.Project.View.Set.Object);
+   --  Set member Key of Obj to view_ids array.
 
 end GPR2.C.JSON;

@@ -30,6 +30,7 @@ with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
 with GPR2.Project.View;
+with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 
 package body GPR2.C is
@@ -221,13 +222,13 @@ package body GPR2.C is
 
       procedure Handler (Request : JSON_Value; Result : JSON_Value)
       is
-         Tree : Project_Tree_Access;
-         View : constant Project_View_Access := new GPR2.Project.View.Object;
+         Tree : constant Project_Tree_Access :=
+                  Get_Project_Tree (Request, "tree_id");
+         View : Project_View_Access := new GPR2.Project.View.Object;
       begin
-         Tree := Get_Project_Tree (Request, "tree_id");
-         View.all := GPR2.Project.Tree.Get_View (
-            Tree.all,
-            GPR2.Name_Type (Get_String (Request, "unit")));
+         View.all := Tree.Get_View
+           (GPR2.Name_Type (Get_String (Request, "unit")));
+
          Set_Project_View (Result, "view_id", View);
       end Handler;
 
@@ -507,11 +508,11 @@ package body GPR2.C is
 
       procedure Handler (Request : JSON_Value; Result : JSON_Value)
       is
-         Tree : Project_Tree_Access;
-         View : constant Project_View_Access := new GPR2.Project.View.Object;
+         Tree : constant Project_Tree_Access :=
+                  Get_Project_Tree (Request, "tree_id");
+         View : Project_View_Access := new GPR2.Project.View.Object;
       begin
-         Tree := Get_Project_Tree (Request, "tree_id");
-         View.all := GPR2.Project.Tree.Root_Project (Tree.all);
+         View.all := Tree.Root_Project;
          Set_Project_View (Result, "view_id", View);
       end Handler;
    begin
@@ -587,6 +588,83 @@ package body GPR2.C is
    end GPR2_Project_Tree_Update_Sources;
 
    ---------------------------------
+   -- GPR2_Project_View_Aggregate --
+   ---------------------------------
+
+   function GPR2_Project_View_Aggregate
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         if View.Is_Aggregated then
+            declare
+               Aggregate_View : Project_View_Access :=
+                                  new GPR2.Project.View.Object;
+            begin
+               Aggregate_View.all := View.Aggregate;
+               Set_Project_View (Result, "view_id", Aggregate_View);
+            end;
+         else
+            GNATCOLL.JSON.Set_Field (Result, "view_id",
+                                    GNATCOLL.JSON.JSON_Null);
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Aggregate;
+
+   ----------------------------------
+   -- GPR2_Project_View_Aggregated --
+   ----------------------------------
+
+   function GPR2_Project_View_Aggregated
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         if View.Kind in Aggregate_Kind then
+            Set_Project_Views
+              (Result, "view_ids", View.Aggregated);
+         else
+            Set_Project_Views (Result, "view_ids",
+                               GPR2.Project.View.Set.Empty_Set);
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Aggregated;
+
+   ---------------------------------
+   -- GPR2_Project_View_Artifacts --
+   ---------------------------------
+
+   function GPR2_Project_View_Artifacts
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         Set_Path_Name_Set_Object (Result, "artifacts", View.Artifacts);
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Artifacts;
+
+   ---------------------------------
    -- GPR2_Project_View_Attribute --
    ---------------------------------
 
@@ -613,6 +691,145 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Attribute;
 
+   ----------------------------------------
+   -- GPR2_Project_View_Binder_Artifacts --
+   ----------------------------------------
+
+   function GPR2_Project_View_Binder_Artifacts
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View     : constant Project_View_Access :=
+                      Get_Project_View (Request, "view_id");
+         Name     : constant Name_Type :=
+                      Name_Type (Get_String (Request, "name"));
+         Language : constant Optional_Name_Type :=
+                      Optional_Name_Type
+                        (Get_String (Request, "language", String (No_Name)));
+      begin
+         Set_Path_Name_Set_Object (Result, "binder_artifacts",
+                                   View.Binder_Artifacts (Name, Language));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Binder_Artifacts;
+
+   -------------------------------
+   -- GPR2_Project_View_Context --
+   -------------------------------
+
+   function GPR2_Project_View_Context
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         if View.all.Has_Context then
+            Set_Context (Result, "context", View.all.Context);
+         else
+            GNATCOLL.JSON.Set_Field (Result, "context",
+                                     GNATCOLL.JSON.JSON_Null);
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Context;
+
+   --------------------------------
+   -- GPR2_Project_View_Extended --
+   --------------------------------
+
+   function GPR2_Project_View_Extended
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                 Get_Project_View (Request, "view_id");
+      begin
+         if View.Is_Extending then
+            declare
+               Extended_View : Project_View_Access :=
+                                 new GPR2.Project.View.Object;
+            begin
+               Extended_View.all := View.Extended;
+               Set_Project_View (Result, "view_id", Extended_View);
+            end;
+         else
+            GNATCOLL.JSON.Set_Field (Result, "view_id",
+                                     GNATCOLL.JSON.JSON_Null);
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Extended;
+
+   ---------------------------------
+   -- GPR2_Project_View_Extending --
+   ---------------------------------
+
+   function GPR2_Project_View_Extending
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         if View.Is_Extended then
+            declare
+               Extending_View : Project_View_Access :=
+                                  new GPR2.Project.View.Object;
+            begin
+               Extending_View.all := View.Extending;
+               Set_Project_View (Result, "view_id", Extending_View);
+            end;
+         else
+            GNATCOLL.JSON.Set_Field (Result, "view_id",
+                                     GNATCOLL.JSON.JSON_Null);
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Extending;
+
+   -------------------------------
+   -- GPR2_Project_View_Imports --
+   -------------------------------
+
+   function GPR2_Project_View_Imports
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         if View.Has_Imports then
+            Set_Project_Views
+              (Result, "view_ids", View.Imports);
+         else
+            Set_Project_Views
+              (Result, "view_ids", GPR2.Project.View.Set.Empty_Set);
+         end if;
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Imports;
+
    -----------------------------------
    -- GPR2_Project_View_Information --
    -----------------------------------
@@ -635,5 +852,79 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Information;
+
+   ------------------------------------------
+   -- GPR2_Project_View_Invalidate_Sources --
+   ------------------------------------------
+
+   function GPR2_Project_View_Invalidate_Sources
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         pragma Unreferenced (Result);
+      begin
+         Get_Project_View (Request, "view_id").Invalidate_Sources;
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Invalidate_Sources;
+
+   -----------------------------------
+   -- GPR2_Project_View_Source_Path --
+   -----------------------------------
+
+   function GPR2_Project_View_Source_Path
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View        : constant Project_View_Access :=
+                         Get_Project_View (Request, "view_id");
+         Filename    : constant Simple_Name :=
+                         Simple_Name (Get_String (Request, "filename"));
+         Need_Update : constant Boolean :=
+                         Get_Boolean (Request, "need_update", True);
+      begin
+         Set_String (Result, "source_path",
+                     View.Source_Path (Filename, Need_Update).Value);
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Source_Path;
+
+   --------------------------------
+   -- GPR2_Project_View_View_For --
+   --------------------------------
+
+   function GPR2_Project_View_View_For
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+         Name : constant Name_Type :=
+                  Name_Type (Get_String (Request, "name"));
+      begin
+         declare
+            Found_View : Project_View_Access :=  new GPR2.Project.View.Object;
+         begin
+            Found_View.all := View.View_For (Name);
+            Set_Project_View (Result, "view_id", Found_View);
+         end;
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_View_For;
 
 end GPR2.C;
