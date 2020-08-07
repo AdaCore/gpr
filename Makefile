@@ -58,6 +58,7 @@ RBD=
 GPR2=gpr2.gpr
 GPR2LAL=gpr2-lal.gpr
 GPR2TOOLS=gpr2-tools.gpr
+GPR2KB=src/kb/collect_kb.gpr
 MAKEPREFIX=
 LANGKIT_GENERATED_SRC=langkit/build
 else

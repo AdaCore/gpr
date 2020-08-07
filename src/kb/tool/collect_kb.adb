@@ -247,13 +247,13 @@ begin
    end;
 
 exception
-   when Collect_KB_Error =>
-      null;
    when Ex : Command_Line.Invalid_Switch =>
       Text_IO.Put_Line
         (Text_IO.Standard_Error, Ada.Exceptions.Exception_Message (Ex));
       Help;
+      OS_Lib.OS_Exit (1);
    when Ex : others =>
       Text_IO.Put_Line
         (Text_IO.Standard_Error, Ada.Exceptions.Exception_Information (Ex));
+      OS_Lib.OS_Exit (2);
 end Collect_KB;
