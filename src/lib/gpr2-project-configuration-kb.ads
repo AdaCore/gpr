@@ -60,10 +60,14 @@ package GPR2.Project.Configuration.KB is
    Default_Flags : constant Parsing_Flags;
    --  Default set of flags used by gprtools
 
+   Default_Location_Error : exception;
+   --  Raised when default location of the knowledge base cannot be found
+
    function Default_Location return GPR2.Path_Name.Object
      with Post => Default_Location'Result.Is_Defined;
    --  Returns the default location of the knowledge database. This is based on
-   --  the location of gprconfig in path.
+   --  the location of gprconfig in path. If gprconfig is not found, raises
+   --  Default_Location_Error.
 
    function Create
      (Location : GPR2.Path_Name.Object;

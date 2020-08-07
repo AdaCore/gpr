@@ -155,7 +155,7 @@ package body GPR2.Project.Configuration.KB is
       Free (GPRconfig);
 
       if Dir = No_File then
-         return GPR2.Path_Name.Undefined;
+         raise Default_Location_Error;
       end if;
 
       Dir := Dir.Join ("share").Join ("gprconfig");
