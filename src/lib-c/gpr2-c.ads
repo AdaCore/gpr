@@ -98,12 +98,36 @@ package GPR2.C is
 
    function GPR2_Project_Tree_Load
       (Request : C_Request; Answer : out C_Answer) return C_Status;
-   --  GPR2.Project.Tree.Load/Load_Autoconf binding
+   --  Load a project tree.
+   --
+   --  filename: location of the gpr file to load.
+   --  implicit_project: if True then load behaves as if filename is
+   --      located in the current directory. If False, directoty in
+   --      which the project file is located is used. Using True allows
+   --      implementation of "default projects" in tools.
+   --  context: a JSON object that contains values for external variables
+   --  configuration_id: optional id to a configuration. If None then use
+   --      the default configuration.
+   --  build_path: root directory where build artefacts are stored.
+   --      If None then object, libraries and executable location is
+   --      relative to the project location.
+   --  subdirs: If not None, then add subdirs as suffix to object, library
+   --      and executables directories.
+   --  src_subdirs: If not None, then add as source directory for each
+   --      project the src_subdirs subdirectory of the object directory.
+   --  check_shared_lib: if True, check in the project tree, that all
+   --       projects describing shared libraries do not import static
+   --       library or standard project.
+   --  absent_dir_error: TODO
+   --  implicit_with: a list of implicitely withed projects
+   --  target: target name
+   --  language_runtimes: JSON object associating to a language name
+   --       a runtime name.
    --
    --  Request:
-   --      {'tree_id'            Optional[str],
-   --       'filename':          Optional[str],
-   --       'context':           Dict[str, str],
+   --      {'filename':          str,
+   --       'implicit_project':  Optional[bool] = False,
+   --       'context':           Optional[Dict[str, str]],
    --       'configuration_id':  Optional[str],
    --       'build_path':        Optional[str],
    --       'subdirs':           Optional[str],
@@ -115,11 +139,7 @@ package GPR2.C is
    --       'language_runtimes': Optional[Dict[str, str]]}
    --
    --  Answer:
-   --      {'tree_id': str},
-   --  If tree_id is None then a tree object is allocated
-   --  If config_id is provided target & language_runtimes parameters are not
-   --  used. If filename is not provided an implicit project file is looked
-   --  for in current working directory.
+   --      {'tree_id': str}
 
    function GPR2_Project_Tree_Unload
       (Request : C_Request; Answer : out C_Answer) return C_Status;

@@ -313,6 +313,18 @@ package body GPR2.C.JSON is
       return Get_File_Path (Obj, Key, GPR2.Path_Name.Undefined);
    end Get_Optional_File_Path;
 
+   -----------------------
+   -- Get_Optional_Name --
+   -----------------------
+
+   function Get_Optional_Name
+      (Obj : JSON_Value; Key : String) return GPR2.Optional_Name_Type
+   is
+   begin
+      return Optional_Name_Type
+         (Get_String (Obj, Key, String (GPR2.No_Name)));
+   end Get_Optional_Name;
+
    -------------------------------
    -- Get_Optional_Project_View --
    -------------------------------

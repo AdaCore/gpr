@@ -303,39 +303,43 @@ package body GPR2.C is
 
       procedure Handler (Request : JSON_Value; Result : JSON_Value)
       is
-         Tree              : constant Project_Tree_Access :=
-                               new GPR2.Project.Tree.Object;
-         Filename          : constant GPR2.Path_Name.Object :=
-                               Get_File_Path (Request, "filename");
-         Context           : constant GPR2.Context.Object :=
-                               Get_Context (Request, "context");
-         Config            : constant GPR2.Project.Configuration.Object :=
-                               Get_Project_Configuration (Request);
-         Build_Path        : constant Path_Name.Object :=
-                               Get_Optional_Dir_Path (Request, "build_path");
-         Subdirs           : constant Optional_Name_Type :=
-                               Optional_Name_Type (Get_String (Request,
-                                                   "subdirs",
-                                                   String (GPR2.No_Name)));
-         Src_Subdirs       : constant Optional_Name_Type :=
-                               Optional_Name_Type (Get_String (Request,
-                                                   "src_subdirs",
-                                                   String (GPR2.No_Name)));
-         Check_Shared_Lib  : constant Boolean :=
-                               Get_Boolean (Request, "check_shared_lib", True);
-         Implicit_Project  : constant Boolean := not Filename.Is_Defined;
-         Absent_Dir_Error  : constant Boolean :=
-                               Get_Boolean (Request, "absent_dir_error",
-                                            False);
-         Implicit_With     : constant GPR2.Containers.Name_Set :=
-                               Get_Name_Set (Request, "implicit_with");
-         Target            : constant Optional_Name_Type :=
-                               Optional_Name_Type (Get_String (Request,
-                                                   "target",
-                                                   String (GPR2.No_Name)));
+         Tree : constant Project_Tree_Access := new GPR2.Project.Tree.Object;
+
+         Filename : constant Path_Name.Object :=
+            Get_File_Path (Request, "filename");
+
+         Context : constant GPR2.Context.Object :=
+            Get_Context (Request, "context");
+
+         Config : constant GPR2.Project.Configuration.Object :=
+            Get_Project_Configuration (Request);
+
+         Build_Path : constant Path_Name.Object :=
+            Get_Optional_Dir_Path (Request, "build_path");
+
+         Subdirs : constant Optional_Name_Type :=
+            Get_Optional_Name (Request, "subdirs");
+
+         Src_Subdirs : constant Optional_Name_Type :=
+            Get_Optional_Name (Request, "src_subdirs");
+
+         Check_Shared_Lib : constant Boolean :=
+            Get_Boolean (Request, "check_shared_lib", True);
+
+         Implicit_Project : constant Boolean :=
+            Get_Boolean (Request, "implicit_project", False);
+
+         Absent_Dir_Error : constant Boolean :=
+            Get_Boolean (Request, "absent_dir_error", False);
+
+         Implicit_With : constant Containers.Name_Set :=
+            Get_Name_Set (Request, "implicit_with");
+
+         Target : constant Optional_Name_Type :=
+            Get_Optional_Name (Request, "target");
+
          Language_Runtimes : constant Containers.Name_Value_Map :=
-                               Get_Name_Value_Map (Request,
-                                                   "language_runtimes");
+            Get_Name_Value_Map (Request, "language_runtimes");
 
       begin
 

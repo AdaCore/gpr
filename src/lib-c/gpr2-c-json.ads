@@ -70,6 +70,15 @@ package GPR2.C.JSON is
    --  If the Key member exists but is not a string then an exception is
    --  raised.
 
+   function Get_Optional_Name
+      (Obj : JSON_Value; Key : String) return GPR2.Optional_Name_Type;
+   --  Returns member Key of JSON object Obj, assuming that member's value is
+   --  a string or null.
+   --  If Obj does not have a Key member or member value is null then
+   --  No_Name is returned
+   --  If the Key member exists but is not a string or null then an
+   --  exception is raised.
+
    function Get_Boolean
       (Obj     : JSON_Value;
        Key     : String;
