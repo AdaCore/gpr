@@ -56,6 +56,10 @@ package body GPR2.Project.Tree is
    Version_Regexp  : constant Regexp.Regexp :=
                       Regexp.Compile (".[0-9]+(.[0-9]+)?");
 
+   function "&" (Left, Right : Optional_Name_Type) return Optional_Name_Type
+   is (GPR2."&" (Left, Right));
+   --  Workaround for strange visibility bug
+
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
      with Post => Register_View'Result.Is_Defined;
@@ -1267,10 +1271,15 @@ package body GPR2.Project.Tree is
       Languages   : Containers.Source_Value_Set;
       Descr_Index : Natural := 0;
       Conf        : Project.Configuration.Object;
+      GNAT_Prefix : constant String := Get_Tools_Directory;
+      Default_Cfg : Path_Name.Object;
 
       procedure Add_Languages (View : Project.View.Object);
       --  Add project languages into the Languages container to configure.
       --  Warn about project has no languages.
+
+      function Default_Config_File return Name_Type;
+      --  Returns default config filename
 
       -------------------
       -- Add_Languages --
@@ -1292,95 +1301,158 @@ package body GPR2.Project.Tree is
          end loop;
       end Add_Languages;
 
+      -------------------------
+      -- Default_Config_File --
+      -------------------------
+
+      function Default_Config_File return Name_Type is
+         Ada_RTS : constant Optional_Name_Type :=
+                     Optional_Name_Type
+                       (Containers.Value_Or_Default
+                          (Language_Runtimes, "Ada"));
+      begin
+         if Target not in No_Name | "all" then
+            return Target & (if Ada_RTS = No_Name then "" else "-" & Ada_RTS)
+              & Config_File_Extension;
+
+         elsif Ada_RTS /= No_Name then
+            return Ada_RTS & Config_File_Extension;
+
+         else
+            declare
+               GPR_Config : constant String := "GPR_CONFIG";
+               Filename   : constant String :=
+                              Environment_Variables.Value (GPR_Config, "");
+            begin
+               if Filename = "" then
+                  return Default_Config_Name;
+               else
+                  return Name_Type (Filename);
+               end if;
+            end;
+         end if;
+      end Default_Config_File;
+
    begin
-      Self.Load
-        (Filename, Context,
-         Build_Path       => Build_Path,
-         Subdirs          => Subdirs,
-         Src_Subdirs      => Src_Subdirs,
-         Check_Shared_Lib => Check_Shared_Lib,
-         Implicit_Project => Implicit_Project,
-         Absent_Dir_Error => Absent_Dir_Error,
-         Implicit_With    => Implicit_With);
+      if GNAT_Prefix = "" then
+         --  No GNAT, use default config only in current directory
 
-      if Self.Root_Project.Is_Externally_Built then
-         --  If we have externally built project, configure only the root one
-
-         Add_Languages (Self.Root_Project);
+         Default_Cfg := Path_Name.Create_File (Default_Config_File);
 
       else
-         --  If we have non externally built project, configure the none
-         --  externally built tree part.
+         --  GNAT found, look for the default config first in the current
+         --  directory and then in the GNAT/share/gpr
 
-         for C in Self.Iterate
-           (Filter =>
-              (F_Aggregate | F_Aggregate_Library => False, others => True),
-            Status => (S_Externally_Built => False))
-         loop
-            Add_Languages (Element (C));
-         end loop;
+         Default_Cfg :=
+           Create
+             (Default_Config_File,
+              Path_Name.Set.To_Set
+                (Path_Name.Create_Directory
+                   ("share", Name_Type (GNAT_Prefix)).Compose
+                 ("gpr", Directory => True)));
       end if;
 
-      if Languages.Length = 0 then
-         Self.Append_Message
-           (Message.Create
-              (Level   => Message.Warning,
-               Message => "no language for the projects tree: "
-                          & "configuration skipped",
-               Sloc    => Self.Root_Project.Attributes.Languages));
-         return;
+      if Default_Cfg.Exists then
+         Conf := Project.Configuration.Load
+           (Default_Cfg, (if Target = "" then "all" else Target));
       end if;
 
-      declare
-         Tmp_Attr      : Attribute.Object;
-         Actual_Target : constant Name_Type :=
-                           (if Target /= No_Name then Target
-                            elsif Self.Root_Project.Check_Attribute
-                                    (PRA.Target, Result => Tmp_Attr)
-                            then Name_Type (Tmp_Attr.Value.Text)
-                            else "all");
-
-         Conf_Descriptions : Project.Configuration.Description_Set
-                               (1 .. Positive (Languages.Length));
-
-      begin
-         for L of Languages loop
-            Descr_Index := Descr_Index + 1;
-
-            declare
-               LRT : constant Value_Type :=
-                       Containers.Value_Or_Default
-                         (Language_Runtimes, Name_Type (L.Text));
-               RTS : constant Optional_Name_Type :=
-                       Optional_Name_Type
-                         (if LRT = No_Value
-                            and then Self.Root_Project.Check_Attribute
-                                       (PRA.Runtime, L.Text,
-                                        Result => Tmp_Attr)
-                          then Tmp_Attr.Value.Text
-                          else LRT);
-            begin
-               Conf_Descriptions (Descr_Index) :=
-                 Project.Configuration.Create
-                   (Language => Name_Type (L.Text),
-                    Version  => No_Name,
-                    Runtime  => RTS,
-                    Path     => No_Name,
-                    Name     => No_Name);
-            end;
-         end loop;
-
-         Conf := Project.Configuration.Create
-           (Conf_Descriptions, Actual_Target, Self.Root_Project.Path_Name);
+      if not Conf.Is_Defined then
+         --  Default configuration file does not exists. Generate configuration
+         --  automatically.
 
          Self.Load
-           (Self.Root_Project.Path_Name, Context, Conf, Build_Path,
+           (Filename, Context,
+            Build_Path       => Build_Path,
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
             Implicit_Project => Implicit_Project,
+            Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Implicit_With);
-      end;
+
+         if Self.Root_Project.Is_Externally_Built then
+            --  If we have externally built project, configure only the root
+            --  one.
+
+            Add_Languages (Self.Root_Project);
+
+         else
+            --  If we have non externally built project, configure the none
+            --  externally built tree part.
+
+            for C in Self.Iterate
+              (Filter =>
+                 (F_Aggregate | F_Aggregate_Library => False, others => True),
+               Status => (S_Externally_Built => False))
+            loop
+               Add_Languages (Element (C));
+            end loop;
+         end if;
+
+         if Languages.Length = 0 then
+            Self.Append_Message
+              (Message.Create
+                 (Level   => Message.Warning,
+                  Message => "no language for the projects tree: "
+                  & "configuration skipped",
+                  Sloc    => Self.Root_Project.Attributes.Languages));
+            return;
+         end if;
+
+         declare
+            Tmp_Attr      : Attribute.Object;
+            Actual_Target : constant Name_Type :=
+                              (if Target /= No_Name then Target
+                               elsif Self.Root_Project.Check_Attribute
+                                 (PRA.Target, Result => Tmp_Attr)
+                               then Name_Type (Tmp_Attr.Value.Text)
+                               else "all");
+
+            Conf_Descriptions : Project.Configuration.Description_Set
+              (1 .. Positive (Languages.Length));
+
+         begin
+            for L of Languages loop
+               Descr_Index := Descr_Index + 1;
+
+               declare
+                  LRT : constant Value_Type :=
+                          Containers.Value_Or_Default
+                            (Language_Runtimes, Name_Type (L.Text));
+                  RTS : constant Optional_Name_Type :=
+                          Optional_Name_Type
+                            (if LRT = No_Value
+                             and then Self.Root_Project.Check_Attribute
+                               (PRA.Runtime, L.Text,
+                                Result => Tmp_Attr)
+                             then Tmp_Attr.Value.Text
+                             else LRT);
+               begin
+                  Conf_Descriptions (Descr_Index) :=
+                    Project.Configuration.Create
+                      (Language => Name_Type (L.Text),
+                       Version  => No_Name,
+                       Runtime  => RTS,
+                       Path     => No_Name,
+                       Name     => No_Name);
+               end;
+            end loop;
+
+            Conf := Project.Configuration.Create
+              (Conf_Descriptions, Actual_Target, Self.Root_Project.Path_Name);
+         end;
+      end if;
+
+      Self.Load
+        ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
+         Context, Conf, Build_Path,
+         Subdirs          => Subdirs,
+         Src_Subdirs      => Src_Subdirs,
+         Check_Shared_Lib => Check_Shared_Lib,
+         Absent_Dir_Error => Absent_Dir_Error,
+         Implicit_Project => Implicit_Project,
+         Implicit_With    => Implicit_With);
    end Load_Autoconf;
 
    ------------------------

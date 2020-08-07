@@ -211,16 +211,17 @@ package body GPR2.Project is
 
    function Ensure_Extension (Name : Name_Type) return Name_Type is
       use Ada.Characters.Handling;
-      Ext1 : constant String := "gpr";
-      Ext2 : constant String := "cgpr";
    begin
-      if To_Lower (Directories.Extension (String (Name))) in Ext1 | Ext2 then
+      if To_Lower (Directories.Extension (String (Name))) in
+           String (Project_File_Extension_No_Dot)
+           | String (Config_File_Extension_No_Dot)
+      then
          return Name;
       else
          --  The default is the .gpr extension, i.e. configuration project file
          --  name have to be provided with extension.
 
-         return Name & Name_Type ('.' & Ext1);
+         return Name & Project_File_Extension;
       end if;
    end Ensure_Extension;
 

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                       Copyright (C) 2020, AdaCore                        --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,19 +16,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Doubly_Linked_Lists;
+package body GPR2.Path_Name.Set is
 
-package GPR2.Path_Name.Set is
+   ------------
+   -- To_Set --
+   ------------
 
-   package Set is new Ada.Containers.Doubly_Linked_Lists (Object);
-
-   subtype Object is Set.List;
-
-   Empty_Set : constant Object := Set.Empty_List;
-
-   function To_Set (Item : Path_Name.Object) return Object
-     with Pre  => Item.Is_Defined,
-          Post => To_Set'Result.First_Element = Item;
-   --  Returns set constructed from single Item
+   function To_Set (Item : Path_Name.Object) return Object is
+   begin
+      return Result : Object do
+         Result.Append (Item);
+      end return;
+   end To_Set;
 
 end GPR2.Path_Name.Set;

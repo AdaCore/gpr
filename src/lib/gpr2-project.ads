@@ -48,6 +48,18 @@ package GPR2.Project is
 
    Default_Iterator : constant Iterator_Control;
 
+   Config_File_Extension  : constant Name_Type := ".cgpr";
+   Project_File_Extension : constant Name_Type := ".gpr";
+   --  The standard config and user project file name extensions
+
+   Config_File_Extension_No_Dot : Name_Type
+     renames Config_File_Extension (2 .. Config_File_Extension'Last);
+
+   Project_File_Extension_No_Dot : Name_Type
+     renames Project_File_Extension (2 .. Project_File_Extension'Last);
+
+   Default_Config_Name : constant Name_Type := "default.cgpr";
+
    type Filter_Kind is
      (F_Standard, F_Library, F_Abstract, F_Aggregate, F_Aggregate_Library);
    type Filter_Control is array (Filter_Kind) of Boolean with Pack;
