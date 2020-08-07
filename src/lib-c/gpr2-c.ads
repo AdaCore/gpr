@@ -471,6 +471,44 @@ package GPR2.C is
    --  Answer:
    --      {'found_view_id': str}
 
+   function GPR2_Project_View_Attributes
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attributes binding
+   --  Also package's attributes are returned
+   --
+   --  Request:
+   --
+   --      {'view_id'          : str}
+   --
+   --  Answer:
+   --      {'attributes': Any,
+   --       'packages':   Any}
+
+   function GPR2_Project_View_Types
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attributes binding
+   --  Also package's attributes are returned
+   --
+   --  Request:
+   --
+   --      {'view_id'          : str}
+   --
+   --  Answer:
+   --      {'types': Any}
+
+   function GPR2_Project_View_Variables
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  GPR2.Project.View.Attributes binding
+   --  Also package's attributes are returned
+   --
+   --  Request:
+   --
+   --      {'view_id'          : str}
+   --
+   --  Answer:
+   --      {'variables': Any,
+   --       'packages':  Any}
+
 private
 
    pragma Export (C, GPR2_Free_Answer, "gpr2_free_answer");
@@ -559,5 +597,14 @@ private
    pragma Export (C,
                   GPR2_Project_View_Artifacts,
                   "gpr2_prj_view_artifacts");
+   pragma Export (C,
+                  GPR2_Project_View_Attributes,
+                  "gpr2_prj_view_attributes");
+   pragma Export (C,
+                  GPR2_Project_View_Types,
+                  "gpr2_prj_view_types");
+   pragma Export (C,
+                  GPR2_Project_View_Variables,
+                  "gpr2_prj_view_variables");
 
 end GPR2.C;

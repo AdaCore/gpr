@@ -23,9 +23,11 @@ with GPR2.Context;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
-with GPR2.Project.Attribute;
+with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
+with GPR2.Project.Typ.Set;
+with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
@@ -287,5 +289,23 @@ package GPR2.C.JSON is
       Key   : String;
       Views : GPR2.Project.View.Set.Object);
    --  Set member Key of Obj to view_ids array.
+
+   procedure Set_Attributes
+     (Obj        : JSON_Value;
+      Key        : String;
+      Attributes : GPR2.Project.Attribute.Set.Object);
+   --  Set member Key of Obj with attributes in Set.
+
+   procedure Set_Types
+     (Obj   : JSON_Value;
+      Key   : String;
+      Types : GPR2.Project.Typ.Set.Object);
+   --  Set member Key of Obj with types in Set.
+
+   procedure Set_Variables
+     (Obj       : JSON_Value;
+      Key       : String;
+      Variables : GPR2.Project.Variable.Set.Object);
+   --  Set member Key of Obj with variables in Set.
 
 end GPR2.C.JSON;

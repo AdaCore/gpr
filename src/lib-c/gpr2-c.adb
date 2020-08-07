@@ -691,6 +691,40 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Attribute;
 
+   ----------------------------------
+   -- GPR2_Project_View_Attributes --
+   ----------------------------------
+
+   function GPR2_Project_View_Attributes
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View     : constant Project_View_Access :=
+                      Get_Project_View (Request, "view_id");
+         Packages : GNATCOLL.JSON.JSON_Array;
+      begin
+         Set_Attributes (Result, "attributes", View.Attributes);
+         for Pack of View.Packages loop
+            declare
+               Package_Value : constant GNATCOLL.JSON.JSON_Value :=
+                                 GNATCOLL.JSON.Create;
+            begin
+               GNATCOLL.JSON.Set_Field (Package_Value, "name",
+                                        String (Pack.Name));
+               Set_Attributes (Package_Value, "attributes", Pack.Attributes);
+               GNATCOLL.JSON.Append (Packages, Package_Value);
+            end;
+         end loop;
+         GNATCOLL.JSON.Set_Field (Result, "packages", Packages);
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Attributes;
+
    ----------------------------------------
    -- GPR2_Project_View_Binder_Artifacts --
    ----------------------------------------
@@ -898,6 +932,61 @@ package body GPR2.C is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Source_Path;
+
+   -----------------------------
+   -- GPR2_Project_View_Types --
+   -----------------------------
+
+   function GPR2_Project_View_Types
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+                  Get_Project_View (Request, "view_id");
+      begin
+         Set_Types (Result, "types", View.Types);
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Types;
+
+   ---------------------------------
+   -- GPR2_Project_View_Variables --
+   ---------------------------------
+
+   function GPR2_Project_View_Variables
+     (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View     : constant Project_View_Access :=
+                      Get_Project_View (Request, "view_id");
+         Packages : GNATCOLL.JSON.JSON_Array;
+      begin
+         Set_Variables (Result, "variables", View.Variables);
+         for Pack of View.Packages loop
+            declare
+               Package_Value : constant GNATCOLL.JSON.JSON_Value :=
+                                 GNATCOLL.JSON.Create;
+            begin
+               Set_Variables (Package_Value, "variables", Pack.Variables);
+               GNATCOLL.JSON.Set_Field (Package_Value, "name",
+                                        String (Pack.Name));
+               GNATCOLL.JSON.Append (Packages, Package_Value);
+            end;
+         end loop;
+         GNATCOLL.JSON.Set_Field (Result, "packages", Packages);
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Variables;
 
    --------------------------------
    -- GPR2_Project_View_View_For --
