@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Task_Attributes;
 
@@ -86,6 +87,8 @@ package body GPRtools.Options is
 
    procedure Read_Remaining_Arguments (Self : in out Object; Tool : Which) is
       use GNATCOLL;
+      use GPR2;
+
       Got_Prj : Boolean := False;
 
       function Get_Next_Argument return String;
@@ -156,6 +159,36 @@ package body GPRtools.Options is
 
          Self.Project_File := GPR2.Project.Create
            (Self.Project_File.Name, Self.Tree.Project_Search_Paths);
+      end if;
+
+      if Tool /= Install then
+         if not Self.Project_File.Is_Defined then
+            if Self.No_Project then
+               Self.Project_File := Path_Name.Implicit_Project;
+               Self.Project_Base :=
+                 Path_Name.Create_Directory
+                   (Name_Type (Ada.Directories.Current_Directory));
+            else
+               Util.Check_For_Default_Project (Self);
+            end if;
+
+            if not Self.Project_File.Is_Defined then
+               Display_Help (Self.Config);
+               raise GPRtools.Usage_Error with
+                 "Can't determine project file to work with";
+            end if;
+
+         elsif Self.No_Project then
+            raise GPRtools.Usage_Error with
+              "cannot specify --no-project with a project file";
+         end if;
+
+         if Self.Project_Base.Is_Defined then
+            Self.Clean_Build_Path (Self.Project_Base);
+
+         elsif Self.Project_File.Has_Dir_Name then
+            Self.Clean_Build_Path (Self.Project_File);
+         end if;
       end if;
    end Read_Remaining_Arguments;
 
@@ -260,6 +293,16 @@ package body GPRtools.Options is
                  when Clean   => "cleanup",
                  when Ls      => "browse",
                  when others => ""));
+
+         if Tool /= Ls then
+            Define_Switch
+              (Self.Config, Self.No_Project'Access,
+               Long_Switch => "--no-project",
+               Help        => "Do not "
+                              & (if Tool = Install
+                                 then "install"
+                                 else "use") & " project file");
+         end if;
 
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,

@@ -60,6 +60,10 @@ package GPR2.Project is
 
    Default_Config_Name : constant Name_Type := "default.cgpr";
 
+   Implicit_Project : Path_Name.Object renames Path_Name.Implicit_Project;
+   --  Means that an empty project has to be generated instead of parsed from
+   --  file.
+
    type Filter_Kind is
      (F_Standard, F_Library, F_Abstract, F_Aggregate, F_Aggregate_Library);
    type Filter_Control is array (Filter_Kind) of Boolean with Pack;
@@ -87,14 +91,6 @@ package GPR2.Project is
                   and then not Tree_Search_Paths.Is_Empty,
           Post => not Search_Paths'Result.Is_Empty;
    --  Returns the project search path for the given project and the given tree
-
-   function Look_For_Default_Project
-     (Implicit_Only : Boolean) return Path_Name.Object;
-   --  If Implicit_Only is False then look for default project in the current
-   --  directory, if not found then look for _default.gpr using the location of
-   --  the current executable, returns Undefined if not found.
-   --  If Implicit_Only is False then look only for _default.gpr using the
-   --  location of the current executable, returns Undefined if not found.
 
    function Ensure_Extension (Name : Name_Type) return Name_Type;
    --  If Name ending with ".gpr" or ".cgpr" the function returns it unchanged,

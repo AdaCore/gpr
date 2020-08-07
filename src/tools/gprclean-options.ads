@@ -38,12 +38,10 @@ package GPRclean.Options is
       Dry_Run                     : aliased Boolean := False;
       All_Projects                : aliased Boolean := False;
       Remain_Useful               : aliased Boolean := False;
-      No_Project                  : aliased Boolean := False;
       Remove_Empty_Dirs           : aliased Boolean := False;
       Force_Deletions             : aliased Boolean := False;
 
       Arg_Mains     : Boolean;
-      Implicit_Proj : Boolean := False;
       Config_File   : Path_Name.Object;
       Remove_Config : Boolean := False;
       Subdirs       : Unbounded_String;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -217,20 +217,11 @@ begin
    --  If there is no file on the command line, check if -v is provided
    --  so that we enter the "only display paths" mode.
 
-   if not Self.Project_File.Is_Defined then
-      if Self.Files.Is_Empty and then Self.Verbose then
-         Self.Only_Display_Paths := True;
-      end if;
-
-      Self.Project_File :=
-        Look_For_Default_Project
-          (Self.Verbose_Parsing = 0, Implicit_Only => False);
-
-      if not Self.Project_File.Is_Defined then
-         Finish_Program
-           (E_Errors,
-            "no project file specified and no default project file.");
-      end if;
+   if not Self.Project_File.Is_Defined
+     and then Self.Files.Is_Empty
+     and then Self.Verbose
+   then
+      Self.Only_Display_Paths := True;
    end if;
 
    if Self.Closure_Mode then

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -85,9 +85,6 @@ package GPRinstall.Options is
       Global_Install_Name : Param := (new String'("default"), True);
       --  The installation name, the default value is the project name without
       --  extension.
-
-      No_Project        : aliased Boolean := False;
-      --  If set to True no project is generated/installed
 
       Build_Vars        : OS_Lib.String_Access;
       --  Name of the build variables for the installed project file

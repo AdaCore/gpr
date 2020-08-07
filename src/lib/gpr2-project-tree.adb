@@ -84,15 +84,14 @@ package body GPR2.Project.Tree is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Recursive_Load
-     (Self             : Object;
-      Filename         : Path_Name.Object;
-      Context_View     : View.Object;
-      Status           : Relation_Status;
-      Root_Context     : out GPR2.Context.Object;
-      Messages         : out Log.Object;
-      Circularities    : out Boolean;
-      Starting_From    : View.Object := View.Undefined;
-      Implicit_Project : Boolean     := False) return View.Object
+     (Self          : Object;
+      Filename      : Path_Name.Object;
+      Context_View  : View.Object;
+      Status        : Relation_Status;
+      Root_Context  : out GPR2.Context.Object;
+      Messages      : out Log.Object;
+      Circularities : out Boolean;
+      Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
         then Starting_From.Qualifier in Aggregate_Kind);
@@ -1054,11 +1053,11 @@ package body GPR2.Project.Tree is
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
       Config           : PC.Object            := PC.Undefined;
+      Project_Dir      : Path_Name.Object     := Path_Name.Undefined;
       Build_Path       : Path_Name.Object     := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type   := No_Name;
       Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
-      Implicit_Project : Boolean              := False;
       Absent_Dir_Error : Boolean              := False;
       Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
    is
@@ -1161,6 +1160,7 @@ package body GPR2.Project.Tree is
          end;
       end if;
 
+      Self.Project_Dir      := Project_Dir;
       Self.Build_Path       := Build_Path;
       Self.Subdirs          := To_Unbounded_String (String (Subdirs));
       Self.Src_Subdirs      := To_Unbounded_String (String (Src_Subdirs));
@@ -1172,12 +1172,15 @@ package body GPR2.Project.Tree is
 
       Set_Project_Search_Paths;
 
-      if Filename.Has_Dir_Name then
+      if Filename.Is_Implicit_Project then
+         Project_Path := Project_Dir;
+
+      elsif Filename.Has_Dir_Name then
          Project_Path := Filename;
 
       else
-         --  If project directory still not defined, search it in full set of
-         --  search paths.
+         --  If project directory still not defined, search it in full set
+         --  of search paths.
 
          Project_Path := Create (Filename.Name, Self.Search_Paths);
 
@@ -1199,7 +1202,7 @@ package body GPR2.Project.Tree is
 
       Self.Root := Recursive_Load
         (Self, Project_Path, View.Undefined, Root, Root_Context, Self.Messages,
-         Circularities, Implicit_Project => Implicit_Project);
+         Circularities);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -1257,11 +1260,11 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
+      Project_Dir       : Path_Name.Object     := Path_Name.Undefined;
       Build_Path        : Path_Name.Object     := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type   := No_Name;
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
-      Implicit_Project  : Boolean              := False;
       Absent_Dir_Error  : Boolean              := False;
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
@@ -1363,11 +1366,11 @@ package body GPR2.Project.Tree is
 
          Self.Load
            (Filename, Context,
+            Project_Dir      => Project_Dir,
             Build_Path       => Build_Path,
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
-            Implicit_Project => Implicit_Project,
             Absent_Dir_Error => Absent_Dir_Error,
             Implicit_With    => Implicit_With);
 
@@ -1446,12 +1449,13 @@ package body GPR2.Project.Tree is
 
       Self.Load
         ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
-         Context, Conf, Build_Path,
+         Context, Conf,
+         Project_Dir      => Project_Dir,
+         Build_Path       => Build_Path,
          Subdirs          => Subdirs,
          Src_Subdirs      => Src_Subdirs,
          Check_Shared_Lib => Check_Shared_Lib,
          Absent_Dir_Error => Absent_Dir_Error,
-         Implicit_Project => Implicit_Project,
          Implicit_With    => Implicit_With);
    end Load_Autoconf;
 
@@ -1533,15 +1537,14 @@ package body GPR2.Project.Tree is
    --------------------
 
    function Recursive_Load
-     (Self             : Object;
-      Filename         : Path_Name.Object;
-      Context_View     : View.Object;
-      Status           : Relation_Status;
-      Root_Context     : out GPR2.Context.Object;
-      Messages         : out Log.Object;
-      Circularities    : out Boolean;
-      Starting_From    : View.Object := View.Undefined;
-      Implicit_Project : Boolean := False) return View.Object
+     (Self          : Object;
+      Filename      : Path_Name.Object;
+      Context_View  : View.Object;
+      Status        : Relation_Status;
+      Root_Context  : out GPR2.Context.Object;
+      Messages      : out Log.Object;
+      Circularities : out Boolean;
+      Starting_From : View.Object := View.Undefined) return View.Object
    is
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
       PP          : Attribute.Object;
@@ -1616,11 +1619,10 @@ package body GPR2.Project.Tree is
                   return View;
                end if;
 
-               Data.Path := Path_Name.Create_Directory
-                 (Name_Type
-                    (if Implicit_Project
-                     then Ada.Directories.Current_Directory
-                     else Filename.Dir_Name));
+               Data.Path := (if Self.Project_Dir.Is_Defined
+                             then Self.Project_Dir
+                             else Path_Name.Create_Directory
+                                    (Name_Type (Filename.Dir_Name)));
 
                case Status is
                   when Extended =>

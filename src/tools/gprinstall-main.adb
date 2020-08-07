@@ -506,7 +506,7 @@ begin
          if Config.Is_Defined then
             Tree.Load
               (Options.Project_File, Options.Context, Config,
-               Options.Build_Path,
+               Build_Path       => Options.Build_Path,
                Subdirs          => (if Options.Subdirs = null
                                     then ""
                                     else ONT (Options.Subdirs.all)),
@@ -516,10 +516,11 @@ begin
             --  No configuration, go with auto-configuration
 
             Tree.Load_Autoconf
-              (Options.Project_File, Options.Context, Options.Build_Path,
-               (if Options.Subdirs = null
-                then ""
-                else Optional_Name_Type (Options.Subdirs.all)),
+              (Options.Project_File, Options.Context,
+               Build_Path => Options.Build_Path,
+               Subdirs    => (if Options.Subdirs = null
+                              then ""
+                              else Optional_Name_Type (Options.Subdirs.all)),
                Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
                Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
          end if;

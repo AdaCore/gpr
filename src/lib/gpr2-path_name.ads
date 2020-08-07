@@ -41,6 +41,10 @@ package GPR2.Path_Name is
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
+   Implicit_Project : constant Object;
+   --  Means that an empty project has to be generated instead of parsed from
+   --  file.
+
    Resolve_On_Current : constant Optional_Name_Type := "./";
    --  Resolves relative path from current directory
    No_Resolution      : constant Optional_Name_Type := "";
@@ -48,6 +52,9 @@ package GPR2.Path_Name is
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
+
+   function Is_Implicit_Project (Self : Object) return Boolean;
+   --  Returns True if Self is implicit project
 
    overriding function "=" (Left, Right : Object) return Boolean;
    --  Returns True if Left and Right are referencing the same normalized path
@@ -192,8 +199,14 @@ private
 
    Undefined : constant Object := (others => <>);
 
+   Implicit_Project : constant Object :=
+                        (Comparing => To_Unbounded_String ("^"), others => <>);
+
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Is_Implicit_Project (Self : Object) return Boolean is
+     (Self = Implicit_Project);
 
    overriding function "=" (Left, Right : Object) return Boolean is
      (Left.Comparing = Right.Comparing);

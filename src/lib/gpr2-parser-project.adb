@@ -896,6 +896,9 @@ package body GPR2.Parser.Project is
       Unit    : Analysis_Unit;
       Project : Object;
 
+      Empty_Project : constant String :=
+                        "standard project Default is end Default;";
+
    begin
       if Registry.Check_Project (Filename, Project) then
          return Project;
@@ -910,7 +913,12 @@ package body GPR2.Parser.Project is
             return Undefined;
          end if;
 
-         Unit := Get_From_File (Context, Filename.Value);
+         if Filename.Is_Directory then
+            Unit := Get_From_Buffer
+                      (Context, Filename.Value, Buffer => Empty_Project);
+         else
+            Unit := Get_From_File (Context, Filename.Value);
+         end if;
 
          if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
             if Has_Diagnostics (Unit) then

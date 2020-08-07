@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
@@ -39,6 +40,57 @@ package body GPRtools.Util is
    --  A call to Exit_Program terminates execution with the given status.
    --  A status of zero indicates normal completion, a non-zero status
    --  indicates abnormal termination.
+
+   -------------------------------
+   -- Check_For_Default_Project --
+   -------------------------------
+
+   procedure Check_For_Default_Project
+     (Options : in out GPRtools.Options.Object'Class)
+   is
+      use Directories;
+      Default_Name : constant String := "default.gpr";
+      Search       : Search_Type;
+      Item         : Directory_Entry_Type;
+
+   begin
+      if Exists (Default_Name)
+        and then Kind (Default_Name) = Ordinary_File
+      then
+         Options.Project_File :=
+           Path_Name.Create_File (Name_Type (Default_Name));
+         return;
+      end if;
+
+      Start_Search
+        (Search, ".", "*.gpr", (Ordinary_File => True, others => False));
+
+      if More_Entries (Search) then
+         Get_Next_Entry (Search, Item);
+
+         if not More_Entries (Search) then
+            --  Only one project in current directory can be default one
+
+            Options.Project_File :=
+              Path_Name.Create_File (Name_Type (Full_Name (Item)));
+
+            if not Options.Quiet then
+               Text_IO.Put_Line
+                 ("using project file " & Options.Project_File.Value);
+            end if;
+         end if;
+
+      else
+         Options.Project_File := Path_Name.Implicit_Project;
+         Options.Project_Base :=
+           Path_Name.Create_Directory (Name_Type (Current_Directory));
+
+         if not Options.Quiet then
+            Text_IO.Put_Line
+              ("use implicit project in " & Options.Project_Base.Value);
+         end if;
+      end if;
+   end Check_For_Default_Project;
 
    ------------------
    -- Exit_Program --
@@ -102,24 +154,6 @@ package body GPRtools.Util is
       Exit_Program (Exit_Code);
    end Finish_Program;
 
-   ------------------------------
-   -- Look_For_Default_Project --
-   ------------------------------
-
-   function Look_For_Default_Project
-     (Quiet : Boolean; Implicit_Only : Boolean) return GPR2.Path_Name.Object
-   is
-      Result : GPR2.Path_Name.Object;
-   begin
-      Result := GPR2.Project.Look_For_Default_Project (Implicit_Only);
-
-      if not Quiet and then Result.Is_Defined then
-         Text_IO.Put_Line ("using project file " & Result.Value);
-      end if;
-
-      return Result;
-   end Look_For_Default_Project;
-
    ---------------------
    -- Output_Messages --
    ---------------------
@@ -177,7 +211,10 @@ package body GPRtools.Util is
    begin
       Output_Messages (Options);
       Fail_Program
-        ('"' & String (Options.Project_File.Simple_Name)
+        ('"'
+         & (if Options.Project_File.Is_Defined
+            then String (Options.Project_File.Simple_Name)
+            else Options.Project_Base.Value)
          & """ processing failed");
    end Project_Processing_Failed;
 

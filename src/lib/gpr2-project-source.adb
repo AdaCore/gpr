@@ -540,8 +540,15 @@ package body GPR2.Project.Source is
                end Update_Kind;
 
             begin
-               if not US.Has_Element (CU) and then Self.Source.Is_Runtime then
-                  return;
+               if not US.Has_Element (CU) then
+                  if Self.Source.Is_Runtime then
+                     return;
+                  end if;
+
+                  pragma Assert
+                    (U.Kind not in S_Spec | S_Body,
+                     "can't find """ & String (U.Name) & """ for "
+                     & U.Kind'Img);
                end if;
 
                if U.Kind = S_Spec and then not US.Element (CU).Has_Body then

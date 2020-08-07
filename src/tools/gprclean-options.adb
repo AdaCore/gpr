@@ -16,12 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Directories;
 with Ada.Text_IO;
 
 with GPR2.Compilation.Registry;
 with GPR2.Version;
-with GPRtools.Util;
 
 package body GPRclean.Options is
 
@@ -120,11 +118,6 @@ package body GPRclean.Options is
         (GPRtools.Options.Object (Options), GPRtools.Clean);
 
       Define_Switch
-        (Config, Options.No_Project'Access,
-         Long_Switch => "--no-project",
-         Help        => "Do not use project file");
-
-      Define_Switch
         (Config, Options.All_Projects'Access, "-r",
          Help => "Clean all projects recursively");
 
@@ -191,36 +184,6 @@ package body GPRclean.Options is
       Options.Read_Remaining_Arguments (GPRtools.Clean);
 
       Options.Arg_Mains := not Options.Mains.Is_Empty;
-
-      if not Options.Project_File.Is_Defined then
-         Options.Project_File :=
-           GPRtools.Util.Look_For_Default_Project
-             (Quiet         => Options.Quiet,
-              Implicit_Only => Options.No_Project);
-
-         Options.Implicit_Proj := Options.Project_File.Is_Defined
-           and then Options.Project_File.Dir_Name
-             /= Ada.Directories.Current_Directory;
-
-         if not Options.Project_File.Is_Defined then
-            Display_Help (Config);
-            raise GPRtools.Usage_Error with
-              "Can't determine project file to work with";
-         end if;
-
-      elsif Options.No_Project then
-         raise GPRtools.Usage_Error with
-           "cannot specify --no-project with a project file";
-      end if;
-
-      if Options.Implicit_Proj then
-         Options.Clean_Build_Path
-           (Path_Name.Create_Directory
-              (Name_Type (Ada.Directories.Current_Directory)));
-
-      elsif Options.Project_File.Has_Dir_Name then
-         Options.Clean_Build_Path (Options.Project_File);
-      end if;
 
       if Options.Slave_Env = Null_Unbounded_String
         and then Options.Distributed_Mode

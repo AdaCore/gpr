@@ -199,6 +199,7 @@ begin
 
    Tree.Load_Autoconf
      (Filename          => Opt.Project_File,
+      Project_Dir       => Opt.Project_Base,
       Context           => Opt.Project_Context,
       Absent_Dir_Error  => True,
       Target            => Opt.Get_Target,

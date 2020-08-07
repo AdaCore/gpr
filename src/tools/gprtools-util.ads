@@ -56,10 +56,10 @@ package GPRtools.Util is
    --  parameters. Output error message '"proj.gpr" processing failed' at the
    --  end if not Quiet.
 
-   function Look_For_Default_Project
-     (Quiet : Boolean; Implicit_Only : Boolean) return GPR2.Path_Name.Object;
-   --  Calls GPR2.Project.Look_For_Default_Project and print returned project
-   --  if not Quiet.
+   procedure Check_For_Default_Project
+     (Options : in out GPRtools.Options.Object'Class);
+   --  Look for default project in the current directory, set Project_File
+   --  to Implicit_Project if no projects in the current directory.
 
    procedure Finish_Program
      (Exit_Code : Exit_Code_Type := E_Success;

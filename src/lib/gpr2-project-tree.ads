@@ -66,14 +66,16 @@ package GPR2.Project.Tree is
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
       Config           : Configuration.Object := Configuration.Undefined;
+      Project_Dir      : Path_Name.Object     := Path_Name.Undefined;
       Build_Path       : Path_Name.Object     := Path_Name.Undefined;
       Subdirs          : Optional_Name_Type   := No_Name;
       Src_Subdirs      : Optional_Name_Type   := No_Name;
       Check_Shared_Lib : Boolean              := True;
-      Implicit_Project : Boolean              := False;
       Absent_Dir_Error : Boolean              := False;
       Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
-     with Pre => Filename.Is_Defined;
+     with Pre => Filename.Is_Defined
+                 and then (not Filename.Is_Implicit_Project
+                           or else Project_Dir.Is_Defined);
    --  Loads a root project
    --  If Implicit_Project is True, the main project file being parsed is
    --  deemed to be in the current working directory, even if it is not the
@@ -92,11 +94,11 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
+      Project_Dir       : Path_Name.Object     := Path_Name.Undefined;
       Build_Path        : Path_Name.Object     := Path_Name.Undefined;
       Subdirs           : Optional_Name_Type   := No_Name;
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
-      Implicit_Project  : Boolean              := False;
       Absent_Dir_Error  : Boolean              := False;
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
@@ -111,12 +113,11 @@ package GPR2.Project.Tree is
    --  instead of any attribute Runtime (Lang) declared in the root project.
    --  Typically this is useful to enforce precedence of the command-line
    --  options --target and --RTS[:lang].
-   --  If Implicit_Project is True, the main project file being parsed is
-   --  deemed to be in the current working directory, even if it is not the
-   --  case. Implicit_Project is set to True when a gpr tool is invoked without
-   --  a project file and is using an implicit project file that is virtually
-   --  in the current working directory, but is physically in another
-   --  directory.
+   --  If Project_Dir is defined, the main project file being parsed is deemed
+   --  to be in this directory, even if it is not the case. Project_Dir is
+   --  defined when a gpr tool is invoked without a project file and is using
+   --  an implicit project file that is virtually in the Project_Dir, but is
+   --  physically in another directory.
 
    procedure Unload (Self : in out Object);
    --  Unloads the tree and free all associated objects (projects, sources,
@@ -415,6 +416,7 @@ private
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
       Implicit_With    : Containers.Name_Set;
+      Project_Dir      : Path_Name.Object;
       Build_Path       : Path_Name.Object;
       Subdirs          : Unbounded_String;
       Src_Subdirs      : Unbounded_String;

@@ -41,6 +41,10 @@ package GPRtools.Options is
       Project_File : GPR2.Path_Name.Object;
       --  The project to be processed
 
+      Project_Base : GPR2.Path_Name.Object;
+      --  If defined, then process Project_File like it is located in the
+      --  Project_Base.
+
       Tree : access GPR2.Project.Tree.Object;
 
       Args : GPR2.Containers.Value_Set;
@@ -49,6 +53,7 @@ package GPRtools.Options is
       --  It is install name for gprinstall --uninstall.
       --  It could be object or dependency files for gprls.
 
+      No_Project               : aliased Boolean := False;
       Unchecked_Shared_Lib     : aliased Boolean := False;
       Full_Path_Name_For_Brief : aliased Boolean := False;
       Version                  : aliased Boolean := False;
