@@ -219,9 +219,7 @@ package body GPR2.Project.Configuration is
          begin
             KB_Flags (Compiler_Info) := False;
 
-            Base := KB.Create
-              (Location => Default_Location,
-               Flags    => KB_Flags);
+            Base := KB.Create_Default (KB_Flags);
 
             if Base.Has_Error then
                for Msg of Base.Log_Messages loop
