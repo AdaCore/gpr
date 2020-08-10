@@ -306,6 +306,7 @@ package GPR2.C.JSON is
      (Obj       : JSON_Value;
       Key       : String;
       Variables : GPR2.Project.Variable.Set.Object);
-   --  Set member Key of Obj with variables in Set.
+   --  Set member Key of Obj with variables in set Variables
+   --  The member value is Dict[str, Variable] (see GPR2.C for Variable format)
 
 end GPR2.C.JSON;

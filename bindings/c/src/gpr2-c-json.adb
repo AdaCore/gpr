@@ -52,6 +52,12 @@ package body GPR2.C.JSON is
      (Obj    : JSON_Value;
       Key    : String;
       Values : GPR2.Containers.Source_Value_List);
+
+   procedure Set_Variable
+      (Obj : JSON_Value;
+       Key : String;
+       Variable : GPR2.Project.Variable.Object);
+
    -----------------
    -- Add_Message --
    -----------------
@@ -821,6 +827,35 @@ package body GPR2.C.JSON is
       GNATCOLL.JSON.Set_Field (Obj, Key, Types_Array);
    end Set_Types;
 
+   ------------------
+   -- Set_Variable --
+   ------------------
+
+   procedure Set_Variable
+      (Obj : JSON_Value;
+       Key : String;
+       Variable : GPR2.Project.Variable.Object)
+   is
+      Content : constant GNATCOLL.JSON.JSON_Value :=
+         GNATCOLL.JSON.Create_Object;
+   begin
+      GNATCOLL.JSON.Set_Field (Content, "name",
+                               String (Variable.Name.Text));
+      if Variable.Has_Type then
+         GNATCOLL.JSON.Set_Field (Content, "type",
+                                  String (Variable.Typ.Name.Text));
+      else
+         GNATCOLL.JSON.Set_Field (Content, "type",
+                                  GNATCOLL.JSON.JSON_Null);
+      end if;
+      if Variable.Kind = GPR2.Project.Registry.Attribute.Single then
+         GNATCOLL.JSON.Set_Field (Content, "value", Variable.Value.Text);
+      else
+         Set_Source_Value_List (Content, "value", Variable.Values);
+      end if;
+      GNATCOLL.JSON.Set_Field (Obj, Key, Content);
+   end Set_Variable;
+
    -------------------
    -- Set_Variables --
    -------------------
@@ -830,30 +865,16 @@ package body GPR2.C.JSON is
       Key       : String;
       Variables : GPR2.Project.Variable.Set.Object)
    is
-      Variables_Array : GNATCOLL.JSON.JSON_Array;
+      JSON_Variables : constant GNATCOLL.JSON.JSON_Value :=
+         GNATCOLL.JSON.Create_Object;
    begin
       for Variable of Variables loop
-         declare
-            Content : constant GNATCOLL.JSON.JSON_Value :=
-                        GNATCOLL.JSON.Create_Object;
-         begin
-            GNATCOLL.JSON.Set_Field (Content, "name",
-                                     String (Variable.Name.Text));
-            if Variable.Has_Type then
-               GNATCOLL.JSON.Set_Field (Content, "type",
-                                        String (Variable.Typ.Name.Text));
-            else
-               GNATCOLL.JSON.Set_Field (Content, "type",
-                                        GNATCOLL.JSON.JSON_Null);
-            end if;
-            if Variable.Kind = GPR2.Project.Registry.Attribute.Single then
-               GNATCOLL.JSON.Set_Field (Content, "value", Variable.Value.Text);
-            else
-               Set_Source_Value_List (Content, "value", Variable.Values);
-            end if;
-         end;
+         Set_Variable (JSON_Variables,
+                       String (Variable.Name.Text),
+                       Variable);
       end loop;
-      GNATCOLL.JSON.Set_Field (Obj, Key, Variables_Array);
+
+      GNATCOLL.JSON.Set_Field (Obj, Key, JSON_Variables);
    end Set_Variables;
 
 end GPR2.C.JSON;

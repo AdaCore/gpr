@@ -20,7 +20,6 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.JSON;
-
 with GPR2.C.JSON; use GPR2.C.JSON;
 with GPR2.Containers;
 with GPR2.Context;
@@ -711,7 +710,7 @@ package body GPR2.C is
             for Pack of View.Packages loop
                declare
                   Package_Value : constant GNATCOLL.JSON.JSON_Value :=
-                                    GNATCOLL.JSON.Create;
+                                    GNATCOLL.JSON.Create_Object;
                begin
                   GNATCOLL.JSON.Set_Field (Package_Value, "name",
                                            String (Pack.Name));
@@ -977,7 +976,7 @@ package body GPR2.C is
             for Pack of View.Packages loop
                declare
                   Package_Value : constant GNATCOLL.JSON.JSON_Value :=
-                                    GNATCOLL.JSON.Create;
+                                    GNATCOLL.JSON.Create_Object;
                begin
                   Set_Variables (Package_Value, "variables", Pack.Variables);
                   GNATCOLL.JSON.Set_Field (Package_Value, "name",

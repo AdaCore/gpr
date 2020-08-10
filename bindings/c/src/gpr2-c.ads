@@ -71,6 +71,12 @@
 --     {'filename': str,
 --      'line':     Optional[int],
 --      'column':   Optional[int]}
+--
+--  Variable: represent a project variable
+--
+--     {'name': str,
+--      'type': Optional[str],
+--      'value': Union[List[str], str]}
 
 with GPR2.Project.Tree;
 with Interfaces.C.Strings;
@@ -498,16 +504,15 @@ package GPR2.C is
 
    function GPR2_Project_View_Variables
      (Request : C_Request; Answer : out C_Answer) return C_Status;
-   --  GPR2.Project.View.Attributes binding
-   --  Also package's attributes are returned
+   --  Return variables for a given view
    --
    --  Request:
    --
-   --      {'view_id'          : str}
+   --      {'view_id' : str}
    --
    --  Answer:
-   --      {'variables': Any,
-   --       'packages':  Any}
+   --      {'variables': Dict[str, Variable],
+   --       'packages':  Dict[str, Dict[str, Variable]]}
 
 private
 
