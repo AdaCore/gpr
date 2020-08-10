@@ -13,6 +13,11 @@ The LibGPR2 library depends on some other external libraries:
 
 Both must be installed on the system to be able to compile LibGPR2.
 
+The library also depends on the Knowledge Base containing information
+of different targets, runtimes, compilers, etc.:
+
+* [GPRCONFIG KB](https://github.com/AdaCore/gprconfig_kb)
+
 To regenerate the GPR parser from the Langkit grammar the following additional
 external modules are required:
 
@@ -38,6 +43,9 @@ The following variables can be used to configure the libGPR2 library:
 
 * `SOURCE_DIR`: For out-of-tree build.
 
+* `GPR2KBDIR`: Location of the Knowledge Base contents (by default library
+   expects them in src/kb/gprconfig_kb).
+
 To use the default options:
 
 ```sh
@@ -47,22 +55,21 @@ $ make setup
 For example, to setup LibGPR2 to install a debug version on `/opt/libgpr2`:
 
 ```sh
-$ make prefix=/opt/libgpr2 BUILD=debug install
+$ make setup prefix=/opt/libgpr2 BUILD=debug install
 ```
 
+To point out the location of the Knowledge Base (assuming it has been checked
+out to /usr/share/gprconfig_kb):
+
+```sh
+$ make setup GPR2KBDIR=/usr/share/gprconfig_kb/db
+```
 
 BUILDING LibGPR2
 ----------------
 
-LibGPR2 is using project file, to build it is as simple as:
-
-```sh
-$ gprbuild gpr2.gpr
-```
-
-Though, to build all versions of the library (static, relocatable and
-static-pic) plus the associated tools it is simpler to use the provided
-Makefile:
+To build all versions of the library (static, relocatable and
+static-pic) plus the associated tools use the provided Makefile:
 
 ```sh
 $ make
