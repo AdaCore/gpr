@@ -707,17 +707,20 @@ package body GPR2.C is
          Packages : GNATCOLL.JSON.JSON_Array;
       begin
          Set_Attributes (Result, "attributes", View.Attributes);
-         for Pack of View.Packages loop
-            declare
-               Package_Value : constant GNATCOLL.JSON.JSON_Value :=
-                                 GNATCOLL.JSON.Create;
-            begin
-               GNATCOLL.JSON.Set_Field (Package_Value, "name",
-                                        String (Pack.Name));
-               Set_Attributes (Package_Value, "attributes", Pack.Attributes);
-               GNATCOLL.JSON.Append (Packages, Package_Value);
-            end;
-         end loop;
+         if View.Has_Packages then
+            for Pack of View.Packages loop
+               declare
+                  Package_Value : constant GNATCOLL.JSON.JSON_Value :=
+                                    GNATCOLL.JSON.Create;
+               begin
+                  GNATCOLL.JSON.Set_Field (Package_Value, "name",
+                                           String (Pack.Name));
+                  Set_Attributes (Package_Value, "attributes",
+                                  Pack.Attributes);
+                  GNATCOLL.JSON.Append (Packages, Package_Value);
+               end;
+            end loop;
+         end if;
          GNATCOLL.JSON.Set_Field (Result, "packages", Packages);
       end Handler;
 
@@ -970,17 +973,19 @@ package body GPR2.C is
          Packages : GNATCOLL.JSON.JSON_Array;
       begin
          Set_Variables (Result, "variables", View.Variables);
-         for Pack of View.Packages loop
-            declare
-               Package_Value : constant GNATCOLL.JSON.JSON_Value :=
-                                 GNATCOLL.JSON.Create;
-            begin
-               Set_Variables (Package_Value, "variables", Pack.Variables);
-               GNATCOLL.JSON.Set_Field (Package_Value, "name",
-                                        String (Pack.Name));
-               GNATCOLL.JSON.Append (Packages, Package_Value);
-            end;
-         end loop;
+         if View.Has_Packages then
+            for Pack of View.Packages loop
+               declare
+                  Package_Value : constant GNATCOLL.JSON.JSON_Value :=
+                                    GNATCOLL.JSON.Create;
+               begin
+                  Set_Variables (Package_Value, "variables", Pack.Variables);
+                  GNATCOLL.JSON.Set_Field (Package_Value, "name",
+                                           String (Pack.Name));
+                  GNATCOLL.JSON.Append (Packages, Package_Value);
+               end;
+            end loop;
+         end if;
          GNATCOLL.JSON.Set_Field (Result, "packages", Packages);
       end Handler;
 
