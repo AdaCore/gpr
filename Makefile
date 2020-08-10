@@ -59,6 +59,7 @@ GPR2=gpr2.gpr
 GPR2LAL=gpr2-lal.gpr
 GPR2TOOLS=gpr2-tools.gpr
 GPR2KB=src/kb/collect_kb.gpr
+GPR2KBDIR=src/kb/gprconfig_kb
 MAKEPREFIX=
 LANGKIT_GENERATED_SRC=langkit/build
 else
@@ -67,6 +68,7 @@ GPR2=$(SOURCE_DIR)/gpr2.gpr
 GPR2LAL=$(SOURCE_DIR)/gpr2-lal.gpr
 GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 GPR2KB=$(SOURCE_DIR)/src/kb/collect_kb.gpr
+GPR2KBDIR=$(SOURCE_DIR)/src/kb/gprconfig_kb
 MAKEPREFIX=$(SOURCE_DIR)/
 LANGKIT_GENERATED_SRC=$(shell pwd)/langkit/build
 endif
@@ -105,7 +107,7 @@ all: kb build build-tools
 kb:
 	gprbuild -p $(GPR2KB)
 	$(SOURCE_DIR)/src/kb/collect_kb -o $(SOURCE_DIR)/src/kb/config.kb \
-		$(SOURCE_DIR)/src/kb/gprconfig_kb
+		$(GPR2KBDIR)
 
 build: ${LIBGPR2_TYPES:%=build-%} ${LIBGPR2_TYPES:%=buildlal-%}
 
@@ -166,6 +168,7 @@ setup: langkit/build
 	echo "PROCESSORS=$(PROCESSORS)" >> makefile.setup
 	echo "TARGET=$(TARGET)" >> makefile.setup
 	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
+	echo "GPR2KBDIR=$(GPR2KBDIR)" >> makefile.setup
 
 setup2: setup
 	echo "GPRINSTALL=.build/$(BUILD)/obj-tools/gpr2install" >> makefile.setup

@@ -195,6 +195,10 @@ begin
 
    Directories.End_Search (Search);
 
+   if XML_Files.Is_Empty then
+      Fail ("collect_kb: no xml files found in " & To_String (KB_Dir));
+   end if;
+
    if Schema /= Null_Unbounded_String then
       Text_IO.Open (KB_File_In, Text_IO.In_File, To_String (Schema));
 
