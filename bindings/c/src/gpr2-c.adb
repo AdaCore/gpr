@@ -16,18 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Unchecked_Conversion;
-
-with GNATCOLL.JSON;
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
-with GPR2.Path_Name;
-with GPR2.Project.Attribute;
-with GPR2.Project.Configuration;
-with GPR2.Project.View;
-with GPR2.Source_Reference;
-
 package body GPR2.C is
 
    ----------------------
