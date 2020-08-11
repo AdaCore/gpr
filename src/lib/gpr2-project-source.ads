@@ -99,7 +99,7 @@ package GPR2.Project.Source is
    --  Returns the aggregating view
 
    function Is_Main (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.View.Has_Mains;
+     with Pre => Self.Is_Defined;
    --  Returns whether the source is the main file to create executable
 
    function Artifacts (Self : Object) return Artifact.Object
