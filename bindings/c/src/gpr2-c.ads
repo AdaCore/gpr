@@ -60,23 +60,34 @@
 --
 --  -- Complex structure JSON formats --
 --
---  Message: represent GPR2 log messages
+--  Message: represents GPR2 log messages
 --
 --     {'level':   str,
 --      'message': str,
 --      'sloc':    Sloc}
 --
---  Sloc: represent a reference to/in a file
+--  Sloc: represents a reference to/in a file
 --
 --     {'filename': str,
 --      'line':     Optional[int],
 --      'column':   Optional[int]}
 --
---  Variable: represent a project variable
+--  Variable: represents a project variable
 --
 --     {'name': str,
 --      'type': Optional[str],
 --      'value': Union[List[str], str]}
+--
+--  Source: represents a source
+--
+--     {'path': str,
+--      'is_aggregated': bool,
+--      'is_compilable': bool,
+--      'is_interface': bool,
+--      'has_naming_exception': bool,
+--      'is_main': bool,
+--      'language': str,
+--      'timestamp': int}
 
 with Interfaces.C.Strings;
 

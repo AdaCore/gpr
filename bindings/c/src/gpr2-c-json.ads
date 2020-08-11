@@ -25,6 +25,7 @@ with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
+with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
@@ -323,5 +324,12 @@ package GPR2.C.JSON is
       Variables : GPR2.Project.Variable.Set.Object);
    --  Set member Key of Obj with variables in set Variables
    --  The member value is Dict[str, Variable] (see GPR2.C for Variable format)
+
+   procedure Set_Sources
+      (Obj : JSON_Value;
+       Key : String;
+       Sources : GPR2.Project.Source.Set.Object);
+   --  Sets member Key of Obj with sources in set Sources
+   --  The member value is List[Source] (see GPR2.C for Source format)
 
 end GPR2.C.JSON;

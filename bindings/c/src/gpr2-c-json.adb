@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Calendar.Conversions;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 
@@ -804,6 +805,51 @@ package body GPR2.C.JSON is
       end loop;
       GNATCOLL.JSON.Set_Field (Obj, Key, Values_Array);
    end Set_Source_Value_List;
+
+   -----------------
+   -- Set_Sources --
+   -----------------
+
+   procedure Set_Sources
+      (Obj     : JSON_Value;
+       Key     : String;
+       Sources : GPR2.Project.Source.Set.Object)
+   is
+      Sources_Array : JSON_Array;
+
+      function Source_As_JSON
+         (Source : GPR2.Project.Source.Object) return JSON_Value;
+
+      --------------------
+      -- Source_As_JSON --
+      --------------------
+
+      function Source_As_JSON
+         (Source : GPR2.Project.Source.Object) return JSON_Value
+      is
+         JSON_Src : constant JSON_Value := GNATCOLL.JSON.Create_Object;
+         use GNATCOLL.JSON;
+         use Ada.Calendar.Conversions;
+      begin
+         Set_Field (JSON_Src, "path", String (Source.Path_Name.Value));
+         Set_Field (JSON_Src, "is_aggregated", Source.Is_Aggregated);
+         Set_Field (JSON_Src, "is_compilable", Source.Is_Compilable);
+         Set_Field (JSON_Src, "is_interface", Source.Is_Interface);
+         Set_Field
+            (JSON_Src, "has_naming_exception", Source.Has_Naming_Exception);
+         Set_Field (JSON_Src, "is_main", Source.Is_Main);
+         Set_Field (JSON_Src, "language", String (Source.Source.Language));
+         Set_Field (JSON_Src, "timestamp",
+                    Long_Integer (To_Unix_Time (Source.Source.Timestamp)));
+         return JSON_Src;
+      end Source_As_JSON;
+
+   begin
+      for Source of Sources loop
+         GNATCOLL.JSON.Append (Sources_Array, Source_As_JSON (Source));
+      end loop;
+      GNATCOLL.JSON.Set_Field (Obj, Key, Sources_Array);
+   end Set_Sources;
 
    ----------------
    -- Set_Status --
