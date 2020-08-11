@@ -956,6 +956,31 @@ package body GPR2.C is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Types;
 
+   ------------------------------
+   -- GPR2_Project_View_Unload --
+   ------------------------------
+
+   function GPR2_Project_View_Unload
+        (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : Project_View_Access := Get_Project_View (Request, "view_id");
+
+         procedure Free is new Ada.Unchecked_Deallocation
+            (GPR2.Project.View.Object, Project_View_Access);
+
+         pragma Unreferenced (Result);
+      begin
+         Free (View);
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Unload;
+
    ---------------------------------
    -- GPR2_Project_View_Variables --
    ---------------------------------

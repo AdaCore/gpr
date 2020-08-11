@@ -223,6 +223,19 @@ package GPR2.C is
    --      {'view_id': str}
    --
 
+   function GPR2_Project_View_Unload
+      (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  Unload a project view.
+   --
+   --  After a call to that function, view_id should not be used
+   --  in any further calls.
+   --
+   --  Request:
+   --      {'view_id': str}
+   --
+   --  Answer:
+   --      {}
+
    function GPR2_Project_View_Information
       (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  Returns in one call several information about the selected view
@@ -608,6 +621,9 @@ private
    pragma Export (C,
                   GPR2_Project_View_Types,
                   "gpr2_prj_view_types");
+   pragma Export (C,
+                  GPR2_Project_View_Unload,
+                  "gpr2_prj_view_unload");
    pragma Export (C,
                   GPR2_Project_View_Variables,
                   "gpr2_prj_view_variables");
