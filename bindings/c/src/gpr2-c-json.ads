@@ -43,6 +43,21 @@ package GPR2.C.JSON is
    function Encode (Answer : JSON_Value) return C_Answer;
    --  Encodes a JSON_Value into a C_Answer (char * in C)
 
+   type Bind_Handler is access procedure
+      (Request : JSON_Value; Result : JSON_Value);
+
+   function Bind
+      (Request : C_Request;
+       Answer  : out C_Answer;
+       Handler : Bind_Handler) return C_Status;
+   --  Takes care of the boilerplate that decodes the incoming request and
+   --  encodes the answer. Handler function receives the decoded JSON and
+   --  returns the 'result' part of the answer.
+   --  Bind catches all exceptions and sets properly the error in the answer.
+   --  Note that Result is in fact an in/out parameter. When the handler is
+   --  called, the Result JSON_Value is initialized as an empty JSON object
+   --  (i.e. dictionary).
+
    -----------------------
    -- Decoding requests --
    -----------------------

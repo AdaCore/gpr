@@ -35,7 +35,7 @@ library project GPR2.C is
    for Object_Dir use ".build/" & Build & "/obj-c-" & Library_Type;
    for Library_Dir use ".build/" & Build & "/lib-c-" & Library_Type;
    for Library_Kind use Library_Type;
-   for Library_Interface use ("gpr2.c");
+   for Library_Interface use ("gpr2.c", "gpr2.c.tree", "gpr2.c.view");
 
    --------------
    -- Compiler --

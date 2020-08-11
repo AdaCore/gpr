@@ -75,6 +75,50 @@ package body GPR2.C.JSON is
       Obj.Append (JSON_Message);
    end Add_Message;
 
+   ----------
+   -- Bind --
+   ----------
+
+   function Bind
+      (Request : C_Request;
+       Answer  : out C_Answer;
+       Handler : Bind_Handler) return C_Status
+   is
+      Request_Obj : JSON.JSON_Value;
+      Answer_Obj  : constant JSON_Value := Initialize_Answer;
+      Result_Obj  : JSON_Value;
+      Can_Decode  : Boolean := True;
+   begin
+
+      Result_Obj := Get_Result (Answer_Obj);
+
+      --  Until this stage an error can only occur if there is a lack of
+      --  memory in which case nothing can really be done.
+      begin
+         Request_Obj := Decode (Request);
+      exception
+         when E : others =>
+            --  Error detected during parsing of the request JSON.
+            Set_Status (Answer_Obj, Invalid_Request, E);
+            Can_Decode := False;
+      end;
+
+      if Can_Decode then
+         begin
+            Handler (Request => Request_Obj,
+                     Result  => Result_Obj);
+         exception
+            when E : others =>
+               Set_Status (Answer_Obj, Call_Error, E);
+         end;
+      end if;
+
+      --  Unless there is a bug in the GNATCOLL.JSON library, all relevant
+      --  errors have been caught. No exception is expected from here.
+      Answer := Encode (Answer_Obj);
+      return Get_Status (Answer_Obj);
+   end Bind;
+
    ------------
    -- Decode --
    ------------
