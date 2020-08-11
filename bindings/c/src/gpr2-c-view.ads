@@ -186,6 +186,17 @@ package GPR2.C.View is
    --      {'attributes': Any,
    --       'packages':   Any}
 
+   function GPR2_Project_View_Sources
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
+   --  Return sources for a given view
+   --
+   --  Request:
+   --
+   --      {'view_id'          : str}
+   --
+   --  Answer:
+   --      {'sources': List[Source]}
+
    function GPR2_Project_View_Types
      (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.View.Attributes binding
@@ -212,6 +223,9 @@ package GPR2.C.View is
 
 private
 
+   pragma Export (C,
+                  GPR2_Project_View_Sources,
+                  "gpr2_prj_view_sources");
    pragma Export (C,
                   GPR2_Project_View_Attribute,
                   "gpr2_prj_view_attribute");

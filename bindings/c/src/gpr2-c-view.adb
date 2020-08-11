@@ -382,6 +382,31 @@ package body GPR2.C.View is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Source_Path;
 
+   -------------------------------
+   -- GPR2_Project_View_Sources --
+   -------------------------------
+
+   function GPR2_Project_View_Sources
+      (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+            Get_Project_View (Request, "view_id");
+      begin
+         Set_Sources
+            (Result,
+             "sources",
+             View.Sources
+                (Need_Update => Get_Boolean
+                   (Request, "need_update", True)));
+      end Handler;
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Sources;
+
    -----------------------------
    -- GPR2_Project_View_Types --
    -----------------------------
