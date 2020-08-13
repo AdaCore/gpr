@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
-
 with GPR2.Containers;
 
 with GNAT.MD5;
@@ -29,8 +27,7 @@ package GPR2.Context is
    use type GPR2.Containers.Count_Type;
    use type MD5.Binary_Message_Digest;
 
-   package Key_Value is
-     new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Value_Type);
+   package Key_Value renames Containers.Name_Value_Map_Package;
 
    type Object is new Key_Value.Map with private;
    --  A parsing context containing the external values for a given project
