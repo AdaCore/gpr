@@ -59,9 +59,10 @@ procedure Main is
       if Att.Has_Index and then Att.Index.Is_Others then
          Text_IO.Put ("  - this is the others index");
       else
-         Text_IO.Put ("  - this is the language 'others'");
+         Text_IO.Put ("  - this is the source 'others'");
       end if;
       Text_IO.New_Line;
+      Text_IO.Put_Line (Att.Image);
    end Display;
 
    procedure Display (Prj : Project.View.Object) is

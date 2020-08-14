@@ -150,7 +150,11 @@ package body GPR2.Project.Attribute is
       end if;
 
       if Self.Has_Index then
-         Append (Result, " (""" & Self.Index.Text & """)");
+         if Self.Index.Is_Others then
+            Append (Result, " (others)");
+         else
+            Append (Result, " (""" & Self.Index.Text & """)");
+         end if;
       end if;
 
       Append (Result, " use ");
