@@ -196,7 +196,7 @@ package body GPR2.Project.Tree is
                         Last_3_Chars : constant String :=
                                          (if Is_Windows_Host
                                           then Ada.Characters.Handling.To_Lower
-                                            (Driver (Last_3_Chars_Range))
+                                                 (Driver (Last_3_Chars_Range))
                                           else Driver (Last_3_Chars_Range));
                      begin
                         if Last_3_Chars = "gcc"
@@ -2690,7 +2690,7 @@ package body GPR2.Project.Tree is
 
                   function Has_Essential_Sources
                     (V : Project.View.Object) return Boolean;
-                  --  Returns True if V has Ada sources or non ada bodies.
+                  --  Returns True if V has Ada sources or non ada bodies
 
                   ---------------------------
                   -- Has_Essential_Sources --

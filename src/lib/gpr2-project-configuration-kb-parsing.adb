@@ -287,7 +287,7 @@ package body GPR2.Project.Configuration.KB.Parsing is
       KB_Length   : constant Integer
                       with Import     => True,
                            Convention => C,
-                           Link_Name => "_binary_config_kb_size";
+                           Link_Name  => "_binary_config_kb_size";
 
       Result      : Name_Value_Map;
       KB          : String (1 .. KB_Length) with Address => KB_Start'Address;

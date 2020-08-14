@@ -295,9 +295,9 @@ package body GPR2.Project.Attribute.Set is
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      Position : constant Set.Cursor :=
-                   Self.Attributes.Find (Attribute.Name.Text);
-      Present  : Boolean := False;
+      ---------------------
+      -- To_Value_At_Num --
+      ---------------------
 
       function To_Value_At_Num
         (Item : Source_Reference.Value.Object) return Value_At_Num
@@ -307,6 +307,10 @@ package body GPR2.Project.Attribute.Set is
          else (0, "", 0));
       --  Returns value as string together with 'at' part or empty if not
       --  defined.
+
+      Position : constant Set.Cursor :=
+                   Self.Attributes.Find (Attribute.Name.Text);
+      Present  : Boolean := False;
 
    begin
       if Set.Has_Element (Position) then
@@ -626,6 +630,7 @@ package body GPR2.Project.Attribute.Set is
             begin
                if Set.Has_Element (CM) then
                   Gather (Def, Self.Attributes (CM));
+
                else
                   Gather (Def, AM);
 
