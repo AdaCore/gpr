@@ -22,6 +22,7 @@ with Ada.Environment_Variables;
 with Ada.Directories;
 
 with GPR2.Parser.Project.Create;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
@@ -179,14 +180,17 @@ package body GPR2.Project.Tree is
          if View.Is_Defined and then View.Has_Packages (PRP.Compiler) then
             for Language of View.Languages loop
                declare
+                  Index  : constant Attribute_Index.Object :=
+                             Attribute_Index.Create (Language.Text);
                   Driver : constant String :=
                              (if View.Pack (PRP.Compiler).Has_Attributes
-                              (PRA.Driver, Language.Text) then
+                                (PRA.Driver, Index)
+                              then
                                  String (Path_Name.Create_File
-                                (Name_Type (View.Pack (
-                                   PRP.Compiler).Attribute
-                                     (PRA.Driver,
-                                      Language.Text).Value.Text)).Base_Name)
+                                           (Name_Type (View.Pack
+                                             (PRP.Compiler).Attribute
+                                               (PRA.Driver,
+                                                Index).Value.Text)).Base_Name)
                               else "");
                begin
                   if Driver'Length > 2 then
@@ -364,7 +368,9 @@ package body GPR2.Project.Tree is
    begin
       --  Check runtime path
 
-      if CV.Check_Attribute (PRA.Runtime_Dir, "ada", Result => RTD)
+      if CV.Check_Attribute
+        (PRA.Runtime_Dir,
+         Attribute_Index.Create ("ada"), Result => RTD)
         and then RTD.Value.Text /= ""
       then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
@@ -1427,7 +1433,7 @@ package body GPR2.Project.Tree is
                           Optional_Name_Type
                             (if LRT = No_Value
                              and then Self.Root_Project.Check_Attribute
-                               (PRA.Runtime, L.Text,
+                               (PRA.Runtime, Attribute_Index.Create (L.Text),
                                 Result => Tmp_Attr)
                              then Tmp_Attr.Value.Text
                              else LRT);

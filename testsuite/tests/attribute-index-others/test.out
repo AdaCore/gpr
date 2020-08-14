@@ -1,0 +1,4 @@
+Demo     K_STANDARD
+ Compiler
+   Switches (others) -> -g2  - this is the others index
+   Switches (others) -> -g1  - this is the language 'others'

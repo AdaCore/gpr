@@ -18,6 +18,7 @@
 
 --  Handle project's packages which are a set of attributes
 
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -50,7 +51,8 @@ package GPR2.Project.Pack is
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Boolean
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the package has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
@@ -59,7 +61,8 @@ package GPR2.Project.Pack is
    function Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Attribute.Set.Object
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Attribute.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all attributes defined for the package. Possibly an empty list
    --  if it does not contain attributes or if Name and Index does not match
@@ -68,7 +71,7 @@ package GPR2.Project.Pack is
    function Check_Attribute
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Num : Natural    := 0;
       Result : out Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -78,7 +81,8 @@ package GPR2.Project.Pack is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := No_Value) return Project.Attribute.Object
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Project.Attribute.Object
      with Pre =>
        Self.Is_Defined
        and then Self.Has_Attributes (Name, Index)
@@ -197,33 +201,38 @@ private
       Language : Name_Type) return Boolean
    is
      (Self.Has_Attributes
-        (Registry.Attribute.Separate_Suffix, Value_Type (Language)));
+        (Registry.Attribute.Separate_Suffix,
+         Attribute_Index.Create (Value_Type (Language))));
 
    function Has_Spec_Suffix
      (Self     : Object;
       Language : Name_Type) return Boolean
    is
      (Self.Has_Attributes
-        (Registry.Attribute.Spec_Suffix, Value_Type (Language)));
+        (Registry.Attribute.Spec_Suffix,
+         Attribute_Index.Create (Value_Type (Language))));
 
    function Has_Body_Suffix
      (Self     : Object;
       Language : Name_Type) return Boolean
    is
      (Self.Has_Attributes
-        (Registry.Attribute.Body_Suffix, Value_Type (Language)));
+        (Registry.Attribute.Body_Suffix,
+         Attribute_Index.Create (Value_Type (Language))));
 
    function Has_Implementation
      (Self : Object;
       Unit : Value_Type) return Boolean
    is
-     (Self.Has_Attributes (Registry.Attribute.Body_N, Unit));
+     (Self.Has_Attributes
+        (Registry.Attribute.Body_N, Attribute_Index.Create (Unit)));
 
    function Has_Specification
      (Self : Object;
       Unit : Value_Type) return Boolean
    is
-     (Self.Has_Attributes (Registry.Attribute.Spec, Unit));
+     (Self.Has_Attributes
+        (Registry.Attribute.Spec, Attribute_Index.Create (Unit)));
 
    Undefined : constant Object :=
                  (Source_Reference.Undefined with others => <>);

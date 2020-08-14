@@ -208,7 +208,8 @@ package body GPR2.Project.View is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := No_Value) return Project.Attribute.Object is
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Project.Attribute.Object is
    begin
       return Definition.Get_RO (Self).Attrs.Element (Name, Index);
    end Attribute;
@@ -220,7 +221,8 @@ package body GPR2.Project.View is
    function Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Project.Attribute.Set.Object is
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Project.Attribute.Set.Object is
    begin
       return Definition.Get_RO (Self).Attrs.Filter (Name, Index);
    end Attributes;
@@ -323,14 +325,17 @@ package body GPR2.Project.View is
    is
       package P renames GPR2.Project.Registry.Pack;
       package A renames GPR2.Project.Registry.Attribute;
+
+      Index  : constant Attribute_Index.Object :=
+                 Attribute_Index.Create (Value_Type (Language));
       Binder : Project.Pack.Object;
    begin
       if Self.Has_Packages (P.Binder) then
          Binder := Self.Pack (P.Binder);
 
-         if Binder.Has_Attributes (A.Prefix, Value_Type (Language)) then
+         if Binder.Has_Attributes (A.Prefix, Index) then
             return Name_Type
-              (Binder.Attribute (A.Prefix, Value_Type (Language)).Value.Text);
+              (Binder.Attribute (A.Prefix, Index).Value.Text);
          end if;
       end if;
 
@@ -351,8 +356,8 @@ package body GPR2.Project.View is
    function Check_Attribute
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
-      At_Num : Natural    := 0;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural                := 0;
       Result : out Project.Attribute.Object) return Boolean is
    begin
       Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Num);
@@ -368,6 +373,10 @@ package body GPR2.Project.View is
       Name     : Name_Type;
       Language : Optional_Name_Type) return Containers.Value_Set
    is
+      Index  : constant Attribute_Index.Object :=
+                 (if Language = ""
+                  then Attribute_Index.Undefined
+                  else Attribute_Index.Create (Value_Type (Language)));
       Result : Containers.Value_Set;
 
       procedure Exts_Set_Include (View : Project.View.Object);
@@ -381,8 +390,8 @@ package body GPR2.Project.View is
          AV : Project.Attribute.Object;
       begin
          if View.Has_Packages (PRP.Clean)
-           and then View.Pack (PRP.Clean).Check_Attribute
-                      (Name, Value_Type (Language), Result => AV)
+              and then
+            View.Pack (PRP.Clean).Check_Attribute (Name, Index, Result => AV)
          then
             for V of AV.Values loop
                Result.Include (V.Text);
@@ -527,13 +536,16 @@ package body GPR2.Project.View is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type         := No_Value) return Boolean
+      Name  : Optional_Name_Type     := No_Name;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Boolean
    is
       use Project.Attribute.Set;
+      use type Attribute_Index.Object;
+
       Def : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      if Name = No_Name and then Index = No_Value then
+      if Name = No_Name and then not Index.Is_Defined then
          return not Def.Attrs.Is_Empty;
 
       elsif Name /= No_Name then
@@ -1063,8 +1075,12 @@ package body GPR2.Project.View is
         (Source : Value_Not_Empty;
          At_Num : Natural) return GPR2.Path_Name.Object
       is
-         BN   : constant Value_Not_Empty := Base_Name (Source);
-         Attr : GPR2.Project.Attribute.Object;
+         BN       : constant Value_Not_Empty := Base_Name (Source);
+         BN_Index : constant Attribute_Index.Object :=
+                      Attribute_Index.Create (BN);
+         Index    : constant Attribute_Index.Object :=
+                      Attribute_Index.Create (Source);
+         Attr     : GPR2.Project.Attribute.Object;
 
          function Create_Path
            (Name : Value_Not_Empty) return GPR2.Path_Name.Object
@@ -1076,11 +1092,11 @@ package body GPR2.Project.View is
       begin
          if Builder.Is_Defined
            and then
-             (Builder.Check_Attribute (A.Executable, Source, At_Num, Attr)
+             (Builder.Check_Attribute (A.Executable, Index, At_Num, Attr)
               or else
                 (Source /= BN
                  and then Builder.Check_Attribute
-                            (A.Executable, BN, At_Num, Attr)))
+                   (A.Executable, BN_Index, At_Num, Attr)))
            and then At_Num = At_Num_Or (Attr.Index, 0)
          then
             return Create_Path (Attr.Value.Text);

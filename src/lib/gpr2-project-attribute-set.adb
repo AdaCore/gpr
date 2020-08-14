@@ -16,8 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
-
 with GPR2.Project.Definition;
 
 package body GPR2.Project.Attribute.Set is
@@ -26,7 +24,7 @@ package body GPR2.Project.Attribute.Set is
 
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
       Name          : Unbounded_String;
-      Index         : Unbounded_String;
+      Index         : Attribute_Index.Object;
       At_Num        : Natural := 0;
       Set           : Object;
       With_Defaults : Boolean := False;
@@ -80,10 +78,10 @@ package body GPR2.Project.Attribute.Set is
    --------------
 
    function Contains
-     (Self  : Object;
-      Name  : Name_Type;
-      Index : Value_Type := No_Value;
-      At_Num : Natural   := 0) return Boolean
+     (Self   : Object;
+      Name   : Name_Type;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural    := 0) return Boolean
    is
       Position : constant Cursor := Self.Find (Name, Index, At_Num);
    begin
@@ -95,8 +93,9 @@ package body GPR2.Project.Attribute.Set is
       Attribute : Project.Attribute.Object) return Boolean is
    begin
       return Self.Contains
-        (Attribute.Name.Text, Attribute.Index.Text,
-         At_Num_Or (Attribute.Index, 0));
+        (Attribute.Name.Text,
+         Attribute.Index,
+         At_Num_Or (Source_Reference.Value.Object (Attribute.Index), 0));
    end Contains;
 
    -------------
@@ -111,10 +110,11 @@ package body GPR2.Project.Attribute.Set is
    function Element
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
-      At_Num : Natural    := 0) return Attribute.Object
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural                := 0) return Attribute.Object
    is
-      Position : constant Cursor := Self.Find (Name, Index, At_Num);
+      Position : constant Cursor :=
+                   Self.Find (Name, Index, At_Num);
    begin
       if Set_Attribute.Has_Element (Position.CA) then
          return Element (Position);
@@ -129,11 +129,11 @@ package body GPR2.Project.Attribute.Set is
 
    function Filter
      (Self   : Object;
-      Name   : Optional_Name_Type := No_Name;
-      Index  : Value_Type         := No_Value;
-      At_Num : Natural            := 0) return Object is
+      Name   : Optional_Name_Type     := No_Name;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural                := 0) return Object is
    begin
-      if Name = No_Name and then Index = No_Value then
+      if Name = No_Name and then not Index.Is_Defined then
          return Self;
       end if;
 
@@ -163,10 +163,8 @@ package body GPR2.Project.Attribute.Set is
                Item : constant Set.Constant_Reference_Type :=
                         Self.Attributes (C);
                CI   : Set_Attribute.Cursor;
-               LI   : constant Value_Type :=
-                        Ada.Characters.Handling.To_Lower (Index);
             begin
-               if Index = No_Value then
+               if not Index.Is_Defined then
                   --  All indexes
 
                   Result.Attributes.Insert (Name, Item);
@@ -176,35 +174,20 @@ package body GPR2.Project.Attribute.Set is
 
                --  Specific index only
 
-               CI := Item.Find (Create (Index, At_Num));
+               CI := Item.Find
+                 (Create (Index, Index.Is_Case_Sensitive, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   declare
                      E : constant Set_Attribute.Constant_Reference_Type :=
                            Item (CI);
                   begin
-                     if E.Index_Case_Sensitive or else Index = LI then
-                        Result.Insert (E);
-                        return Result;
-                     end if;
+                     Result.Insert (E);
+                     return Result;
                   end;
                end if;
 
-               CI := Item.Find (Create (LI, At_Num));
-
-               if Set_Attribute.Has_Element (CI) then
-                  declare
-                     E : constant Set_Attribute.Constant_Reference_Type :=
-                           Item (CI);
-                  begin
-                     if not E.Index_Case_Sensitive then
-                        Result.Insert (E);
-                        return Result;
-                     end if;
-                  end;
-               end if;
-
-               CI := Item.Find (Create (Any_Index, At_Num));
+               CI := Item.Find (Create (Attribute_Index.Any, True, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   Result.Insert (Item (CI));
@@ -224,8 +207,8 @@ package body GPR2.Project.Attribute.Set is
    function Find
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
-      At_Num : Natural    := 0) return Cursor
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural                := 0) return Cursor
    is
       Result : Cursor :=
                  (CM  => Self.Attributes.Find (Name),
@@ -238,17 +221,25 @@ package body GPR2.Project.Attribute.Set is
          --  If we have an attribute in the bucket let's check if the index
          --  is case sensitive or not.
 
-         Result.CA := Result.Set.Find
-           (Create
-              ((if Index = No_Value
-                  or else Result.Set.Is_Empty
-                  or else Result.Set.First_Element.Index_Case_Sensitive
-                then Index
-                else Characters.Handling.To_Lower (Index)),
-               At_Num));
+         declare
+            PC : constant Boolean :=
+                   Index = Attribute_Index.Undefined
+                     or else
+                   Result.Set.Is_Empty
+                     or else
+                   Result.Set.First_Element.Index.Is_Case_Sensitive;
+         begin
+            --  ??? PC /= Index.Is_Case_Sensitive ???
+            Result.CA := Result.Set.Find
+              (Create
+                 (Index,
+                  Preserve_Case  => PC,
+                  Default_At_Num => At_Num));
+         end;
 
          if not Set_Attribute.Has_Element (Result.CA) then
-            Result.CA := Result.Set.Find (Create (Any_Index, 0));
+            Result.CA := Result.Set.Find
+              (Create (Attribute_Index.Any, True, 0));
          end if;
       end if;
 
@@ -300,10 +291,13 @@ package body GPR2.Project.Attribute.Set is
       ---------------------
 
       function To_Value_At_Num
-        (Item : Source_Reference.Value.Object) return Value_At_Num
+        (Item : Attribute_Index.Object) return Value_At_Num
       is
+         --  ??? INDEX and case ?
         (if Item.Is_Defined
-         then Create (Item.Text, At_Num_Or (Item, 0))
+         then Create (Item,
+                      Preserve_Case  => False,
+                      Default_At_Num => At_Num_Or (Item, 0))
          else (0, "", 0));
       --  Returns value as string together with 'at' part or empty if not
       --  defined.
@@ -379,14 +373,14 @@ package body GPR2.Project.Attribute.Set is
    function Is_Matching
      (Iter : Iterator'Class; Position : Cursor) return Boolean
    is
-      A     : constant Attribute.Object := Position.Set.all (Position.CA);
-      Name  : constant Optional_Name_Type :=
-                Optional_Name_Type (To_String (Iter.Name));
-      Index : constant Value_Type := To_String (Iter.Index);
+      A    : constant Attribute.Object := Position.Set.all (Position.CA);
+      Name : constant Optional_Name_Type :=
+               Optional_Name_Type (To_String (Iter.Name));
    begin
       return
         (Name = No_Name or else A.Name.Text = Name_Type (Name))
-        and then (Index = No_Value or else A.Index_Equal (Index))
+        and then (not Iter.Index.Is_Defined
+                  or else A.Index = Iter.Index)
         and then (Iter.With_Defaults or else not A.Is_Default);
    end Is_Matching;
 
@@ -395,17 +389,17 @@ package body GPR2.Project.Attribute.Set is
    -------------
 
    function Iterate
-     (Self          : Object;
-      Name          : Optional_Name_Type := No_Name;
-      Index         : Value_Type         := No_Value;
-      At_Num        : Natural            := 0;
-      With_Defaults : Boolean            := False)
+     (Self            : Object;
+      Name            : Optional_Name_Type     := No_Name;
+      Index           : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num          : Natural                := 0;
+      With_Defaults   : Boolean                := False)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do
          It.Set           := Self;
          It.Name          := To_Unbounded_String (String (Name));
-         It.Index         := To_Unbounded_String (Index);
+         It.Index         := Index;
          It.At_Num        := At_Num;
          It.With_Defaults := With_Defaults;
       end return;
@@ -546,18 +540,21 @@ package body GPR2.Project.Attribute.Set is
          is
             Result : Attribute.Object;
 
-            function Create_Index return SR.Value.Object is
-              (if Def.Index = RA.No then SR.Value.Undefined
-               else SR.Value.Object (SR.Value.Create (Project_SRef, Index)));
+            function Create_Index return Attribute_Index.Object is
+              (if Def.Index = RA.No
+               then Attribute_Index.Undefined
+               else Attribute_Index.Create
+                 (SR.Value.Object (SR.Value.Create (Project_SRef, Index)),
+                  False, False));
 
          begin
             if Def.Value = List then
                Result := Project.Attribute.Create
-                 (Name    => Attr_Id,
-                  Index   => Create_Index,
-                  Values  => Containers.Source_Value_Type_List.To_Vector
-                    (Value, 1),
-                  Default => True);
+                 (Name            => Attr_Id,
+                  Index           => Create_Index,
+                  Values          =>
+                    Containers.Source_Value_Type_List.To_Vector (Value, 1),
+                  Default         => True);
 
             else
                Result := Project.Attribute.Create

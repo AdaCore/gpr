@@ -22,6 +22,8 @@ private with Ada.Containers.Indefinite_Ordered_Maps;
 
 package GPR2.Project.Attribute.Set is
 
+   use type Attribute_Index.Object;
+
    type Object is tagged private
      with Constant_Indexing => Constant_Reference,
           Variable_Indexing => Reference,
@@ -37,7 +39,7 @@ package GPR2.Project.Attribute.Set is
    function Contains
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Num : Natural    := 0) return Boolean;
    --  Checks whether the set contains the attribute with the given Name and
    --  possibly the given Index.
@@ -53,7 +55,7 @@ package GPR2.Project.Attribute.Set is
    function Element
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Num : Natural    := 0) return Attribute.Object
      with Post =>
        (if Self.Contains (Name, Index, At_Num)
@@ -86,7 +88,7 @@ package GPR2.Project.Attribute.Set is
    function Find
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Num : Natural    := 0) return Cursor;
 
    function Has_Element (Position : Cursor) return Boolean;
@@ -112,18 +114,18 @@ package GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self          : Object;
-      Name          : Optional_Name_Type := No_Name;
-      Index         : Value_Type         := No_Value;
-      At_Num        : Natural            := 0;
-      With_Defaults : Boolean            := False)
+      Name          : Optional_Name_Type     := No_Name;
+      Index         : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num        : Natural                := 0;
+      With_Defaults : Boolean                := False)
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
      (Self   : Object;
-      Name   : Optional_Name_Type := No_Name;
-      Index  : Value_Type         := No_Value;
-      At_Num : Natural            := 0) return Object
-     with Post => (if Name = No_Name and then Index = No_Value
+      Name   : Optional_Name_Type     := No_Name;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural                := 0) return Object
+     with Post => (if Name = No_Name and then not Index.Is_Defined
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
    --  the given filter.

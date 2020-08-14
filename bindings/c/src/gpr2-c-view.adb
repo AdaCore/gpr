@@ -26,6 +26,7 @@ with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
@@ -131,7 +132,8 @@ package body GPR2.C.View is
          Attr := GPR2.Project.View.Attribute
             (Self => View.all,
              Name => Name_Type (Get_String (Request, "name")),
-             Index => Value_Type (Get_String (Request, "index", "")));
+             Index => GPR2.Project.Attribute_Index.Create
+                        (Value_Type (Get_String (Request, "index", ""))));
          Set_Project_Attribute (Result, "attr", Attr);
       end Handler;
    begin

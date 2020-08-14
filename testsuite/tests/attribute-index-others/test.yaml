@@ -1,0 +1,5 @@
+description:
+    tests for attribute's index others
+driver: build_and_run
+project_file: attribute_index_others
+main: main

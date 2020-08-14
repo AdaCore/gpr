@@ -25,6 +25,7 @@ with GNATCOLL.Utils;
 
 with GPR2.Message;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration.KB;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
@@ -422,7 +423,9 @@ package body GPR2.Project.Configuration is
    begin
       if Self.Conf.Has_Packages (PRP.Compiler)
         and then Self.Conf.Pack (PRP.Compiler).Check_Attribute
-                   (PRA.Object_File_Suffix, String (Language), Result => A)
+                   (PRA.Object_File_Suffix,
+                    Attribute_Index.Create (Value_Type (Language)),
+                    Result => A)
       then
          return Name_Type (A.Value.Text);
       else

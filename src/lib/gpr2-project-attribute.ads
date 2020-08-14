@@ -16,9 +16,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
-
 with GPR2.Containers;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Source_Reference.Identifier;
@@ -39,7 +38,7 @@ package GPR2.Project.Attribute is
 
    function Create
      (Name    : Source_Reference.Identifier.Object;
-      Index   : Source_Reference.Value.Object;
+      Index   : Attribute_Index.Object;
       Value   : Source_Reference.Value.Object;
       Default : Boolean) return Object
      with Post => Create'Result.Kind = Single
@@ -48,9 +47,9 @@ package GPR2.Project.Attribute is
    --  Creates a single-valued object
 
    function Create
-     (Name   : Source_Reference.Identifier.Object;
-      Index  : Source_Reference.Value.Object;
-      Value  : Source_Reference.Value.Object) return Object
+     (Name  : Source_Reference.Identifier.Object;
+      Index : Attribute_Index.Object;
+      Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name.Text = Name.Text
                   and then Create'Result.Count_Values = 1;
@@ -58,7 +57,7 @@ package GPR2.Project.Attribute is
 
    function Create
      (Name    : Source_Reference.Identifier.Object;
-      Index   : Source_Reference.Value.Object;
+      Index   : Attribute_Index.Object;
       Values  : Containers.Source_Value_List;
       Default : Boolean := False) return Object
      with Post => Create'Result.Kind = List
@@ -104,21 +103,11 @@ package GPR2.Project.Attribute is
      with Pre => Self.Is_Defined;
    --  Returns True if the attribute has an index
 
-   function Index (Self : Object) return Source_Reference.Value.Object
-     with Inline, Pre => Self.Is_Defined;
+   function Index (Self : Object) return Attribute_Index.Object
+     with Inline,
+          Pre  => Self.Is_Defined,
+          Post => Index'Result.Is_Defined;
    --  Returns the attribute's index value
-
-   function Index_Equal (Self : Object; Value : Value_Type) return Boolean
-     with Pre => Self.Is_Defined and then Self.Has_Index;
-   --  Returns True if the attribute's index is equal to Value taking into
-   --  account the case-sensitivity of the index.
-
-   function Is_Any_Index (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Has_Index;
-   --  Returns True if the attribute can be returned from the set for any
-   --  index in a request. Main case to use such attributes is to get attribute
-   --  with default value from the set when the default value defined for any
-   --  index.
 
    procedure Set_Case
      (Self                    : in out Object;
@@ -156,28 +145,33 @@ private
      (Left.Value < Right.Value
       or else (Left.Value = Right.Value and then Left.At_Num < Right.At_Num));
 
-   function Create (Value : Value_Type; At_Num : Natural) return Value_At_Num
-   is ((Length => Value'Length, Value => Value, At_Num => At_Num));
+   function Create
+     (Index          : Attribute_Index.Object;
+      Preserve_Case  : Boolean;
+      Default_At_Num : Natural := 0) return Value_At_Num;
+   --  ??? NOT SURE Preserve_Case is needed here as using
+   --  Index.Is_Case_Sensitve seems ok, to be checked
+
+   function Create
+     (Value  : Value_Type;
+      At_Num : Natural) return Value_At_Num
+     is (Value'Length, Value, At_Num);
 
    type Object is new Name_Values.Object with record
-      Index                : Source_Reference.Value.Object;
-      Index_Case_Sensitive : Boolean := True;
-      Default              : Boolean := False;
+      Index   : Attribute_Index.Object;
+      Default : Boolean := False;
    end record;
 
    function Case_Aware_Index (Self : Object) return Value_At_Num is
-     (Create
-        ((if Self.Index_Case_Sensitive
-          then Self.Index.Text
-          else Ada.Characters.Handling.To_Lower (Self.Index.Text)),
-         At_Num_Or (Self.Index, 0)));
+     (Create (Index           => Self.Index,
+              Preserve_Case   =>
+                 Self.Index.Is_Defined and then Self.Index.Is_Case_Sensitive,
+              Default_At_Num =>
+                 At_Num_Or (Self.Index, 0)));
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 
    Undefined : constant Object := (Name_Values.Undefined with others => <>);
-
-   function Is_Any_Index (Self : Object) return Boolean is
-     (Self.Index_Equal (Any_Index));
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

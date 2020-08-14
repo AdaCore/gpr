@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -31,7 +31,8 @@ package body GPR2.Project.Pack is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := No_Value) return Project.Attribute.Object is
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Project.Attribute.Object is
    begin
       return Self.Attrs.Element (Name, Index);
    end Attribute;
@@ -43,7 +44,8 @@ package body GPR2.Project.Pack is
    function Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Project.Attribute.Set.Object is
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Project.Attribute.Set.Object is
    begin
       return Self.Attrs.Filter (Name, Index);
    end Attributes;
@@ -58,7 +60,8 @@ package body GPR2.Project.Pack is
    is
       Lang : constant Value_Type := Value_Type (Language);
    begin
-      return Self.Attribute (Registry.Attribute.Body_Suffix, Lang);
+      return Self.Attribute
+        (Registry.Attribute.Body_Suffix, Attribute_Index.Create (Lang));
    end Body_Suffix;
 
    ---------------------
@@ -68,7 +71,7 @@ package body GPR2.Project.Pack is
    function Check_Attribute
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Num : Natural    := 0;
       Result : out Project.Attribute.Object) return Boolean is
    begin
@@ -97,9 +100,10 @@ package body GPR2.Project.Pack is
    function Has_Attributes
      (Self  : Object;
       Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Boolean is
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Boolean is
    begin
-      if Name = No_Name and then Index = No_Value then
+      if Name = No_Name and then not Index.Is_Defined then
          return not Self.Attrs.Is_Empty;
       else
          return Self.Attrs.Contains (Name, Index);
@@ -129,7 +133,8 @@ package body GPR2.Project.Pack is
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object is
    begin
-      return Self.Attribute (Registry.Attribute.Body_N, Unit);
+      return Self.Attribute
+        (Registry.Attribute.Body_N, Attribute_Index.Create (Unit));
    end Implementation;
 
    ----------
@@ -151,7 +156,8 @@ package body GPR2.Project.Pack is
    is
       Lang : constant Value_Type := Value_Type (Language);
    begin
-      return Self.Attribute (Registry.Attribute.Separate_Suffix, Lang);
+      return Self.Attribute
+        (Registry.Attribute.Separate_Suffix, Attribute_Index.Create (Lang));
    end Separate_Suffix;
 
    ----------------------------
@@ -175,7 +181,8 @@ package body GPR2.Project.Pack is
    is
       Lang : constant Value_Type := Value_Type (Language);
    begin
-      return Self.Attribute (Registry.Attribute.Spec_Suffix, Lang);
+      return Self.Attribute
+        (Registry.Attribute.Spec_Suffix, Attribute_Index.Create (Lang));
    end Spec_Suffix;
 
    -------------------
@@ -186,7 +193,8 @@ package body GPR2.Project.Pack is
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object is
    begin
-      return Self.Attribute (Registry.Attribute.Spec, Unit);
+      return Self.Attribute
+        (Registry.Attribute.Spec, Attribute_Index.Create (Unit));
    end Specification;
 
    --------------

@@ -26,6 +26,9 @@ package body GPR2.Project.Registry.Attribute is
      (Optional_Name_Type, Default_References.Map,
       "=" => Default_References."=");
 
+   Any_Index : constant Value_Type := (1 => ASCII.NUL);
+   --  Internal index declaring that it is fit for any index request
+
    Store    : Attribute_Definitions.Map;
    Defaults : Pack_Defaults.Map;
 

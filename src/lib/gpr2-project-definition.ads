@@ -20,6 +20,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GPR2.Context;
 with GPR2.Parser.Project.Set;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
 with GPR2.Project.Pack.Set;
@@ -33,6 +34,7 @@ limited with GPR2.Project.Tree;
 
 private package GPR2.Project.Definition is
 
+   use type Attribute_Index.Object;
    use type View.Object;
    use type Path_Name.Object;
 
@@ -195,10 +197,13 @@ private package GPR2.Project.Definition is
    function Has_Attributes
      (Def   : Data;
       Name  : Optional_Name_Type;
-      Index : Value_Type := No_Value) return Boolean
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Boolean
    is
-     (if Name = No_Name and then Index = No_Value then not Def.Attrs.Is_Empty
-      elsif Index = No_Value then Def.Attrs.Contains (Name)
+     (if Name = No_Name and then Index = Attribute_Index.Undefined
+      then not Def.Attrs.Is_Empty
+      elsif Index = Attribute_Index.Undefined
+      then Def.Attrs.Contains (Name)
       else not Def.Attrs.Filter (Name, Index).Is_Empty);
 
    function Languages (Def : Data) return Containers.Source_Value_List;

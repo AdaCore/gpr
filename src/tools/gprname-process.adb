@@ -37,6 +37,7 @@ with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration;
 with GPR2.Project.Pack;
 with GPR2.Project.Pretty_Printer;
@@ -280,6 +281,9 @@ begin
    declare
       use type OS_Lib.String_Access;
 
+      Ada_I : constant Attribute_Index.Object :=
+                Attribute_Index.Create ("ada");
+
       Proj : constant View.Object := Tree.Root_Project;
       Conf : constant View.Object := Tree.Configuration.Corresponding_View;
 
@@ -291,18 +295,18 @@ begin
 
    begin
       if Proj.Has_Packages (PRP.Compiler)
-        and then Proj.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, "ada")
+        and then Proj.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, Ada_I)
       then
          --  Use the main project's driver if it is defined
 
-         Driver_Attr := Proj.Pack (PRP.Compiler).Attribute (PRA.Driver, "ada");
+         Driver_Attr := Proj.Pack (PRP.Compiler).Attribute (PRA.Driver, Ada_I);
 
       elsif Conf.Has_Packages (PRP.Compiler)
-        and then Conf.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, "ada")
+        and then Conf.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, Ada_I)
       then
          --  Otherwise, we expect to have a configuration-defined driver
 
-         Driver_Attr := Conf.Pack (PRP.Compiler).Attribute (PRA.Driver, "ada");
+         Driver_Attr := Conf.Pack (PRP.Compiler).Attribute (PRA.Driver, Ada_I);
 
       else
          raise GPRname_Exception with

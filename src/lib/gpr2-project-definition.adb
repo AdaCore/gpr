@@ -646,7 +646,7 @@ package body GPR2.Project.Definition is
             else
                if Naming.Check_Attribute
                     (PRA.Specification_Exceptions,
-                     String (Language),
+                     Attribute_Index.Create (Value_Type (Language)),
                      Result => Attr)
                  and then Attr.Has_Value (Basename)
                then
@@ -655,7 +655,7 @@ package body GPR2.Project.Definition is
 
                elsif Naming.Check_Attribute
                     (PRA.Implementation_Exceptions,
-                     String (Language),
+                     Attribute_Index.Create (Value_Type (Language)),
                      Result => Attr)
                  and then Attr.Has_Value (Basename)
                then
@@ -1067,8 +1067,9 @@ package body GPR2.Project.Definition is
                           (Attr_Name : Name_Type) return Boolean is
                         begin
                            for CA in Naming.Attributes.Iterate
-                                       (Attr_Name, Value_Type (Unit_Name),
-                                        With_Defaults => True)
+                             (Attr_Name,
+                              Attribute_Index.Create (Value_Type (Unit_Name)),
+                              With_Defaults => True)
                            loop
                               if not Naming_Exception_Equal
                                        (Attribute.Set.Element (CA),
@@ -1392,7 +1393,9 @@ package body GPR2.Project.Definition is
                Pck := View.Pack (PRP.Compiler);
 
                if Pck.Check_Attribute
-                 (PRA.Driver, Value_Type (Language), Result => Att)
+                 (PRA.Driver,
+                  Attribute_Index.Create (Value_Type (Language)),
+                  Result => Att)
                then
                   return Att.Value.Text /= "";
                end if;

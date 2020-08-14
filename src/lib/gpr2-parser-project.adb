@@ -30,6 +30,7 @@ with GPR2.Message;
 with GPR2.Parser.Registry;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
@@ -45,6 +46,7 @@ package body GPR2.Parser.Project is
    use type Ada.Containers.Count_Type;
 
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PAI renames GPR2.Project.Attribute_Index;
 
    function Is_Builtin_Project_Name (Name : Name_Type) return Boolean is
      (To_Lower (Name) in "project" | "config" | "runtime");
@@ -1116,10 +1118,11 @@ package body GPR2.Parser.Project is
                     Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
          I_Node : constant GPR_Node := F_Attribute_Index (Node);
-         Index  : constant Value_Type :=
+         Index  : constant PAI.Object :=
                     (if Present (I_Node)
-                     then Get_Value_Type (I_Node.As_Single_Tok_Node)
-                     else "");
+                     then PAI.Create
+                            (Get_Value_Type (I_Node.As_Single_Tok_Node))
+                     else PAI.Undefined);
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
 
@@ -1179,7 +1182,7 @@ package body GPR2.Parser.Project is
 
                --  Special cases for some built-in references
 
-               elsif Index = "" then
+               elsif not Index.Is_Defined then
                   if Name_Type (To_Lower (Name))
                     in PRA.Target | PRA.Canonical_Target
                   then
@@ -1192,7 +1195,9 @@ package body GPR2.Parser.Project is
                      end return;
                   end if;
 
-               elsif Index /= "" and then Name = PRA.Runtime then
+               elsif Index.Is_Defined
+                 and then Name = PRA.Runtime
+               then
                   --  Project'Runtime ("<lang>")
 
                   return R : Item_Values do
@@ -1200,7 +1205,7 @@ package body GPR2.Parser.Project is
                      R.Values.Append
                        (Get_Value_Reference
                           (To_Lower
-                             (Tree.Runtime (Optional_Name_Type (Index))),
+                             (Tree.Runtime (Optional_Name_Type (Index.Text))),
                            Sloc));
                   end return;
                end if;
@@ -1882,63 +1887,76 @@ package body GPR2.Parser.Project is
                       Get_Name_Type (Name.As_Single_Tok_Node);
          begin
             declare
-               Q_Name : constant PRA.Qualified_Name :=
-                          PRA.Create
-                            (N_Str,
-                             Optional_Name_Type (To_String (Pack_Name)));
+               Q_Name   : constant PRA.Qualified_Name :=
+                            PRA.Create
+                              (N_Str,
+                               Optional_Name_Type (To_String (Pack_Name)));
 
-               Values   : constant Item_Values := Get_Term_List (Expr);
-               A        : GPR2.Project.Attribute.Object;
-               Is_Valid : Boolean := True;
+               Values    : constant Item_Values := Get_Term_List (Expr);
+               A         : GPR2.Project.Attribute.Object;
+               Is_Valid  : Boolean := True;
                --  Set to False if the attribute definition is invalid
 
-               function Create_Index return Source_Reference.Value.Object;
+               function Create_Index return PAI.Object;
                --  Create index with "at" part if exists
 
                ------------------
                -- Create_Index --
                ------------------
 
-               function Create_Index return Source_Reference.Value.Object is
+               function Create_Index return PAI.Object is
                   Str_Lit : String_Literal_At;
                   At_Lit  : Num_Literal;
                begin
                   if Index.Kind = GPR_Others_Designator then
-                     return Get_Value_Reference
-                       (Self.Path_Name, Sloc_Range (Index), "others");
+                     return PAI.Create
+                       (Get_Value_Reference
+                          (Self.Path_Name, Sloc_Range (Index), "others"),
+                        Is_Others      => True,
+                        Case_Sensitive => False);
+
+                  else
+                     Str_Lit := Index.As_String_Literal_At;
+                     At_Lit  := Str_Lit.F_At_Lit;
+
+                     return PAI.Create
+                       (Get_Value_Reference
+                          (Self.Path_Name, Sloc_Range (Index),
+                           Get_Value_Type (Str_Lit.F_Str_Lit),
+                           At_Num => -- Ati),
+                             (if At_Lit = No_GPR_Node
+                              then 0
+                              else Positive'Wide_Wide_Value (At_Lit.Text))),
+                        Is_Others      => False,
+                        Case_Sensitive => False);
                   end if;
-
-                  Str_Lit := Index.As_String_Literal_At;
-                  At_Lit  := Str_Lit.F_At_Lit;
-
-                  return Get_Value_Reference
-                    (Self.Path_Name, Sloc_Range (Index),
-                     Get_Value_Type (Str_Lit.F_Str_Lit),
-                     At_Num => (if At_Lit = No_GPR_Node then 0
-                                else Positive'Wide_Wide_Value (At_Lit.Text)));
                end Create_Index;
 
-               I_Sloc    : constant Source_Reference.Value.Object :=
-                             (if Present (Index)
-                              then Create_Index
-                              else Source_Reference.Value.Undefined);
+               I_Sloc : constant PAI.Object :=
+                          (if Present (Index)
+                           then Create_Index
+                           else PAI.Undefined);
 
             begin
                if Values.Single then
                   pragma Assert (Expr.Children_Count >= 1);
 
                   A := GPR2.Project.Attribute.Create
-                    (Name  => Get_Identifier_Reference
-                       (Self.Path_Name, Sloc_Range (Name), N_Str),
-                     Index => I_Sloc,
-                     Value => Values.Values.First_Element);
+                    (Name            => Get_Identifier_Reference
+                                          (Self.Path_Name,
+                                           Sloc_Range (Name),
+                                           N_Str),
+                     Index           => I_Sloc,
+                     Value           => Values.Values.First_Element);
 
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name   => Get_Identifier_Reference
-                                 (Self.Path_Name, Sloc_Range (Name), N_Str),
-                     Index  => I_Sloc,
-                     Values => Values.Values);
+                    (Name            => Get_Identifier_Reference
+                                          (Self.Path_Name,
+                                           Sloc_Range (Name),
+                                           N_Str),
+                     Index           => I_Sloc,
+                     Values          => Values.Values);
                end if;
 
                --  Record attribute with proper casing definition if found

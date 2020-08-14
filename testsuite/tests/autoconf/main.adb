@@ -19,6 +19,7 @@
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
+with GPR2.Project.Attribute_Index;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
@@ -48,19 +49,23 @@ procedure Main is
    -----------------------
 
    procedure Print_Config_Info is
+      Ada_I           : constant Project.Attribute_Index.Object :=
+                          Project.Attribute_Index.Create ("Ada");
       Config_View     : constant Project.View.Object :=
                           Project_Tree.Configuration.Corresponding_View;
       Compiler_Driver : constant Path_Name.Object :=
                           Path_Name.Create_File
                             (Name_Type (Config_View.Pack ("compiler").Attribute
                                           (Name  => "driver",
-                                           Index => "Ada").Value.Text));
+                                           Index => Ada_I).Value.Text));
       Runtime_Dir     : constant Path_Name.Object :=
                           Path_Name.Create_Directory
                             (Name_Type (Config_View.Attribute
                                           (Name  => "Runtime_Dir",
-                                           Index => "Ada").Value.Text));
-      Target : constant String := Config_View.Attribute ("Target").Value.Text;
+                                           Index => Ada_I).Value.Text));
+
+      Target           : constant String :=
+                           Config_View.Attribute ("Target").Value.Text;
       Canonical_Target : constant String :=
                            Config_View.Attribute
                              ("Canonical_Target").Value.Text;

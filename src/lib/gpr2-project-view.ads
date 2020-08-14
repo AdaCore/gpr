@@ -26,6 +26,7 @@
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name.Set;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Pack.Set;
 with GPR2.Project.Registry.Attribute;
@@ -158,8 +159,9 @@ package GPR2.Project.View is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type         := No_Value) return Boolean
+      Name  : Optional_Name_Type     := No_Name;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project view has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
@@ -168,8 +170,8 @@ package GPR2.Project.View is
    function Check_Attribute
      (Self   : Object;
       Name   : Name_Type;
-      Index  : Value_Type := No_Value;
-      At_Num : Natural    := 0;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Num : Natural                := 0;
       Result : out Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True and set Result to attribute if attribute exists or has
@@ -177,8 +179,9 @@ package GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
-      Index : Value_Type := No_Value) return Attribute.Set.Object
+      Name  : Optional_Name_Type     := No_Name;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Attribute.Set.Object
      with Post =>
        (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty);
    --  Get the list of attributes, possibly an empty list if it does not
@@ -187,7 +190,8 @@ package GPR2.Project.View is
    function Attribute
      (Self  : Object;
       Name  : Name_Type;
-      Index : Value_Type := No_Value) return Attribute.Object
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Attribute.Object
      with
        Pre =>
          Self.Is_Defined

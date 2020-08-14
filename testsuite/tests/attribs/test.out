@@ -14,4 +14,3 @@ V:   Dir ->
 Compiler
 A:   object_file_suffix () ~> .o
 A:   Switches [Capital.adb] -> -g -gnata
-A:   Switches [Capital.adb] -> -g -gnata

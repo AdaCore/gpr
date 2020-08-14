@@ -147,11 +147,9 @@ private
 
    Default_Status : constant Status_Control := (others => Indeterminate);
 
-   Any_Index : constant Value_Type := (1 => ASCII.NUL);
-   --  Internal index declaring that it is fit for any index request
-
    function At_Num_Or
-     (Value : Source_Reference.Value.Object; Default : Natural) return Natural
+     (Value   : Source_Reference.Value.Object'Class;
+      Default : Natural) return Natural
    is
      (if Value.Is_Defined and then Value.Has_At_Num
       then Value.At_Num

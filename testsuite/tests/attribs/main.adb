@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -20,6 +20,7 @@ with Ada.Directories;
 with Ada.Text_IO;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Attribute;
@@ -59,7 +60,7 @@ procedure Main is
             Text_IO.Put ("A:   " & String (Attr.Name.Text));
 
             if Attr.Has_Index then
-               if Attr.Is_Any_Index then
+               if Attr.Index.Is_Any_Index then
                   Text_IO.Put (" ()");
                else
                   Text_IO.Put (" [" & String (Attr.Index.Text)  & ']');
@@ -138,7 +139,8 @@ procedure Main is
                if P.Name = Registry.Pack.Compiler then
                   Put_Attributes
                     (P.Attributes
-                      (Registry.Attribute.Switches, "Capital.adb"));
+                      (Registry.Attribute.Switches,
+                       Attribute_Index.Create ("Capital.adb")));
                end if;
             end loop;
          end if;

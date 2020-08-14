@@ -36,6 +36,7 @@ with GPR2.Unit.List;
 with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
+with GPR2.Project.Attribute_Index;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
@@ -1674,6 +1675,8 @@ package body GPRinstall.Install is
             -----------------
 
             procedure For_Project (Project : GPR2.Project.View.Object) is
+               use GPR2.Project;
+
                package A renames GPR2.Project.Registry.Attribute;
                package P renames GPR2.Project.Registry.Pack;
                Attr : GPR2.Project.Attribute.Object;
@@ -1687,7 +1690,9 @@ package body GPRinstall.Install is
                         begin
                            if C.Has_Packages (P.Compiler)
                              and then C.Pack (P.Compiler).Check_Attribute
-                                        (A.Driver, Lang.Text, Result => Attr)
+                                        (A.Driver,
+                                         Attribute_Index.Create (Lang.Text),
+                                         Result => Attr)
                              and then Attr.Value.Text /= ""
                            then
                               Langs.Include (Lang.Text);
