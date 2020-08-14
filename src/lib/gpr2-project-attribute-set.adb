@@ -174,8 +174,7 @@ package body GPR2.Project.Attribute.Set is
 
                --  Specific index only
 
-               CI := Item.Find
-                 (Create (Index, Index.Is_Case_Sensitive, At_Num));
+               CI := Item.Find (Create (Index, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   declare
@@ -187,7 +186,7 @@ package body GPR2.Project.Attribute.Set is
                   end;
                end if;
 
-               CI := Item.Find (Create (Attribute_Index.Any, True, At_Num));
+               CI := Item.Find (Create (Attribute_Index.Any, At_Num));
 
                if Set_Attribute.Has_Element (CI) then
                   Result.Insert (Item (CI));
@@ -221,25 +220,12 @@ package body GPR2.Project.Attribute.Set is
          --  If we have an attribute in the bucket let's check if the index
          --  is case sensitive or not.
 
-         declare
-            PC : constant Boolean :=
-                   Index = Attribute_Index.Undefined
-                     or else
-                   Result.Set.Is_Empty
-                     or else
-                   Result.Set.First_Element.Index.Is_Case_Sensitive;
-         begin
-            --  ??? PC /= Index.Is_Case_Sensitive ???
-            Result.CA := Result.Set.Find
-              (Create
-                 (Index,
-                  Preserve_Case  => PC,
-                  Default_At_Num => At_Num));
-         end;
+         Result.CA := Result.Set.Find
+           (Create (Index, Default_At_Num => At_Num));
 
          if not Set_Attribute.Has_Element (Result.CA) then
             Result.CA := Result.Set.Find
-              (Create (Attribute_Index.Any, True, 0));
+              (Create (Attribute_Index.Any, 0));
          end if;
       end if;
 
@@ -293,10 +279,8 @@ package body GPR2.Project.Attribute.Set is
       function To_Value_At_Num
         (Item : Attribute_Index.Object) return Value_At_Num
       is
-         --  ??? INDEX and case ?
         (if Item.Is_Defined
          then Create (Item,
-                      Preserve_Case  => False,
                       Default_At_Num => At_Num_Or (Item, 0))
          else (0, "", 0));
       --  Returns value as string together with 'at' part or empty if not

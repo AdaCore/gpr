@@ -7,7 +7,7 @@ project Build is
    end Compiler;
 
    package Binder is
-      for Switches ("Ada") use Logging.Binder'Switches ("Ada");
+      for Default_Switches ("Ada") use Logging.Binder'Default_Switches ("Ada");
    end Binder;
 
 end Build;

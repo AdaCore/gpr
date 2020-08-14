@@ -20,6 +20,8 @@ with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 with Ada.Containers;
 with Ada.Exceptions;
+with Ada.Strings.Equal_Case_Insensitive;
+with Ada.Strings.Fixed;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
@@ -1063,6 +1065,12 @@ package body GPR2.Parser.Project is
       function Has_Error return Boolean is
         (Tree.Log_Messages.Has_Error);
 
+      function Is_Switches_Index_Case_Sensitive
+        (Value : Value_Type) return Boolean;
+      --  Check wether the switches index is case senstive or not. This is
+      --  needed as the Switches index can have language (non case-sensitive)
+      --  and filename which can be case sensitive depending on the OS.
+
       --  Global variables used to keep state during the parsing. While
       --  visiting child nodes we may need to record status (when in a package
       --  or a case construct for example). This parsing state is then used
@@ -1117,12 +1125,19 @@ package body GPR2.Parser.Project is
          Name   : constant Name_Type :=
                     Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
+         Q_Name : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
+         Def    : constant PRA.Def := PRA.Get (Q_Name);
+
          I_Node : constant GPR_Node := F_Attribute_Index (Node);
          Index  : constant PAI.Object :=
                     (if Present (I_Node)
                      then PAI.Create
-                            (Get_Value_Type (I_Node.As_Single_Tok_Node))
-                     else PAI.Undefined);
+                       (Get_Value_Type (I_Node.As_Single_Tok_Node),
+                        (if Name = PRA.Switches
+                         then Is_Switches_Index_Case_Sensitive
+                                (Get_Value_Type (I_Node.As_Single_Tok_Node))
+                         else Def.Index_Case_Sensitive))
+                         else PAI.Undefined);
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
 
@@ -1835,6 +1850,70 @@ package body GPR2.Parser.Project is
            and then Self.Imports.Element (Project).Is_Limited;
       end Is_Limited_Import;
 
+      --------------------------------------
+      -- Is_Switches_Index_Case_Sensitive --
+      --------------------------------------
+
+      function Is_Switches_Index_Case_Sensitive
+        (Value : Value_Type) return Boolean
+      is
+         function Is_Language
+           (Value : Value_Type) return Boolean;
+         --  Return true if Value is defined in language
+         --  attribute.
+
+         -----------------
+         -- Is_Language --
+         -----------------
+
+         function Is_Language
+           (Value : Value_Type) return Boolean
+         is
+            use GPR2.Project;
+         begin
+            if Attrs.Has_Languages then
+               declare
+                  Lang : constant Attribute.Object :=
+                           Attrs.Languages;
+               begin
+                  for V of Lang.Values loop
+                     if Strings.Equal_Case_Insensitive (V.Text, Value) then
+                        return True;
+                     end if;
+                  end loop;
+
+                  return False;
+               end;
+
+            else
+               return False;
+            end if;
+         end Is_Language;
+
+         Q_Name               : constant PRA.Qualified_Name :=
+                                  PRA.Create ("switches", "compiler");
+         Def                  : constant PRA.Def := PRA.Get (Q_Name);
+         Index_Case_Sensitive : Boolean := Def.Index_Case_Sensitive;
+
+      begin
+         --  Check for source filename by looking for an
+         --  extenssion separator or if the index is defined as
+         --  a language. If Language is not defined the project
+         --  tree will use the default languages and none of
+         --  them have a dot in their name.
+
+         if Strings.Fixed.Index (Value, ".") = 0
+           or else Is_Language (Value)
+         then
+            --  No extension found, this is a language which is
+            --  inconditionally non case-sensitive.
+
+            Index_Case_Sensitive := False;
+         end if;
+
+         return Index_Case_Sensitive;
+      end Is_Switches_Index_Case_Sensitive;
+
       ------------
       -- Parser --
       ------------
@@ -1900,6 +1979,13 @@ package body GPR2.Parser.Project is
                function Create_Index return PAI.Object;
                --  Create index with "at" part if exists
 
+               Id     : constant Source_Reference.Identifier.Object :=
+                             Get_Identifier_Reference
+                               (Self.Path_Name,
+                                Sloc_Range (Name),
+                                N_Str);
+               --  The attribute name & sloc
+
                ------------------
                -- Create_Index --
                ------------------
@@ -1942,19 +2028,13 @@ package body GPR2.Parser.Project is
                   pragma Assert (Expr.Children_Count >= 1);
 
                   A := GPR2.Project.Attribute.Create
-                    (Name            => Get_Identifier_Reference
-                                          (Self.Path_Name,
-                                           Sloc_Range (Name),
-                                           N_Str),
+                    (Name            => Id,
                      Index           => I_Sloc,
                      Value           => Values.Values.First_Element);
 
                else
                   A := GPR2.Project.Attribute.Create
-                    (Name            => Get_Identifier_Reference
-                                          (Self.Path_Name,
-                                           Sloc_Range (Name),
-                                           N_Str),
+                    (Name            => Id,
                      Index           => I_Sloc,
                      Values          => Values.Values);
                end if;
@@ -2001,9 +2081,38 @@ package body GPR2.Parser.Project is
                         end case;
                      end if;
 
-                     A.Set_Case
-                       (Def.Index_Case_Sensitive,
-                        Def.Value_Case_Sensitive);
+                     --  We need to special case the Switches attribute
+                     --  which may have an index with a language or a source
+                     --  filename. On case-sensitive system like Linux this
+                     --  means that we need to have the language handled
+                     --  without case-sensitivity but the source must be
+                     --  handled with case taken into account.
+
+                     Case_Switches_Index : declare
+                        Index_Case_Sensitive : Boolean :=
+                                                 Def.Index_Case_Sensitive;
+                     begin
+                        --  Check for source filename by looking for an
+                        --  extenssion separator or if the index is defined as
+                        --  a language. If Language is not defined the project
+                        --  tree will use the default languages and none of
+                        --  them have a dot in their name.
+
+                        if I_Sloc.Is_Defined
+                          and then not I_Sloc.Is_Others
+                          and then A.Name.Text = PRA.Switches
+                        then
+                           --  No extension found, this is a language which is
+                           --  inconditionally non case-sensitive.
+
+                           Index_Case_Sensitive :=
+                             Is_Switches_Index_Case_Sensitive (I_Sloc.Value);
+                        end if;
+
+                        A.Set_Case
+                          (Index_Case_Sensitive,
+                           Def.Value_Case_Sensitive);
+                     end Case_Switches_Index;
                   end;
                end if;
 

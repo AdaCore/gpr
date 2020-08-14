@@ -24,14 +24,13 @@ package body GPR2.Project.Attribute is
 
    function Create
      (Index          : Attribute_Index.Object;
-      Preserve_Case  : Boolean;
       Default_At_Num : Natural := 0) return Value_At_Num
    is
-      Is_Others : constant Boolean :=
+      Is_Others : constant Boolean    :=
                     Index.Is_Defined and then Index.Is_Others;
       Value     : constant Value_Type :=
                     (if Index.Is_Defined
-                     then Index.Value (Preserve_Case)
+                     then Index.Value (Index.Is_Case_Sensitive)
                      else "");
       Size      : constant Natural   :=
                     Value'Length + (if Is_Others then 1 else 0);

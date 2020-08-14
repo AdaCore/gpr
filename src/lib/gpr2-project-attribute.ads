@@ -147,10 +147,8 @@ private
 
    function Create
      (Index          : Attribute_Index.Object;
-      Preserve_Case  : Boolean;
       Default_At_Num : Natural := 0) return Value_At_Num;
-   --  ??? NOT SURE Preserve_Case is needed here as using
-   --  Index.Is_Case_Sensitve seems ok, to be checked
+   --  Create the key Value_At_Num for the given index
 
    function Create
      (Value  : Value_Type;
@@ -163,11 +161,9 @@ private
    end record;
 
    function Case_Aware_Index (Self : Object) return Value_At_Num is
-     (Create (Index           => Self.Index,
-              Preserve_Case   =>
-                 Self.Index.Is_Defined and then Self.Index.Is_Case_Sensitive,
-              Default_At_Num =>
-                 At_Num_Or (Self.Index, 0)));
+     (Create
+        (Index          => Self.Index,
+         Default_At_Num => At_Num_Or (Self.Index, 0)));
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 
