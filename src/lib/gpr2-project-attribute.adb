@@ -28,15 +28,17 @@ package body GPR2.Project.Attribute is
    is
       Is_Others : constant Boolean    :=
                     Index.Is_Defined and then Index.Is_Others;
+      --  If we have the others index we prefix the string with '@' to
+      --  avoid ambiguity with the "others" in quote which could be a
+      --  language name.
       Value     : constant Value_Type :=
-                    (if Index.Is_Defined
-                     then Index.Value (Index.Is_Case_Sensitive)
-                     else "");
-      Size      : constant Natural   :=
-                    Value'Length + (if Is_Others then 1 else 0);
+                    (if Is_Others then "@" else "")
+                     & (if Index.Is_Defined
+                        then Index.Value (Index.Is_Case_Sensitive)
+                        else "");
    begin
-      return V : Value_At_Num (Size) do
-         V.Value := (if Is_Others then "@" else "") & Value;
+      return V : Value_At_Num (Value'Length) do
+         V.Value  := Value;
          V.At_Num := At_Num_Or
                        (Source_Reference.Value.Object (Index), Default_At_Num);
       end return;
