@@ -37,14 +37,17 @@ package GPR2.Source_Reference.Text_Value is
    function Create
      (Filename     : Path_Name.Full_Name;
       Line, Column : Natural;
-      Text         : Text_Type) return Object'Class;
+      Text         : Text_Type) return Object'Class
+     with Post => Create'Result.Is_Defined;
 
    function Create
-     (Sloc  : GPR2.Source_Reference.Object;
-      Text  : Text_Type) return Object'Class
-     with Pre => Sloc.Is_Defined;
+     (Sloc : GPR2.Source_Reference.Object;
+      Text : Text_Type) return Object'Class
+     with Pre  => Sloc.Is_Defined,
+          Post => Create'Result.Is_Defined;
 
-   function Text (Self : Object) return Text_Type;
+   function Text (Self : Object) return Text_Type
+     with Pre => Self.Is_Defined;
    --  Returns the message associated with the reference
 
 private

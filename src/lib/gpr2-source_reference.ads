@@ -39,22 +39,24 @@ package GPR2.Source_Reference is
 
    function Create
      (Filename     : Path_Name.Full_Name;
-      Line, Column : Natural) return Object'Class;
+      Line, Column : Natural) return Object'Class
+     with Post => Create'Result.Is_Defined;
 
    function Filename (Self : Object) return Path_Name.Full_Name
      with Pre => Self.Is_Defined;
    --  Returns the full pathname where the entity is defined
 
-   function Has_Source_Reference (Self : Object) return Boolean;
+   function Has_Source_Reference (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
    --  Returns True if Self has source references. That is, in this case the
    --  Line and Column have meaningful values.
 
    function Line (Self : Object) return Positive
-     with Pre => Self.Has_Source_Reference;
+     with Pre => Self.Is_Defined and then Self.Has_Source_Reference;
    --  Returns the starting line of the entity declaration
 
    function Column (Self : Object) return Positive
-     with Pre => Self.Has_Source_Reference;
+     with Pre => Self.Is_Defined and then Self.Has_Source_Reference;
    --  Returns the starting column of the entity declaration
 
 private

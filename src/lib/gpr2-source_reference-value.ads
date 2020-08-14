@@ -35,12 +35,14 @@ package GPR2.Source_Reference.Value is
      (Filename     : Path_Name.Full_Name;
       Line, Column : Natural;
       Text         : Value_Type;
-      At_Num       : Natural := 0) return Object'Class;
+      At_Num       : Natural := 0) return Object'Class
+     with Post => Create'Result.Is_Defined;
 
    function Create
      (Sloc   : GPR2.Source_Reference.Object;
       Text   : Value_Type;
-      At_Num : Natural := 0) return Text_Values.Object'Class;
+      At_Num : Natural := 0) return Text_Values.Object'Class
+     with Post => Create'Result.Is_Defined;
 
    function Has_At_Num (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
