@@ -17,7 +17,9 @@
 ------------------------------------------------------------------------------
 
 with Ada.Exceptions;
+
 with GNATCOLL.JSON;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Message;

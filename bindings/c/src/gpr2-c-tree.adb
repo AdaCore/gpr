@@ -20,19 +20,20 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.JSON;
-with GPR2.C.JSON; use GPR2.C.JSON;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
-with GPR2.Message;
-with GPR2.Path_Name;
-with GPR2.Project.Attribute;
 with GPR2.Project.Configuration;
+with GPR2.Path_Name;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
-with GPR2.Source_Reference;
+
+with GPR2.C.JSON;
 
 package body GPR2.C.Tree is
+
+   use GPR2.C.JSON;
 
    ---------------------------------------
    -- GPR2_Project_Tree_Add_Tool_Prefix --
@@ -155,8 +156,7 @@ package body GPR2.C.Tree is
       -- Handler --
       -------------
 
-      procedure Handler (Request : JSON_Value; Result : JSON_Value)
-      is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value) is
          Tree : constant Project_Tree_Access :=
                   Get_Project_Tree (Request, "tree_id");
          View : Project_View_Access := new GPR2.Project.View.Object;
@@ -186,6 +186,7 @@ package body GPR2.C.Tree is
 
       procedure Handler (Request : JSON_Value; Result : JSON_Value) is
          pragma Unreferenced (Result);
+
          Tree : constant Project_Tree_Access :=
                   Get_Project_Tree (Request, "tree_id");
          View : constant Project_View_Access :=
@@ -194,8 +195,9 @@ package body GPR2.C.Tree is
          if View = null then
             GPR2.Project.Tree.Invalidate_Sources (Self => Tree.all);
          else
-            GPR2.Project.Tree.Invalidate_Sources (Self => Tree.all,
-                                                  View => View.all);
+            GPR2.Project.Tree.Invalidate_Sources
+              (Self => Tree.all,
+               View => View.all);
          end if;
 
       end Handler;
@@ -222,7 +224,7 @@ package body GPR2.C.Tree is
                       Get_Project_Tree (Request, "tree_id");
          Language : constant Optional_Name_Type :=
                       Optional_Name_Type (Get_String (Obj => Request,
-                                                      Key => "language",
+                                                      Key     => "language",
                                                       Default => "ada"));
       begin
          Set_Optional_Name (Result, "runtime", Tree.Runtime (Language));
@@ -250,40 +252,41 @@ package body GPR2.C.Tree is
       -------------
 
       procedure Handler (Request : JSON_Value; Result : JSON_Value) is
-         Tree : constant Project_Tree_Access := new GPR2.Project.Tree.Object;
+         Tree              : constant Project_Tree_Access :=
+                               new GPR2.Project.Tree.Object;
+         Filename          : constant Path_Name.Object :=
+                               Get_File_Path (Request, "filename");
 
-         Filename    : constant Path_Name.Object :=
-                         Get_File_Path (Request, "filename");
+         Context           : constant GPR2.Context.Object :=
+                               Get_Context (Request, "context");
 
-         Context     : constant GPR2.Context.Object :=
-                         Get_Context (Request, "context");
+         Config            : constant GPR2.Project.Configuration.Object :=
+                               Get_Project_Configuration (Request);
 
-         Config      : constant GPR2.Project.Configuration.Object :=
-                         Get_Project_Configuration (Request);
+         Build_Path        : constant Path_Name.Object :=
+                               Get_Optional_Dir_Path (Request, "build_path");
 
-         Build_Path  : constant Path_Name.Object :=
-                         Get_Optional_Dir_Path (Request, "build_path");
+         Subdirs           : constant Optional_Name_Type :=
+                               Get_Optional_Name (Request, "subdirs");
 
-         Subdirs     : constant Optional_Name_Type :=
-                         Get_Optional_Name (Request, "subdirs");
+         Src_Subdirs       : constant Optional_Name_Type :=
+                               Get_Optional_Name (Request, "src_subdirs");
 
-         Src_Subdirs : constant Optional_Name_Type :=
-                         Get_Optional_Name (Request, "src_subdirs");
+         Check_Shared_Lib  : constant Boolean :=
+                               Get_Boolean (Request, "check_shared_lib", True);
 
-         Check_Shared_Lib : constant Boolean :=
-                              Get_Boolean (Request, "check_shared_lib", True);
+         Project_Dir       : constant Path_Name.Object :=
+                               Get_Optional_Dir_Path (Request, "project_dir");
 
-         Project_Dir : constant Path_Name.Object :=
-            Get_Optional_Dir_Path (Request, "project_dir");
+         Absent_Dir_Error  : constant Boolean :=
+                               Get_Boolean
+                                 (Request, "absent_dir_error", False);
 
-         Absent_Dir_Error : constant Boolean :=
-                              Get_Boolean (Request, "absent_dir_error", False);
+         Implicit_With     : constant Containers.Name_Set :=
+                               Get_Name_Set (Request, "implicit_with");
 
-         Implicit_With : constant Containers.Name_Set :=
-                           Get_Name_Set (Request, "implicit_with");
-
-         Target        : constant Optional_Name_Type :=
-                           Get_Optional_Name (Request, "target");
+         Target            : constant Optional_Name_Type :=
+                               Get_Optional_Name (Request, "target");
 
          Language_Runtimes : constant Containers.Name_Value_Map :=
                                Get_Name_Value_Map
@@ -387,15 +390,19 @@ package body GPR2.C.Tree is
    is
       procedure Handler (Request : JSON_Value; Result : JSON_Value);
 
-      procedure Handler (Request : JSON_Value; Result : JSON_Value)
-      is
+      -------------
+      -- Handler --
+      -------------
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value) is
       begin
          Set_Path_Name_Set_Object
            (Obj => Result,
             Key => "project_search_paths",
             Set => GPR2.Project.Tree.Project_Search_Paths
-              (Self => Get_Project_Tree (Request, "tree_id").all));
+                     (Self => Get_Project_Tree (Request, "tree_id").all));
       end Handler;
+
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Project_Search_Paths;
@@ -419,15 +426,21 @@ package body GPR2.C.Tree is
       begin
          --  By construction the tree is always defined
 
-         Set_Name (Result, "target", GPR2.Project.Tree.Target (Tree.all));
-         Set_Name (Result, "archive_suffix",
-                   GPR2.Project.Tree.Archive_Suffix (Tree.all));
-         Set_Optional_Name (Result, "src_subdirs",
-                            GPR2.Project.Tree.Src_Subdirs (Tree.all));
-         Set_Optional_Name (Result, "subdirs",
-                            GPR2.Project.Tree.Subdirs (Tree.all));
-         Set_Path (Result, "build_path",
-                   GPR2.Project.Tree.Build_Path (Tree.all));
+         Set_Name
+           (Result, "target",
+            GPR2.Project.Tree.Target (Tree.all));
+         Set_Name
+           (Result, "archive_suffix",
+            GPR2.Project.Tree.Archive_Suffix (Tree.all));
+         Set_Optional_Name
+           (Result, "src_subdirs",
+            GPR2.Project.Tree.Src_Subdirs (Tree.all));
+         Set_Optional_Name
+           (Result, "subdirs",
+            GPR2.Project.Tree.Subdirs (Tree.all));
+         Set_Path
+           (Result, "build_path",
+            GPR2.Project.Tree.Build_Path (Tree.all));
       end Handler;
 
    begin
@@ -464,9 +477,9 @@ package body GPR2.C.Tree is
    ------------------------------------
 
    function GPR2_Project_Tree_Root_Project
-      (Request : C_Request;
-       Answer  : out C_Answer)
-       return C_Status
+     (Request : C_Request;
+      Answer  : out C_Answer)
+      return C_Status
    is
       procedure Handler (Request : JSON_Value; Result : JSON_Value);
 
@@ -517,7 +530,7 @@ package body GPR2.C.Tree is
    ------------------------------
 
    function GPR2_Project_Tree_Unload
-      (Request : C_Request; Answer : out C_Answer) return C_Status
+     (Request : C_Request; Answer : out C_Answer) return C_Status
    is
       procedure Handler (Request : JSON_Value; Result : JSON_Value);
 
@@ -529,13 +542,14 @@ package body GPR2.C.Tree is
          pragma Unreferenced (Result);
 
          procedure Free is new Ada.Unchecked_Deallocation
-            (GPR2.Project.Tree.Object, Project_Tree_Access);
+           (GPR2.Project.Tree.Object, Project_Tree_Access);
 
          Tree : Project_Tree_Access := Get_Project_Tree (Request, "tree_id");
       begin
          GPR2.Project.Tree.Unload (Tree.all);
          Free (Tree);
       end Handler;
+
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_Tree_Unload;

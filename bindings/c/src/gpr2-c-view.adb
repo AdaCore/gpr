@@ -20,20 +20,17 @@ with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 
 with GNATCOLL.JSON;
-with GPR2.C.JSON; use GPR2.C.JSON;
-with GPR2.Context;
-with GPR2.Log;
-with GPR2.Message;
-with GPR2.Path_Name;
+
+with GPR2.C.JSON;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Configuration;
-with GPR2.Project.View;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
 with GPR2.Path_Name.Set;
 
 package body GPR2.C.View is
+
+   use GPR2.C.JSON;
 
    ---------------------------------
    -- GPR2_Project_View_Aggregate --
@@ -62,8 +59,8 @@ package body GPR2.C.View is
             end;
 
          else
-            GNATCOLL.JSON.Set_Field (Result, "view_id",
-                                    GNATCOLL.JSON.JSON_Null);
+            GNATCOLL.JSON.Set_Field
+              (Result, "view_id", GNATCOLL.JSON.JSON_Null);
          end if;
       end Handler;
 
@@ -92,8 +89,8 @@ package body GPR2.C.View is
             Set_Project_Views
               (Result, "view_ids", View.Aggregated);
          else
-            Set_Project_Views (Result, "view_ids",
-                               GPR2.Project.View.Set.Empty_Set);
+            Set_Project_Views
+              (Result, "view_ids", GPR2.Project.View.Set.Empty_Set);
          end if;
       end Handler;
 
@@ -130,9 +127,9 @@ package body GPR2.C.View is
    ---------------------------------
 
    function GPR2_Project_View_Attribute
-      (Request : C_Request;
-       Answer  : out C_Answer)
-       return C_Status
+     (Request : C_Request;
+      Answer  : out C_Answer)
+      return C_Status
    is
       procedure Handler (Request : JSON_Value; Result : JSON_Value);
 
@@ -146,10 +143,10 @@ package body GPR2.C.View is
          Attr : GPR2.Project.Attribute.Object;
       begin
          Attr := GPR2.Project.View.Attribute
-            (Self  => View.all,
-             Name  => Name_Type (Get_String (Request, "name")),
-             Index => GPR2.Project.Attribute_Index.Create
-                        (Value_Type (Get_String (Request, "index", ""))));
+           (Self  => View.all,
+            Name  => Name_Type (Get_String (Request, "name")),
+            Index => GPR2.Project.Attribute_Index.Create
+                       (Value_Type (Get_String (Request, "index", ""))));
          Set_Project_Attribute (Result, "attr", Attr);
       end Handler;
 
@@ -274,7 +271,7 @@ package body GPR2.C.View is
 
       procedure Handler (Request : JSON_Value; Result : JSON_Value) is
          View : constant Project_View_Access :=
-                 Get_Project_View (Request, "view_id");
+                  Get_Project_View (Request, "view_id");
       begin
          if View.Is_Extending then
             declare
@@ -322,8 +319,8 @@ package body GPR2.C.View is
             end;
 
          else
-            GNATCOLL.JSON.Set_Field (Result, "view_id",
-                                     GNATCOLL.JSON.JSON_Null);
+            GNATCOLL.JSON.Set_Field
+              (Result, "view_id", GNATCOLL.JSON.JSON_Null);
          end if;
       end Handler;
 
@@ -494,8 +491,9 @@ package body GPR2.C.View is
          Need_Update : constant Boolean :=
                          Get_Boolean (Request, "need_update", True);
       begin
-         Set_String (Result, "source_path",
-                     View.Source_Path (Filename, Need_Update).Value);
+         Set_String
+           (Result, "source_path",
+            View.Source_Path (Filename, Need_Update).Value);
       end Handler;
 
    begin
@@ -568,7 +566,7 @@ package body GPR2.C.View is
          pragma Unreferenced (Result);
 
          procedure Free is new Ada.Unchecked_Deallocation
-            (GPR2.Project.View.Object, Project_View_Access);
+           (GPR2.Project.View.Object, Project_View_Access);
 
          View : Project_View_Access := Get_Project_View (Request, "view_id");
 
