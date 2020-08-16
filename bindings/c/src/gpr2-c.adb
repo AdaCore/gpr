@@ -22,8 +22,7 @@ package body GPR2.C is
    -- GPR2_Free_Answer --
    ----------------------
 
-   procedure GPR2_Free_Answer (Answer : C_Answer)
-   is
+   procedure GPR2_Free_Answer (Answer : C_Answer) is
       use Interfaces.C.Strings;
       Tmp : chars_ptr := chars_ptr (Answer);
    begin

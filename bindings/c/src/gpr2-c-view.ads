@@ -21,7 +21,7 @@
 package GPR2.C.View is
 
    function GPR2_Project_View_Unload
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  Unload a project view.
    --
    --  After a call to that function, view_id should not be used
@@ -34,7 +34,7 @@ package GPR2.C.View is
    --      {}
 
    function GPR2_Project_View_Properties
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  Returns in one call aggregated information about the selected view
    --
    --  Request:

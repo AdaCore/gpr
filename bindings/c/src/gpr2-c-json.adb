@@ -33,19 +33,21 @@ package body GPR2.C.JSON is
    use type GNATCOLL.JSON.JSON_Value;
 
    function Convert is new Ada.Unchecked_Conversion
-      (Interfaces.C.Strings.chars_ptr, C_Answer);
+     (Interfaces.C.Strings.chars_ptr, C_Answer);
 
    function Get_Id (Addr : System.Address) return String;
 
    procedure Set_Address
-      (Obj : JSON_Value; Key : String; Addr : System.Address);
+     (Obj : JSON_Value; Key : String; Addr : System.Address);
 
    function Get_Address
-      (Obj : JSON_Value; Key : String) return System.Address;
+     (Obj : JSON_Value; Key : String) return System.Address;
 
    function Has_Non_Null_Field
-     (Obj : JSON_Value; Key : String) return Boolean is
-     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key) and then
+     (Obj : JSON_Value; Key : String) return Boolean
+   is
+     (GNATCOLL.JSON.Has_Field (Val => Obj, Field => Key)
+        and then
       GNATCOLL.JSON.Get (Val => Obj, Field => Key) /= GNATCOLL.JSON.JSON_Null);
    --  Return True if Obj contains a non null field named Key
 
@@ -68,7 +70,7 @@ package body GPR2.C.JSON is
       Message        : GPR2.Message.Object)
    is
       JSON_Message : constant GNATCOLL.JSON.JSON_Value :=
-         GNATCOLL.JSON.Create_Object;
+                       GNATCOLL.JSON.Create_Object;
    begin
       Set_String (JSON_Message, "level", Message.Level'Img);
       Set_String (JSON_Message, "message", Message.Message);
@@ -85,12 +87,12 @@ package body GPR2.C.JSON is
        Answer  : out C_Answer;
        Handler : Bind_Handler) return C_Status
    is
-      Request_Obj : JSON.JSON_Value;
       Answer_Obj  : constant JSON_Value := Initialize_Answer;
+      Request_Obj : JSON.JSON_Value;
       Result_Obj  : JSON_Value;
       Can_Decode  : Boolean := True;
-   begin
 
+   begin
       Result_Obj := Get_Result (Answer_Obj);
 
       --  Until this stage an error can only occur if there is a lack of
@@ -99,15 +101,14 @@ package body GPR2.C.JSON is
          Request_Obj := Decode (Request);
       exception
          when E : others =>
-            --  Error detected during parsing of the request JSON.
+            --  Error detected during parsing of the request JSON
             Set_Status (Answer_Obj, Invalid_Request, E);
             Can_Decode := False;
       end;
 
       if Can_Decode then
          begin
-            Handler (Request => Request_Obj,
-                     Result  => Result_Obj);
+            Handler (Request => Request_Obj, Result  => Result_Obj);
          exception
             when E : others =>
                Set_Status (Answer_Obj, Call_Error, E);
@@ -117,6 +118,7 @@ package body GPR2.C.JSON is
       --  Unless there is a bug in the GNATCOLL.JSON library, all relevant
       --  errors have been caught. No exception is expected from here.
       Answer := Encode (Answer_Obj);
+
       return Get_Status (Answer_Obj);
    end Bind;
 
@@ -124,8 +126,7 @@ package body GPR2.C.JSON is
    -- Decode --
    ------------
 
-   function Decode (Request : C_Request) return JSON_Value
-   is
+   function Decode (Request : C_Request) return JSON_Value is
    begin
       return GNATCOLL.JSON.Read (Value (Request));
    end Decode;
@@ -134,11 +135,10 @@ package body GPR2.C.JSON is
    -- Encode --
    ------------
 
-   function Encode (Answer : JSON.JSON_Value) return C_Answer
-   is
+   function Encode (Answer : JSON.JSON_Value) return C_Answer is
       use Interfaces.C.Strings;
       Result : constant chars_ptr :=
-         New_String (GNATCOLL.JSON.Write (Answer));
+                 New_String (GNATCOLL.JSON.Write (Answer));
    begin
       return Convert (Result);
    end Encode;
@@ -151,7 +151,7 @@ package body GPR2.C.JSON is
       (Obj : JSON_Value; Key : String) return System.Address
    is
       use System.Storage_Elements;
-      Str : constant String := GNATCOLL.JSON.Get (Obj, Key);
+      Str      : constant String := GNATCOLL.JSON.Get (Obj, Key);
       Addr_Int : constant Integer_Address := Integer_Address'Value (Str);
    begin
       return To_Address (Addr_Int);
@@ -164,8 +164,7 @@ package body GPR2.C.JSON is
    function Get_Boolean
       (Obj     : JSON_Value;
        Key     : String;
-       Default : Boolean) return Boolean
-   is
+       Default : Boolean) return Boolean is
    begin
       if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GNATCOLL.JSON.Get (Val => Obj, Field => Key);
@@ -184,25 +183,25 @@ package body GPR2.C.JSON is
       Result : GPR2.Context.Object;
 
       procedure CB
-         (Name  : GNATCOLL.JSON.UTF8_String;
-          Value : GNATCOLL.JSON.JSON_Value);
+        (Name  : GNATCOLL.JSON.UTF8_String;
+         Value : GNATCOLL.JSON.JSON_Value);
 
       --------
       -- CB --
       --------
 
       procedure CB
-         (Name : GNATCOLL.JSON.UTF8_String;
-          Value : GNATCOLL.JSON.JSON_Value)
+        (Name : GNATCOLL.JSON.UTF8_String;
+         Value : GNATCOLL.JSON.JSON_Value)
       is
       begin
-         Result.Insert (Optional_Name_Type (Name),
-                        GNATCOLL.JSON.Get (Value));
+         Result.Insert (Optional_Name_Type (Name), GNATCOLL.JSON.Get (Value));
       end CB;
 
    begin
-      GNATCOLL.JSON.Map_JSON_Object (Val => GNATCOLL.JSON.Get (Obj, Key),
-                                     CB  => CB'Unrestricted_Access);
+      GNATCOLL.JSON.Map_JSON_Object
+        (Val => GNATCOLL.JSON.Get (Obj, Key),
+         CB  => CB'Unrestricted_Access);
       return Result;
    end Get_Context;
 
@@ -213,12 +212,11 @@ package body GPR2.C.JSON is
    function Get_Dir_Path
       (Obj     : JSON_Value;
        Key     : String;
-       Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object
-   is
+       Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object is
    begin
       if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GPR2.Path_Name.Create_Directory
-            (Name => GPR2.Name_Type (Get_String (Obj, Key)));
+           (Name => GPR2.Name_Type (Get_String (Obj, Key)));
       else
          return Default;
       end if;
@@ -229,8 +227,7 @@ package body GPR2.C.JSON is
    -------------------
 
    function Get_File_Path
-      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object
-   is
+      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object is
    begin
       return GPR2.Path_Name.Create_File
          (Name => GPR2.Name_Type (Get_String (Obj, Key)));
@@ -239,12 +236,11 @@ package body GPR2.C.JSON is
    function Get_File_Path
       (Obj     : JSON_Value;
        Key     : String;
-       Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object
-   is
+       Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object is
    begin
       if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GPR2.Path_Name.Create_File
-            (Name => GPR2.Name_Type (Get_String (Obj, Key)));
+           (Name => GPR2.Name_Type (Get_String (Obj, Key)));
       else
          return Default;
       end if;
@@ -254,9 +250,9 @@ package body GPR2.C.JSON is
    -- Get_Id --
    ------------
 
-   function Get_Id (Addr : System.Address) return String
-   is
+   function Get_Id (Addr : System.Address) return String is
       use System.Storage_Elements;
+
       Addr_Int : constant Integer_Address := To_Integer (Addr);
 
       --  When compiling with -fstack-usage, the following call is marked as
@@ -272,9 +268,10 @@ package body GPR2.C.JSON is
    ----------------------
 
    function Get_Level_Format
-     (Obj : JSON_Value; Key : String; Default : GPR2.Message.Level_Format)
-      return GPR2.Message.Level_Format
-   is
+     (Obj     : JSON_Value;
+      Key     : String;
+      Default : GPR2.Message.Level_Format)
+      return GPR2.Message.Level_Format is
    begin
       if not Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return Default;
@@ -298,7 +295,8 @@ package body GPR2.C.JSON is
    ----------------------
 
    function Get_Level_Output
-     (Obj : JSON_Value; Default : GPR2.Message.Level_Output)
+     (Obj     : JSON_Value;
+      Default : GPR2.Message.Level_Output)
       return GPR2.Message.Level_Output
    is
       Level_Output : GPR2.Message.Level_Output;
@@ -356,16 +354,16 @@ package body GPR2.C.JSON is
 
       procedure CB
         (Name  : GNATCOLL.JSON.UTF8_String;
-         Value : GNATCOLL.JSON.JSON_Value)
-      is
+         Value : GNATCOLL.JSON.JSON_Value) is
       begin
          Result.Insert (Optional_Name_Type (Name), Value.Get);
       end CB;
 
    begin
       if Has_Non_Null_Field (Obj => Obj, Key => Key) then
-         GNATCOLL.JSON.Map_JSON_Object (Val => GNATCOLL.JSON.Get (Obj, Key),
-                                        CB  => CB'Unrestricted_Access);
+         GNATCOLL.JSON.Map_JSON_Object
+           (Val => GNATCOLL.JSON.Get (Obj, Key),
+            CB  => CB'Unrestricted_Access);
       end if;
       return Result;
    end Get_Name_Value_Map;
@@ -375,8 +373,7 @@ package body GPR2.C.JSON is
    ----------------------------
 
    function Get_Optional_Dir_Path
-      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object
-   is
+      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object is
    begin
       return Get_Dir_Path (Obj, Key, GPR2.Path_Name.Undefined);
    end Get_Optional_Dir_Path;
@@ -386,8 +383,7 @@ package body GPR2.C.JSON is
    ----------------------------
 
    function Get_Optional_File_Path
-      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object
-   is
+      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object is
    begin
       return Get_File_Path (Obj, Key, GPR2.Path_Name.Undefined);
    end Get_Optional_File_Path;
@@ -397,8 +393,7 @@ package body GPR2.C.JSON is
    -----------------------
 
    function Get_Optional_Name
-      (Obj : JSON_Value; Key : String) return GPR2.Optional_Name_Type
-   is
+      (Obj : JSON_Value; Key : String) return GPR2.Optional_Name_Type is
    begin
       return Optional_Name_Type
          (Get_String (Obj, Key, String (GPR2.No_Name)));
@@ -409,8 +404,7 @@ package body GPR2.C.JSON is
    -------------------------------
 
    function Get_Optional_Project_View
-     (Obj : JSON_Value; Key : String) return Project_View_Access
-   is
+     (Obj : JSON_Value; Key : String) return Project_View_Access is
    begin
       if Has_Non_Null_Field (Obj, Key) then
          return Get_Project_View (Obj, Key);
@@ -424,7 +418,8 @@ package body GPR2.C.JSON is
    -------------------------------
 
    function Get_Project_Configuration
-     (Obj : JSON_Value; Key : String := "configuration_id")
+     (Obj : JSON_Value;
+      Key : String := "configuration_id")
       return GPR2.Project.Configuration.Object
    is
       function Convert is new Ada.Unchecked_Conversion
@@ -445,7 +440,7 @@ package body GPR2.C.JSON is
       (Obj : JSON_Value; Key : String) return Project_Tree_Access
    is
       function Convert is new Ada.Unchecked_Conversion
-         (System.Address, Project_Tree_Access);
+        (System.Address, Project_Tree_Access);
    begin
       return Convert (Get_Address (Obj, Key));
    end Get_Project_Tree;
@@ -458,7 +453,7 @@ package body GPR2.C.JSON is
       (Obj : JSON_Value; Key : String) return Project_View_Access
    is
       function Convert is new Ada.Unchecked_Conversion
-         (System.Address, Project_View_Access);
+        (System.Address, Project_View_Access);
    begin
       return Convert (Get_Address (Obj, Key));
    end Get_Project_View;
@@ -467,8 +462,7 @@ package body GPR2.C.JSON is
    -- Get_Result --
    ----------------
 
-   function Get_Result (Obj : JSON_Value) return JSON_Value
-   is
+   function Get_Result (Obj : JSON_Value) return JSON_Value is
    begin
       return GNATCOLL.JSON.Get (Obj, "result");
    end Get_Result;
@@ -477,8 +471,7 @@ package body GPR2.C.JSON is
    -- Get_Status --
    ----------------
 
-   function Get_Status (Obj : JSON_Value) return C_Status
-   is
+   function Get_Status (Obj : JSON_Value) return C_Status is
       I : constant Integer := GNATCOLL.JSON.Get (Obj, "status");
    begin
       return C_Status (I);
@@ -489,8 +482,7 @@ package body GPR2.C.JSON is
    ----------------
 
    function Get_String
-      (Obj : JSON_Value; Key : String) return String
-   is
+      (Obj : JSON_Value; Key : String) return String is
    begin
       return GNATCOLL.JSON.Get (Val => Obj, Field => Key);
    exception
@@ -503,8 +495,7 @@ package body GPR2.C.JSON is
       (Obj     : JSON_Value;
        Key     : String;
        Default : String)
-      return String
-   is
+       return String is
    begin
       if Has_Non_Null_Field (Obj => Obj, Key => Key) then
          return GNATCOLL.JSON.Get (Val => Obj, Field => Key);
@@ -517,8 +508,7 @@ package body GPR2.C.JSON is
    -- Initialize_Answer --
    -----------------------
 
-   function Initialize_Answer return JSON_Value
-   is
+   function Initialize_Answer return JSON_Value is
       Answer : JSON_Value;
    begin
       Answer := GNATCOLL.JSON.Create_Object;
@@ -534,8 +524,7 @@ package body GPR2.C.JSON is
    procedure Set_Address
       (Obj  : JSON_Value;
        Key  : String;
-       Addr : System.Address)
-   is
+       Addr : System.Address) is
    begin
       GNATCOLL.JSON.Set_Field (Obj, Key, Get_Id (Addr));
    end Set_Address;
@@ -556,33 +545,39 @@ package body GPR2.C.JSON is
             Content : constant GNATCOLL.JSON.JSON_Value :=
                         GNATCOLL.JSON.Create_Object;
          begin
-            GNATCOLL.JSON.Set_Field (Content, "name",
-                                     String (Attribute.Name.Text));
+            GNATCOLL.JSON.Set_Field
+              (Content, "name", String (Attribute.Name.Text));
+
             if Attribute.Has_Index then
-               GNATCOLL.JSON.Set_Field (Content, "index",
-                                        String (Attribute.Index.Text));
+               GNATCOLL.JSON.Set_Field
+                 (Content, "index", String (Attribute.Index.Text));
+
                if Attribute.Index.Has_At_Pos then
-                  GNATCOLL.JSON.Set_Field (Content, "at",
-                                           Attribute.Index.At_Pos);
+                  GNATCOLL.JSON.Set_Field
+                    (Content, "at", Attribute.Index.At_Pos);
                else
-                  GNATCOLL.JSON.Set_Field (Content, "at",
-                                           GNATCOLL.JSON.JSON_Null);
+                  GNATCOLL.JSON.Set_Field
+                    (Content, "at", GNATCOLL.JSON.JSON_Null);
                end if;
+
             else
-               GNATCOLL.JSON.Set_Field (Content, "index",
-                                        GNATCOLL.JSON.JSON_Null);
-               GNATCOLL.JSON.Set_Field (Content, "at",
-                                        GNATCOLL.JSON.JSON_Null);
+               GNATCOLL.JSON.Set_Field
+                 (Content, "index", GNATCOLL.JSON.JSON_Null);
+               GNATCOLL.JSON.Set_Field
+                 (Content, "at", GNATCOLL.JSON.JSON_Null);
             end if;
+
             if Attribute.Kind = GPR2.Project.Registry.Attribute.Single then
-               GNATCOLL.JSON.Set_Field (Content, "value",
-                                        Attribute.Value.Text);
+               GNATCOLL.JSON.Set_Field
+                 (Content, "value", Attribute.Value.Text);
             else
                Set_Source_Value_List (Content, "value", Attribute.Values);
             end if;
+
             GNATCOLL.JSON.Append (Attributes_Array, Content);
          end;
       end loop;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, Attributes_Array);
    end Set_Attributes;
 
@@ -627,8 +622,7 @@ package body GPR2.C.JSON is
    procedure Set_Name
       (Obj  : JSON_Value;
        Key  : String;
-       Name : GPR2.Name_Type)
-   is
+       Name : GPR2.Name_Type) is
    begin
       Set_String (Obj, Key, String (Name));
    end Set_Name;
@@ -652,8 +646,7 @@ package body GPR2.C.JSON is
    procedure Set_Optional_Name
       (Obj  : JSON_Value;
        Key  : String;
-       Name : GPR2.Optional_Name_Type)
-   is
+       Name : GPR2.Optional_Name_Type) is
    begin
       if Name = GPR2.No_Name then
          GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
@@ -669,8 +662,7 @@ package body GPR2.C.JSON is
    procedure Set_Path
       (Obj  : JSON_Value;
        Key  : String;
-       Path : GPR2.Path_Name.Object)
-   is
+       Path : GPR2.Path_Name.Object) is
    begin
       if Path.Is_Defined then
          Set_String (Obj, Key, Path.Value);
@@ -694,6 +686,7 @@ package body GPR2.C.JSON is
          GNATCOLL.JSON.Append
            (Elements, GNATCOLL.JSON.Create (String (Path.Value)));
       end loop;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.Create (Elements));
    end Set_Path_Name_Set_Object;
 
@@ -704,11 +697,11 @@ package body GPR2.C.JSON is
    procedure Set_Project_Attribute
       (Obj   : JSON_Value;
        Key   : String;
-       Value : GPR2.Project.Attribute.Object)
-   is
+       Value : GPR2.Project.Attribute.Object) is
    begin
       if Value.Kind = GPR2.Project.Registry.Attribute.Single then
          Set_String (Obj, Key, Value.Value.Text);
+
       else
          declare
             Value_Array : GNATCOLL.JSON.JSON_Array;
@@ -722,12 +715,12 @@ package body GPR2.C.JSON is
                   GNATCOLL.JSON.Append (Value_Array, JSON_Str);
                end;
             end loop;
+
             GNATCOLL.JSON.Set_Field
                (Obj, Key, GNATCOLL.JSON.Create (Value_Array));
          end;
 
       end if;
-
    end Set_Project_Attribute;
 
    ----------------------
@@ -737,8 +730,7 @@ package body GPR2.C.JSON is
    procedure Set_Project_Tree
       (Obj   : JSON_Value;
        Key   : String;
-       Value : Project_Tree_Access)
-   is
+       Value : Project_Tree_Access) is
    begin
       Set_Address (Obj, Key, Value.all'Address);
    end Set_Project_Tree;
@@ -769,9 +761,9 @@ package body GPR2.C.JSON is
    -----------------------
 
    procedure Set_Project_Views
-     (Obj   : JSON_Value;
-      Key   : String;
-      Views : GPR2.Project.View.Set.Object) is
+     (Obj      : JSON_Value;
+      Key      : String;
+      Views    : GPR2.Project.View.Set.Object) is
       View_Ids : GNATCOLL.JSON.JSON_Array;
    begin
       for View of Views loop
@@ -787,6 +779,7 @@ package body GPR2.C.JSON is
             end;
          end if;
       end loop;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.Create (View_Ids));
    end Set_Project_Views;
 
@@ -800,9 +793,10 @@ package body GPR2.C.JSON is
       Sloc : GPR2.Source_Reference.Object)
    is
       JSON_Sloc : constant GNATCOLL.JSON.JSON_Value :=
-         GNATCOLL.JSON.Create_Object;
+                    GNATCOLL.JSON.Create_Object;
    begin
       Set_String (JSON_Sloc, "filename", Sloc.Filename);
+
       if Sloc.Has_Source_Reference then
          GNATCOLL.JSON.Set_Field (JSON_Sloc, "line", Sloc.Line);
          GNATCOLL.JSON.Set_Field (JSON_Sloc, "column", Sloc.Column);
@@ -811,6 +805,7 @@ package body GPR2.C.JSON is
          GNATCOLL.JSON.Set_Field
             (JSON_Sloc, "column", GNATCOLL.JSON.JSON_Null);
       end if;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, JSON_Sloc);
    end Set_Source_Reference;
 
@@ -819,15 +814,16 @@ package body GPR2.C.JSON is
    ---------------------------
 
    procedure Set_Source_Value_List
-     (Obj : JSON_Value;
-      Key : String;
-      Values : GPR2.Containers.Source_Value_List) is
+     (Obj          : JSON_Value;
+      Key          : String;
+      Values       : GPR2.Containers.Source_Value_List) is
       Values_Array : JSON_Array;
    begin
       for Value of Values loop
          GNATCOLL.JSON.Append
            (Values_Array, GNATCOLL.JSON.Create (String (Value.Text)));
       end loop;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, Values_Array);
    end Set_Source_Value_List;
 
@@ -881,9 +877,8 @@ package body GPR2.C.JSON is
    ----------------
 
    procedure Set_Status
-      (Obj   : JSON_Value;
-       Value : C_Status)
-   is
+     (Obj   : JSON_Value;
+      Value : C_Status) is
    begin
       GNATCOLL.JSON.Set_Field (Obj, "status", Integer (Value));
       Set_String (Obj, "error_msg", "");
@@ -891,10 +886,9 @@ package body GPR2.C.JSON is
    end Set_Status;
 
    procedure Set_Status
-      (Obj   : JSON_Value;
-       Value : C_Status;
-       E     : Ada.Exceptions.Exception_Occurrence)
-   is
+     (Obj   : JSON_Value;
+      Value : C_Status;
+      E     : Ada.Exceptions.Exception_Occurrence) is
    begin
       GNATCOLL.JSON.Set_Field (Obj, "status", Integer (Value));
       Set_String (Obj, "error_msg", Ada.Exceptions.Exception_Message (E));
@@ -906,10 +900,9 @@ package body GPR2.C.JSON is
    ----------------
 
    procedure Set_String
-      (Obj   : JSON_Value;
-       Key   : String;
-       Value : String)
-   is
+     (Obj   : JSON_Value;
+      Key   : String;
+      Value : String) is
    begin
       GNATCOLL.JSON.Set_Field (Obj, Key, Value);
    end Set_String;
@@ -930,8 +923,9 @@ package body GPR2.C.JSON is
             Content : constant GNATCOLL.JSON.JSON_Value :=
                         GNATCOLL.JSON.Create_Object;
          begin
-            GNATCOLL.JSON.Set_Field (Content, "name",
-                                     String (Typ.Name.Text));
+            GNATCOLL.JSON.Set_Field
+              (Content, "name", String (Typ.Name.Text));
+
             if Typ.Kind = GPR2.Project.Registry.Attribute.Single then
                GNATCOLL.JSON.Set_Field (Content, "value", Typ.Value.Text);
             else
@@ -939,6 +933,7 @@ package body GPR2.C.JSON is
             end if;
          end;
       end loop;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, Types_Array);
    end Set_Types;
 
@@ -947,27 +942,30 @@ package body GPR2.C.JSON is
    ------------------
 
    procedure Set_Variable
-      (Obj : JSON_Value;
-       Key : String;
-       Variable : GPR2.Project.Variable.Object)
+     (Obj      : JSON_Value;
+      Key      : String;
+      Variable : GPR2.Project.Variable.Object)
    is
       Content : constant GNATCOLL.JSON.JSON_Value :=
-         GNATCOLL.JSON.Create_Object;
+                  GNATCOLL.JSON.Create_Object;
    begin
-      GNATCOLL.JSON.Set_Field (Content, "name",
-                               String (Variable.Name.Text));
+      GNATCOLL.JSON.Set_Field
+        (Content, "name", String (Variable.Name.Text));
+
       if Variable.Has_Type then
-         GNATCOLL.JSON.Set_Field (Content, "type",
-                                  String (Variable.Typ.Name.Text));
+         GNATCOLL.JSON.Set_Field
+           (Content, "type", String (Variable.Typ.Name.Text));
       else
-         GNATCOLL.JSON.Set_Field (Content, "type",
-                                  GNATCOLL.JSON.JSON_Null);
+         GNATCOLL.JSON.Set_Field
+           (Content, "type", GNATCOLL.JSON.JSON_Null);
       end if;
+
       if Variable.Kind = GPR2.Project.Registry.Attribute.Single then
          GNATCOLL.JSON.Set_Field (Content, "value", Variable.Value.Text);
       else
          Set_Source_Value_List (Content, "value", Variable.Values);
       end if;
+
       GNATCOLL.JSON.Set_Field (Obj, Key, Content);
    end Set_Variable;
 
@@ -981,7 +979,7 @@ package body GPR2.C.JSON is
       Variables : GPR2.Project.Variable.Set.Object)
    is
       JSON_Variables : constant GNATCOLL.JSON.JSON_Value :=
-         GNATCOLL.JSON.Create_Object;
+                         GNATCOLL.JSON.Create_Object;
    begin
       for Variable of Variables loop
          Set_Variable (JSON_Variables,

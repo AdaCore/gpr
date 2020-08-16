@@ -45,12 +45,12 @@ package GPR2.C.JSON is
    --  Encodes a JSON_Value into a C_Answer (char * in C)
 
    type Bind_Handler is access procedure
-      (Request : JSON_Value; Result : JSON_Value);
+     (Request : JSON_Value; Result : JSON_Value);
 
    function Bind
-      (Request : C_Request;
-       Answer  : out C_Answer;
-       Handler : Bind_Handler) return C_Status;
+     (Request : C_Request;
+      Answer  : out C_Answer;
+      Handler : Bind_Handler) return C_Status;
    --  Takes care of the boilerplate that decodes the incoming request and
    --  encodes the answer. Handler function receives the decoded JSON and
    --  returns the 'result' part of the answer.
@@ -69,20 +69,20 @@ package GPR2.C.JSON is
    type Project_View_Access is access all GPR2.Project.View.Object;
    pragma No_Strict_Aliasing (Project_View_Access);
 
-   type Project_Configuration_Access is access all
-     GPR2.Project.Configuration.Object;
+   type Project_Configuration_Access is
+     access all GPR2.Project.Configuration.Object;
    pragma No_Strict_Aliasing (Project_Configuration_Access);
 
    function Get_String
-      (Obj : JSON_Value; Key : String) return String;
+     (Obj : JSON_Value; Key : String) return String;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string. If Obj does not have a Key member or if the member is not a
    --  string then an exception is raised.
 
    function Get_String
-      (Obj     : JSON_Value;
-       Key     : String;
-       Default : String) return String;
+     (Obj     : JSON_Value;
+      Key     : String;
+      Default : String) return String;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string.
    --  If Obj does not have a Key member then Default is returned.
@@ -90,7 +90,7 @@ package GPR2.C.JSON is
    --  raised.
 
    function Get_Optional_Name
-      (Obj : JSON_Value; Key : String) return GPR2.Optional_Name_Type;
+     (Obj : JSON_Value; Key : String) return GPR2.Optional_Name_Type;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string or null.
    --  If Obj does not have a Key member or member value is null then
@@ -99,9 +99,9 @@ package GPR2.C.JSON is
    --  exception is raised.
 
    function Get_Boolean
-      (Obj     : JSON_Value;
-       Key     : String;
-       Default : Boolean) return Boolean;
+     (Obj     : JSON_Value;
+      Key     : String;
+      Default : Boolean) return Boolean;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a boolean.
    --  If Obj does not have a Key member then Default is returned.
@@ -109,46 +109,46 @@ package GPR2.C.JSON is
    --  raised.
 
    function Get_File_Path
-      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object;
+     (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string that can be used to constuct a GPR2.Path_Name file.
    --  Exception is raised in the member does not exist or if member's value
    --  is not a string.
 
    function Get_File_Path
-      (Obj     : JSON_Value;
-       Key     : String;
-       Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object;
+     (Obj     : JSON_Value;
+      Key     : String;
+      Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string that can be used to constuct a GPR2.Path_Name file.
    --  If the member does not exist Default is returned.
    --  Exception is raised if the member is not a string.
 
    function Get_Optional_File_Path
-      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object;
+     (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string that can be used to constuct a GPR2.Path_Name file.
    --  If the member does not exist GPR2.Path_Name.Undefined is returned.
    --  Exception is raised if the member is not a string.
 
    function Get_Dir_Path
-      (Obj     : JSON_Value;
-       Key     : String;
-       Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object;
+     (Obj     : JSON_Value;
+      Key     : String;
+      Default : GPR2.Path_Name.Object) return GPR2.Path_Name.Object;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string that can be used to constuct a GPR2.Path_Name directory.
    --  If the member does not exist Default is returned.
    --  Exception is raised if the member is not a string.
 
    function Get_Optional_Dir_Path
-      (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object;
+     (Obj : JSON_Value; Key : String) return GPR2.Path_Name.Object;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a string that can be used to constuct a GPR2.Path_Name directory.
    --  If the member does not exist GPR2.Path_Name.Undefined is returned.
    --  Exception is raised if the member is not a string.
 
    function Get_Context
-      (Obj : JSON_Value; Key : String) return GPR2.Context.Object;
+     (Obj : JSON_Value; Key : String) return GPR2.Context.Object;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a JSON object for which all members values are strings. The returned
    --  object is a GPR2.Context.Object.
@@ -156,7 +156,7 @@ package GPR2.C.JSON is
    --  expected structure an exception is raised.
 
    function Get_Project_Tree
-      (Obj : JSON_Value; Key : String) return Project_Tree_Access;
+     (Obj : JSON_Value; Key : String) return Project_Tree_Access;
    --  Returns member Key of JSON object Obj, assuming that member's value is
    --  a JSON string representing a project tree id. The returned object is an
    --  access to a GPR2.Project.Tree.Object.
@@ -178,7 +178,7 @@ package GPR2.C.JSON is
    --  null is returned
 
    function Get_Status (Obj : JSON_Value) return C_Status;
-   --  Returns the "status" member of an answer JSON object.
+   --  Returns the "status" member of an answer JSON object
 
    function Get_Result (Obj : JSON_Value) return JSON_Value;
    --  Returns the "result" member of an answer JSON object. Note that the
@@ -192,7 +192,7 @@ package GPR2.C.JSON is
    function Get_Level_Output
      (Obj : JSON_Value; Default : GPR2.Message.Level_Output)
       return GPR2.Message.Level_Output;
-   --  Return the Level_Output encoded in JSON.
+   --  Return the Level_Output encoded in JSON
 
    function Get_Name_Set
      (Obj : JSON_Value; Key : String) return GPR2.Containers.Name_Set;
@@ -221,37 +221,37 @@ package GPR2.C.JSON is
    --     }
 
    procedure Set_Status (Obj : JSON_Value; Value : C_Status);
-   --  Sets the status member of an answer JSON object Obj.
+   --  Sets the status member of an answer JSON object Obj
 
    procedure Set_Status
-      (Obj   : JSON_Value;
-       Value : C_Status;
-       E     : Ada.Exceptions.Exception_Occurrence);
-   --  Sets the status, error_msg and error_name of an answer JSON object Obj.
+     (Obj   : JSON_Value;
+      Value : C_Status;
+      E     : Ada.Exceptions.Exception_Occurrence);
+   --  Sets the status, error_msg and error_name of an answer JSON object Obj
 
    procedure Set_Project_Tree
-      (Obj   : JSON_Value;
-       Key   : String;
-       Value : Project_Tree_Access);
-   --  Sets member Key of Obj to the project tree id of Value.
+     (Obj   : JSON_Value;
+      Key   : String;
+      Value : Project_Tree_Access);
+   --  Sets member Key of Obj to the project tree id of Value
 
    procedure Set_Project_View
-      (Obj  : JSON_Value;
-       Key  : String;
-       View : in out Project_View_Access);
+     (Obj  : JSON_Value;
+      Key  : String;
+      View : in out Project_View_Access);
    --  Sets member Key of Obj to the project view id of Value.
    --  If View is undefined, it is deallocated.
 
    procedure Set_String
-      (Obj   : JSON_Value;
-       Key   : String;
-       Value : String);
-   --  Sets member Key of Obj to the string Value.
+     (Obj   : JSON_Value;
+      Key   : String;
+      Value : String);
+   --  Sets member Key of Obj to the string Value
 
    procedure Set_Project_Attribute
-      (Obj   : JSON_Value;
-       Key   : String;
-       Value : GPR2.Project.Attribute.Object);
+     (Obj   : JSON_Value;
+      Key   : String;
+      Value : GPR2.Project.Attribute.Object);
    --  Sets member Key of Obj to the GPR2 attribute. The attribute is
    --  serialized as string for single project values or to a list of
    --  string.
@@ -275,48 +275,48 @@ package GPR2.C.JSON is
    --  a JSON object.
 
    procedure Set_Path
-      (Obj  : JSON_Value;
-       Key  : String;
-       Path : GPR2.Path_Name.Object);
+     (Obj  : JSON_Value;
+      Key  : String;
+      Path : GPR2.Path_Name.Object);
    --  Set member Key of Obj to Path. In case Path is not defined then set the
    --  value to null.
 
    procedure Set_Optional_Name
-      (Obj  : JSON_Value;
-       Key  : String;
-       Name : GPR2.Optional_Name_Type);
+     (Obj  : JSON_Value;
+      Key  : String;
+      Name : GPR2.Optional_Name_Type);
    --  Set member Key of Obj to Name. In case Name = No_Name then set the
    --  value to null.
 
    procedure Set_Name
-      (Obj  : JSON_Value;
-       Key  : String;
-       Name : GPR2.Name_Type);
-   --  Set member Key of Obj to Name.
+     (Obj  : JSON_Value;
+      Key  : String;
+      Name : GPR2.Name_Type);
+   --  Set member Key of Obj to Name
 
    procedure Set_Path_Name_Set_Object
      (Obj : JSON_Value;
       Key : String;
       Set : GPR2.Path_Name.Set.Object);
-   --  Set member Key of Obj with path name set full names.
+   --  Set member Key of Obj with path name set full names
 
    procedure Set_Project_Views
      (Obj   : JSON_Value;
       Key   : String;
       Views : GPR2.Project.View.Set.Object);
-   --  Set member Key of Obj to view_ids array.
+   --  Set member Key of Obj to view_ids array
 
    procedure Set_Attributes
      (Obj        : JSON_Value;
       Key        : String;
       Attributes : GPR2.Project.Attribute.Set.Object);
-   --  Set member Key of Obj with attributes in Set.
+   --  Set member Key of Obj with attributes in Set
 
    procedure Set_Types
      (Obj   : JSON_Value;
       Key   : String;
       Types : GPR2.Project.Typ.Set.Object);
-   --  Set member Key of Obj with types in Set.
+   --  Set member Key of Obj with types in Set
 
    procedure Set_Variables
      (Obj       : JSON_Value;

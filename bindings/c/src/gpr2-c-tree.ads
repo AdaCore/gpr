@@ -21,7 +21,7 @@
 package GPR2.C.Tree is
 
    function GPR2_Project_Tree_Load
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  Loads a project tree.
    --
    --  filename: path to the gpr file to load.
@@ -66,7 +66,7 @@ package GPR2.C.Tree is
    --      {'tree_id': str}
 
    function GPR2_Project_Tree_Unload
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.Tree.Unload binding.
    --
    --  After a call to that function, tree_id should not be used
@@ -130,7 +130,7 @@ package GPR2.C.Tree is
    --       'build_path':     Optional[str]}
 
    function GPR2_Project_Tree_Get_View
-      (Request : C_Request; Answer : out C_Answer) return C_Status;
+     (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  GPR2.Project.Tree.Get_View binding
    --
    --  Request:
