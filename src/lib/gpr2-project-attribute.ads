@@ -136,34 +136,34 @@ package GPR2.Project.Attribute is
 
 private
 
-   type Value_At_Num (Length : Natural) is record
+   type Value_At_Pos (Length : Natural) is record
       Value  : Value_Type (1 .. Length);
-      At_Num : Natural := 0;
+      At_Pos : Natural := 0;
    end record;
 
-   function "<" (Left, Right : Value_At_Num) return Boolean is
+   function "<" (Left, Right : Value_At_Pos) return Boolean is
      (Left.Value < Right.Value
-      or else (Left.Value = Right.Value and then Left.At_Num < Right.At_Num));
+      or else (Left.Value = Right.Value and then Left.At_Pos < Right.At_Pos));
 
    function Create
      (Index          : Attribute_Index.Object;
-      Default_At_Num : Natural := 0) return Value_At_Num;
-   --  Create the key Value_At_Num for the given index
+      Default_At_Pos : Natural := 0) return Value_At_Pos;
+   --  Create the key Value_At_Pos for the given index
 
    function Create
      (Value  : Value_Type;
-      At_Num : Natural) return Value_At_Num
-     is (Value'Length, Value, At_Num);
+      At_Pos : Natural) return Value_At_Pos
+     is (Value'Length, Value, At_Pos);
 
    type Object is new Name_Values.Object with record
       Index   : Attribute_Index.Object;
       Default : Boolean := False;
    end record;
 
-   function Case_Aware_Index (Self : Object) return Value_At_Num is
+   function Case_Aware_Index (Self : Object) return Value_At_Pos is
      (Create
         (Index          => Self.Index,
-         Default_At_Num => At_Num_Or (Self.Index, 0)));
+         Default_At_Pos => At_Pos_Or (Self.Index, 0)));
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 

@@ -29,7 +29,7 @@ package body GPR2.Project.Source.Artifact is
    function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
    --  ??? work around a strange visibility issue
 
-   function At_Suffix (At_Num : Positive) return Name_Type;
+   function At_Suffix (At_Pos : Positive) return Name_Type;
    --  Returns 'at' index from attribute value or index prefixed with '~'
    --  character to use in filenames.
 
@@ -37,8 +37,8 @@ package body GPR2.Project.Source.Artifact is
    -- At_Suffix --
    ---------------
 
-   function At_Suffix (At_Num : Positive) return Name_Type is
-      Result : String :=  At_Num'Img;
+   function At_Suffix (At_Pos : Positive) return Name_Type is
+      Result : String :=  At_Pos'Img;
    begin
       Result (Result'First) := '~';
       return Name_Type (Result);

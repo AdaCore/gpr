@@ -90,19 +90,19 @@ package body GPR2.Parser.Project is
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range;
       Value     : Value_Type;
-      At_Num    : Natural := 0) return Source_Reference.Value.Object
+      At_Pos    : Natural := 0) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
        (Source_Reference.Value.Create
-         (Get_Source_Reference (Path_Name, Slr), Value, At_Num)));
+         (Get_Source_Reference (Path_Name, Slr), Value, At_Pos)));
 
    function Get_Value_Reference
      (Value  : Value_Type;
       Sloc   : Source_Reference.Object;
-      At_Num : Natural := 0) return Source_Reference.Value.Object
+      At_Pos : Natural := 0) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
-       (Source_Reference.Value.Create (Sloc, Value, At_Num)));
+       (Source_Reference.Value.Create (Sloc, Value, At_Pos)));
 
    function Get_Identifier_Reference
      (Path_Name  : GPR2.Path_Name.Object;
@@ -1533,7 +1533,7 @@ package body GPR2.Parser.Project is
                  (Get_Value_Reference
                     (Unquote (Value_Type (To_UTF8 (Node.F_Str_Lit.Text))),
                      Get_Source_Reference (Self.File, Sloc_Range (Node)),
-                     At_Num => (if At_Lit = No_GPR_Node then 0
+                     At_Pos => (if At_Lit = No_GPR_Node then 0
                                 else Positive'Wide_Wide_Value (At_Lit.Text))));
                Status := Over;
                --  Stop here to avoid parsing into the String_Literal child
@@ -2009,7 +2009,7 @@ package body GPR2.Parser.Project is
                        (Get_Value_Reference
                           (Self.Path_Name, Sloc_Range (Index),
                            Get_Value_Type (Str_Lit.F_Str_Lit),
-                           At_Num => -- Ati),
+                           At_Pos => -- Ati),
                              (if At_Lit = No_GPR_Node
                               then 0
                               else Positive'Wide_Wide_Value (At_Lit.Text))),

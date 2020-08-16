@@ -357,10 +357,10 @@ package body GPR2.Project.View is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural                := 0;
+      At_Pos : Natural                := 0;
       Result : out Project.Attribute.Object) return Boolean is
    begin
-      Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Num);
+      Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Pos);
       return Result.Is_Defined;
    end Check_Attribute;
 
@@ -1039,7 +1039,7 @@ package body GPR2.Project.View is
 
       function Create
         (Source : Value_Not_Empty;
-         At_Num : Natural) return GPR2.Path_Name.Object;
+         At_Pos : Natural) return GPR2.Path_Name.Object;
       --  Returns the full pathname of the main executable for the givem main
 
       function Base_Name
@@ -1073,7 +1073,7 @@ package body GPR2.Project.View is
 
       function Create
         (Source : Value_Not_Empty;
-         At_Num : Natural) return GPR2.Path_Name.Object
+         At_Pos : Natural) return GPR2.Path_Name.Object
       is
          BN       : constant Value_Not_Empty := Base_Name (Source);
          BN_Index : constant Attribute_Index.Object :=
@@ -1092,12 +1092,12 @@ package body GPR2.Project.View is
       begin
          if Builder.Is_Defined
            and then
-             (Builder.Check_Attribute (A.Executable, Index, At_Num, Attr)
+             (Builder.Check_Attribute (A.Executable, Index, At_Pos, Attr)
               or else
                 (Source /= BN
                  and then Builder.Check_Attribute
-                   (A.Executable, BN_Index, At_Num, Attr)))
-           and then At_Num = At_Num_Or (Attr.Index, 0)
+                   (A.Executable, BN_Index, At_Pos, Attr)))
+           and then At_Pos = At_Pos_Or (Attr.Index, 0)
          then
             return Create_Path (Attr.Value.Text);
          else
@@ -1111,7 +1111,7 @@ package body GPR2.Project.View is
       return Set : GPR2.Path_Name.Set.Object do
          if Self.Check_Attribute (A.Main, Result => Attr) then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text, At_Num_Or (Main, 0)));
+               Set.Append (Mains.Create (Main.Text, At_Pos_Or (Main, 0)));
             end loop;
          end if;
 
@@ -1121,7 +1121,7 @@ package body GPR2.Project.View is
            and then Self.Extended.Check_Attribute (A.Main, Result => Attr)
          then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text, At_Num_Or (Main, 0)));
+               Set.Append (Mains.Create (Main.Text, At_Pos_Or (Main, 0)));
             end loop;
          end if;
       end return;

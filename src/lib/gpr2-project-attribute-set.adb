@@ -25,7 +25,7 @@ package body GPR2.Project.Attribute.Set is
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
       Name          : Unbounded_String;
       Index         : Attribute_Index.Object;
-      At_Num        : Natural := 0;
+      At_Pos        : Natural := 0;
       Set           : Object;
       With_Defaults : Boolean := False;
    end record;
@@ -81,9 +81,9 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural    := 0) return Boolean
+      At_Pos : Natural    := 0) return Boolean
    is
-      Position : constant Cursor := Self.Find (Name, Index, At_Num);
+      Position : constant Cursor := Self.Find (Name, Index, At_Pos);
    begin
       return Has_Element (Position);
    end Contains;
@@ -95,7 +95,7 @@ package body GPR2.Project.Attribute.Set is
       return Self.Contains
         (Attribute.Name.Text,
          Attribute.Index,
-         At_Num_Or (Source_Reference.Value.Object (Attribute.Index), 0));
+         At_Pos_Or (Source_Reference.Value.Object (Attribute.Index), 0));
    end Contains;
 
    -------------
@@ -111,10 +111,10 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural                := 0) return Attribute.Object
+      At_Pos : Natural                := 0) return Attribute.Object
    is
       Position : constant Cursor :=
-                   Self.Find (Name, Index, At_Num);
+                   Self.Find (Name, Index, At_Pos);
    begin
       if Set_Attribute.Has_Element (Position.CA) then
          return Element (Position);
@@ -131,7 +131,7 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Optional_Name_Type     := No_Name;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural                := 0) return Object is
+      At_Pos : Natural                := 0) return Object is
    begin
       if Name = No_Name and then not Index.Is_Defined then
          return Self;
@@ -141,7 +141,7 @@ package body GPR2.Project.Attribute.Set is
          Result : Object;
       begin
          if Name = No_Name then
-            for C in Self.Iterate (Name, Index, At_Num) loop
+            for C in Self.Iterate (Name, Index, At_Pos) loop
                Result.Insert (Element (C));
             end loop;
 
@@ -174,7 +174,7 @@ package body GPR2.Project.Attribute.Set is
 
                --  Specific index only
 
-               CI := Item.Find (Create (Index, At_Num));
+               CI := Item.Find (Create (Index, At_Pos));
 
                if Set_Attribute.Has_Element (CI) then
                   declare
@@ -186,7 +186,7 @@ package body GPR2.Project.Attribute.Set is
                   end;
                end if;
 
-               CI := Item.Find (Create (Attribute_Index.Any, At_Num));
+               CI := Item.Find (Create (Attribute_Index.Any, At_Pos));
 
                if Set_Attribute.Has_Element (CI) then
                   Result.Insert (Item (CI));
@@ -207,7 +207,7 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural                := 0) return Cursor
+      At_Pos : Natural                := 0) return Cursor
    is
       Result : Cursor :=
                  (CM  => Self.Attributes.Find (Name),
@@ -221,7 +221,7 @@ package body GPR2.Project.Attribute.Set is
          --  is case sensitive or not.
 
          Result.CA := Result.Set.Find
-           (Create (Index, Default_At_Num => At_Num));
+           (Create (Index, Default_At_Pos => At_Pos));
 
          if not Set_Attribute.Has_Element (Result.CA) then
             Result.CA := Result.Set.Find
@@ -273,15 +273,15 @@ package body GPR2.Project.Attribute.Set is
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
       ---------------------
-      -- To_Value_At_Num --
+      -- To_Value_At_Pos --
       ---------------------
 
-      function To_Value_At_Num
-        (Item : Attribute_Index.Object) return Value_At_Num
+      function To_Value_At_Pos
+        (Item : Attribute_Index.Object) return Value_At_Pos
       is
         (if Item.Is_Defined
          then Create (Item,
-                      Default_At_Num => At_Num_Or (Item, 0))
+                      Default_At_Pos => At_Pos_Or (Item, 0))
          else (0, "", 0));
       --  Returns value as string together with 'at' part or empty if not
       --  defined.
@@ -295,7 +295,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map := Set.Element (Position);
          begin
-            Present := A.Contains (To_Value_At_Num (Attribute.Index));
+            Present := A.Contains (To_Value_At_Pos (Attribute.Index));
             A.Include  (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Replace_Element (Position, A);
          end;
@@ -304,7 +304,7 @@ package body GPR2.Project.Attribute.Set is
          declare
             A : Set_Attribute.Map;
          begin
-            Present := A.Contains (To_Value_At_Num (Attribute.Index));
+            Present := A.Contains (To_Value_At_Pos (Attribute.Index));
             A.Include (Attribute.Case_Aware_Index, Attribute);
             Self.Attributes.Insert (Attribute.Name.Text, A);
          end;
@@ -376,7 +376,7 @@ package body GPR2.Project.Attribute.Set is
      (Self            : Object;
       Name            : Optional_Name_Type     := No_Name;
       Index           : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num          : Natural                := 0;
+      At_Pos          : Natural                := 0;
       With_Defaults   : Boolean                := False)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
@@ -384,7 +384,7 @@ package body GPR2.Project.Attribute.Set is
          It.Set           := Self;
          It.Name          := To_Unbounded_String (String (Name));
          It.Index         := Index;
-         It.At_Num        := At_Num;
+         It.At_Pos        := At_Pos;
          It.With_Defaults := With_Defaults;
       end return;
    end Iterate;

@@ -40,7 +40,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural    := 0) return Boolean;
+      At_Pos : Natural    := 0) return Boolean;
    --  Checks whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
@@ -56,9 +56,9 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural    := 0) return Attribute.Object
+      At_Pos : Natural    := 0) return Attribute.Object
      with Post =>
-       (if Self.Contains (Name, Index, At_Num)
+       (if Self.Contains (Name, Index, At_Pos)
         then Element'Result.Is_Defined
         else not Element'Result.Is_Defined);
 
@@ -89,7 +89,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Name_Type;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural    := 0) return Cursor;
+      At_Pos : Natural    := 0) return Cursor;
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -116,7 +116,7 @@ package GPR2.Project.Attribute.Set is
      (Self          : Object;
       Name          : Optional_Name_Type     := No_Name;
       Index         : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num        : Natural                := 0;
+      At_Pos        : Natural                := 0;
       With_Defaults : Boolean                := False)
       return Attribute_Iterator.Forward_Iterator'Class;
 
@@ -124,7 +124,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Optional_Name_Type     := No_Name;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Num : Natural                := 0) return Object
+      At_Pos : Natural                := 0) return Object
      with Post => (if Name = No_Name and then not Index.Is_Defined
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
@@ -166,7 +166,7 @@ private
    --        attributes. The map key is the index for the attributes.
 
    package Set_Attribute is new Ada.Containers.Indefinite_Ordered_Maps
-     (Value_At_Num, Attribute.Object);
+     (Value_At_Pos, Attribute.Object);
    --  The key in this set is the attribute index and 'at' part
 
    package Set is new Ada.Containers.Indefinite_Ordered_Maps

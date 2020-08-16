@@ -147,13 +147,13 @@ private
 
    Default_Status : constant Status_Control := (others => Indeterminate);
 
-   function At_Num_Or
+   function At_Pos_Or
      (Value   : Source_Reference.Value.Object'Class;
       Default : Natural) return Natural
    is
-     (if Value.Is_Defined and then Value.Has_At_Num
-      then Value.At_Num
+     (if Value.Is_Defined and then Value.Has_At_Pos
+      then Value.At_Pos
       else Default);
-   --  Returns At_Num if defined or Default if not defined
+   --  Returns At_Pos if defined or Default if not defined
 
 end GPR2.Project;

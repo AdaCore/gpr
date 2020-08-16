@@ -24,7 +24,7 @@ package body GPR2.Project.Attribute is
 
    function Create
      (Index          : Attribute_Index.Object;
-      Default_At_Num : Natural := 0) return Value_At_Num
+      Default_At_Pos : Natural := 0) return Value_At_Pos
    is
       Is_Others : constant Boolean    :=
                     Index.Is_Defined and then Index.Is_Others;
@@ -37,10 +37,10 @@ package body GPR2.Project.Attribute is
                         then Index.Value (Index.Is_Case_Sensitive)
                         else "");
    begin
-      return V : Value_At_Num (Value'Length) do
+      return V : Value_At_Pos (Value'Length) do
          V.Value  := Value;
-         V.At_Num := At_Num_Or
-                       (Source_Reference.Value.Object (Index), Default_At_Num);
+         V.At_Pos := At_Pos_Or
+                       (Source_Reference.Value.Object (Index), Default_At_Pos);
       end return;
    end Create;
 
@@ -163,8 +163,8 @@ package body GPR2.Project.Attribute is
          when Single =>
             Append (Result, '"' & Self.Value.Text & '"');
 
-            if Self.Value.Has_At_Num then
-               Append (Result, " at" & Integer'Image (Self.Value.At_Num));
+            if Self.Value.Has_At_Pos then
+               Append (Result, " at" & Integer'Image (Self.Value.At_Pos));
             end if;
 
          when List =>

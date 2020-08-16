@@ -946,7 +946,7 @@ package body GPR2.Project.Definition is
            (A : Attribute.Object;
             B : Value_Type;
             I : Natural) return Boolean
-         is (A.Value.Text = B and then At_Num_Or (A.Value, 1) = I);
+         is (A.Value.Text = B and then At_Pos_Or (A.Value, 1) = I);
 
       begin
          --  Stop here if it's one of the excluded sources, or it's not in the
@@ -993,8 +993,8 @@ package body GPR2.Project.Definition is
                                            (Ada_Use_Index (Exc));
                         begin
                            if Naming_Exceptions_Usage.Has_Element (Pos) then
-                              if Value.Has_At_Num then
-                                 Index      := Value.At_Num;
+                              if Value.Has_At_Pos then
+                                 Index      := Value.At_Pos;
                                  Is_Indexed := True;
                               else
                                  Index := 1;

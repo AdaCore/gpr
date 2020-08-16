@@ -561,9 +561,9 @@ package body GPR2.C.JSON is
             if Attribute.Has_Index then
                GNATCOLL.JSON.Set_Field (Content, "index",
                                         String (Attribute.Index.Text));
-               if Attribute.Index.Has_At_Num then
+               if Attribute.Index.Has_At_Pos then
                   GNATCOLL.JSON.Set_Field (Content, "at",
-                                           Attribute.Index.At_Num);
+                                           Attribute.Index.At_Pos);
                else
                   GNATCOLL.JSON.Set_Field (Content, "at",
                                            GNATCOLL.JSON.JSON_Null);
