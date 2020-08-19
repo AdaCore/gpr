@@ -2731,8 +2731,7 @@ package body GPR2.Project.Tree is
                                 (Imp.Path_Name)));
 
                      elsif Imp.Is_Static_Library
-                       and then (not PV.Is_Library
-                                 or else PV.Library_Standalone /= Encapsulated)
+                       and then View.Library_Standalone /= Encapsulated
                      then
                         Self.Self.Messages.Append
                           (Message.Create
@@ -2744,8 +2743,7 @@ package body GPR2.Project.Tree is
                                 (Imp.Path_Name)));
 
                      elsif Imp.Is_Shared_Library
-                       and then PV.Is_Library
-                       and then PV.Library_Standalone = Encapsulated
+                       and then View.Library_Standalone = Encapsulated
                      then
                         Self.Self.Messages.Append
                           (Message.Create
