@@ -20,6 +20,7 @@
 
 with GPR2.Log;
 with GPR2.Parser.Project;
+with GPR2.Path_Name.Set;
 with GPR2.Project.View;
 
 private with Ada.Containers.Vectors;
@@ -71,11 +72,17 @@ package GPR2.Project.Configuration is
    --  the compilers for the given language, the runtime if specified, etc.
 
    function Create
-     (Settings : Description_Set;
-      Target   : Name_Type;
-      Project  : GPR2.Path_Name.Object) return Object;
+     (Settings   : Description_Set;
+      Target     : Name_Type;
+      Project    : GPR2.Path_Name.Object;
+      Default_KB : Boolean                   := True;
+      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+      return Object;
    --  Creates a configuration based on the settings requested.
    --  Project parameter need to log error if happen.
+   --  Default_KB indicates whether the default contants of the Knowledge
+   --  Base should be used for creation of configuration. Custom_KB is used to
+   --  pass additional chunks of the Knowledge Base for configuration creation.
 
    function Load
      (Filename : Path_Name.Object;

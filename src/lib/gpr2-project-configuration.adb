@@ -101,9 +101,12 @@ package body GPR2.Project.Configuration is
    end Create;
 
    function Create
-     (Settings : Description_Set;
-      Target   : Name_Type;
-      Project  : GPR2.Path_Name.Object) return Object
+     (Settings   : Description_Set;
+      Target     : Name_Type;
+      Project    : GPR2.Path_Name.Object;
+      Default_KB : Boolean                   := True;
+      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+      return Object
    is
       --  Note that this is a temporary implementation to bring a solution
       --  for the configuration support in LibGPR2. The long term and proper
@@ -156,7 +159,10 @@ package body GPR2.Project.Configuration is
       Args      : OS_Lib.Argument_List
                     (1
                      .. Settings'Length + 4 + (if Debug then 1 else 0) +
-                          (if Native_Target then 1 else 0));
+                          (if Native_Target then 1 else 0) +
+                            (if Default_KB then 0 else 1) +
+                              Integer (Custom_KB.Length) * 2);
+
       Success   : Boolean := False;
       Ret_Code  : Integer := 0;
       Result    : Object;
@@ -219,7 +225,15 @@ package body GPR2.Project.Configuration is
          begin
             KB_Flags (Compiler_Info) := False;
 
-            Base := KB.Create_Default (KB_Flags);
+            if Default_KB then
+               Base := KB.Create_Default (KB_Flags);
+            else
+               Base := KB.Create_Empty;
+            end if;
+
+            for KB_Location of Custom_KB loop
+               Base.Add (KB_Flags, KB_Location);
+            end loop;
 
             if Base.Has_Error then
                for Msg of Base.Log_Messages loop
@@ -252,6 +266,15 @@ package body GPR2.Project.Configuration is
       if Debug then
          Add_Arg ("-v");
       end if;
+
+      if not Default_KB then
+         Add_Arg ("--db-");
+      end if;
+
+      for KB_Location of Custom_KB loop
+         Add_Arg ("--db");
+         Add_Arg (KB_Location.Value);
+      end loop;
 
       --  Execute external GPRconfig tool
 
