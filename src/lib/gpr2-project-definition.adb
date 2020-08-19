@@ -391,6 +391,8 @@ package body GPR2.Project.Definition is
 
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
+      Has_Source_List   : Boolean := False;
+      --  Has either Source_Files or Source_List_File attributes
 
       Interface_Units       : Unit_Name_To_Sloc.Map;
       Position_In_Units     : Unit_Name_To_Sloc.Cursor;
@@ -953,8 +955,8 @@ package body GPR2.Project.Definition is
          --  included sources if those are given explicitely.
 
          if Excluded_Sources.Contains (Basename)
-           or else not (Included_Sources.Is_Empty
-                        or else Included_Sources.Contains (Basename))
+           or else (Has_Source_List
+                    and then not Included_Sources.Contains (Basename))
          then
             return;
          end if;
@@ -1737,6 +1739,8 @@ package body GPR2.Project.Definition is
 
       if Def.Attrs.Has_Source_List_File then
          Read_File (PRA.Source_List_File, Included_Sources);
+
+         Has_Source_List := True;
       end if;
 
       --  If we have attribute Source_Files
@@ -1745,6 +1749,8 @@ package body GPR2.Project.Definition is
          for File of Def.Attrs.Source_Files.Values loop
             Include_Simple_Filename (Included_Sources, File.Text, File);
          end loop;
+
+         Has_Source_List := True;
       end if;
 
       if Def.Kind = K_Aggregate_Library then
