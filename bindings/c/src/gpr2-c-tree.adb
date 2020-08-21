@@ -255,8 +255,8 @@ package body GPR2.C.Tree is
          Check_Shared_Lib : constant Boolean :=
             Get_Boolean (Request, "check_shared_lib", True);
 
-         Implicit_Project : constant Boolean :=
-            Get_Boolean (Request, "implicit_project", False);
+         Project_Dir : constant Path_Name.Object :=
+            Get_Optional_Dir_Path (Request, "project_dir");
 
          Absent_Dir_Error : constant Boolean :=
             Get_Boolean (Request, "absent_dir_error", False);
@@ -282,7 +282,7 @@ package body GPR2.C.Tree is
                Subdirs          => Subdirs,
                Src_Subdirs      => Src_Subdirs,
                Check_Shared_Lib => Check_Shared_Lib,
-               Implicit_Project => Implicit_Project,
+               Project_Dir      => Project_Dir,
                Absent_Dir_Error => Absent_Dir_Error,
                Implicit_With    => Implicit_With);
          else
@@ -294,7 +294,7 @@ package body GPR2.C.Tree is
                Subdirs           => Subdirs,
                Src_Subdirs       => Src_Subdirs,
                Check_Shared_Lib  => Check_Shared_Lib,
-               Implicit_Project  => Implicit_Project,
+               Project_Dir       => Project_Dir,
                Absent_Dir_Error  => Absent_Dir_Error,
                Implicit_With     => Implicit_With,
                Target            => Target,

@@ -25,8 +25,8 @@ package GPR2.C.Tree is
    --  Loads a project tree.
    --
    --  filename: path to the gpr file to load.
-   --  implicit_project: if True then load behaves as if filename is
-   --      located in the current directory. If False, directory in
+   --  project_dir: if True then load behaves as if filename is
+   --      located in the project_dir directory. If False, directory in
    --      which the project file is located is used. Using True allows
    --      implementation of "default projects" in tools.
    --  context: a JSON object that contains values for external variables
@@ -50,7 +50,7 @@ package GPR2.C.Tree is
    --
    --  Request:
    --      {'filename':          str,
-   --       'implicit_project':  Optional[bool] = False,
+   --       'project_dir':       Optional[str],
    --       'context':           Optional[Dict[str, str]],
    --       'configuration_id':  Optional[str],
    --       'build_path':        Optional[str],
