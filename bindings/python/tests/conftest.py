@@ -4,6 +4,13 @@ from e3.os.fs import cd
 import pytest
 import os
 import tempfile
+import logging
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "data_dir(dir) :directory containing test data")
 
 
 @pytest.fixture(autouse=True)
@@ -20,12 +27,11 @@ def env_protect(request):
     tempd = tempfile.mkdtemp()
     cd(tempd)
 
-    data_dir = os.path.join(
-        os.path.dirname(request.fspath.strpath), request.function.__name__
-    )
-    print(data_dir)
-    if os.path.isdir(data_dir):
-        sync_tree(data_dir, tempd)
+    project_marker = request.node.get_closest_marker("data_dir")
+    if project_marker is not None:
+        project_dir = os.path.join(ROOT_DIR, "projects", project_marker.args[0])
+        logging.debug(f"use project dir {project_dir}")
+        sync_tree(project_dir, tempd)
 
     def restore_env():
         Env().restore()

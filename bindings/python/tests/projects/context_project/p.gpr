@@ -1,0 +1,9 @@
+project P is
+
+   Var1 := external ("VAR1", "val1");
+   Var2 := external ("VAR2", "val2");
+
+   for Source_Dirs use (".", Var1, Var2);
+   for Languages use ("ada");
+
+end P;

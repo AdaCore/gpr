@@ -2,7 +2,6 @@ from __future__ import annotations
 from gpr2 import GPR2Error
 from gpr2.capi import LibGPR2
 from gpr2.view import ProjectView
-from gpr2.level_format import LevelFormat
 from gpr2.message import Message
 from typing import TYPE_CHECKING
 import os
@@ -10,41 +9,106 @@ import os
 
 if TYPE_CHECKING:
     from types import TracebackType
-    from typing import Dict, Optional, Type
+    from typing import Dict, Optional, Type, List
+    from gpr2.config import ProjectConfig
+
+
+class LanguageProperties:
+    def __init__(
+        self,
+        language: str,
+        runtime: Optional[str],
+        object_ext: str,
+        dependency_ext: str,
+    ):
+        self.language = language
+        self.runtime = runtime
+        self.object_ext = object_ext
+        self.dependency_ext = dependency_ext
+
+    @classmethod
+    def from_dict(cls, language, data):
+        return LanguageProperties(
+            language=language,
+            runtime=data.get("runtime"),
+            object_ext=data["object_suffix"],
+            dependency_ext=data["dependency_suffix"],
+        )
 
 
 class ProjectTree:
     """Represent a tree of project files."""
 
     def __init__(
-        self, project_file: str, context: Optional[Dict[str, str]] = None
+        self,
+        project: str,
+        context: Optional[Dict[str, str]] = None,
+        config: Optional[ProjectConfig] = None,
+        build_path: Optional[str] = None,
+        subdirs: Optional[str] = None,
+        src_subdirs: Optional[str] = None,
+        check_shared_lib: bool = True,
+        absent_dir_error: bool = False,
+        implicit_with: Optional[List[str]] = None,
+        target: Optional[str] = None,
+        language_runtimes: Optional[Dict[str, str]] = None,
     ) -> None:
         """Load a project tree.
 
-        :param project_file: the root project file to load
+        :param project: the root project file to load
         :param context: the external variables values. The key is the variable
             name. If None no external variables are passed.
+        :param configuration: a gpr configuration
         """
         # Project existence should be handled by the GPR2 load function. But
         # currently the API returns a syntax error. Remove check when this is
         # fixed.
-        if not os.path.isfile(project_file):
-            raise GPR2Error(f"{project_file}: no such file")
+        if not os.path.isfile(project):
+            raise GPR2Error(f"{project}: no such file")
 
-        request = {"filename": project_file, "context": context if context else {}}
-        answer = LibGPR2.gpr2_prj_tree_load_autoconf(request)
-        self.id = answer["tree_id"]
+        self.project = project
+        self._context = context if context is not None else {}
+        self.config = config
+        self.build_path = build_path
+        self.subdirs = subdirs
+        self.src_subdirs = src_subdirs
+        self.check_shared_lib = check_shared_lib
+        self.absent_dir_error = absent_dir_error
+        self.implicit_with = implicit_with
+        self.target = target
+        self.language_runtimes = language_runtimes
+
+        self.id = LibGPR2.gpr2_prj_tree_load(
+            request={
+                "filename": project,
+                "context": self._context,
+                "configuration_id": self.config.id if self.config is not None else None,
+                "build_path": self.build_path,
+                "subdirs": self.subdirs,
+                "src_subdirs": self.src_subdirs,
+                "check_shared_lib": self.check_shared_lib,
+                "implicit_with": self.implicit_with,
+                "target": self.target,
+                "language_runtime": self.language_runtimes,
+            }
+        )["tree_id"]
+
+        self.messages = []
         self.properties_for_languages = {}
-        request = {"tree_id": self.id}
-        self.properties = LibGPR2.gpr2_prj_tree_properties(request)
+        self._update_properties()
 
+    def _update_properties(self):
+        properties = LibGPR2.gpr2_prj_tree_properties({"tree_id": self.id})
+        self.target = properties["target"]
+        self.archive_suffix = properties["archive_suffix"]
 
-    def language_properties(self, language: Optional [str] = None):
-        if self.properties_for_languages[language] is None:
-            request = {"tree_id": self.id, "language": language}
-            answer = LibGPR2.gpr2_prj_config_language_properties(request)
-            self.properties_for_languages[language] = answer
-        return self.properties_for_languages[language]
+    def language_properties(self, language: str):
+        return LanguageProperties.from_dict(
+            language,
+            LibGPR2.gpr2_prj_tree_language_properties(
+                {"tree_id": self.id, "language": language}
+            ),
+        )
 
     @property
     def context(self):
@@ -52,9 +116,13 @@ class ProjectTree:
 
         :return: the context
         """
-        answer = LibGPR2.gpr2_prj_tree_context({"tree_id": self.id})
-        context = answer["context"]
-        return context
+        return self._context
+
+    @context.setter
+    def context(self, value: Dict[str, str]):
+        LibGPR2.gpr2_prj_tree_set_context({"tree_id": self.id, "context": value})
+        self._context = value
+        self._update_properties()
 
     @property
     def root_view(self) -> ProjectView:
@@ -65,91 +133,26 @@ class ProjectTree:
         answer = LibGPR2.gpr2_prj_tree_root_project({"tree_id": self.id})
         return ProjectView(id=answer["view_id"])
 
-    def runtime(self, language: Optional [str] = None):
-        return self.language_properties(language)["runtime"]
+    def fetch_messages(self) -> List[Message]:
+        """Fetch new messages.
 
-    def object_suffix(self, language: Optional [str] = None):
-        return self.language_properties(language)["object_suffix"]
+        Note that unread messages are also added to self.messages
 
-    def dependency_suffix(self, language: Optional [str] = None):
-        return self.language_properties(language)["dependency_suffix"]
-
-    def log_messages(
-        self,
-        information=True,
-        warning=True,
-        error=True,
-        read=True,
-        unread=True,
-        full_path_name=False,
-        information_output_level=LevelFormat.LONG,
-        warning_output_level=LevelFormat.LONG,
-        error_output_level=LevelFormat.LONG,
-    ):
-        """Return the messages in tree's log.
-
-        use information/warning/error/read/unread parameters to filter messages
-        use others parameters to get expected formatted_message
-
-        :return: the Message objects array
+        :return: unread messages
         """
         answer = LibGPR2.gpr2_prj_tree_log_messages(
             {
                 "tree_id": self.id,
-                "information": information,
-                "warning": warning,
-                "error": error,
-                "read": read,
-                "unread": unread,
-                "information_output_level": information_output_level,
-                "warning_output_level": warning_output_level,
-                "error_output_level": error_output_level,
+                "information": True,
+                "warning": True,
+                "error": True,
+                "read": False,
+                "unread": True,
             }
         )
-        messages = []
-        for message in answer["messages"]:
-            messages.append(Message(message=message))
+        messages = [Message.from_dict(msg) for msg in answer["messages"]]
+        self.messages += messages
         return messages
-
-    @property
-    def target(self):
-        """Return the target for the project tree.
-
-        :return: the target
-        """
-        return self.properties["target"]
-
-    @property
-    def build_path(self):
-        """Return the build path for the project tree.
-
-        :return: the build path
-        """
-        return self.properties["build_path"]
-
-    @property
-    def archive_suffix(self):
-        """Return the archive suffix for the project tree.
-
-        :return: the archive suffix
-        """
-        return self.properties["archive_suffix"]
-
-    @property
-    def subdirs(self):
-        """Return the subdirs for the project tree.
-
-        :return: the subdirs
-        """
-        return self.properties["subdirs"]
-
-    @property
-    def src_subdirs(self):
-        """Return the src subdirs for the project tree.
-
-        :return: the src subdirs
-        """
-        return self.properties["src_subdirs"]
 
     def close(self) -> None:
         """Unload a project tree."""

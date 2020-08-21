@@ -11,14 +11,18 @@ class LibGPR2:
     METHOD_LIST = [
         "gpr2_prj_tree_context",
         "gpr2_prj_tree_language_properties",
-        "gpr2_prj_tree_load_autoconf",
+        "gpr2_prj_tree_load",
         "gpr2_prj_tree_log_messages",
         "gpr2_prj_tree_properties",
         "gpr2_prj_tree_root_project",
         "gpr2_prj_tree_unload",
         "gpr2_prj_tree_get_view",
-        "gpr2_prj_view_attribute",
-        "gpr2_prj_view_information"
+        "gpr2_prj_tree_set_context",
+        "gpr2_prj_view_attributes",
+        "gpr2_prj_view_properties",
+        "gpr2_prj_view_unload",
+        "gpr2_prj_view_sources",
+        "gpr2_prj_view_variables",
     ]
 
     # ??? not portable ???

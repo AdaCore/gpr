@@ -1,0 +1,14 @@
+project P is
+   target_name := external ("TARGET_NAME", "dummy");
+   for Source_Dirs use (".");
+   for Languages use ("ada", "c");
+   for Target use target_name;
+
+   target_name := "tutu";
+   package Compiler is
+      for Switches(others) use ("-g", "-O2");
+      for Switches("ada") use ("-ada");
+      for Switches("others") use ("-adai2", target_name);
+      target_name := "tata";
+   end Compiler;
+end P;

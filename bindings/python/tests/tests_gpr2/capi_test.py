@@ -12,7 +12,7 @@ def test_load_gpr2():
 
 def test_invalid_json_request():
     """Invalid request paramater in C binding."""
-    fun = LibGPR2.cfun("gpr2_prj_tree_load_autoconf")
+    fun = LibGPR2.cfun("gpr2_prj_tree_load")
     answer = c_char_p()
     status = fun('[""],'.encode("utf-8"), byref(answer))
     answer = json.loads(answer.value.decode("utf-8"))
@@ -22,5 +22,5 @@ def test_invalid_json_request():
 def test_missing_json_member_request():
     """Missing manadatory key in C binding request."""
     with pytest.raises(GPR2Error) as exc_info:
-        LibGPR2.gpr2_prj_tree_load_autoconf({"wrong_param": "wrong"})
+        LibGPR2.gpr2_prj_tree_load({"wrong_param": "wrong"})
     exc_info.match("missing string parameter: 'filename'")
