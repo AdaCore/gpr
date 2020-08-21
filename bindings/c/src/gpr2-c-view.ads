@@ -33,7 +33,7 @@ package GPR2.C.View is
    --  Answer:
    --      {}
 
-   function GPR2_Project_View_Information
+   function GPR2_Project_View_Properties
       (Request : C_Request; Answer : out C_Answer) return C_Status;
    --  Returns in one call aggregated information about the selected view
    --
@@ -41,9 +41,21 @@ package GPR2.C.View is
    --      {'view_id': str}
    --
    --  Answer:
-   --      {'path_name': str,   # GPR2.Project.View.Path_Name
-   --       'dir_name':  str,   # GPR2.Project.View.Dir_Name
-   --       'name':      str}   # GPR2.Project.View.Name
+   --      {'name:  str,   # Project Name
+   --       'path': str,   # Full path to the project file
+   --       'dir':  str,   # Working directory
+   --       'kind': str,
+   --       'is_extending': bool,
+   --       'is_extending_all': bool,
+   --       'is_extended': bool,
+   --       'is_aggregated': bool,
+   --       'is_aggregated_in_library': bool,
+   --       'mains': List[str],
+   --       'library': Library
+   --       'object_dir': str,
+   --       'source_subdir': str,
+   --       'exec_dir': str,
+   --       'exec_suffix': str}
 
    function GPR2_Project_View_Attribute
      (Request : C_Request; Answer : out C_Answer) return C_Status;
@@ -192,7 +204,8 @@ package GPR2.C.View is
    --
    --  Request:
    --
-   --      {'view_id'          : str}
+   --      {'view_id'    : str,
+   --       'need_update : Optional[bool] = True}
    --
    --  Answer:
    --      {'sources': List[Source]}
@@ -230,8 +243,8 @@ private
                   GPR2_Project_View_Attribute,
                   "gpr2_prj_view_attribute");
    pragma Export (C,
-                  GPR2_Project_View_Information,
-                  "gpr2_prj_view_information");
+                  GPR2_Project_View_Properties,
+                  "gpr2_prj_view_properties");
    pragma Export (C,
                   GPR2_Project_View_Imports,
                   "gpr2_prj_view_imports");

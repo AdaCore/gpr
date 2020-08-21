@@ -30,6 +30,7 @@ with GPR2.Project.Configuration;
 with GPR2.Project.View;
 with GPR2.Project.View.Set;
 with GPR2.Source_Reference;
+with GPR2.Path_Name.Set;
 
 package body GPR2.C.View is
 
@@ -313,29 +314,6 @@ package body GPR2.C.View is
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Imports;
 
-   -----------------------------------
-   -- GPR2_Project_View_Information --
-   -----------------------------------
-
-   function GPR2_Project_View_Information
-      (Request : C_Request; Answer : out C_Answer) return C_Status
-   is
-      procedure Handler (Request : JSON_Value; Result : JSON_Value);
-
-      procedure Handler (Request : JSON_Value; Result : JSON_Value)
-      is
-         View : constant Project_View_Access :=
-            Get_Project_View (Request, "view_id");
-      begin
-         Set_String (Result, "path_name", View.all.Path_Name.Value);
-         Set_String (Result, "dir_name", View.all.Dir_Name.Value);
-         Set_String (Result, "name", String (View.all.Name));
-      end Handler;
-
-   begin
-      return Bind (Request, Answer, Handler'Unrestricted_Access);
-   end GPR2_Project_View_Information;
-
    ------------------------------------------
    -- GPR2_Project_View_Invalidate_Sources --
    ------------------------------------------
@@ -355,6 +333,92 @@ package body GPR2.C.View is
    begin
       return Bind (Request, Answer, Handler'Unrestricted_Access);
    end GPR2_Project_View_Invalidate_Sources;
+
+   ----------------------------------
+   -- GPR2_Project_View_Properties --
+   ----------------------------------
+
+   function GPR2_Project_View_Properties
+      (Request : C_Request; Answer : out C_Answer) return C_Status
+   is
+      procedure Handler (Request : JSON_Value; Result : JSON_Value);
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value)
+      is
+         View : constant Project_View_Access :=
+            Get_Project_View (Request, "view_id");
+         Library : constant GNATCOLL.JSON.JSON_Value :=
+            GNATCOLL.JSON.Create_Object;
+      begin
+         Set_String (Result, "path", View.all.Path_Name.Value);
+         Set_String (Result, "dir", View.all.Dir_Name.Value);
+         Set_String (Result, "name", String (View.all.Name));
+         Set_String (Result, "kind", View.Kind'Img);
+         Set_Boolean (Result, "is_extending", View.Is_Extending);
+         if View.Is_Extending then
+            Set_Boolean (Result, "is_extending_all", View.Is_Extending_All);
+         else
+            Set_Boolean (Result, "is_extending_all", False);
+         end if;
+         Set_Boolean (Result, "is_extended", View.Is_Extended);
+         Set_Boolean (Result, "is_aggregated", View.Is_Aggregated);
+         Set_Boolean
+           (Result, "is_aggregated_in_library", View.Is_Aggregated_In_Library);
+
+         Set_Boolean (Result, "is_externally_built", View.Is_Externally_Built);
+
+         if View.Has_Mains then
+            Set_Path_Name_Set_Object (Result, "mains", View.Mains);
+         else
+            Set_Path_Name_Set_Object (Result, "mains",
+                                      GPR2.Path_Name.Set.Empty_Set);
+         end if;
+
+         if View.Is_Library then
+            Set_String (Library, "name", String (View.Library_Name));
+            Set_String (Library, "kind", String (View.Library_Kind));
+            Set_Boolean (Library, "is_shared", View.Is_Shared_Library);
+            if not View.Is_Static_Library and then View.Has_Library_Version
+            then
+               Set_String (Library, "version",
+                           View.all.Library_Version_Filename.Value);
+            else
+               Set_Null (Library, "version");
+            end if;
+
+            Set_String (Library, "path", View.Library_Filename.Value);
+            Set_String (Library, "dir", View.Library_Directory.Value);
+            Set_String (Library, "ali_dir", View.Library_Ali_Directory.Value);
+            Set_String (Library, "src_dir", View.Library_Src_Directory.Value);
+            Set_String (Library, "standalone", View.Library_Standalone'Img);
+            GNATCOLL.JSON.Set_Field (Result, "library", Library);
+         else
+            Set_Null (Result, "library");
+         end if;
+
+         if View.Kind not in K_Configuration | K_Abstract then
+            Set_String (Result, "object_dir", View.Object_Directory.Value);
+            if View.Tree.Src_Subdirs /= No_Name then
+               Set_String (Result, "source_subdir",
+                           View.Source_Subdirectory.Value);
+            else
+               Set_Null (Result, "source_subdir");
+            end if;
+         end if;
+
+         if View.Kind in K_Standard | K_Library | K_Aggregate_Library then
+            Set_String (Result, "exec_dir",
+                        View.all.Executable_Directory.Value);
+         else
+            Set_Null (Result, "exec_dir");
+         end if;
+         Set_String (Result, "exec_suffix",
+                     String (View.Executable_Suffix));
+      end Handler;
+
+   begin
+      return Bind (Request, Answer, Handler'Unrestricted_Access);
+   end GPR2_Project_View_Properties;
 
    -----------------------------------
    -- GPR2_Project_View_Source_Path --
