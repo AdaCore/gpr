@@ -52,6 +52,7 @@ class ProjectTree:
         implicit_with: Optional[List[str]] = None,
         target: Optional[str] = None,
         language_runtimes: Optional[Dict[str, str]] = None,
+        project_dir: Optional[str] = None,
     ) -> None:
         """Load a project tree.
 
@@ -77,6 +78,10 @@ class ProjectTree:
         self.implicit_with = implicit_with
         self.target = target
         self.language_runtimes = language_runtimes
+        if project_dir is not None:
+            self.project_dir = os.path.abspath(project_dir)
+        else:
+            self.project_dir = None
 
         self.id = LibGPR2.gpr2_prj_tree_load(
             request={
@@ -90,6 +95,7 @@ class ProjectTree:
                 "implicit_with": self.implicit_with,
                 "target": self.target,
                 "language_runtime": self.language_runtimes,
+                "project_dir": self.project_dir,
             }
         )["tree_id"]
 

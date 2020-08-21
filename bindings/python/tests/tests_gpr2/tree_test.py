@@ -1,6 +1,8 @@
 from gpr2.tree import ProjectTree
 from gpr2.view import ProjectView
 from gpr2 import GPR2Error
+from e3.fs import mkdir
+import os
 import pytest
 import logging
 
@@ -104,3 +106,11 @@ def test_target2():
         assert tree.target == "new-target2"
         tree.context = {}
         assert tree.target == "dummy"
+
+
+@pytest.mark.data_dir("simple_project")
+def test_project_dir():
+    mkdir("working_dir")
+    with ProjectTree("p.gpr", project_dir="working_dir") as tree:
+        assert tree.project_dir == tree.root_view.dir
+        assert tree.project_dir == os.path.abspath("working_dir")
