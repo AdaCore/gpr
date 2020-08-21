@@ -1,0 +1,5 @@
+description:
+    check swicthes index case handling
+driver: build_and_run
+project_file: switches_attribute
+main: main

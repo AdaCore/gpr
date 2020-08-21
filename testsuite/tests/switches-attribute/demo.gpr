@@ -1,0 +1,20 @@
+project Demo is
+
+   for Languages use ("Ada", ".LANG");
+
+   package Compiler is
+      --  Check that Capital.adb and capital.adb are properly handled
+      --  based on the OS case-sensitive property of the filesystem.
+
+      for Switches ("Capital.adb") use ("-g", "-gnata");
+      for Switches ("capital.adb")
+        use Compiler'Switches("Capital.adb") & ("-g0");
+
+      --  Check that .LANG .lang and .Lang are all referencing the
+      --  same language (non case-sensitive).
+
+      for Switches (".LANG") use ("-g1");
+      for Switches (".lang") use Compiler'Switches(".Lang") & ("-g2");
+   end Compiler;
+
+end Demo;
