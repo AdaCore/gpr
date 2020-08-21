@@ -1,6 +1,5 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-
 from gpr2.capi import LibGPR2
 
 if TYPE_CHECKING:
@@ -16,9 +15,8 @@ class ProjectView:
     def _update_properties(self):
         properties = LibGPR2.gpr2_prj_view_properties({"view_id": self.id})
         self.name = properties["name"]
-        self.path_name = properties["path_name"]
-        self.dir_name = properties["dir_name"]
-        self.qualifier = properties["qualifier"]
+        self.path = properties["path"]
+        self.dir = properties["dir"]
         self.kind = properties["kind"]
 
     def attributes(self):
