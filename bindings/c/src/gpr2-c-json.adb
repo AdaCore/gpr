@@ -587,6 +587,19 @@ package body GPR2.C.JSON is
    end Set_Attributes;
 
    -----------------
+   -- Set_Boolean --
+   -----------------
+
+   procedure Set_Boolean
+      (Obj  : JSON_Value;
+       Key  : String;
+       Bool : Boolean)
+   is
+   begin
+      GNATCOLL.JSON.Set_Field (Obj, Key, Bool);
+   end Set_Boolean;
+
+   -----------------
    -- Set_Context --
    -----------------
 
@@ -619,6 +632,18 @@ package body GPR2.C.JSON is
    begin
       Set_String (Obj, Key, String (Name));
    end Set_Name;
+
+   --------------
+   -- Set_Null --
+   --------------
+
+   procedure Set_Null
+      (Obj : JSON_Value;
+       Key : String)
+   is
+   begin
+      GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
+   end Set_Null;
 
    -----------------------
    -- Set_Optional_Name --

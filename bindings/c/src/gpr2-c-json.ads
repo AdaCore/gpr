@@ -332,4 +332,14 @@ package GPR2.C.JSON is
    --  Sets member Key of Obj with sources in set Sources
    --  The member value is List[Source] (see GPR2.C for Source format)
 
+   procedure Set_Boolean
+      (Obj  : JSON_Value;
+       Key  : String;
+       Bool : Boolean);
+   --  Sets member Key of Obj with boolean Bool
+
+   procedure Set_Null
+      (Obj : JSON_Value;
+       Key : String);
+   --  Sets member Key of Obj to null
 end GPR2.C.JSON;
