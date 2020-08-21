@@ -642,8 +642,7 @@ package body GPR2.C.JSON is
 
    procedure Set_Null
       (Obj : JSON_Value;
-       Key : String)
-   is
+       Key : String) is
    begin
       GNATCOLL.JSON.Set_Field (Obj, Key, GNATCOLL.JSON.JSON_Null);
    end Set_Null;

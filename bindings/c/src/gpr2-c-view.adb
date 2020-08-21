@@ -405,11 +405,13 @@ package body GPR2.C.View is
          Set_String (Result, "name", String (View.all.Name));
          Set_String (Result, "kind", View.Kind'Img);
          Set_Boolean (Result, "is_extending", View.Is_Extending);
+
          if View.Is_Extending then
             Set_Boolean (Result, "is_extending_all", View.Is_Extending_All);
          else
             Set_Boolean (Result, "is_extending_all", False);
          end if;
+
          Set_Boolean (Result, "is_extended", View.Is_Extended);
          Set_Boolean (Result, "is_aggregated", View.Is_Aggregated);
          Set_Boolean
@@ -428,7 +430,9 @@ package body GPR2.C.View is
             Set_String (Library, "name", String (View.Library_Name));
             Set_String (Library, "kind", String (View.Library_Kind));
             Set_Boolean (Library, "is_shared", View.Is_Shared_Library);
-            if not View.Is_Static_Library and then View.Has_Library_Version
+
+            if not View.Is_Static_Library
+              and then View.Has_Library_Version
             then
                Set_String (Library, "version",
                            View.all.Library_Version_Filename.Value);
@@ -442,12 +446,14 @@ package body GPR2.C.View is
             Set_String (Library, "src_dir", View.Library_Src_Directory.Value);
             Set_String (Library, "standalone", View.Library_Standalone'Img);
             GNATCOLL.JSON.Set_Field (Result, "library", Library);
+
          else
             Set_Null (Result, "library");
          end if;
 
          if View.Kind not in K_Configuration | K_Abstract then
             Set_String (Result, "object_dir", View.Object_Directory.Value);
+
             if View.Tree.Src_Subdirs /= No_Name then
                Set_String (Result, "source_subdir",
                            View.Source_Subdirectory.Value);
@@ -462,6 +468,7 @@ package body GPR2.C.View is
          else
             Set_Null (Result, "exec_dir");
          end if;
+
          Set_String (Result, "exec_suffix",
                      String (View.Executable_Suffix));
       end Handler;
@@ -509,10 +516,13 @@ package body GPR2.C.View is
    is
       procedure Handler (Request : JSON_Value; Result : JSON_Value);
 
-      procedure Handler (Request : JSON_Value; Result : JSON_Value)
-      is
+      -------------
+      -- Handler --
+      -------------
+
+      procedure Handler (Request : JSON_Value; Result : JSON_Value) is
          View : constant Project_View_Access :=
-            Get_Project_View (Request, "view_id");
+                  Get_Project_View (Request, "view_id");
       begin
          Set_Sources
             (Result,
