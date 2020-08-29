@@ -136,12 +136,6 @@ procedure Main is
                if P.Has_Attributes then
                   Put_Attributes (P.Attributes);
                end if;
-               if P.Name = Registry.Pack.Compiler then
-                  Put_Attributes
-                    (P.Attributes
-                      (Registry.Attribute.Switches,
-                       Attribute_Index.Create ("Capital.adb")));
-               end if;
             end loop;
          end if;
       end if;
