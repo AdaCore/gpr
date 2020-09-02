@@ -19,9 +19,7 @@
 with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
-with GPR2.Context;
 with GPR2.Path_Name;
-with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
 
 with GPRtools.Options;

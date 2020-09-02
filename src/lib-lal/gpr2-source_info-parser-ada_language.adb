@@ -28,9 +28,6 @@ with Libadalang.Common;
 with GNAT.Case_Util;
 
 with GPR2.Project.Source;
-with GPR2.Project.Tree;
-with GPR2.Project.Unit_Info;
-with GPR2.Source;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Identifier.Set;

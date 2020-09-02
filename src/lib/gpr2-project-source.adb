@@ -17,9 +17,7 @@
 ------------------------------------------------------------------------------
 
 with GPR2.Message;
-with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
-with GPR2.Project.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;

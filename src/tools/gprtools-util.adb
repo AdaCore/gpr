@@ -25,6 +25,8 @@ with GNAT.OS_Lib;
 
 with GPR2.Containers;
 with GPR2.Message;
+with GPR2.Path_Name;
+with GPR2.Project.Tree;
 
 package body GPRtools.Util is
 

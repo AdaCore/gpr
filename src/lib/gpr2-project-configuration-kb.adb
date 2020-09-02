@@ -19,8 +19,6 @@
 with GNATCOLL.VFS;
 with GNATCOLL.VFS_Utils;
 
-with GPR2.Message;
-with GPR2.Source_Reference;
 with GPR2.Project.Configuration.KB.Parsing;
 
 package body GPR2.Project.Configuration.KB is

@@ -17,7 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar;
-with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Text_IO;
 
@@ -28,20 +27,16 @@ with GPR.Snames;
 
 with GPR2.Unit;
 with GPR2.Containers;
-with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
-with GPR2.Project.Attribute.Set;
-with GPR2.Project.Configuration;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.View;
 with GPR2.Source;
-with GPR2.Source_Info;
 with GPR2.Version;
 
 with GPRtools.Util;
@@ -234,14 +229,8 @@ begin
    --
 
    declare
-      use type Project.View.Object;
-
       --  Cache some data to speed up later processing.
       --  The maps should have Value_Path keys to support case-insensitive FS.
-
-      package View_List_Package is new Ada.Containers.Indefinite_Vectors
-        (Index_Type   => Ada.Containers.Count_Type,
-         Element_Type => Project.View.Object);
 
       use type Project.Source.Object;
 

@@ -26,7 +26,6 @@ with Ada.Containers.Ordered_Maps;
 
 with GPR2.Unit.List;
 with GPR2.Containers;
-with GPR2.Path_Name;
 with GPR2.Source_Reference.Identifier.Set;
 
 package GPR2.Source_Info is

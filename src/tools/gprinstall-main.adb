@@ -27,13 +27,10 @@ with GNAT.OS_Lib;
 
 with GPR.Util;
 
-with GPR2.Context;
 with GPR2.Interrupt_Handler;
-with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
-with GPR2.Source_Reference;
 with GPR2.Version;
 
 with GPRtools.Options;

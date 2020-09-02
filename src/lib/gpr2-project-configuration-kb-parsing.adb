@@ -38,7 +38,6 @@ with Sax.Readers;
 with Unicode.CES.Utf8;
 
 with GNATCOLL.Traces;
-with GNATCOLL.VFS;
 
 with GPR2.Containers;
 with GPR2.Message;

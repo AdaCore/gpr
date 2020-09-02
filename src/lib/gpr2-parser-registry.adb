@@ -18,8 +18,6 @@
 
 with Ada.Containers.Ordered_Maps;
 
-with GPR2.Project.View;
-
 package body GPR2.Parser.Registry is
 
    --  Project with reference counter

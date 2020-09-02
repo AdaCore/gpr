@@ -31,9 +31,7 @@ with GNATCOLL.Utils;
 with GPR.Util;
 
 with GPR2.Compilation.Registry;
-with GPR2.Unit;
 with GPR2.Containers;
-with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
@@ -47,6 +45,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
 with GPR2.Source_Reference;
+with GPR2.Unit;
 
 with GPRtools.Util;
 

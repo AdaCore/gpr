@@ -16,7 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;

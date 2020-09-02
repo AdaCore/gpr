@@ -30,7 +30,6 @@ with GPR2.Project.Configuration.KB;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
-with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 
 pragma Warnings (Off);

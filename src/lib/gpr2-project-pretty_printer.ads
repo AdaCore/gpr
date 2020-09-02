@@ -20,7 +20,6 @@
 
 with GPR_Parser.Analysis;
 
-with GPR2.Project.Tree;
 with GPR2.Project.View;
 
 package GPR2.Project.Pretty_Printer is

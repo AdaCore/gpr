@@ -37,7 +37,6 @@ with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Name_Values;
 with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;

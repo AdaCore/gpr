@@ -19,8 +19,6 @@
 with Ada.Directories;
 with GNAT.Formatted_String;
 
-with GPR2.Path_Name;
-
 package body GPR2.Message is
 
    ------------

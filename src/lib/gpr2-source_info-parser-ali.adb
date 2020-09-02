@@ -21,11 +21,11 @@ with Ada.Streams.Stream_IO;
 
 with GNATCOLL.Utils;
 
+with GPR2.Path_Name;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.Source.Artifact;
-with GPR2.Project.Tree;
+with GPR2.Project.View;
 with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source;
 
 with Ada.Exceptions;
 with Ada.Text_IO;

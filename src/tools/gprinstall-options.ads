@@ -18,8 +18,6 @@
 
 with GNAT.OS_Lib;
 
-with GPR2.Path_Name;
-
 with GPRtools.Options;
 
 package GPRinstall.Options is

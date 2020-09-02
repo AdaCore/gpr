@@ -19,8 +19,6 @@
 --  Common utilities for all gpr tools
 
 with GPR2.Log;
-with GPR2.Path_Name;
-with GPR2.Project.Tree;
 
 with GPRtools.Options;
 

@@ -20,14 +20,13 @@ with Ada.Characters.Handling;
 
 with GPR_Parser.Common;
 
+with Langkit_Support.Text;
+
 with GPR2;
 with GPR2.Parser;
 with GPR2.Parser.Project;
-with GPR2.Project.Attribute;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
-
-with Langkit_Support.Text;
 
 package body GPR2.Project.Pretty_Printer is
 

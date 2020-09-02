@@ -21,7 +21,8 @@ with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
-with GPR2.Message;
+with GNATCOLL.Utils;
+
 with GPR2.Project.Definition;
 with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
@@ -29,12 +30,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source;
-with GPR2.Source_Info;
-with GPR2.Source_Reference;
 with GPR2.Project.Unit_Info;
-with GPR2.Unit;
-
-with GNATCOLL.Utils;
 
 package body GPR2.Project.View is
 

@@ -23,8 +23,6 @@
 --  A soucre parser is created as a child package. It is then
 --  registered into the source info parser registry child package.
 
-with GPR2.Project.View;
-
 limited with GPR2.Project.Source;
 
 package GPR2.Source_Info.Parser is

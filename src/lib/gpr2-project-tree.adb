@@ -29,7 +29,6 @@ with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source;
-with GPR2.Project.Source.Set;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 with GPR2.Unit;
