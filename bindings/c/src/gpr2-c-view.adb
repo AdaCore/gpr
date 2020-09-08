@@ -25,7 +25,6 @@ with GPR2.C.JSON;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.View.Set;
-with GPR2.Source_Reference;
 with GPR2.Path_Name.Set;
 
 package body GPR2.C.View is
