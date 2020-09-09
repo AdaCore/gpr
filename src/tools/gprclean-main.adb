@@ -28,8 +28,6 @@ with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 with GNATCOLL.Utils;
 
-with GPR.Util;
-
 with GPR2.Compilation.Registry;
 with GPR2.Containers;
 with GPR2.Log;
@@ -170,12 +168,10 @@ procedure GPRclean.Main is
          Library_Name : Name_Type;
          Number       : Natural) return Path_Name.Object
       is
-         use GPR.Util;
       begin
          return View.Object_Directory.Compose
-           (Name_Type (Partial_Name (String (Library_Name),
-                                     Number,
-                                     String (View.Tree.Object_Suffix))));
+           (GPRtools.Util.Partial_Name
+              (Library_Name, Number, View.Tree.Object_Suffix));
       end Partial_Path;
 
    begin
