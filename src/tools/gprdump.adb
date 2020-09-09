@@ -27,8 +27,8 @@ with GNAT.Strings;
 with GNATCOLL.Traces;
 with GNATCOLL.Tribooleans;
 
-with GPR.Util;
-with GPR.Version;
+with GPRtools.Util;
+with GPRtools.Options;
 
 with GPR2.Containers;
 with GPR2.Context;
@@ -39,8 +39,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
 with GPR2.Project.Unit_Info;
-
-with GPRtools.Util;
+with GPR2.Version;
 
 procedure GPRdump is
 
@@ -103,66 +102,57 @@ procedure GPRdump is
    procedure Parse_Command_Line is
       use GNAT.Command_Line;
 
-      procedure Usage;
-
-      procedure Check_Version_And_Help is new
-        GPR.Util.Check_Version_And_Help_G (Usage);
-
-      Config : Command_Line_Configuration;
-
-      -----------
-      -- Usage --
-      -----------
-
-      procedure Usage is
-      begin
-         Display_Help (Config);
-      end Usage;
+      Options : GPRtools.Options.Object;
 
    begin
       Define_Switch
-        (Config, Help'Access,
+        (Options.Config, Help'Access,
          "-h", Long_Switch => "--help",
          Help => "display this help message and exit");
 
       Define_Switch
-        (Config, Display_Sources'Access,
+        (Options.Config, Display_Sources'Access,
          "-s", Long_Switch => "--sources",
          Help => "display sources");
 
       Define_Switch
-        (Config, Display_All_Sources'Access,
+        (Options.Config, Display_All_Sources'Access,
          "-a", Long_Switch => "--all-sources",
          Help => "display sources");
 
       Define_Switch
-        (Config, Display_Units'Access,
+        (Options.Config, Display_Units'Access,
          "-u", Long_Switch => "--units",
          Help => "display units");
 
       Define_Switch
-        (Config, All_Projects'Access,
+        (Options.Config, All_Projects'Access,
          "-r", Long_Switch => "--recoursive",
          Help => "All none external projects recoursively");
 
       Define_Switch
-        (Config, Display_Artifacts'Access,
+        (Options.Config, Display_Artifacts'Access,
          Long_Switch => "--artifacts",
          Help => "display artifacts");
 
       Define_Switch
-        (Config, Source'Access,
+        (Options.Config, Source'Access,
          "-d:", Long_Switch => "--deps:",
          Help => "display full closure");
 
-      Set_Usage (Config, Usage => "[switches] <project>");
+      GPRtools.Util.Set_Program_Name ("gprdump");
 
-      Check_Version_And_Help
-        ("GPRDUMP",
-         "2017",
-         Version_String => GPR.Version.Gpr_Version_String);
+      Getopt (Options.Config);
 
-      Getopt (Config);
+      if Options.Version or else Options.Verbose then
+         Version.Display
+           ("GPRDUMP", "2019", Version_String => Version.Long_Value);
+
+         if Options.Version then
+            Version.Display_Free_Software;
+            return;
+         end if;
+      end if;
 
       --  Now read arguments
 
@@ -181,7 +171,6 @@ procedure GPRdump is
       end loop Read_Arguments;
 
       if Project_Path = Null_Unbounded_String then
-         Usage;
          raise Invalid_Switch;
       end if;
    end Parse_Command_Line;
