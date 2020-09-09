@@ -24,6 +24,8 @@ with GPRtools.Options;
 
 package GPRtools.Util is
 
+   use GPR2;
+
    type Exit_Code_Type is
      (E_Success,    -- No warnings or errors
       E_Warnings,   -- Compiler warnings generated
@@ -64,5 +66,11 @@ package GPRtools.Util is
       Message   : String := "");
    --  Terminate program, with or without a message, setting the status code
    --  according to Exit_Code.
+
+   function Partial_Name
+     (Lib_Name      : Name_Type;
+      Number        : Natural;
+      Object_Suffix : Name_Type) return Name_Type;
+   --  Returns the name of an object file created by the partial linker
 
 end GPRtools.Util;

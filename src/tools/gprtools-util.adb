@@ -33,7 +33,7 @@ package body GPRtools.Util is
    use Ada;
    use Ada.Strings.Unbounded;
 
-   use GPR2;
+   Partial_Prefix : constant Name_Type := "p__";
 
    Keep_Program_Name : Unbounded_String;
 
@@ -203,6 +203,22 @@ package body GPRtools.Util is
          end;
       end loop;
    end Output_Messages;
+
+   ------------------
+   -- Partial_Name --
+   ------------------
+
+   function Partial_Name
+     (Lib_Name      : Name_Type;
+      Number        : Natural;
+      Object_Suffix : Name_Type) return Name_Type
+   is
+      Img : constant String := Number'Img;
+   begin
+      return Name_Type (String (Partial_Prefix) & String (Lib_Name)
+                        & '_' & Img (Img'First + 1 .. Img'Last)
+                        & String (Object_Suffix));
+   end Partial_Name;
 
    -------------------------------
    -- Project_Processing_Failed --
