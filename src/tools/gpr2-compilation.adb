@@ -24,7 +24,7 @@ with Ada.Text_IO;
 with GNAT.MD5;
 with GNAT.String_Split;
 
-with GPR.Util;
+with GPRtools.Util;
 
 package body GPR2.Compilation is
 
@@ -49,7 +49,7 @@ package body GPR2.Compilation is
                     & OS_Lib.Errno'Img
                     & " (" & OS_Lib.Errno_Message & ")";
          begin
-            GPR.Util.Fail_Program (null, Err);
+            GPRtools.Util.Fail_Program (Err);
          end;
       end if;
    end Check_Local_Process;
