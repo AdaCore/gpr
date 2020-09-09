@@ -46,8 +46,8 @@ package body GPR2.Compilation is
       if Process = Invalid_Process then
          declare
             Err : constant String := "spawn failed with ERRNO ="
-              & OS_Lib.Errno'Img
-              & " (" & OS_Lib.Errno_Message & ")";
+                    & OS_Lib.Errno'Img
+                    & " (" & OS_Lib.Errno_Message & ")";
          begin
             GPR.Util.Fail_Program (null, Err);
          end;
