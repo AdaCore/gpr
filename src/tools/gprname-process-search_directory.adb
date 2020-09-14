@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -27,6 +27,8 @@ with GNAT.Regpat;
 with GNATCOLL.Strings;
 
 with GPRname.Unit.Vector;
+
+with GPRtools.Util;
 
 separate (GPRname.Process)
 procedure Search_Directory
@@ -370,7 +372,8 @@ begin
 
                               if not (Opt.Ignore_Predefined_Units
                                         and then
-                                      Is_Ada_Predefined_Unit (String (Name)))
+                                      GPRtools.Util.Is_Ada_Predefined_Unit
+                                        (Name))
                               then
                                  Unit_Count := Unit_Count + 1;
                                  Src.Append_Unit

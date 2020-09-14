@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -23,8 +23,6 @@ with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Hash_Case_Insensitive;
 with Ada.Strings.Less_Case_Insensitive;
 with Ada.Strings.Unbounded;
-
-with GPR.Util;
 
 with GPR2.Path_Name;
 
@@ -100,13 +98,5 @@ package GPRname.Common is
    --
 
    GPRname_Exception : exception;
-
-   --
-   --  Routines
-   --
-
-   function Is_Ada_Predefined_Unit (Unit : String) return Boolean renames
-     GPR.Util.Is_Ada_Predefined_Unit;
-   --  From legacy GPR: checks whether a unit is predefined based on its name
 
 end GPRname.Common;
