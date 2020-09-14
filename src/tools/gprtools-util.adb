@@ -22,6 +22,7 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
+with GNATCOLL.Utils;
 
 with GPR2.Containers;
 with GPR2.Message;
@@ -155,6 +156,33 @@ package body GPRtools.Util is
 
       Exit_Program (Exit_Code);
    end Finish_Program;
+
+   ----------------------------
+   -- Is_Ada_Predefined_Unit --
+   ----------------------------
+
+   function Is_Ada_Predefined_Unit (Unit : Name_Type) return Boolean is
+      use GNATCOLL.Utils;
+
+      Lower_Unit : constant String := To_Lower (Unit);
+   begin
+      return Lower_Unit = "ada"
+        or else Lower_Unit = "gnat"
+        or else Lower_Unit = "interfaces"
+        or else Lower_Unit = "system"
+        or else Lower_Unit = "calendar"
+        or else Lower_Unit = "machine_code"
+        or else Lower_Unit = "unchecked_conversion"
+        or else Lower_Unit = "unchecked_deallocation"
+        or else Lower_Unit = "direct_io"
+        or else Lower_Unit = "io_exceptions"
+        or else Lower_Unit = "sequential_io"
+        or else Lower_Unit = "text_io"
+        or else Starts_With (Lower_Unit, "ada.")
+        or else Starts_With (Lower_Unit, "gnat.")
+        or else Starts_With (Lower_Unit, "system.")
+        or else Starts_With (Lower_Unit, "interfaces.");
+   end Is_Ada_Predefined_Unit;
 
    ---------------------
    -- Output_Messages --

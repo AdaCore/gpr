@@ -43,6 +43,9 @@ package GPRtools.Util is
    --  Output errors and if Verbose is True other messages from Log.
    --  Options Tree's log is used when Log is undefined.
 
+   function Is_Ada_Predefined_Unit (Unit : Name_Type) return Boolean;
+   --  Return True if Unit is an Ada runtime unit
+
    -------------------------
    -- Program termination --
    -------------------------
