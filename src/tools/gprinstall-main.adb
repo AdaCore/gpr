@@ -25,8 +25,6 @@ with Ada.Text_IO;
 with GNAT.Command_Line;
 with GNAT.OS_Lib;
 
-with GPR.Util;
-
 with GPR2.Interrupt_Handler;
 with GPR2.Path_Name;
 with GPR2.Project.Configuration;
@@ -434,7 +432,7 @@ procedure GPRinstall.Main is
       if Options.Global_Prefix_Dir.V = null then
          --  Set to default for current toolchain
          Options.Global_Prefix_Dir :=
-           (new String'(GPR.Util.Executable_Prefix_Path), True);
+           (new String'(GPRtools.Util.Executable_Prefix_Path), True);
 
       elsif Options.Global_Prefix_Dir.V.all = "" then
          raise Usage_Error with "--prefix argument cannot be empty";
