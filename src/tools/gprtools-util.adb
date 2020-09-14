@@ -16,11 +16,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
+with GNAT.Case_Util;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
@@ -94,6 +96,86 @@ package body GPRtools.Util is
          end if;
       end if;
    end Check_For_Default_Project;
+
+   ----------------------------
+   -- Executable_Prefix_Path --
+   ----------------------------
+
+   function Executable_Prefix_Path return String is
+      use GNAT;
+      use GNATCOLL;
+
+      Exec_Name : constant String := Command_Line.Command_Name;
+
+      function Get_Install_Dir (S : String) return String;
+      --  S is the executable name preceded by the absolute or relative path,
+      --  e.g. "c:\usr\bin\gcc.exe". Returns the absolute directory where "bin"
+      --  lies (in the example "C:\usr"). If the executable is not in a "bin"
+      --  directory, return "".
+
+      ---------------------
+      -- Get_Install_Dir --
+      ---------------------
+
+      function Get_Install_Dir (S : String) return String is
+         Exec      : String  :=
+                       OS_Lib.Normalize_Pathname (S, Resolve_Links => True);
+         Path_Last : Integer := 0;
+
+      begin
+         for J in reverse Exec'Range loop
+            if Utils.Is_Directory_Separator (Exec (J)) then
+               Path_Last := J - 1;
+               exit;
+            end if;
+         end loop;
+
+         if Path_Last >= Exec'First + 2 then
+            Case_Util.To_Lower (Exec (Path_Last - 2 .. Path_Last));
+         end if;
+
+         if Path_Last < Exec'First + 2
+           or else Exec (Path_Last - 2 .. Path_Last) /= "bin"
+           or else (Path_Last - 3 >= Exec'First
+                      and then
+                    not Utils.Is_Directory_Separator (Exec (Path_Last - 3)))
+         then
+            return "";
+         end if;
+
+         return (Exec (Exec'First .. Path_Last - 4))
+           & OS_Lib.Directory_Separator;
+      end Get_Install_Dir;
+
+   --  Beginning of Executable_Prefix_Path
+
+   begin
+      --  First determine if a path prefix was placed in front of the
+      --  executable name.
+
+      if GPR2.Has_Directory_Separator (Exec_Name) then
+         return Get_Install_Dir (Exec_Name);
+      end if;
+
+      --  If we get here, the user has typed the executable name with no
+      --  directory prefix.
+
+      declare
+         use type OS_Lib.String_Access;
+         Path : OS_Lib.String_Access := OS_Lib.Locate_Exec_On_Path (Exec_Name);
+      begin
+         if Path = null then
+            return "";
+         else
+            declare
+               Dir : constant String := Get_Install_Dir (Path.all);
+            begin
+               OS_Lib.Free (Path);
+               return Dir;
+            end;
+         end if;
+      end;
+   end Executable_Prefix_Path;
 
    ------------------
    -- Exit_Program --

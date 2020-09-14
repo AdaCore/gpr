@@ -46,6 +46,12 @@ package GPRtools.Util is
    function Is_Ada_Predefined_Unit (Unit : Name_Type) return Boolean;
    --  Return True if Unit is an Ada runtime unit
 
+   function Executable_Prefix_Path return String;
+   --  Return the absolute path parent directory of the directory where the
+   --  current executable resides, if its directory is named "bin", otherwise
+   --  return an empty string. When a directory is returned, it is guaranteed
+   --  to end with a directory separator.
+
    -------------------------
    -- Program termination --
    -------------------------
