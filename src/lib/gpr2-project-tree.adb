@@ -2678,10 +2678,15 @@ package body GPR2.Project.Tree is
    -- Update_Sources --
    --------------------
 
-   procedure Update_Sources (Self : Object; Stop_On_Error : Boolean := True) is
+   procedure Update_Sources
+     (Self          : Object;
+      Stop_On_Error : Boolean := True;
+      With_Runtime  : Boolean := False) is
    begin
       for V of Self.Views_Set loop
-         Definition.Get (V).Update_Sources (V, Stop_On_Error);
+         if With_Runtime or else not V.Is_Runtime then
+            Definition.Get (V).Update_Sources (V, Stop_On_Error);
+         end if;
       end loop;
 
       if Self.Check_Shared_Lib then

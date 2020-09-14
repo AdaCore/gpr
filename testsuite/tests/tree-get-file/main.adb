@@ -33,7 +33,7 @@ begin
              (GPR2.Optional_Name_Type (Project_Name)),
          GPR2.Path_Name.No_Resolution),
       Context           => Context);
-   Tree.Update_Sources;
+   Tree.Update_Sources (With_Runtime => True);
    if not Tree.Log_Messages.Has_Error then
       declare
          function Check (S : GPR2.Simple_Name) return Boolean;

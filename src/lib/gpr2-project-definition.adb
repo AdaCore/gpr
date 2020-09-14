@@ -1140,12 +1140,10 @@ package body GPR2.Project.Definition is
                      end loop;
 
                      Source := GPR2.Source.Create_Ada
-                          (Filename      => File,
-                           Units         => Units,
-                           Is_RTS_Source =>
-                             (View.Tree.Has_Runtime_Project
-                              and then View = View.Tree.Runtime_Project),
-                           Is_Indexed    => Is_Indexed);
+                                 (Filename      => File,
+                                  Units         => Units,
+                                  Is_RTS_Source => View.Is_Runtime,
+                                  Is_Indexed    => Is_Indexed);
 
                   else
                      Source := GPR2.Source.Create (File, Language, Kind);

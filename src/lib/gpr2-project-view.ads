@@ -352,6 +352,9 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns true if the project is externally built
 
+   function Is_Runtime (Self : Object) return Boolean;
+   --  Returns True if the project describes the runtime
+
    function Has_Mains (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project has some mains defined

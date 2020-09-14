@@ -819,6 +819,16 @@ package body GPR2.Project.View is
         or else (Self.Is_Extending and then Self.Extended.Is_Main (Source));
    end Is_Main;
 
+   ----------------
+   -- Is_Runtime --
+   ----------------
+
+   function Is_Runtime (Self : Object) return Boolean is
+      Tree : constant not null access Project.Tree.Object := Self.Tree;
+   begin
+      return Tree.Has_Runtime_Project and then Tree.Runtime_Project = Self;
+   end Is_Runtime;
+
    -----------------------
    -- Is_Shared_Library --
    -----------------------
