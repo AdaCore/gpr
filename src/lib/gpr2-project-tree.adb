@@ -1280,7 +1280,10 @@ package body GPR2.Project.Tree is
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
-                            Containers.Name_Value_Map_Package.Empty_Map)
+                            Containers.Name_Value_Map_Package.Empty_Map;
+      Default_KB        : Boolean              := True;
+      Custom_KB         : GPR2.Path_Name.Set.Object :=
+                            GPR2.Path_Name.Set.Empty_Set)
    is
       Languages   : Containers.Source_Value_Set;
       Descr_Index : Natural := 0;
@@ -1454,7 +1457,11 @@ package body GPR2.Project.Tree is
             end loop;
 
             Conf := Project.Configuration.Create
-              (Conf_Descriptions, Actual_Target, Self.Root_Project.Path_Name);
+              (Conf_Descriptions,
+               Actual_Target,
+               Self.Root_Project.Path_Name,
+               Default_KB,
+               Custom_KB);
          end;
       end if;
 

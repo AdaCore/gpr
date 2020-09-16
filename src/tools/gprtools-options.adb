@@ -20,6 +20,8 @@ with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Task_Attributes;
 
+with GNAT.OS_Lib;
+
 with GPR2.Compilation.Registry;
 with GPR2.Project.Registry.Pack;
 
@@ -327,6 +329,16 @@ package body GPRtools.Options is
             "-X:",
             Help     => "Specify an external reference for Project Files",
             Argument => "<NAME>=<VALUE>");
+
+         Define_Switch
+           (Self.Config, Self.Skip_Default_KB'Access,
+            Long_Switch => "--db-",
+            Help        => "Do not load the standard knowledge base");
+
+         Define_Switch
+           (Self.Config, Value_Callback'Unrestricted_Access,
+            Long_Switch => "--db:",
+            Help        => "Parse dir as an additional knowledge base");
       end if;
 
       if Tool in Build | Clean then
@@ -483,6 +495,26 @@ package body GPRtools.Options is
 
       elsif Switch = "--src-subdirs" then
          Self.Src_Subdirs := To_Unbounded_String (Normalize_Value);
+
+      elsif Switch = "--db" then
+         declare
+            KB_Norm : constant String :=
+                        GNAT.OS_Lib.Normalize_Pathname (Normalize_Value);
+            KB_Path : GPR2.Path_Name.Object;
+         begin
+            if GNAT.OS_Lib.Is_Directory (KB_Norm) then
+               KB_Path :=
+                 GPR2.Path_Name.Create_Directory (GPR2.Name_Type (KB_Norm));
+            elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
+               KB_Path :=
+                 GPR2.Path_Name.Create_File (GPR2.Name_Type (KB_Norm));
+            else
+               raise GPRtools.Usage_Error with
+                 KB_Norm & " is not a file or directory";
+            end if;
+
+            Self.KB_Locations.Append (KB_Path);
+         end;
       end if;
    end Value_Callback;
 

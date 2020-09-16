@@ -517,7 +517,9 @@ begin
                               then ""
                               else Optional_Name_Type (Options.Subdirs.all)),
                Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
-               Check_Shared_Lib => not Options.Unchecked_Shared_Lib);
+               Check_Shared_Lib => not Options.Unchecked_Shared_Lib,
+               Default_KB       => not Options.Skip_Default_KB,
+               Custom_KB        => Options.KB_Locations);
          end if;
 
          if Options.Verbose then

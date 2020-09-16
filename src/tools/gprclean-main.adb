@@ -605,7 +605,9 @@ begin
          Check_Shared_Lib  => not Options.Unchecked_Shared_Lib,
          Target            => Name_Type (To_String (Options.Target)),
          Language_Runtimes => Options.RTS_Map,
-         Implicit_With     => Options.Implicit_With);
+         Implicit_With     => Options.Implicit_With,
+         Default_KB        => not Options.Skip_Default_KB,
+         Custom_KB         => Options.KB_Locations);
 
       if Project_Tree.Configuration.Log_Messages.Has_Element
            (Warning     => True,

@@ -23,6 +23,7 @@ with GNAT.Command_Line;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Tree;
 
 package GPRtools.Options is
@@ -75,6 +76,9 @@ package GPRtools.Options is
       Src_Subdirs              : Unbounded_String;
       Implicit_With            : GPR2.Containers.Name_Set;
       Maximum_Processes        : Natural := 0;
+
+      Skip_Default_KB          : aliased Boolean := False;
+      KB_Locations             : GPR2.Path_Name.Set.Object;
    end record;
 
    procedure Setup

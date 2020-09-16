@@ -109,7 +109,10 @@ package GPR2.Project.Tree is
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
-                            Containers.Name_Value_Map_Package.Empty_Map)
+                            Containers.Name_Value_Map_Package.Empty_Map;
+      Default_KB        : Boolean              := True;
+      Custom_KB         : GPR2.Path_Name.Set.Object :=
+                            GPR2.Path_Name.Set.Empty_Set)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
