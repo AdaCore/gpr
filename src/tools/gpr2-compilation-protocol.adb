@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -28,7 +28,7 @@ with Ada.Unchecked_Deallocation;
 with GNAT.Rewrite_Data;
 with GNAT.String_Split;
 
-with GPR.Version;
+with GPR2.Version;
 with Gpr_Build_Util;
 
 package body GPR2.Compilation.Protocol is
@@ -39,7 +39,6 @@ package body GPR2.Compilation.Protocol is
    use Ada.Streams;
    use Ada.Strings.Fixed;
    use Ada.Strings.Maps;
-   use GPR.Version;
 
    use GNAT.String_Split;
 
@@ -693,7 +692,7 @@ package body GPR2.Compilation.Protocol is
          & Args_Sep & Build_Env
          & Args_Sep & Boolean'Image (Sync)
          & Args_Sep & String (Time_Stamp.UTC_Time)
-         & Args_Sep & Gpr_Version_String (Host => False)
+         & Args_Sep & Version.Long_Value (Host => False)
          & Args_Sep & Hash
          & Args_Sep & Included_Artifact_Patterns);
    end Send_Context;

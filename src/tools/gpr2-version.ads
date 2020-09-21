@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,21 +16,19 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR.Version;
-
 package GPR2.Version is
 
-   Short_Value : constant String := GPR.Version.Gpr_Version;
+   Short_Value : constant String := "21.0w";
    --  Static string identifying this version
 
-   Date : constant String := GPR.Version.Date;
+   Date : constant String := "19940713";
 
-   Current_Year : constant String := GPR.Version.Current_Year;
+   Current_Year : constant String := "2020";
 
-   subtype GNAT_Build_Type is GPR.Version.Gnat_Build_Type;
+   type GNAT_Build_Type is (Gnatpro, FSF, GPL);
    --  See Get_Gnat_Build_Type below for the meaning of these values
 
-   Build_Type : constant GNAT_Build_Type := GPR.Version.Build_Type;
+   Build_Type : constant GNAT_Build_Type := Gnatpro;
    --  Kind of GNAT Build:
    --
    --    FSF
@@ -52,18 +50,15 @@ package GPR2.Version is
    --       gives appropriate bug submission instructions that do not reference
    --       customer number etc.
 
-   function Long_Value (Host : Boolean := True) return String
-     renames GPR.Version.Gpr_Version_String;
+   function Long_Value (Host : Boolean := True) return String;
    --  Version output when GPRBUILD or its related tools, including
    --  GPRCLEAN, are run (with appropriate verbose option switch set).
 
-   function Free_Software return String
-     renames GPR.Version.Free_Software;
+   function Free_Software return String;
    --  Text to be displayed by the different GNAT tools when switch --version
    --  is used. This text depends on the GNAT build type.
 
-   function Copyright_Holder return String
-     renames GPR.Version.Copyright_Holder;
+   function Copyright_Holder return String;
    --  Return the name of the Copyright holder to be displayed by the different
    --  GNAT tools when switch --version is used.
 
@@ -74,6 +69,6 @@ package GPR2.Version is
    --  Display version of a tool when switch --version is used
 
    procedure Display_Free_Software;
-   --  Display Free Software disclaimer.
+   --  Display Free Software disclaimer
 
 end GPR2.Version;
