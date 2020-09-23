@@ -49,14 +49,17 @@ package GPR2.Project.Attribute_Index is
       Case_Sensitive : Boolean) return Object
      with Pre  => Index.Is_Defined,
           Post => Create'Result.Is_Defined;
+   --  Creates an attribute index for the given Index source reference
 
    function Create
      (Value          : Value_Not_Empty;
       Case_Sensitive : Boolean := False) return Object
      with Post => Create'Result.Is_Defined;
+   --  Creates a built-in attribute index
 
    function Is_Others (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
+   --  Returns True if this attribute index is the special others index
 
    function Is_Any_Index (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -72,6 +75,7 @@ package GPR2.Project.Attribute_Index is
      (Self          : Object;
       Preserve_Case : Boolean := True) return Value_Not_Empty
      with Pre => Self.Is_Defined;
+   --  Returns the actual value for the given attribute index
 
    procedure Set_Case
      (Self              : in out Object;
