@@ -51,7 +51,7 @@ package GPR2.Project.Attribute_Index is
           Post => Create'Result.Is_Defined;
 
    function Create
-     (Value          : Value_Type;
+     (Value          : Value_Not_Empty;
       Case_Sensitive : Boolean := False) return Object
      with Post => Create'Result.Is_Defined;
 
@@ -70,7 +70,7 @@ package GPR2.Project.Attribute_Index is
 
    function Value
      (Self          : Object;
-      Preserve_Case : Boolean := True) return Value_Type
+      Preserve_Case : Boolean := True) return Value_Not_Empty
      with Pre => Self.Is_Defined;
 
    procedure Set_Case
@@ -113,7 +113,7 @@ private
    is (Index with Is_Others, Case_Sensitive);
 
    function Create
-     (Value          : Value_Type;
+     (Value          : Value_Not_Empty;
       Case_Sensitive : Boolean := False) return Object
    is
      (Create (Source_Reference.Value.Object
@@ -126,7 +126,7 @@ private
 
    function Value
      (Self          : Object;
-      Preserve_Case : Boolean := True) return Value_Type
+      Preserve_Case : Boolean := True) return Value_Not_Empty
    is
      (if Preserve_Case
       then Self.Text
