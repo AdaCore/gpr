@@ -32,8 +32,6 @@ with GNAT.MD5;
 with GNAT.OS_Lib;
 with GNAT.Sockets;
 
-with GPR.Opt;
-
 with GPR2.Compilation.Process;
 with GPR2.Compilation.Slave.List;
 with GPR2.Compilation.Sync;
@@ -698,7 +696,7 @@ package body GPR2.Compilation.Registry is
       use Ada.Directories;
       use GNAT.OS_Lib;
 
-      use type GPR.Opt.Verbosity_Level_Type;
+      use type GPRtools.Verbosity_Level;
       use type Calendar.Time;
       use type Containers.Count_Type;
 
@@ -816,7 +814,7 @@ package body GPR2.Compilation.Registry is
 
       Stop := Calendar.Clock;
 
-      if Synchronize and then GPR.Opt.Verbosity_Level > GPR.Opt.Low then
+      if Synchronize and then Options.Verbosity > GPRtools.Quiet then
          Tree.Root_Project.Tree.Append_Message
            (Message.Create
               (Message.Information,
