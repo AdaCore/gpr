@@ -1132,7 +1132,6 @@ package body GPR2.Parser.Project is
                     Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
          Q_Name : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
-         Def    : constant PRA.Def := PRA.Get (Q_Name);
 
          I_Node : constant GPR_Node := F_Attribute_Index (Node);
          Index  : constant PAI.Object :=
@@ -1142,8 +1141,10 @@ package body GPR2.Parser.Project is
                         (if Name = PRA.Switches
                          then Is_Switches_Index_Case_Sensitive
                                 (Get_Value_Type (I_Node.As_Single_Tok_Node))
-                         else Def.Index_Case_Sensitive))
-                         else PAI.Undefined);
+                         else (if PRA.Exists (Q_Name)
+                               then PRA.Get (Q_Name).Index_Case_Sensitive
+                               else True)))
+                     else PAI.Undefined);
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
 

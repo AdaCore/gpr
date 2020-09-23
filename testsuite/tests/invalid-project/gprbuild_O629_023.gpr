@@ -1,0 +1,11 @@
+project gprbuild_O629_023 is
+   Ada_Runtime := P'Runtime ("Ada");
+
+   case P'Runtime ("Ada") is
+      when "sjlj" =>
+         for Source_Dirs use ("src_sjlj");
+      when others =>
+         for Source_Dirs use ("src");
+   end case;
+end gprbuild_O629_023;
+
