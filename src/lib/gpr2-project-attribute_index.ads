@@ -38,7 +38,10 @@ package GPR2.Project.Attribute_Index is
    Undefined : constant Object;
 
    Any       : constant Object;
-   --  Represents any indexex values
+   --  Represents any index values
+
+   I_Others  : constant Object;
+   --  others index
 
    overriding function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -94,6 +97,16 @@ private
 
    Undefined : constant Object :=
                  (Source_Reference.Value.Undefined with others => <>);
+
+   I_Others  : constant Object :=
+                    (Source_Reference.Value.Object
+                       (Source_Reference.Value.Create
+                          (Filename => "/others",
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => "others")) with
+                     Is_Others => True,
+                     Case_Sensitive => False);
 
    Any       : constant Object :=
                  (Source_Reference.Value.Object
