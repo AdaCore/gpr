@@ -1,0 +1,4 @@
+with "prj2.gpr";
+project Prj1 is
+   for Source_Files use ("p.adb", "p.ads", "p-f.adb", "p-c.adb", "q.adb", "q.ads");
+end Prj1;

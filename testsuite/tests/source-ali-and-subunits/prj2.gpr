@@ -1,0 +1,5 @@
+project Prj2 is
+   for Source_Files use ("q-f.adb");
+   for Object_Dir use "obj2";
+end Prj2;
+

@@ -368,7 +368,9 @@ begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if S.Source.Build_Timestamp = S.Source.Timestamp then
+            if S.Source.Is_Parsed
+              and then S.Source.Build_Timestamp = S.Source.Timestamp
+            then
                Status := OK;
 
             else

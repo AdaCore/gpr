@@ -1,0 +1,2 @@
+description: non regression test for scan ali on subunits. found using gprbuild HA27_001 files.
+driver: python_script
