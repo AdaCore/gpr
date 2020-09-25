@@ -18,12 +18,12 @@
 
 package GPR2.Version is
 
-   Short_Value : constant String := "21.0w";
+   Short_Value : constant String := "18.0w";
    --  Static string identifying this version
 
    Date : constant String := "19940713";
 
-   Current_Year : constant String := "2020";
+   Current_Year : constant String := "2016";
 
    type GNAT_Build_Type is (Gnatpro, FSF, GPL);
    --  See Get_Gnat_Build_Type below for the meaning of these values
