@@ -20,11 +20,6 @@ with Ada.Calendar;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Text_IO;
 
-with GPR.Err;
-with GPR.Scans;
-with GPR.Sinput;
-with GPR.Snames;
-
 with GPR2.Unit;
 with GPR2.Containers;
 with GPR2.Log;
@@ -249,8 +244,7 @@ begin
 
       type File_Status is
         (OK,          --  matching timestamp
-         Checksum_OK, --  only matching checksum
-         Not_Same);   --  neither checksum nor timestamp matching
+         Not_Same);   --  non matching timestamp
 
       No_Obj : constant String := "<no_obj>";
 
@@ -269,33 +263,9 @@ begin
       Full_Closure : Boolean := Opt.Closure_Mode;
       --  Reset this flag to False if closure became incomplete
 
-      function Checksum (Source : Path_Name.Object) return Word;
-
       procedure Display_Closures;
 
       procedure Display_Normal;
-
-      --------------
-      -- Checksum --
-      --------------
-
-      function Checksum (Source : Path_Name.Object) return Word is
-         use GPR;
-         use type Scans.Token_Type;
-
-         Source_Index : constant Source_File_Index :=
-                          Sinput.Load_File (Source.Value);
-
-      begin
-         Err.Scanner.Initialize_Scanner (Source_Index, Err.Scanner.Ada);
-
-         loop
-            Err.Scanner.Scan;
-            exit when Scans.Token = Scans.Tok_EOF;
-         end loop;
-
-         return GPR2.Word (Scans.Checksum);
-      end Checksum;
 
       ----------------------
       -- Display_Closures --
@@ -383,9 +353,6 @@ begin
             if S.Source.Build_Timestamp = S.Source.Timestamp then
                Status := OK;
 
-            elsif S.Source.Checksum = Checksum (S.Source.Path_Name) then
-               Status := Checksum_OK;
-
             else
                Status := Not_Same;
             end if;
@@ -397,9 +364,6 @@ begin
                case Status is
                   when OK =>
                      Text_IO.Put (" unchanged");
-
-                  when Checksum_OK =>
-                     Text_IO.Put (" slightly modified");
 
                   when Not_Same =>
                      Text_IO.Put (" modified");
@@ -413,9 +377,6 @@ begin
                   when OK =>
                      Text_IO.Put ("  OK ");
 
-                  when Checksum_OK =>
-                     Text_IO.Put (" MOK ");
-
                   when Not_Same =>
                      Text_IO.Put (" DIF ");
                   end case;
@@ -428,12 +389,6 @@ begin
          end Output_Source;
 
       begin
-         --  Unfortunately, initialization of the GPR hash-consing of strings
-         --  is still needed for the GPR tokenizer that we're using for now to
-         --  compute source checksums.
-
-         GPR.Snames.Initialize;
-
          for S of Sources loop
             declare
                View      : constant Project.View.Object := S.View;
