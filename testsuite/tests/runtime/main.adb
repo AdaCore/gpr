@@ -23,6 +23,7 @@ with Ada.Strings.Fixed;
 
 with GPR2.Unit;
 with GPR2.Context;
+with GPR2.KB;
 with GPR2.Log;
 with GPR2.Context;
 with GPR2.Path_Name;
@@ -154,7 +155,8 @@ procedure Main is
            Configuration.Create (Language => "Ada");
    Cnf : constant Configuration.Object :=
            Configuration.Create
-             (Configuration.Description_Set'(1 => Des), "all", Gpr);
+             (Configuration.Description_Set'(1 => Des), "all", Gpr,
+              Base => GPR2.KB.Create);
 
    Prj : Project.Tree.Object;
    Ctx : Context.Object;

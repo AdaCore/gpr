@@ -25,9 +25,9 @@
 with GNATCOLL.VFS;
 with GNATCOLL.VFS_Utils;
 
-with GPR2.Project.Configuration.KB.Parsing;
+with GPR2.KB.Parsing;
 
-package body GPR2.Project.Configuration.KB is
+package body GPR2.KB is
 
    function Query_Targets_Set
      (Self   : Object;
@@ -72,7 +72,7 @@ package body GPR2.Project.Configuration.KB is
 
    function Configuration
      (Self     : Object;
-      Settings : Description_Set;
+      Settings : GPR2.Project.Configuration.Description_Set;
       Target   : Name_Type) return GPR2.Project.Configuration.Object is
    begin
       return GPR2.Project.Configuration.Undefined;
@@ -83,13 +83,36 @@ package body GPR2.Project.Configuration.KB is
    ------------
 
    function Create
-     (Content : GPR2.Containers.Value_List;
-      Flags   : Parsing_Flags) return Object
+     (Flags      : Parsing_Flags := Targetset_Only_Flags;
+      Default_KB : Boolean := True;
+      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+      return Object
    is
       Result : Object;
    begin
-      Result.Initialized := True;
+      if Default_KB then
+         Result := Create_Default (Flags => Flags);
+      else
+         Result := Create_Empty;
+      end if;
 
+      for Location of Custom_KB loop
+         Result.Add (Flags, Location);
+      end loop;
+
+      return Result;
+   end Create;
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create
+     (Content : GPR2.Containers.Value_List;
+      Flags   : Parsing_Flags) return Object
+   is
+      Result : Object := Create_Empty;
+   begin
       for Cont of Content loop
          if Cont /= "" then
             Result.Add (Flags, Cont);
@@ -107,9 +130,8 @@ package body GPR2.Project.Configuration.KB is
      (Location : GPR2.Path_Name.Object;
       Flags   : Parsing_Flags) return Object
    is
-      Result    : Object;
+      Result    : Object := Create_Empty;
    begin
-      Result.Initialized := True;
       Result.Parsed_Directories.Append (Location);
       Parsing.Parse_Knowledge_Base (Result, Location, Flags);
 
@@ -121,9 +143,14 @@ package body GPR2.Project.Configuration.KB is
    --------------------
 
    function Create_Default
-     (Flags : Parsing_Flags) return Object is
+     (Flags : Parsing_Flags) return Object
+   is
+      Ret : Object;
    begin
-      return Parsing.Parse_Default_Knowledge_Base (Flags);
+      Ret := Parsing.Parse_Default_Knowledge_Base (Flags);
+      Ret.Is_Default := True;
+
+      return Ret;
    end Create_Default;
 
    ------------------
@@ -135,6 +162,7 @@ package body GPR2.Project.Configuration.KB is
       Result : Object;
    begin
       Result.Initialized := True;
+      Result.Is_Default  := False;
       return Result;
    end Create_Empty;
 
@@ -251,4 +279,4 @@ package body GPR2.Project.Configuration.KB is
       null;
    end Release;
 
-end GPR2.Project.Configuration.KB;
+end GPR2.KB;

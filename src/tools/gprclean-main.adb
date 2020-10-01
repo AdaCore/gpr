@@ -30,6 +30,7 @@ with GNATCOLL.Utils;
 
 with GPR2.Compilation.Registry;
 with GPR2.Containers;
+with GPR2.KB;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Path_Name;
@@ -606,8 +607,9 @@ begin
          Target            => Name_Type (To_String (Options.Target)),
          Language_Runtimes => Options.RTS_Map,
          Implicit_With     => Options.Implicit_With,
-         Default_KB        => not Options.Skip_Default_KB,
-         Custom_KB         => Options.KB_Locations);
+         Base              => GPR2.KB.Create
+           (Default_KB => not Options.Skip_Default_KB,
+            Custom_KB  => Options.KB_Locations));
 
       if Project_Tree.Configuration.Log_Messages.Has_Element
            (Warning     => True,

@@ -20,6 +20,7 @@ with Ada.Calendar;
 with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Text_IO;
 
+with GPR2.KB;
 with GPR2.Unit;
 with GPR2.Containers;
 with GPR2.Log;
@@ -195,8 +196,9 @@ begin
       Target            => Opt.Get_Target,
       Language_Runtimes => Opt.RTS_Map,
       Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib,
-      Default_KB        => not Opt.Skip_Default_KB,
-      Custom_KB         => Opt.KB_Locations);
+      Base              => GPR2.KB.Create
+        (Default_KB        => not Opt.Skip_Default_KB,
+         Custom_KB         => Opt.KB_Locations));
 
    --  The configuration step could fail because the language list has been
    --  set to empty ("for Languages use ()"), in this case just exit.

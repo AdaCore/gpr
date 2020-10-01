@@ -22,6 +22,7 @@ with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
 with GPR2.Context;
+with GPR2.KB;
 with GPR2.Log;
 with GPR2.Context;
 with GPR2.Path_Name;
@@ -116,7 +117,8 @@ procedure Main is
            Configuration.Create (Language => "Ada");
    Cnf : Configuration.Object :=
            Configuration.Create
-             (Configuration.Description_Set'(1 => Des), "all", Gpr);
+            (Configuration.Description_Set'(1 => Des), "all", Gpr,
+             Base => GPR2.KB.Create);
 begin
    if Cnf.Has_Messages then
       for M of Cnf.Log_Messages loop

@@ -26,6 +26,7 @@ with GNAT.Command_Line;
 with GNAT.OS_Lib;
 
 with GPR2.Interrupt_Handler;
+with GPR2.KB;
 with GPR2.Path_Name;
 with GPR2.Project.Configuration;
 with GPR2.Project.Tree;
@@ -518,8 +519,9 @@ begin
                               else Optional_Name_Type (Options.Subdirs.all)),
                Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
                Check_Shared_Lib => not Options.Unchecked_Shared_Lib,
-               Default_KB       => not Options.Skip_Default_KB,
-               Custom_KB        => Options.KB_Locations);
+               Base             => GPR2.KB.Create
+                 (Default_KB => not Options.Skip_Default_KB,
+                  Custom_KB  => Options.KB_Locations));
          end if;
 
          if Options.Verbose then

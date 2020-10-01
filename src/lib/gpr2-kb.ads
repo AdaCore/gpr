@@ -32,14 +32,16 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Vectors;
 
 with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name.Set;
+with GPR2.Project.Configuration;
 
 private with GNAT.Regpat;
 
-package GPR2.Project.Configuration.KB is
+package GPR2.KB is
 
    type Object is tagged private;
 
@@ -66,6 +68,9 @@ package GPR2.Project.Configuration.KB is
    Default_Flags : constant Parsing_Flags;
    --  Default set of flags used by gprtools
 
+   Targetset_Only_Flags : constant Parsing_Flags;
+   --  Flags used for loading targets definitions only
+
    Default_Location_Error : exception;
    --  Raised when default location of the knowledge base cannot be found
 
@@ -74,6 +79,17 @@ package GPR2.Project.Configuration.KB is
    --  Returns the default location of the knowledge database. This is based on
    --  the location of gprconfig in path. If gprconfig is not found, raises
    --  Default_Location_Error.
+
+   function Create
+     (Flags      : Parsing_Flags := Targetset_Only_Flags;
+      Default_KB : Boolean := True;
+      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+      return Object
+     with Post => Create'Result.Is_Defined;
+   --  Main entry point for creating a KB object.
+   --  Flags: tell the parser what part of the Knowledge Base to read
+   --  Default_KB: whether to load the default knowledge base or start empty
+   --  Custom_KB: a list of paths to use as custom knowledge base
 
    function Create
      (Location : GPR2.Path_Name.Object;
@@ -133,16 +149,25 @@ package GPR2.Project.Configuration.KB is
 
    function Log_Messages (Self : Object) return Log.Object
      with Pre  => Self.Is_Defined,
-          Post => not Self.Has_Messages or else Log_Messages'Result.Count > 0;
+          Post => not Self.Has_Messages
+            or else not Log_Messages'Result.Is_Empty;
    --  Returns the Logs (information, warning and error messages) produced by
    --  Create and subsequent Add operations for this knowledge base.
 
+   function Is_Default_Db (Self : Object) return Boolean;
+   --  Whether the Knowledge base object is the default KB or was created empty
+
+   function Custom_KB_Locations
+     (Self : Object) return GPR2.Path_Name.Set.Object;
+   --  The various paths the Knowledge Base object uses to retrieve the kb
+   --  data.
+
    function Configuration
      (Self     : Object;
-      Settings : Description_Set;
+      Settings : GPR2.Project.Configuration.Description_Set;
       Target   : Name_Type) return GPR2.Project.Configuration.Object
      with Pre  => Self.Is_Defined and then Settings'Length > 0,
-          Post => Configuration'Result.Is_Defined;
+          Post => GPR2.Project.Configuration.Is_Defined (Configuration'Result);
    --  Creates configuration object
 
    procedure Release (Self : in out Object)
@@ -176,6 +201,11 @@ private
 
    Default_Flags : constant Parsing_Flags :=
      (Compiler_Info => True,
+      Pedantic      => True,
+      Validation    => False);
+
+   Targetset_Only_Flags : constant Parsing_Flags :=
+     (Compiler_Info => False,
       Pedantic      => True,
       Validation    => False);
 
@@ -416,6 +446,10 @@ private
 
       Initialized             : Boolean := False;
       Messages                : Log.Object;
+
+      Is_Default              : Boolean := False;
+      --  ??? Used to call gprconfig to actually create the configuration
+      --  project: to be removed when this is all done locally
    end record;
    --  Check_Executable_Regexp is set to True if at least some of the
    --  executable names are specified as regular expressions. In such a case,
@@ -425,8 +459,9 @@ private
 
    Undefined : constant Object := (others => <>);
 
-   function Is_Defined (Self : Object) return Boolean is
-     (Self /= Undefined);
+   function Custom_KB_Locations
+     (Self : Object) return GPR2.Path_Name.Set.Object is
+     (Self.Parsed_Directories);
 
    function Has_Error (Self : Object) return Boolean is
       (Self.Messages.Has_Error);
@@ -434,7 +469,13 @@ private
    function Has_Messages (Self : Object) return Boolean is
      (not Self.Messages.Is_Empty);
 
+   function Is_Defined (Self : Object) return Boolean is
+     (Self /= Undefined);
+
+   function Is_Default_Db (Self : Object) return Boolean is
+      (Self.Is_Default);
+
    function Log_Messages (Self : Object) return Log.Object is
      (Self.Messages);
 
-end GPR2.Project.Configuration.KB;
+end GPR2.KB;

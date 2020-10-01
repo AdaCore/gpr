@@ -29,10 +29,10 @@ with Ada.Text_IO;
 with GNAT.OS_Lib;
 with GNATCOLL.Utils;
 
+with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Configuration.KB;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -110,8 +110,7 @@ package body GPR2.Project.Configuration is
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Default_KB : Boolean                   := True;
-      Custom_KB  : GPR2.Path_Name.Set.Object := GPR2.Path_Name.Set.Empty_Set)
+      Base       : GPR2.KB.Object)
       return Object
    is
       --  Note that this is a temporary implementation to bring a solution
@@ -166,13 +165,15 @@ package body GPR2.Project.Configuration is
                     (1
                      .. Settings'Length + 4 + (if Debug then 1 else 0) +
                           (if Native_Target then 1 else 0) +
-                            (if Default_KB then 0 else 1) +
-                              Integer (Custom_KB.Length) * 2);
+                            (if Base.Is_Default_Db then 0 else 1) +
+                              Integer (Base.Custom_KB_Locations.Length) * 2);
 
       Success   : Boolean := False;
       Ret_Code  : Integer := 0;
       Result    : Object;
       Cur_Arg   : Natural := Args'First;
+      Host      : constant Name_Type :=
+                    Name_Type (System.OS_Constants.Target_Name);
 
       -------------
       -- Add_Arg --
@@ -222,35 +223,12 @@ package body GPR2.Project.Configuration is
       if Native_Target then
          --  Normalize implicit target
          declare
-            use GPR2.Project.Configuration.KB;
-
-            Host     : constant Name_Type :=
-                         Name_Type (System.OS_Constants.Target_Name);
-            KB_Flags : Parsing_Flags := Default_Flags;
-            Base     : KB.Object;
+            Normalized : constant Name_Type := Base.Normalized_Target (Host);
          begin
-            KB_Flags (Compiler_Info) := False;
-
-            if Default_KB then
-               Base := KB.Create_Default (KB_Flags);
-            else
-               Base := KB.Create_Empty;
-            end if;
-
-            for KB_Location of Custom_KB loop
-               Base.Add (KB_Flags, KB_Location);
-            end loop;
-
-            if Base.Has_Error then
-               for Msg of Base.Log_Messages loop
-                  Result.Messages.Append (Msg);
-               end loop;
-            end if;
-
-            if Base.Normalized_Target (Host) = "unknown" then
+            if Normalized = "unknown" then
                Add_Arg ("--target=" & System.OS_Constants.Target_Name);
             else
-               Add_Arg ("--target=" & String (Base.Normalized_Target (Host)));
+               Add_Arg ("--target=" & String (Normalized));
             end if;
          end;
 
@@ -273,11 +251,11 @@ package body GPR2.Project.Configuration is
          Add_Arg ("-v");
       end if;
 
-      if not Default_KB then
+      if not Base.Is_Default_Db then
          Add_Arg ("--db-");
       end if;
 
-      for KB_Location of Custom_KB loop
+      for KB_Location of Base.Custom_KB_Locations loop
          Add_Arg ("--db");
          Add_Arg (KB_Location.Value);
       end loop;

@@ -24,7 +24,7 @@
 
 --  Knowledge base xml parsing
 
-private package GPR2.Project.Configuration.KB.Parsing is
+private package GPR2.KB.Parsing is
 
    procedure Parse_Knowledge_Base
      (Self     : in out Object;
@@ -44,4 +44,4 @@ private package GPR2.Project.Configuration.KB.Parsing is
    function Parse_Default_Knowledge_Base (Flags : Parsing_Flags) return Object;
    --  Implementation of Knowledge_Base.Create_Default
 
-end GPR2.Project.Configuration.KB.Parsing;
+end GPR2.KB.Parsing;

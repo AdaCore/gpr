@@ -47,12 +47,13 @@ with GNATCOLL.Traces;
 
 with GPR2.Containers;
 with GPR2.Message;
+with GPR2.Source_Reference;
 
 pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
 
-package body GPR2.Project.Configuration.KB.Parsing is
+package body GPR2.KB.Parsing is
 
    function Default_Content return GPR2.Containers.Name_Value_Map
      with Post => not Default_Content'Result.Is_Empty;
@@ -2395,4 +2396,4 @@ package body GPR2.Project.Configuration.KB.Parsing is
       return Do_Substitute (Str, Error_Sloc, Messages);
    end Substitute_Variables_In_Compiler_Description;
 
-end GPR2.Project.Configuration.KB.Parsing;
+end GPR2.KB.Parsing;

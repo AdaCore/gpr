@@ -1283,10 +1283,8 @@ package body GPR2.Project.Tree is
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
-                            Containers.Name_Value_Map_Package.Empty_Map;
-      Default_KB        : Boolean              := True;
-      Custom_KB         : GPR2.Path_Name.Set.Object :=
-                            GPR2.Path_Name.Set.Empty_Set)
+                           Containers.Name_Value_Map_Package.Empty_Map;
+      Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
    is
       Languages   : Containers.Source_Value_Set;
       Conf        : Project.Configuration.Object;
@@ -1511,8 +1509,9 @@ package body GPR2.Project.Tree is
               (Conf_Descriptions,
                Actual_Target,
                Self.Root_Project.Path_Name,
-               Default_KB,
-               Custom_KB);
+               Base => (if not Base.Is_Defined
+                        then GPR2.KB.Create
+                        else Base));
          end;
 
          --  Unload the project that was loaded without configuration.
@@ -1527,6 +1526,10 @@ package body GPR2.Project.Tree is
             Self.Messages := Old_Messages;
             Self.Search_Paths := Old_Paths;
          end;
+      end if;
+
+      if Base.Is_Defined then
+         Self.Base := Base;
       end if;
 
       Self.Load
@@ -2744,6 +2747,9 @@ package body GPR2.Project.Tree is
           (PRA.Target, Result => TA)
       then
          return Name_Type (TA.Value.Text);
+
+      elsif Self.Base.Is_Defined then
+         return Self.Base.Normalized_Target (Target_Name);
 
       else
          --  target name as specified during the build.

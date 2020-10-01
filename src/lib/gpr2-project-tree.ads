@@ -28,6 +28,7 @@ with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
 with GPR2.Context;
+with GPR2.KB;
 with GPR2.Log;
 with GPR2.Message;
 with GPR2.Project.Configuration;
@@ -109,10 +110,8 @@ package GPR2.Project.Tree is
       Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
       Target            : Optional_Name_Type   := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
-                            Containers.Name_Value_Map_Package.Empty_Map;
-      Default_KB        : Boolean              := True;
-      Custom_KB         : GPR2.Path_Name.Set.Object :=
-                            GPR2.Path_Name.Set.Empty_Set)
+                           Containers.Name_Value_Map_Package.Empty_Map;
+      Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
@@ -422,6 +421,7 @@ private
       Self             : access Object := null;
       Root             : View.Object;
       Conf             : Project.Configuration.Object;
+      Base             : GPR2.KB.Object;
       Runtime          : View.Object;
       Units            : Name_View.Map;
       Sources          : Name_View.Map;
