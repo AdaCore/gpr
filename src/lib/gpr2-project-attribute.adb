@@ -54,21 +54,13 @@ package body GPR2.Project.Attribute is
      (Name    : Source_Reference.Identifier.Object;
       Index   : Attribute_Index.Object;
       Value   : Source_Reference.Value.Object;
-      Default : Boolean) return Object is
+      Default : Boolean := False;
+      Frozen  : Boolean := False) return Object is
    begin
       return A : Object := Create (Name, Value) do
          A.Index   := Index;
          A.Default := Default;
-      end return;
-   end Create;
-
-   function Create
-     (Name  : Source_Reference.Identifier.Object;
-      Index : Attribute_Index.Object;
-      Value : Source_Reference.Value.Object) return Object is
-   begin
-      return A : Object := Create (Name, Value) do
-         A.Index := Index;
+         A.Frozen  := Frozen;
       end return;
    end Create;
 
@@ -91,18 +83,21 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Value)
          with Index   => Attribute_Index.Undefined,
-              Default => False);
+              Default => False,
+              Frozen  => False);
    end Create;
 
    function Create
      (Name    : Source_Reference.Identifier.Object;
       Value   : Source_Reference.Value.Object;
-      Default : Boolean) return Object is
+      Default : Boolean;
+      Frozen  : Boolean := False) return Object is
    begin
       return Object'
         (Name_Values.Create (Name, Value)
          with Index   => Attribute_Index.Undefined,
-              Default => Default);
+              Default => Default,
+              Frozen  => Frozen);
    end Create;
 
    overriding function Create
@@ -112,7 +107,8 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Values)
          with Index   => Attribute_Index.Undefined,
-              Default => False);
+              Default => False,
+              Frozen  => False);
    end Create;
 
    function Create
@@ -123,8 +119,18 @@ package body GPR2.Project.Attribute is
       return Object'
         (Name_Values.Create (Name, Values)
          with Index   => Attribute_Index.Undefined,
-              Default => Default);
+              Default => Default,
+              Frozen  => False);
    end Create;
+
+   ------------
+   -- Freeze --
+   ------------
+
+   procedure Freeze (Self : in out Object) is
+   begin
+      Self.Frozen := True;
+   end Freeze;
 
    ---------------
    -- Has_Index --
@@ -201,7 +207,8 @@ package body GPR2.Project.Attribute is
    begin
       return (Name_Values.Object (Self).Rename (Name) with
                 Default => True,
-                Index   => Self.Index);
+                Index   => Self.Index,
+                Frozen  => Self.Frozen);
    end Rename;
 
    --------------

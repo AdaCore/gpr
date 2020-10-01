@@ -76,6 +76,13 @@ package GPR2.Project.Registry.Attribute is
       Default              : VSR.Map;
       Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := (others => False);
+      Is_Toolchain_Config  : Boolean            := False;
+      --  When set, the attribute is used to during the gprconfig stage to
+      --  configure toolchains (for example the attributes Target or Runtime
+      --  are toolchain config attributes). Due to elaboration constraints,
+      --  such attributes need to be global to the project tree, and so
+      --  should not be modified after being referenced. So for example
+      --  using "for Target use project'Target & "suffix"" is not allowed.
    end record
      with Dynamic_Predicate =>
        --  Either Index is allowed or the other parts are default
@@ -120,7 +127,8 @@ package GPR2.Project.Registry.Attribute is
       Empty_Value          : Empty_Value_Status := Allow;
       Default              : VSR.Map            := VSR.Empty_Map;
       Default_Is_Reference : Boolean            := False;
-      Has_Default_In       : Allowed_In         := Nowhere);
+      Has_Default_In       : Allowed_In         := Nowhere;
+      Is_Toolchain_Config  : Boolean            := False);
    --  add package/attribute definition in database for attribute checks
 
    --  Some common attribute names

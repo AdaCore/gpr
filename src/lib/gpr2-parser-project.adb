@@ -1034,7 +1034,7 @@ package body GPR2.Parser.Project is
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : Attribute_Reference;
-         Pack    : Optional_Name_Type := "") return Item_Values;
+         Pack    : Optional_Name_Type := No_Name) return Item_Values;
       --  Return the value for an attribute reference in the given project and
       --  possibly the given package.
 
@@ -1057,8 +1057,9 @@ package body GPR2.Parser.Project is
       --  list surrounded by parentheses.
 
       procedure Record_Attribute
-        (Set : in out GPR2.Project.Attribute.Set.Object;
-         A   : GPR2.Project.Attribute.Object);
+        (Set  : in out GPR2.Project.Attribute.Set.Object;
+         A    : GPR2.Project.Attribute.Object;
+         Sloc : Source_Reference.Object);
       --  Record an attribute into the given set. At the same time we increment
       --  the Empty_Attribute_Count if this attribute has an empty value. This
       --  is used to check whether we need to reparse the tree.
@@ -1122,7 +1123,7 @@ package body GPR2.Parser.Project is
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : Attribute_Reference;
-         Pack    : Optional_Name_Type := "") return Item_Values
+         Pack    : Optional_Name_Type := No_Name) return Item_Values
       is
          use type PRA.Value_Kind;
 
@@ -1194,42 +1195,65 @@ package body GPR2.Parser.Project is
             --  and stop parsing when the number of undefined attribute is
             --  stable.
 
-            if Pack = "" then
+            if Pack = No_Name then
                Attr := Attrs.Element (Name, Index);
 
+               --  Attributes used to configure the toolchain are handled
+               --  specially: they are global to the project tree, and are just
+               --  considered default values when creating the configuration
+               --  project.
+
+               --  Because of that, we need to implement a freezing mechanism
+               --  for such attributes: once read, they can't be modified.
+               --
+               --  The freeze mechanism is used as follows:
+               --  when the attribute is accessed, we first ensure that an
+               --  attribute object is properly created in the Attrs list of
+               --  the view, with the proper value from the tree, and we
+               --  mark this attribute as frozen.
+               --
+               --  Then in the calls to Record_Attribute below, if a
+               --  previous attribute already exists and is frozen, then an
+               --  error is raised.
+
                if Attr.Is_Defined then
-                  --  Found, no need other conditions
-
-                  null;
-
-               --  Special cases for some built-in references
-
-               elsif not Index.Is_Defined then
-                  if Name_Type (To_Lower (Name))
-                    in PRA.Target | PRA.Canonical_Target
+                  if PRA.Get (Q_Name).Is_Toolchain_Config
+                    and then not Attr.Is_Frozen
                   then
-                     --  Project'Target
-
-                     return R : Item_Values do
-                        R.Single := True;
-                        R.Values.Append
-                          (Get_Value_Reference (To_Lower (Tree.Target), Sloc));
-                     end return;
+                     Attr.Freeze;
+                     Attrs.Include (Attr);
                   end if;
 
-               elsif Index.Is_Defined
-                 and then Name = PRA.Runtime
+               elsif Name_Type (To_Lower (Name))
+                   in PRA.Target | PRA.Canonical_Target
                then
-                  --  Project'Runtime ("<lang>")
+                  --  Project'Target case
+                  Attr := GPR2.Project.Attribute.Create
+                    (Get_Identifier_Reference
+                       (Self.Path_Name,
+                        Sloc_Range (Node),
+                        Name_Type (To_Lower (Name))),
+                     Value   => Get_Value_Reference
+                       (Value_Not_Empty (Tree.Target),
+                        Sloc),
+                     Default => True,
+                     Frozen  => True);
+                  Attrs.Include (Attr);
 
-                  return R : Item_Values do
-                     R.Single := True;
-                     R.Values.Append
-                       (Get_Value_Reference
-                          (To_Lower
-                             (Tree.Runtime (Optional_Name_Type (Index.Text))),
-                           Sloc));
-                  end return;
+               elsif Name_Type (To_Lower (Name)) = PRA.Runtime then
+                  --  Project'Runtime (<lang>)
+                  Attr := GPR2.Project.Attribute.Create
+                    (Get_Identifier_Reference
+                       (Self.Path_Name,
+                        Sloc_Range (Node),
+                        Name_Type (To_Lower (Name))),
+                     Index   => Index,
+                     Value   => Get_Value_Reference
+                       (Value_Type (Tree.Runtime (Name_Type (Index.Text))),
+                        Sloc),
+                     Default => True,
+                     Frozen  => True);
+                  Attrs.Include (Attr);
                end if;
 
             elsif Pack_Name /= Null_Unbounded_String
@@ -1247,7 +1271,7 @@ package body GPR2.Parser.Project is
             end if;
 
          elsif View.Is_Defined then
-            if Pack = "" then
+            if Pack = No_Name then
                if not View.Check_Attribute (Name, Index, Result => Attr) then
                   Tree.Log_Messages.Append
                     (Message.Create
@@ -1775,7 +1799,7 @@ package body GPR2.Parser.Project is
                   --  This is a project reference: <project>'<attribute>
                   return Get_Attribute_Ref
                     (Project => Name,
-                     Pack    => "",
+                     Pack    => No_Name,
                      Node    => Att_Ref);
                else
                   --  This is a package reference: <package>'<attribute>
@@ -2025,6 +2049,8 @@ package body GPR2.Parser.Project is
                   end if;
                end Create_Index;
 
+               Sloc   : constant Source_Reference.Object :=
+                          Get_Source_Reference (Self.File, Node);
                I_Sloc : constant PAI.Object :=
                           (if Present (Index)
                            then Create_Index
@@ -2051,12 +2077,6 @@ package body GPR2.Parser.Project is
                if PRA.Exists (Q_Name) then
                   declare
                      Def : constant PRA.Def := PRA.Get (Q_Name);
-
-                     function Sloc return Source_Reference.Object is
-                       (Get_Source_Reference (Self.File, Node));
-                     --  Use function instead of constant because Sloc need
-                     --  only in case of warning or error logging and no more
-                     --  than once.
 
                   begin
                      if (Values.Single
@@ -2125,9 +2145,9 @@ package body GPR2.Parser.Project is
 
                if Is_Valid then
                   if In_Pack then
-                     Record_Attribute (Pack_Attrs, A);
+                     Record_Attribute (Pack_Attrs, A, Sloc);
                   else
-                     Record_Attribute (Attrs, A);
+                     Record_Attribute (Attrs, A, Sloc);
                   end if;
                end if;
             end;
@@ -2634,13 +2654,39 @@ package body GPR2.Parser.Project is
       ----------------------
 
       procedure Record_Attribute
-        (Set : in out GPR2.Project.Attribute.Set.Object;
-         A   : GPR2.Project.Attribute.Object) is
+        (Set  : in out GPR2.Project.Attribute.Set.Object;
+         A    : GPR2.Project.Attribute.Object;
+         Sloc : Source_Reference.Object)
+      is
+         Include : Boolean := True;
       begin
-         if A.Is_Defined then
-            Set.Include (A);
-         else
+         if not A.Is_Defined then
             Undefined_Attribute_Count := Undefined_Attribute_Count + 1;
+            Include := False;
+         end if;
+
+         if Include and then Set.Contains (A) then
+            declare
+               Old : constant GPR2.Project.Attribute.Object := Set.Element
+                 (A.Name.Text,
+                  (if A.Has_Index then A.Index
+                   else GPR2.Project.Attribute_Index.Undefined));
+            begin
+               if Old.Is_Frozen then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level => Message.Error,
+                        Sloc  => Sloc,
+                        Message => "Cannot set attribute """ &
+                          String (A.Name.Text) &
+                          """ after it is referenced."));
+                  Include := False;
+               end if;
+            end;
+         end if;
+
+         if Include then
+            Set.Include (A);
          end if;
       end Record_Attribute;
 

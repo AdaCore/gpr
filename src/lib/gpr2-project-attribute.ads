@@ -46,20 +46,18 @@ package GPR2.Project.Attribute is
      (Name    : Source_Reference.Identifier.Object;
       Index   : Attribute_Index.Object;
       Value   : Source_Reference.Value.Object;
-      Default : Boolean) return Object
+      Default : Boolean := False;
+      Frozen  : Boolean := False) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name.Text = Name.Text
-                  and then Create'Result.Count_Values = 1;
-   --  Creates a single-valued object
-
-   function Create
-     (Name  : Source_Reference.Identifier.Object;
-      Index : Attribute_Index.Object;
-      Value : Source_Reference.Value.Object) return Object
-     with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name.Text = Name.Text
-                  and then Create'Result.Count_Values = 1;
-   --  Creates a single-valued object with "at" number
+                  and then Create'Result.Count_Values = 1
+                  and then Create'Result.Is_Default = Default
+                  and then Create'Result.Is_Frozen = Frozen;
+   --  Creates a single-valued attribute.
+   --  Default: sets the "default" state of the attribute value
+   --  Frozen:  sets the "frozen" state of the attribute value.
+   --           when an attribute is frozen, any write to its value will raise
+   --           an error.
 
    function Create
      (Name    : Source_Reference.Identifier.Object;
@@ -68,7 +66,8 @@ package GPR2.Project.Attribute is
       Default : Boolean := False) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name.Text = Name.Text
-                  and then Create'Result.Count_Values = Values.Length;
+                  and then Create'Result.Count_Values = Values.Length
+                  and then Create'Result.Is_Default = Default;
    --  Creates a multi-valued object
 
    overriding function Create
@@ -82,10 +81,13 @@ package GPR2.Project.Attribute is
    function Create
      (Name    : Source_Reference.Identifier.Object;
       Value   : Source_Reference.Value.Object;
-      Default : Boolean) return Object
+      Default : Boolean;
+      Frozen  : Boolean := False) return Object
      with Post => Create'Result.Kind = Single
                   and then Create'Result.Name.Text = Name.Text
-                  and then Create'Result.Count_Values = 1;
+                  and then Create'Result.Count_Values = 1
+                  and then Create'Result.Is_Default = Default
+                  and then Create'Result.Is_Frozen = Frozen;
    --  Creates a single-valued object with default flag
 
    overriding function Create
@@ -102,7 +104,8 @@ package GPR2.Project.Attribute is
       Default : Boolean) return Object
      with Post => Create'Result.Kind = List
                   and then Create'Result.Name.Text = Name.Text
-                  and then Create'Result.Count_Values = Values.Length;
+                  and then Create'Result.Count_Values = Values.Length
+                  and then Create'Result.Is_Default = Default;
    --  Creates a multi-valued object with Default flag
 
    function Has_Index (Self : Object) return Boolean
@@ -134,6 +137,15 @@ package GPR2.Project.Attribute is
    --  Attribute did not exist in attribute set and was created from default
    --  value.
 
+   procedure Freeze (Self : in out Object)
+     with Pre => Self.Is_Defined;
+   --  Set the freeze state of the attribute.
+
+   function Is_Frozen (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  The freeze state of the attribute value. If an attribute is frozen, then
+   --  its value shall not be modified.
+
    overriding function Rename
      (Self : Object;
       Name : Source_Reference.Identifier.Object) return Object
@@ -164,6 +176,7 @@ private
    type Object is new Name_Values.Object with record
       Index   : Attribute_Index.Object;
       Default : Boolean := False;
+      Frozen  : Boolean := False;
    end record;
 
    function Case_Aware_Index (Self : Object) return Value_At_Pos is
@@ -179,5 +192,7 @@ private
      (Self /= Undefined);
 
    function Is_Default (Self : Object) return Boolean is (Self.Default);
+
+   function Is_Frozen (Self : Object) return Boolean is (Self.Frozen);
 
 end GPR2.Project.Attribute;
