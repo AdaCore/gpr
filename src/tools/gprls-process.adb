@@ -67,7 +67,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    --  Call Ada.Text_IO.Put (Str) if Opt.Verbosity is at least Lvl
 
    procedure Put_Line (Str : String; Lvl : Verbosity_Level);
-   pragma Unreferenced (Put_Line);
    --  Call Ada.Text_IO.Put_Line (Str) if Opt.Verbosity is at least Lvl
 
    procedure Show_Tree_Load_Errors;
@@ -172,17 +171,32 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -- Show_Tree_Load_Errors --
    ---------------------------
 
-   procedure Show_Tree_Load_Errors is
+   procedure Show_Tree_Load_Errors
+   is
+      Has_Error : Boolean := False;
    begin
       for C in Tree.Log_Messages.Iterate
-        (False, False, True, True, True)
+        (Information => False,
+         Warning     => False,
+         Error       => True,
+         Read        => False,
+         Unread      => True)
       loop
-         Text_IO.Put_Line (Log.Element (C).Format);
+         Put_Line (Log.Element (C).Format, Quiet);
+         Has_Error := True;
       end loop;
 
-      Finish_Program
-        (E_Errors,
-         "unable to process project file " & String (Opt.Project_File.Name));
+      if not Has_Error then
+         for C in Tree.Log_Messages.Iterate
+           (Information => False,
+            Warning     => True,
+            Error       => False,
+            Read        => False,
+            Unread      => True)
+         loop
+            Put_Line (Log.Element (C).Format, Regular);
+         end loop;
+      end if;
    end Show_Tree_Load_Errors;
 
 begin
@@ -205,12 +219,15 @@ begin
    --  In other cases this is an error.
 
    if not Tree.Has_Configuration then
-      if Tree.Root_Project.Has_Languages then
-         Show_Tree_Load_Errors;
-      else
+      if not Tree.Root_Project.Has_Languages then
          Finish_Program (E_Success);
+      else
+         raise Processing_Error;
       end if;
    end if;
+
+   --  Show errors and warnings from the load stage
+   Show_Tree_Load_Errors;
 
    if Opt.Only_Display_Paths then
       --  For the "gprls -v" usage
@@ -729,4 +746,8 @@ begin
 exception
    when Project_Error | Processing_Error =>
       Show_Tree_Load_Errors;
+      Finish_Program
+        (E_Errors,
+         "unable to process project file " &
+           String (Opt.Project_File.Name));
 end GPRls.Process;
