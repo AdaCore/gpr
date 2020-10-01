@@ -1142,7 +1142,7 @@ package body GPR2.Project.Tree is
             raise Project_Error with "configuration project has errors";
          end if;
 
-         if Config.Is_Defined and then Config.Has_Externals then
+         if Config.Has_Externals then
             Fill_Externals_From_Environment (Root_Context, Config.Externals);
          end if;
 
@@ -1289,10 +1289,12 @@ package body GPR2.Project.Tree is
                             GPR2.Path_Name.Set.Empty_Set)
    is
       Languages   : Containers.Source_Value_Set;
-      Descr_Index : Natural := 0;
       Conf        : Project.Configuration.Object;
       GNAT_Prefix : constant String := Get_Tools_Directory;
       Default_Cfg : Path_Name.Object;
+
+      function Actual_Target return Name_Type;
+      --  Returns the target, depending on the parsing stage
 
       procedure Add_Languages (View : Project.View.Object);
       --  Add project languages into the Languages container to configure.
@@ -1300,6 +1302,43 @@ package body GPR2.Project.Tree is
 
       function Default_Config_File return Name_Type;
       --  Returns default config filename
+
+      -------------------
+      -- Actual_Target --
+      -------------------
+
+      function Actual_Target return Name_Type
+      is
+         Tmp_Attr : GPR2.Project.Attribute.Object;
+      begin
+         if Target /= No_Name and then Target /= "all" then
+            --  If Target is specified as parameter, this always takes
+            --  precedence
+            return Target;
+         end if;
+
+         if Self.Root_Project.Check_Attribute
+           (PRA.Target, Result => Tmp_Attr)
+         then
+            --  Check if the project explicitly defines the attribute or if
+            --  this comes from a default value
+            if not Tmp_Attr.Is_Default then
+               return Name_Type (Tmp_Attr.Value.Text);
+            end if;
+         end if;
+
+         if Self.Root_Project.Is_Extending
+           and then Self.Root_Project.Extended.Check_Attribute
+             (PRA.Target, Result => Tmp_Attr)
+         then
+            if not Tmp_Attr.Is_Default then
+               return Name_Type (Tmp_Attr.Value.Text);
+            end if;
+         end if;
+
+         --  No explicit target as parameter or in project: return "all"
+         return "all";
+      end Actual_Target;
 
       -------------------
       -- Add_Languages --
@@ -1374,12 +1413,22 @@ package body GPR2.Project.Tree is
 
       if Default_Cfg.Exists then
          Conf := Project.Configuration.Load
-           (Default_Cfg, (if Target = "" then "all" else Target));
+           (Default_Cfg, (if Target = No_Name then "all" else Target));
       end if;
 
       if not Conf.Is_Defined then
          --  Default configuration file does not exists. Generate configuration
          --  automatically.
+
+         --  This involves some delicate bootstrap:
+         --  1- we load the project without configuration
+         --  2- using the loaded project, we determine
+         --     * the Target: if explicitely given to us, this one is used,
+         --       else if the project defines it, this one is used, else the
+         --       host's value is used.
+         --     * the list of languages
+         --     and we load a configuration for the above.
+         --  3- we then reload the project with the configuration
 
          Self.Load
            (Filename, Context,
@@ -1388,8 +1437,13 @@ package body GPR2.Project.Tree is
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
-            Absent_Dir_Error => Absent_Dir_Error,
+            Absent_Dir_Error => False, --  Ignore obj dir for this first load
             Implicit_With    => Implicit_With);
+
+         --  Ignore messages issued with this initial load: as we don't have
+         --  a valid configuration here, we can't really know whether they
+         --  are meaningful or not
+         Self.Messages.Clear;
 
          if Self.Root_Project.Is_Externally_Built then
             --  If we have externally built project, configure only the root
@@ -1421,16 +1475,10 @@ package body GPR2.Project.Tree is
          end if;
 
          declare
-            Tmp_Attr      : Attribute.Object;
-            Actual_Target : constant Name_Type :=
-                              (if Target /= No_Name then Target
-                               elsif Self.Root_Project.Check_Attribute
-                                 (PRA.Target, Result => Tmp_Attr)
-                               then Name_Type (Tmp_Attr.Value.Text)
-                               else "all");
-
+            Tmp_Attr          : Attribute.Object;
+            Descr_Index       : Natural := 0;
             Conf_Descriptions : Project.Configuration.Description_Set
-              (1 .. Positive (Languages.Length));
+                                 (1 .. Positive (Languages.Length));
 
          begin
             for L of Languages loop
@@ -1465,6 +1513,19 @@ package body GPR2.Project.Tree is
                Self.Root_Project.Path_Name,
                Default_KB,
                Custom_KB);
+         end;
+
+         --  Unload the project that was loaded without configuration.
+         --  We need to backup the messages and default search path:
+         --  messages issued during configuration are relevant, together with
+         --  already computed search paths
+         declare
+            Old_Messages : constant Log.Object := Self.Messages;
+            Old_Paths    : constant Path_Name.Set.Object := Self.Search_Paths;
+         begin
+            Self.Unload;
+            Self.Messages := Old_Messages;
+            Self.Search_Paths := Old_Paths;
          end;
       end if;
 
@@ -1908,7 +1969,6 @@ package body GPR2.Project.Tree is
                                         & String (Import.Path_Name.Name)
                                         & """ not found",
                            Sloc    => Import));
-                     exit;
                   end if;
                end;
             end loop;
@@ -2011,15 +2071,37 @@ package body GPR2.Project.Tree is
    -------------
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type is
+     (Self : Object; Language : Name_Type) return Optional_Name_Type
+   is
+      TA : Attribute.Object;
+
    begin
       if Self.Has_Configuration
-        and then Self.Conf.Runtime (Language) /= ""
+        and then Self.Conf.Runtime (Language) /= No_Name
       then
          return Self.Conf.Runtime (Language);
 
+      elsif Self.Root /= View.Undefined
+        and then Self.Root_Project.Check_Attribute
+          (PRA.Runtime,
+           Index => GPR2.Project.Attribute_Index.Create
+             (Value_Type (Language), Case_Sensitive => False),
+           Result => TA)
+      then
+         return Name_Type (TA.Value.Text);
+
+      elsif Self.Root /= View.Undefined
+        and then Self.Root_Project.Is_Extending
+        and then Self.Root_Project.Extended.Check_Attribute
+          (PRA.Runtime,
+           Index => GPR2.Project.Attribute_Index.Create
+             (Value_Type (Language), Case_Sensitive => False),
+           Result => TA)
+      then
+         return Name_Type (TA.Value.Text);
+
       else
-         return "";
+         return No_Name;
       end if;
    end Runtime;
 
@@ -2641,22 +2723,30 @@ package body GPR2.Project.Tree is
       TA : Attribute.Object;
    begin
       if Self.Has_Configuration
-        and then Self.Conf.Target /= ""
+        and then Self.Conf.Target /= No_Name
       then
          return Self.Conf.Target;
+
+      elsif Self.Has_Configuration
+        and then Self.Conf.Corresponding_View.Check_Attribute
+          (PRA.Target, Result => TA)
+      then
+         return Name_Type (TA.Value.Text);
 
       elsif Self.Root /= View.Undefined
         and then Self.Root_Project.Check_Attribute (PRA.Target, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 
-      elsif Self.Has_Configuration
-        and then Self.Conf.Corresponding_View.Check_Attribute
-                   (PRA.Target, Result => TA)
+      elsif Self.Root /= View.Undefined
+        and then Self.Root_Project.Is_Extending
+        and then Self.Root_Project.Extending.Check_Attribute
+          (PRA.Target, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 
       else
+         --  target name as specified during the build.
          return Target_Name;
       end if;
    end Target;
@@ -2675,11 +2765,11 @@ package body GPR2.Project.Tree is
       Self.Subdirs          := Undefined.Subdirs;
       Self.Src_Subdirs      := Undefined.Src_Subdirs;
       Self.Check_Shared_Lib := Undefined.Check_Shared_Lib;
+      Self.Search_Paths     := Undefined.Search_Paths;
 
       Self.Units.Clear;
       Self.Sources.Clear;
       Self.Messages.Clear;
-      Self.Search_Paths.Clear;
       Self.Views.Clear;
       Self.Views_Set.Clear;
    end Unload;
