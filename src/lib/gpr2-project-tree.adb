@@ -2782,6 +2782,20 @@ package body GPR2.Project.Tree is
                                 (Imp.Path_Name)));
                      end if;
                   end loop;
+
+                  --  Also check value of liobrary_standalone if any
+
+                  if PV.Has_Library_Interface
+                    and then PV.Library_Standalone = No
+                  then
+                     Self.Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "wrong value for Library_Standalone when"
+                           & " Library_Interface defined",
+                           PV.Attribute
+                             (Registry.Attribute.Library_Standalone)));
+                  end if;
                end Check_Shared_Lib;
 
             begin
