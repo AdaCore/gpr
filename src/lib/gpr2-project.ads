@@ -42,7 +42,7 @@ package GPR2.Project is
    --  This package is the root of the high level abstraction of a hierarchy of
    --  projects given by a root project.
 
-   type Standalone_Library_Kind is (No, Standard, Encapsulated);
+   type Standalone_Library_Kind is (No, Standard, Encapsulated, Full);
 
    --
    --  Iterators
