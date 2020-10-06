@@ -2796,6 +2796,18 @@ package body GPR2.Project.Tree is
                            PV.Attribute
                              (Registry.Attribute.Library_Standalone)));
                   end if;
+
+                  if not PV.Has_Library_Interface
+                    and then PV.Library_Standalone /= No
+                  then
+                     Self.Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "Library_Standalone valid only if library"
+                           & " has Ada interfaces",
+                           PV.Attribute
+                             (Registry.Attribute.Library_Standalone)));
+                  end if;
                end Check_Shared_Lib;
 
             begin
