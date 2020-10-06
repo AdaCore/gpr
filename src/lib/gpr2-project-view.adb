@@ -1003,23 +1003,18 @@ package body GPR2.Project.View is
    function Library_Standalone
      (Self : Object) return Standalone_Library_Kind
    is
-      Has_Interface : constant Boolean :=
-                        Self.Has_Attributes
-                          (Project.Registry.Attribute.Interfaces)
-                            or else
-                        Self.Has_Attributes
-                          (Project.Registry.Attribute.Library_Interface);
       Attr : Project.Attribute.Object;
    begin
-      if Has_Interface
-        and then Self.Check_Attribute
-                   (Project.Registry.Attribute.Library_Standalone,
-                    Result => Attr)
+      if Self.Has_Attributes (Project.Registry.Attribute.Library_Standalone)
+        and then
+          Self.Check_Attribute
+            (Project.Registry.Attribute.Library_Standalone,
+             Result => Attr)
       then
          return Standalone_Library_Kind'Value (Attr.Value.Text);
 
       else
-         --  No interface, that is not a standalone library
+         --  Library_Standalone not defined
          return No;
       end if;
    end Library_Standalone;
