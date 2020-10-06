@@ -2783,30 +2783,36 @@ package body GPR2.Project.Tree is
                      end if;
                   end loop;
 
-                  --  Also check value of liobrary_standalone if any
+                  if PV.Is_Library and then PV.Is_Shared_Library then
+                     --  Also check value of liobrary_standalone if any
 
-                  if PV.Has_Library_Interface
-                    and then PV.Library_Standalone = No
-                  then
-                     Self.Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "wrong value for Library_Standalone when"
-                           & " Library_Interface defined",
-                           PV.Attribute
-                             (Registry.Attribute.Library_Standalone)));
-                  end if;
+                     if PV.Has_Library_Interface
+                       and then PV.Library_Standalone = No
+                     then
+                        Self.Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "wrong value for Library_Standalone when"
+                              & " Library_Interface defined",
+                              PV.Attribute
+                                (Registry.Attribute.Library_Standalone)));
+                     end if;
 
-                  if not PV.Has_Library_Interface
-                    and then PV.Library_Standalone /= No
-                  then
-                     Self.Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "Library_Standalone valid only if library"
-                           & " has Ada interfaces",
-                           PV.Attribute
-                             (Registry.Attribute.Library_Standalone)));
+                     --  And if a standalone library has interfaces
+
+                     if not PV.Has_Library_Interface
+                       and then PV.Has_Attributes
+                         (Project.Registry.Attribute.Library_Standalone)
+                       and then PV.Library_Standalone /= No
+                     then
+                        Self.Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "Library_Standalone valid only if library"
+                              & " has Ada interfaces",
+                              PV.Attribute
+                                (Registry.Attribute.Library_Standalone)));
+                     end if;
                   end if;
                end Check_Shared_Lib;
 
