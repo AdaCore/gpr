@@ -1301,6 +1301,11 @@ package body GPR2.Project.Tree is
       function Default_Config_File return Name_Type;
       --  Returns default config filename
 
+      function Runtime
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+      --  Returns the runtime to use during configuration for the specified
+      --  language.
+
       -------------------
       -- Actual_Target --
       -------------------
@@ -1388,6 +1393,76 @@ package body GPR2.Project.Tree is
          end if;
       end Default_Config_File;
 
+      -------------
+      -- Runtime --
+      -------------
+
+      function Runtime
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+      is
+         function Attr_As_Abs_Path
+           (Attr : Attribute.Object;
+            View : GPR2.Project.View.Object) return Optional_Name_Type;
+
+         ----------------------
+         -- Attr_As_Abs_Path --
+         ----------------------
+
+         function Attr_As_Abs_Path
+           (Attr : Attribute.Object;
+            View : GPR2.Project.View.Object) return Optional_Name_Type
+         is
+            Value : constant String := String (Attr.Value.Text);
+            Has_Dir_Indication : Boolean := False;
+         begin
+            for C of Value loop
+               if C = '/' or else C = '\' then
+                  Has_Dir_Indication := True;
+                  exit;
+               end if;
+            end loop;
+
+            if Has_Dir_Indication then
+               if GNAT.OS_Lib.Is_Absolute_Path (Value) then
+                  return Name_Type (Value);
+               else
+                  return Name_Type (GNAT.OS_Lib.Normalize_Pathname
+                                    (Value, View.Dir_Name.Value));
+               end if;
+            else
+               return Optional_Name_Type (Value);
+            end if;
+         end Attr_As_Abs_Path;
+
+         Tmp_Attr : Attribute.Object;
+         LRT : constant Value_Type :=
+                 Containers.Value_Or_Default
+                        (Language_Runtimes, Name_Type (Language.Text));
+
+      begin
+         if LRT /= No_Value then
+            --  Return the value given as parameter
+            return Name_Type (LRT);
+         end if;
+
+         if Self.Root_Project.Check_Attribute
+           (PRA.Runtime, Attribute_Index.Create (Language.Text),
+            Result => Tmp_Attr)
+         then
+            return Attr_As_Abs_Path (Tmp_Attr, Self.Root_Project);
+         end if;
+
+         if Self.Root_Project.Is_Extending
+           and then Self.Root_Project.Extended.Check_Attribute
+             (PRA.Runtime, Attribute_Index.Create (Language.Text),
+              Result => Tmp_Attr)
+         then
+            return Attr_As_Abs_Path (Tmp_Attr, Self.Root_Project.Extended);
+         end if;
+
+         return No_Name;
+      end Runtime;
+
    begin
       if GNAT_Prefix = "" then
          --  No GNAT, use default config only in current directory
@@ -1471,7 +1546,6 @@ package body GPR2.Project.Tree is
          end if;
 
          declare
-            Tmp_Attr          : Attribute.Object;
             Descr_Index       : Natural := 0;
             Conf_Descriptions : Project.Configuration.Description_Set
                                  (1 .. Positive (Languages.Length));
@@ -1480,27 +1554,13 @@ package body GPR2.Project.Tree is
             for L of Languages loop
                Descr_Index := Descr_Index + 1;
 
-               declare
-                  LRT : constant Value_Type :=
-                          Containers.Value_Or_Default
-                            (Language_Runtimes, Name_Type (L.Text));
-                  RTS : constant Optional_Name_Type :=
-                          Optional_Name_Type
-                            (if LRT = No_Value
-                             and then Self.Root_Project.Check_Attribute
-                               (PRA.Runtime, Attribute_Index.Create (L.Text),
-                                Result => Tmp_Attr)
-                             then Tmp_Attr.Value.Text
-                             else LRT);
-               begin
-                  Conf_Descriptions (Descr_Index) :=
-                    Project.Configuration.Create
-                      (Language => Name_Type (L.Text),
-                       Version  => No_Name,
-                       Runtime  => RTS,
-                       Path     => No_Name,
-                       Name     => No_Name);
-               end;
+               Conf_Descriptions (Descr_Index) :=
+                 Project.Configuration.Create
+                   (Language => Name_Type (L.Text),
+                    Version  => No_Name,
+                    Runtime  => Runtime (L),
+                    Path     => No_Name,
+                    Name     => No_Name);
             end loop;
 
             Conf := Project.Configuration.Create
