@@ -222,7 +222,7 @@ package body GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
+      Name  : Optional_Name_Type     := No_Name;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Project.Attribute.Set.Object is
    begin
@@ -366,7 +366,8 @@ package body GPR2.Project.View is
       Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Pos);
 
       if Recursive
-        and then not Result.Is_Defined
+        and then (not Result.Is_Defined
+                  or else Result.Is_Default)
         and then Self.Is_Extending
       then
          return Self.Extended.Check_Attribute
@@ -750,6 +751,50 @@ package body GPR2.Project.View is
       Definition.Get_RW (Self).Sources_Signature :=
         GPR2.Context.Default_Signature;
    end Invalidate_Sources;
+
+   -----------------
+   -- Is_Abstract --
+   -----------------
+
+   function Is_Abstract (Self : Object) return Boolean is
+      Tmp_Attr         : Project.Attribute.Object;
+      Empty_Source_Dir : Boolean := False;
+      Empty_Languages  : Boolean := False;
+
+   begin
+      if Self.Kind = K_Abstract then
+         return True;
+      end if;
+
+      if Self.Check_Attribute (PRA.Source_Dirs,
+                               Recursive => True, Result => Tmp_Attr)
+      then
+         if Tmp_Attr.Values.Is_Empty then
+            Empty_Source_Dir := True;
+         elsif not Tmp_Attr.Is_Default then
+            --  Explicitly set to a non-empty value
+            return False;
+         end if;
+      end if;
+
+      --  At this point, Source_Dirs is either explictly empty or is the
+      --  default value
+
+      if Self.Check_Attribute (PRA.Languages,
+                               Recursive => True, Result => Tmp_Attr)
+      then
+         if Tmp_Attr.Values.Is_Empty then
+            Empty_Languages := True;
+         elsif not Tmp_Attr.Is_Default then
+            --  non-empty non-default value: not abstract project
+            return False;
+         end if;
+      end if;
+
+      --  So we have at this point either two default values (non-abstract
+      --  project then) or one or two empty values (abstract project)
+      return Empty_Source_Dir or else Empty_Languages;
+   end Is_Abstract;
 
    -------------------
    -- Is_Aggregated --

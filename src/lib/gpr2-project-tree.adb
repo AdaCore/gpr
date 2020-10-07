@@ -1347,7 +1347,9 @@ package body GPR2.Project.Tree is
 
       procedure Add_Languages (View : Project.View.Object) is
       begin
-         if View.Languages.Length = 0 then
+         if View.Languages.Length = 0
+           and then not View.Is_Abstract
+         then
             Self.Append_Message
               (Message.Create
                  (Level   => Message.Warning,
@@ -1447,17 +1449,9 @@ package body GPR2.Project.Tree is
 
          if Self.Root_Project.Check_Attribute
            (PRA.Runtime, Attribute_Index.Create (Language.Text),
-            Result => Tmp_Attr)
+            Recursive => True, Result => Tmp_Attr)
          then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root_Project);
-         end if;
-
-         if Self.Root_Project.Is_Extending
-           and then Self.Root_Project.Extended.Check_Attribute
-             (PRA.Runtime, Attribute_Index.Create (Language.Text),
-              Result => Tmp_Attr)
-         then
-            return Attr_As_Abs_Path (Tmp_Attr, Self.Root_Project.Extended);
          end if;
 
          return No_Name;

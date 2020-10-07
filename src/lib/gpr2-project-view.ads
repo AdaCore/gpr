@@ -351,6 +351,15 @@ package GPR2.Project.View is
       Need_Update  : Boolean := True) return Unit_Info.Object
      with Pre => Self.Is_Defined;
 
+   function Is_Abstract (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns true if the project is an abstract project, or if it is a
+   --  regular project that defines explicitly at least:
+   --  * either an empty list of languages
+   --  * an empty list of source directories
+   --  Note: if one of the above attributes is set to a non-empty list while
+   --  the other is empty, then the view is not considered abstract anymore.
+
    function Is_Externally_Built (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project is externally built
