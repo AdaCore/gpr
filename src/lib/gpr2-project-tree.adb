@@ -2882,7 +2882,7 @@ package body GPR2.Project.Tree is
                   if PV.Is_Library and then PV.Is_Shared_Library then
                      --  Also check value of liobrary_standalone if any
 
-                     if PV.Has_Library_Interface
+                     if PV.Has_Any_Interfaces
                        and then PV.Library_Standalone = No
                      then
                         Self.Self.Messages.Append
@@ -2896,7 +2896,7 @@ package body GPR2.Project.Tree is
 
                      --  And if a standalone library has interfaces
 
-                     if not PV.Has_Library_Interface
+                     if not PV.Has_Any_Interfaces
                        and then PV.Has_Attributes
                          (Project.Registry.Attribute.Library_Standalone)
                        and then PV.Library_Standalone /= No
