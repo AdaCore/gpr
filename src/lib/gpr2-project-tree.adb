@@ -2732,7 +2732,7 @@ package body GPR2.Project.Tree is
 
       elsif Self.Has_Configuration
         and then Self.Conf.Corresponding_View.Check_Attribute
-          (PRA.Target, Result => TA)
+                   (PRA.Target, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 
@@ -2744,7 +2744,7 @@ package body GPR2.Project.Tree is
       elsif Self.Root /= View.Undefined
         and then Self.Root_Project.Is_Extending
         and then Self.Root_Project.Extending.Check_Attribute
-          (PRA.Target, Result => TA)
+                   (PRA.Target, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 
@@ -2752,7 +2752,7 @@ package body GPR2.Project.Tree is
          return Self.Base.Normalized_Target (Target_Name);
 
       else
-         --  target name as specified during the build.
+         --  Target name as specified during the build
          return Target_Name;
       end if;
    end Target;
