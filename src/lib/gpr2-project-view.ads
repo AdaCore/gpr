@@ -397,6 +397,13 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the optional interfaces attribute is defined
 
+   function Has_Any_Interfaces (Self : Object) return Boolean
+     with Pre  => Self.Is_Defined and then Self.Is_Library,
+          Post => Has_Any_Interfaces'Result =
+                    Self.Has_Interfaces or else Self.Has_Library_Interface;
+   --  Returns whether any interface is defined either using the
+   --  Library_Interface or Interfaces attribute.
+
    function Has_Library_Version (Self : Object) return Boolean
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns whether the optional library version name is defined
@@ -546,6 +553,9 @@ private
 
    function Has_Interfaces (Self : Object) return Boolean is
      (Self.Has_Attributes (Registry.Attribute.Interfaces));
+
+   function Has_Any_Interfaces (Self : Object) return Boolean is
+     (Self.Has_Library_Interface or else Self.Has_Interfaces);
 
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
