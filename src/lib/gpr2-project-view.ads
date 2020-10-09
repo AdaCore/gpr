@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -39,6 +39,7 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.Unit_Info.Set;
+with GPR2.Source_Reference.Value;
 
 limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
@@ -561,6 +562,22 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns artifact files taken from Artifacts_In_Object_Dir and
    --  Artifacts_In_Exec_Dir attributes.
+
+   procedure Foreach
+     (Self              : Object;
+      Directory_Pattern : GPR2.Filename_Optional;
+      Source            : GPR2.Source_Reference.Value.Object;
+      File_CB           : not null access procedure
+        (File : GPR2.Path_Name.Object);
+      Directory_CB      : access procedure
+        (Directory : GPR2.Path_Name.Object; Do_Visit : out Boolean) := null)
+      with Pre => Self.Is_Defined;
+   --  Visit Dir_Name (recursive if "**" at end) calling callbacks on each
+   --  directory/file visited.
+   --  When entering a Directory, Is_Visited callback can avoid Dir's
+   --  files to be handled. If recursive, sub directories are always visited.
+   --  Visit_File is called for each regular file found.
+   --  source reference Ref used when messages added to Self.Tree's log
 
 private
 

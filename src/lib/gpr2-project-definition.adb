@@ -25,15 +25,14 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Directories;
-with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 
 with GNAT.MD5;
-with GNAT.OS_Lib;
 
+with GPR2.Containers;
 with GPR2.Unit.List;
 with GPR2.Message;
 with GPR2.Path_Name.Set;
@@ -332,14 +331,7 @@ package body GPR2.Project.Definition is
 
       package Source_Set renames Containers.Value_Type_Set;
 
-      procedure Handle_Directory
-        (Dir       : GPR2.Path_Name.Full_Name;
-         Recursive : Boolean);
-      --  Handle the specified directory, that is read all files in Dir and
-      --  eventually call recursivelly Handle_Directory if a recursive read
-      --  is specified.
-
-      procedure Handle_File (Path : GPR2.Path_Name.Full_Name);
+      procedure Handle_File (File : GPR2.Path_Name.Object);
       --  Processes the given file: see if it should be added to the view's
       --  sources, and compute information such as language/unit(s)/...
 
@@ -436,7 +428,7 @@ package body GPR2.Project.Definition is
       Ada_Except_Usage      : Naming_Exceptions_Usage.Map;
       Other_Except_Usage    : Naming_Exceptions_Usage.Map;
 
-      Visited_Dirs          : Containers.Value_Type_Set.Set;
+      Visited_Dirs          : GPR2.Containers.Filename_Set;
       --  List of already visited directories to avoid looking twice at the
       --  same one.
 
@@ -508,67 +500,11 @@ package body GPR2.Project.Definition is
          end loop;
       end Fill_Other_Naming_Exceptions;
 
-      ----------------------
-      -- Handle_Directory --
-      ----------------------
-
-      procedure Handle_Directory
-        (Dir       : GPR2.Path_Name.Full_Name;
-         Recursive : Boolean)
-      is
-         use all type Directories.File_Kind;
-
-         Dir_Search : Directories.Search_Type;
-         Dir_Entry  : Directories.Directory_Entry_Type;
-         Inserted   : Boolean;
-         Position   : Containers.Value_Type_Set.Cursor;
-      begin
-         Visited_Dirs.Insert (Dir, Position, Inserted);
-
-         if Inserted or else Recursive then
-            begin
-               Directories.Start_Search
-                 (Dir_Search, Dir, "",
-                  Filter => (Directory     => Recursive,
-                             Ordinary_File => Inserted,
-                             Special_File  => False));
-            exception
-               when Ada.IO_Exceptions.Name_Error =>
-                  Tree.Append_Message
-                    (Message.Create
-                       (Message.Error,
-                        """" & Dir & """ is not a valid directory",
-                        Source_Dir_Ref));
-            end;
-
-            while Directories.More_Entries (Dir_Search) loop
-               Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
-
-               case Directories.Kind (Dir_Entry) is
-                  when Ordinary_File =>
-                     Handle_File (Directories.Full_Name (Dir_Entry));
-
-                  when Directory =>
-                     if Directories.Simple_Name (Dir_Entry) not in "." | ".."
-                     then
-                        Handle_Directory
-                          (Directories.Full_Name (Dir_Entry), Recursive);
-                     end if;
-
-                  when Special_File =>
-                     raise Program_Error;
-               end case;
-            end loop;
-
-            Directories.End_Search (Dir_Search);
-         end if;
-      end Handle_Directory;
-
       -----------------
       -- Handle_File --
       -----------------
 
-      procedure Handle_File (Path : GPR2.Path_Name.Full_Name) is
+      procedure Handle_File (File : GPR2.Path_Name.Object) is
          use all type GPR2.Project.Source.Naming_Exception_Kind;
          use all type Unit.Library_Unit_Type;
 
@@ -950,9 +886,6 @@ package body GPR2.Project.Definition is
 
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
-         File      : constant GPR2.Path_Name.Object :=
-                       Path_Name.Create_File
-                         (Filename_Type (Path), Path_Name.No_Resolution);
          Basename  : constant Value_Type := Value_Type (File.Simple_Name);
 
          Match                  : Boolean := False;
@@ -1879,18 +1812,34 @@ package body GPR2.Project.Definition is
             Source_Dir_Ref := Source_Reference.Object (Dir);
 
             declare
-               use GNAT.OS_Lib;
-               Dir_Name  : constant String  := Dir.Text;
-               Recursive : constant Boolean :=
-                             GNATCOLL.Utils.Ends_With (Dir_Name, "**");
-               Last      : constant Positive :=
-                             Dir_Name'Last - (if Recursive then 2 else 0);
+               procedure Is_Directory_Handled
+                 (Directory : GPR2.Path_Name.Object;
+                  Handled   : out Boolean);
+
+               --------------------------
+               -- Is_Directory_Handled --
+               --------------------------
+
+               procedure Is_Directory_Handled
+                 (Directory : GPR2.Path_Name.Object;
+                  Handled   : out Boolean)
+               is
+                  Position : GPR2.Containers.Filename_Type_Set.Cursor;
+               begin
+                  --  If Directory already inserted in Visited_Dirs,
+                  --  Handled is set to False.
+
+                  Visited_Dirs.Insert (New_Item => Directory.Name,
+                                       Position => Position,
+                                       Inserted => Handled);
+               end Is_Directory_Handled;
+
             begin
-               Handle_Directory
-                 ((if Is_Absolute_Path (Dir_Name)
-                   then ""
-                   else Root & Directory_Separator) & Dir_Name (1 .. Last),
-                  Recursive => Recursive);
+               View.Foreach
+                 (Directory_Pattern  => GPR2.Filename_Optional (Dir.Text),
+                  Source             => Dir,
+                  File_CB            => Handle_File'Access,
+                  Directory_CB       => Is_Directory_Handled'Access);
             end;
 
             Def.Sources.Union (Src_Dir_Set);

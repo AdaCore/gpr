@@ -26,6 +26,9 @@ with Ada.Characters.Handling;
 with Ada.Containers.Ordered_Maps;
 with Ada.Environment_Variables;
 with Ada.Directories;
+with Ada.IO_Exceptions;
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps;
 
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute_Index;
@@ -41,7 +44,6 @@ with GNAT.OS_Lib;
 with GNAT.Regexp;
 
 with GNATCOLL.OS.Constants;
-with GNATCOLL.Utils;
 
 package body GPR2.Project.Tree is
 
@@ -59,6 +61,10 @@ package body GPR2.Project.Tree is
 
    Version_Regexp  : constant Regexp.Regexp :=
                       Regexp.Compile (".[0-9]+(.[0-9]+)?");
+
+   Wildcards       : constant Ada.Strings.Maps.Character_Set :=
+                       Ada.Strings.Maps.To_Set ("?*");
+   --  Wild chars for filename pattern
 
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
@@ -2345,6 +2351,137 @@ package body GPR2.Project.Tree is
          Paths         : Path_Name.Set.Object;
          Tmp_Attr      : Project.Attribute.Object;
 
+         function Get_Matching_Files
+           (Projects : Source_Reference.Value.Object)
+            return Path_Name.Set.Object;
+         --  Return all gpr files matching Source_Reference text
+
+         ------------------------
+         -- Get_Matching_Files --
+         ------------------------
+
+         function Get_Matching_Files
+           (Projects : Source_Reference.Value.Object)
+            return Path_Name.Set.Object
+         is
+
+            View_Dir        : constant GPR2.Path_Name.Object :=
+                                Path_Name.Create_Directory
+                                  (Filename_Optional
+                                     (View.Path_Name.Dir_Name));
+            --  View root directory
+
+            Pattern         : constant GPR2.Path_Name.Object :=
+                                (if OS_Lib.Is_Absolute_Path (Projects.Text)
+                                 then Path_Name.Create_File
+                                   (Filename_Optional (Projects.Text),
+                                    Path_Name.No_Resolution)
+                                 else View_Dir.Compose
+                                   (Filename_Optional (Projects.Text)));
+
+            --  The absolute path pattern to get matching files
+
+            Dir_Part        : constant Filename_Optional :=
+                                Filename_Optional (Pattern.Relative_Path
+                                                   (View_Dir).Value);
+            --  The dir part without the trailing directory separator
+
+            Filename_Part   : constant Filename_Optional :=
+                                Filename_Optional (Pattern.Simple_Name);
+            --  The filename pattern of matching files
+
+            Filename        : constant Filename_Optional :=
+                                (if Ada.Strings.Fixed.Index
+                                   (String (Filename_Part),
+                                    Wildcards,
+                                    Going => Ada.Strings.Backward) = 0
+                                 then Filename_Part
+                                 else "");
+            --  "" if Filename part is a regular expression otherwise the
+            --  filename to locate.
+
+            Filename_Regexp : constant GNAT.Regexp.Regexp :=
+                                GPR2.Compile_Regexp (Filename_Part);
+            --  regexp pattern for matching Filename
+
+            Files           : GPR2.Path_Name.Set.Object;
+            --  matching files
+
+            procedure Handle_File
+              (File : GPR2.Path_Name.Object);
+            procedure Is_Directory_Handled
+              (Directory : GPR2.Path_Name.Object;
+               Do_Visit  : out Boolean);
+            procedure Log (Level : GPR2.Message.Level_Value; Msg : String);
+
+            -----------------
+            -- Handle_File --
+            -----------------
+
+            procedure Handle_File
+              (File : GPR2.Path_Name.Object) is
+            begin
+               if GNAT.Regexp.Match (String (File.Simple_Name),
+                                     Filename_Regexp)
+                 and then not Files.Contains (File)
+               then
+                  Files.Append (File);
+               end if;
+            end Handle_File;
+
+            --------------------------
+            -- Is_Directory_Handled --
+            --------------------------
+
+            procedure Is_Directory_Handled
+              (Directory : GPR2.Path_Name.Object;
+               Do_Visit  : out Boolean) is
+            begin
+               if Filename = "" then
+                  Do_Visit := True;
+               else
+                  Do_Visit := False;
+                  declare
+                     File : constant GPR2.Path_Name.Object :=
+                              Directory.Compose (Filename);
+                  begin
+                     if File.Exists
+                       and then not Files.Contains (File)
+                     then
+                        Files.Append (File);
+                     end if;
+                  end;
+               end if;
+            end Is_Directory_Handled;
+
+            ---------
+            -- Log --
+            ---------
+
+            procedure Log (Level : GPR2.Message.Level_Value; Msg : String) is
+            begin
+               Self.Append_Message (Message.Create (Level, Msg, Projects));
+            end Log;
+
+         begin
+            View.Foreach
+              (Directory_Pattern => Dir_Part,
+               Source            => Projects,
+               File_CB           => Handle_File'Access,
+               Directory_CB      => Is_Directory_Handled'Access);
+
+            if Files.Is_Empty then
+               Log (Message.Error, Projects.Text & " file not found");
+            end if;
+
+            return Files;
+         exception
+            when Ada.IO_Exceptions.Name_Error =>
+               Log (Message.Error,
+                    Projects.Text & " contains an invalid directory");
+               return Files;
+         end Get_Matching_Files;
+
          function Is_Implicitly_Abstract
            (View : Project.View.Object) return Boolean;
          --  Returns True if project can be recognised as abstract project.
@@ -2454,19 +2591,11 @@ package body GPR2.Project.Tree is
             Paths.Append (View.Path_Name);
 
             for Project of P_Data.Attrs.Element (PRA.Project_Files).Values loop
-               declare
-                  Pathname : constant Path_Name.Object :=
-                               Create (Filename_Type (Project.Text), Paths);
-               begin
+               for Pathname of Get_Matching_Files (Project) loop
                   if Pathname = View.Path_Name then
                      --  We are loading recursively the aggregate project
-
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "project cannot aggregate itself "
-                           & String (Pathname.Base_Name),
-                           Project));
+                     --  As in GPR1 ignore it.
+                     null;
 
                   elsif P_Data.Aggregated.Contains
                     (Name_Type (Pathname.Value))
@@ -2539,7 +2668,7 @@ package body GPR2.Project.Tree is
                            Project));
                      exit;
                   end if;
-               end;
+               end loop;
             end loop;
 
             if P_Data.Status = Root then

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -53,6 +53,8 @@
 --
 --     Unit
 --        A unit with its spec and possible bodies (main body and separates)
+
+with GNAT.Regexp;
 
 private with Ada.Calendar;
 private with Ada.Characters.Handling;
@@ -168,6 +170,11 @@ package GPR2 is
    --  Returns name prefix before last dot.
    --  Returns No_Name if there is not dot in the name.
 
+   function Compile_Regexp
+     (Filename_Regexp : Filename_Optional) return GNAT.Regexp.Regexp;
+   --  Returns Regexp object for Filename_Regexp pattern
+   --  Allows '?' & '*' wildchars. Use case insensitive match when required
+
 private
 
    use Ada;
@@ -210,5 +217,12 @@ private
 
    function Has_Directory_Separator (Name : String) return Boolean is
       (for some Char of Name => GNATCOLL.Utils.Is_Directory_Separator (Char));
+
+   function Compile_Regexp
+     (Filename_Regexp : Filename_Optional) return GNAT.Regexp.Regexp is
+     (GNAT.Regexp.Compile
+        (Pattern        => String (Filename_Regexp),
+         Glob           => True,
+         Case_Sensitive => File_Names_Case_Sensitive));
 
 end GPR2;

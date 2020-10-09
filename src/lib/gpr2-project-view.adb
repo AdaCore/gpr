@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -23,12 +23,14 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
+with Ada.IO_Exceptions;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
 with GNATCOLL.Utils;
 
+with GPR2.Message;
 with GPR2.Project.Definition;
 with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
@@ -507,6 +509,116 @@ package body GPR2.Project.View is
    begin
       return Definition.Strong (Definition.Get_RO (Self).Extending);
    end Extending;
+
+   -------------
+   -- Foreach --
+   -------------
+
+   procedure Foreach
+     (Self              : Object;
+      Directory_Pattern : GPR2.Filename_Optional;
+      Source            : GPR2.Source_Reference.Value.Object;
+      File_CB           : not null access procedure
+        (File : GPR2.Path_Name.Object);
+      Directory_CB      : access procedure
+        (Directory : GPR2.Path_Name.Object; Do_Visit : out Boolean) := null)
+   is
+      use GNAT.OS_Lib;
+
+      View_Dir  : constant GPR2.Path_Name.Object :=
+                    GPR2.Path_Name.Create_Directory
+                      (Filename_Optional (Self.Path_Name.Dir_Name));
+      Dir       : constant String :=
+                    (if Directory_Pattern'Length = 0
+                     then "."
+                     else
+                       (if Directory_Pattern = "**"
+                        then "./**"
+                        else String (Directory_Pattern)));
+      --  normalize dir part avoiding "" & "**"
+      Recursive : constant Boolean :=
+                    GNATCOLL.Utils.Ends_With (Dir, "**");
+      Last      : constant Positive :=
+                    Dir'Last - (if Recursive then 2 else 0);
+      Root_Dir  : constant String :=
+                    (if Is_Absolute_Path (Dir)
+                     then Dir (Dir'First .. Last)
+                     else View_Dir.Compose
+                       (Filename_Optional (Dir (Dir'First .. Last))).Value);
+
+      procedure Handle_Directory
+        (Dir       : Filename_Type;
+         Recursive : Boolean);
+      --  Handle the specified directory, that is read all files in Dir and
+      --  eventually call recursivelly Handle_Directory if a recursive read
+      --  is specified.
+
+      ----------------------
+      -- Handle_Directory --
+      ----------------------
+
+      procedure Handle_Directory
+        (Dir       : Filename_Type;
+         Recursive : Boolean)
+      is
+         use all type Directories.File_Kind;
+
+         Dir_Search : Directories.Search_Type;
+         Dir_Entry  : Directories.Directory_Entry_Type;
+         Do_Visit   : Boolean := True;
+      begin
+         if Directory_CB /= null then
+            Directory_CB
+              (GPR2.Path_Name.Create_Directory
+                 (Dir, GPR2.Path_Name.No_Resolution),
+               Do_Visit);
+         end if;
+
+         if Do_Visit or else Recursive then
+            Directories.Start_Search
+              (Dir_Search, String (Dir), "",
+               Filter => (Directory     => Recursive,
+                          Ordinary_File => Do_Visit,
+                          Special_File  => False));
+
+            while Directories.More_Entries (Dir_Search) loop
+               Directories.Get_Next_Entry (Dir_Search, Dir_Entry);
+
+               case Directories.Kind (Dir_Entry) is
+                  when Ordinary_File =>
+                     File_CB
+                       (GPR2.Path_Name.Create_File
+                          (Filename_Optional
+                               (Directories.Full_Name (Dir_Entry)),
+                           GPR2.Path_Name.No_Resolution));
+
+                  when Directory =>
+                     if Directories.Simple_Name (Dir_Entry) not in "." | ".."
+                     then
+                        Handle_Directory
+                          (Filename_Type (Directories.Full_Name (Dir_Entry)),
+                           Recursive);
+                     end if;
+
+                  when Special_File =>
+                     raise Program_Error;
+               end case;
+            end loop;
+
+            Directories.End_Search (Dir_Search);
+         end if;
+      exception
+         when Ada.IO_Exceptions.Name_Error =>
+            Self.Tree.Append_Message
+              (GPR2.Message.Create
+                 (GPR2.Message.Error,
+                  """" & String (Dir) & """ is not a valid directory",
+                  Source));
+      end Handle_Directory;
+
+   begin
+      Handle_Directory (Filename_Type (Root_Dir), Recursive => Recursive);
+   end Foreach;
 
    ---------------------------
    -- Has_Aggregate_Context --

@@ -1,0 +1,4 @@
+with "gpr2";
+project Test is
+   for main use ("main.adb");
+end Test;
