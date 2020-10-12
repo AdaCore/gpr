@@ -1316,21 +1316,19 @@ package body GPR2.Project.Tree is
          end if;
 
          if Self.Root_Project.Check_Attribute
-           (PRA.Target, Result => Tmp_Attr)
+           (PRA.Target, Recursive => True, Result => Tmp_Attr)
          then
             --  Check if the project explicitly defines the attribute or if
             --  this comes from a default value
             if not Tmp_Attr.Is_Default then
-               return Name_Type (Tmp_Attr.Value.Text);
-            end if;
-         end if;
-
-         if Self.Root_Project.Is_Extending
-           and then Self.Root_Project.Extended.Check_Attribute
-             (PRA.Target, Result => Tmp_Attr)
-         then
-            if not Tmp_Attr.Is_Default then
-               return Name_Type (Tmp_Attr.Value.Text);
+               declare
+                  Value     : constant Name_Type :=
+                                Name_Type (Tmp_Attr.Value.Text);
+                  Canonical : constant Name_Type :=
+                                Base.Normalized_Target (Value);
+               begin
+                  return (if Canonical = "unknown" then Value else Canonical);
+               end;
             end if;
          end if;
 
@@ -2089,16 +2087,7 @@ package body GPR2.Project.Tree is
           (PRA.Runtime,
            Index => GPR2.Project.Attribute_Index.Create
              (Value_Type (Language), Case_Sensitive => False),
-           Result => TA)
-      then
-         return Name_Type (TA.Value.Text);
-
-      elsif Self.Root /= View.Undefined
-        and then Self.Root_Project.Is_Extending
-        and then Self.Root_Project.Extended.Check_Attribute
-          (PRA.Runtime,
-           Index => GPR2.Project.Attribute_Index.Create
-             (Value_Type (Language), Case_Sensitive => False),
+           Recursive => True,
            Result => TA)
       then
          return Name_Type (TA.Value.Text);
@@ -2607,7 +2596,9 @@ package body GPR2.Project.Tree is
 
          begin
             if View.Is_Library and then View.Is_Shared_Library then
-               if View.Check_Attribute (PRA.Library_Version, Result => Attr)
+               if View.Check_Attribute (PRA.Library_Version,
+                                        Recursive => True,
+                                        Result => Attr)
                  and then not View.Tree.Is_Windows_Target
                  --  Library_Version attribute has no effect on Windows
                then
@@ -2722,34 +2713,52 @@ package body GPR2.Project.Tree is
    -- Target --
    ------------
 
-   function Target (Self : Object) return Name_Type is
+   function Target (Self      : Object;
+                    Canonical : Boolean := False) return Name_Type
+   is
+      function Normalized (Target : Name_Type) return Name_Type
+        with Inline;
+
+      ----------------
+      -- Normalized --
+      ----------------
+
+      function Normalized (Target : Name_Type) return Name_Type
+      is
+      begin
+         if Self.Base.Is_Defined then
+            declare
+               Ret : constant Name_Type :=
+                       Self.Base.Normalized_Target (Target);
+            begin
+               if Ret /= "unknown" then
+                  return Ret;
+               end if;
+            end;
+         end if;
+
+         return Target;
+      end Normalized;
+
       TA : Attribute.Object;
    begin
       if Self.Has_Configuration
         and then Self.Conf.Target /= No_Name
       then
-         return Self.Conf.Target;
-
-      elsif Self.Has_Configuration
-        and then Self.Conf.Corresponding_View.Check_Attribute
-                   (PRA.Target, Result => TA)
-      then
-         return Name_Type (TA.Value.Text);
+         if Canonical then
+            return Normalized (Self.Conf.Target);
+         else
+            return Self.Conf.Target;
+         end if;
 
       elsif Self.Root /= View.Undefined
-        and then Self.Root_Project.Check_Attribute (PRA.Target, Result => TA)
-      then
-         return Name_Type (TA.Value.Text);
-
-      elsif Self.Root /= View.Undefined
-        and then Self.Root_Project.Is_Extending
-        and then Self.Root_Project.Extending.Check_Attribute
-                   (PRA.Target, Result => TA)
+        and then Self.Root_Project.Check_Attribute
+                   (PRA.Target, Recursive => True, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 
       elsif Self.Base.Is_Defined then
-         return Self.Base.Normalized_Target (Target_Name);
+         return Normalized (Target_Name);
 
       else
          --  Target name as specified during the build

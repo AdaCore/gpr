@@ -153,7 +153,9 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined and then Self.Has_Runtime_Project;
    --  Returns the runtime project for the given tree
 
-   function Target (Self : Object) return Name_Type;
+   function Target (Self      : Object;
+                    Canonical : Boolean := False) return Name_Type
+     with Pre => Self.Is_Defined;
    --  Returns the target for the project tree
 
    function Runtime

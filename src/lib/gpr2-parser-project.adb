@@ -1224,9 +1224,7 @@ package body GPR2.Parser.Project is
                      Attrs.Include (Attr);
                   end if;
 
-               elsif Name_Type (To_Lower (Name))
-                   in PRA.Target | PRA.Canonical_Target
-               then
+               elsif Name_Type (To_Lower (Name)) = PRA.Target then
                   --  Project'Target case
                   Attr := GPR2.Project.Attribute.Create
                     (Get_Identifier_Reference
@@ -1235,6 +1233,20 @@ package body GPR2.Parser.Project is
                         Name_Type (To_Lower (Name))),
                      Value   => Get_Value_Reference
                        (Value_Not_Empty (Tree.Target),
+                        Sloc),
+                     Default => True,
+                     Frozen  => True);
+                  Attrs.Include (Attr);
+
+               elsif Name_Type (To_Lower (Name)) = PRA.Canonical_Target then
+                  --  Project'Target case
+                  Attr := GPR2.Project.Attribute.Create
+                    (Get_Identifier_Reference
+                       (Self.Path_Name,
+                        Sloc_Range (Node),
+                        Name_Type (To_Lower (Name))),
+                     Value   => Get_Value_Reference
+                       (Value_Not_Empty (Tree.Target (Canonical => True)),
                         Sloc),
                      Default => True,
                      Frozen  => True);
@@ -1273,13 +1285,57 @@ package body GPR2.Parser.Project is
          elsif View.Is_Defined then
             if Pack = No_Name then
                if not View.Check_Attribute (Name, Index, Result => Attr) then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "attribute """ & String (Name)
-                        & """ is not defined in project """ & String (Project)
-                        & '"',
-                        Get_Source_Reference (Self.File, Node)));
+                  --  Special case for Target & Runtime, that always default
+                  --  to the configuration value
+                  if Name_Type (To_Lower (Name)) = PRA.Target then
+                     --  Project'Target case
+                     Attr := GPR2.Project.Attribute.Create
+                       (Get_Identifier_Reference
+                          (Self.Path_Name,
+                           Sloc_Range (Node),
+                           Name_Type (To_Lower (Name))),
+                        Value   => Get_Value_Reference
+                          (Value_Not_Empty (Tree.Target),
+                           Sloc),
+                        Default => True,
+                        Frozen  => True);
+
+                  elsif Name_Type (To_Lower (Name)) = PRA.Canonical_Target then
+                     --  Project'Target case
+                     Attr := GPR2.Project.Attribute.Create
+                       (Get_Identifier_Reference
+                          (Self.Path_Name,
+                           Sloc_Range (Node),
+                           Name_Type (To_Lower (Name))),
+                        Value   => Get_Value_Reference
+                          (Value_Not_Empty (Tree.Target (Canonical => True)),
+                           Sloc),
+                        Default => True,
+                        Frozen  => True);
+
+                  elsif Name_Type (To_Lower (Name)) = PRA.Runtime then
+                     --  Project'Runtime (<lang>)
+                     Attr := GPR2.Project.Attribute.Create
+                       (Get_Identifier_Reference
+                          (Self.Path_Name,
+                           Sloc_Range (Node),
+                           Name_Type (To_Lower (Name))),
+                        Index   => Index,
+                        Value   => Get_Value_Reference
+                          (Value_Type (Tree.Runtime (Name_Type (Index.Text))),
+                           Sloc),
+                        Default => True,
+                        Frozen  => True);
+
+                  else
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "attribute """ & String (Name)
+                           & """ is not defined in project """
+                           & String (Project) & '"',
+                           Get_Source_Reference (Self.File, Node)));
+                  end if;
                end if;
 
             elsif View.Has_Packages (Pack)

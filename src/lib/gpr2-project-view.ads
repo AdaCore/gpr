@@ -174,14 +174,17 @@ package GPR2.Project.View is
    --  Name and/or Index is defined.
 
    function Check_Attribute
-     (Self   : Object;
-      Name   : Name_Type;
-      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural                := 0;
-      Result : out Attribute.Object) return Boolean
+     (Self      : Object;
+      Name      : Name_Type;
+      Index     : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos    : Natural                := 0;
+      Recursive : Boolean                := False;
+      Result    : out Project.Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True and set Result to attribute if attribute exists or has
    --  default value, returns False and set Result to Undefined otherwise.
+   --  If Recursive is set, and the attribute is not defined in the view, and
+   --  the view is extending, then the extended project attribute is checked.
 
    function Attributes
      (Self  : Object;
