@@ -2577,7 +2577,7 @@ package body GPR2.Project.Tree is
                      --  for backward compatibility, emit warnings
                      Self.Messages.Append
                        (Message.Create
-                          (Message.Warning,
+                          (Message.Error,
                            "attribute """ & String (A.Name.Text)
                            & """ cannot be used in " & Image (P_Kind) & 's',
                            A));
