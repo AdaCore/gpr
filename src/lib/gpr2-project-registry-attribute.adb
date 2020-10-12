@@ -39,8 +39,11 @@ package body GPR2.Project.Registry.Attribute is
    Defaults : Pack_Defaults.Map;
 
    In_Library       : constant Allowed_In :=
-                        (K_Library | K_Aggregate_Library => True,
-                         others                          => False);
+                        (K_Library           |
+                         K_Aggregate_Library |
+                         K_Standard          |
+                         K_Abstract => True,
+                         others     => False);
 
    In_Aggregates    : constant Allowed_In :=
                         (Aggregate_Kind => True,
