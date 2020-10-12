@@ -126,6 +126,8 @@ package GPR2.Project.Tree is
    --  defined when a gpr tool is invoked without a project file and is using
    --  an implicit project file that is virtually in the Project_Dir, but is
    --  physically in another directory.
+   --  Base is the knowledge base object used to configure the toolchain for
+   --  the project.
 
    procedure Unload (Self : in out Object);
    --  Unloads the tree and free all associated objects (projects, sources,

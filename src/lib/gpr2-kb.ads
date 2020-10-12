@@ -87,9 +87,14 @@ package GPR2.KB is
       return Object
      with Post => Create'Result.Is_Defined;
    --  Main entry point for creating a KB object.
-   --  Flags: tell the parser what part of the Knowledge Base to read
-   --  Default_KB: whether to load the default knowledge base or start empty
-   --  Custom_KB: a list of paths to use as custom knowledge base
+   --  The Flags will indicate how the knowledge base is read.
+   --  If Default_KB is set, then the default knowledge base embedded in the
+   --  gpr2 library is used to create the object. Otherwise, an empty knowledge
+   --  base is used.
+   --  Custom_KB provides a list of additional directories to use when reading
+   --  the knowledge base. If Default_KB is set, those directories will be used
+   --  in conjunction with the default knowledge base, while if Default_Kb is
+   --  not set, only those locations will be parsed.
 
    function Create
      (Location : GPR2.Path_Name.Object;
