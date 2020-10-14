@@ -2713,6 +2713,19 @@ package body GPR2.Project.Tree is
                      Project.View.Library_Src_Directory'Access);
                end if;
             end if;
+
+            if View.Kind in Aggregate_Kind then
+               for Agg of View.Aggregated loop
+                  if Agg.Is_Externally_Built then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "cannot aggregate externally built project """
+                           & String (Agg.Name) & """",
+                           Sloc => View.Attribute (PRA.Project_Files)));
+                  end if;
+               end loop;
+            end if;
          end;
       end Validity_Check;
 
