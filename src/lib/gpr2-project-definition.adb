@@ -1321,6 +1321,8 @@ package body GPR2.Project.Definition is
 
             if Source_Is_In_Interface then
                Interface_Sources.Exclude (Basename);
+            elsif Interface_Units.Is_Empty then
+               Interface_Sources.Exclude (Value_Type (File.Simple_Name));
             end if;
 
             Def.Sources.Insert (Src);

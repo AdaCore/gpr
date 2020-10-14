@@ -1,0 +1,2 @@
+description: Check extending project's interface files found in extended project
+driver: python_script

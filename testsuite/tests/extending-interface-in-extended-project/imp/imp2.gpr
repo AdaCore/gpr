@@ -1,0 +1,3 @@
+project Imp2 is
+   for Interfaces use ("pkg.ads");
+end Imp2;
