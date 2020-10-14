@@ -22,6 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Unbounded;
+
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
@@ -56,6 +58,17 @@ package GPR2.Parser.Project is
       Messages      : out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
+
+   function Parse
+     (Contents        : Ada.Strings.Unbounded.Unbounded_String;
+      Messages        : out Log.Object;
+      Pseudo_Filename : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
+      return Object;
+   --  Performs phase-1 on Contents. Project parsed this way is not registered
+   --  in the Registry. Pseudo_Filename is used for reporting possible errors,
+   --  when not specified the default /string_input/default.gpr is used.
+   --  This is mostly intended to load configuration projects created in memory
+   --  to be used during autoconfiguration step.
 
    procedure Process
      (Self    : in out Object;

@@ -135,6 +135,13 @@ package body GPR2.Parser.Project is
    --  helper routine to get strings out of built-in parameters for example.
    --  Set Error to True if the node was not a simple string-literal.
 
+   function Parse_Stage_1
+     (Unit          : Analysis_Unit;
+      Filename      : GPR2.Path_Name.Object;
+      Implicit_With : Containers.Name_Set;
+      Messages      : out Log.Object) return Object;
+   --  Analyzes the project, recording all external references and imports
+
    --------------
    -- Extended --
    --------------
@@ -288,619 +295,99 @@ package body GPR2.Parser.Project is
    -----------
 
    function Parse
+     (Contents        : Ada.Strings.Unbounded.Unbounded_String;
+      Messages        : out Log.Object;
+      Pseudo_Filename : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined)
+      return Object
+   is
+      use Ada.Characters.Conversions;
+      use Ada.Strings.Wide_Wide_Unbounded;
+
+      Filename : constant GPR2.Path_Name.Object :=
+                   (if Pseudo_Filename.Is_Defined then Pseudo_Filename
+                    else GPR2.Path_Name.Create_File
+                      ("/string_input/default.gpr"));
+      Context  : constant Analysis_Context := Create_Context ("UTF-8");
+      Unit     : Analysis_Unit;
+      Project  : Object;
+   begin
+      if Contents = Null_Unbounded_String then
+         Messages.Append
+           (GPR2.Message.Create
+              (Level   => Message.Error,
+               Message => "project string is empty",
+               Sloc    => Source_Reference.Create (Filename.Value, 0, 0)));
+
+         return Undefined;
+      end if;
+
+      Unit := Get_From_Buffer
+        (Context, Filename.Value, Buffer => To_String (Contents));
+
+      if Root (Unit).Is_Null or else Has_Diagnostics (Unit) then
+         if Has_Diagnostics (Unit) then
+            for D of Diagnostics (Unit) loop
+               declare
+                  Sloc : constant Source_Reference.Object'Class :=
+                           Source_Reference.Create
+                             (Filename => Filename.Value,
+                              Line     =>
+                                Natural (D.Sloc_Range.Start_Line),
+                              Column   =>
+                                Natural (D.Sloc_Range.Start_Column));
+               begin
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message =>
+                          To_String (To_Wide_Wide_String (D.Message))));
+               end;
+            end loop;
+         end if;
+
+         return Undefined;
+      end if;
+
+      --  Do the first stage parsing. We just need the external references
+      --  and the project dependencies. This is the minimum to be able to
+      --  create the project tree and setup the project context.
+
+      Project := Parse_Stage_1
+        (Unit, Filename, GPR2.Containers.Empty_Name_Set, Messages);
+
+      --  Then record langkit tree data with project. Those data will be
+      --  used for later parsing when creating view of projects with a
+      --  full context.
+
+      Project.File    := Filename;
+      Project.Unit    := Unit;
+      Project.Context := Context;
+
+      --  If this is a configuration project, then we register it under the
+      --  "config" name as this is what is expected on this implementation.
+      --  That is, referencing the configuration is done using
+      --  Config'Archive_Suffix for example.
+
+      if Project.Qualifier = K_Configuration then
+         Project.Name := To_Unbounded_String ("Config");
+      end if;
+
+      return Project;
+
+   end Parse;
+
+   -----------
+   -- Parse --
+   -----------
+
+   function Parse
      (Filename      : GPR2.Path_Name.Object;
       Implicit_With : Containers.Name_Set;
       Messages      : out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
-
-      function Parse_Stage_1 (Unit : Analysis_Unit) return Object;
-      --  Analyze project, record all externals variables and imports
-
-      -------------------
-      -- Parse_Stage_1 --
-      -------------------
-
-      function Parse_Stage_1 (Unit : Analysis_Unit) return Object is
-
-         Project : Object;
-         --  The project being constructed
-
-         function Parser (Node : GPR_Node'Class) return Visit_Status;
-         --  Actual parser callabck for the project
-
-         ------------
-         -- Parser --
-         ------------
-
-         function Parser (Node : GPR_Node'Class) return Visit_Status is
-
-            Status : Visit_Status := Into;
-
-            procedure Parse_Project_Declaration (N : Project_Declaration);
-            --  Parse a project declaration and set the qualifier if present
-
-            procedure Parse_Builtin (N : Builtin_Function_Call);
-            --  Put the name of the external into the Externals list
-
-            procedure Parse_With_Decl (N : With_Decl);
-            --  Add the name of the withed project into the Imports list
-
-            procedure Parse_Typed_String_Decl (N : Typed_String_Decl);
-            --  A typed string declaration
-
-            -------------------
-            -- Parse_Builtin --
-            -------------------
-
-            procedure Parse_Builtin (N : Builtin_Function_Call) is
-
-               procedure Parse_External_Reference
-                 (N : Builtin_Function_Call);
-               --  Put the name of the external into the Externals list
-
-               procedure Parse_External_As_List_Reference
-                 (N : Builtin_Function_Call);
-               --  Put the name of the external into the Externals list
-
-               procedure Parse_Split_Reference (N : Builtin_Function_Call);
-               --  Check that split parameters has the proper type
-
-               --------------------------------------
-               -- Parse_External_As_List_Reference --
-               --------------------------------------
-
-               procedure Parse_External_As_List_Reference
-                 (N : Builtin_Function_Call)
-               is
-                  Parameters : constant Expr_List := F_Parameters (N);
-                  Exprs      : constant Term_List_List := F_Exprs (Parameters);
-               begin
-                  --  Note that this routine is only validating the syntax
-                  --  of the external_as_list built-in. It does not add the
-                  --  variable referenced by the built-in as dependencies
-                  --  as an external_as_list result cannot be used in a
-                  --  case statement.
-
-                  if Exprs.Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Get_Source_Reference (Filename, N),
-                           Message =>
-                             "missing parameters for external_as_list"
-                             & " built-in"));
-
-                  else
-                     --  We have External_As_List ("VAR", "SEP"), check the
-                     --  variable name.
-
-                     declare
-                        Var_Node : constant Term_List :=
-                                     Exprs.Child (1).As_Term_List;
-                        Error    : Boolean;
-                        Var      : constant Value_Type :=
-                                     Get_String_Literal (Var_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference (Filename, Var_Node),
-                                 Message =>
-                                   "external_as_list first parameter must be "
-                                   & "a simple string"));
-
-                        elsif Var = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference (Filename, Var_Node),
-                                 Message =>
-                                   "external_as_list variable name must not "
-                                   & "be empty"));
-                        end if;
-                     end;
-
-                     --  Check that the second parameter exists and is a string
-
-                     if Child (Exprs, 2).Is_Null then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference (Filename, Exprs),
-                              Message =>
-                                "external_as_list requires a second "
-                                & "parameter"));
-                     else
-                        declare
-                           Sep_Node : constant Term_List :=
-                                        Child (Exprs, 2).As_Term_List;
-                           Error    : Boolean;
-                           Sep      : constant Value_Type :=
-                                        Get_String_Literal (Sep_Node, Error);
-                        begin
-                           if Error then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Sep_Node),
-                                    Message =>
-                                      "external_as_list second parameter must "
-                                      & "be a simple string"));
-
-                           elsif Sep = "" then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Sep_Node),
-                                    Message =>
-                                      "external_as_list separator must not "
-                                      & "be empty"));
-                           end if;
-                        end;
-                     end if;
-                  end if;
-               end Parse_External_As_List_Reference;
-
-               ------------------------------
-               -- Parse_External_Reference --
-               ------------------------------
-
-               procedure Parse_External_Reference
-                 (N : Builtin_Function_Call)
-               is
-                  Parameters : constant Expr_List := F_Parameters (N);
-                  Exprs      : constant Term_List_List := F_Exprs (Parameters);
-               begin
-                  if Exprs.Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Get_Source_Reference (Filename, N),
-                           Message =>
-                             "missing parameter for external built-in"));
-
-                  else
-                     --  We have External ("VAR" [, "VALUE"]), get the
-                     --  variable name.
-
-                     declare
-                        Var_Node : constant Term_List :=
-                                     Child (Exprs, 1).As_Term_List;
-                        Error    : Boolean;
-                        Var      : constant Value_Type :=
-                                     Get_String_Literal (Var_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference (Filename, Var_Node),
-                                 Message =>
-                                   "external first parameter must be a "
-                                   & "simple string"));
-
-                        elsif Var = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference (Filename, Var_Node),
-                                 Message =>
-                                   "external variable name must not be "
-                                   & "empty"));
-
-                        else
-                           Project.Externals.Append
-                             (Optional_Name_Type (Var));
-                        end if;
-                     end;
-                  end if;
-               end Parse_External_Reference;
-
-               ---------------------------
-               -- Parse_Split_Reference --
-               ---------------------------
-
-               procedure Parse_Split_Reference (N : Builtin_Function_Call) is
-                  Parameters : constant Expr_List := F_Parameters (N);
-                  Exprs      : constant Term_List_List := F_Exprs (Parameters);
-               begin
-                  --  Note that this routine is only validating the syntax
-                  --  of the split built-in.
-
-                  if Exprs.Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Get_Source_Reference (Filename, N),
-                           Message =>
-                             "missing parameters for split built-in"));
-
-                  else
-                     --  We have Split ("STR", "SEP"), check that STR and
-                     --  SEP are actually simple strings.
-
-                     declare
-                        Str_Node : constant Term_List :=
-                                     Child (Exprs, 1).As_Term_List;
-                        Error    : Boolean;
-                        Str      : constant Value_Type :=
-                                     Get_String_Literal (Str_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference (Filename, Str_Node),
-                                 Message =>
-                                   "split first parameter must be "
-                                   & "a simple string"));
-
-                        elsif Str = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference (Filename, Str_Node),
-                                 Message =>
-                                   "split first parameter must not "
-                                   & "be empty"));
-                        end if;
-                     end;
-
-                     --  Check that the second parameter exists and is a string
-
-                     if Child (Exprs, 2).Is_Null then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference (Filename, Exprs),
-                              Message => "split requires a second parameter"));
-                     else
-                        declare
-                           Sep_Node : constant Term_List :=
-                                         Child (Exprs, 2).As_Term_List;
-                           Error    : Boolean;
-                           Sep      : constant Value_Type :=
-                                        Get_String_Literal (Sep_Node, Error);
-                        begin
-                           if Error then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Sep_Node),
-                                    Message =>
-                                      "split separator parameter must "
-                                      & "be a simple string"));
-
-                           elsif Sep = "" then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Sep_Node),
-                                    Message =>
-                                      "split separator parameter must not "
-                                      & "be empty"));
-                           end if;
-                        end;
-                     end if;
-                  end if;
-               end Parse_Split_Reference;
-
-               Function_Name : constant Name_Type :=
-                                 Get_Name_Type (F_Function_Name (N));
-            begin
-               if Function_Name = "external" then
-                  Parse_External_Reference (N);
-
-               elsif Function_Name = "external_as_list" then
-                  Parse_External_As_List_Reference (N);
-
-               elsif Function_Name = "split" then
-                  Parse_Split_Reference (N);
-
-               else
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => Get_Source_Reference (Filename, N),
-                        Message =>
-                          "unknown built-in '"
-                        & String (Function_Name) & "'"));
-               end if;
-            end Parse_Builtin;
-
-            -------------------------------
-            -- Parse_Project_Declaration --
-            -------------------------------
-
-            procedure Parse_Project_Declaration (N : Project_Declaration) is
-               Qual : constant Project_Qualifier := F_Qualifier (N);
-               Ext  : constant Project_Extension := F_Extension (N);
-            begin
-               Project.Name := To_Unbounded_String
-                 (To_UTF8 (F_Project_Name (N).Text));
-
-               if Name (Project)
-                 /= Name_Type (To_UTF8 (F_End_Name (N).Text))
-               then
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, F_End_Name (N)),
-                        Message =>
-                          "'end " & String (Name (Project)) & "' expected"));
-               end if;
-
-               --  If we have an explicit qualifier parse it now. If not the
-               --  kind of project will be determined later during a second
-               --  pass.
-
-               if Present (Qual) then
-                  case Kind (F_Qualifier (Qual)) is
-                     when GPR_Abstract_Present =>
-                        Project.Qualifier := K_Abstract;
-
-                     when GPR_Qualifier_Names =>
-                        declare
-                           Not_Present : constant Name_Type := "@";
-
-                           Names : constant Qualifier_Names :=
-                                     Qual.F_Qualifier.As_Qualifier_Names;
-                           Name_1 : constant Identifier :=
-                                      F_Qualifier_Id1 (Names);
-                           Str_1  : constant Name_Type :=
-                                      (if Name_1.Is_Null
-                                       then Not_Present
-                                       else Get_Name_Type
-                                              (Name_1.As_Single_Tok_Node));
-                           Name_2 : constant Identifier :=
-                                      F_Qualifier_Id2 (Names);
-                           Str_2  : constant Name_Type :=
-                                      (if Name_2.Is_Null
-                                       then Not_Present
-                                       else Get_Name_Type
-                                              (Name_2.As_Single_Tok_Node));
-                        begin
-                           if Str_1 = "library"
-                             and then Str_2 = Not_Present
-                           then
-                              Project.Qualifier := K_Library;
-
-                           elsif Str_1 = "aggregate"
-                             and then Str_2 = Not_Present
-                           then
-                              Project.Qualifier := K_Aggregate;
-
-                           elsif Str_1 = "aggregate"
-                             and then Str_2 = "library"
-                           then
-                              Project.Qualifier := K_Aggregate_Library;
-
-                           elsif Str_1 = "configuration"
-                             and then Str_2 = Not_Present
-                           then
-                              Project.Qualifier := K_Configuration;
-
-                           else
-                              --  ?? an error
-                              null;
-                           end if;
-                        end;
-
-                     when others =>
-                        --  ?? an error
-                        null;
-                  end case;
-               end if;
-
-               --  Check if we have an extends declaration
-
-               if Present (Ext) then
-                  Project.Extended :=
-                    GPR2.Project.Import.Create
-                      (Get_Raw_Path (F_Path_Name (Ext)),
-                       Get_Source_Reference (Filename, Ext),
-                       Is_Limited => False);
-                  Project.Is_All := F_Is_All (Ext);
-               end if;
-            end Parse_Project_Declaration;
-
-            -----------------------------
-            -- Parse_Typed_String_Decl --
-            -----------------------------
-
-            procedure Parse_Typed_String_Decl (N : Typed_String_Decl) is
-               Name       : constant Name_Type :=
-                              Get_Name_Type (F_Type_Id (N));
-               Values     : constant String_Literal_List :=
-                              F_String_Literals (N);
-               Num_Childs : constant Natural := Children_Count (Values);
-               Cur_Child  : GPR_Node;
-               Set        : Containers.Value_Set;
-               List       : Containers.Source_Value_List;
-            begin
-               if Project.Types.Contains (Name) then
-                  Messages.Append
-                    (GPR2.Message.Create
-                       (Level   => Message.Error,
-                        Sloc    =>
-                          Get_Source_Reference (Filename, F_Type_Id (N)),
-                        Message =>
-                          "type " & String (Name) & " already defined"));
-
-               else
-                  for J in 1 .. Num_Childs loop
-                     Cur_Child := Child (GPR_Node (Values), J);
-
-                     if not Cur_Child.Is_Null then
-                        declare
-                           Value : constant Value_Type :=
-                                     Get_Value_Type
-                                       (Cur_Child.As_String_Literal);
-                        begin
-                           if Set.Contains (Value) then
-                              Messages.Append
-                                (GPR2.Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    =>
-                                      Get_Source_Reference
-                                        (Filename, Cur_Child),
-                                    Message =>
-                                      String (Name)
-                                      & " has duplicate value '"
-                                      & String (Value) & '''));
-                           else
-                              Set.Insert (Value);
-                              List.Append
-                                (Get_Value_Reference
-                                   (Filename, Sloc_Range (Cur_Child), Value));
-                           end if;
-                        end;
-                     end if;
-                  end loop;
-
-                  Project.Types.Insert
-                    (Name,
-                     GPR2.Project.Typ.Create
-                       (Get_Identifier_Reference
-                          (Filename, Sloc_Range (F_Type_Id (N)), Name), List));
-               end if;
-            end Parse_Typed_String_Decl;
-
-            ---------------------
-            -- Parse_With_Decl --
-            ---------------------
-
-            procedure Parse_With_Decl (N : With_Decl) is
-               Path_Names : constant String_Literal_List :=
-                              F_Path_Names (N);
-               Num_Childs : constant Natural := Children_Count (N);
-               Cur_Child  : GPR_Node;
-            begin
-               for J in 1 .. Num_Childs loop
-                  Cur_Child := Child (GPR_Node (Path_Names), J);
-
-                  if not Cur_Child.Is_Null then
-                     declare
-                        use type GPR2.Path_Name.Object;
-
-                        Path : constant GPR2.Path_Name.Object :=
-                                 Get_Raw_Path (Cur_Child.As_String_Literal);
-                     begin
-                        if Project.Imports.Contains (Path) then
-                           declare
-                              Prev : constant GPR2.Project.Import.Object :=
-                                       Project.Imports.Element (Path);
-                           begin
-                              if Prev.Path_Name = Path then
-                                 Messages.Append
-                                   (GPR2.Message.Create
-                                      (Level   => Message.Warning,
-                                       Message => "duplicate with clause '"
-                                       & String (Path.Base_Name) & ''',
-                                       Sloc    => Get_Source_Reference
-                                         (Filename, Cur_Child)));
-
-                              else
-                                 Messages.Append
-                                   (GPR2.Message.Create
-                                      (Level   => Message.Warning,
-                                       Message => "duplicate project name '"
-                                       & String (Path.Base_Name) & ''',
-                                       Sloc    => Get_Source_Reference
-                                         (Filename, Cur_Child)));
-                                 Messages.Append
-                                   (GPR2.Message.Create
-                                      (Level   => Message.Warning,
-                                       Message => "already in '"
-                                       & String (Prev.Path_Name.Name)
-                                       & ''',
-                                       Sloc    => Get_Source_Reference
-                                         (Filename, Cur_Child)));
-                              end if;
-                           end;
-
-                        else
-                           Project.Imports.Insert
-                             (GPR2.Project.Import.Create
-                                (Path,
-                                 Get_Source_Reference (Filename, Cur_Child),
-                                 F_Is_Limited (N)));
-                        end if;
-                     end;
-                  end if;
-               end loop;
-            end Parse_With_Decl;
-
-         begin
-            case Kind (Node) is
-               when GPR_Project_Declaration =>
-                  Parse_Project_Declaration (Node.As_Project_Declaration);
-
-               when GPR_Builtin_Function_Call =>
-                  Parse_Builtin (Node.As_Builtin_Function_Call);
-                  Status := Over;
-
-               when GPR_With_Decl =>
-                  Parse_With_Decl (Node.As_With_Decl);
-                  Status := Over;
-
-               when GPR_Typed_String_Decl =>
-                  Parse_Typed_String_Decl (Node.As_Typed_String_Decl);
-                  Status := Over;
-
-               when others =>
-                  null;
-            end case;
-
-            return Status;
-         end Parser;
-
-      begin
-         Traverse (Root (Unit), Parser'Access);
-
-         --  Import --implicit-with options
-
-         for W of Implicit_With loop
-            declare
-               use GPR2.Path_Name;
-               PN : constant GPR2.Path_Name.Object :=
-                      Create_File (W, No_Resolution);
-            begin
-               if PN /= Filename
-                 and then not Project.Imports.Contains (PN)
-               then
-                  Project.Imports.Insert
-                    (GPR2.Project.Import.Create
-                       (PN,
-                        Source_Reference.Object
-                          (Source_Reference.Create (Filename.Value, 0, 0)),
-                        Is_Limited => True));
-               end if;
-            end;
-         end loop;
-
-         return Project;
-      end Parse_Stage_1;
 
       Context : constant Analysis_Context := Create_Context ("UTF-8");
       Unit    : Analysis_Unit;
@@ -959,7 +446,7 @@ package body GPR2.Parser.Project is
          --  and the project dependencies. This is the minimum to be able to
          --  create the project tree and setup the project context.
 
-         Project := Parse_Stage_1 (Unit);
+         Project := Parse_Stage_1 (Unit, Filename, Implicit_With, Messages);
 
          --  Then record langkit tree data with project. Those data will be
          --  used for later parsing when creating view of projects with a
@@ -985,6 +472,614 @@ package body GPR2.Parser.Project is
          return Project;
       end if;
    end Parse;
+
+   -------------------
+   -- Parse_Stage_1 --
+   -------------------
+
+   function Parse_Stage_1
+     (Unit          : Analysis_Unit;
+      Filename      : GPR2.Path_Name.Object;
+      Implicit_With : Containers.Name_Set;
+      Messages      : out Log.Object) return Object is
+
+      Project : Object;
+      --  The project being constructed
+
+      function Parser (Node : GPR_Node'Class) return Visit_Status;
+      --  Actual parser callabck for the project
+
+      ------------
+      -- Parser --
+      ------------
+
+      function Parser (Node : GPR_Node'Class) return Visit_Status is
+
+         Status : Visit_Status := Into;
+
+         procedure Parse_Project_Declaration (N : Project_Declaration);
+         --  Parse a project declaration and set the qualifier if present
+
+         procedure Parse_Builtin (N : Builtin_Function_Call);
+         --  Put the name of the external into the Externals list
+
+         procedure Parse_With_Decl (N : With_Decl);
+         --  Add the name of the withed project into the Imports list
+
+         procedure Parse_Typed_String_Decl (N : Typed_String_Decl);
+         --  A typed string declaration
+
+         -------------------
+         -- Parse_Builtin --
+         -------------------
+
+         procedure Parse_Builtin (N : Builtin_Function_Call) is
+
+            procedure Parse_External_Reference
+              (N : Builtin_Function_Call);
+            --  Put the name of the external into the Externals list
+
+            procedure Parse_External_As_List_Reference
+              (N : Builtin_Function_Call);
+            --  Put the name of the external into the Externals list
+
+            procedure Parse_Split_Reference (N : Builtin_Function_Call);
+            --  Check that split parameters has the proper type
+
+            --------------------------------------
+            -- Parse_External_As_List_Reference --
+            --------------------------------------
+
+            procedure Parse_External_As_List_Reference
+              (N : Builtin_Function_Call)
+            is
+               Parameters : constant Expr_List := F_Parameters (N);
+               Exprs      : constant Term_List_List := F_Exprs (Parameters);
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the external_as_list built-in. It does not add the
+               --  variable referenced by the built-in as dependencies
+               --  as an external_as_list result cannot be used in a
+               --  case statement.
+
+               if Exprs.Is_Null then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message =>
+                          "missing parameters for external_as_list"
+                        & " built-in"));
+
+               else
+                  --  We have External_As_List ("VAR", "SEP"), check the
+                  --  variable name.
+
+                  declare
+                     Var_Node : constant Term_List :=
+                                  Exprs.Child (1).As_Term_List;
+                     Error    : Boolean;
+                     Var      : constant Value_Type :=
+                                  Get_String_Literal (Var_Node, Error);
+                  begin
+                     if Error then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Var_Node),
+                              Message =>
+                                "external_as_list first parameter must be "
+                              & "a simple string"));
+
+                     elsif Var = "" then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Var_Node),
+                              Message =>
+                                "external_as_list variable name must not "
+                              & "be empty"));
+                     end if;
+                  end;
+
+                  --  Check that the second parameter exists and is a string
+
+                  if Child (Exprs, 2).Is_Null then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference (Filename, Exprs),
+                           Message =>
+                             "external_as_list requires a second "
+                           & "parameter"));
+                  else
+                     declare
+                        Sep_Node : constant Term_List :=
+                                     Child (Exprs, 2).As_Term_List;
+                        Error    : Boolean;
+                        Sep      : constant Value_Type :=
+                                     Get_String_Literal (Sep_Node, Error);
+                     begin
+                        if Error then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sep_Node),
+                                 Message =>
+                                   "external_as_list second parameter must "
+                                 & "be a simple string"));
+
+                        elsif Sep = "" then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sep_Node),
+                                 Message =>
+                                   "external_as_list separator must not "
+                                 & "be empty"));
+                        end if;
+                     end;
+                  end if;
+               end if;
+            end Parse_External_As_List_Reference;
+
+            ------------------------------
+            -- Parse_External_Reference --
+            ------------------------------
+
+            procedure Parse_External_Reference
+              (N : Builtin_Function_Call)
+            is
+               Parameters : constant Expr_List := F_Parameters (N);
+               Exprs      : constant Term_List_List := F_Exprs (Parameters);
+            begin
+               if Exprs.Is_Null then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message =>
+                          "missing parameter for external built-in"));
+
+               else
+                  --  We have External ("VAR" [, "VALUE"]), get the
+                  --  variable name.
+
+                  declare
+                     Var_Node : constant Term_List :=
+                                  Child (Exprs, 1).As_Term_List;
+                     Error    : Boolean;
+                     Var      : constant Value_Type :=
+                                  Get_String_Literal (Var_Node, Error);
+                  begin
+                     if Error then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Var_Node),
+                              Message =>
+                                "external first parameter must be a "
+                              & "simple string"));
+
+                     elsif Var = "" then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Var_Node),
+                              Message =>
+                                "external variable name must not be "
+                              & "empty"));
+
+                     else
+                        Project.Externals.Append
+                          (Optional_Name_Type (Var));
+                     end if;
+                  end;
+               end if;
+            end Parse_External_Reference;
+
+            ---------------------------
+            -- Parse_Split_Reference --
+            ---------------------------
+
+            procedure Parse_Split_Reference (N : Builtin_Function_Call) is
+               Parameters : constant Expr_List := F_Parameters (N);
+               Exprs      : constant Term_List_List := F_Exprs (Parameters);
+            begin
+               --  Note that this routine is only validating the syntax
+               --  of the split built-in.
+
+               if Exprs.Is_Null then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, N),
+                        Message =>
+                          "missing parameters for split built-in"));
+
+               else
+                  --  We have Split ("STR", "SEP"), check that STR and
+                  --  SEP are actually simple strings.
+
+                  declare
+                     Str_Node : constant Term_List :=
+                                  Child (Exprs, 1).As_Term_List;
+                     Error    : Boolean;
+                     Str      : constant Value_Type :=
+                                  Get_String_Literal (Str_Node, Error);
+                  begin
+                     if Error then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Str_Node),
+                              Message =>
+                                "split first parameter must be "
+                              & "a simple string"));
+
+                     elsif Str = "" then
+                        Messages.Append
+                          (GPR2.Message.Create
+                             (Level   => Message.Error,
+                              Sloc    =>
+                                Get_Source_Reference (Filename, Str_Node),
+                              Message =>
+                                "split first parameter must not "
+                              & "be empty"));
+                     end if;
+                  end;
+
+                  --  Check that the second parameter exists and is a string
+
+                  if Child (Exprs, 2).Is_Null then
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Sloc    =>
+                             Get_Source_Reference (Filename, Exprs),
+                           Message => "split requires a second parameter"));
+                  else
+                     declare
+                        Sep_Node : constant Term_List :=
+                                     Child (Exprs, 2).As_Term_List;
+                        Error    : Boolean;
+                        Sep      : constant Value_Type :=
+                                     Get_String_Literal (Sep_Node, Error);
+                     begin
+                        if Error then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sep_Node),
+                                 Message =>
+                                   "split separator parameter must "
+                                 & "be a simple string"));
+
+                        elsif Sep = "" then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Sep_Node),
+                                 Message =>
+                                   "split separator parameter must not "
+                                 & "be empty"));
+                        end if;
+                     end;
+                  end if;
+               end if;
+            end Parse_Split_Reference;
+
+            Function_Name : constant Name_Type :=
+                              Get_Name_Type (F_Function_Name (N));
+         begin
+            if Function_Name = "external" then
+               Parse_External_Reference (N);
+
+            elsif Function_Name = "external_as_list" then
+               Parse_External_As_List_Reference (N);
+
+            elsif Function_Name = "split" then
+               Parse_Split_Reference (N);
+
+            else
+               Messages.Append
+                 (GPR2.Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Get_Source_Reference (Filename, N),
+                     Message =>
+                       "unknown built-in '"
+                     & String (Function_Name) & "'"));
+            end if;
+         end Parse_Builtin;
+
+         -------------------------------
+         -- Parse_Project_Declaration --
+         -------------------------------
+
+         procedure Parse_Project_Declaration (N : Project_Declaration) is
+            Qual : constant Project_Qualifier := F_Qualifier (N);
+            Ext  : constant Project_Extension := F_Extension (N);
+         begin
+            Project.Name := To_Unbounded_String
+              (To_UTF8 (F_Project_Name (N).Text));
+
+            if Name (Project)
+              /= Name_Type (To_UTF8 (F_End_Name (N).Text))
+            then
+               Messages.Append
+                 (GPR2.Message.Create
+                    (Level   => Message.Error,
+                     Sloc    =>
+                       Get_Source_Reference (Filename, F_End_Name (N)),
+                     Message =>
+                       "'end " & String (Name (Project)) & "' expected"));
+            end if;
+
+            --  If we have an explicit qualifier parse it now. If not the
+            --  kind of project will be determined later during a second
+            --  pass.
+
+            if Present (Qual) then
+               case Kind (F_Qualifier (Qual)) is
+                  when GPR_Abstract_Present =>
+                     Project.Qualifier := K_Abstract;
+
+                  when GPR_Qualifier_Names =>
+                     declare
+                        Not_Present : constant Name_Type := "@";
+
+                        Names : constant Qualifier_Names :=
+                                  Qual.F_Qualifier.As_Qualifier_Names;
+                        Name_1 : constant Identifier :=
+                                   F_Qualifier_Id1 (Names);
+                        Str_1  : constant Name_Type :=
+                                   (if Name_1.Is_Null
+                                    then Not_Present
+                                    else Get_Name_Type
+                                      (Name_1.As_Single_Tok_Node));
+                        Name_2 : constant Identifier :=
+                                   F_Qualifier_Id2 (Names);
+                        Str_2  : constant Name_Type :=
+                                   (if Name_2.Is_Null
+                                    then Not_Present
+                                    else Get_Name_Type
+                                      (Name_2.As_Single_Tok_Node));
+                     begin
+                        if Str_1 = "library"
+                          and then Str_2 = Not_Present
+                        then
+                           Project.Qualifier := K_Library;
+
+                        elsif Str_1 = "aggregate"
+                          and then Str_2 = Not_Present
+                        then
+                           Project.Qualifier := K_Aggregate;
+
+                        elsif Str_1 = "aggregate"
+                          and then Str_2 = "library"
+                        then
+                           Project.Qualifier := K_Aggregate_Library;
+
+                        elsif Str_1 = "configuration"
+                          and then Str_2 = Not_Present
+                        then
+                           Project.Qualifier := K_Configuration;
+
+                        else
+                           --  ?? an error
+                           null;
+                        end if;
+                     end;
+
+                  when others =>
+                     --  ?? an error
+                     null;
+               end case;
+            end if;
+
+            --  Check if we have an extends declaration
+
+            if Present (Ext) then
+               Project.Extended :=
+                 GPR2.Project.Import.Create
+                   (Get_Raw_Path (F_Path_Name (Ext)),
+                    Get_Source_Reference (Filename, Ext),
+                    Is_Limited => False);
+               Project.Is_All := F_Is_All (Ext);
+            end if;
+         end Parse_Project_Declaration;
+
+         -----------------------------
+         -- Parse_Typed_String_Decl --
+         -----------------------------
+
+         procedure Parse_Typed_String_Decl (N : Typed_String_Decl) is
+            Name       : constant Name_Type :=
+                           Get_Name_Type (F_Type_Id (N));
+            Values     : constant String_Literal_List :=
+                           F_String_Literals (N);
+            Num_Childs : constant Natural := Children_Count (Values);
+            Cur_Child  : GPR_Node;
+            Set        : Containers.Value_Set;
+            List       : Containers.Source_Value_List;
+         begin
+            if Project.Types.Contains (Name) then
+               Messages.Append
+                 (GPR2.Message.Create
+                    (Level   => Message.Error,
+                     Sloc    =>
+                       Get_Source_Reference (Filename, F_Type_Id (N)),
+                     Message =>
+                       "type " & String (Name) & " already defined"));
+
+            else
+               for J in 1 .. Num_Childs loop
+                  Cur_Child := Child (GPR_Node (Values), J);
+
+                  if not Cur_Child.Is_Null then
+                     declare
+                        Value : constant Value_Type :=
+                                  Get_Value_Type
+                                    (Cur_Child.As_String_Literal);
+                     begin
+                        if Set.Contains (Value) then
+                           Messages.Append
+                             (GPR2.Message.Create
+                                (Level   => Message.Error,
+                                 Sloc    =>
+                                   Get_Source_Reference
+                                     (Filename, Cur_Child),
+                                 Message =>
+                                   String (Name)
+                                 & " has duplicate value '"
+                                 & String (Value) & '''));
+                        else
+                           Set.Insert (Value);
+                           List.Append
+                             (Get_Value_Reference
+                                (Filename, Sloc_Range (Cur_Child), Value));
+                        end if;
+                     end;
+                  end if;
+               end loop;
+
+               Project.Types.Insert
+                 (Name,
+                  GPR2.Project.Typ.Create
+                    (Get_Identifier_Reference
+                         (Filename, Sloc_Range (F_Type_Id (N)), Name), List));
+            end if;
+         end Parse_Typed_String_Decl;
+
+         ---------------------
+         -- Parse_With_Decl --
+         ---------------------
+
+         procedure Parse_With_Decl (N : With_Decl) is
+            Path_Names : constant String_Literal_List :=
+                           F_Path_Names (N);
+            Num_Childs : constant Natural := Children_Count (N);
+            Cur_Child  : GPR_Node;
+         begin
+            for J in 1 .. Num_Childs loop
+               Cur_Child := Child (GPR_Node (Path_Names), J);
+
+               if not Cur_Child.Is_Null then
+                  declare
+                     use type GPR2.Path_Name.Object;
+
+                     Path : constant GPR2.Path_Name.Object :=
+                              Get_Raw_Path (Cur_Child.As_String_Literal);
+                  begin
+                     if Project.Imports.Contains (Path) then
+                        declare
+                           Prev : constant GPR2.Project.Import.Object :=
+                                    Project.Imports.Element (Path);
+                        begin
+                           if Prev.Path_Name = Path then
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Warning,
+                                    Message => "duplicate with clause '"
+                                    & String (Path.Base_Name) & ''',
+                                    Sloc    => Get_Source_Reference
+                                      (Filename, Cur_Child)));
+
+                           else
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Warning,
+                                    Message => "duplicate project name '"
+                                    & String (Path.Base_Name) & ''',
+                                    Sloc    => Get_Source_Reference
+                                      (Filename, Cur_Child)));
+                              Messages.Append
+                                (GPR2.Message.Create
+                                   (Level   => Message.Warning,
+                                    Message => "already in '"
+                                    & String (Prev.Path_Name.Name)
+                                    & ''',
+                                    Sloc    => Get_Source_Reference
+                                      (Filename, Cur_Child)));
+                           end if;
+                        end;
+
+                     else
+                        Project.Imports.Insert
+                          (GPR2.Project.Import.Create
+                             (Path,
+                              Get_Source_Reference (Filename, Cur_Child),
+                              F_Is_Limited (N)));
+                     end if;
+                  end;
+               end if;
+            end loop;
+         end Parse_With_Decl;
+
+      begin
+         case Kind (Node) is
+            when GPR_Project_Declaration =>
+               Parse_Project_Declaration (Node.As_Project_Declaration);
+
+            when GPR_Builtin_Function_Call =>
+               Parse_Builtin (Node.As_Builtin_Function_Call);
+               Status := Over;
+
+            when GPR_With_Decl =>
+               Parse_With_Decl (Node.As_With_Decl);
+               Status := Over;
+
+            when GPR_Typed_String_Decl =>
+               Parse_Typed_String_Decl (Node.As_Typed_String_Decl);
+               Status := Over;
+
+            when others =>
+               null;
+         end case;
+
+         return Status;
+      end Parser;
+
+   begin
+      Traverse (Root (Unit), Parser'Access);
+
+      --  Import --implicit-with options
+
+      for W of Implicit_With loop
+         declare
+            use GPR2.Path_Name;
+            PN : constant GPR2.Path_Name.Object :=
+                   Create_File (W, No_Resolution);
+         begin
+            if PN /= Filename
+              and then not Project.Imports.Contains (PN)
+            then
+               Project.Imports.Insert
+                 (GPR2.Project.Import.Create
+                    (PN,
+                     Source_Reference.Object
+                       (Source_Reference.Create (Filename.Value, 0, 0)),
+                     Is_Limited => True));
+            end if;
+         end;
+      end loop;
+
+      return Project;
+   end Parse_Stage_1;
 
    ---------------
    -- Path_Name --
