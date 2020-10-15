@@ -19,6 +19,7 @@
 with Ada.Text_IO;
 
 with GPR2.Context;
+with GPR2.Log;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -90,4 +91,15 @@ begin
    for P of Prj loop
       Display (P);
    end loop;
+exception
+   when Project_Error =>
+      for C in Prj.Log_Messages.Iterate
+        (Information => False,
+         Warning     => True,
+         Error       => True,
+         Read        => False,
+         Unread      => True)
+      loop
+         Text_IO.Put_Line (GPR2.Log.Element (C).Format);
+      end loop;
 end Main;

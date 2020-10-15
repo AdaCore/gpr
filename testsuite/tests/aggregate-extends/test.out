@@ -4,7 +4,7 @@ V:   K -> one
 [B]      K_STANDARD
 V:   Var -> var is one
 
-[Agg]    K_AGGREGATE
+[Agg]    K_AGGREGATE_LIBRARY
 A:   External -> two
 A:   Library_Dir -> .
 A:   Library_Name -> Agg

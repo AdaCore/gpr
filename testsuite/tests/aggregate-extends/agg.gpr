@@ -1,5 +1,5 @@
 with "b.gpr";
-aggregate project Agg is
+aggregate library project Agg is
    Var := B.Var;
    for External ("KVAL") use "two";
    for Project_Files use ("a.gpr");

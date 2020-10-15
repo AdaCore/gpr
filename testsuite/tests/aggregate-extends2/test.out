@@ -6,7 +6,7 @@
 [B]      K_STANDARD
    Var = var is one
 
-[Agg]    K_AGGREGATE
+[Agg]    K_AGGREGATE_LIBRARY
    External (KVAL) -> two
    Library_Dir -> .
    Library_Name -> Agg

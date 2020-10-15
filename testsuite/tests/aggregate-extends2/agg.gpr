@@ -1,5 +1,5 @@
 with "b.gpr";
-aggregate project Agg extends "conf.gpr" is
+aggregate library project Agg extends "conf.gpr" is
    Var1 := B.Var;
    Var2 := Conf.K;
    for External ("KVAL") use "two";
