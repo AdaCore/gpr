@@ -1,0 +1,5 @@
+description:
+    Check library attributes validity checks
+driver: build_and_run
+project_file: test
+main: main

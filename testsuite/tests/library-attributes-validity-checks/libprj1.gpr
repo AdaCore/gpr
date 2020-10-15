@@ -1,0 +1,20 @@
+library project Libprj1 is
+
+   for Object_Dir use "obj";
+   for Library_Name use project'Name;
+   for Library_Dir use project'Name & ".lib";
+   for Library_Kind use "dynamic";
+   for Library_Ali_Dir use project'Library_Dir & ".ali";
+   for Library_Version use "lib" & project'Name & ".so.1";
+   for Library_Gcc use "gcc";
+   for Library_Options use ("-L.");
+   for Leading_Library_Options use ("-Wl,--as-needed");
+   for Interfaces use ("pkg1.ads");
+   for Library_Interface use ("pkg2");
+   for Library_Standalone use "standard";
+   for Library_Auto_Init use "False";
+   for Library_Src_Dir use project'Library_Dir & ".src";
+   for Library_Symbol_Policy use "restricted";
+   for Library_Symbol_File use "symbols.def";
+
+end Libprj1;

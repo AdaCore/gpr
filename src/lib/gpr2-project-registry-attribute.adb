@@ -445,7 +445,7 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => In_Library);
 
    --  project_files
    Add
