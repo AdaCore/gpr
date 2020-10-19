@@ -1326,14 +1326,7 @@ package body GPR2.Project.Tree is
             --  Check if the project explicitly defines the attribute or if
             --  this comes from a default value
             if not Tmp_Attr.Is_Default then
-               declare
-                  Value     : constant Name_Type :=
-                                Name_Type (Tmp_Attr.Value.Text);
-                  Canonical : constant Name_Type :=
-                                Base.Normalized_Target (Value);
-               begin
-                  return (if Canonical = "unknown" then Value else Canonical);
-               end;
+               return Name_Type (Tmp_Attr.Value.Text);
             end if;
          end if;
 
