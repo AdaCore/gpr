@@ -1502,6 +1502,7 @@ package body GPR2.Project.Tree is
       end Runtime;
 
    begin
+
       if GNAT_Prefix = "" then
          --  No GNAT, use default config only in current directory
 
@@ -1523,6 +1524,10 @@ package body GPR2.Project.Tree is
       if Default_Cfg.Exists then
          Conf := Project.Configuration.Load
            (Default_Cfg, (if Target = No_Name then "all" else Target));
+      end if;
+
+      if Base.Is_Defined then
+         Self.Base := Base;
       end if;
 
       if not Conf.Is_Defined then
@@ -1587,7 +1592,6 @@ package body GPR2.Project.Tree is
             Descr_Index       : Natural := 0;
             Conf_Descriptions : Project.Configuration.Description_Set
                                  (1 .. Positive (Languages.Length));
-
          begin
             for L of Languages loop
                Descr_Index := Descr_Index + 1;
@@ -1601,13 +1605,15 @@ package body GPR2.Project.Tree is
                     Name     => No_Name);
             end loop;
 
+            if not Self.Base.Is_Defined then
+               Self.Base := GPR2.KB.Create (GPR2.KB.Default_Flags);
+            end if;
+
             Conf := Project.Configuration.Create
               (Conf_Descriptions,
                Actual_Target,
                Self.Root_Project.Path_Name,
-               Base => (if not Base.Is_Defined
-                        then GPR2.KB.Create
-                        else Base));
+               Self.Base);
          end;
 
          --  Unload the project that was loaded without configuration.
@@ -1622,10 +1628,6 @@ package body GPR2.Project.Tree is
             Self.Messages := Old_Messages;
             Self.Search_Paths := Old_Paths;
          end;
-      end if;
-
-      if Base.Is_Defined then
-         Self.Base := Base;
       end if;
 
       Self.Load

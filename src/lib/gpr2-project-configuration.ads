@@ -77,11 +77,26 @@ package GPR2.Project.Configuration is
    --  used to retrieve the available and corresponding compilers. That is,
    --  the compilers for the given language, the runtime if specified, etc.
 
+   function Language (Descr : Description) return Name_Type;
+   --  Returns language specified by Descr
+
+   function Version (Descr : Description) return Optional_Name_Type;
+   --  Returns version specified by Descr
+
+   function Runtime (Descr : Description) return Optional_Name_Type;
+   --  Returns runtime specified by Descr
+
+   function Path (Descr : Description) return Filename_Optional;
+   --  Returns path specified by Descr
+
+   function Name (Descr : Description) return Optional_Name_Type;
+   --  Returns name specified by Descr
+
    function Create
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Base       : GPR2.KB.Object)
+      Base       : in out GPR2.KB.Object)
       return Object;
    --  Creates a configuration based on the settings requested.
    --  Project parameter need to log error if happen.
@@ -145,6 +160,21 @@ private
       Path     : Unbounded_String;
       Name     : Unbounded_String;
    end record;
+
+   function Language (Descr : Description) return Name_Type is
+     (Name_Type (To_String (Descr.Language)));
+
+   function Version (Descr : Description) return Optional_Name_Type is
+     (Optional_Name_Type (To_String (Descr.Version)));
+
+   function Runtime (Descr : Description) return Optional_Name_Type is
+     (Optional_Name_Type (To_String (Descr.Runtime)));
+
+   function Path (Descr : Description) return Filename_Optional is
+     (Filename_Optional (To_String (Descr.Path)));
+
+   function Name (Descr : Description) return Optional_Name_Type is
+     (Optional_Name_Type (To_String (Descr.Name)));
 
    package Descriptions is new Ada.Containers.Vectors (Positive, Description);
 

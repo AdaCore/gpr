@@ -520,7 +520,8 @@ begin
                Src_Subdirs      => ONT (To_String (Options.Src_Subdirs)),
                Check_Shared_Lib => not Options.Unchecked_Shared_Lib,
                Base             => GPR2.KB.Create
-                 (Default_KB => not Options.Skip_Default_KB,
+                 (Flags      => KB.Default_Flags,
+                  Default_KB => not Options.Skip_Default_KB,
                   Custom_KB  => Options.KB_Locations));
          end if;
 

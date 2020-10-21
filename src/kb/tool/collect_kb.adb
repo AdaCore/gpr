@@ -203,7 +203,7 @@ begin
       Text_IO.Open (KB_File_In, Text_IO.In_File, To_String (Schema));
 
       while not Text_IO.End_Of_File (KB_File_In) loop
-         Append (Input_Buffer, Text_IO.Get_Line (KB_File_In));
+         Append (Input_Buffer, Text_IO.Get_Line (KB_File_In) & ASCII.LF);
       end loop;
 
       Text_IO.Close (KB_File_In);
@@ -216,7 +216,7 @@ begin
       Text_IO.Open (KB_File_In, Text_IO.In_File, Ent_File);
 
       while not Text_IO.End_Of_File (KB_File_In) loop
-         Append (Input_Buffer, Text_IO.Get_Line (KB_File_In));
+         Append (Input_Buffer, Text_IO.Get_Line (KB_File_In) & ASCII.LF);
       end loop;
 
       Text_IO.Close (KB_File_In);
@@ -230,7 +230,7 @@ begin
       Text_IO.Open (KB_File_In, Text_IO.In_File, XML_File);
 
       while not Text_IO.End_Of_File (KB_File_In) loop
-         Append (Input_Buffer, Text_IO.Get_Line (KB_File_In));
+         Append (Input_Buffer, Text_IO.Get_Line (KB_File_In) & ASCII.LF);
       end loop;
 
       Text_IO.Close (KB_File_In);

@@ -115,10 +115,11 @@ procedure Main is
 
    Des : Configuration.Description :=
            Configuration.Create (Language => "Ada");
+   KB  : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
    Cnf : Configuration.Object :=
            Configuration.Create
             (Configuration.Description_Set'(1 => Des), "all", Gpr,
-             Base => GPR2.KB.Create);
+             Base => KB);
 begin
    if Cnf.Has_Messages then
       for M of Cnf.Log_Messages loop

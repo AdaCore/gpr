@@ -22,13 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Directories;
-with Ada.Strings.Fixed;
-with Ada.Text_IO;
-
-with GNAT.OS_Lib;
-with GNATCOLL.Utils;
-
 with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -112,115 +105,20 @@ package body GPR2.Project.Configuration is
      (Settings   : Description_Set;
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
-      Base       : GPR2.KB.Object)
+      Base       : in out GPR2.KB.Object)
       return Object
    is
-      --  Note that this is a temporary implementation to bring a solution
-      --  for the configuration support in LibGPR2. The long term and proper
-      --  solution will be implemented later based on the knowledge base API
-      --  which could be reviewed from scratch.
 
-      use Ada.Strings;
-      use Ada.Strings.Fixed;
-      use GNAT;
-
-      procedure Load_Messages;
-      --  Load messages from saved gprconfig output file to result
-      --  configuration object.
-
-      function Process_Id return String is
-        (Strings.Fixed.Trim
-           (Integer'Image (OS_Lib.Pid_To_Integer (OS_Lib.Current_Process_Id)),
-            Strings.Both));
-
-      --  Note that Temporary_Directory_Path could be the empty string and in
-      --  this case we just write the temporary file into the current working
-      --  directory.
-
-      procedure Add_Arg (Arg : String);
-      --  Adds next argument of gprconfig call to the list
-
-      Key : constant String := Config_File_Key'Img;
-
-      Out_Filename  : constant String :=
-                        (if not Path_Name.Temporary_Directory.Is_Defined
-                         then ""
-                         else Path_Name.Compose
-                           (Path_Name.Temporary_Directory,
-                            Filename_Type
-                              (Process_Id & "-gpr2_tmp_out.tmp")).Value);
-
-      Conf_Filename : constant String :=
-                        (if not Path_Name.Temporary_Directory.Is_Defined
-                         then ""
-                         else Path_Name.Compose
-                           (Path_Name.Temporary_Directory,
-                            Filename_Type
-                              (Process_Id & "-gpr2_tmp_conf_"
-                               & Trim (Key, Left) & ".cgpr")).Value);
-
-      GPRconfig     : OS_Lib.String_Access :=
-                        OS_Lib.Locate_Exec_On_Path ("gprconfig");
       Native_Target : constant Boolean := Target = "all";
 
-      Args      : OS_Lib.Argument_List
-                    (1
-                     .. Settings'Length + 4 + (if Debug then 1 else 0) +
-                          (if Native_Target then 1 else 0) +
-                            (if Base.Is_Default_Db then 0 else 1) +
-                              Integer (Base.Custom_KB_Locations.Length) * 2);
-
-      Success   : Boolean := False;
-      Ret_Code  : Integer := 0;
       Result    : Object;
-      Cur_Arg   : Natural := Args'First;
       Host      : constant Name_Type :=
                     Name_Type (System.OS_Constants.Target_Name);
 
-      -------------
-      -- Add_Arg --
-      -------------
-
-      procedure Add_Arg (Arg : String) is
-      begin
-         Args (Cur_Arg) := new String'(Arg);
-         Cur_Arg := Cur_Arg + 1;
-      end Add_Arg;
-
-      -------------------
-      -- Load_Messages --
-      -------------------
-
-      procedure Load_Messages is
-         File_Out : Text_IO.File_Type;
-      begin
-         Text_IO.Open (File_Out, Text_IO.In_File, Out_Filename);
-
-         while not Text_IO.End_Of_File (File_Out) loop
-            declare
-               use GNATCOLL.Utils;
-               Line : constant String := Text_IO.Get_Line (File_Out);
-            begin
-               Result.Messages.Append
-                 (Message.Create
-                    ((if Starts_With (Line, "gprconfig: ")
-                      then Message.Warning
-                      else Message.Information),
-                     Line,
-                     Sloc => Source_Reference.Create (Project.Value, 0, 0),
-                     Raw  => True));
-            end;
-         end loop;
-
-         Text_IO.Close (File_Out);
-      end Load_Messages;
+      Configuration_String : Unbounded_String;
+      Parsing_Messages     : Log.Object;
 
    begin
-      --  Build parameters
-
-      Add_Arg ("-o");
-      Add_Arg (Conf_Filename);
-      Add_Arg ("--batch");
 
       if Native_Target then
          --  Normalize implicit target
@@ -228,87 +126,72 @@ package body GPR2.Project.Configuration is
             Normalized : constant Name_Type := Base.Normalized_Target (Host);
          begin
             if Normalized = "unknown" then
-               Add_Arg ("--target=" & System.OS_Constants.Target_Name);
+               Configuration_String :=
+                 Base.Configuration
+                   (Settings => Settings,
+                    Target   => Name_Type (System.OS_Constants.Target_Name),
+                    Messages => Result.Messages,
+                    Fallback => True);
             else
-               Add_Arg ("--target=" & String (Normalized));
+               Configuration_String :=
+                 Base.Configuration
+                   (Settings => Settings,
+                    Target   => Normalized,
+                    Messages => Result.Messages,
+                    Fallback => True);
             end if;
          end;
 
-         Add_Arg ("--fallback-targets");
-
       else
-         Add_Arg ("--target=" & String (Target));
+         Configuration_String :=
+           Base.Configuration
+             (Settings => Settings,
+              Target   => Target,
+              Messages => Result.Messages,
+              Fallback => False);
       end if;
 
-      for K in Settings'Range loop
-         Add_Arg ("--config="
-                  & To_String (Settings (K).Language)
-                  & "," & To_String (Settings (K).Version)
-                  & "," & To_String (Settings (K).Runtime)
-                  & "," & To_String (Settings (K).Path)
-                  & "," & To_String (Settings (K).Name));
-      end loop;
+      if Configuration_String /= Null_Unbounded_String then
 
-      if Debug then
-         Add_Arg ("-v");
-      end if;
+         if Path_Name.Temporary_Directory.Is_Defined then
+            Result.Project :=
+              Parser.Project.Parse
+                (Contents        => Configuration_String,
+                 Messages        => Parsing_Messages,
+                 Pseudo_Filename => Path_Name.Create_File
+                   ("autoconf.cgpr",
+                    Filename_Type (Path_Name.Temporary_Directory.Value)));
+         else
+            Result.Project :=
+              Parser.Project.Parse
+                (Contents        => Configuration_String,
+                 Messages        => Parsing_Messages,
+                 Pseudo_Filename => Path_Name.Create_File
+                   ("autoconf.cgpr",
+                    Filename_Type (Project.Dir_Name)));
+         end if;
 
-      if not Base.Is_Default_Db then
-         Add_Arg ("--db-");
-      end if;
+         --  Continue only if there is no parsing error on the configuration
+         --  project.
 
-      for KB_Location of Base.Custom_KB_Locations loop
-         Add_Arg ("--db");
-         Add_Arg (KB_Location.Value);
-      end loop;
-
-      --  Execute external GPRconfig tool
-
-      OS_Lib.Spawn (GPRconfig.all, Args, Out_Filename, Success, Ret_Code);
-      OS_Lib.Free (GPRconfig);
-
-      --  Free arguments
-
-      for K in Args'Range loop
-         OS_Lib.Free (Args (K));
-      end loop;
-
-      --  Increment the key to make sure we have distinct files if Debug mode
-      --  is set.
-
-      Config_File_Key := Config_File_Key + 1;
-
-      --  Load the configuration object generated if execution was succeful
-
-      Result.Conf := View.Undefined;
-
-      if Success then
-         Result := Load (Create (Filename_Type (Conf_Filename)), Target);
+         if Result.Project.Is_Defined then
+            Result.Target :=
+              (if Target = "all"
+               then Null_Unbounded_String
+               else To_Unbounded_String (String (Target)));
+         end if;
 
          for S of Settings loop
             Result.Descriptions.Append (S);
          end loop;
 
-         Load_Messages;
-
       else
-         --  If not Success, than the Out_Filename file was not created
 
          Result.Messages.Append
            (Message.Create
               (Message.Error,
                "cannot create configuration file, fail to execute gprconfig",
                Sloc => Source_Reference.Create (Project.Value, 0, 0)));
-      end if;
-
-      if not Debug then
-         if Directories.Exists (Conf_Filename) then
-            Directories.Delete_File (Conf_Filename);
-         end if;
-
-         if Directories.Exists (Out_Filename) then
-            Directories.Delete_File (Out_Filename);
-         end if;
       end if;
 
       return Result;

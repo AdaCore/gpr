@@ -612,7 +612,8 @@ begin
          Language_Runtimes => Options.RTS_Map,
          Implicit_With     => Options.Implicit_With,
          Base              => GPR2.KB.Create
-           (Default_KB => not Options.Skip_Default_KB,
+           (Flags      => KB.Default_Flags,
+            Default_KB => not Options.Skip_Default_KB,
             Custom_KB  => Options.KB_Locations));
 
       if Project_Tree.Configuration.Log_Messages.Has_Element

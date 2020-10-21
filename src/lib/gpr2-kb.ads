@@ -32,16 +32,24 @@ with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Vectors;
+with Ada.Strings.Hash;
+with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
 with GPR2.Log;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Configuration;
+with GPR2.Source_Reference;
 
 private with GNAT.Regpat;
 
 package GPR2.KB is
+
+   pragma Warnings (Off, "already use-visible");
+   use Ada.Strings.Unbounded;
+   pragma Warnings (On, "already use-visible");
 
    type Object is tagged private;
 
@@ -168,12 +176,16 @@ package GPR2.KB is
    --  data.
 
    function Configuration
-     (Self     : Object;
-      Settings : GPR2.Project.Configuration.Description_Set;
-      Target   : Name_Type) return GPR2.Project.Configuration.Object
+     (Self     : in out Object;
+      Settings : Project.Configuration.Description_Set;
+      Target   : Name_Type;
+      Messages : in out GPR2.Log.Object;
+      Fallback : Boolean := False)
+      return Ada.Strings.Unbounded.Unbounded_String
      with Pre  => Self.Is_Defined and then Settings'Length > 0,
-          Post => GPR2.Project.Configuration.Is_Defined (Configuration'Result);
-   --  Creates configuration object
+          Post => Configuration'Result /= Null_Unbounded_String
+             or else Messages.Has_Error;
+   --  Creates configuration string
 
    procedure Release (Self : in out Object)
      with Pre  => Self.Is_Defined,
@@ -194,6 +206,11 @@ package GPR2.KB is
           Post => not Fallback_List'Result.Is_Empty;
    --  Gets the list of fallback targets for a given target. The list will
    --  contain at least the given target itself.
+
+   type Compiler is private;
+   --  Describes one of the compilers found on the PATH
+
+   No_Compiler : constant Compiler;
 
 private
 
@@ -254,12 +271,7 @@ private
       Selectable   : Boolean := True;
       Selected     : Boolean := False;
       Complete     : Boolean := True;
-   end record
-     with Dynamic_Predicate => Name = Null_Unbounded_String
-     or else (GPR2.Path_Name."/=" (Path, GPR2.Path_Name.Undefined)
-              and then Base_Name /= Null_Unbounded_String
-              and then Prefix /= Null_Unbounded_String
-              and then Executable /= Null_Unbounded_String);
+   end record;
 
    No_Compiler : constant Compiler :=
                    (Name            => Null_Unbounded_String,
@@ -282,6 +294,15 @@ private
                     Selected        => False,
                     Complete        => True,
                     Path_Order      => 0);
+
+   package Compiler_Lists is new
+     Ada.Containers.Indefinite_Doubly_Linked_Lists (Compiler);
+
+   function Filter_Match
+     (Self   : Object;
+      Comp   : Compiler;
+      Filter : Compiler) return Boolean;
+   --  Returns True if Comp match Filter
 
    function "="
      (Dummy_Left  : Regpat.Pattern_Matcher;
@@ -335,11 +356,14 @@ private
    package External_Value_Nodes is
      new Ada.Containers.Doubly_Linked_Lists (External_Value_Node);
 
-   subtype External_Value is External_Value_Nodes.List;
+   type External_Value is record
+      EV   : External_Value_Nodes.List;
+      Sloc : GPR2.Source_Reference.Object;
+   end record;
 
    Null_External_Value : constant External_Value :=
-     External_Value_Nodes.Empty_List;
-
+                           (EV   => External_Value_Nodes.Empty_List,
+                            Sloc => Source_Reference.Undefined);
    type Compiler_Description is record
       Name             : Unbounded_String := Null_Unbounded_String;
       Executable       : Unbounded_String := Null_Unbounded_String;
@@ -350,7 +374,7 @@ private
       Variables        : External_Value;
       Languages        : External_Value;
       Runtimes         : External_Value;
-      Default_Runtimes : GPR2.Containers.Name_List;
+      Default_Runtimes : GPR2.Containers.Value_List;
    end record;
    --  Executable_Re is only set if the name of the <executable> must be
    --  taken as a regular expression.
@@ -407,6 +431,7 @@ private
       Targets_Filters   : Double_String_Lists.List;  --  these are regexps
       Negate_Targets    : Boolean  := False;
       Config            : Unbounded_String;
+      Sloc              : Source_Reference.Object;
 
       Supported         : Boolean;
       --  Whether the combination of compilers is supported
@@ -462,6 +487,16 @@ private
    --  No_Compilers is the list of languages that require no compiler, and thus
    --  should not be searched on the PATH.
 
+   function Name_As_Directory (Dir : String) return String;
+   --  Ensures that Dir ends with a directory separator
+
+   function Query_Targets_Set
+     (Self   : Object;
+      Target : Name_Type) return Targets_Set_Id
+     with Pre => Self.Is_Defined;
+   --  Gets the target alias set id for a target, or Unknown_Targets_Set_Id if
+   --  no such target is in the base.
+
    Undefined : constant Object := (others => <>);
 
    function Custom_KB_Locations
@@ -482,5 +517,74 @@ private
 
    function Log_Messages (Self : Object) return Log.Object is
      (Self.Messages);
+
+   Ignore_Compiler : exception;
+   --  Raised when the compiler should be ignored
+
+   Invalid_KB : exception;
+   --  Raised when an error occurred while parsing the knowledge base
+
+   type External_Value_Item is record
+      Value          : Unbounded_String;
+      Alternate      : Unbounded_String;
+      Extracted_From : Unbounded_String;
+   end record;
+   --  Value is the actual value of the <external_value> node.
+   --  Extracted_From will either be set to Value itself, or when the node is
+   --  a <directory node> to the full directory, before the regexp match.
+   --  When the value comes from a <shell> node, Extracted_From is set to the
+   --  full output of the shell command.
+
+   package External_Value_Lists is new Ada.Containers.Doubly_Linked_Lists
+     (External_Value_Item);
+
+   package String_To_External_Value is
+      new Ada.Containers.Indefinite_Hashed_Maps
+        (Key_Type        => String,
+         Element_Type    => External_Value_Lists.Cursor,
+         Hash            => Ada.Strings.Hash,
+         Equivalent_Keys => "=",
+         "="             => External_Value_Lists."=");
+
+   procedure Get_External_Value
+     (Attribute        : String;
+      Value            : External_Value;
+      Comp             : Compiler;
+      Split_Into_Words : Boolean := True;
+      Merge_Same_Dirs  : Boolean := False;
+      Calls_Cache      : in out GPR2.Containers.Name_Value_Map;
+      Messages         : in out Log.Object;
+      Processed_Value  : out External_Value_Lists.List);
+   --  Computes the value of Value, depending on its type. When an external
+   --  command needs to be executed, Path is put first on the PATH environment
+   --  variable. Results of external command execution are cached for effciency
+   --  and are stored/looked up in Calls_Cache.
+   --  Raises Ignore_Compiler if the value doesn't match its <must_have>
+   --  regexp.
+   --  The <filter> node is also taken into account.
+   --  If Split_Into_Words is true, then the value read from <shell> or as a
+   --  constant string is further assumed to be a comma-separated or space-
+   --  separated string, and split.
+   --  Comparisong with Matching is case-insensitive (this is needed for
+   --  languages, does not matter for versions, is not used for targets)
+   --
+   --  If Merge_Same_Dirs is True, then the values that come from a
+   --  <directory> node will be merged (the last one is kept, other removed) if
+   --  they point to the same physical directory (after normalizing names).
+   --
+   --  This is only for use within a <compiler_description> context.
+
+   procedure Get_Words
+     (Words                : String;
+      Filter               : String;
+      Separator1           : Character;
+      Separator2           : Character;
+      Map                  : out Containers.Value_List;
+      Allow_Empty_Elements : Boolean);
+   --  Returns the list of words in Words. Splitting is done on special
+   --  characters, so as to be compatible with a list of languages or a list of
+   --  runtimes
+   --  If Allow_Empty_Elements is false, then empty strings are not stored in
+   --  the list.
 
 end GPR2.KB;

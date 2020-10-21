@@ -207,7 +207,8 @@ begin
       Language_Runtimes => Opt.RTS_Map,
       Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib,
       Base              => GPR2.KB.Create
-        (Default_KB        => not Opt.Skip_Default_KB,
+        (Flags             => KB.Default_Flags,
+         Default_KB        => not Opt.Skip_Default_KB,
          Custom_KB         => Opt.KB_Locations));
 
    --  The configuration step could fail because the language list has been
