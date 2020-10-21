@@ -1569,8 +1569,6 @@ package body GPRinstall.Install is
 
                   --  And then generates the interfaces
 
-                  Line := +"         for Library_Interface use (";
-
                   declare
                      use all type GPR2.Project.View.Source_Kind;
                      First : Boolean := True;
@@ -1578,6 +1576,22 @@ package body GPRinstall.Install is
                      if Project.Check_Attribute
                           (A.Library_Interface, Result => Attr)
                      then
+                        Line := +"         for Library_Interface use (";
+
+                        for V of Attr.Values loop
+                           if not First then
+                              Append (Line, ", ");
+                           end if;
+
+                           Append (Line, Quote (V.Text));
+                           First := False;
+                        end loop;
+
+                     elsif Project.Check_Attribute
+                          (A.Interfaces, Result => Attr)
+                     then
+                        Line := +"         for Interfaces use (";
+
                         for V of Attr.Values loop
                            if not First then
                               Append (Line, ", ");
@@ -1588,6 +1602,8 @@ package body GPRinstall.Install is
                         end loop;
 
                      else
+                        Line := +"         for library_Interfaces use (";
+
                         for Source
                           of Project.Sources (Filter => K_Interface_Only)
                         loop
