@@ -481,7 +481,8 @@ package body GPR2.Parser.Project is
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
       Implicit_With : Containers.Name_Set;
-      Messages      : out Log.Object) return Object is
+      Messages      : out Log.Object) return Object
+   is
 
       Project : Object;
       --  The project being constructed
@@ -842,8 +843,8 @@ package body GPR2.Parser.Project is
                      declare
                         Not_Present : constant Name_Type := "@";
 
-                        Names : constant Qualifier_Names :=
-                                  Qual.F_Qualifier.As_Qualifier_Names;
+                        Names  : constant Qualifier_Names :=
+                                   Qual.F_Qualifier.As_Qualifier_Names;
                         Name_1 : constant Identifier :=
                                    F_Qualifier_Id1 (Names);
                         Str_1  : constant Name_Type :=

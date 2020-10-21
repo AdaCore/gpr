@@ -1414,7 +1414,7 @@ package body GPR2.Project.Tree is
            (Attr : Attribute.Object;
             View : GPR2.Project.View.Object) return Optional_Name_Type
          is
-            Value : constant String := String (Attr.Value.Text);
+            Value              : constant String := String (Attr.Value.Text);
             Has_Dir_Indication : Boolean := False;
          begin
             for C of Value loop
@@ -1437,8 +1437,8 @@ package body GPR2.Project.Tree is
          end Attr_As_Abs_Path;
 
          Tmp_Attr : Attribute.Object;
-         LRT : constant Value_Type :=
-                 Containers.Value_Or_Default
+         LRT      : constant Value_Type :=
+                      Containers.Value_Or_Default
                         (Language_Runtimes, Name_Type (Language.Text));
 
       begin
