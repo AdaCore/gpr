@@ -5,6 +5,10 @@ testsuite/tests/*/*.gpr no-precommit-check
 testsuite/tests/*/*/*.ads no-precommit-check
 testsuite/tests/*/*/*.adb no-precommit-check
 testsuite/tests/*/*/*.gpr no-precommit-check
+testsuite/tests/*/*.c no-precommit-check
+testsuite/tests/*/*.h no-precommit-check
+testsuite/tests/*/*/*.c no-precommit-check
+testsuite/tests/*/*/*.h no-precommit-check
 
 # Disable checks on python bindings until Python 3.x is supported
 bindings/python/* no-precommit-check
