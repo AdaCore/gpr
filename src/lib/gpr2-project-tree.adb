@@ -2234,6 +2234,8 @@ package body GPR2.Project.Tree is
                            Root.Context.Signature (P_Data.Externals);
          Context       : constant GPR2.Context.Object := View.Context;
          Paths         : Path_Name.Set.Object;
+         Tmp_Attr      : Project.Attribute.Object;
+
       begin
          Parser.Project.Process
            (P_Data.Trees.Project,
@@ -2274,7 +2276,6 @@ package body GPR2.Project.Tree is
 
          elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
             --  Aggregate project can't have Project_Files attribute
-
             Self.Messages.Append
               (Message.Create
                  (Message.Error,
@@ -2407,18 +2408,35 @@ package body GPR2.Project.Tree is
          if not Has_Error then
             P_Data.Signature := New_Signature;
 
-            --  Let's compute the project kind if needed. A project without
-            --  an explicit qualifier may actually be a library project if
-            --  Library_Name, Library_Kind is declared.
+            --  Let's compute the project kind if needed. A project without an
+            --  explicit qualifier may actually be an abstract project or a
+            --  library project.
 
             P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
             if P_Data.Kind = K_Standard then
-               if P_Data.Attrs.Contains (PRA.Library_Name)
-                 and then
-                   P_Data.Attrs.Element (PRA.Library_Name).Value.Text /= ""
-                 and then
-                   P_Data.Attrs.Contains (PRA.Library_Dir)
+               --  A project with empty source dir and/or empty languages list
+               --  is considered abstract
+
+               --  We need at least Source_Dirs or Languages explicitly empty,
+               --  and the other either default or empty
+               if View.Is_Abstract then
+                  P_Data.Kind := K_Abstract;
+               end if;
+            end if;
+
+            if P_Data.Kind = K_Standard then
+               --  If Library_Name, Library_Dir are declared, then the project
+               --  is a library project.
+               --  Note: Library_Name may be inherited from an extended project
+               --  while Library_Dir has to be defined in the project
+
+               if View.Check_Attribute (PRA.Library_Name,
+                                        Recursive => True,
+                                        Result    => Tmp_Attr)
+                 and then Tmp_Attr.Value.Text /= ""
+                 and then View.Check_Attribute (PRA.Library_Dir,
+                                                Result    => Tmp_Attr)
                then
                   P_Data.Kind := K_Library;
                end if;

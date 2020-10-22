@@ -11,7 +11,6 @@ libprj1.gpr:7:50: warning: library ALI directory "libprj1.lib.ali" not found
 libprj1.gpr:16:50: warning: Directory "libprj1.lib.src" not found
 aggrprj1.gpr
 /aggrprj1.gpr semantic error
-aggrprj1.gpr:15:09: error: attribute "Interfaces" cannot be used in aggregate projects
 aggrprj1.gpr:10:08: error: attribute "Library_Ali_Dir" cannot be used in aggregate projects
 aggrprj1.gpr:18:08: error: attribute "Library_Auto_Init" cannot be used in aggregate projects
 aggrprj1.gpr:8:09: error: attribute "Library_Dir" cannot be used in aggregate projects

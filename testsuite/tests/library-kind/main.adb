@@ -88,6 +88,8 @@ begin
       Display (P);
    end loop;
 
+   Prj.Unload;
+
    Project.Tree.Load (Prj, Create ("demo2.gpr"), Ctx);
 
    Print_Messages;

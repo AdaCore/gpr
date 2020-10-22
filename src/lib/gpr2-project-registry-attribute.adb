@@ -41,7 +41,6 @@ package body GPR2.Project.Registry.Attribute is
    In_Library       : constant Allowed_In :=
                         (K_Library           |
                          K_Aggregate_Library |
-                         K_Standard          |
                          K_Abstract => True,
                          others     => False);
 
@@ -445,7 +444,7 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Is_Allowed_In        => Everywhere);
 
    --  project_files
    Add

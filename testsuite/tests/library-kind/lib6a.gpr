@@ -1,0 +1,4 @@
+project lib6a is
+   for Languages use ();
+   for Library_Name use "lib";
+end lib6a;

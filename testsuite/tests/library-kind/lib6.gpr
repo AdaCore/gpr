@@ -1,0 +1,4 @@
+project lib6 extends "lib6a" is
+   for Languages use ("Ada");
+   for Library_Dir use "obj";
+end lib6;
