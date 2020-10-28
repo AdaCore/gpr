@@ -3,7 +3,7 @@ with "logging.gpr";
 project Build is
 
    package Compiler extends Logging.Compiler is
-      for Default_Switches use ("-ext");
+      for Default_Switches ("C") use ("-ext");
    end Compiler;
 
    package Binder is

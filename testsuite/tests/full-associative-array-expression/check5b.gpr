@@ -1,0 +1,7 @@
+with "options";
+project Check5b is
+  package Compiler is
+  --  full associative array expression must reference the same attribute "Switches"
+    for Switches use Options.Compiler'Default_Switches;
+  end Compiler;
+end Check5b;

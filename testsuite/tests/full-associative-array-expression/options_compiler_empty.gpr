@@ -1,0 +1,4 @@
+project Options_Compiler_Empty is
+package Compiler is
+end Compiler;
+end Options_Compiler_Empty;

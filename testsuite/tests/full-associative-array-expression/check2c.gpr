@@ -1,0 +1,7 @@
+with "options_compiler_empty";
+project Check2c is
+  package Compiler is
+  --  associative array value not found
+    for Switches use Options_Compiler_Empty.Compiler'Switches;
+  end Compiler;
+end Check2c;

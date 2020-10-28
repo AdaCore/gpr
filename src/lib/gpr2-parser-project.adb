@@ -25,6 +25,7 @@
 with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 with Ada.Containers;
+with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Fixed;
@@ -1106,19 +1107,51 @@ package body GPR2.Parser.Project is
       Types   : in out GPR2.Project.Typ.Set.Object)
    is
 
-      type Item_Values is record
+      type Indexed_Values is record
+         Index  : GPR2.Project.Attribute_Index.Object;
          Values : Containers.Source_Value_List;
          Single : Boolean := False;
       end record
         with Dynamic_Predicate =>
+          not PAI."=" (Indexed_Values.Index, PAI.Undefined)
+            and then (if Indexed_Values.Single
+                        then Indexed_Values.Values.Length = 1);
+
+      package Indexed_Item_Values_Vectors is new Ada.Containers.Vectors
+        (Index_Type => Positive, Element_Type => Indexed_Values);
+
+      type Indexed_Item_Values is record
+         Filled         : Boolean := False;
+         Attribute_Pack : Unbounded_String;
+         Attribute_Name : Unbounded_String;
+         Values         : Indexed_Item_Values_Vectors.Vector;
+      end record;
+
+      type Item_Values is record
+         Values         : Containers.Source_Value_List;
+         Single         : Boolean := False;
+         Indexed_Values : Indexed_Item_Values;
+      end record
+        with Dynamic_Predicate =>
           (if Item_Values.Single then Item_Values.Values.Length = 1);
+      --  Indexed_Values is filled only in Get_Attribute_Ref when attribute
+      --  allows index and index is not provided in the reference.
 
       function To_Set
         (Values : Containers.Source_Value_List) return Containers.Value_Set;
       --  Create a set for fast searchiing from a list of values
 
+      Unfilled_Indexed_Values : constant Indexed_Item_Values :=
+                                  (Filled         => False,
+                                   Attribute_Pack => +"",
+                                   Attribute_Name => +"",
+                                   Values         =>
+                                     Indexed_Item_Values_Vectors.Empty_Vector);
+
       Empty_Item_Values : constant Item_Values :=
-                            (Single => False, Values => <>);
+                            (Single         => False,
+                             Values         => <>,
+                             Indexed_Values => Unfilled_Indexed_Values);
 
       function Parser (Node : GPR_Node'Class) return Visit_Status;
       --  Actual parser callabck for the project
@@ -1222,6 +1255,7 @@ package body GPR2.Parser.Project is
          Pack    : Optional_Name_Type := No_Name) return Item_Values
       is
          use type PRA.Value_Kind;
+         use PAI;
 
          Sloc   : constant Source_Reference.Object :=
                     Get_Source_Reference (Self.File, Node);
@@ -1246,6 +1280,40 @@ package body GPR2.Parser.Project is
                     Process.View.View_For (Project);
 
          Attr   : GPR2.Project.Attribute.Object;
+
+         Indexed_Values : Indexed_Item_Values := Unfilled_Indexed_Values;
+
+         procedure Fill_Indexed_Values
+           (Attrs : GPR2.Project.Attribute.Set.Object);
+         --  fill Indexed_Values if Index is undefined and Q_Name allows Index
+
+         -------------------------
+         -- Fill_Indexed_Values --
+         -------------------------
+
+         procedure Fill_Indexed_Values
+           (Attrs : GPR2.Project.Attribute.Set.Object)
+         is
+            use Indexed_Item_Values_Vectors;
+            use PRA;
+         begin
+            if Index = PAI.Undefined
+              and then PRA.Get (Q_Name).Index /= PRA.No
+            then
+               Indexed_Values.Filled := True;
+               Indexed_Values.Attribute_Pack := +String (Pack);
+               Indexed_Values.Attribute_Name := +String (Name);
+               for Attribute of Attrs.Filter (Name => Name) loop
+                  Indexed_Values.Values :=
+                    Indexed_Values.Values
+                        & (Index => (if Attribute.Is_Defined
+                                     then Attribute.Index
+                                     else PAI.Undefined),
+                           Values => Attribute.Values,
+                           Single => Attribute.Kind = PRA.Single);
+               end loop;
+            end if;
+         end Fill_Indexed_Values;
 
       begin
          --  We do not want to have a reference to a limited import, we do not
@@ -1292,6 +1360,7 @@ package body GPR2.Parser.Project is
             --  stable.
 
             if Pack = No_Name then
+               Fill_Indexed_Values (Attrs);
                Attr := Attrs.Element (Name, Index);
 
                --  Attributes used to configure the toolchain are handled
@@ -1348,7 +1417,9 @@ package body GPR2.Parser.Project is
                      Frozen  => True);
                   Attrs.Include (Attr);
 
-               elsif Name_Type (To_Lower (Name)) = PRA.Runtime then
+               elsif Name_Type (To_Lower (Name)) = PRA.Runtime
+                 and then Index /= PAI.Undefined
+               then
                   --  Project'Runtime (<lang>)
                   Attr := GPR2.Project.Attribute.Create
                     (Get_Identifier_Reference
@@ -1369,17 +1440,21 @@ package body GPR2.Parser.Project is
             then
                --  This is the current parsed package, look into Pack_Attrs
 
+               Fill_Indexed_Values (Pack_Attrs);
                Attr := Pack_Attrs.Element (Name, Index);
 
             elsif Packs.Contains (Name_Type (Pack)) then
                --  Or in another package in the same project
 
+               Fill_Indexed_Values
+                 (Packs.Element (Name_Type (Pack)).Attributes);
                Attr := Packs.Element
                  (Name_Type (Pack)).Attributes.Element (Name, Index);
             end if;
 
          elsif View.Is_Defined then
             if Pack = No_Name then
+               Fill_Indexed_Values (View.Attributes);
                if not View.Check_Attribute (Name, Index, Result => Attr) then
                   --  Special case for Target & Runtime, that always default
                   --  to the configuration value
@@ -1409,7 +1484,9 @@ package body GPR2.Parser.Project is
                         Default => True,
                         Frozen  => True);
 
-                  elsif Name_Type (To_Lower (Name)) = PRA.Runtime then
+                  elsif Name_Type (To_Lower (Name)) = PRA.Runtime
+                    and then Index /= PAI.Undefined
+                  then
                      --  Project'Runtime (<lang>)
                      Attr := GPR2.Project.Attribute.Create
                        (Get_Identifier_Reference
@@ -1423,6 +1500,15 @@ package body GPR2.Parser.Project is
                         Default => True,
                         Frozen  => True);
 
+                  elsif Indexed_Values.Filled then
+                     if Indexed_Values.Values.Is_Empty then
+                        Tree.Log_Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "associative array value not found",
+                              Get_Source_Reference (Self.File, Node)));
+                     end if;
+
                   else
                      Tree.Log_Messages.Append
                        (Message.Create
@@ -1435,16 +1521,38 @@ package body GPR2.Parser.Project is
                end if;
 
             elsif View.Has_Packages (Pack)
-              and then not View.Pack (Pack).Check_Attribute
-                             (Name, Index, Result => Attr)
             then
+               Fill_Indexed_Values (View.Pack (Pack).Attributes);
+               if not View.Pack (Pack).Check_Attribute (Name, Index,
+                                                        Result => Attr)
+               then
+                  if Indexed_Values.Filled then
+                     if Indexed_Values.Values.Is_Empty then
+                        Tree.Log_Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "associative array value not found",
+                              Get_Source_Reference (Self.File, Node)));
+                     end if;
+                  else
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "attribute """ & String (Name)
+                           & """ is not defined in project """
+                           & String (Project) & """ package """ & String (Pack)
+                           & '"',
+                           Get_Source_Reference (Self.File, Node)));
+                  end if;
+               end if;
+            else
+               Fill_Indexed_Values (GPR2.Project.Attribute.Set.Empty_Set);
                Tree.Log_Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "attribute """ & String (Name)
-                     & """ is not defined in project """
-                     & String (Project) & """ package """ & String (Pack)
-                     & '"',
+                     "package """ & String (Pack)
+                     & """ not declared in project """
+                     & String (Project) & '"',
                      Get_Source_Reference (Self.File, Node)));
             end if;
 
@@ -1459,8 +1567,12 @@ package body GPR2.Parser.Project is
          end if;
 
          return (if Attr.Is_Defined
-                 then (Attr.Values, Attr.Kind = PRA.Single)
-                 else Empty_Item_Values);
+                 then (Values         => Attr.Values,
+                       Single         => Attr.Kind = PRA.Single,
+                       Indexed_Values => Indexed_Values)
+                 else (Values         => <>,
+                       Single         => False,
+                       Indexed_Values => Indexed_Values));
       end Get_Attribute_Ref;
 
       -------------------
@@ -1803,6 +1915,7 @@ package body GPR2.Parser.Project is
 
          procedure Record_Values (Values : Item_Values) is
          begin
+            Result.Indexed_Values := Values.Indexed_Values;
             for V of Values.Values loop
                New_Item := New_Item or else Values.Single = False;
                Record_Value (V);
@@ -1823,7 +1936,9 @@ package body GPR2.Parser.Project is
 
          Is_Project_Reference := False;
 
-         if Result.Values.Is_Empty then
+         if Result.Values.Is_Empty
+           and then Result.Indexed_Values = Unfilled_Indexed_Values
+         then
             return Empty_Item_Values;
          else
             return Result;
@@ -1859,7 +1974,9 @@ package body GPR2.Parser.Project is
                   V : constant GPR2.Project.Variable.Object :=
                         Pack.Variable (Name);
                begin
-                  return (V.Values, V.Kind = PRA.Single);
+                  return (Values         => V.Values,
+                          Single         => V.Kind = PRA.Single,
+                          Indexed_Values => Unfilled_Indexed_Values);
                end;
 
             else
@@ -1906,7 +2023,9 @@ package body GPR2.Parser.Project is
                   V : constant GPR2.Project.Variable.Object :=
                         View.Variable (Name);
                begin
-                  Result := (V.Values, V.Kind = PRA.Single);
+                  Result := (Values         => V.Values,
+                             Single         => V.Kind = PRA.Single,
+                             Indexed_Values => Unfilled_Indexed_Values);
                end;
             end if;
          end if;
@@ -1973,14 +2092,18 @@ package body GPR2.Parser.Project is
          elsif In_Pack and then Pack_Vars.Contains (Name) then
             --  Name (being defined into the current package)
             return
-              (Pack_Vars (Name).Values,
-               Pack_Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);
+              (Values         => Pack_Vars (Name).Values,
+               Single         => Pack_Vars (Name).Kind =
+                   GPR2.Project.Registry.Attribute.Single,
+               Indexed_Values => Unfilled_Indexed_Values);
 
          elsif Vars.Contains (Name) then
             --  Name (being defined in current project)
             return
-              (Vars (Name).Values,
-               Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single);
+              (Values         => Vars (Name).Values,
+               Single         =>
+                 Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single,
+               Indexed_Values => Unfilled_Indexed_Values);
 
          else
             declare
@@ -2001,8 +2124,9 @@ package body GPR2.Parser.Project is
                                  View.Variable (Name);
                         begin
                            Result :=
-                             (Values => V.Values,
-                              Single => V.Count_Values = 1);
+                             (Values         => V.Values,
+                              Single         => V.Count_Values = 1,
+                              Indexed_Values => Unfilled_Indexed_Values);
                         end;
                      end if;
                   end;
@@ -2162,12 +2286,127 @@ package body GPR2.Parser.Project is
                function Create_Index return PAI.Object;
                --  Create index with "at" part if exists
 
+               procedure Create_And_Register_Attribute
+                 (Index  : PAI.Object;
+                  Values : Containers.Source_Value_List;
+                  Single : Boolean);
+               --  Create attribute and register it if needed.
+
                Id     : constant Source_Reference.Identifier.Object :=
                              Get_Identifier_Reference
                                (Self.Path_Name,
                                 Sloc_Range (Name),
                                 N_Str);
                --  The attribute name & sloc
+
+               Sloc      : constant Source_Reference.Object :=
+                             Get_Source_Reference (Self.File, Node);
+
+               -----------------------------------
+               -- Create_And_Register_Attribute --
+               -----------------------------------
+
+               procedure Create_And_Register_Attribute
+                 (Index  : PAI.Object;
+                  Values : Containers.Source_Value_List;
+                  Single : Boolean)
+               is
+               begin
+                  if Single then
+                     pragma Assert (Expr.Children_Count >= 1);
+
+                     A := GPR2.Project.Attribute.Create
+                       (Name  => Id,
+                        Index => Index,
+                        Value => Values.First_Element);
+
+                  else
+                     A := GPR2.Project.Attribute.Create
+                       (Name   => Id,
+                        Index  => Index,
+                        Values => Values);
+                  end if;
+
+                  --  Record attribute with proper casing definition if found
+
+                  if PRA.Exists (Q_Name) then
+                     declare
+                        Def : constant PRA.Def := PRA.Get (Q_Name);
+
+                     begin
+                        if (Single
+                            and then Values.First_Element.Text = "")
+                          or else (not Single
+                                   and then Values.Length = 0)
+                        then
+                           case Def.Empty_Value is
+                           when PRA.Allow =>
+                              null;
+
+                           when PRA.Ignore =>
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Warning,
+                                    Sloc    => Sloc,
+                                    Message => "Empty attribute "
+                                               & PRA.Image (Q_Name)
+                                               & " ignored"));
+                              Is_Valid := False;
+
+                           when PRA.Error =>
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    => Sloc,
+                                    Message => "Attribute "
+                                               & PRA.Image (Q_Name)
+                                               & " can't be empty"));
+                           end case;
+                        end if;
+
+                        --  We need to special case the Switches attribute
+                        --  which may have an index with a language or a source
+                        --  filename. On case-sensitive system like Linux this
+                        --  means that we need to have the language handled
+                        --  without case-sensitivity but the source must be
+                        --  handled with case taken into account.
+
+                        Case_Switches_Index : declare
+                           Index_Case_Sensitive : Boolean :=
+                                                    Def.Index_Case_Sensitive;
+                        begin
+                           --  Check for source filename by looking for an
+                           --  extenssion separator or if the index is defined
+                           --  as a language. If Language is not defined
+                           --  the project tree will use the default languages
+                           --  and none of them have a dot in their name.
+
+                           if Index.Is_Defined
+                             and then not Index.Is_Others
+                             and then A.Name.Text = PRA.Switches
+                           then
+                              --  No extension found, this is a language which
+                              --  is inconditionally non case-sensitive.
+
+                              Index_Case_Sensitive :=
+                                Is_Switches_Index_Case_Sensitive (Index.Value);
+                           end if;
+
+                           A.Set_Case
+                             (Index_Case_Sensitive,
+                              Def.Value_Case_Sensitive);
+                        end Case_Switches_Index;
+                     end;
+                  end if;
+
+                  if Is_Valid then
+                     if In_Pack then
+                        Record_Attribute (Pack_Attrs, A, Sloc);
+                     else
+                        Record_Attribute (Attrs, A, Sloc);
+                     end if;
+                  end if;
+               end Create_And_Register_Attribute;
 
                ------------------
                -- Create_Index --
@@ -2201,106 +2440,59 @@ package body GPR2.Parser.Project is
                   end if;
                end Create_Index;
 
-               Sloc   : constant Source_Reference.Object :=
-                          Get_Source_Reference (Self.File, Node);
                I_Sloc : constant PAI.Object :=
                           (if Present (Index)
                            then Create_Index
                            else PAI.Undefined);
 
+               use PAI;
+               use PRA;
             begin
-               if Values.Single then
-                  pragma Assert (Expr.Children_Count >= 1);
-
-                  A := GPR2.Project.Attribute.Create
-                    (Name            => Id,
-                     Index           => I_Sloc,
-                     Value           => Values.Values.First_Element);
-
-               else
-                  A := GPR2.Project.Attribute.Create
-                    (Name            => Id,
-                     Index           => I_Sloc,
-                     Values          => Values.Values);
-               end if;
-
-               --  Record attribute with proper casing definition if found
-
-               if PRA.Exists (Q_Name) then
-                  declare
-                     Def : constant PRA.Def := PRA.Get (Q_Name);
-
-                  begin
-                     if (Values.Single
-                         and then Values.Values.First_Element.Text = "")
-                       or else (not Values.Single
-                                and then Values.Values.Length = 0)
-                     then
-                        case Def.Empty_Value is
-                           when PRA.Allow =>
-                              null;
-
-                           when PRA.Ignore =>
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Warning,
-                                    Sloc    => Sloc,
-                                    Message => "Empty attribute "
-                                    & PRA.Image (Q_Name) & " ignored"));
-                              Is_Valid := False;
-
-                           when PRA.Error =>
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    => Sloc,
-                                    Message => "Attribute "
-                                               & PRA.Image (Q_Name)
-                                               & " can't be empty"));
-                        end case;
-                     end if;
-
-                     --  We need to special case the Switches attribute
-                     --  which may have an index with a language or a source
-                     --  filename. On case-sensitive system like Linux this
-                     --  means that we need to have the language handled
-                     --  without case-sensitivity but the source must be
-                     --  handled with case taken into account.
-
-                     Case_Switches_Index : declare
-                        Index_Case_Sensitive : Boolean :=
-                                                 Def.Index_Case_Sensitive;
-                     begin
-                        --  Check for source filename by looking for an
-                        --  extenssion separator or if the index is defined as
-                        --  a language. If Language is not defined the project
-                        --  tree will use the default languages and none of
-                        --  them have a dot in their name.
-
-                        if I_Sloc.Is_Defined
-                          and then not I_Sloc.Is_Others
-                          and then A.Name.Text = PRA.Switches
-                        then
-                           --  No extension found, this is a language which is
-                           --  inconditionally non case-sensitive.
-
-                           Index_Case_Sensitive :=
-                             Is_Switches_Index_Case_Sensitive (I_Sloc.Value);
-                        end if;
-
-                        A.Set_Case
-                          (Index_Case_Sensitive,
-                           Def.Value_Case_Sensitive);
-                     end Case_Switches_Index;
-                  end;
-               end if;
-
-               if Is_Valid then
-                  if In_Pack then
-                     Record_Attribute (Pack_Attrs, A, Sloc);
+               if I_Sloc = PAI.Undefined
+                 and then PRA.Exists (Q_Name)
+                 and then PRA.Get (Q_Name).Index /= PRA.No
+               then
+                  if not Values.Indexed_Values.Filled then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Sloc    => Sloc,
+                           Message => "full associative array expression " &
+                             "requires simple attribute reference"));
+                  elsif not Ada.Strings.Equal_Case_Insensitive
+                    (To_String (Values.Indexed_Values.Attribute_Pack),
+                     To_String (Pack_Name))
+                  then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Sloc    => Sloc,
+                           Message => "not the same package as " &
+                             To_String (Pack_Name)));
+                  elsif not Ada.Strings.Equal_Case_Insensitive
+                    (To_String (Values.Indexed_Values.Attribute_Name),
+                     String (N_Str))
+                  then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Sloc    => Sloc,
+                           Message => "full associative array expression " &
+                             "must reference the same attribute """ &
+                             String (N_Str) & '"'));
                   else
-                     Record_Attribute (Attrs, A, Sloc);
+                     for V of Values.Indexed_Values.Values loop
+                        Create_And_Register_Attribute
+                          (Index  => V.Index,
+                           Values => V.Values,
+                           Single => V.Single);
+                     end loop;
                   end if;
+               else
+                  Create_And_Register_Attribute
+                    (Index  => I_Sloc,
+                     Values => Values.Values,
+                     Single => Values.Single);
                end if;
             end;
          end Parse_Attribute_Decl;

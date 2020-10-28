@@ -3,5 +3,5 @@ Build    K_STANDARD
  Binder
    Default_Switches (Ada) -> -E
  Compiler
-   Default_Switches -> -ext
    Default_Switches (Ada) -> -O2
+   Default_Switches (C) -> -ext

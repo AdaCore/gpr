@@ -1,0 +1,7 @@
+with "options";
+project Check6 is
+  package Compiler is
+    --  not the same package as Compiler
+    for Switches use Options.Linker'Switches;
+  end Compiler;
+end Check6;

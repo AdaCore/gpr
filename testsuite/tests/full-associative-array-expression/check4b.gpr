@@ -1,0 +1,7 @@
+with "options";
+project Check4b is
+  package Compiler is
+  --  full associative array expression requires simple attribute reference
+    for Switches use Options.Compiler'Switches ("Ada");
+  end Compiler;
+end Check4b;

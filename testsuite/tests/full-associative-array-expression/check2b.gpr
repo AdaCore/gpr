@@ -1,0 +1,7 @@
+with "options_empty";
+project Check2b is
+  package Compiler is
+  --  package "Compiler" not declared in project "Options_Empty"
+    for Switches use Options_Empty.Compiler'Switches;
+  end Compiler;
+end Check2b;

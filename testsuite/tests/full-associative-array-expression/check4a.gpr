@@ -1,0 +1,5 @@
+with "options";
+project Check4a is
+  --  full associative array expression requires simple attribute reference
+  for Runtime use Options'Runtime ("Ada");
+end Check4a;

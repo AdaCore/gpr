@@ -1,7 +1,7 @@
 Project: c         K_STANDARD
  compiler
-   driver -> toto
+   driver (Ada) -> toto
 Project: b         K_STANDARD
  compiler
-   driver -> toto
+   driver (Ada) -> toto
 Project: a         K_STANDARD

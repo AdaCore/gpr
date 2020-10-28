@@ -1,0 +1,5 @@
+with "options_empty";
+project Check2a is
+  --  associative array value not found
+  for Runtime use Options_Empty'Runtime;
+end Check2a;

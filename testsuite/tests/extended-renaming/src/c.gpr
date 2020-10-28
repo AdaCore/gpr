@@ -1,5 +1,5 @@
 project c is
    package compiler is
-      for driver use "toto";
+      for driver ("Ada") use "toto";
    end compiler;
 end c;

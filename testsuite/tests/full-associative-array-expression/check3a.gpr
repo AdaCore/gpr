@@ -1,0 +1,4 @@
+project Check3a is
+  --  full associative array expression requires simple attribute reference
+  for Runtime use "text15";
+end Check3a;

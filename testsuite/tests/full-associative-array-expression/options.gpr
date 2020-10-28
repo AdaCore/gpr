@@ -1,0 +1,18 @@
+project Options is
+   for Runtime ("C") use "text1";
+   for Runtime ("C++") use "text2";
+   package Compiler is
+      for Switches ("Ada") use ("text3");
+      for Switches ("C") use ("text4", "text5");
+      for Switches ("C++") use ();
+      for Default_Switches ("Ada") use ("text6");
+      for Default_Switches ("C") use ("text7", "text8");
+   end Compiler;
+   package Linker is
+      for Switches ("Ada") use ("text9");
+      for Switches ("C") use ("text10", "text11");
+      for Default_Switches ("Ada") use ("text12");
+      for Default_Switches ("C") use ("text13", "text14");
+   end Linker;
+   for Object_Generated ("C") use "text15";
+end Options;

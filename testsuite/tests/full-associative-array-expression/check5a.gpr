@@ -1,0 +1,5 @@
+with "options";
+project Check5a is
+  --  full associative array expression must reference the same attribute "Runtime"
+  for Runtime use Options'Object_Generated;
+end Check5a;

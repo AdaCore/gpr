@@ -1,0 +1,9 @@
+with "options";
+project Check1 is
+  --  check attribute name case insensitive comparison
+  for Runtime use Options'runtime;
+  package Compiler is
+  --  check package name case insensitive comparison
+    for Switches use Options.compiler'switches;
+  end Compiler;
+end Check1;

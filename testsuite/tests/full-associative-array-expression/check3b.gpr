@@ -1,0 +1,6 @@
+project Check3b is
+  package Compiler is
+  --  full associative array expression requires simple attribute reference
+    for Switches use ("test16");
+  end Compiler;
+end Check3b;
