@@ -1,9 +1,11 @@
-from e3.os.process import Run
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
 import sys
 
-print(Run('gpr2clean --config=no.cgpr -P p.gpr'.split(), output=None).status)
+bnr = BuilderAndRunner()
+print(bnr.run('gpr2clean --config=no.cgpr -P p.gpr'.split(),
+              output=None).status)
 sys.stdout.flush()
 
-print(Run('gpr2install --prefix=p --config=no.cgpr -P p.gpr'.split(),
-          output=None).status)
+print(bnr.run('gpr2install --prefix=p --config=no.cgpr -P p.gpr'.split(),
+              output=None).status)

@@ -69,15 +69,11 @@ package body GPR2.Parser.Project is
    --  Returns the Value_Type for the given node
 
    function Get_Name_Type
-     (Node : Single_Tok_Node'Class) return Name_Type
-   is
-     (Name_Type (Get_Value_Type (Node)));
+     (Node : Single_Tok_Node'Class) return Name_Type;
    --  Returns the Name for the given node
 
    function Get_Filename
-     (Node : Single_Tok_Node'Class) return Filename_Type
-   is
-     (Filename_Type (Get_Value_Type (Node)));
+     (Node : Single_Tok_Node'Class) return Filename_Type;
    --  Returns the Name for the given node
 
    function Present (Node : GPR_Node'Class) return Boolean is
@@ -87,47 +83,28 @@ package body GPR2.Parser.Project is
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range)
-      return Source_Reference.Object
-   is
-     (Source_Reference.Object
-        (Source_Reference.Create
-           (Path_Name.Value,
-            Positive (Slr.Start_Line),
-            Positive (Slr.Start_Column))));
+      return Source_Reference.Object;
 
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
-      Node      : GPR_Node'Class) return Source_Reference.Object
-   is
-     (Get_Source_Reference (Path_Name, Sloc_Range (Node)));
+      Node      : GPR_Node'Class) return Source_Reference.Object;
 
    function Get_Value_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range;
       Value     : Value_Type;
-      At_Pos    : Natural := 0) return Source_Reference.Value.Object
-   is
-     (Source_Reference.Value.Object
-       (Source_Reference.Value.Create
-         (Get_Source_Reference (Path_Name, Slr), Value, At_Pos)));
+      At_Pos    : Natural := 0) return Source_Reference.Value.Object;
 
    function Get_Value_Reference
      (Value  : Value_Type;
       Sloc   : Source_Reference.Object;
-      At_Pos : Natural := 0) return Source_Reference.Value.Object
-   is
-     (Source_Reference.Value.Object
-       (Source_Reference.Value.Create (Sloc, Value, At_Pos)));
+      At_Pos : Natural := 0) return Source_Reference.Value.Object;
 
    function Get_Identifier_Reference
      (Path_Name  : GPR2.Path_Name.Object;
       Slr        : Langkit_Support.Slocs.Source_Location_Range;
       Identifier : Name_Type)
-      return Source_Reference.Identifier.Object
-   is
-     (Source_Reference.Identifier.Object
-       (Source_Reference.Identifier.Create
-          (Get_Source_Reference (Path_Name, Slr), Identifier)));
+      return Source_Reference.Identifier.Object;
 
    function Get_Raw_Path
      (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object
@@ -168,6 +145,69 @@ package body GPR2.Parser.Project is
    begin
       return Self.Externals;
    end Externals;
+
+   ------------------
+   -- Get_Filename --
+   ------------------
+
+   function Get_Filename
+     (Node : Single_Tok_Node'Class) return Filename_Type
+   is
+   begin
+      return Filename_Type (Get_Value_Type (Node));
+   end Get_Filename;
+
+   ------------------------------
+   -- Get_Identifier_Reference --
+   ------------------------------
+
+   function Get_Identifier_Reference
+     (Path_Name  : GPR2.Path_Name.Object;
+      Slr        : Langkit_Support.Slocs.Source_Location_Range;
+      Identifier : Name_Type)
+      return Source_Reference.Identifier.Object
+   is
+   begin
+      return Source_Reference.Identifier.Object
+        (Source_Reference.Identifier.Create
+           (Get_Source_Reference (Path_Name, Slr), Identifier));
+   end Get_Identifier_Reference;
+
+   -------------------
+   -- Get_Name_Type --
+   -------------------
+
+   function Get_Name_Type
+     (Node : Single_Tok_Node'Class) return Name_Type
+   is
+   begin
+      return Name_Type (Get_Value_Type (Node));
+   end Get_Name_Type;
+
+   --------------------------
+   -- Get_Source_Reference --
+   --------------------------
+
+   function Get_Source_Reference
+     (Path_Name : GPR2.Path_Name.Object;
+      Node      : GPR_Node'Class) return Source_Reference.Object
+   is
+   begin
+      return Get_Source_Reference (Path_Name, Sloc_Range (Node));
+   end Get_Source_Reference;
+
+   function Get_Source_Reference
+     (Path_Name : GPR2.Path_Name.Object;
+      Slr       : Langkit_Support.Slocs.Source_Location_Range)
+      return Source_Reference.Object
+   is
+   begin
+      return Source_Reference.Object
+        (Source_Reference.Create
+           (Path_Name.Value,
+            Positive (Slr.Start_Line),
+            Positive (Slr.Start_Column)));
+   end Get_Source_Reference;
 
    ------------------------
    -- Get_String_Literal --
@@ -227,6 +267,32 @@ package body GPR2.Parser.Project is
 
       return Value_Type (To_String (Result));
    end Get_String_Literal;
+
+   -------------------------
+   -- Get_Value_Reference --
+   -------------------------
+
+   function Get_Value_Reference
+     (Value  : Value_Type;
+      Sloc   : Source_Reference.Object;
+      At_Pos : Natural := 0) return Source_Reference.Value.Object
+   is
+   begin
+      return Source_Reference.Value.Object
+        (Source_Reference.Value.Create (Sloc, Value, At_Pos));
+   end Get_Value_Reference;
+
+   function Get_Value_Reference
+     (Path_Name : GPR2.Path_Name.Object;
+      Slr       : Langkit_Support.Slocs.Source_Location_Range;
+      Value     : Value_Type;
+      At_Pos    : Natural := 0) return Source_Reference.Value.Object
+   is
+   begin
+      return Source_Reference.Value.Object
+        (Source_Reference.Value.Create
+           (Get_Source_Reference (Path_Name, Slr), Value, At_Pos));
+   end Get_Value_Reference;
 
    --------------------
    -- Get_Value_Type --
@@ -2872,10 +2938,18 @@ package body GPR2.Parser.Project is
               (GPR2.Project.Search_Paths
                  (Self.File, Tree.Project_Search_Paths));
 
-            function Sloc return Source_Reference.Object is
-              (Get_Source_Reference (Self.File, Node));
+            function Sloc return Source_Reference.Object;
             --  Use function instead of constant because Sloc need only in case
             --  of error logging and no more than once.
+
+            ----------
+            -- Sloc --
+            ----------
+
+            function Sloc return Source_Reference.Object is
+            begin
+               return Get_Source_Reference (Self.File, Node);
+            end Sloc;
 
             Name     : constant Identifier := F_Var_Name (Node);
             Expr     : constant Term_List := F_Expr (Node);
@@ -3168,10 +3242,19 @@ package body GPR2.Parser.Project is
                     (Source_Reference.Create (Self.File.Value, 0, 0));
 
          function Create_Name
+           (Name : Name_Type) return Source_Reference.Identifier.Object;
+
+         -----------------
+         -- Create_Name --
+         -----------------
+
+         function Create_Name
            (Name : Name_Type) return Source_Reference.Identifier.Object
          is
-           (Source_Reference.Identifier.Object
-              (Source_Reference.Identifier.Create (Sloc, Name)));
+         begin
+            return Source_Reference.Identifier.Object
+              (Source_Reference.Identifier.Create (Sloc, Name));
+         end Create_Name;
 
       begin
          Attrs.Insert

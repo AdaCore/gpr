@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
 
 src_dir = "src"
@@ -31,14 +32,14 @@ with open("%s/p%d.adb" % (src_dir, PN), "w+") as f:
     f.write("end P%d;\n" % PN)
 
 
-subprocess.call(["gprbuild", "-p", "-q"])
+BuilderAndRunner().build("check_mem.gpr", args=['-p'])
 
 EXEC = "obj/check_mem"
 first_final = False
 
 #  Run driver 2 times
 for r in range(0, 2):
-    subprocess.call([EXEC, str(r * 2 + 1)])
+    BuilderAndRunner().call([EXEC, str(r * 2 + 1)])
     with open("run%d.out" % r, "w+") as ofn:
         subprocess.call(["gnatmem", "-t", "0", EXEC], stdout=ofn)
         ofn.seek(0)

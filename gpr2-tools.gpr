@@ -64,6 +64,8 @@ project GPR2.Tools is
             for Default_Switches ("Ada") use Common_Options & Checks_Options
             & Debug_Options;
 
+            for Default_Switches ("gnatcov*") use Debug_Options;
+
          when "release_checks" =>
             for Default_Switches ("Ada") use Common_Options & Release_Options
             & Checks_Options;

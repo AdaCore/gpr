@@ -1,16 +1,18 @@
 import os
 import stat
 
-from e3.os.process import Run
+from testsuite_support.builder_and_runner import BuilderAndRunner
+
+bnr = BuilderAndRunner()
 
 # build 'p' project
-Run(['gprbuild', '-p', '-q', '-Pp'])
+bnr.run(['gprbuild', '-p', '-q', '-Pp'])
 
 # set main.ali read only
 os.chmod('main.ali', stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
 # clean project in normal mode
-Run(['gpr2clean', '-Pp'])
+bnr.run(['gpr2clean', '-Pp'])
 
 # check read only main.ali not deleted
 if not os.path.exists('main.ali'):
@@ -18,7 +20,7 @@ if not os.path.exists('main.ali'):
 
 else:
     # clean project forcing deletions
-    Run(['gpr2clean', '-f', '-Pp'])
+    bnr.run(['gpr2clean', '-f', '-Pp'])
 
     # check read only main.ali deleted
     if os.path.exists('main.ali'):

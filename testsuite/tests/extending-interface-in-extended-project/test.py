@@ -1,3 +1,3 @@
-import subprocess
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
-subprocess.call(["gpr2ls", "-Pimp4/imp4"])
+BuilderAndRunner().call(["gpr2ls", "-Pimp4/imp4"])

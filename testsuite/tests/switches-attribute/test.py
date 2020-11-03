@@ -1,14 +1,16 @@
 from e3.env import Env
-from e3.os.process import Run
+from testsuite_support.builder_and_runner import BuilderAndRunner
+
+bnr = BuilderAndRunner()
 
 if Env().host.platform.endswith('windows'):
     is_win = True
 else:
     is_win = False
 
-Run(['gprbuild', '-p', 'switches_attribute.gpr'])
+bnr.build('switches_attribute.gpr', args=['-p'])
 
-Run(['./main'], output="run.out")
+bnr.run(['./main'], output="run.out")
 
 for line in open("run.out"):
     li = line[:-1]

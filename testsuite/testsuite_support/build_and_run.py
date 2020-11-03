@@ -4,6 +4,7 @@ import os.path
 from e3.testsuite.driver.classic import TestAbortWithError
 
 from testsuite_support.base_driver import BaseDriver, create_fake_ada_compiler
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
 
 class BuildAndRunDriver(BaseDriver):
@@ -26,6 +27,10 @@ class BuildAndRunDriver(BaseDriver):
 
     default_process_timeout = 300
 
+    # gpr2 test program builder handling coverage, and gpr2 test & tools
+    # launcher supporting coverage & valgrind mode.
+    builder_and_runner = None
+
     def set_up(self):
         super(BuildAndRunDriver, self).set_up()
 
@@ -43,6 +48,8 @@ class BuildAndRunDriver(BaseDriver):
         self.main_program = main
         self.fake_ada_target = self.test_env.get('fake_ada_target', None)
 
+        self.builder_and_runner = BuilderAndRunner(self)
+
     def run(self):
         env = dict(os.environ)
 
@@ -58,10 +65,9 @@ class BuildAndRunDriver(BaseDriver):
                 os.path.join(fake_dir, 'bin') + os.path.pathsep + env['PATH'])
 
         # Build the program and run it
-        self.shell(['gprbuild', '-g1', '-q', '-p', '-P', self.project_file,
-                    '-bargs', '-Es'],
-                   env=env)
-        self.shell(
-           (['valgrind', '-q'] if self.env.valgrind else []) +
-           [os.path.join('.', self.main_program)],
-           env=env)
+        self.builder_and_runner.build(project=self.project_file,
+                                      args=['-g1', '-q', '-p', '-bargs',
+                                            '-Es'],
+                                      env=env)
+        self.builder_and_runner.run([os.path.join('.', self.main_program)],
+                                    env=env)

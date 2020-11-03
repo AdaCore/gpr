@@ -74,6 +74,8 @@ library project GPR2 is
             for Switches ("gpr_parser.*") use ("-g", "-O0");
             for Switches ("adalog*") use  ("-g", "-O0");
 
+            for Switches ("gnatcov*") use ("-g", "-O0");
+
          when "release_checks" =>
             for Default_Switches ("Ada") use Common_Options & Checks_Options &
                                              Release_Options;

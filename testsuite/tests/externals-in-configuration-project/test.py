@@ -1,4 +1,5 @@
-from e3.os.process import Run
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
-p = Run('gpr2clean -p -q p.gpr --config=p.cgpr'.split())
+p = BuilderAndRunner().run(['gpr2clean', '-p', '-q', 'p.gpr',
+                            '--config=p.cgpr'])
 print(p.out)

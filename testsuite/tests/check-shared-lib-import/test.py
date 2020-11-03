@@ -1,4 +1,6 @@
-import subprocess
+from testsuite_support.builder_and_runner import BuilderAndRunner
+
+subprocess = BuilderAndRunner()
 
 subprocess.call(["gpr2clean", "-r", "prj.gpr"])
 subprocess.call(["gpr2clean", "-r", "--unchecked-shared-lib-imports",

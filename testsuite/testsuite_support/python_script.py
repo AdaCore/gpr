@@ -1,6 +1,8 @@
+import os
 import sys
 
 from testsuite_support.base_driver import BaseDriver
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
 
 class PythonScriptDriver(BaseDriver):
@@ -21,4 +23,16 @@ class PythonScriptDriver(BaseDriver):
     default_process_timeout = 300
 
     def run(self):
-        self.shell([sys.executable, 'test.py'])
+        builder_and_runner = BuilderAndRunner(self)
+
+        cmd = [sys.executable, 'test.py']
+
+        env = dict(os.environ)
+        if 'PYTHONPATH' not in os.environ:
+            env['PYTHONPATH'] = self.env.root_dir
+        else:
+            env['PYTHONPATH'] = str(self.env.root_dir) + \
+                                os.path.pathsep + os.environ['PYTHONPATH']
+        builder_and_runner.insert_build_and_runner_parameters(env)
+
+        self.shell(cmd, env=env)

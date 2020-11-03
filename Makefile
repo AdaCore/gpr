@@ -52,6 +52,9 @@ GPRINSTALL=gprinstall
 # Load current setup if any
 -include makefile.setup
 
+# Whether to enable coverage (empty for no, any other value for yes)
+COVERAGE=
+
 # check for out-of-tree build
 ifeq ($(SOURCE_DIR),.)
 RBD=
@@ -62,7 +65,11 @@ GPR2KBDIR=src/kb/gprconfig_kb
 MAKEPREFIX=
 LANGKIT_GENERATED_SRC=langkit/build
 else
+ifeq ($(COVERAGE),)
 RBD=--relocate-build-tree
+else
+RBD=
+endif
 GPR2=$(SOURCE_DIR)/gpr2.gpr
 GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 GPR2KB=$(SOURCE_DIR)/src/kb/collect_kb.gpr
@@ -78,7 +85,7 @@ else
 GTARGET=--target=$(TARGET)
 endif
 
-ifeq ($(ENABLE_SHARED), yes)
+ifeq ($(ENABLE_SHARED)$(COVERAGE), yes)
    LIBGPR2_TYPES=static relocatable static-pic
 else
    LIBGPR2_TYPES=static
@@ -87,11 +94,27 @@ endif
 # Used to pass extra options to GPRBUILD, like -d for instance
 GPRBUILD_OPTIONS=
 
+ifeq ($(COVERAGE),)
+   COVERAGE_BUILD_FLAGS=
+else
+   override BUILD=debug
+   COVERAGE_BUILD_FLAGS= \
+           --implicit-with=gnatcov_rts_full \
+           --src-subdirs=gnatcov-instr
+   COVERAGE_INSTR_FLAGS= -XBUILD=${BUILD} \
+           -XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC} \
+           -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
+           -XLANGKIT_SUPPORT_BUILD=static
+   COVERAGE_INSTR=gnatcov instrument --level $(LEVEL) --dump-trigger=atexit \
+        $(COVERAGE_INSTR_FLAGS)
+endif
+
 GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
 	-aP ${LANGKIT_GENERATED_SRC}/lib/gnat \
 	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC}
 
-BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS}
+BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
+            ${COVERAGE_BUILD_FLAGS}
 INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --uninstall
@@ -110,12 +133,40 @@ kb:
 build: ${LIBGPR2_TYPES:%=build-%}
 
 build-%:
-	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
+ifeq ($(COVERAGE),)
+	$(SOURCE_DIR);$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2)
+else
+	echo "gpr2 library built from gpr2-tools in coverage mode"
+endif
 
-build-tools:
+
+build-tools: coverage-instrument
 	$(BUILDER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static $(GPR2TOOLS)
+
+coverage-instrument:
+ifneq ($(COVERAGE),)
+	# Remove artifacts from previous instrumentations, so that stale units
+	# that are not overriden by new ones don't get in our way.
+	rm -rf $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*gnatcov-instr
+	mkdir -p $(SOURCE_DIR)/.build/$(BUILD)
+
+	# TODO remove when gnatcoverage limitations fixed
+	# TODO remove also gpr2-parser-project.adb gpr2-project-view.adb patches 
+	echo "gpr2-source_info.ads" > $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-path_name.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-project-attribute_index.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-project-attribute-set.adb" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-project-attribute-set.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-source.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-source_info-parser-registry.adb" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+	echo "gpr2-unit.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
+
+	$(COVERAGE_INSTR) \
+	--ignore-source-files @$(SOURCE_DIR)/.build/$(BUILD)/ignored.txt \
+	-P $(GPR2TOOLS)
+endif
 
 ###########
 # Install #
@@ -127,6 +178,21 @@ ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
 endif
 
 install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
+ifneq ($(COVERAGE),)
+	mkdir -p $(prefix)/share/gpr2/sids || true
+	# copy gpr2 & gpr2-tools sid files
+	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*.sid $(prefix)/share/gpr2/sids/
+	# exclude generated code from test coverage statistics
+	-rm $(prefix)/share/gpr2/sids/gpr_parser*
+	# copy --ignore-source-files list
+	cp $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt $(prefix)/share/gpr2/sids/.
+	# copy instrumented gpr2 source files
+	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-static/gpr2-gnatcov-instr/*.ad? \
+		$(prefix)/include/gpr2.static/.
+	# copy instrumented gpr2 ali files
+	cp $(SOURCE_DIR)/.build/$(BUILD)/lib-static/*.ali \
+		$(prefix)/lib/gpr2.static/.
+endif
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \

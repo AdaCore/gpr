@@ -2,7 +2,7 @@ import os
 
 from e3.env import Env
 from e3.fs import cp
-from e3.os.process import Run
+from testsuite_support.builder_and_runner import BuilderAndRunner
 
 if Env().host.platform.endswith('windows'):
     exeext = '.exe'
@@ -10,8 +10,9 @@ if Env().host.platform.endswith('windows'):
 else:
     exeext = ""
 
-p = Run(['gpr2install', '-p',
-         '--prefix=' + os.path.join(os.getcwd(), 'inst'), 'inst.gpr'])
+p = BuilderAndRunner().run(['gpr2install', '-p',
+                            '--prefix=' + os.path.join(os.getcwd(), 'inst'),
+                            'inst.gpr'])
 
 if os.path.exists('inst/share/doc/gps/html/main.html'):
     print("OK main html")
