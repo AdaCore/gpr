@@ -1303,14 +1303,15 @@ package body GPR2.Parser.Project is
                Indexed_Values.Filled := True;
                Indexed_Values.Attribute_Pack := +String (Pack);
                Indexed_Values.Attribute_Name := +String (Name);
+
                for Attribute of Attrs.Filter (Name => Name) loop
                   Indexed_Values.Values :=
                     Indexed_Values.Values
-                        & (Index => (if Attribute.Is_Defined
-                                     then Attribute.Index
-                                     else PAI.Undefined),
-                           Values => Attribute.Values,
-                           Single => Attribute.Kind = PRA.Single);
+                      & (Index => (if Attribute.Is_Defined
+                                   then Attribute.Index
+                                   else PAI.Undefined),
+                         Values => Attribute.Values,
+                         Single => Attribute.Kind = PRA.Single);
                end loop;
             end if;
          end Fill_Indexed_Values;
@@ -1520,11 +1521,11 @@ package body GPR2.Parser.Project is
                   end if;
                end if;
 
-            elsif View.Has_Packages (Pack)
-            then
+            elsif View.Has_Packages (Pack) then
                Fill_Indexed_Values (View.Pack (Pack).Attributes);
-               if not View.Pack (Pack).Check_Attribute (Name, Index,
-                                                        Result => Attr)
+
+               if not View.Pack (Pack).Check_Attribute
+                 (Name, Index, Result => Attr)
                then
                   if Indexed_Values.Filled then
                      if Indexed_Values.Values.Is_Empty then
@@ -1534,6 +1535,7 @@ package body GPR2.Parser.Project is
                               "associative array value not found",
                               Get_Source_Reference (Self.File, Node)));
                      end if;
+
                   else
                      Tree.Log_Messages.Append
                        (Message.Create
@@ -1545,6 +1547,7 @@ package body GPR2.Parser.Project is
                            Get_Source_Reference (Self.File, Node)));
                   end if;
                end if;
+
             else
                Fill_Indexed_Values (GPR2.Project.Attribute.Set.Empty_Set);
                Tree.Log_Messages.Append
@@ -1635,6 +1638,7 @@ package body GPR2.Parser.Project is
                if Is_Project_Reference then
                   Record_Values (Get_Attribute_Ref ("project", Node));
                end if;
+
                Status := Over;
             end Handle_Attribute_Reference;
 
@@ -2273,16 +2277,6 @@ package body GPR2.Parser.Project is
                       Get_Name_Type (Name.As_Single_Tok_Node);
          begin
             declare
-               Q_Name   : constant PRA.Qualified_Name :=
-                            PRA.Create
-                              (N_Str,
-                               Optional_Name_Type (To_String (Pack_Name)));
-
-               Values    : constant Item_Values := Get_Term_List (Expr);
-               A         : GPR2.Project.Attribute.Object;
-               Is_Valid  : Boolean := True;
-               --  Set to False if the attribute definition is invalid
-
                function Create_Index return PAI.Object;
                --  Create index with "at" part if exists
 
@@ -2290,17 +2284,27 @@ package body GPR2.Parser.Project is
                  (Index  : PAI.Object;
                   Values : Containers.Source_Value_List;
                   Single : Boolean);
-               --  Create attribute and register it if needed.
+               --  Create attribute and register it if needed
 
-               Id     : constant Source_Reference.Identifier.Object :=
-                             Get_Identifier_Reference
-                               (Self.Path_Name,
-                                Sloc_Range (Name),
-                                N_Str);
+               Q_Name  : constant PRA.Qualified_Name :=
+                           PRA.Create
+                             (N_Str,
+                              Optional_Name_Type (To_String (Pack_Name)));
+
+               Values   : constant Item_Values := Get_Term_List (Expr);
+               A        : GPR2.Project.Attribute.Object;
+               Is_Valid : Boolean := True;
+               --  Set to False if the attribute definition is invalid
+
+               Id       : constant Source_Reference.Identifier.Object :=
+                            Get_Identifier_Reference
+                              (Self.Path_Name,
+                               Sloc_Range (Name),
+                               N_Str);
                --  The attribute name & sloc
 
-               Sloc      : constant Source_Reference.Object :=
-                             Get_Source_Reference (Self.File, Node);
+               Sloc     : constant Source_Reference.Object :=
+                            Get_Source_Reference (Self.File, Node);
 
                -----------------------------------
                -- Create_And_Register_Attribute --
@@ -2309,8 +2313,7 @@ package body GPR2.Parser.Project is
                procedure Create_And_Register_Attribute
                  (Index  : PAI.Object;
                   Values : Containers.Source_Value_List;
-                  Single : Boolean)
-               is
+                  Single : Boolean) is
                begin
                   if Single then
                      pragma Assert (Expr.Children_Count >= 1);
@@ -2334,33 +2337,31 @@ package body GPR2.Parser.Project is
                         Def : constant PRA.Def := PRA.Get (Q_Name);
 
                      begin
-                        if (Single
-                            and then Values.First_Element.Text = "")
-                          or else (not Single
-                                   and then Values.Length = 0)
+                        if (Single and then Values.First_Element.Text = "")
+                          or else (not Single and then Values.Length = 0)
                         then
                            case Def.Empty_Value is
-                           when PRA.Allow =>
-                              null;
+                              when PRA.Allow =>
+                                 null;
 
-                           when PRA.Ignore =>
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Warning,
-                                    Sloc    => Sloc,
-                                    Message => "Empty attribute "
-                                               & PRA.Image (Q_Name)
-                                               & " ignored"));
-                              Is_Valid := False;
+                              when PRA.Ignore =>
+                                 Tree.Log_Messages.Append
+                                   (Message.Create
+                                      (Level   => Message.Warning,
+                                       Sloc    => Sloc,
+                                       Message => "Empty attribute "
+                                                  & PRA.Image (Q_Name)
+                                                  & " ignored"));
+                                 Is_Valid := False;
 
-                           when PRA.Error =>
-                              Tree.Log_Messages.Append
-                                (Message.Create
-                                   (Level   => Message.Error,
-                                    Sloc    => Sloc,
-                                    Message => "Attribute "
-                                               & PRA.Image (Q_Name)
-                                               & " can't be empty"));
+                              when PRA.Error =>
+                                 Tree.Log_Messages.Append
+                                   (Message.Create
+                                      (Level   => Message.Error,
+                                       Sloc    => Sloc,
+                                       Message => "Attribute "
+                                                  & PRA.Image (Q_Name)
+                                                  & " can't be empty"));
                            end case;
                         end if;
 
@@ -2459,6 +2460,7 @@ package body GPR2.Parser.Project is
                            Sloc    => Sloc,
                            Message => "full associative array expression " &
                              "requires simple attribute reference"));
+
                   elsif not Ada.Strings.Equal_Case_Insensitive
                     (To_String (Values.Indexed_Values.Attribute_Pack),
                      To_String (Pack_Name))
@@ -2469,6 +2471,7 @@ package body GPR2.Parser.Project is
                            Sloc    => Sloc,
                            Message => "not the same package as " &
                              To_String (Pack_Name)));
+
                   elsif not Ada.Strings.Equal_Case_Insensitive
                     (To_String (Values.Indexed_Values.Attribute_Name),
                      String (N_Str))
@@ -2480,6 +2483,7 @@ package body GPR2.Parser.Project is
                            Message => "full associative array expression " &
                              "must reference the same attribute """ &
                              String (N_Str) & '"'));
+
                   else
                      for V of Values.Indexed_Values.Values loop
                         Create_And_Register_Attribute
@@ -2488,6 +2492,7 @@ package body GPR2.Parser.Project is
                            Single => V.Single);
                      end loop;
                   end if;
+
                else
                   Create_And_Register_Attribute
                     (Index  => I_Sloc,
