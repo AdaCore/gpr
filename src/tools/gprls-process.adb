@@ -250,7 +250,10 @@ begin
       is (Left = Right and then Left.Path_Name.Value = Right.Path_Name.Value);
 
       function Path_Less (Left, Right : Project.Source.Object) return Boolean
-      is (Left < Right
+      is (Left.View.Namespace_Root.Name < Right.View.Namespace_Root.Name
+          or else (Left.View.Namespace_Root.Name
+                   = Right.View.Namespace_Root.Name
+                   and then Left < Right)
           or else (Left = Right
                    and then Left.Path_Name.Value < Right.Path_Name.Value));
 

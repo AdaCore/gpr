@@ -23,7 +23,9 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Hashed_Sets;
 with Ada.Iterator_Interfaces;
+with Ada.Strings.Hash;
 with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
@@ -35,6 +37,7 @@ with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 with GPR2.Project.View.Set;
+with GPR2.Project.Source;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.Registry.Attribute;
 
@@ -427,6 +430,30 @@ private
    package View_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Set.Object, "=" => View.Set."=");
 
+   function Key
+     (View : Project.View.Object; Source : Simple_Name) return String
+   is
+     (To_Lower (View.Namespace_Root.Name)
+      & '|' & Path_Name.To_OS_Case (String (Source)));
+
+   function Key (Item : Source.Object) return String is
+     (Key (Item.View, Item.Path_Name.Simple_Name));
+
+   function To_Hash (Item : Source.Object) return Ada.Containers.Hash_Type is
+     (Ada.Strings.Hash (Key (Item)));
+
+   function Same_Key (Left, Right : Source.Object) return Boolean is
+      (Key (Left) = Key (Right));
+
+   package Source_Set is new Ada.Containers.Hashed_Sets
+     (Element_Type        => Source.Object,
+      Hash                => To_Hash,
+      Equivalent_Elements => Same_Key,
+      "="                 => Same_Key);
+
+   package Source_Keys is new Source_Set.Generic_Keys
+     (String, Key, Ada.Strings.Hash, "=");
+
    type Object is tagged limited record
       Self             : access Object := null;
       Root             : View.Object;
@@ -435,6 +462,7 @@ private
       Runtime          : View.Object;
       Units            : Name_View.Map;
       Sources          : Filename_View.Map;
+      Rooted_Sources   : Source_Set.Set;
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
       Implicit_With    : Containers.Filename_Set;

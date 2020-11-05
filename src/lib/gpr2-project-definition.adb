@@ -1980,6 +1980,8 @@ package body GPR2.Project.Definition is
             pragma Assert
               (Inserted or else SW.Source.Language /= "Ada",
                String (SW.Path_Name.Simple_Name) & " duplicated");
+
+            Set_Source (Def.Tree.all, SW);
          end loop;
          Def.Sources     := Def_Sources;
          Def.Sources_Map := Def_Src_Map;

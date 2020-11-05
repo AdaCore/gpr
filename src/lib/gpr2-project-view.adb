@@ -38,6 +38,8 @@ with GPR2.Project.View.Set;
 with GPR2.Source;
 with GPR2.Project.Unit_Info;
 
+with System.Assertions;
+
 package body GPR2.Project.View is
 
    use GNAT;
@@ -372,6 +374,18 @@ package body GPR2.Project.View is
       return Result.Is_Defined;
    end Check_Attribute;
 
+   ------------------
+   -- Check_Source --
+   ------------------
+
+   function Check_Source
+     (Self     : Object;
+      Filename : GPR2.Simple_Name;
+      Result   : in out Project.Source.Object) return Boolean is
+   begin
+      return Definition.Check_Source (Self, Filename, Result);
+   end Check_Source;
+
    --------------------------
    -- Clean_Attribute_List --
    --------------------------
@@ -663,6 +677,16 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Has_Packages (Name);
    end Has_Packages;
+
+   ----------------
+   -- Has_Source --
+   ----------------
+
+   function Has_Source
+     (Self : Object; Filename : GPR2.Simple_Name) return Boolean is
+   begin
+      return Definition.Has_Source (Self, Filename);
+   end Has_Source;
 
    -----------------
    -- Has_Sources --
@@ -1198,6 +1222,15 @@ package body GPR2.Project.View is
    end Name;
 
    --------------------
+   -- Namespace_Root --
+   --------------------
+
+   function Namespace_Root (Self : Object) return Object is
+   begin
+      return Definition.Strong (Get_RO (Self).Root_View);
+   end Namespace_Root;
+
+   --------------------
    -- Naming_Package --
    --------------------
 
@@ -1294,6 +1327,24 @@ package body GPR2.Project.View is
       else
          return  Project.Source.Undefined;
       end if;
+   end Source;
+
+   ------------
+   -- Source --
+   ------------
+
+   function Source
+     (Self     : Object;
+      Filename : GPR2.Simple_Name) return Project.Source.Object
+   is
+      Result : Project.Source.Object;
+   begin
+      if Definition.Check_Source (Self, Filename, Result) then
+         return Result;
+      end if;
+
+      raise System.Assertions.Assert_Failure with
+        "Source " & String (Filename) & " not found";
    end Source;
 
    ------------------------

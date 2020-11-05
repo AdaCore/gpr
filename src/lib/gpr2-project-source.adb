@@ -296,7 +296,6 @@ package body GPR2.Project.Source is
                    (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
    is
-      Tree : constant not null access Project.Tree.Object := View (Self).Tree;
       Done : Containers.Filename_Set;
 
       procedure Collect_Source (Source : Source_Info.Object'Class);
@@ -309,27 +308,17 @@ package body GPR2.Project.Source is
          S        : Project.Source.Object;
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
-         Src_File : GPR2.Path_Name.Object;
-         View     : Project.View.Object;
       begin
          for File of Source.Dependencies loop
             Done.Insert (File, Position, Inserted);
 
-            if Inserted then
-               Src_File := GPR2.Path_Name.Create_File
-                 (File, GPR2.Path_Name.No_Resolution);
-               View := Tree.Get_View (Src_File);
+            if Inserted
+              and then View (Self).Check_Source (File, S)
+            then
+               For_Each (S);
 
-               if View.Is_Defined then
-                  S := View.Source (Src_File);
-
-                  pragma Assert (S.Is_Defined, "Can't find " & String (File));
-
-                  For_Each (S);
-
-                  if Closure then
-                     Collect_Source (S.Source);
-                  end if;
+               if Closure then
+                  Collect_Source (S.Source);
                end if;
             end if;
          end loop;

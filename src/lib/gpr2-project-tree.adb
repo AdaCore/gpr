@@ -34,7 +34,6 @@ with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Pack;
-with GPR2.Project.Source;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 with GPR2.Unit;
@@ -71,6 +70,26 @@ package body GPR2.Project.Tree is
      (Self    : in out Object;
       Changed : access procedure (Project : View.Object) := null);
    --  Update project tree with updated context
+
+   function Check_Source
+     (View   : Project.View.Object;
+      Name   : Simple_Name;
+      Result : in out Source.Object) return Boolean;
+   --  Get the source by simple filename from the same subtree with the View.
+   --  Return True on success and set Result.
+   --  Return False if source not found and remain Result untouched.
+
+   function Has_Source
+     (View : Project.View.Object; Name : Simple_Name) return Boolean
+   is
+     (Source_Keys.Contains (View.Tree.Rooted_Sources, Key (View, Name)));
+   --  Return True if source with such filename found in project namespace
+   --  subtree.
+
+   procedure Set_Source
+     (Self : in out Object; Source : Project.Source.Object);
+   --  Insert source into internal Tree container indexed by Root of subtree
+   --  project name and simple source filename.
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
       Kind   : Iterator_Control;
@@ -270,6 +289,27 @@ package body GPR2.Project.Tree is
       Self.Messages.Append (Message);
    end Append_Message;
 
+   ------------------
+   -- Check_Source --
+   ------------------
+
+   function Check_Source
+     (View   : Project.View.Object;
+      Name   : Simple_Name;
+      Result : in out Source.Object) return Boolean
+   is
+      Position : constant Source_Set.Cursor :=
+                   Source_Keys.Find
+                     (View.Tree.Rooted_Sources, Key (View, Name));
+   begin
+      if Source_Set.Has_Element (Position) then
+         Result := Source_Set.Element (Position);
+         return True;
+      else
+         return False;
+      end if;
+   end Check_Source;
+
    ----------------
    -- Clear_View --
    ----------------
@@ -395,10 +435,13 @@ package body GPR2.Project.Tree is
             File      => RTF,
             Qualifier => K_Standard);
 
-         return Result : constant View.Object := Register_View (Data) do
+         return Result : View.Object := Register_View (Data) do
             --  If we simply return Register_View (Data) the reference counter
             --  will be one more than should be, see T709-001.
-            null;
+            --  It is not actual for now because line below is added after the
+            --  T709-001 bug detected.
+
+            Definition.Get_RW (Result).Root_View := Definition.Weak (Result);
          end return;
 
       else
@@ -1164,7 +1207,7 @@ package body GPR2.Project.Tree is
                P_Data.Packs,
                P_Data.Types);
 
-            P_Data.Kind := P_Data.Trees.Project.Qualifier;
+            pragma Assert (P_Data.Kind = K_Configuration, P_Data.Kind'Img);
          end;
       end if;
 
@@ -1771,7 +1814,7 @@ package body GPR2.Project.Tree is
                end if;
 
                --  Create the view, needed to be able to reference it if it is
-               --  an aggregate project as it becomes the new View_Context.
+               --  an aggregate project as it becomes the new Context_View.
 
                Data.Context_View := Definition.Weak (Context_View);
                Data.Status       := Status;
@@ -1829,6 +1872,15 @@ package body GPR2.Project.Tree is
                end Push;
 
             begin
+               Data.Root_View :=
+                 (if (Status = Aggregated and then not Parent.Is_Library)
+                    or else Status = Root
+                  then Definition.Weak (View)
+                  else Definition.Get_RO (Parent).Root_View);
+
+               pragma Assert
+                 (View.Namespace_Root.Is_Defined, String (View.Name));
+
                --  Now load all imported projects. If we are parsing the root
                --  project or an aggregate project then the context view become
                --  this project.
@@ -1910,8 +1962,8 @@ package body GPR2.Project.Tree is
                           (Project.Name,
                            Internal
                              (Project.Path_Name,
-                              Status    => Imported,
-                              Parent    => GPR2.Project.View.Undefined));
+                              Status => Imported,
+                              Parent => View));
 
                         Pop;
                      end if;
@@ -1936,8 +1988,8 @@ package body GPR2.Project.Tree is
                         Data.Extended :=
                           Internal
                             (Path_Name,
-                             Status    => Extended,
-                             Parent    => View);
+                             Status => Extended,
+                             Parent => View);
 
                         Pop;
 
@@ -2401,7 +2453,9 @@ package body GPR2.Project.Tree is
             end loop;
          end if;
 
-         if not Has_Error then
+         if not (Has_Error
+                 or else P_Data.Kind in K_Abstract | K_Configuration)
+         then
             P_Data.Signature := New_Signature;
 
             --  Let's compute the project kind if needed. A project without an
@@ -2783,6 +2837,16 @@ package body GPR2.Project.Tree is
       end if;
    end Set_Context;
 
+   ----------------
+   -- Set_Source --
+   ----------------
+
+   procedure Set_Source
+     (Self : in out Project.Tree.Object; Source : Project.Source.Object) is
+   begin
+      Self.Rooted_Sources.Include (Source);
+   end Set_Source;
+
    ------------
    -- Target --
    ------------
@@ -2872,6 +2936,8 @@ package body GPR2.Project.Tree is
       Stop_On_Error : Boolean := True;
       With_Runtime  : Boolean := False) is
    begin
+      Self.Self.Rooted_Sources.Clear;
+
       for V of Self.Views_Set loop
          if With_Runtime or else not V.Is_Runtime then
             Definition.Get (V).Update_Sources (V, Stop_On_Error);
@@ -3047,5 +3113,8 @@ package body GPR2.Project.Tree is
 begin
    --  Export routines to Definitions to avoid cyclic dependencies
 
-   Definition.Register := Register_View'Access;
+   Definition.Register     := Register_View'Access;
+   Definition.Check_Source := Check_Source'Access;
+   Definition.Has_Source   := Has_Source'Access;
+   Definition.Set_Source   := Set_Source'Access;
 end GPR2.Project.Tree;

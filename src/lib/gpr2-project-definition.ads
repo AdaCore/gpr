@@ -96,6 +96,9 @@ private package GPR2.Project.Definition is
 
       Units        : Unit_Info.Set.Object;
 
+      Root_View    : Weak_Reference;
+      --  Either root aggregated project view, or just root view of the tree
+
       --  Some general information
 
       Context_View : Weak_Reference;
@@ -131,6 +134,29 @@ private package GPR2.Project.Definition is
    Register : access function
      (Def : in out Definition.Data) return Project.View.Object;
    --  Register view definition in the project tree
+
+   Check_Source : access function
+     (View   : Project.View.Object;
+      Name   : Simple_Name;
+      Result : in out Project.Source.Object) return Boolean;
+   --  Get the source object by the simple filename from the same projects
+   --  subtree where the View is.
+   --  Return True on success and set Result.
+   --  Return False if source not found and remain Result untouched.
+
+   Has_Source : access function
+     (View : Project.View.Object; Name : Simple_Name) return Boolean;
+   --  Return True if source with such filename found in project namespace
+   --  subtree.
+
+   Set_Source : access procedure
+     (Tree : in out Project.Tree.Object; Source : Project.Source.Object);
+   --  Insert source into internal Tree container indexed by Root of subtree
+   --  project name and simple source filename.
+
+   --------------------------------------------------------------
+   -- Private routines exported from GPR2.Project.View package --
+   --------------------------------------------------------------
 
    Set : access procedure
      (Ref : out View.Object; Def : Definition_Base'Class);

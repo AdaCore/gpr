@@ -244,6 +244,13 @@ package GPR2.Project.View is
           Post => Variable'Result.Is_Defined;
    --  Returns the variable with the given name
 
+   function Namespace_Root (Self : Object) return Object
+     with Pre  => Self.Is_Defined,
+          Post => Namespace_Root'Result.Is_Defined;
+   --  Root of the projects namespace subtree. It is either root aggregated
+   --  project view or just root view of the tree. Source simple filenames
+   --  have to be unique in the name-space of this subtree.
+
    --  Packages
 
    function Has_Packages
@@ -325,6 +332,31 @@ package GPR2.Project.View is
       Need_Update : Boolean := True) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Get full path name corresponding to the given filename
+
+   function Has_Source
+     (Self : Object; Filename : GPR2.Simple_Name) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Return True if source with such filename found in project namespace
+   --  subtree.
+
+   function Source
+     (Self : Object; Filename : GPR2.Simple_Name) return Project.Source.Object
+     with Pre => Self.Is_Defined and then Self.Has_Source (Filename);
+   --  Returns source by simple filename. The search is performed in the same
+   --  namespace projects subtree where the Self is located.
+   --  If the source with such simple filename is not found in the subtree, the
+   --  exception Assert_Failure is raised.
+
+   function Check_Source
+     (Self     : Object;
+      Filename : GPR2.Simple_Name;
+      Result   : in out Project.Source.Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Get the source by simple filename from the same subtree with the View.
+   --  Return True on success and set Result.
+   --  Return False if source not found and remain Result untouched.
+   --  This routine is faster than using Has_Source and Source above as
+   --  avoiding one access to the underlying structure.
 
    procedure Invalidate_Sources (Self : in out Object)
      with Pre => Self.Is_Defined;
