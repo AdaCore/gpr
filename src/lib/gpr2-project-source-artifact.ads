@@ -46,9 +46,15 @@ package GPR2.Project.Source.Artifact is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
-   function Create (Source : Project.Source.Object) return Artifact.Object
+   function Create
+     (Source     : Project.Source.Object;
+      Force_Spec : Boolean := False) return Artifact.Object
      with Pre => Source.Is_Defined;
-   --  Constructor for Object defining the artifacts for the given Source
+   --  Constructor for Object defining the artifacts for the given Source.
+   --  Force_Spec is for the case when specification has implementation part
+   --  but artefact names need to be created from specification base name. It
+   --  is necessary when body and spec have different base names due to naming
+   --  exception and gprinstall installing only specifications with -m option.
 
    function Source (Self : Object) return Project.Source.Object
      with Pre => Self.Is_Defined;

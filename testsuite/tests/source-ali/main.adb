@@ -38,7 +38,7 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Check (Project_Name : Name_Type);
+   procedure Check (Project_Name : Filename_Type);
    --  Do check the given project's sources
 
    procedure Output_Filename (Filename : Path_Name.Full_Name);
@@ -48,7 +48,7 @@ procedure Main is
    -- Check --
    -----------
 
-   procedure Check (Project_Name : Name_Type) is
+   procedure Check (Project_Name : Filename_Type) is
       Prj  : Project.Tree.Object;
       Ctx  : Context.Object;
       View : Project.View.Object;

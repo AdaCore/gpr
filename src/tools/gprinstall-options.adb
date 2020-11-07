@@ -49,8 +49,8 @@ package body GPRinstall.Options is
          return Self.Global_Project_Subdir.V.all;
       else
          return Path_Name.Create_Directory
-           (Name_Type (Self.Global_Project_Subdir.V.all),
-            Optional_Name_Type (Self.Global_Prefix_Dir.V.all)).Dir_Name;
+           (Filename_Type (Self.Global_Project_Subdir.V.all),
+            Filename_Type (Self.Global_Prefix_Dir.V.all)).Dir_Name;
       end if;
    end Project_Dir;
 

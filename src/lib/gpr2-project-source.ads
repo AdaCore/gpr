@@ -108,11 +108,14 @@ package GPR2.Project.Source is
      with Pre => Self.Is_Defined;
    --  Returns whether the source is the main file to create executable
 
-   function Artifacts (Self : Object) return Artifact.Object
+   function Artifacts
+     (Self : Object; Force_Spec : Boolean := False) return Artifact.Object
      with Pre => Self.Is_Defined;
    --  Returns the source artifacts for this source. Note that the returned
    --  Source artifacts may not exist if the compilation has not yet been
    --  done/finished.
+   --  If Flag Force_Spec is True than the artifact object created like the
+   --  spec does not have a body. This mode is needed for gprinstall -m option.
 
    --
    --  The following routines only make sense if Has_Units is True

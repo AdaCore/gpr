@@ -52,10 +52,10 @@ package GPR2.Project.Import.Set is
    function Contains
      (Self : Object; Path_Name : GPR2.Path_Name.Object) return Boolean;
 
-   function Contains (Self : Object; Base_Name : Simple_Name) return Boolean;
+   function Contains (Self : Object; Base_Name : Name_Type) return Boolean;
 
    function Element
-     (Self : Object; Base_Name : Simple_Name) return Import.Object
+     (Self : Object; Base_Name : Name_Type) return Import.Object
      with Pre => Self.Contains (Base_Name);
 
    function Element
@@ -91,7 +91,7 @@ package GPR2.Project.Import.Set is
 private
 
    package Base_Name_Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Simple_Name, Project.Import.Object);
+     (Name_Type, Project.Import.Object);
 
    type Object is tagged record
       Set : Base_Name_Set.Map;

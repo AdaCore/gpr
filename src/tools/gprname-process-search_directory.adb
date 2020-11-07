@@ -200,7 +200,7 @@ begin
       --  Current entry
 
       File := Path_Name.Create_File
-        (Name_Type (Str (1 .. Last)), Dir_Path.Name);
+        (Filename_Type (Str (1 .. Last)), Dir_Path.Name);
 
       Put_Line ("  checking file: " & String (File.Name), Low);
 
@@ -414,7 +414,7 @@ begin
         and then Str (1 .. Last) not in "." | ".."
       then
          Search_Directory
-           (Path_Name.Create_Directory (Name_Type (File.Value)),
+           (Path_Name.Create_Directory (Filename_Type (File.Value)),
             Sect,
             Processed_Dirs,
             True,

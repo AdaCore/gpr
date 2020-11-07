@@ -144,7 +144,7 @@ package body GPRinstall.Uninstall is
                F_Name   : constant String := Buffer (Name_Range'First .. Last);
                Pathname : constant String := Dir & F_Name;
                Path     : constant Path_Name.Object :=
-                            Path_Name.Create_File (Name_Type (Pathname));
+                            Path_Name.Create_File (Filename_Type (Pathname));
 
             begin
                Expected_Digest := Buffer (MD5_Range);
@@ -159,7 +159,7 @@ package body GPRinstall.Uninstall is
                if Options.Global_Prefix_Dir.Default then
                   if not Prefix.Is_Defined then
                      Prefix := Path_Name.Create_Directory
-                       (Name_Type (Path.Dir_Name));
+                       (Filename_Type (Path.Dir_Name));
                   else
                      Prefix := Prefix.Common_Prefix (Path);
                   end if;

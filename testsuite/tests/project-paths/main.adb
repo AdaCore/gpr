@@ -66,8 +66,8 @@ procedure Main is
          end if;
    end Load;
 
-   Current_Directory : Optional_Name_Type :=
-                         Optional_Name_Type (Directories.Current_Directory);
+   Current_Directory : Filename_Type :=
+                         Filename_Type (Directories.Current_Directory);
    Prj1, Prj2, Prj3  : Project.Tree.Object;
 
 begin

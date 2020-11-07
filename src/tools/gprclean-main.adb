@@ -105,7 +105,7 @@ procedure GPRclean.Main is
       pragma Warnings (On);
 
       procedure Binder_Artifacts
-        (Name     : Name_Type;
+        (Name     : GPR2.Simple_Name;
          Language : Optional_Name_Type := No_Name);
       --  Add binder artefacts for the name
 
@@ -114,13 +114,13 @@ procedure GPRclean.Main is
 
       function Partial_Path
         (View         : Project.View.Object;
-         Library_Name : Name_Type;
+         Library_Name : GPR2.Simple_Name;
          Number       : Natural) return Path_Name.Object;
       --  return partially linked object
 
       function Linker_Options
-        (View        : Project.View.Object;
-         Library_Name : Name_Type) return Path_Name.Object;
+        (View         : Project.View.Object;
+         Library_Name : GPR2.Simple_Name) return Path_Name.Object;
       --  return linker options path
 
       ----------------------
@@ -128,7 +128,7 @@ procedure GPRclean.Main is
       ----------------------
 
       procedure Binder_Artifacts
-        (Name     : Name_Type;
+        (Name     : GPR2.Simple_Name;
          Language : Optional_Name_Type := No_Name) is
       begin
          for F of View.Binder_Artifacts (Name, Language) loop
@@ -154,7 +154,7 @@ procedure GPRclean.Main is
 
       function Linker_Options
         (View         : Project.View.Object;
-         Library_Name : Name_Type) return Path_Name.Object is
+         Library_Name : GPR2.Simple_Name) return Path_Name.Object is
       begin
          return View.Object_Directory.Compose
            (Library_Name & ".linker_options");
@@ -166,7 +166,7 @@ procedure GPRclean.Main is
 
       function Partial_Path
         (View         : Project.View.Object;
-         Library_Name : Name_Type;
+         Library_Name : GPR2.Simple_Name;
          Number       : Natural) return Path_Name.Object
       is
       begin
@@ -328,15 +328,15 @@ procedure GPRclean.Main is
                   for CU of S.Source.Units loop
                      if CU.Kind in Unit.Body_Kind then
                         Binder_Artifacts
-                          (S.Source.Path_Name.Base_Name
-                           & Name_Type ('~' & Image (CU.Index, 1)),
+                          (S.Source.Path_Name.Base_Filename
+                           & Filename_Type ('~' & Image (CU.Index, 1)),
                            Language => S.Source.Language);
                      end if;
                   end loop;
 
                elsif not View.Is_Library then
                   Binder_Artifacts
-                    (S.Source.Path_Name.Base_Name,
+                    (S.Source.Path_Name.Base_Filename,
                      Language => S.Source.Language);
                end if;
             end if;
@@ -357,9 +357,10 @@ procedure GPRclean.Main is
 
                   Delete_File
                     (Path_Name.Create_File
-                       (S.Source.Path_Name.Base_Name
+                       (S.Source.Path_Name.Base_Filename
                         & View.Executable_Suffix,
-                        Name_Type (View.Executable_Directory.Value)).Value);
+                        Filename_Type
+                          (View.Executable_Directory.Value)).Value);
                end if;
             end if;
          end;
@@ -388,7 +389,7 @@ procedure GPRclean.Main is
          declare
             Main_Lib : constant Value_Type :=
                          Obj_Dir.Compose
-                           ("lib" & View.Path_Name.Base_Name).Value;
+                           ("lib" & View.Path_Name.Base_Filename).Value;
          begin
             Delete_File (Main_Lib & String (Tree.Archive_Suffix));
             Delete_File (Main_Lib & ".deps");
@@ -523,7 +524,8 @@ procedure GPRclean.Main is
                  (Project.Registry.Attribute.Library_Src_Dir, Result => Attr)
                then
                   Delete_If_Not_Project
-                    (Path_Name.Create_Directory (Name_Type (Attr.Value.Text)));
+                    (Path_Name.Create_Directory
+                       (Filename_Type (Attr.Value.Text)));
                end if;
             end if;
          end;

@@ -54,17 +54,17 @@ package GPR2.Project is
 
    Default_Iterator : constant Iterator_Control;
 
-   Config_File_Extension  : constant Name_Type := ".cgpr";
-   Project_File_Extension : constant Name_Type := ".gpr";
+   Config_File_Extension  : constant Filename_Type := ".cgpr";
+   Project_File_Extension : constant Filename_Type := ".gpr";
    --  The standard config and user project file name extensions
 
-   Config_File_Extension_No_Dot : Name_Type
+   Config_File_Extension_No_Dot : Filename_Type
      renames Config_File_Extension (2 .. Config_File_Extension'Last);
 
-   Project_File_Extension_No_Dot : Name_Type
+   Project_File_Extension_No_Dot : Filename_Type
      renames Project_File_Extension (2 .. Project_File_Extension'Last);
 
-   Default_Config_Name : constant Name_Type := "default.cgpr";
+   Default_Config_Name : constant Filename_Type := "default.cgpr";
 
    Implicit_Project : Path_Name.Object renames Path_Name.Implicit_Project;
    --  Means that an empty project has to be generated instead of parsed from
@@ -84,7 +84,7 @@ package GPR2.Project is
    Default_Status : constant Status_Control;
 
    function Create
-     (Name  : Name_Type;
+     (Name  : Filename_Type;
       Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return Path_Name.Object;
    --  Given a filename (possibly a full pathname) returns a Path_Name_Type. If
@@ -98,7 +98,7 @@ package GPR2.Project is
           Post => not Search_Paths'Result.Is_Empty;
    --  Returns the project search path for the given project and the given tree
 
-   function Ensure_Extension (Name : Name_Type) return Name_Type;
+   function Ensure_Extension (Name : Filename_Type) return Filename_Type;
    --  If Name ending with ".gpr" or ".cgpr" the function returns it unchanged,
    --  otherwise returns Name appended with ".gpr" suffix.
 

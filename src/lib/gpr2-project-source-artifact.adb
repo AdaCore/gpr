@@ -31,10 +31,7 @@ package body GPR2.Project.Source.Artifact is
 
    package PRA renames GPR2.Project.Registry.Attribute;
 
-   function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
-   --  ??? work around a strange visibility issue
-
-   function At_Suffix (At_Pos : Positive) return Name_Type;
+   function At_Suffix (At_Pos : Positive) return Filename_Type;
    --  Returns 'at' index from attribute value or index prefixed with '~'
    --  character to use in filenames.
 
@@ -42,11 +39,11 @@ package body GPR2.Project.Source.Artifact is
    -- At_Suffix --
    ---------------
 
-   function At_Suffix (At_Pos : Positive) return Name_Type is
+   function At_Suffix (At_Pos : Positive) return Filename_Type is
       Result : String :=  At_Pos'Img;
    begin
       Result (Result'First) := '~';
-      return Name_Type (Result);
+      return Filename_Type (Result);
    end At_Suffix;
 
    ---------------
@@ -72,56 +69,68 @@ package body GPR2.Project.Source.Artifact is
    ------------
 
    function Create
-     (Source : Project.Source.Object) return Artifact.Object
+     (Source     : Project.Source.Object;
+      Force_Spec : Boolean := False) return Artifact.Object
    is
       Src  : constant GPR2.Source.Object := Source.Source;
-      BN   : constant Name_Type := Src.Path_Name.Base_Name;
+      Main : constant GPR2.Project.Source.Object :=
+               (if Source.Has_Other_Part
+                  and then Source.Has_Naming_Exception
+                  and then Src.Has_Single_Unit
+                  and then Src.Kind = Unit.S_Spec
+                  and then not Force_Spec
+                then Source.Other_Part
+                else Source);
+      BN   : constant Filename_Type := Main.Path_Name.Base_Filename;
       Lang : constant Name_Type := Src.Language;
       View : constant Project.View.Object :=
                Definition.Strong (Source.View);
 
-      O_Suffix   : constant Name_Type := View.Tree.Object_Suffix (Lang);
-      D_Suffix   : constant Name_Type := View.Tree.Dependency_Suffix (Lang);
-      C_Suffix   : constant Name_Type := ".ci";
-      P_Suffix   : constant Name_Type := ".prep";
-      S_Suffix   : constant Name_Type := ".cswi";
-      Cov_Suffix : constant Name_Type := ".sid";
+      O_Suffix   : constant Filename_Type := View.Tree.Object_Suffix (Lang);
+      D_Suffix   : constant Filename_Type :=
+                     View.Tree.Dependency_Suffix (Lang);
+      C_Suffix   : constant Filename_Type := ".ci";
+      P_Suffix   : constant Filename_Type := ".prep";
+      S_Suffix   : constant Filename_Type := ".cswi";
+      Cov_Suffix : constant Filename_Type := ".sid";
 
       Object_Files : Index_Path_Name_Map.Map;
       Deps_Lib     : Index_Path_Name_Map.Map;
       Deps_Obj     : Index_Path_Name_Map.Map;
 
       function From_Hierarchy
-        (Filename, Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+        (Filename : Filename_Type;
+         Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
       --  Find Filename in directory defined in attribute Dir_Attr in this
       --  source view and in the extended views if the Source is inherited.
 
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (Src.Path_Name.Simple_Name & P_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
+                          Filename_Optional (View.Object_Directory.Value));
 
       Callgraph    : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (BN & C_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
+                          Filename_Type (View.Object_Directory.Value));
 
       Coverage     : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (BN & Cov_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
+                          Filename_Type (View.Object_Directory.Value));
 
       Switches     : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (BN & S_Suffix,
-                          Optional_Name_Type (View.Object_Directory.Value));
+                          Filename_Type (View.Object_Directory.Value));
 
       -------------------
       -- From_Hierarhy --
       -------------------
 
       function From_Hierarchy
-        (Filename, Dir_Attr : Name_Type) return GPR2.Path_Name.Object
+        (Filename : Filename_Type;
+         Dir_Attr : Name_Type) return GPR2.Path_Name.Object
       is
          View      : Project.View.Object   := Create.View;
          Source    : Project.Source.Object := Create.Source;
@@ -131,7 +140,7 @@ package body GPR2.Project.Source.Artifact is
             Candidate :=
               GPR2.Path_Name.Create_File
                 (Filename,
-                 Optional_Name_Type
+                 Filename_Type
                    (Definition.Apply_Root_And_Subdirs
                       (View, Dir_Attr).Value));
 
@@ -150,14 +159,14 @@ package body GPR2.Project.Source.Artifact is
          for CU of Src.Units loop
             if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
                declare
-                  Base : constant Name_Type := BN & At_Suffix (CU.Index);
+                  Base : constant Filename_Type := BN & At_Suffix (CU.Index);
                begin
                   if Source.Aggregated then
                      Deps_Lib.Insert
                        (CU.Index,
                         GPR2.Path_Name.Create_File
                           (Base & D_Suffix,
-                           Optional_Name_Type
+                           Filename_Type
                              (Source.Aggregating_View.Library_Ali_Directory
                               .Value)));
 
@@ -189,7 +198,7 @@ package body GPR2.Project.Source.Artifact is
            (1,
             GPR2.Path_Name.Create_File
               (BN & D_Suffix,
-               Optional_Name_Type
+               Filename_Type
                  (Source.Aggregating_View.Library_Ali_Directory.Value)));
 
       else
@@ -201,8 +210,7 @@ package body GPR2.Project.Source.Artifact is
               (1, From_Hierarchy (BN & D_Suffix, PRA.Library_Ali_Dir));
          end if;
 
-         Deps_Obj.Insert
-           (1, From_Hierarchy (BN & D_Suffix, PRA.Object_Dir));
+         Deps_Obj.Insert (1, From_Hierarchy (BN & D_Suffix, PRA.Object_Dir));
       end if;
 
       return Artifact.Object'
@@ -308,25 +316,25 @@ package body GPR2.Project.Source.Artifact is
       View     : constant Project.View.Object :=
                    Definition.Strong (P_Source.View);
       Result   : GPR2.Path_Name.Set.Object;
-      Name     : constant Name_Type := Source.Path_Name.Simple_Name;
-      O_Dir    : constant Optional_Name_Type :=
-                   Optional_Name_Type (View.Object_Directory.Value);
+      Name     : constant Filename_Type := Source.Path_Name.Simple_Name;
+      O_Dir    : constant Filename_Type :=
+                   Filename_Type (View.Object_Directory.Value);
 
-      procedure Append_File (Name : Name_Type);
+      procedure Append_File (Name : Filename_Type);
       --  Append full filename constructed from Name and Object_Dir to result
 
       -----------------
       -- Append_File --
       -----------------
 
-      procedure Append_File (Name : Name_Type) is
+      procedure Append_File (Name : Filename_Type) is
       begin
          Result.Append (GPR2.Path_Name.Create_File (Name, O_Dir));
       end Append_File;
 
    begin
       for E of View.Source_Artifact_Extensions (Lang) loop
-         Append_File (Name & Name_Type (E));
+         Append_File (Name & Filename_Type (E));
       end loop;
 
       if not Self.Object_Files.Is_Empty then
@@ -341,10 +349,10 @@ package body GPR2.Project.Source.Artifact is
          Append_File (Name & ".stdout");
          Append_File (Name & ".stderr");
 
-         Append_File (Source.Path_Name.Base_Name & ".adt");
+         Append_File (Source.Path_Name.Base_Filename & ".adt");
 
          for E of View.Object_Artifact_Extensions (Lang) loop
-            Append_File (Source.Path_Name.Base_Name & Name_Type (E));
+            Append_File (Source.Path_Name.Base_Filename & Filename_Type (E));
          end loop;
       end if;
 

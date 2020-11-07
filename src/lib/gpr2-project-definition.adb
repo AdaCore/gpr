@@ -948,7 +948,7 @@ package body GPR2.Project.Definition is
 
          File      : constant GPR2.Path_Name.Object :=
                        Path_Name.Create_File
-                         (Name_Type (Path), Path_Name.No_Resolution);
+                         (Filename_Type (Path), Path_Name.No_Resolution);
          Basename  : constant Value_Type := Value_Type (File.Simple_Name);
 
          Match                  : Boolean := False;
@@ -1976,7 +1976,10 @@ package body GPR2.Project.Definition is
             Def_Sources.Insert (SW);
             Def_Src_Map.Insert
               (SW.Path_Name.Simple_Name, SW, Position, Inserted);
-            pragma Assert (Inserted or else SW.Source.Language /= "Ada");
+
+            pragma Assert
+              (Inserted or else SW.Source.Language /= "Ada",
+               String (SW.Path_Name.Simple_Name) & " duplicated");
          end loop;
          Def.Sources     := Def_Sources;
          Def.Sources_Map := Def_Src_Map;

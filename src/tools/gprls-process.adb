@@ -56,10 +56,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
 
    Tree : Project.Tree.Object renames Opt.Tree.all;
 
-   function "&" (Left, Right : Optional_Name_Type) return Optional_Name_Type is
-     (GPR2."&" (Left, Right));
-   --  Workaround for GNAT visibility issue
-
    procedure Display_Paths;
 
    procedure Put (Str : String; Lvl : Verbosity_Level);
@@ -92,7 +88,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
             if V.Kind not in K_Aggregate | K_Abstract then
                for D of V.Source_Directories.Values loop
                   Src_Path.Append
-                    (Path_Name.Create_Directory (Optional_Name_Type (D.Text)));
+                    (Path_Name.Create_Directory (Filename_Type (D.Text)));
                end loop;
             end if;
          end loop;
@@ -100,7 +96,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          if Tree.Has_Runtime_Project then
             for D of Tree.Runtime_Project.Source_Directories.Values loop
                Src_Path.Append
-                 (Path_Name.Create_Directory (Optional_Name_Type (D.Text)));
+                 (Path_Name.Create_Directory (Filename_Type (D.Text)));
             end loop;
          end if;
 
@@ -573,7 +569,7 @@ begin
                   Artifacts : Project.Source.Artifact.Object;
 
                   function Insert_Prefer_Body
-                    (Key  : Name_Type;
+                    (Key  : Filename_Type;
                      Kind : GPR2.Unit.Library_Unit_Type) return Boolean;
 
                   ------------------------
@@ -581,7 +577,7 @@ begin
                   ------------------------
 
                   function Insert_Prefer_Body
-                    (Key  : Name_Type;
+                    (Key  : Filename_Type;
                      Kind : GPR2.Unit.Library_Unit_Type) return Boolean
                   is
                      Position : Sources_By_Path.Cursor;
@@ -615,7 +611,7 @@ begin
                                 CU.Kind)
                              or else
                              Insert_Prefer_Body
-                               (Artifacts.Dependency (CU.Index).Base_Name,
+                               (Artifacts.Dependency (CU.Index).Base_Filename,
                                 CU.Kind));
 
                         exit when Artifacts.Has_Object_Code (CU.Index)

@@ -34,13 +34,13 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Load (Filename : Name_Type);
+   procedure Load (Filename : Filename_Type);
 
    ----------
    -- Load --
    ----------
 
-   procedure Load (Filename : Name_Type) is
+   procedure Load (Filename : Filename_Type) is
       Prj : Project.Tree.Object;
       Ctx : Context.Object;
    begin

@@ -72,14 +72,15 @@ package GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      Config           : Configuration.Object := Configuration.Undefined;
-      Project_Dir      : Path_Name.Object     := Path_Name.Undefined;
-      Build_Path       : Path_Name.Object     := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type   := No_Name;
-      Src_Subdirs      : Optional_Name_Type   := No_Name;
-      Check_Shared_Lib : Boolean              := True;
-      Absent_Dir_Error : Boolean              := False;
-      Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
+      Config           : Configuration.Object    := Configuration.Undefined;
+      Project_Dir      : Path_Name.Object        := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object        := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type      := No_Name;
+      Src_Subdirs      : Optional_Name_Type      := No_Name;
+      Check_Shared_Lib : Boolean                 := True;
+      Absent_Dir_Error : Boolean                 := False;
+      Implicit_With    : Containers.Filename_Set :=
+                           Containers.Empty_Filename_Set)
      with Pre => Filename.Is_Defined
                  and then (not Filename.Is_Implicit_Project
                            or else Project_Dir.Is_Defined);
@@ -107,10 +108,11 @@ package GPR2.Project.Tree is
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
       Absent_Dir_Error  : Boolean              := False;
-      Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
-      Target            : Optional_Name_Type   := No_Name;
+      Implicit_With     : Containers.Filename_Set :=
+                            Containers.Empty_Filename_Set;
+      Target            : Optional_Name_Type       := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
-                           Containers.Name_Value_Map_Package.Empty_Map;
+                            Containers.Name_Value_Map_Package.Empty_Map;
       Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
@@ -340,24 +342,24 @@ package GPR2.Project.Tree is
    function Project_Search_Paths (Self : Object) return Path_Name.Set.Object;
    --  Returns the Tree project search paths
 
-   function Archive_Suffix (Self : Object) return Name_Type;
+   function Archive_Suffix (Self : Object) return Filename_Type;
    --  Returns archive suffix for the project tree
 
    function Object_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Name_Type;
+     (Self : Object; Language : Name_Type := "ada") return Filename_Type;
    --  Returns object suffix for language in project tree
 
    function Dependency_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Name_Type;
+     (Self : Object; Language : Name_Type := "ada") return Filename_Type;
    --  Returns dependency suffix for language in project tree
 
-   function Subdirs (Tree : Object) return Optional_Name_Type
+   function Subdirs (Tree : Object) return Filename_Optional
      with Pre => Tree.Is_Defined;
    --  Returns the subdirs parameter <sub> of the project tree such that, for
    --  each project, the actual {executable,object,library} directories are
    --  {<exec>,<obj>,<lib>}/<sub>.
 
-   function Src_Subdirs (Tree : Object) return Optional_Name_Type;
+   function Src_Subdirs (Tree : Object) return Filename_Optional;
    --  Returns the src_subdirs parameter <sub> of the project tree such that,
    --  for each project, the actual source directories list will be prepended
    --  with {object_dir}/<sub>.
@@ -418,6 +420,10 @@ private
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, View.Object);
    --  Map to find in which view a unit/source is defined
 
+   package Filename_View is
+     new Ada.Containers.Indefinite_Ordered_Maps (Filename_Type, View.Object);
+   --  Map to find in which view a unit/source is defined
+
    package View_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Set.Object, "=" => View.Set."=");
 
@@ -428,10 +434,10 @@ private
       Base             : GPR2.KB.Object;
       Runtime          : View.Object;
       Units            : Name_View.Map;
-      Sources          : Name_View.Map;
+      Sources          : Filename_View.Map;
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
-      Implicit_With    : Containers.Name_Set;
+      Implicit_With    : Containers.Filename_Set;
       Project_Dir      : Path_Name.Object;
       Build_Path       : Path_Name.Object;
       Subdirs          : Unbounded_String;
@@ -443,7 +449,7 @@ private
    end record;
 
    function "=" (Left, Right : Object) return Boolean
-     is (Left.Self = Right.Self);
+   is (Left.Self = Right.Self);
 
    package Project_View_Store is
      new Ada.Containers.Vectors (Positive, View.Object);
@@ -481,19 +487,19 @@ private
       --  ??? We may also check that the Tree target name constains mingw or
       --  windows.
 
-   function Archive_Suffix (Self : Object) return Name_Type is
+   function Archive_Suffix (Self : Object) return Filename_Type is
      (if Self.Has_Configuration
       then Self.Configuration.Archive_Suffix
       else ".a");
 
    function Object_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Name_Type
+     (Self : Object; Language : Name_Type := "ada") return Filename_Type
    is (if Self.Has_Configuration
        then Self.Configuration.Object_File_Suffix (Language)
        else ".o");
 
    function Dependency_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Name_Type
+     (Self : Object; Language : Name_Type := "ada") return Filename_Type
    is
      (if Self.Has_Configuration
       then Self.Configuration.Dependency_File_Suffix (Language)
@@ -502,11 +508,11 @@ private
    function Reference (Tree : Object) return access Object is
      (Tree'Unrestricted_Access);
 
-   function Subdirs (Tree : Object) return Optional_Name_Type is
-     (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));
+   function Subdirs (Tree : Object) return Filename_Optional is
+     (Filename_Optional (Ada.Strings.Unbounded.To_String (Tree.Subdirs)));
 
-   function Src_Subdirs (Tree : Object) return Optional_Name_Type is
-     (Optional_Name_Type (Ada.Strings.Unbounded.To_String (Tree.Src_Subdirs)));
+   function Src_Subdirs (Tree : Object) return Filename_Optional is
+     (Filename_Optional (Ada.Strings.Unbounded.To_String (Tree.Src_Subdirs)));
 
    function Build_Path (Tree : Object) return Path_Name.Object is
      (Tree.Build_Path);

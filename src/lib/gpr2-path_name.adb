@@ -106,8 +106,8 @@ package body GPR2.Path_Name is
    -------------------
 
    function Make_Absolute
-     (Name      : Name_Type;
-      Directory : Optional_Name_Type := "") return String
+     (Name      : Filename_Type;
+      Directory : Filename_Optional := "") return String
    is
      (OS_Lib.Normalize_Pathname
         ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
@@ -234,7 +234,8 @@ package body GPR2.Path_Name is
       end loop;
 
       declare
-         CP : constant Name_Type := Name_Type (P1 (P1'First .. I1 - 1));
+         CP : constant Filename_Type :=
+                Filename_Type (P1 (P1'First .. I1 - 1));
       begin
          if Self.Is_Dir then
             return Create_Directory (CP);
@@ -250,11 +251,11 @@ package body GPR2.Path_Name is
 
    function Compose
      (Self      : Object;
-      Name      : Name_Type;
+      Name      : Filename_Type;
       Directory : Boolean := False) return Object
    is
-      Filename : constant Name_Type :=
-                   Name_Type (Dir_Name (Self) & String (Name));
+      Filename : constant Filename_Type :=
+                   Filename_Type (Dir_Name (Self)) & Name;
    begin
       if Directory then
          return Create_Directory (Filename);
@@ -329,7 +330,7 @@ package body GPR2.Path_Name is
    function Containing_Directory (Self : Object) return Object is
    begin
       return Create_Directory
-        (Name_Type
+        (Filename_Type
            (Containing_Directory (Remove_Last_DS (Dir_Name (Self)))));
    end Containing_Directory;
 
@@ -363,7 +364,7 @@ package body GPR2.Path_Name is
    -- Create --
    ------------
 
-   function Create (Name, Path_Name : Name_Type) return Object is
+   function Create (Name, Path_Name : Filename_Type) return Object is
       Value : constant Unbounded_String := +String (Path_Name);
    begin
       return Object'
@@ -381,8 +382,8 @@ package body GPR2.Path_Name is
    ----------------------
 
    function Create_Directory
-     (Name      : Name_Type;
-      Directory : Optional_Name_Type := "") return Object
+     (Name      : Filename_Type;
+      Directory : Filename_Optional := "") return Object
    is
       NN : constant String :=
              Ensure_Directory (Make_Absolute (Name, Directory));
@@ -402,8 +403,8 @@ package body GPR2.Path_Name is
    -----------------
 
    function Create_File
-     (Name      : Name_Type;
-      Directory : Optional_Name_Type := Resolve_On_Current) return Object
+     (Name      : Filename_Type;
+      Directory : Filename_Optional := Resolve_On_Current) return Object
    is
    begin
       if Directory = No_Resolution
@@ -475,7 +476,8 @@ package body GPR2.Path_Name is
       begin
          if OS_Lib.Is_Directory (Name) then
             Temp_Directory :=
-              Create_Directory (Name_Type (OS_Lib.Normalize_Pathname (Name)));
+              Create_Directory
+                (Filename_Type (OS_Lib.Normalize_Pathname (Name)));
             return True;
          end if;
 
@@ -543,13 +545,13 @@ package body GPR2.Path_Name is
 
    function Name
      (Self      : Object;
-      Extension : Boolean := True) return Name_Type
+      Extension : Boolean := True) return Filename_Type
    is
       Name : constant String := To_String (Self.As_Is);
       Ext : Natural;
    begin
       if Extension then
-         return Name_Type (Name);
+         return Filename_Type (Name);
       else
          Ext := Strings.Fixed.Index (Name, ".", Going => Strings.Backward);
 
@@ -559,7 +561,7 @@ package body GPR2.Path_Name is
             Ext := Ext - 1;
          end if;
 
-         return Name_Type (Name (Name'First .. Ext));
+         return Filename_Type (Name (Name'First .. Ext));
       end if;
    end Name;
 
@@ -617,11 +619,11 @@ package body GPR2.Path_Name is
       end if;
 
       return Create_Directory
-        (Name_Type (String'(N * "../")
+        (Filename_Type (String'(N * "../")
          & (if Pi = P'Last and then N = 0
            then "./"
            else P (Pi + 1 .. P'Last))),
-         Optional_Name_Type (To_Path));
+         Filename_Optional (To_Path));
    end Relative_Path;
 
    -----------------

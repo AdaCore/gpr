@@ -66,7 +66,7 @@ package body GPR2.Project.Import.Set is
       return Self.Contains (Path_Name.Base_Name);
    end Contains;
 
-   function Contains (Self : Object; Base_Name : Simple_Name) return Boolean is
+   function Contains (Self : Object; Base_Name : Name_Type) return Boolean is
    begin
       return Self.Set.Contains (Base_Name);
    end Contains;
@@ -99,7 +99,7 @@ package body GPR2.Project.Import.Set is
    end Element;
 
    function Element
-     (Self : Object; Base_Name : Simple_Name) return Import.Object is
+     (Self : Object; Base_Name : Name_Type) return Import.Object is
    begin
       return Self.Set (Base_Name);
    end Element;

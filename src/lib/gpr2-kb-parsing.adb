@@ -1429,7 +1429,8 @@ package body GPR2.KB.Parsing is
          while More_Entries (Search) loop
             Get_Next_Entry (Search, File);
             Parse_Single_File
-              (Create_File (Name_Type (Ada.Directories.Full_Name ((File)))));
+              (Create_File
+                 (Filename_Type (Ada.Directories.Full_Name ((File)))));
          end loop;
 
          End_Search (Search);

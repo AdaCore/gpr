@@ -52,7 +52,12 @@ private
    end record;
 
    package Cache_Map is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Cache_Holder);
+     (String, Cache_Holder);
+   --  Cache by 2 kind of keys.
+   --  First one is complex key concatenated from full ALI path name, source
+   --  file simple name and body/spec. This key is lowercased when
+   --  File_Names_Case_Sensitive is False.
+   --  Second kind of key is lowercased separate unit name.
 
    type Object is new Parser.Object
      (Language => Language'Unrestricted_Access,

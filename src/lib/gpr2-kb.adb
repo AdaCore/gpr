@@ -193,7 +193,7 @@ package body GPR2.KB is
       Dir := Dir.Join ("share").Join ("gprconfig");
 
       return GPR2.Path_Name.Create_Directory
-        (Optional_Name_Type (Dir.Display_Full_Name));
+               (Filename_Type (Dir.Display_Full_Name));
    end Default_Location;
 
    -------------------

@@ -63,7 +63,7 @@ package body GPRtools.Options is
       use GPR2, GPR2.Path_Name;
 
       function Project_Dir return GPR2.Path_Name.Object is
-        (Create_Directory (Name_Type (Project.Dir_Name)));
+        (Create_Directory (Filename_Type (Project.Dir_Name)));
 
    begin
       if not Self.Build_Path.Is_Defined then
@@ -79,7 +79,7 @@ package body GPRtools.Options is
       elsif Self.Root_Path.Is_Defined then
          Self.Build_Path := Create_Directory
            (Project_Dir.Relative_Path (Self.Root_Path).Name,
-            Name_Type (Self.Build_Path.Value));
+            Filename_Type (Self.Build_Path.Value));
       end if;
    end Clean_Build_Path;
 
@@ -169,7 +169,7 @@ package body GPRtools.Options is
                Self.Project_File := Path_Name.Implicit_Project;
                Self.Project_Base :=
                  Path_Name.Create_Directory
-                   (Name_Type (Ada.Directories.Current_Directory));
+                   (Filename_Type (Ada.Directories.Current_Directory));
             else
                Util.Check_For_Default_Project (Self);
             end if;
@@ -397,7 +397,7 @@ package body GPRtools.Options is
             Self.Project_File :=
               GPR2.Path_Name.Create_File
                 (GPR2.Project.Ensure_Extension
-                   (GPR2.Optional_Name_Type (Normalize_Value)),
+                   (GPR2.Filename_Type (Normalize_Value)),
                  GPR2.Path_Name.No_Resolution);
          else
             raise GPRtools.Usage_Error with
@@ -410,12 +410,12 @@ package body GPRtools.Options is
       elsif Switch = "--relocate-build-tree" then
          Self.Build_Path :=
            GPR2.Path_Name.Create_Directory
-             (GPR2.Name_Type (Normalize_Value (".")));
+             (GPR2.Filename_Type (Normalize_Value (".")));
 
       elsif Switch = "--root-dir" then
          Self.Root_Path :=
            GPR2.Path_Name.Create_Directory
-             (GPR2.Name_Type (Normalize_Value));
+             (GPR2.Filename_Type (Normalize_Value));
 
       elsif Switch = "-q" or else Switch = "--quiet" then
          if Self.Verbosity = Regular then
@@ -426,7 +426,7 @@ package body GPRtools.Options is
          Self.Verbosity := Verbose;
 
       elsif Switch = "--implicit-with" then
-         Self.Implicit_With.Include (GPR2.Name_Type (Normalize_Value));
+         Self.Implicit_With.Include (GPR2.Filename_Type (Normalize_Value));
 
       elsif Switch = "--target" then
          Self.Target := To_Unbounded_String (Normalize_Value);
@@ -461,7 +461,7 @@ package body GPRtools.Options is
 
       elsif Switch = "-aP" then
          Self.Tree.Register_Project_Search_Path
-           (GPR2.Path_Name.Create_Directory (GPR2.Name_Type (Value)));
+           (GPR2.Path_Name.Create_Directory (GPR2.Filename_Type (Value)));
 
       elsif Switch = "--distributed" then
          declare
@@ -504,10 +504,11 @@ package body GPRtools.Options is
          begin
             if GNAT.OS_Lib.Is_Directory (KB_Norm) then
                KB_Path :=
-                 GPR2.Path_Name.Create_Directory (GPR2.Name_Type (KB_Norm));
+                 GPR2.Path_Name.Create_Directory
+                   (GPR2.Filename_Type (KB_Norm));
             elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
                KB_Path :=
-                 GPR2.Path_Name.Create_File (GPR2.Name_Type (KB_Norm));
+                 GPR2.Path_Name.Create_File (GPR2.Filename_Type (KB_Norm));
             else
                raise GPRtools.Usage_Error with
                  KB_Norm & " is not a file or directory";

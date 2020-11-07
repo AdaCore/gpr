@@ -55,12 +55,12 @@ procedure Main is
                           Project_Tree.Configuration.Corresponding_View;
       Compiler_Driver : constant Path_Name.Object :=
                           Path_Name.Create_File
-                            (Name_Type (Config_View.Pack ("compiler").Attribute
+                            (Filename_Type (Config_View.Pack ("compiler").Attribute
                                           (Name  => "driver",
                                            Index => Ada_I).Value.Text));
       Runtime_Dir     : constant Path_Name.Object :=
                           Path_Name.Create_Directory
-                            (Name_Type (Config_View.Attribute
+                            (Filename_Type (Config_View.Attribute
                                           (Name  => "Runtime_Dir",
                                            Index => Ada_I).Value.Text));
 

@@ -308,7 +308,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
       subtype CU_Index is Natural range 0 .. 2;
 
-      B_Name  : constant Name_Type := Source.Simple_Name;
+      B_Name  : constant Simple_Name := Source.Simple_Name;
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
       U_Kind  : Unit.Library_Unit_Type;
@@ -341,13 +341,14 @@ package body GPR2.Source_Info.Parser.ALI is
 
       function Key
         (LI       : Path_Name.Object'Class;
-         Basename : Name_Type;
-         Kind     : Unit.Library_Unit_Type) return Name_Type
-      is (Name_Type (LI.Value & '@' & String (Basename) & '|'
-                     & (case Kind is
-                           when Unit.Body_Kind => 'b',
-                           when Unit.Spec_Kind => 's',
-                           when Unit.S_Separate => raise Program_Error)));
+         Basename : Simple_Name;
+         Kind     : Unit.Library_Unit_Type) return String
+      is (Path_Name.To_OS_Case
+            (LI.Value & '@' & String (Basename) & '|'
+             & (case Kind is
+                   when Unit.Body_Kind => 'b',
+                   when Unit.Spec_Kind => 's',
+                   when Unit.S_Separate => raise Program_Error)));
 
       --------------
       -- Fill_Dep --
@@ -481,8 +482,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      Flags         => Default_Flags),
                   Dependency_Maps.Empty_Map, Chksum, Stamp);
 
-               Self.Cache.Insert
-                 (Name_Type (Name), H_Cache, C_Cache, Inserted);
+               Self.Cache.Insert (Name, H_Cache, C_Cache, Inserted);
 
                if not Inserted and then Self.Cache (C_Cache) /= H_Cache then
                   raise Scan_ALI_Error with "subunit inconsistency " & Name
@@ -852,7 +852,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
             Withs.Clear;
 
-            if Name_Type (-S_Name) = B_Name
+            if Simple_Name (-S_Name) = B_Name
               and then (U_Kind in Unit.Spec_Kind)
                        = (U_Ref.Kind in Unit.Spec_Kind)
             then
@@ -910,7 +910,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
          for K in 1 .. CU_Idx loop
             Self.Cache.Insert
-              (Key (LI, Name_Type (-CU_BN (K)), CUs (K).Kind),
+              (Key (LI, Simple_Name (-CU_BN (K)), CUs (K).Kind),
                (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
                In_Cache, Inserted);
 
@@ -955,9 +955,10 @@ package body GPR2.Source_Info.Parser.ALI is
 
       procedure Check_Separated (SU : in out Unit.Object) is
          Name : constant Name_Type := SU.Name;
+         Lown : constant String := To_Lower (Name);
          FU   : Project.Unit_Info.Object;
          Src  : Project.Source.Object;
-         CS   : Cache_Map.Cursor := Self.Cache.Find (Name);
+         CS   : Cache_Map.Cursor := Self.Cache.Find (Lown);
 
          procedure Set_Data;
          --  Set some fields from cache to Source_Info.Object for subunit
@@ -1025,7 +1026,7 @@ package body GPR2.Source_Info.Parser.ALI is
             end loop;
 
             if Info.Is_Parsed then
-               CS := Self.Cache.Find (Name);
+               CS := Self.Cache.Find (Lown);
                if Cache_Map.Has_Element (CS) then
                   Set_Data;
                end if;

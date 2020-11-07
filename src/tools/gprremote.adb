@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -364,7 +364,7 @@ procedure GPRremote is
 
       procedure Load_Project (Filename : String) is
          Pathname : constant GPR2.Path_Name.Object :=
-                      GPR2.Project.Create (GPR2.Optional_Name_Type (Filename));
+                      GPR2.Project.Create (GPR2.Filename_Type (Filename));
          Context  : GPR2.Context.Object;
       begin
          if Options.Verbose then

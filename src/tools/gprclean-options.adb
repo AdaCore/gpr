@@ -95,7 +95,7 @@ package body GPRclean.Options is
       begin
          if Switch = "--config" then
             Options.Config_File :=
-              Path_Name.Create_File (Name_Type (Normalize_Value));
+              Path_Name.Create_File (Filename_Type (Normalize_Value));
 
          elsif Switch = "--autoconf" then
             --  --autoconf option for gprbuild mean that the file have to be
@@ -105,7 +105,7 @@ package body GPRclean.Options is
             Options.Remove_Config := True;
 
             Options.Config_File :=
-              Path_Name.Create_File (Name_Type (Normalize_Value));
+              Path_Name.Create_File (Filename_Type (Normalize_Value));
 
          elsif Switch = "--subdirs" then
             Options.Subdirs := To_Unbounded_String (Normalize_Value);

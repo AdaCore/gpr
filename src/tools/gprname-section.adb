@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -33,7 +33,7 @@ package body GPRname.Section is
      (Self : in out Object;
       File : String) is
    begin
-      Self.Directories_Files.Append (Create_File (Name_Type (File)));
+      Self.Directories_Files.Append (Create_File (Filename_Type (File)));
    end Add_Directories_File;
 
    -------------------
@@ -44,7 +44,7 @@ package body GPRname.Section is
      (Self      : in out Object;
       Directory : String) is
    begin
-      Self.Directories.Append (Create (Name_Type (Directory)));
+      Self.Directories.Append (Create (Filename_Type (Directory)));
    end Add_Directory;
 
    -----------------------------------
@@ -117,11 +117,7 @@ package body GPRname.Section is
          Open (F, In_File, File);
 
          while not End_Of_File (F) loop
-            declare
-               Line : constant String := Get_Line (F);
-            begin
-               Ret.Append (Create (Name_Type (Line)));
-            end;
+            Ret.Append (Create (Filename_Type (Get_Line (F))));
          end loop;
 
          Close (F);

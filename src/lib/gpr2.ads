@@ -86,6 +86,8 @@ package GPR2 is
    --
 
    type Optional_Name_Type is new String;
+   --  with Dynamic_Predicate =>
+   --    (for all C of Optional_Name_Type => C not in '/' | '\');
 
    No_Name : constant Optional_Name_Type;
 
@@ -100,10 +102,6 @@ package GPR2 is
      with Dynamic_Predicate => Value_Not_Empty'Length > 0;
    --  A string type which cannot be empty
 
-   subtype Simple_Name is Name_Type
-     with Dynamic_Predicate =>
-       (for all C of Simple_Name => C not in '/' | '\');
-   --  A simple name, non empty and without some characters not allowed in
    --  filenames for example.
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
@@ -112,6 +110,21 @@ package GPR2 is
    function To_Lower (Name : Name_Type) return Value_Not_Empty;
    --  Convert name to lowercased String. Need to be able to use "in" operator
    --  because of predefined equality used, see ARM 2012 4.5.2 28.1/4.
+
+   type Filename_Optional is new String;
+
+   overriding function "=" (Left, Right : Filename_Optional) return Boolean;
+   overriding function "<" (Left, Right : Filename_Optional) return Boolean;
+
+   subtype Filename_Type is Filename_Optional
+     with Dynamic_Predicate => Filename_Type'Length > 0;
+
+   subtype Simple_Name is Filename_Type
+     with Dynamic_Predicate =>
+       (for all C of Simple_Name => C not in '/' | '\');
+   --  A simple name, non empty and without some characters not allowed in
+
+   No_Filename : constant Filename_Optional;
 
    No_Value : constant Value_Type;
 
@@ -156,9 +169,10 @@ private
    use Ada;
    use Ada.Strings.Unbounded;
 
-   No_Name  : constant Optional_Name_Type := "";
-   No_Value : constant Value_Type := "";
-   No_Time  : Calendar.Time renames GNATCOLL.Utils.No_Time;
+   No_Name     : constant Optional_Name_Type := "";
+   No_Value    : constant Value_Type := "";
+   No_Filename : constant Filename_Optional := "";
+   No_Time     : Calendar.Time renames GNATCOLL.Utils.No_Time;
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is

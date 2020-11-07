@@ -74,7 +74,7 @@ package GPRtools.Options is
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;
       Src_Subdirs              : Unbounded_String;
-      Implicit_With            : GPR2.Containers.Name_Set;
+      Implicit_With            : GPR2.Containers.Filename_Set;
       Maximum_Processes        : Natural := 0;
 
       Skip_Default_KB          : aliased Boolean := False;

@@ -74,11 +74,11 @@ package body GPR2.Source_Info is
    -- File_Dependencies --
    -----------------------
 
-   function Dependencies (Self  : Object) return Containers.Name_List is
-      Result : Containers.Name_List;
+   function Dependencies (Self  : Object) return Containers.Filename_List is
+      Result : Containers.Filename_List;
    begin
       for D of Self.Dependencies loop
-         Result.Append (Name_Type (To_String (D.Sfile)));
+         Result.Append (Filename_Type (To_String (D.Sfile)));
       end loop;
 
       return Result;

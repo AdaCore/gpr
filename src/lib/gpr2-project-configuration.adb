@@ -51,9 +51,10 @@ package body GPR2.Project.Configuration is
    -- Archive_Suffix --
    --------------------
 
-   function Archive_Suffix (Self : Object) return Name_Type is
+   function Archive_Suffix (Self : Object) return Filename_Type is
    begin
-      return Name_Type (Self.Conf.Attribute (PRA.Archive_Suffix).Value.Text);
+      return Filename_Type
+               (Self.Conf.Attribute (PRA.Archive_Suffix).Value.Text);
    end Archive_Suffix;
 
    ------------------
@@ -71,7 +72,8 @@ package body GPR2.Project.Configuration is
       Data.Kind          := K_Configuration;
       Data.Tree          := Tree;
       Data.Path          := Path_Name.Create_Directory
-                              (Name_Type (Self.Project.Path_Name.Dir_Name));
+                              (Filename_Type
+                                 (Self.Project.Path_Name.Dir_Name));
       Self.Conf          := Definition.Register (Data);
    end Bind_To_Tree;
 
@@ -145,7 +147,7 @@ package body GPR2.Project.Configuration is
                          then ""
                          else Path_Name.Compose
                            (Path_Name.Temporary_Directory,
-                            Name_Type
+                            Filename_Type
                               (Process_Id & "-gpr2_tmp_out.tmp")).Value);
 
       Conf_Filename : constant String :=
@@ -153,7 +155,7 @@ package body GPR2.Project.Configuration is
                          then ""
                          else Path_Name.Compose
                            (Path_Name.Temporary_Directory,
-                            Name_Type
+                            Filename_Type
                               (Process_Id & "-gpr2_tmp_conf_"
                                & Trim (Key, Left) & ".cgpr")).Value);
 
@@ -281,7 +283,7 @@ package body GPR2.Project.Configuration is
       Result.Conf := View.Undefined;
 
       if Success then
-         Result := Load (Create (Name_Type (Conf_Filename)), Target);
+         Result := Load (Create (Filename_Type (Conf_Filename)), Target);
 
          for S of Settings loop
             Result.Descriptions.Append (S);
@@ -318,7 +320,7 @@ package body GPR2.Project.Configuration is
 
    function Dependency_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Name_Type
+      Language : Name_Type) return Filename_Type
    is
       pragma Unreferenced (Self);
    begin
@@ -370,7 +372,7 @@ package body GPR2.Project.Configuration is
    begin
       Result.Project :=
         Parser.Project.Parse
-          (Filename, Containers.Empty_Name_Set, Result.Messages);
+          (Filename, Containers.Empty_Filename_Set, Result.Messages);
 
       --  Continue only if there is no parsing error on the configuration
       --  project.
@@ -400,7 +402,7 @@ package body GPR2.Project.Configuration is
 
    function Object_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Name_Type
+      Language : Name_Type) return Filename_Type
    is
       A : Project.Attribute.Object;
    begin
@@ -410,7 +412,7 @@ package body GPR2.Project.Configuration is
                     Attribute_Index.Create (Value_Type (Language)),
                     Result => A)
       then
-         return Name_Type (A.Value.Text);
+         return Filename_Type (A.Value.Text);
       else
          return ".o";
       end if;

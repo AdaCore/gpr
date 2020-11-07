@@ -37,43 +37,39 @@ procedure Main is
 
       use GNATCOLL.Opt_Parse;
 
-      Parser : GNATCOLL.Opt_Parse.Argument_Parser :=
-                 GNATCOLL.Opt_Parse.Create_Argument_Parser
+      Parser : Argument_Parser := Create_Argument_Parser
         (Help =>
            "GNAT prefix tool test");
 
-      package Project_Arg is new GNATCOLL.Opt_Parse.Parse_Option
+      package Project_Arg is new Parse_Option
         (Parser      => Parser,
          Short       => "-P",
          Long        => "--project",
-         Arg_Type    => Ada.Strings.Unbounded.Unbounded_String,
-         Default_Val => Ada.Strings.Unbounded.Null_Unbounded_String,
+         Arg_Type    => Unbounded_String,
+         Default_Val => Null_Unbounded_String,
          Help        => "Project file to use");
 
-      package Config_File_Arg is new GNATCOLL.Opt_Parse.Parse_Option
+      package Config_File_Arg is new Parse_Option
         (Parser       => Parser,
          Long         => "--config",
-         Arg_Type     => Ada.Strings.Unbounded.Unbounded_String,
-         Default_Val  => Ada.Strings.Unbounded.Null_Unbounded_String,
+         Arg_Type     => Unbounded_String,
+         Default_Val  => Null_Unbounded_String,
          Help         => "Specify the main config project file name");
 
       function Project_File return GPR2.Path_Name.Object is
-        (if Args.Project_Arg.Get = Ada.Strings.Unbounded.Null_Unbounded_String
+        (if Args.Project_Arg.Get = Null_Unbounded_String
          then GPR2.Path_Name.Undefined
          else GPR2.Path_Name.Create_File
-           (GPR2.Project.Ensure_Extension
-                (GPR2.Optional_Name_Type
-                     (Ada.Strings.Unbounded.To_String
-                        (Args.Project_Arg.Get)))));
+                (GPR2.Project.Ensure_Extension
+                   (GPR2.Filename_Type
+                      (To_String (Args.Project_Arg.Get)))));
       --  The GPR2 project file object (default GPR2.Path_Name.Undefined)
 
       function Config_File return GPR2.Path_Name.Object is
-        (if Args.Config_File_Arg.Get =
-           Ada.Strings.Unbounded.Null_Unbounded_String
+        (if Args.Config_File_Arg.Get = Null_Unbounded_String
          then GPR2.Path_Name.Undefined
          else GPR2.Path_Name.Create_File
-           (GPR2.Name_Type
-                (Ada.Strings.Unbounded.To_String (Args.Config_File_Arg.Get))));
+                (GPR2.Filename_Type (To_String (Args.Config_File_Arg.Get))));
       --  The GPR2 project file object (default GPR2.Path_Name.Undefined)
 
    end Args;

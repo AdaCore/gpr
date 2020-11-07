@@ -40,7 +40,7 @@ begin
          Ctx : Context.Object;
 
       begin
-         Project.Tree.Load (Prj, Create (Name_Type (P)), Ctx);
+         Project.Tree.Load (Prj, Create (Filename_Type (P)), Ctx);
          Text_IO.Put_Line ("All good, no message.");
 
       exception

@@ -72,6 +72,12 @@ package body GPR2.Parser.Project is
      (Name_Type (Get_Value_Type (Node)));
    --  Returns the Name for the given node
 
+   function Get_Filename
+     (Node : Single_Tok_Node'Class) return Filename_Type
+   is
+     (Filename_Type (Get_Value_Type (Node)));
+   --  Returns the Name for the given node
+
    function Present (Node : GPR_Node'Class) return Boolean is
      (not Node.Is_Null);
    --  Returns True if the Node is present (not null)
@@ -125,7 +131,7 @@ package body GPR2.Parser.Project is
      (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object
    is
      (GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension (Get_Name_Type (Node)),
+        (GPR2.Project.Ensure_Extension (Get_Filename (Node)),
          GPR2.Path_Name.No_Resolution));
    --  Creates project Path_Name.Object not checked for location
 
@@ -139,7 +145,7 @@ package body GPR2.Parser.Project is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Name_Set;
+      Implicit_With : Containers.Filename_Set;
       Messages      : out Log.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
@@ -355,7 +361,7 @@ package body GPR2.Parser.Project is
       --  create the project tree and setup the project context.
 
       Project := Parse_Stage_1
-        (Unit, Filename, GPR2.Containers.Empty_Name_Set, Messages);
+        (Unit, Filename, GPR2.Containers.Empty_Filename_Set, Messages);
 
       --  Then record langkit tree data with project. Those data will be
       --  used for later parsing when creating view of projects with a
@@ -384,7 +390,7 @@ package body GPR2.Parser.Project is
 
    function Parse
      (Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Name_Set;
+      Implicit_With : Containers.Filename_Set;
       Messages      : out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
@@ -481,7 +487,7 @@ package body GPR2.Parser.Project is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Name_Set;
+      Implicit_With : Containers.Filename_Set;
       Messages      : out Log.Object) return Object
    is
 
@@ -2050,7 +2056,7 @@ package body GPR2.Parser.Project is
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
-         Name    : constant Simple_Name := Simple_Name (To_UTF8 (Name_1.Text));
+         Name    : constant Name_Type := Name_Type (To_UTF8 (Name_1.Text));
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -2066,9 +2072,7 @@ package body GPR2.Parser.Project is
 
                if Self.Imports.Contains (Name)
                  or else (Self.Extended.Is_Defined
-                            and then
-                          Optional_Name_Type
-                            (Self.Extended.Path_Name.Base_Name) = Name)
+                          and then Self.Extended.Path_Name.Base_Name = Name)
                  or else Is_Builtin_Project_Name (Name)
                then
                   --  This is a project reference: <project>'<attribute>
@@ -2117,8 +2121,7 @@ package body GPR2.Parser.Project is
                   declare
                      View : constant GPR2.Project.View.Object :=
                               Process.View.View_For
-                                (Name_Type
-                                   (Self.Extended.Path_Name.Base_Name));
+                                (Self.Extended.Path_Name.Base_Name);
                   begin
                      if View.Is_Defined
                        and then View.Has_Variables (Name)

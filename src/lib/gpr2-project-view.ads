@@ -376,7 +376,7 @@ package GPR2.Project.View is
           Post => Mains'Result.Length > 0;
    --  Returns the mains's binary full pathname
 
-   function Library_Name (Self : Object) return Name_Type
+   function Library_Name (Self : Object) return Simple_Name
      with Pre => Self.Is_Defined and then Self.Is_Library;
    --  Returns the library name
 
@@ -486,7 +486,7 @@ package GPR2.Project.View is
        and then Self.Kind in K_Standard | K_Library | K_Aggregate_Library;
    --  As above but for the Exec_Dir attribute
 
-   function Executable_Suffix (Self : Object) return Optional_Name_Type
+   function Executable_Suffix (Self : Object) return Filename_Optional
      with Pre => Self.Is_Defined;
    --  Returns executable suffix for this project
 
@@ -502,7 +502,7 @@ package GPR2.Project.View is
 
    function Binder_Artifacts
      (Self     : Object;
-      Name     : Name_Type;
+      Name     : Simple_Name;
       Language : Optional_Name_Type := No_Name)
       return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined
@@ -553,8 +553,8 @@ private
    function Is_Library (Self : Object) return Boolean is
      (Self.Kind in K_Library | K_Aggregate_Library);
 
-   function Library_Name (Self : Object) return Name_Type is
-     (Name_Type
+   function Library_Name (Self : Object) return Simple_Name is
+     (Simple_Name
         (Self.Attribute (Registry.Attribute.Library_Name).Value.Text));
 
    function Has_Library_Version (Self : Object) return Boolean is

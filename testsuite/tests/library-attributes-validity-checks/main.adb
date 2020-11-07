@@ -7,8 +7,9 @@ with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Log;
 
-procedure main is
-   procedure Test (Filename : GPR2.Optional_Name_Type) is
+procedure Main is
+
+   procedure Test (Filename : GPR2.Filename_Type) is
       Tree    : GPR2.Project.Tree.Object;
       Context : GPR2.Context.Object;
    begin
@@ -29,6 +30,7 @@ procedure main is
          end loop;
       end if;
    end Test;
+
 begin
    Test ("prj1.gpr");
    Test ("abstractprj1.gpr");

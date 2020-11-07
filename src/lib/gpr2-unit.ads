@@ -114,8 +114,7 @@ package GPR2.Unit is
       Sep_From      : Optional_Name_Type;
       Flags         : Flags_Set) return Object
      with Post => Create'Result.Is_Defined;
-   --  Create a compilation unit object.
-   --  File_Name could be known only for ALI parser
+   --  Create a compilation unit object
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns True if Self is defined

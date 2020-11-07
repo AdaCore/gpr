@@ -62,9 +62,10 @@ package body GPR2.Project.Source is
    -- Artifacts --
    ---------------
 
-   function Artifacts (Self : Object) return Artifact.Object is
+   function Artifacts
+     (Self : Object; Force_Spec : Boolean := False) return Artifact.Object is
    begin
-      return Artifact.Create (Self);
+      return Artifact.Create (Self, Force_Spec => Force_Spec);
    end Artifacts;
 
    ------------------------
@@ -91,9 +92,10 @@ package body GPR2.Project.Source is
       Closure  : Boolean := False)
    is
       Tree : constant not null access Project.Tree.Object := View (Self).Tree;
-      Done : Containers.Name_Set;
-      --  Fast look-up table to avoid analysing the same unit multiple time and
-      --  more specifically avoid circularities.
+      U_Done : Containers.Name_Set;
+      S_Done : Containers.Filename_Set;
+      --  Fast look-up tables to avoid analysing the same unit/file multiple
+      --  time and more specifically avoid circularities.
 
       procedure Output (Unit : Unit_Info.Object)
         with Inline, Pre => Unit.Is_Defined;
@@ -120,10 +122,10 @@ package body GPR2.Project.Source is
          ----------
 
          procedure Outp (Item : GPR2.Path_Name.Object) is
-            Position : Containers.Name_Type_Set.Cursor;
+            Position : Containers.Filename_Type_Set.Cursor;
             Inserted : Boolean;
          begin
-            Done.Insert (Item.Simple_Name, Position, Inserted);
+            S_Done.Insert (Item.Simple_Name, Position, Inserted);
             if Inserted then
                For_Each (Get (Item));
             end if;
@@ -161,7 +163,7 @@ package body GPR2.Project.Source is
       begin
          for CU of Src.Source.Units loop
             for W of CU.Dependencies loop
-               Done.Insert (W.Text, Done_Pos, Inserted);
+               U_Done.Insert (W.Text, Done_Pos, Inserted);
 
                if Inserted then
                   Buf.Insert (W, Position, Inserted);
@@ -295,7 +297,7 @@ package body GPR2.Project.Source is
       Closure  : Boolean := False)
    is
       Tree : constant not null access Project.Tree.Object := View (Self).Tree;
-      Done : Containers.Name_Set;
+      Done : Containers.Filename_Set;
 
       procedure Collect_Source (Source : Source_Info.Object'Class);
 
@@ -305,7 +307,7 @@ package body GPR2.Project.Source is
 
       procedure Collect_Source (Source : Source_Info.Object'Class) is
          S        : Project.Source.Object;
-         Position : Containers.Name_Type_Set.Cursor;
+         Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
          Src_File : GPR2.Path_Name.Object;
          View     : Project.View.Object;

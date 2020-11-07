@@ -40,7 +40,7 @@ procedure Main is
       Prj : Project.Tree.Object;
       Ctx : Context.Object;
    begin
-      Project.Tree.Load (Prj, Create (Name_Type (Filename)), Ctx);
+      Project.Tree.Load (Prj, Create (Filename_Type (Filename)), Ctx);
       Text_IO.Put_Line ("All good, no message.");
 
    exception

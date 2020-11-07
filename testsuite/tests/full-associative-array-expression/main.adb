@@ -13,8 +13,9 @@ with GPR2.Log;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
-procedure main is
-   procedure Test (Filename : GPR2.Optional_Name_Type) is
+procedure Main is
+
+   procedure Test (Filename : GPR2.Filename_Type) is
       Tree    : GPR2.Project.Tree.Object;
       Context : GPR2.Context.Object;
 
@@ -69,6 +70,7 @@ procedure main is
 
          end loop;
       end Print_Attributes;
+
    begin
       begin
          Ada.Text_IO.Put_Line (String (Filename));
@@ -89,6 +91,7 @@ procedure main is
          end loop;
       end if;
    end Test;
+
 begin
    Test ("check1.gpr");
    Test ("check2a.gpr");

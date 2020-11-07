@@ -85,7 +85,7 @@ package body GPR2.Project.View is
    --  exists.
 
    function Binder_Prefix
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     (Self : Object; Language : Name_Type) return Filename_Optional
      with Pre => Self.Is_Defined;
    --  Prefix to be used for the binder exchange file name for the language.
    --  Used to have different binder exchange file names when binding different
@@ -121,9 +121,9 @@ package body GPR2.Project.View is
      (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object
    is
       Dir      : constant Value_Type := Self.Attribute (Dir_Attr).Value.Text;
-      Subdirs  : constant Optional_Name_Type := Self.Tree.Subdirs;
-      Dir_Name : constant Name_Type :=
-                   (if Dir = "" then "." else Name_Type (Dir));
+      Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
+      Dir_Name : constant Filename_Type :=
+                   (if Dir = "" then "." else Filename_Type (Dir));
       Result   : GPR2.Path_Name.Object;
    begin
       if OS_Lib.Is_Absolute_Path (Dir) then
@@ -133,22 +133,22 @@ package body GPR2.Project.View is
          Result := GPR2.Path_Name.Create_Directory
            (Self.Dir_Name.Relative_Path
               (Self.Tree.Root_Project.Dir_Name).Name,
-            Name_Type (Self.Tree.Build_Path.Value));
+            Filename_Type (Self.Tree.Build_Path.Value));
 
          Result := GPR2.Path_Name.Create_Directory
-           (Dir_Name, Name_Type (Result.Value));
+           (Dir_Name, Filename_Type (Result.Value));
 
       else
          Result := GPR2.Path_Name.Create_Directory
-           (Dir_Name, Name_Type (Self.Dir_Name.Value));
+           (Dir_Name, Filename_Type (Self.Dir_Name.Value));
       end if;
 
-      if Subdirs = No_Name then
+      if Subdirs = No_Filename then
          return Result;
       end if;
 
       return GPR2.Path_Name.Create_Directory
-               (Subdirs, Name_Type (Result.Value));
+               (Subdirs, Filename_Type (Result.Value));
    end Apply_Root_And_Subdirs;
 
    ---------------
@@ -189,7 +189,8 @@ package body GPR2.Project.View is
                Get_Next_Entry (Find, Item);
 
                Result.Append
-                 (GPR2.Path_Name.Create_File (Name_Type (Full_Name (Item))));
+                 (GPR2.Path_Name.Create_File
+                    (Filename_Type (Full_Name (Item))));
             end loop;
          end loop;
       end Result_Append;
@@ -235,23 +236,17 @@ package body GPR2.Project.View is
 
    function Binder_Artifacts
      (Self     : Object;
-      Name     : Name_Type;
+      Name     : Simple_Name;
       Language : Optional_Name_Type := No_Name)
       return GPR2.Path_Name.Set.Object
    is
       use Ada.Text_IO;
       use GNATCOLL.Utils;
 
-      function "&"
-        (Left, Right : Optional_Name_Type) return Optional_Name_Type
-      is
-        (GPR2."&" (Left, Right));
-      --  Workaround for strange visibility bug
-
       Result  : GPR2.Path_Name.Set.Object;
       Obj_Dir : constant GPR2.Path_Name.Object := Self.Object_Directory;
-      BP      : constant Optional_Name_Type :=
-                  (if Language = No_Name then No_Name
+      BP      : constant Filename_Optional :=
+                  (if Language = No_Name then No_Filename
                    else Self.Binder_Prefix (Language));
       BF      : constant GPR2.Path_Name.Object :=
                   Obj_Dir.Compose
@@ -259,8 +254,8 @@ package body GPR2.Project.View is
                      & (if Self.Is_Library then ".lexch" else ".bexch"));
 
       File    : File_Type;
-      Obj_Ext : constant Optional_Name_Type :=
-                  (if Language = No_Name then No_Name
+      Obj_Ext : constant Filename_Optional :=
+                  (if Language = No_Name then No_Filename
                    else Self.Tree.Object_Suffix (Language));
 
       Generated : Boolean := False;
@@ -281,7 +276,7 @@ package body GPR2.Project.View is
                   end if;
 
                elsif Generated then
-                  Result.Append (Obj_Dir.Compose (Name_Type (Line)));
+                  Result.Append (Obj_Dir.Compose (Filename_Type (Line)));
 
                   if Gen_Src then
                      for A of Self.Naming_Package.Attributes (PRA.Body_Suffix)
@@ -291,7 +286,7 @@ package body GPR2.Project.View is
                                       (Language => Name_Type (A.Index.Text))
                            loop
                               Result.Append
-                                (Obj_Dir.Compose (Name_Type (Line & E)));
+                                (Obj_Dir.Compose (Filename_Type (Line & E)));
                            end loop;
                         end if;
                      end loop;
@@ -302,7 +297,7 @@ package body GPR2.Project.View is
                      for E of Self.Object_Artifact_Extensions (Language) loop
                         Result.Append
                           (Obj_Dir.Compose
-                             (Name_Type
+                             (Filename_Type
                                 (Line (Line'First
                                        .. Line'Last - Obj_Ext'Length) & E)));
                      end loop;
@@ -323,7 +318,7 @@ package body GPR2.Project.View is
    -------------------
 
    function Binder_Prefix
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     (Self : Object; Language : Name_Type) return Filename_Optional
    is
       package P renames GPR2.Project.Registry.Pack;
       package A renames GPR2.Project.Registry.Attribute;
@@ -336,7 +331,7 @@ package body GPR2.Project.View is
          Binder := Self.Pack (P.Binder);
 
          if Binder.Has_Attributes (A.Prefix, Index) then
-            return Name_Type
+            return Filename_Optional
               (Binder.Attribute (A.Prefix, Index).Value.Text);
          end if;
       end if;
@@ -497,7 +492,7 @@ package body GPR2.Project.View is
    -- Executable_Suffix --
    -----------------------
 
-   function Executable_Suffix (Self : Object) return Optional_Name_Type is
+   function Executable_Suffix (Self : Object) return Filename_Optional is
       package A renames GPR2.Project.Registry.Attribute;
 
       Tree : constant not null access Project.Tree.Object := Self.Tree;
@@ -508,7 +503,7 @@ package body GPR2.Project.View is
         and then Tree.Configuration.Corresponding_View.Check_Attribute
                    (A.Executable_Suffix, Result => Attr)
       then
-         return Optional_Name_Type (Attr.Value.Text);
+         return Filename_Optional (Attr.Value.Text);
       end if;
 
       declare
@@ -518,11 +513,11 @@ package body GPR2.Project.View is
            and then Builder.Check_Attribute
                       (A.Executable_Suffix, Result => Attr)
          then
-            return Optional_Name_Type (Attr.Value.Text);
+            return Filename_Optional (Attr.Value.Text);
          end if;
       end;
 
-      return Optional_Name_Type (OS_Lib.Get_Executable_Suffix.all);
+      return Filename_Optional (OS_Lib.Get_Executable_Suffix.all);
    end Executable_Suffix;
 
    --------------
@@ -987,8 +982,8 @@ package body GPR2.Project.View is
       end if;
 
       return GPR2.Path_Name.Create_File
-        (Name_Type (To_String (File_Name)),
-         Directory =>  Optional_Name_Type (Self.Library_Directory.Dir_Name));
+        (Filename_Type (To_String (File_Name)),
+         Directory =>  Filename_Optional (Self.Library_Directory.Dir_Name));
    end Library_Filename;
 
    ------------------
@@ -1013,14 +1008,16 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object
    is
 
-      function Major_Version_Name (Lib_Version : Name_Type) return Name_Type;
+      function Major_Version_Name
+        (Lib_Version : Filename_Type) return Filename_Type;
       --  Returns the major version name
 
       ------------------------
       -- Major_Version_Name --
       ------------------------
 
-      function Major_Version_Name (Lib_Version : Name_Type) return Name_Type is
+      function Major_Version_Name
+        (Lib_Version : Filename_Type) return Filename_Type is
       begin
          for J in reverse Lib_Version'Range loop
             if Lib_Version (J) = '.' then
@@ -1038,8 +1035,8 @@ package body GPR2.Project.View is
 
    begin
       return GPR2.Path_Name.Create_File
-        (Major_Version_Name (Name_Type (LV.Value.Text)),
-         Directory => Optional_Name_Type (Self.Library_Filename.Dir_Name));
+        (Major_Version_Name (Filename_Type (LV.Value.Text)),
+         Directory => Filename_Optional (Self.Library_Filename.Dir_Name));
    end Library_Major_Version_Filename;
 
    ---------------------------
@@ -1084,10 +1081,10 @@ package body GPR2.Project.View is
      (Self : Object) return GPR2.Path_Name.Object is
    begin
       return GPR2.Path_Name.Create_File
-        (Name_Type
+        (Filename_Type
            (Self.Attribute
               (Project.Registry.Attribute.Library_Version).Value.Text),
-         Directory => Optional_Name_Type (Self.Library_Directory.Dir_Name));
+         Directory => Filename_Optional (Self.Library_Directory.Dir_Name));
    end Library_Version_Filename;
 
    -----------
@@ -1150,8 +1147,8 @@ package body GPR2.Project.View is
            (Name : Value_Not_Empty) return GPR2.Path_Name.Object
          is
            (GPR2.Path_Name.Create_File
-              (Name_Type (Name & String (Self.Executable_Suffix)),
-               Optional_Name_Type (Self.Executable_Directory.Dir_Name)));
+              (Filename_Type (Name) & Self.Executable_Suffix,
+               Filename_Optional (Self.Executable_Directory.Dir_Name)));
 
       begin
          if Builder.Is_Defined

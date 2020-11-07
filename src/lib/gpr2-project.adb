@@ -79,7 +79,7 @@ package body GPR2.Project is
          if Value /= "" then
             declare
                Path : constant Path_Name.Object :=
-                        Path_Name.Create_Directory (Name_Type (Value));
+                        Path_Name.Create_Directory (Filename_Type (Value));
             begin
                if not Paths.Contains (Path) then
                   Paths.Append (Path);
@@ -140,12 +140,12 @@ package body GPR2.Project is
    ------------
 
    function Create
-     (Name  : Name_Type;
+     (Name  : Filename_Type;
       Paths : Path_Name.Set.Object := Path_Name.Set.Empty_Set)
       return GPR2.Path_Name.Object
    is
       DS       : constant Character := OS_Lib.Directory_Separator;
-      GPR_Name : constant Name_Type := Ensure_Extension (Name);
+      GPR_Name : constant Filename_Type := Ensure_Extension (Name);
 
    begin
       --  If the file exists or an absolute path has been specificed or there
@@ -155,7 +155,7 @@ package body GPR2.Project is
       if OS_Lib.Is_Absolute_Path (String (GPR_Name)) then
          return Path_Name.Create
            (GPR_Name,
-            Name_Type (OS_Lib.Normalize_Pathname (String (GPR_Name))));
+            Filename_Type (OS_Lib.Normalize_Pathname (String (GPR_Name))));
 
       else
          --  If we have an empty Paths set, this is the root project and it is
@@ -167,7 +167,7 @@ package body GPR2.Project is
             then
                return Path_Name.Create
                  (GPR_Name,
-                  Name_Type (OS_Lib.Normalize_Pathname
+                  Filename_Type (OS_Lib.Normalize_Pathname
                     (Directories.Current_Directory & DS & String (GPR_Name))));
             end if;
 
@@ -180,7 +180,7 @@ package body GPR2.Project is
                   if Directories.Exists (F_Name) then
                      return Path_Name.Create
                        (GPR_Name,
-                        Name_Type (OS_Lib.Normalize_Pathname (F_Name)));
+                        Filename_Type (OS_Lib.Normalize_Pathname (F_Name)));
                   end if;
                end;
             end loop;
@@ -202,7 +202,7 @@ package body GPR2.Project is
       if Current_Directory then
          Result.Append
            (Path_Name.Create_Directory
-              (Name_Type (Directories.Current_Directory)));
+              (Filename_Type (Directories.Current_Directory)));
       end if;
 
       Append_Default_Search_Paths (Result);
@@ -214,7 +214,7 @@ package body GPR2.Project is
    -- Ensure_Extension --
    ----------------------
 
-   function Ensure_Extension (Name : Name_Type) return Name_Type is
+   function Ensure_Extension (Name : Filename_Type) return Filename_Type is
       use Ada.Characters.Handling;
    begin
       if To_Lower (Directories.Extension (String (Name))) in
@@ -240,7 +240,8 @@ package body GPR2.Project is
    begin
       return Result : Path_Name.Set.Object := Tree_Search_Paths do
          Result.Prepend
-           (Path_Name.Create_Directory (Name_Type (Root_Project.Dir_Name)));
+           (Path_Name.Create_Directory
+              (Filename_Type (Root_Project.Dir_Name)));
       end return;
    end Search_Paths;
 

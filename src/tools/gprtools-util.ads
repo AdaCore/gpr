@@ -77,9 +77,9 @@ package GPRtools.Util is
    --  according to Exit_Code.
 
    function Partial_Name
-     (Lib_Name      : Name_Type;
+     (Lib_Name      : Simple_Name;
       Number        : Natural;
-      Object_Suffix : Name_Type) return Name_Type;
+      Object_Suffix : Simple_Name) return Simple_Name;
    --  Returns the name of an object file created by the partial linker
 
 end GPRtools.Util;

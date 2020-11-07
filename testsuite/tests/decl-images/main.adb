@@ -33,7 +33,7 @@ procedure Main is
 
    procedure Display (Prj : Project.View.Object);
 
-   procedure Load (Filename : Name_Type);
+   procedure Load (Filename : Filename_Type);
 
    -------------
    -- Display --
@@ -83,7 +83,7 @@ procedure Main is
    -- Load --
    ----------
 
-   procedure Load (Filename : Name_Type) is
+   procedure Load (Filename : Filename_Type) is
       Prj : Project.Tree.Object;
       Ctx : Context.Object;
    begin

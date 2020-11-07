@@ -76,7 +76,7 @@ procedure GPRdump is
    procedure Full_Closure (Tree : Project.Tree.Object; Filename : String) is
       File : constant GPR2.Path_Name.Object :=
                GPR2.Path_Name.Create_File
-                 (Name_Type (Filename), GPR2.Path_Name.No_Resolution);
+                 (Filename_Type (Filename), GPR2.Path_Name.No_Resolution);
       View : constant GPR2.Project.View.Object :=
                Tree.Get_View (File);
    begin
@@ -239,7 +239,7 @@ begin
 
       Pathname : constant GPR2.Path_Name.Object :=
                    GPR2.Project.Create
-                     (GPR2.Optional_Name_Type (To_String (Project_Path)));
+                     (GPR2.Filename_Type (To_String (Project_Path)));
       Context  : GPR2.Context.Object;
    begin
       Project_Tree.Load (Pathname, Context, Check_Shared_Lib => False);

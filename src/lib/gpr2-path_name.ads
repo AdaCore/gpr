@@ -51,9 +51,9 @@ package GPR2.Path_Name is
    --  Means that an empty project has to be generated instead of parsed from
    --  file.
 
-   Resolve_On_Current : constant Optional_Name_Type := "./";
+   Resolve_On_Current : constant Filename_Type := "./";
    --  Resolves relative path from current directory
-   No_Resolution      : constant Optional_Name_Type := "";
+   No_Resolution      : constant Filename_Optional := "";
    --  Skip full path-name resolution, delay for later
 
    function Is_Defined (Self : Object) return Boolean;
@@ -73,8 +73,8 @@ package GPR2.Path_Name is
    --  Returns True if Self represent a directory
 
    function Create_File
-     (Name      : Name_Type;
-      Directory : Optional_Name_Type := Resolve_On_Current) return Object
+     (Name      : Filename_Type;
+      Directory : Filename_Optional := Resolve_On_Current) return Object
      with Post => Create_File'Result.Is_Defined
                   and then not Create_File'Result.Is_Directory;
    --  Creates a Path_Name.Object for a file.
@@ -86,20 +86,21 @@ package GPR2.Path_Name is
    --  parameter the Directory parameter has no meaning.
 
    function Create_Directory
-     (Name      : Name_Type;
-      Directory : Optional_Name_Type := "") return Object
+     (Name      : Filename_Type;
+      Directory : Filename_Optional := "") return Object
      with Post => Create_Directory'Result.Is_Defined
                   and then Create_Directory'Result.Is_Directory;
    --  Creates a Path_Name_Type for a directory
 
-   function Create (Name, Path_Name : Name_Type) return Object
+   function Create (Name, Path_Name : Filename_Type) return Object
      with Post => Create'Result.Is_Defined;
    --  Creates a path-name object
 
    subtype Full_Name is String
      with Dynamic_Predicate => (for some C of Full_Name => C in '/' | '\');
 
-   function Name (Self : Object; Extension : Boolean := True) return Name_Type
+   function Name
+     (Self : Object; Extension : Boolean := True) return Filename_Type
      with Pre => Self.Is_Defined;
    --  Returns the original, untouched name used to create the object. If
    --  Extension is set to False then the final extension is removed. Note that
@@ -110,9 +111,17 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined;
    --  Returns the full pathname for Self
 
-   function Base_Name (Self : Object) return Simple_Name
+   function Base_Name (Self : Object) return Name_Type
      with Pre => Self.Is_Defined;
-   --  Returns the base name for Self (no extension)
+   --  Returns the base name for Self (no extension).
+   --  This routine should be used when base filename used to get unit name
+   --  from filename.
+
+   function Base_Filename (Self : Object) return GPR2.Simple_Name
+     with Pre => Self.Is_Defined;
+   --  Returns the base name for Self (no extension).
+   --  This routine should be used when base filename used as part of another
+   --  source related filenames.
 
    function Simple_Name (Self : Object) return GPR2.Simple_Name
      with Pre => Self.Is_Defined;
@@ -132,7 +141,7 @@ package GPR2.Path_Name is
 
    function Compose
      (Self      : Object;
-      Name      : Name_Type;
+      Name      : Filename_Type;
       Directory : Boolean := False) return Object
      with Pre  => Self.Is_Defined,
           Post => Compose'Result.Is_Defined;
@@ -220,7 +229,10 @@ private
    function "<" (Left, Right : Object) return Boolean is
      (Left.Comparing < Right.Comparing);
 
-   function Base_Name (Self : Object) return GPR2.Simple_Name is
+   function Base_Name (Self : Object) return Name_Type is
+     (Name_Type (To_String (Self.Base_Name)));
+
+   function Base_Filename (Self : Object) return GPR2.Simple_Name is
      (GPR2.Simple_Name (To_String (Self.Base_Name)));
 
    function Dir_Name (Self : Object) return Full_Name is

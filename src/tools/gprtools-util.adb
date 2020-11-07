@@ -36,7 +36,7 @@ package body GPRtools.Util is
    use Ada;
    use Ada.Strings.Unbounded;
 
-   Partial_Prefix : constant Name_Type := "p__";
+   Partial_Prefix : constant Simple_Name := "p__";
 
    Keep_Program_Name : Unbounded_String;
 
@@ -63,7 +63,7 @@ package body GPRtools.Util is
         and then Kind (Default_Name) = Ordinary_File
       then
          Options.Project_File :=
-           Path_Name.Create_File (Name_Type (Default_Name));
+           Path_Name.Create_File (Filename_Type (Default_Name));
          return;
       end if;
 
@@ -77,7 +77,7 @@ package body GPRtools.Util is
             --  Only one project in current directory can be default one
 
             Options.Project_File :=
-              Path_Name.Create_File (Name_Type (Full_Name (Item)));
+              Path_Name.Create_File (Filename_Type (Full_Name (Item)));
 
             if not Options.Quiet then
                Text_IO.Put_Line
@@ -88,7 +88,7 @@ package body GPRtools.Util is
       else
          Options.Project_File := Path_Name.Implicit_Project;
          Options.Project_Base :=
-           Path_Name.Create_Directory (Name_Type (Current_Directory));
+           Path_Name.Create_Directory (Filename_Type (Current_Directory));
 
          if not Options.Quiet then
             Text_IO.Put_Line
@@ -319,15 +319,13 @@ package body GPRtools.Util is
    ------------------
 
    function Partial_Name
-     (Lib_Name      : Name_Type;
+     (Lib_Name      : Simple_Name;
       Number        : Natural;
-      Object_Suffix : Name_Type) return Name_Type
-   is
-      Img : constant String := Number'Img;
+      Object_Suffix : Simple_Name) return Simple_Name is
    begin
-      return Name_Type (String (Partial_Prefix) & String (Lib_Name)
-                        & '_' & Img (Img'First + 1 .. Img'Last)
-                        & String (Object_Suffix));
+      return Partial_Prefix & Lib_Name
+             & Simple_Name ('_' & GNATCOLL.Utils.Image (Number, 1))
+             & Object_Suffix;
    end Partial_Name;
 
    -------------------------------

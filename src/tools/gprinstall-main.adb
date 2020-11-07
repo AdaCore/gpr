@@ -473,7 +473,7 @@ begin
 
       if Options.Config_Project.all /= "" then
          Config := Project.Configuration.Load
-           (Path_Name.Create_File (Name_Type (Options.Config_Project.all)),
+           (Path_Name.Create_File (Filename_Type (Options.Config_Project.all)),
             Target => Name_Type
               (Strings.Unbounded.To_String (Options.Target)));
 

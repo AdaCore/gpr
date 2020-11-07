@@ -225,15 +225,15 @@ package body GPRinstall.Install is
 
       procedure Copy_File
         (From, To      : Path_Name.Object;
-         File          : Optional_Name_Type := No_Name;
-         From_Ver      : Path_Name.Object := Path_Name.Undefined;
+         File          : Filename_Optional := No_Filename;
+         From_Ver      : Path_Name.Object  := Path_Name.Undefined;
          Sym_Link      : Boolean := False;
          Executable    : Boolean := False;
          Extract_Debug : Boolean := False)
         with Pre =>
           (if From.Is_Directory
-           then not To.Is_Directory or else File /= No_Name
-           else To.Is_Directory or else File = No_Name);
+           then not To.Is_Directory or else File /= No_Filename
+           else To.Is_Directory or else File = No_Filename);
       --  Copy file From into To. If From and To are directories the full path
       --  name is using the File which must not be empty in this case.
       --  If Sym_Link is set a symbolic link is created.
@@ -241,7 +241,7 @@ package body GPRinstall.Install is
       --  When Extract_Debug is set to True the debug information for the
       --  executable is written in a side file.
 
-      function Dir_Name (Suffix : Boolean := True) return Name_Type;
+      function Dir_Name (Suffix : Boolean := True) return Filename_Type;
       --  Returns the name of directory where project files are to be
       --  installed. This name is the name of the project. If Suffix is
       --  True then the build name is also returned.
@@ -249,6 +249,15 @@ package body GPRinstall.Install is
       function Sources_Dir
         (Build_Name : Boolean := True) return Path_Name.Object;
       --  Returns the full pathname to the sources destination directory
+
+      function Prefix_For_Dir (Name : String) return Path_Name.Object is
+        (Path_Name.Create_Directory
+           (Filename_Type (Name),
+            (if OS_Lib.Is_Absolute_Path (Name)
+             then No_Filename
+             else Filename_Optional (Prefix_Dir.V.all))));
+      --  Returns directory as Path_Name.Object prefixed with Prefix_Dir.V.all
+      --  if not absote.
 
       function Exec_Dir return Path_Name.Object;
       --  Returns the full pathname to the executable destination directory
@@ -331,7 +340,7 @@ package body GPRinstall.Install is
                declare
                   Man_Path : constant Path_Name.Object :=
                                Path_Name.Create_File
-                                 (Name_Type (N (Name (Man))),
+                                 (Filename_Type (N (Name (Man))),
                                   Path_Name.No_Resolution);
                begin
                   Put_Line
@@ -346,7 +355,7 @@ package body GPRinstall.Install is
                declare
                   Agg_Man_Path : constant Path_Name.Object :=
                                    Path_Name.Create_File
-                                     (Name_Type (N (Name (Agg_Manifest))),
+                                     (Filename_Type (N (Name (Agg_Manifest))),
                                       Path_Name.No_Resolution);
                begin
                   Put_Line
@@ -378,33 +387,33 @@ package body GPRinstall.Install is
         (Subdir     : Param;
          Build_Name : Boolean := True) return Path_Name.Object
       is
-         Install_Name_Dir : constant Name_Type :=
+         Install_Name_Dir : constant Filename_Type :=
                               (if Install_Name.Default
                                then "."
-                               else Name_Type (Install_Name.V.all));
+                               else Filename_Type (Install_Name.V.all));
       begin
          if OS_Lib.Is_Absolute_Path (Subdir.V.all) then
             return Path_Name.Create_Directory
-              (Install_Name_Dir, Optional_Name_Type (Subdir.V.all));
+              (Install_Name_Dir, Filename_Optional (Subdir.V.all));
 
          elsif not Subdir.Default or else not Build_Name then
             return Path_Name.Create_Directory
               (Install_Name_Dir,
-               Optional_Name_Type
+               Filename_Type
                  (Path_Name.Create_Directory
-                      (Name_Type (Subdir.V.all),
-                       Optional_Name_Type (Prefix_Dir.V.all)).Value));
+                      (Filename_Type (Subdir.V.all),
+                       Filename_Optional (Prefix_Dir.V.all)).Value));
 
          else
             return Path_Name.Create_Directory
               (Dir_Name,
-               Optional_Name_Type
+               Filename_Type
                  (Path_Name.Create_Directory
                       (Install_Name_Dir,
-                       Optional_Name_Type
+                       Filename_Type
                          (Path_Name.Create_Directory
-                            (Name_Type (Subdir.V.all),
-                             Optional_Name_Type (Prefix_Dir.V.all)).Value))
+                            (Filename_Type (Subdir.V.all),
+                             Filename_Optional (Prefix_Dir.V.all)).Value))
                   .Value));
          end if;
       end Build_Subdir;
@@ -577,8 +586,8 @@ package body GPRinstall.Install is
 
       procedure Copy_File
         (From, To      : Path_Name.Object;
-         File          : Optional_Name_Type := No_Name;
-         From_Ver      : Path_Name.Object := Path_Name.Undefined;
+         File          : Filename_Optional := No_Filename;
+         From_Ver      : Path_Name.Object  := Path_Name.Undefined;
          Sym_Link      : Boolean := False;
          Executable    : Boolean := False;
          Extract_Debug : Boolean := False)
@@ -586,7 +595,7 @@ package body GPRinstall.Install is
          Src_Path      : constant Path_Name.Object :=
                            (if From.Is_Directory
                             then From.Compose
-                                  (if File = No_Name
+                                  (if File = No_Filename
                                    then To.Simple_Name
                                    else File)
                             else From);
@@ -594,7 +603,7 @@ package body GPRinstall.Install is
          Dest_Path     : constant Path_Name.Object :=
                            (if To.Is_Directory
                             then To.Compose
-                                   (if File = No_Name
+                                   (if File = No_Filename
                                     then From.Simple_Name
                                     else File)
                             else To);
@@ -768,7 +777,7 @@ package body GPRinstall.Install is
                               if Options.Install_Manifest then
                                  Add_To_Manifest
                                    (Path_Name.Create_File
-                                      (Name_Type (Dest_Debug)));
+                                      (Filename_Type (Dest_Debug)));
                               end if;
 
                               --  2. strip original executable
@@ -870,8 +879,8 @@ package body GPRinstall.Install is
                Fullname : constant String := Full_Name (E);
                Dest_Dir : constant Path_Name.Object :=
                             Path_Name.Create_Directory
-                              (Name_Type (Destination.Value),
-                               Optional_Name_Type (Prefix_Dir.V.all));
+                              (Filename_Type (Destination.Value),
+                               Filename_Optional (Prefix_Dir.V.all));
             begin
                if Kind (E) = Directory
                  and then Directories.Simple_Name (E) /= "."
@@ -879,17 +888,17 @@ package body GPRinstall.Install is
                then
                   Copy_Artifacts
                     (Path_Name.Create_File
-                       ("*", Optional_Name_Type (Fullname)),
+                       ("*", Filename_Optional (Fullname)),
                      Path_Name.Compose
                        (Dest_Dir,
-                        Name_Type (Directories.Simple_Name (E)),
+                        Filename_Type (Directories.Simple_Name (E)),
                         Directory => True),
                      Required);
 
                elsif Kind (E) = Ordinary_File then
                   Copy_File
                     (From       =>
-                       Path_Name.Create_File (Name_Type (Fullname)),
+                       Path_Name.Create_File (Filename_Type (Fullname)),
                      To         => Destination,
                      Executable => OS_Lib.Is_Executable_File (Fullname));
 
@@ -1050,21 +1059,24 @@ package body GPRinstall.Install is
                         end loop;
                      end if;
 
-                     --  Only install Ada .ali files (always name the .ali
-                     --  against the spec file).
+                     --  Install Ada .ali files (name the .ali
+                     --  against the spec file in case of minimal
+                     --  installation).
 
                      if Copy (Dependency) then
                         declare
                            Proj : GPR2.Project.View.Object;
-                           Ssrc : GPR2.Project.Source.Object;
+                           Satf : GPR2.Project.Source.Artifact.Object;
                         begin
                            if not Source.Has_Other_Part
                              or else not Source.Has_Naming_Exception
+                             or else not Source.Source.Has_Single_Unit
                              or else Options.All_Sources
                            then
-                              Ssrc := Source;
+                              Satf := Atf;
                            else
-                              Ssrc := Source.Other_Part;
+                              Satf := Source.Other_Part.Artifacts
+                                        (Force_Spec => True);
                            end if;
 
                            if Project.Qualifier = K_Aggregate_Library then
@@ -1083,8 +1095,8 @@ package body GPRinstall.Install is
                                        To   => (if Proj.Kind = K_Library
                                                 then ALI_Dir
                                                 else Lib_Dir),
-                                       File => Ssrc.Artifacts.
-                                         Dependency (CU.Index).Simple_Name);
+                                       File => Satf.Dependency
+                                                 (CU.Index).Simple_Name);
                                  end if;
                               end loop;
                            end if;
@@ -1097,7 +1109,7 @@ package body GPRinstall.Install is
                                  To   => (if Proj.Kind = K_Library
                                           then ALI_Dir
                                           else Lib_Dir),
-                                 File => Ssrc.Artifacts.Callgraph.Simple_Name);
+                                 File => Satf.Callgraph.Simple_Name);
                            end if;
 
                            if Atf.Has_Coverage
@@ -1108,7 +1120,7 @@ package body GPRinstall.Install is
                                  To   => (if Proj.Kind = K_Library
                                           then ALI_Dir
                                           else Lib_Dir),
-                                 File => Ssrc.Artifacts.Coverage.Simple_Name);
+                                 File => Satf.Coverage.Simple_Name);
                            end if;
                         end;
                      end if;
@@ -1289,16 +1301,16 @@ package body GPRinstall.Install is
 
          for E of Artifacts loop
             declare
-               Destination : constant Name_Type :=
-                               Name_Type (To_String (E.Destination));
-               Filename    : constant Name_Type :=
-                               Name_Type (To_String (E.Filename));
+               Destination : constant Filename_Type :=
+                               Filename_Type (To_String (E.Destination));
+               Filename    : constant Filename_Type :=
+                               Filename_Type (To_String (E.Filename));
             begin
                Copy_Artifacts
                  (Path_Name.Compose (Project.Dir_Name, Filename),
                   Path_Name.Create_Directory
                     (Destination,
-                     Optional_Name_Type (Prefix_Dir.V.all)),
+                     Filename_Optional (Prefix_Dir.V.all)),
                   E.Required);
             end;
          end loop;
@@ -2347,7 +2359,7 @@ package body GPRinstall.Install is
          if not Options.Dry_Run and then Options.Install_Manifest then
             --  Add project file to manifest
 
-            Add_To_Manifest (Path_Name.Create_File (Name_Type (Filename)));
+            Add_To_Manifest (Path_Name.Create_File (Filename_Type (Filename)));
          end if;
       end Create_Project;
 
@@ -2355,28 +2367,28 @@ package body GPRinstall.Install is
       -- Dir_Name --
       --------------
 
-      function Dir_Name (Suffix : Boolean := True) return Name_Type is
+      function Dir_Name (Suffix : Boolean := True) return Filename_Type is
 
-         function Get_Suffix return String;
+         function Get_Suffix return Filename_Optional;
          --  Returns a suffix if needed
 
          ----------------
          -- Get_Suffix --
          ----------------
 
-         function Get_Suffix return String is
+         function Get_Suffix return Filename_Optional is
          begin
             --  .default is always omitted from the directory name
 
             if Suffix and then Options.Build_Name.all /= "default" then
-               return '.' & Options.Build_Name.all;
+               return Filename_Type ('.' & Options.Build_Name.all);
             else
-               return "";
+               return No_Filename;
             end if;
          end Get_Suffix;
 
       begin
-         return Name_Type (String (Project.Path_Name.Base_Name) & Get_Suffix);
+         return Project.Path_Name.Base_Filename & Get_Suffix;
       end Dir_Name;
 
       --------------
@@ -2384,15 +2396,7 @@ package body GPRinstall.Install is
       --------------
 
       function Exec_Dir return Path_Name.Object is
-         E_Dir : constant Name_Type := Name_Type (Exec_Subdir.V.all);
-      begin
-         if OS_Lib.Is_Absolute_Path (Exec_Subdir.V.all) then
-            return Path_Name.Create_Directory (E_Dir);
-         else
-            return Path_Name.Create_Directory
-              (E_Dir, Optional_Name_Type (Prefix_Dir.V.all));
-         end if;
-      end Exec_Dir;
+        (Prefix_For_Dir (Exec_Subdir.V.all));
 
       -----------------
       -- Has_Sources --
@@ -2441,15 +2445,7 @@ package body GPRinstall.Install is
       ------------------
 
       function Link_Lib_Dir return Path_Name.Object is
-         L_Dir : constant Name_Type := Name_Type (Link_Lib_Subdir.V.all);
-      begin
-         if OS_Lib.Is_Absolute_Path (Link_Lib_Subdir.V.all) then
-            return Path_Name.Create_Directory (L_Dir);
-         else
-            return Path_Name.Create_Directory
-              (L_Dir, Optional_Name_Type (Prefix_Dir.V.all));
-         end if;
-      end Link_Lib_Dir;
+         (Prefix_For_Dir (Link_Lib_Subdir.V.all));
 
       -------------------------
       -- Open_Check_Manifest --
@@ -2463,8 +2459,8 @@ package body GPRinstall.Install is
                      Path_Name.Compose (Project_Dir, "manifests");
          M_File  : constant Path_Name.Object :=
                      Path_Name.Create_File
-                       (Name_Type (Install_Name.V.all),
-                        Optional_Name_Type (Dir.Value));
+                       (Filename_Type (Install_Name.V.all),
+                        Filename_Optional (Dir.Value));
          Name    : constant String := String (M_File.Value);
          Prj_Sig : constant String := Project.Path_Name.Content_MD5;
          Buf     : String (1 .. 128);
@@ -2534,15 +2530,7 @@ package body GPRinstall.Install is
       -----------------
 
       function Project_Dir return Path_Name.Object is
-         P_Dir : constant Name_Type := Name_Type (Project_Subdir.V.all);
-      begin
-         if OS_Lib.Is_Absolute_Path (String (P_Dir)) then
-            return Path_Name.Create_Directory (P_Dir);
-         else
-            return Path_Name.Create_Directory
-              (P_Dir, Optional_Name_Type (Prefix_Dir.V.all));
-         end if;
-      end Project_Dir;
+         (Prefix_For_Dir (Project_Subdir.V.all));
 
       ------------------------
       -- Rollback_Manifests --
@@ -2765,12 +2753,12 @@ package body GPRinstall.Install is
                   Man_Dir  : constant Path_Name.Object :=
                                Path_Name.Create_Directory
                                  ("manifests",
-                                  Optional_Name_Type (Project_Dir.Value));
+                                  Filename_Type (Project_Dir.Value));
                   Filename : constant Path_Name.Object :=
                                Path_Name.Create_File
-                                 (Name_Type
+                                 (Filename_Type
                                     (Directories.Simple_Name (Name (Man))),
-                                  Optional_Name_Type (Man_Dir.Value));
+                                  Filename_Type (Man_Dir.Value));
                begin
                   Close (Man);
                   Add_To_Manifest (Filename, Aggregate_Only => True);

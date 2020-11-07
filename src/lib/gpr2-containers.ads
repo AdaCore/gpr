@@ -46,6 +46,18 @@ package GPR2.Containers is
 
    Empty_Name_Set : Name_Set renames Name_Type_Set.Empty_Set;
 
+   package Filename_Type_List is
+     new Ada.Containers.Indefinite_Vectors (Positive, Filename_Type);
+
+   subtype Filename_List is Filename_Type_List.Vector;
+
+   package Filename_Type_Set is
+     new Ada.Containers.Indefinite_Ordered_Sets (Filename_Type);
+
+   subtype Filename_Set is Filename_Type_Set.Set;
+
+   Empty_Filename_Set : Filename_Set renames Filename_Type_Set.Empty_Set;
+
    package Value_Type_List is
      new Ada.Containers.Indefinite_Vectors (Positive, Value_Type);
 

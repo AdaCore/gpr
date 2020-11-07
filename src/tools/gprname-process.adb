@@ -152,19 +152,21 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    Context : GPR2.Context.Object;
 
    Project_Path : GPR2.Path_Name.Object := GPR2.Project.Create
-     (Name_Type (Opt.Project_File));
+     (Filename_Type (Opt.Project_File));
 
    From_Scratch : constant Boolean := not Project_Path.Exists;
    --  Indicates that we need to create the project from scratch
 
-   Naming_Project_Basename : constant String := String
-     (Project_Path.Base_Name) & "_naming.gpr";
-   Naming_Project_Path     : constant Path_Name.Object := GPR2.Project.Create
-     (Name_Type (Naming_Project_Basename));
+   Naming_Project_Basename : constant String :=
+                               String (Project_Path.Base_Name) & "_naming.gpr";
+   Naming_Project_Path     : constant Path_Name.Object :=
+                               GPR2.Project.Create
+                                 (Filename_Type (Naming_Project_Basename));
    Naming_Project_Name     : String := String (Naming_Project_Path.Base_Name);
 
-   Source_List_File_Basename : constant String := String
-     (Project_Path.Base_Name) & "_source_list.txt";
+   Source_List_File_Basename : constant String :=
+                                 String (Project_Path.Base_Name)
+                                 & "_source_list.txt";
 
    Compiler_Path : GPR2.Path_Name.Object;
 
@@ -227,7 +229,7 @@ begin
          --  Re-create the object, otherwise the Value field will be wrong
 
          Project_Path := GPR2.Project.Create
-           (Name_Type (Opt.Project_File));
+           (Filename_Type (Opt.Project_File));
 
       exception
          when others =>
@@ -313,7 +315,7 @@ begin
       end if;
 
       Compiler_Path :=
-        Path_Name.Create_File (Name_Type (Driver_Attr.Value.Text));
+        Path_Name.Create_File (Filename_Type (Driver_Attr.Value.Text));
 
       if not Compiler_Path.Exists then
          Put_Line ("warning: invalid compiler path from configuration ("
@@ -321,7 +323,7 @@ begin
 
          if Default_Compiler /= null then
             Compiler_Path := Path_Name.Create_File
-              (Name_Type (Default_Compiler.all));
+              (Filename_Type (Default_Compiler.all));
             Put_Line ("trying default gcc (" & Compiler_Path.Value & ")", Low);
 
          else
@@ -608,8 +610,8 @@ begin
                exit when Last = 0;
 
                File := GPR2.Path_Name.Create_File
-                 (Name_Type (Str (1 .. Last)),
-                  Optional_Name_Type (Project_Path.Dir_Name));
+                 (Filename_Type (Str (1 .. Last)),
+                  Filename_Optional (Project_Path.Dir_Name));
 
                if File.Exists then
                   Match (Bkp_Matcher, Str (1 .. Last), Matches);

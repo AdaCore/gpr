@@ -62,10 +62,6 @@ package body GPR2.Project.Tree is
    Version_Regexp  : constant Regexp.Regexp :=
                       Regexp.Compile (".[0-9]+(.[0-9]+)?");
 
-   function "&" (Left, Right : Optional_Name_Type) return Optional_Name_Type
-   is (GPR2."&" (Left, Right));
-   --  Workaround for strange visibility bug
-
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
      with Post => Register_View'Result.Is_Defined;
@@ -192,7 +188,7 @@ package body GPR2.Project.Tree is
                                 (PRA.Driver, Index)
                               then
                                  String (Path_Name.Create_File
-                                           (Name_Type (View.Pack
+                                           (Filename_Type (View.Pack
                                              (PRP.Compiler).Attribute
                                                (PRA.Driver,
                                                 Index).Value.Text)).Base_Name)
@@ -284,21 +280,18 @@ package body GPR2.Project.Tree is
    begin
       --  Clear the corresponding sources
 
-      --  TODO: Self.Sources should contain a case-sensitive string type
-      --        instead of Name_Type.
-
       if Unit.Spec.Is_Defined then
          Self.Sources.Exclude
-           (Name_Type (Unit.Spec.Value));
+           (Filename_Type (Unit.Spec.Value));
       end if;
 
       if Unit.Main_Body.Is_Defined then
          Self.Sources.Exclude
-           (Name_Type (Unit.Main_Body.Value));
+           (Filename_Type (Unit.Main_Body.Value));
       end if;
 
       for S of Unit.Separates loop
-         Self.Sources.Exclude (Name_Type (S.Value));
+         Self.Sources.Exclude (Filename_Type (S.Value));
       end loop;
    end Clear_View;
 
@@ -382,7 +375,7 @@ package body GPR2.Project.Tree is
          --  and Object_Dir for the Runtime project view.
 
          RTF := Path_Name.Create_File
-           ("runtime.gpr", Directory => Optional_Name_Type (RTD.Value.Text));
+           ("runtime.gpr", Directory => Filename_Optional (RTD.Value.Text));
 
          Add_Attribute (PRA.Source_Dirs, RTD.Value.Text & DS & "adainclude");
          Add_Attribute (PRA.Object_Dir,  RTD.Value.Text & DS & "adalib");
@@ -395,7 +388,7 @@ package body GPR2.Project.Tree is
          Data.Status := Root;
          Data.Kind   := K_Standard;
          Data.Path   := Path_Name.Create_Directory
-                          (Name_Type (RTD.Value.Text));
+                          (Filename_Type (RTD.Value.Text));
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => PRA.Runtime,
@@ -886,14 +879,14 @@ package body GPR2.Project.Tree is
      (Self   : Object;
       Source : Path_Name.Object) return Project.View.Object
    is
-      Filename : constant Name_Type :=
+      Filename : constant Filename_Type :=
                    (if Source.Has_Dir_Name
-                    then Name_Type (Source.Value)
+                    then Filename_Type (Source.Value)
                     else Source.Simple_Name);
-      Pos      : Name_View.Cursor := Self.Sources.Find (Filename);
+      Pos      : Filename_View.Cursor := Self.Sources.Find (Filename);
    begin
-      if Name_View.Has_Element (Pos) then
-         return Name_View.Element (Pos);
+      if Filename_View.Has_Element (Pos) then
+         return Filename_View.Element (Pos);
 
       else
          --  Try to update sources and check again
@@ -901,8 +894,8 @@ package body GPR2.Project.Tree is
          Update_Sources (Self);
          Pos := Self.Sources.Find (Filename);
 
-         if Name_View.Has_Element (Pos) then
-            return Name_View.Element (Pos);
+         if Filename_View.Has_Element (Pos) then
+            return Filename_View.Element (Pos);
          else
             return Project.View.Undefined;
          end if;
@@ -1066,14 +1059,15 @@ package body GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      Config           : PC.Object            := PC.Undefined;
-      Project_Dir      : Path_Name.Object     := Path_Name.Undefined;
-      Build_Path       : Path_Name.Object     := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type   := No_Name;
-      Src_Subdirs      : Optional_Name_Type   := No_Name;
-      Check_Shared_Lib : Boolean              := True;
-      Absent_Dir_Error : Boolean              := False;
-      Implicit_With    : Containers.Name_Set  := Containers.Empty_Name_Set)
+      Config           : PC.Object              := PC.Undefined;
+      Project_Dir      : Path_Name.Object        := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object        := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type      := No_Name;
+      Src_Subdirs      : Optional_Name_Type      := No_Name;
+      Check_Shared_Lib : Boolean                 := True;
+      Absent_Dir_Error : Boolean                 := False;
+      Implicit_With    : Containers.Filename_Set :=
+                           Containers.Empty_Filename_Set)
    is
       procedure Set_Project_Search_Paths;
       --  Set project search path for the tree
@@ -1098,7 +1092,7 @@ package body GPR2.Project.Tree is
          begin
             Self.Search_Paths.Append
               (Path_Name.Create_Directory
-                 (Name_Type
+                 (Filename_Type
                     (Directories.Compose
                        (Directories.Compose
                           (Directories.Compose
@@ -1200,7 +1194,7 @@ package body GPR2.Project.Tree is
 
          if not Build_Path.Is_Defined then
             Self.Build_Path := Path_Name.Create_Directory
-              (Name_Type (Project_Path.Dir_Name));
+              (Filename_Type (Project_Path.Dir_Name));
          end if;
       end if;
 
@@ -1280,8 +1274,9 @@ package body GPR2.Project.Tree is
       Src_Subdirs       : Optional_Name_Type   := No_Name;
       Check_Shared_Lib  : Boolean              := True;
       Absent_Dir_Error  : Boolean              := False;
-      Implicit_With     : Containers.Name_Set  := Containers.Empty_Name_Set;
-      Target            : Optional_Name_Type   := No_Name;
+      Implicit_With     : Containers.Filename_Set :=
+                            Containers.Empty_Filename_Set;
+      Target            : Optional_Name_Type       := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
                            Containers.Name_Value_Map_Package.Empty_Map;
       Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
@@ -1298,7 +1293,7 @@ package body GPR2.Project.Tree is
       --  Add project languages into the Languages container to configure.
       --  Warn about project has no languages.
 
-      function Default_Config_File return Name_Type;
+      function Default_Config_File return Filename_Type;
       --  Returns default config filename
 
       function Runtime
@@ -1360,17 +1355,18 @@ package body GPR2.Project.Tree is
       -- Default_Config_File --
       -------------------------
 
-      function Default_Config_File return Name_Type is
-         Ada_RTS : constant Optional_Name_Type :=
-                     Optional_Name_Type
+      function Default_Config_File return Filename_Type is
+         Ada_RTS : constant Filename_Optional :=
+                     Filename_Optional
                        (Containers.Value_Or_Default
                           (Language_Runtimes, "Ada"));
       begin
          if Target not in No_Name | "all" then
-            return Target & (if Ada_RTS = No_Name then "" else "-" & Ada_RTS)
+            return Filename_Type (Target)
+              & (if Ada_RTS = No_Filename then "" else "-" & Ada_RTS)
               & Config_File_Extension;
 
-         elsif Ada_RTS /= No_Name then
+         elsif Ada_RTS /= No_Filename then
             return Ada_RTS & Config_File_Extension;
 
          else
@@ -1382,7 +1378,7 @@ package body GPR2.Project.Tree is
                if Filename = "" then
                   return Default_Config_Name;
                else
-                  return Name_Type (Filename);
+                  return Filename_Type (Filename);
                end if;
             end;
          end if;
@@ -1465,7 +1461,7 @@ package body GPR2.Project.Tree is
              (Default_Config_File,
               Path_Name.Set.To_Set
                 (Path_Name.Create_Directory
-                   ("share", Name_Type (GNAT_Prefix)).Compose
+                   ("share", Filename_Type (GNAT_Prefix)).Compose
                  ("gpr", Directory => True)));
       end if;
 
@@ -1658,7 +1654,7 @@ package body GPR2.Project.Tree is
       Unit   : Name_Type) is
    begin
       Self.Units.Include (Unit, View);
-      Self.Sources.Include (Name_Type (Source.Value), View);
+      Self.Sources.Include (Filename_Type (Source.Value), View);
       Self.Sources.Include (Source.Simple_Name, View);
    end Record_View;
 
@@ -1752,7 +1748,7 @@ package body GPR2.Project.Tree is
                Data.Path := (if Self.Project_Dir.Is_Defined
                              then Self.Project_Dir
                              else Path_Name.Create_Directory
-                                    (Name_Type (Filename.Dir_Name)));
+                                    (Filename_Type (Filename.Dir_Name)));
 
                case Status is
                   when Extended =>
@@ -2032,8 +2028,8 @@ package body GPR2.Project.Tree is
          for P of PP.Values loop
             Search_Path.Append
               (Path_Name.Create_Directory
-                 (Name_Type (P.Text),
-                  Name_Type (Starting_From.Dir_Name.Value)));
+                 (Filename_Type (P.Text),
+                  Filename_Type (Starting_From.Dir_Name.Value)));
          end loop;
       end if;
 
@@ -2298,7 +2294,7 @@ package body GPR2.Project.Tree is
             for Project of P_Data.Attrs.Element (PRA.Project_Files).Values loop
                declare
                   Pathname : constant Path_Name.Object :=
-                               Create (Name_Type (Project.Text), Paths);
+                               Create (Filename_Type (Project.Text), Paths);
                begin
                   if Pathname = View.Path_Name then
                      --  We are loading recursively the aggregate project

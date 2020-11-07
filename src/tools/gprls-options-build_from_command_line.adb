@@ -88,7 +88,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Handle_List_File (Switch, Value : String) is
       pragma Unreferenced (Switch);
    begin
-      Self.List_File := Path_Name.Create_File (Name_Type (Value));
+      Self.List_File := Path_Name.Create_File (Filename_Type (Value));
    end Handle_List_File;
 
    ----------------------------
