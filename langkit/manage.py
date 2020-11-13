@@ -31,6 +31,7 @@ class Manage(ManageScript):
                           default_charset='iso-8859-1',
                           verbosity=args.verbosity)
 
+
 ada_header = """
 ------------------------------------------------------------------------------
 --                                                                          --
@@ -93,8 +94,7 @@ if __name__ == '__main__':
     m = Manage()
     m.run()
 
-    gpr_parser_files = os.path.join(
-        m.dirs.root_build_dir, 'include', 'gpr_parser')
+    gpr_parser_files = os.path.join(m.dirs.root_build_dir, 'src')
 
     for filename in listdir(gpr_parser_files):
         extension = os.path.splitext(filename)[1]

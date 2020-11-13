@@ -27,19 +27,11 @@ CURRENT_DIR := $(patsubst %/,%,$(dir $(MKFILE_PATH)))
 
 DEST := "build"
 
-GENERATE_LANGKIT_SUPPORT = no
-
-ifeq ($(GENERATE_LANGKIT_SUPPORT), no)
-MANAGE_ARGS=--no-langkit-support
-else
-MANAGE_ARGS=
-endif
-
 PYTHONEXE=python
 
 setup:
 	mkdir -p ${DEST}
-	$(PYTHONEXE) manage.py --build-dir=${DEST} $(MANAGE_ARGS) generate \
+	$(PYTHONEXE) manage.py generate --build-dir=${DEST} \
 		--generate-unparser --disable-warning undocumented-nodes
 
 clean:
