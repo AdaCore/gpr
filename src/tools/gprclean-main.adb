@@ -555,16 +555,18 @@ procedure GPRclean.Main is
                Delete_File (Name, Success);
             end if;
 
-            if Opts.Verbosity > Quiet then
-               if Success then
+            if Success then
+               if Opts.Verbosity > Regular then
                   Text_IO.Put_Line ('"' & Name & """ has been deleted");
-               else
-                  Text_IO.Put_Line
-                    ("Warning: """ & Name & """ could not be deleted");
                end if;
+
+            elsif Opts.Verbosity > Quiet then
+               Text_IO.Put_Line
+                 ("Warning: """ & Name & """ could not be deleted");
             end if;
          end if;
-      elsif Opts.Verbosity >= Verbose then
+
+      elsif Opts.Verbosity > Regular then
          Text_IO.Put_Line ('"' & Name & """ absent");
       end if;
    end Delete_File;
