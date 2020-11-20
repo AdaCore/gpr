@@ -34,7 +34,6 @@ with open("%s/p%d.adb" % (src_dir, PN), "w+") as f:
 subprocess.call(["gprbuild", "-p", "-q"])
 
 EXEC = "obj/check_mem"
-first_high = False
 first_final = False
 
 #  Run driver 2 times
@@ -52,3 +51,6 @@ for r in range(0, 2):
                         print(first_final + line)
                 else:
                     first_final = line
+
+            elif line.find("GNATMEM dump file corrupt") >= 0:
+                print(line)
