@@ -647,10 +647,12 @@ package body GPR2.Project.Tree is
       Context_View : Project.View.Object;
       Status       : Relation_Status) return Project.View.Object
    is
-      Key : constant Name_Type := Name_Type (Path_Name.Value);
+      Position : constant View_Maps.Cursor :=
+                   Tree.Views.Find
+                     (GPR2.Path_Name.To_OS_Case (Path_Name.Value));
    begin
-      if Tree.Views.Contains (Key) then
-         for V of Tree.Views (Key) loop
+      if View_Maps.Has_Element (Position) then
+         for V of View_Maps.Element (Position) loop
             declare
                Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
             begin
@@ -671,10 +673,13 @@ package body GPR2.Project.Tree is
    function Get
      (Tree         : Project.Tree.Object;
       Name         : Name_Type;
-      Context_View : Project.View.Object) return Project.View.Object is
+      Context_View : Project.View.Object) return Project.View.Object
+   is
+      Position : constant View_Maps.Cursor :=
+                   Tree.Views.Find (To_Lower (Name));
    begin
-      if Tree.Views.Contains (Name) then
-         for V of Tree.Views.Constant_Reference (Name) loop
+      if View_Maps.Has_Element (Position) then
+         for V of View_Maps.Element (Position) loop
             declare
                Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
             begin
@@ -2108,19 +2113,16 @@ package body GPR2.Project.Tree is
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
    is
-      Name      : constant Name_Type := Def.Trees.Project.Name;
-      Path_Name : constant Name_Type :=
-                    Name_Type (Def.Trees.Project.Path_Name.Value);
-      View      : Project.View.Object;
+      View : Project.View.Object;
 
-      procedure Add_View (Key : Name_Type);
+      procedure Add_View (Key : Value_Not_Empty);
       --  Add view to the Def.Tree.Views with the Key index
 
       --------------
       -- Add_View --
       --------------
 
-      procedure Add_View (Key : Name_Type) is
+      procedure Add_View (Key : Value_Not_Empty) is
          Position : View_Maps.Cursor;
          Inserted : Boolean;
       begin
@@ -2142,11 +2144,11 @@ package body GPR2.Project.Tree is
 
       pragma Assert (Definition.Refcount (View) = 2);
 
-      Add_View (Path_Name);
+      Add_View (Path_Name.To_OS_Case (View.Path_Name.Value));
 
       pragma Assert (Definition.Refcount (View) = 3);
 
-      Add_View (Name);
+      Add_View (To_Lower (View.Name));
 
       pragma Assert (Definition.Refcount (View) = 4);
 

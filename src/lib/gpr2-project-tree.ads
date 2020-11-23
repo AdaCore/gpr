@@ -428,7 +428,7 @@ private
    --  Map to find in which view a unit/source is defined
 
    package View_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, View.Set.Object, "=" => View.Set."=");
+     (Value_Not_Empty, View.Set.Object, "=" => View.Set."=");
 
    function Key
      (View : Project.View.Object; Source : Simple_Name) return String
