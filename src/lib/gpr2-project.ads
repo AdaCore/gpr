@@ -117,7 +117,7 @@ private
 
    type Relation_Status is (Root, Imported, Extended, Aggregated);
 
-   type Definition_Base (Has_Context : Boolean) is abstract tagged record
+   type Definition_Base is abstract tagged record
       Id                : Natural := 0;
       Path              : Path_Name.Object;
       Externals         : Containers.Name_List;
@@ -128,14 +128,6 @@ private
       Kind              : Project_Kind;
       Sources_Signature : Context.Binary_Signature :=
                             Context.Default_Signature;
-
-      case Has_Context is
-         when True =>
-            Context   : GPR2.Context.Object; -- root context
-            A_Context : GPR2.Context.Object; -- aggregate context
-         when False =>
-            null;
-      end case;
    end record;
 
    package Definition_References is new GNATCOLL.Refcount.Shared_Pointers

@@ -49,6 +49,8 @@ private with Ada.Containers.Vectors;
 
 package GPR2.Project.Tree is
 
+   use GPR2.Context;
+
    use type GPR2.Context.Object;
    use type GPR2.Project.View.Object;
 
@@ -170,24 +172,22 @@ package GPR2.Project.Tree is
    --  if no specific runtime has been configured for this project tree.
 
    function Has_View_For
-     (Self         : Object;
-      Name         : Name_Type;
-      Context_View : View.Object) return Boolean;
-   --  Returns True if the project Name is found on the tree (see below)
+     (Self    : Object;
+      Name    : Name_Type;
+      Context : Context_Kind) return Boolean;
+   --  Returns True if the project Name is found on the tree (see below).
+   --  Context paramter defines where the view going to be looked up in the
+   --  root or in the aggregate context.
 
    function View_For
-     (Self         : Object;
-      Name         : Name_Type;
-      Context_View : View.Object) return View.Object
-     with Pre => Self.Is_Defined
-                 and then Self.Has_View_For (Name, Context_View);
+     (Self    : Object;
+      Name    : Name_Type;
+      Context : Context_Kind) return View.Object
+     with Pre => Self.Is_Defined and then Self.Has_View_For (Name, Context);
    --  Returns the project's view in the tree which corresponds to project name
-   --  and that is matching the context. The context is needed as in the tree
-   --  the same project can have different views with different context (e.g.
-   --  under an aggregate project which is redefining some external variables).
-   --  Given the context we are not sure of the uniqueness of the view, but
-   --  this doesn't matter as all views of the same project with the same
-   --  context will have the exact same definition.
+   --  and that is matching the Aggregated context.
+   --  Context paramter defines is the view going to be taken from the root
+   --  context or from the aggregate context.
 
    function Has_Messages (Self : Object) return Boolean;
    --  Returns whether some messages are present for this project tree
@@ -454,6 +454,9 @@ private
    package Source_Keys is new Source_Set.Generic_Keys
      (String, Key, Ada.Strings.Hash, "=");
 
+   type Two_Contexts is array (Context_Kind) of GPR2.Context.Object;
+   --  Root and Aggregate contexts
+
    type Object is tagged limited record
       Self             : access Object := null;
       Root             : View.Object;
@@ -474,6 +477,7 @@ private
       Absent_Dir_Error : Boolean := False;
       Views            : aliased View_Maps.Map;
       Views_Set        : View.Set.Object; -- All projects in registration order
+      Context          : Two_Contexts;    -- Root and aggregate contexts
    end record;
 
    function "=" (Left, Right : Object) return Boolean

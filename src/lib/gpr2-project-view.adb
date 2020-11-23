@@ -439,57 +439,13 @@ package body GPR2.Project.View is
    -------------
 
    function Context (Self : Object) return GPR2.Context.Object is
-
-      function Recursive_Context (Self : Object) return GPR2.Context.Object;
-      --  Recursively get the context for the view. This properly handle
-      --  the context given by an aggregate project through the External
-      --  attribute.
-
-      -----------------------
-      -- Recursive_Context --
-      -----------------------
-
-      function Recursive_Context (Self : Object) return GPR2.Context.Object is
-
-         Data    : constant Definition.Const_Ref := Definition.Get_RO (Self);
-         Context : constant Object := Strong (Data.Context_View);
-
-         function Root_Context return GPR2.Context.Object;
-         --  Returns the constext of the root project
-
-         ------------------
-         -- Root_Context --
-         ------------------
-
-         function Root_Context return GPR2.Context.Object is
-            R_Data : constant Definition.Const_Ref :=
-                       Definition.Get_RO (Data.Tree.Root_Project);
-         begin
-            return R_Data.Context;
-         end Root_Context;
-
-      begin
-         if not Context.Is_Defined then
-            --  Let's return the Root_Project context and possibly the
-            --  aggregate context if any.
-
-            return Ctx : GPR2.Context.Object := Root_Context do
-               if Data.Trees.Project.Qualifier in Aggregate_Kind then
-                  for C in Data.A_Context.Iterate loop
-                     Ctx.Include
-                       (GPR2.Context.Key_Value.Key (C),
-                        GPR2.Context.Key_Value.Element (C));
-                  end loop;
-               end if;
-            end return;
-
-         else
-            return Recursive_Context (Context);
-         end if;
-      end Recursive_Context;
-
    begin
-      return Recursive_Context (Self);
+      return Definition.Get_Context (Self);
+   end Context;
+
+   function Context (Self : Object) return Context_Kind is
+   begin
+      return Definition.Get_RO (Self).Context;
    end Context;
 
    --------------------------
@@ -552,6 +508,15 @@ package body GPR2.Project.View is
       return Definition.Strong (Definition.Get_RO (Self).Extending);
    end Extending;
 
+   ---------------------------
+   -- Has_Aggregate_Context --
+   ---------------------------
+
+   function Has_Aggregate_Context (Self : Object) return Boolean is
+   begin
+      return Definition.Get_RO (Self).Context = Aggregate;
+   end Has_Aggregate_Context;
+
    --------------------
    -- Has_Attributes --
    --------------------
@@ -583,53 +548,8 @@ package body GPR2.Project.View is
    -----------------
 
    function Has_Context (Self : Object) return Boolean is
-
-      function Recursive_Has_Context (Self : Object) return Boolean;
-      --  Recursively get the context for the view. This properly handle
-      --  the context given by an aggregate project through the External
-      --  attribute.
-
-      -----------------------
-      -- Recursive_Context --
-      -----------------------
-
-      function Recursive_Has_Context (Self : Object) return Boolean is
-
-         Data    : constant Definition.Const_Ref := Definition.Get_RO (Self);
-         Context : constant Object := Strong (Data.Context_View);
-
-         function Root_Has_Context return Boolean;
-         --  Returns wether the root project has a context
-
-         ------------------
-         -- Root_Context --
-         ------------------
-
-         function Root_Has_Context return Boolean is
-            R_Data : constant Definition.Const_Ref :=
-                       Definition.Get_RO (Data.Tree.Root_Project);
-         begin
-            return not R_Data.Context.Is_Empty;
-         end Root_Has_Context;
-
-      begin
-         if not Context.Is_Defined then
-            --  Let's return the Root_Project context and possibly the
-            --  aggregate context if any.
-
-            return Result : Boolean := Root_Has_Context do
-               if Data.Trees.Project.Qualifier in Aggregate_Kind then
-                  Result := Result or else not Data.A_Context.Is_Empty;
-               end if;
-            end return;
-
-         else
-            return Recursive_Has_Context (Context);
-         end if;
-      end Recursive_Has_Context;
-
    begin
-      return Recursive_Has_Context (Self);
+      return not Definition.Get_Context (Self).Is_Empty;
    end Has_Context;
 
    -----------------

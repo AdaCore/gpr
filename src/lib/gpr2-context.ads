@@ -42,6 +42,8 @@ package GPR2.Context is
 
    Empty : constant Object;
 
+   type Context_Kind is (Root, Aggregate);
+
    subtype Binary_Signature is MD5.Binary_Message_Digest;
 
    Default_Signature : constant Binary_Signature;

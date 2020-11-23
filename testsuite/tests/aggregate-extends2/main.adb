@@ -120,8 +120,6 @@ procedure Main is
    Ctx : Context.Object;
 
 begin
-   Ctx.Include ("KVAL", "one");
-
    Project.Tree.Load (Prj, Create ("agg.gpr"), Ctx);
 
    for P of Prj loop

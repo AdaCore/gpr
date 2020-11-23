@@ -86,6 +86,12 @@ package body GPR2.Project.Tree is
    --  Return True if source with such filename found in project namespace
    --  subtree.
 
+   function Get_Context
+     (View : Project.View.Object) return GPR2.Context.Object
+   is
+     (View.Tree.Context (View.Context));
+   --  Returns context of the project view
+
    procedure Set_Source
      (Self : in out Object; Source : Project.Source.Object);
    --  Insert source into internal Tree container indexed by Root of subtree
@@ -107,7 +113,6 @@ package body GPR2.Project.Tree is
    function Recursive_Load
      (Self          : Object;
       Filename      : Path_Name.Object;
-      Context_View  : View.Object;
       Status        : Relation_Status;
       Root_Context  : out GPR2.Context.Object;
       Messages      : out Log.Object;
@@ -126,20 +131,22 @@ package body GPR2.Project.Tree is
    --  Create the runtime view given the configuration project
 
    function Get
-     (Tree         : Project.Tree.Object;
-      Path_Name    : GPR2.Path_Name.Object;
-      Context_View : Project.View.Object;
-      Status       : Relation_Status) return Project.View.Object;
-   --  Returns the project view corresponding to Path_Name, Status and
-   --  Context_View in the given Tree or Undefined if this project is not
-   --  yet registered.
+     (Tree      : Project.Tree.Object;
+      Path_Name : GPR2.Path_Name.Object;
+      Context   : Context_Kind;
+      Status    : Relation_Status) return Project.View.Object;
+   --  Returns the project view corresponding to Path_Name and Status.
+   --  If Aggregated is True then the view should be taken from aggregated
+   --  subtree.
+   --  Returns Undefined if project view is not found.
 
    function Get
-     (Tree         : Project.Tree.Object;
-      Name         : Name_Type;
-      Context_View : Project.View.Object) return Project.View.Object;
-   --  Returns the project view corresponding to Name and Context in the given
-   --  Tree or Undefined if this project is not yet registered.
+     (Tree    : Project.Tree.Object;
+      Name    : Name_Type;
+      Context : Context_Kind) return Project.View.Object;
+   --  Returns the project view corresponding to Name.
+   --  If Aggregated is True then view should be taken from aggregated subtree.
+   --  Returns Undefined if project view is not found.
 
    procedure Fill_Externals_From_Environment
      (Context   : in out GPR2.Context.Object;
@@ -378,7 +385,7 @@ package body GPR2.Project.Tree is
    function Create_Runtime_View (Self : Object) return View.Object is
       CV   : constant View.Object := Self.Conf.Corresponding_View;
       DS   : Character renames OS_Lib.Directory_Separator;
-      Data : Project.Definition.Data (Has_Context => False);
+      Data : Project.Definition.Data;
       RTD  : Attribute.Object;
       RTF  : Path_Name.Object;
 
@@ -642,10 +649,10 @@ package body GPR2.Project.Tree is
    ---------
 
    function Get
-     (Tree         : Project.Tree.Object;
-      Path_Name    : GPR2.Path_Name.Object;
-      Context_View : Project.View.Object;
-      Status       : Relation_Status) return Project.View.Object
+     (Tree      : Project.Tree.Object;
+      Path_Name : GPR2.Path_Name.Object;
+      Context   : Context_Kind;
+      Status    : Relation_Status) return Project.View.Object
    is
       Position : constant View_Maps.Cursor :=
                    Tree.Views.Find
@@ -658,8 +665,9 @@ package body GPR2.Project.Tree is
             begin
                pragma Assert (Defs.Tree.all = Tree);
 
-               if Definition.Strong (Defs.Context_View) = Context_View
-                 and then (Defs.Status = Status or else Status /= Aggregated)
+               if Defs.Context = Context
+                 and then (Defs.Status = Status
+                           or else Status /= Project.Aggregated)
                then
                   return V;
                end if;
@@ -671,9 +679,9 @@ package body GPR2.Project.Tree is
    end Get;
 
    function Get
-     (Tree         : Project.Tree.Object;
-      Name         : Name_Type;
-      Context_View : Project.View.Object) return Project.View.Object
+     (Tree    : Project.Tree.Object;
+      Name    : Name_Type;
+      Context : Context_Kind) return Project.View.Object
    is
       Position : constant View_Maps.Cursor :=
                    Tree.Views.Find (To_Lower (Name));
@@ -685,7 +693,7 @@ package body GPR2.Project.Tree is
             begin
                pragma Assert (Defs.Tree.all = Tree);
 
-               if Definition.Strong (Defs.Context_View) = Context_View then
+               if Defs.Context = Context then
                   return V;
                end if;
             end;
@@ -1023,11 +1031,11 @@ package body GPR2.Project.Tree is
    ------------------
 
    function Has_View_For
-     (Self         : Object;
-      Name         : Name_Type;
-      Context_View : View.Object) return Boolean
+     (Self    : Object;
+      Name    : Name_Type;
+      Context : Context_Kind) return Boolean
    is
-      View : constant Project.View.Object := Self.Get (Name, Context_View);
+      View : constant Project.View.Object := Self.Get (Name, Context);
    begin
       if not View.Is_Defined then
          declare
@@ -1257,8 +1265,7 @@ package body GPR2.Project.Tree is
       end loop;
 
       Self.Root := Recursive_Load
-        (Self, Project_Path, View.Undefined, Root, Root_Context, Self.Messages,
-         Circularities);
+        (Self, Project_Path, Root, Root_Context, Self.Messages, Circularities);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -1713,7 +1720,6 @@ package body GPR2.Project.Tree is
    function Recursive_Load
      (Self          : Object;
       Filename      : Path_Name.Object;
-      Context_View  : View.Object;
       Status        : Relation_Status;
       Root_Context  : out GPR2.Context.Object;
       Messages      : out Log.Object;
@@ -1779,7 +1785,11 @@ package body GPR2.Project.Tree is
          Parent   : View.Object) return View.Object
       is
          View : Project.View.Object :=
-                  Self.Get (Filename, Context_View, Status);
+                  Self.Get
+                    (Filename,
+                     Context => (if Recursive_Load.Status = Aggregated
+                                 then Aggregate else Root),
+                     Status  => Status);
       begin
          if not View.Is_Defined then
             declare
@@ -1811,18 +1821,12 @@ package body GPR2.Project.Tree is
 
                Fill_Externals_From_Environment (Root_Context, Data.Externals);
 
-               --  If we have the root project, record the global context
-
-               if Data.Has_Context and then Status = Root then
-                  --  This is the root-view, assign the corresponding context
-                  Data.Context := Root_Context;
-               end if;
-
                --  Create the view, needed to be able to reference it if it is
                --  an aggregate project as it becomes the new Context_View.
 
-               Data.Context_View := Definition.Weak (Context_View);
-               Data.Status       := Status;
+               Data.Status  := Status;
+               Data.Context := (if Recursive_Load.Status = Aggregated
+                                then Aggregate else Root);
 
                View := Register_View (Data);
             end;
@@ -2027,12 +2031,7 @@ package body GPR2.Project.Tree is
          Project : constant Parser.Project.Object :=
                      Parser.Project.Parse
                        (Filename, Self.Implicit_With, Messages);
-         Data    : Definition.Data
-                     (Has_Context =>
-                        Project.Is_Defined
-                          and then
-                        (not Context_View.Is_Defined
-                         or else Project.Qualifier in Aggregate_Kind));
+         Data    : Definition.Data;
       begin
          Data.Trees.Project := Project;
 
@@ -2217,11 +2216,12 @@ package body GPR2.Project.Tree is
    begin
       --  Register the root context for this project tree
 
-      Root.Context := Context;
+      Self.Context (GPR2.Context.Root) := Context;
 
       --  Take missing external values from environment
 
-      Fill_Externals_From_Environment (Root.Context, Root.Externals);
+      Fill_Externals_From_Environment
+        (Self.Context (GPR2.Context.Root), Root.Externals);
 
       Set_Context (Self, Changed);
 
@@ -2254,7 +2254,6 @@ package body GPR2.Project.Tree is
      (Self    : in out Object;
       Changed : access procedure (Project : View.Object) := null)
    is
-      Root : constant Definition.Ref := Definition.Get_RW (Self.Root);
 
       procedure Set_View
         (View           : Project.View.Object;
@@ -2280,9 +2279,7 @@ package body GPR2.Project.Tree is
          P_Data        : constant Definition.Ref := Definition.Get (View);
          Old_Signature : constant GPR2.Context.Binary_Signature :=
                            P_Data.Signature;
-         New_Signature : constant GPR2.Context.Binary_Signature :=
-                           Root.Context.Signature (P_Data.Externals);
-         Context       : constant GPR2.Context.Object := View.Context;
+         New_Signature : GPR2.Context.Binary_Signature;
          Paths         : Path_Name.Set.Object;
          Tmp_Attr      : Project.Attribute.Object;
 
@@ -2290,30 +2287,12 @@ package body GPR2.Project.Tree is
          Parser.Project.Process
            (P_Data.Trees.Project,
             Self,
-            Context,
+            View.Context,
             View,
             P_Data.Attrs,
             P_Data.Vars,
             P_Data.Packs,
             P_Data.Types);
-
-         --  If an aggregate project and an attribute external is defined then
-         --  remove the dependency on the corresponding externals.
-
-         if View.Qualifier = K_Aggregate then
-            for C in P_Data.Attrs.Iterate (Name => PRA.External) loop
-               declare
-                  E : constant Name_Type :=
-                        Name_Type (P_Data.Attrs (C).Index.Text);
-                  P : Containers.Name_Type_List.Cursor :=
-                        P_Data.Externals.Find (E);
-               begin
-                  if Containers.Name_Type_List.Has_Element (P) then
-                     P_Data.Externals.Delete (P);
-                  end if;
-               end;
-            end loop;
-         end if;
 
          if View.Qualifier not in Aggregate_Kind then
             if P_Data.Attrs.Contains (PRA.Project_Files) then
@@ -2322,10 +2301,13 @@ package body GPR2.Project.Tree is
                     (Message.Error,
                      """project_files"" is only valid in aggregate projects",
                      P_Data.Attrs.Element (PRA.Project_Files)));
+            else
+               New_Signature := View.Context.Signature (P_Data.Externals);
             end if;
 
          elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
             --  Aggregate project can't have Project_Files attribute
+
             Self.Messages.Append
               (Message.Create
                  (Message.Error,
@@ -2334,6 +2316,21 @@ package body GPR2.Project.Tree is
                   Source_Reference.Create (View.Path_Name.Value, 0, 0)));
 
          else
+            --  If an aggregate project and an attribute external is defined
+            --  then remove the dependency on the corresponding externals.
+
+            for C in P_Data.Attrs.Iterate (Name => PRA.External) loop
+               declare
+                  P : Containers.Name_Type_List.Cursor :=
+                        P_Data.Externals.Find
+                          (Name_Type (P_Data.Attrs (C).Index.Text));
+               begin
+                  if Containers.Name_Type_List.Has_Element (P) then
+                     P_Data.Externals.Delete (P);
+                  end if;
+               end;
+            end loop;
+
             --  Now we can record the aggregated projects based on the possibly
             --  new Project_Files attribute value. This attribute may be set
             --  depending on the parsing of the imported projects.
@@ -2383,7 +2380,6 @@ package body GPR2.Project.Tree is
                                           Recursive_Load
                                             (Self          => Self,
                                              Filename      => Pathname,
-                                             Context_View  => View,
                                              Status        => Aggregated,
                                              Root_Context  => Ctx,
                                              Messages      => Messages,
@@ -2435,28 +2431,39 @@ package body GPR2.Project.Tree is
                end;
             end loop;
 
-            --  And finaly also record the External definition if any into
-            --  the aggregate project context.
+            if P_Data.Status = Root then
+               --  And finaly also record the External definition if any into
+               --  the aggregate project context.
 
-            for C in P_Data.Attrs.Iterate (PRA.External) loop
-               declare
-                  use all type PRA.Value_Kind;
+               Self.Context (Aggregate) := Self.Context (GPR2.Context.Root);
 
-                  External : constant Attribute.Object := P_Data.Attrs (C);
-               begin
-                  --  Check for the validity of the external attribute here
-                  --  as the validity check will come after it is fully
-                  --  loaded/resolved.
-                  if External.Kind = Single then
-                     P_Data.A_Context.Include
-                       (Name_Type (External.Index.Text), External.Value.Text);
-                  end if;
-               end;
-            end loop;
+               for C in P_Data.Attrs.Iterate (PRA.External) loop
+                  declare
+                     use all type PRA.Value_Kind;
+
+                     External : constant Attribute.Object := P_Data.Attrs (C);
+                     Position : GPR2.Context.Key_Value.Cursor;
+                     Inserted : Boolean;
+                  begin
+                     --  Check for the validity of the external attribute here
+                     --  as the validity check will come after it is fully
+                     --  loaded/resolved.
+
+                     if External.Kind = Single then
+                        Self.Context (Aggregate).Insert
+                          (Name_Type (External.Index.Text),
+                           External.Value.Text,
+                           Position, Inserted);
+                     end if;
+                  end;
+               end loop;
+            end if;
+
+            New_Signature := View.Context.Signature (P_Data.Externals);
          end if;
 
-         if not (Has_Error
-                 or else P_Data.Kind in K_Abstract | K_Configuration)
+         if not Has_Error
+           and then P_Data.Kind not in K_Abstract | K_Configuration
          then
             P_Data.Signature := New_Signature;
 
@@ -2489,19 +2496,17 @@ package body GPR2.Project.Tree is
                  and then Tmp_Attr.Value.Text /= ""
                  and then View.Check_Attribute (PRA.Library_Dir,
                                                 Result    => Tmp_Attr)
+                 and then Tmp_Attr.Value.Text /= ""
                then
                   P_Data.Kind := K_Library;
                end if;
             end if;
 
-            --  Signal project change only if we have different and non default
-            --  signature. That is if there is at least some external used
-            --  otherwise the project is stable and won't change.
+            --  Signal project change if we have different signature.
+            --  That is if there is at least some external used otherwise the
+            --  project is stable and won't change.
 
-            if Old_Signature /= New_Signature
-              and then P_Data.Signature /= GPR2.Context.Default_Signature
-              and then Changed /= null
-            then
+            if Changed /= null and then Old_Signature /= New_Signature then
                Changed (View);
             end if;
          end if;
@@ -3081,11 +3086,11 @@ package body GPR2.Project.Tree is
    --------------
 
    function View_For
-     (Self         : Object;
-      Name         : Name_Type;
-      Context_View : View.Object) return View.Object
+     (Self    : Object;
+      Name    : Name_Type;
+      Context : Context_Kind) return View.Object
    is
-      View : Project.View.Object := Self.Get (Name, Context_View);
+      View : Project.View.Object := Self.Get (Name, Context);
    begin
       if not View.Is_Defined then
          declare
@@ -3119,4 +3124,5 @@ begin
    Definition.Check_Source := Check_Source'Access;
    Definition.Has_Source   := Has_Source'Access;
    Definition.Set_Source   := Set_Source'Access;
+   Definition.Get_Context  := Get_Context'Access;
 end GPR2.Project.Tree;

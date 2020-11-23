@@ -83,9 +83,7 @@ begin
    end loop;
 
    Text_IO.Put_Line ("//// OS set to Windows");
-   Ctx := Prj.Context;
-   Ctx.Include ("OS", "Windows");
-   Prj.Set_Context (Ctx, Changed_Callback'Access);
+   Prj.Set_Context (Context.Empty, Changed_Callback'Access);
 
    for P of Prj loop
       Display (P);

@@ -65,7 +65,7 @@ package body GPR2.Project.Configuration is
      (Self : in out Object;
       Tree : not null access Project.Tree.Object)
    is
-      Data : Definition.Data (Has_Context => False);
+      Data : Definition.Data;
    begin
       Data.Trees.Project := Self.Project;
       Data.Status        := Root;

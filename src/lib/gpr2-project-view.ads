@@ -46,6 +46,8 @@ limited with GPR2.Project.View.Set;
 
 package GPR2.Project.View is
 
+   use GPR2.Context;
+
    use type Context.Object;
    use type Pack.Object;
 
@@ -160,6 +162,13 @@ package GPR2.Project.View is
      with Pre  => Self.Is_Defined,
           Post => Self.Has_Context = (Context'Result /= GPR2.Context.Empty);
    --  Returns the Context for the given project tree
+
+   function Context (Self : Object) return Context_Kind
+     with Pre  => Self.Is_Defined;
+
+   function Has_Aggregate_Context (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if Self context is from aggregated subtree
 
    --  Attributes
 

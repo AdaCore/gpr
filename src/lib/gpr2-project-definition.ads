@@ -74,9 +74,7 @@ private package GPR2.Project.Definition is
    --  projects have a context. All other projects are referencing a project
    --  which own a context.
 
-   type Data (Has_Context : Boolean) is
-     new Definition_Base (Has_Context)
-   with record
+   type Data is new Definition_Base with record
       Trees        : Tree;
 
       --  Actual values for the view
@@ -101,27 +99,14 @@ private package GPR2.Project.Definition is
 
       --  Some general information
 
-      Context_View : Weak_Reference;
-      --  The context view is the view that has context for this project. That
-      --  is, Context_View will always point to a view with a context, either
-      --  the Undefined view (means root project) which contains the context
-      --  from the running environment or an aggregate project which has
-      --  a context from the External attribute. Undefined is used for the
-      --  root view to differentiate a root context from a root and aggregate
-      --  project.
+      Context : GPR2.Context.Context_Kind := GPR2.Context.Root;
+      --  Use the aggregate context including External attributes or only the
+      --  root context.
 
       Tree : access Project.Tree.Object;
       --  The project tree for this view
 
-   end record
-     with Dynamic_Predicate =>
-            --  Only a root-aggregate project can have a context defined via
-            --  the External attribute.
-            not Data.Has_Context
-            or else (not Strong (Data.Context_View).Is_Defined
-                     and then Data.Status = Root)
-            or else Data.A_Context.Is_Empty
-            or else Data.Kind in Aggregate_Kind;
+   end record;
 
    type Ref is access all Data;
 
@@ -153,6 +138,10 @@ private package GPR2.Project.Definition is
      (Tree : in out Project.Tree.Object; Source : Project.Source.Object);
    --  Insert source into internal Tree container indexed by Root of subtree
    --  project name and simple source filename.
+
+   Get_Context : access function
+     (View : Project.View.Object) return Context.Object;
+   --  Returns context of the project view
 
    --------------------------------------------------------------
    -- Private routines exported from GPR2.Project.View package --
