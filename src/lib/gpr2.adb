@@ -89,6 +89,21 @@ package body GPR2 is
       end if;
    end Get_Tools_Directory;
 
+   -----------------
+   -- Parent_Name --
+   -----------------
+
+   function Parent_Name (Name : Name_Type) return Optional_Name_Type is
+   begin
+      for J in reverse Name'Range loop
+         if Name (J) = '.'  then
+            return Name (Name'First .. J - 1);
+         end if;
+      end loop;
+
+      return No_Name;
+   end Parent_Name;
+
    -----------
    -- Quote --
    -----------

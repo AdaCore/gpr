@@ -164,6 +164,10 @@ package GPR2 is
    function Has_Directory_Separator (Name : String) return Boolean;
    --  Returns True if Name contains directory separator character
 
+   function Parent_Name (Name : Name_Type) return Optional_Name_Type;
+   --  Returns name prefix before last dot.
+   --  Returns No_Name if there is not dot in the name.
+
 private
 
    use Ada;

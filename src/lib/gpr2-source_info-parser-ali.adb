@@ -478,7 +478,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      Main          => None,       -- No way to know from ALI
                      Dependencies  =>
                        Source_Reference.Identifier.Set.Empty_Set,
-                     Sep_From      => CUs (1).Name,
+                     Sep_From      => Parent_Name (Name_Type (Name)),
                      Flags         => Default_Flags),
                   Dependency_Maps.Empty_Map, Chksum, Stamp);
 
