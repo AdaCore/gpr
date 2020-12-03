@@ -1045,7 +1045,10 @@ package body GPR2.Compilation.Registry is
         (S.Channel,
          Project.Path_Name.Value,
          Filter_String (CWD, Sep => ""),
-         String (Language), Options, Obj_Name, Dep_Name, Env,
+         String (Language),
+         String (Tree.Target),
+         String (Tree.Runtime (Language)),
+         Options, Obj_Name, Dep_Name, Env,
          Filter_String'Access);
 
       Remote_Process.Increment;

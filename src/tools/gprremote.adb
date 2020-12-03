@@ -161,6 +161,8 @@ procedure GPRremote is
          Project_Name,
          ".",
          Language => "",
+         Target   => "",
+         Runtime  => "",
          Options  => Options,
          Obj_Name => "",
          Dep_Name => "",

@@ -154,6 +154,8 @@ package GPR2.Compilation.Protocol is
       Project  : String;
       Dir      : String;
       Language : String;
+      Target   : String;
+      Runtime  : String;
       Options  : Containers.Value_List;
       Obj_Name : Name_Type;
       Dep_Name : String;
