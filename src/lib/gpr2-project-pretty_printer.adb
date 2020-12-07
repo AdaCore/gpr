@@ -229,14 +229,18 @@ package body GPR2.Project.Pretty_Printer is
 
             when GPR_Project_Qualifier_Abstract =>
                Write_Token ("abstract", Indent);
+
             when GPR_Project_Qualifier_Library =>
                Write_Token ("library", Indent);
+
             when GPR_Project_Qualifier_Aggregate =>
                Write_Token ("aggregate", Indent);
+
             when GPR_Project_Qualifier_Aggregate_Library =>
                Write_Token ("aggregate", Indent);
                Write_Token (" ", Indent);
                Write_Token ("library", Indent);
+
             when GPR_Project_Qualifier_Configuration =>
                Write_Token ("configuration", Indent);
 

@@ -541,8 +541,7 @@ package body GPR2.Parser.Project is
             procedure Parse_External_As_List_Reference
               (N : Builtin_Function_Call)
             is
-               Exprs : constant Term_List_List :=
-                 F_Terms (F_Parameters (N));
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                --  Note that this routine is only validating the syntax
                --  of the external_as_list built-in. It does not add the
@@ -645,8 +644,7 @@ package body GPR2.Parser.Project is
             procedure Parse_External_Reference
               (N : Builtin_Function_Call)
             is
-               Exprs : constant Term_List_List :=
-                 F_Terms (F_Parameters (N));
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                if Exprs.Is_Null then
                   Messages.Append
@@ -700,8 +698,7 @@ package body GPR2.Parser.Project is
             ---------------------------
 
             procedure Parse_Split_Reference (N : Builtin_Function_Call) is
-               Exprs : constant Term_List_List :=
-                 F_Terms (F_Parameters (N));
+               Exprs : constant Term_List_List := F_Terms (F_Parameters (N));
             begin
                --  Note that this routine is only validating the syntax
                --  of the split built-in.
@@ -844,14 +841,18 @@ package body GPR2.Parser.Project is
             if Present (Qual) then
                Project.Qualifier :=
                  (case Kind (Qual) is
-                    when GPR_Project_Qualifier_Abstract => K_Abstract,
-                    when GPR_Project_Qualifier_Library => K_Library,
-                    when GPR_Project_Qualifier_Aggregate => K_Aggregate,
-                    when GPR_Project_Qualifier_Aggregate_Library =>
-                      K_Aggregate_Library,
-                    when GPR_Project_Qualifier_Configuration =>
-                      K_Configuration,
-                    when others => raise Program_Error with "Unreachable");
+                     when GPR_Project_Qualifier_Abstract
+                       => K_Abstract,
+                     when GPR_Project_Qualifier_Library
+                       => K_Library,
+                     when GPR_Project_Qualifier_Aggregate
+                       => K_Aggregate,
+                     when GPR_Project_Qualifier_Aggregate_Library
+                       => K_Aggregate_Library,
+                     when GPR_Project_Qualifier_Configuration
+                       => K_Configuration,
+                     when others
+                       => raise Program_Error with "Unreachable");
             end if;
 
             --  Check if we have an extends declaration
