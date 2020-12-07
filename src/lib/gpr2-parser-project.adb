@@ -1201,8 +1201,6 @@ package body GPR2.Parser.Project is
       Pack_Name            : Unbounded_String;
       Pack_Attrs           : GPR2.Project.Attribute.Set.Object;
       Pack_Vars            : GPR2.Project.Variable.Set.Object;
-      Is_Project_Reference : Boolean := False;
-      --  Is_Project_Reference is True when using: Project'<attribute>
 
       Undefined_Attribute_Count          : Natural := 0;
       Previous_Undefined_Attribute_Count : Natural := 0;
@@ -1314,7 +1312,7 @@ package body GPR2.Parser.Project is
          --  element.
 
          if Project = Name_Type (To_String (Self.Name))
-           or else Is_Project_Reference
+           or else Project = "Project"
          then
             --  An attribute referencing a value in the current project
 
@@ -1585,25 +1583,6 @@ package body GPR2.Parser.Project is
               with Pre => Present (Node);
             --  A built-in
 
-            procedure Handle_Attribute_Reference (Node : Attribute_Reference)
-              with Pre  => Present (Node);
-            --  An attribute reference for ProjectReference node only. The
-            --  other cases are handled in other parts.
-
-            --------------------------------
-            -- Handle_Attribute_Reference --
-            --------------------------------
-
-            procedure Handle_Attribute_Reference
-              (Node : Attribute_Reference) is
-            begin
-               if Is_Project_Reference then
-                  Record_Values (Get_Attribute_Ref ("project", Node));
-               end if;
-
-               Status := Over;
-            end Handle_Attribute_Reference;
-
             --------------------
             -- Handle_Builtin --
             --------------------
@@ -1834,12 +1813,6 @@ package body GPR2.Parser.Project is
                when GPR_Builtin_Function_Call =>
                   Handle_Builtin (Node.As_Builtin_Function_Call);
 
-               when GPR_Project_Reference =>
-                  Is_Project_Reference := True;
-
-               when GPR_Attribute_Reference =>
-                  Handle_Attribute_Reference (Node.As_Attribute_Reference);
-
                when others =>
                   null;
             end case;
@@ -1896,11 +1869,8 @@ package body GPR2.Parser.Project is
 
       begin
          Result.Single := True;
-         Is_Project_Reference := False;
 
          Traverse (GPR_Node (Node), Parser'Access);
-
-         Is_Project_Reference := False;
 
          if Result.Values.Is_Empty
            and then Result.Indexed_Values = Unfilled_Indexed_Values
