@@ -2007,11 +2007,19 @@ package body GPR2.Parser.Project is
                      Pack    => No_Name,
                      Node    => Att_Ref);
                else
-                  --  This is a package reference: <package>'<attribute>
-                  return Get_Attribute_Ref
-                    (Project => Name_Type (To_String (Self.Name)),
-                     Pack    => Name,
-                     Node    => Att_Ref);
+                  --  This is a package or self-name reference:
+                  --     <package>'<attribute> or <Self.Name>'<attribute>
+                  declare
+                     Self_Name : constant Name_Type :=
+                                   Name_Type (To_String (Self.Name));
+                  begin
+                     return Get_Attribute_Ref
+                       (Project  => Self_Name,
+                        Pack     => (if Self_Name = Name
+                                     then No_Name
+                                     else Name),
+                        Node     => Att_Ref);
+                  end;
                end if;
             end if;
 

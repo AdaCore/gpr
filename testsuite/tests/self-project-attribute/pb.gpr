@@ -1,0 +1,3 @@
+abstract project PB is
+   A := project'Project_Dir & Project'Name;
+end PB;

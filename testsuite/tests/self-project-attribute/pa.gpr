@@ -1,0 +1,3 @@
+abstract project PA is
+   A := pa'Project_Dir & PA'Name;
+end PA;
