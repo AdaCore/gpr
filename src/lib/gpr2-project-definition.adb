@@ -156,13 +156,17 @@ package body GPR2.Project.Definition is
    --------------------
 
    function Naming_Package (Def : Data) return Project.Pack.Object is
+      CP : constant Pack.Set.Set.Cursor := Def.Packs.Find (PRP.Naming);
    begin
-      if Def.Has_Packages (PRP.Naming) then
-         return Def.Packs (PRP.Naming);
+      if Pack.Set.Set.Has_Element (CP) then
+         return Pack.Set.Set.Element (CP);
+
+      elsif Def.Extended.Is_Defined then
+         return Naming_Package (Get_RO (Def.Extended).all);
 
       elsif Def.Tree.Has_Configuration
-              and then
-            Def.Tree.Configuration.Corresponding_View.Has_Packages (PRP.Naming)
+        and then Def.Tree.Configuration.Corresponding_View.Has_Packages
+                   (PRP.Naming)
       then
          return Def.Tree.Configuration.Corresponding_View.Naming_Package;
 
@@ -1827,7 +1831,7 @@ package body GPR2.Project.Definition is
             end;
          end loop;
 
-      elsif View.Kind not in K_Configuration | K_Abstract then
+      else
          --  Handle Source_Dirs
 
          for Dir of View.Source_Directories.Values loop
@@ -1859,23 +1863,33 @@ package body GPR2.Project.Definition is
             Src_Dir_Set.Clear;
          end loop;
 
-         for C in Ada_Except_Usage.Iterate loop
-            declare
-               Key : constant Value_Type := Naming_Exceptions_Usage.Key (C);
-            begin
-               pragma Assert (Key (Key'Last) in 'B' | 'S', Key);
+         if View.Has_Packages (PRP.Naming) then
+            --  Check all naming exceptions is used only in the original
+            --  project where Naming package is declared. If nameing package is
+            --  inherited then not all sources from naming exceptions have to
+            --  be defined, some of then inherited from extended project.
 
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     "source file """
-                     & Naming_Exceptions_Usage.Element (C).Text
-                     & """ for unit """ & Key (Key'First .. Key'Last - 1)
-                     --  Last character in Key is 'B' - Body or 'S' - Spec
-                     & """ not found",
-                     Naming_Exceptions_Usage.Element (C)));
-            end;
-         end loop;
+            for C in Ada_Except_Usage.Iterate loop
+               declare
+                  Key  : constant Value_Type :=
+                           Naming_Exceptions_Usage.Key (C);
+                  Item : constant
+                    Naming_Exceptions_Usage.Constant_Reference_Type :=
+                      Ada_Except_Usage (C);
+               begin
+                  pragma Assert (Key (Key'Last) in 'B' | 'S', Key);
+
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        "source file """ & Item.Text
+                        & """ for unit """ & Key (Key'First .. Key'Last - 1)
+                        --  Last character in Key is 'B' - Body or 'S' - Spec
+                        & """ not found",
+                        Item));
+               end;
+            end loop;
+         end if;
 
          for V of Other_Except_Usage loop
             Tree.Append_Message

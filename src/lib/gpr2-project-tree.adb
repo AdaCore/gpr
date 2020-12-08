@@ -2870,9 +2870,19 @@ package body GPR2.Project.Tree is
    ----------------
 
    procedure Set_Source
-     (Self : in out Project.Tree.Object; Source : Project.Source.Object) is
+     (Self : in out Project.Tree.Object; Source : Project.Source.Object)
+   is
+      Position : Source_Set.Cursor;
+      Inserted : Boolean;
+
    begin
-      Self.Rooted_Sources.Include (Source);
+      Self.Rooted_Sources.Insert (Source, Position, Inserted);
+
+      if not Inserted
+        and then Source.View.Is_Extending (Self.Rooted_Sources (Position).View)
+      then
+         Self.Rooted_Sources.Replace_Element (Position, Source);
+      end if;
    end Set_Source;
 
    ------------

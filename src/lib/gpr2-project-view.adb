@@ -771,9 +771,24 @@ package body GPR2.Project.View is
    -- Is_Extending --
    ------------------
 
-   function Is_Extending (Self : Object) return Boolean is
+   function Is_Extending
+     (Self : Object; Parent : Object'Class := Undefined) return Boolean
+   is
+      This : Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      return Definition.Get_RO (Self).Extended.Is_Defined;
+      if not Parent.Is_Defined then
+         return This.Extended.Is_Defined;
+      end if;
+
+      while This.Extended.Is_Defined loop
+         if This.Extended = Object (Parent) then
+            return True;
+         end if;
+
+         This := Definition.Get_RO (This.Extended);
+      end loop;
+
+      return False;
    end Is_Extending;
 
    ----------------------

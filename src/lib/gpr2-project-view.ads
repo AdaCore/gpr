@@ -102,9 +102,12 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then Self.Has_Imports;
    --  Returns all imported project views
 
-   function Is_Extending (Self : Object) return Boolean
+   function Is_Extending
+     (Self : Object; Parent : Object'Class := Undefined) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True if the project is extending another project
+   --  Returns True if the project is extending another project.
+   --  If Parent is defined then returns True only if the Parent project is in
+   --  the ancestors transitively.
 
    function Is_Extending_All (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
