@@ -55,7 +55,7 @@ library project GPR2.LAL is
    --------------
 
    Common_Options :=
-     ("-gnat2012", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
+     ("-gnat2020", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
       "-Wall");
    --  Common options used for the Debug and Release modes
 

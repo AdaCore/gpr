@@ -819,7 +819,7 @@ package body GPR2.KB.Compiler_Iterator is
          GNATCOLL.Traces.Trace
            (Main_Trace, "create a new target set for " & Target);
          Set.Append (GNAT.Regpat.Compile ("^" & Quote (Target) & "$"));
-         Base.Targets_Sets.Append ((To_Unbounded_String (Target), Set));
+         Base.Targets_Sets.Append ((To_Unbounded_String (Target), Set), 1);
          Id := Base.Targets_Sets.Last_Index;
       end;
    end Get_Targets_Set;

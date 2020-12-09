@@ -1265,13 +1265,12 @@ package body GPR2.Parser.Project is
                Indexed_Values.Attribute_Name := +String (Name);
 
                for Attribute of Attrs.Filter (Name => Name) loop
-                  Indexed_Values.Values :=
-                    Indexed_Values.Values
-                      & (Index => (if Attribute.Is_Defined
-                                   then Attribute.Index
-                                   else PAI.Undefined),
-                         Values => Attribute.Values,
-                         Single => Attribute.Kind = PRA.Single);
+                  Indexed_Values.Values.Append
+                    ((Index => (if Attribute.Is_Defined
+                                then Attribute.Index
+                                else PAI.Undefined),
+                      Values => Attribute.Values,
+                      Single => Attribute.Kind = PRA.Single), 1);
                end loop;
             end if;
          end Fill_Indexed_Values;

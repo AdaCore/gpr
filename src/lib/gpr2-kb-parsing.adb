@@ -1213,7 +1213,7 @@ package body GPR2.KB.Parsing is
          end loop;
 
          if not Target_Lists.Is_Empty (Set) then
-            Targets_Set_Vectors.Append (Append_To, (Name, Set));
+            Append_To.Append ((Name, Set), 1);
          end if;
       end Parse_Targets_Set;
 
