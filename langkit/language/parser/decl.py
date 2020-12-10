@@ -29,8 +29,9 @@ class WithDecl(GPRNode):
 class ProjectQualifier(GPRNode):
     enum_node = True
     alternatives = [
-        "abstract", "library", "aggregate", "aggregate_library",
-        "configuration"
+        "abstract",  "standard", "library",
+        "aggregate", "aggregate_library",
+        "configuration",
     ]
 
 
@@ -200,6 +201,7 @@ A.add_rules(
 
         ProjectQualifier.alt_configuration(Lex.Identifier("configuration")),
 
+        ProjectQualifier.alt_standard(Lex.Identifier("standard")),
     ),
     project_extension=ProjectExtension(
         "extends", Opt("all").as_bool(AllQualifier), A.string_literal

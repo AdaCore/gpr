@@ -843,6 +843,8 @@ package body GPR2.Parser.Project is
                  (case Kind (Qual) is
                      when GPR_Project_Qualifier_Abstract
                        => K_Abstract,
+                     when GPR_Project_Qualifier_Standard
+                       => K_Standard,
                      when GPR_Project_Qualifier_Library
                        => K_Library,
                      when GPR_Project_Qualifier_Aggregate
