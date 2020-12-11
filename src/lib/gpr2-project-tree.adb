@@ -2665,7 +2665,8 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Name_Type;
                Human_Name    : String;
                Get_Directory : not null access function
-                 (Self : Project.View.Object) return Path_Name.Object);
+                 (Self : Project.View.Object) return Path_Name.Object;
+               Mandatory     : Boolean := False);
             --  Check is directory exists and warn if there is try to relocate
             --  absolute path with --relocate-build-tree gpr tool command line
             --  parameter. Similar check for attributes with directory names.
@@ -2680,7 +2681,8 @@ package body GPR2.Project.Tree is
               (Attr_Name     : Name_Type;
                Human_Name    : String;
                Get_Directory : not null access function
-                 (Self : Project.View.Object) return Path_Name.Object) is
+                 (Self : Project.View.Object) return Path_Name.Object;
+               Mandatory     : Boolean := False) is
             begin
                if View.Check_Attribute (Attr_Name, Result => Attr) then
                   declare
@@ -2715,14 +2717,20 @@ package body GPR2.Project.Tree is
                               Sloc => AV));
                      end if;
                   end;
+
+               elsif Mandatory then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "attribute " & String (Attr_Name) & " not declared",
+                        Source_Reference.Create (View.Path_Name.Value, 0, 0)));
                end if;
             end Check_Directory;
 
          begin
             if View.Is_Library and then View.Is_Shared_Library then
-               if View.Check_Attribute (PRA.Library_Version,
-                                        Recursive => True,
-                                        Result => Attr)
+               if View.Check_Attribute
+                    (PRA.Library_Version, Recursive => True, Result => Attr)
                  and then not View.Tree.Is_Windows_Target
                  --  Library_Version attribute has no effect on Windows
                then
@@ -2769,7 +2777,8 @@ package body GPR2.Project.Tree is
             if View.Is_Library then
                Check_Directory
                  (PRA.Library_Dir, "library",
-                  Project.View.Library_Directory'Access);
+                  Project.View.Library_Directory'Access,
+                  Mandatory => True);
 
                Check_Directory
                  (PRA.Library_Ali_Dir, "library ALI",
@@ -2782,6 +2791,16 @@ package body GPR2.Project.Tree is
                     (PRA.Library_Src_Dir, "",
                      Project.View.Library_Src_Directory'Access);
                end if;
+
+               if not View.Check_Attribute
+                        (PRA.Library_Name, Recursive => True, Result => Attr)
+               then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "attribute Library_Name not declared",
+                        Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+               end if;
             end if;
 
             if View.Kind in Aggregate_Kind then
@@ -2791,7 +2810,7 @@ package body GPR2.Project.Tree is
                        (Message.Create
                           (Message.Error,
                            "cannot aggregate externally built project """
-                           & String (Agg.Name) & """",
+                           & String (Agg.Name) & '"',
                            Sloc => View.Attribute (PRA.Project_Files)));
                   end if;
                end loop;
