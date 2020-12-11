@@ -28,7 +28,6 @@ with Ada.Environment_Variables;
 
 pragma Warnings (Off);
 with System.OS_Constants;
---  with Ada.Text_IO; use Ada.Text_IO;
 pragma Warnings (On);
 
 with GNAT.Directory_Operations;
@@ -818,7 +817,8 @@ package body GPR2.KB.Compiler_Iterator is
       begin
          GNATCOLL.Traces.Trace
            (Main_Trace, "create a new target set for " & Target);
-         Set.Append (GNAT.Regpat.Compile ("^" & Quote (Target) & "$"));
+         Set.Append
+           (GNAT.Regpat.Compile ("^" & GNAT.Regpat.Quote (Target) & "$"));
          Base.Targets_Sets.Append ((To_Unbounded_String (Target), Set), 1);
          Id := Base.Targets_Sets.Last_Index;
       end;
