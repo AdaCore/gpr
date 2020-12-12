@@ -2919,13 +2919,11 @@ package body GPR2.Project.Tree is
       TA : Attribute.Object;
    begin
       if Self.Has_Configuration
-        and then Self.Conf.Target /= No_Name
+        and then Self.Configuration.Corresponding_View.Check_Attribute
+          ((if Canonical then PRA.Canonical_Target else PRA.Target),
+           Result => TA)
       then
-         if Canonical then
-            return Normalized (Self.Conf.Target);
-         else
-            return Self.Conf.Target;
-         end if;
+         return Name_Type (TA.Value.Text);
 
       elsif Self.Root /= View.Undefined
         and then Self.Root_Project.Check_Attribute
