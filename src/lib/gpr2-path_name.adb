@@ -113,7 +113,8 @@ package body GPR2.Path_Name is
         ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
           then ""
           else Ensure_Directory (String (Directory)))
-         & String (Name)));
+         & String (Name),
+         Resolve_Links => False));
 
    ---------------
    -- Base_Name --

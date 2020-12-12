@@ -155,7 +155,9 @@ package body GPR2.Project is
       if OS_Lib.Is_Absolute_Path (String (GPR_Name)) then
          return Path_Name.Create
            (GPR_Name,
-            Filename_Type (OS_Lib.Normalize_Pathname (String (GPR_Name))));
+            Filename_Type
+              (OS_Lib.Normalize_Pathname
+                 (String (GPR_Name), Resolve_Links => False)));
 
       else
          --  If we have an empty Paths set, this is the root project and it is
@@ -167,8 +169,10 @@ package body GPR2.Project is
             then
                return Path_Name.Create
                  (GPR_Name,
-                  Filename_Type (OS_Lib.Normalize_Pathname
-                    (Directories.Current_Directory & DS & String (GPR_Name))));
+                  Filename_Type
+                    (OS_Lib.Normalize_Pathname
+                       (Directories.Current_Directory & DS & String (GPR_Name),
+                        Resolve_Links => False)));
             end if;
 
          else
@@ -180,7 +184,9 @@ package body GPR2.Project is
                   if Directories.Exists (F_Name) then
                      return Path_Name.Create
                        (GPR_Name,
-                        Filename_Type (OS_Lib.Normalize_Pathname (F_Name)));
+                        Filename_Type
+                          (OS_Lib.Normalize_Pathname
+                             (F_Name, Resolve_Links => False)));
                   end if;
                end;
             end loop;
