@@ -1,0 +1,12 @@
+project Extended is
+   package Naming is
+      for Implementation_Suffix ("Ada") use ".ada";
+
+      for Implementation_Suffix ("gpr4") use Extended.Naming'Body_Suffix ("C");
+      -- use Separate_Suffix => Body_Suffix => Implementation_Suffix
+
+      for Implementation_Suffix ("gpr5") use  Extended.Naming'Body_Suffix ("gpR4");
+      --  use Separate_Suffix => Body_Suffix => defined Implementation_Suffix
+
+   end Naming;
+end Extended;

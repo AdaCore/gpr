@@ -1,0 +1,55 @@
+with "child";
+project Prj is
+   package Naming is
+      for Implementation_Suffix ("gpr2") use Naming'Body_Suffix ("adA");
+      -- use Body_Suffix  => Implementation_Suffix
+
+      for Implementation_Suffix ("gpr3") use  Naming'Body_Suffix ("gpR2");
+      --  use Body_Suffix => defined Implementation_Suffix
+
+      A := Naming'Implementation_Exceptions ("gpr4");
+      -- ref to non existing value.
+
+      for Specification ("gpr2") use Prj.Naming'Body_Suffix ("gpR2");
+      -- ref to already defined Implementation_Suffix ("gpr2")
+   end Naming;
+
+   package Compiler is
+      for Driver("gpr2") use Prj.Naming'Body_Suffix ("gpR2");
+      -- ref to ref to defined value from different package
+
+      for Driver("gpr3") use Prj.Naming'Body_Suffix("C");
+      -- ref to default value from different package
+
+      A := Prj.Naming'Specification_Suffix("gpr5");
+      -- ref to not defined value from different package
+   end Compiler;
+
+   for Locally_Removed_Files use ("test.out");
+   -- define value used by project'Excluded_Source_Files
+
+   A := project'Languages;
+   --  ref to root attribute default value
+
+   B := Prj'Main;
+   --  ref to undefined root attribute.
+
+   C := project'Exec_Dir;
+   --  use reference to refrence to default
+
+   D := project'Excluded_Source_Files;
+   --  use reference to reference to defined
+
+   E := Prj.Naming'Body_Suffix ("gpr2");
+   F := Prj.Naming'Body_Suffix ("gpr3");
+   G := project.Naming.A;
+   H := Prj.Naming'Specification ("gpr2");
+   I := Prj.Compiler'Driver("gpr2");
+   J := Prj.Compiler'Driver("gpr3");
+   K := project.Compiler.A;
+   L := Child'Exec_Dir;
+   M := Child.Naming'Body_Suffix ("gpr5");
+   N := Child.A;
+   O := Child.B;
+
+end Prj;

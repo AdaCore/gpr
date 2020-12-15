@@ -1,0 +1,15 @@
+A:LIST=Ada;
+B:LIST=
+C:SINGLE=.
+D:LIST=test.out;
+E:SINGLE=.adb
+F:SINGLE=.adb
+G:LIST=
+H:SINGLE=.adb
+I:SINGLE=.adb
+J:SINGLE=.c
+K:LIST=
+L:SINGLE=.
+M:SINGLE=.c
+N:SINGLE=.
+O:SINGLE=.c

@@ -54,6 +54,7 @@ package body GPR2.Parser.Project is
    use Langkit_Support.Text;
    use type Ada.Containers.Count_Type;
 
+   package PA renames GPR2.Project.Attribute;
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
 
@@ -1150,8 +1151,8 @@ package body GPR2.Parser.Project is
       --  list surrounded by parentheses.
 
       procedure Record_Attribute
-        (Set  : in out GPR2.Project.Attribute.Set.Object;
-         A    : GPR2.Project.Attribute.Object;
+        (Set  : in out PA.Set.Object;
+         A    : PA.Object;
          Sloc : Source_Reference.Object);
       --  Record an attribute into the given set. At the same time we increment
       --  the Empty_Attribute_Count if this attribute has an empty value. This
@@ -1201,7 +1202,7 @@ package body GPR2.Parser.Project is
 
       In_Pack              : Boolean := False;
       Pack_Name            : Unbounded_String;
-      Pack_Attrs           : GPR2.Project.Attribute.Set.Object;
+      Pack_Attrs           : PA.Set.Object;
       Pack_Vars            : GPR2.Project.Variable.Set.Object;
 
       Undefined_Attribute_Count          : Natural := 0;
@@ -1241,20 +1242,159 @@ package body GPR2.Parser.Project is
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
 
-         Attr   : GPR2.Project.Attribute.Object;
+         Attr   : PA.Object;
 
          Indexed_Values : Indexed_Item_Values := Unfilled_Indexed_Values;
 
+         function Default_Value
+           (Attribute_Name  : Name_Type := Name;
+            Attrs           : PA.Set.Object := PA.Set.Empty_Set)
+            return PA.Object;
+         --  Returns default value using Attrs for referenced default.
+
          procedure Fill_Indexed_Values
-           (Attrs : GPR2.Project.Attribute.Set.Object);
+           (Attrs : PA.Set.Object);
          --  fill Indexed_Values if Index is undefined and Q_Name allows Index
+
+         -------------------
+         -- Default_Value --
+         -------------------
+
+         function Default_Value
+           (Attribute_Name  : Name_Type := Name;
+            Attrs           : PA.Set.Object := PA.Set.Empty_Set)
+            return PA.Object
+         is
+
+            Result       : PA.Object;
+            --  Return value.
+
+            Q_Name       : constant PRA.Qualified_Name :=
+                             PRA.Create (Attribute_Name, Pack);
+            --  Requested attribute qualified name
+
+            procedure Fill_Result (Def : PRA.Def);
+            --  Fill Result with default value extracted from 'Def'
+
+            package SR renames Source_Reference;
+
+            Project_SRef : constant SR.Object :=
+                             SR.Object
+                               (SR.Create (Self.Path_Name.Value, 0, 0));
+            --  Source reference used when creating attribute's index/object.
+
+            function Attr_Id return SR.Identifier.Object is
+              (SR.Identifier.Object
+                 (SR.Identifier.Create (Project_SRef, Attribute_Name)));
+            --  Name used when creating attribute object.
+
+            -----------------
+            -- Fill_Result --
+            -----------------
+
+            procedure Fill_Result (Def : PRA.Def) is
+               use type PRA.Index_Kind;
+               package VSR renames Containers.Name_Value_Map_Package;
+
+               function Create_Index
+                 (Name : Value_Type) return PAI.Object is
+                 (if Def.Index = PRA.No
+                  then PAI.Undefined
+                  else PAI.Create
+                    (SR.Value.Object
+                         (SR.Value.Create
+                              (Project_SRef, Name)), False, False));
+               --  Index created from attribute definition
+
+               function Create_Attribute
+                 (Value : SR.Value.Object) return PA.Object;
+               --  Create attribute object with Attr_Id name, Kind extracted
+               --  from definition and containing 'Value'
+
+               ----------------------
+               -- Create_Attribute --
+               ----------------------
+
+               function Create_Attribute
+                 (Value : SR.Value.Object) return PA.Object
+               is
+                  Attr : PA.Object;
+               begin
+                  if Def.Value = PRA.List then
+                     Attr := PA.Create
+                       (Name   => Attr_Id,
+                        Index  => Index,
+                        Values =>
+                          Containers.Source_Value_Type_List.To_Vector
+                            (Value, 1));
+                  else
+                     Attr := PA.Create (Attr_Id, Index, Value);
+                  end if;
+
+                  Attr.Set_Case
+                    (Index_Is_Case_Sensitive => Def.Index_Case_Sensitive,
+                     Value_Is_Case_Sensitive => Def.Value_Case_Sensitive);
+
+                  return Attr;
+               end Create_Attribute;
+
+            begin
+               if Def.Has_Default_In (Self.Qualifier) then
+                  if Def.Default_Is_Reference then
+                     declare
+                        Ref_Name : constant Name_Type :=
+                                     Name_Type (Def.Default.First_Element);
+                        --  reference attribute's name
+
+                        package PAS renames PA.Set;
+
+                        CS       : constant PAS.Cursor :=
+                                     Attrs.Find (Ref_Name, Index);
+                        --  get value in 'Attrs' map.
+                     begin
+                        if PAS.Has_Element (CS) then
+                           --  return renamed referenced value
+                           Result := PAS.Element (CS).Rename (Attr_Id);
+                        else
+                           --  return referenced attribute default value
+                           Result := Default_Value
+                             (Attribute_Name  => Ref_Name,
+                              Attrs           => Attrs);
+                        end if;
+                     end;
+                  elsif not Def.Default.Is_Empty then
+                     --  look for default definition for the requested index
+                     for D in Def.Default.Iterate loop
+                        if Index = Create_Index
+                          (Value_Type (VSR.Key (D)))
+                        then
+                           --  At correct element, return it.
+                           Result := Create_Attribute
+                             (SR.Value.Object
+                                (SR.Value.Create
+                                     (Project_SRef, VSR.Element (D))));
+                        end if;
+                     end loop;
+                  end if;
+               else
+                  Result := PA.Undefined;
+               end if;
+            end Fill_Result;
+         begin
+            if PRA.Exists (Q_Name) then
+               Fill_Result (PRA.Get (Q_Name));
+            else
+               Result := PA.Undefined;
+            end if;
+            return Result;
+         end Default_Value;
 
          -------------------------
          -- Fill_Indexed_Values --
          -------------------------
 
          procedure Fill_Indexed_Values
-           (Attrs : GPR2.Project.Attribute.Set.Object)
+           (Attrs : PA.Set.Object)
          is
             use Indexed_Item_Values_Vectors;
             use PRA;
@@ -1353,7 +1493,7 @@ package body GPR2.Parser.Project is
 
                elsif Name = PRA.Target then
                   --  Project'Target case
-                  Attr := GPR2.Project.Attribute.Create
+                  Attr := PA.Create
                     (Get_Identifier_Reference
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Value   => Get_Value_Reference
@@ -1364,7 +1504,7 @@ package body GPR2.Parser.Project is
 
                elsif Name = PRA.Canonical_Target then
                   --  Project'Target case
-                  Attr := GPR2.Project.Attribute.Create
+                  Attr := PA.Create
                     (Get_Identifier_Reference
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Value   => Get_Value_Reference
@@ -1376,7 +1516,7 @@ package body GPR2.Parser.Project is
 
                elsif Name = PRA.Runtime and then Index /= PAI.Undefined then
                   --  Project'Runtime (<lang>)
-                  Attr := GPR2.Project.Attribute.Create
+                  Attr := PA.Create
                     (Get_Identifier_Reference
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Index   => Index,
@@ -1386,6 +1526,8 @@ package body GPR2.Parser.Project is
                      Default => True,
                      Frozen  => True);
                   Attrs.Include (Attr);
+               else
+                  Attr := Default_Value (Name, Attrs);
                end if;
 
             elsif Pack_Name /= Null_Unbounded_String
@@ -1396,6 +1538,10 @@ package body GPR2.Parser.Project is
                Fill_Indexed_Values (Pack_Attrs);
                Attr := Pack_Attrs.Element (Name, Index);
 
+               if not Attr.Is_Defined then
+                  Attr := Default_Value (Name, Pack_Attrs);
+               end if;
+
             elsif Packs.Contains (Name_Type (Pack)) then
                --  Or in another package in the same project
 
@@ -1403,6 +1549,11 @@ package body GPR2.Parser.Project is
                  (Packs.Element (Name_Type (Pack)).Attributes);
                Attr := Packs.Element
                  (Name_Type (Pack)).Attributes.Element (Name, Index);
+
+               if not Attr.Is_Defined then
+                  Attr := Default_Value
+                    (Name, Packs.Element (Name_Type (Pack)).Attributes);
+               end if;
 
             else
                Fill_Indexed_Values (GPR2.Project.Attribute.Set.Empty_Set);
@@ -1423,7 +1574,7 @@ package body GPR2.Parser.Project is
                   --  to the configuration value
                   if Name = PRA.Target then
                      --  Project'Target case
-                     Attr := GPR2.Project.Attribute.Create
+                     Attr := PA.Create
                        (Get_Identifier_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
@@ -1433,7 +1584,7 @@ package body GPR2.Parser.Project is
 
                   elsif Name = PRA.Canonical_Target then
                      --  Project'Target case
-                     Attr := GPR2.Project.Attribute.Create
+                     Attr := PA.Create
                        (Get_Identifier_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
@@ -1446,7 +1597,7 @@ package body GPR2.Parser.Project is
                     and then Index /= PAI.Undefined
                   then
                      --  Project'Runtime (<lang>)
-                     Attr := GPR2.Project.Attribute.Create
+                     Attr := PA.Create
                        (Get_Identifier_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Index   => Index,
@@ -1464,6 +1615,9 @@ package body GPR2.Parser.Project is
                               "associative array value not found",
                               Get_Source_Reference (Self.File, Node)));
                      end if;
+
+                  else
+                     Attr := Default_Value (Name, View.Attributes);
                   end if;
                end if;
 
@@ -1481,11 +1635,14 @@ package body GPR2.Parser.Project is
                               "associative array value not found",
                               Get_Source_Reference (Self.File, Node)));
                      end if;
+
+                  else
+                     Attr := Default_Value (Name, View.Pack (Pack).Attributes);
                   end if;
                end if;
 
             else
-               Fill_Indexed_Values (GPR2.Project.Attribute.Set.Empty_Set);
+               Fill_Indexed_Values (PA.Set.Empty_Set);
                Tree.Log_Messages.Append
                  (Message.Create
                     (Message.Error,
@@ -2219,7 +2376,7 @@ package body GPR2.Parser.Project is
                               Optional_Name_Type (To_String (Pack_Name)));
 
                Values   : constant Item_Values := Get_Term_List (Expr);
-               A        : GPR2.Project.Attribute.Object;
+               A        : PA.Object;
                Is_Valid : Boolean := True;
                --  Set to False if the attribute definition is invalid
 
@@ -2245,13 +2402,13 @@ package body GPR2.Parser.Project is
                   if Single then
                      pragma Assert (Expr.Children_Count >= 1);
 
-                     A := GPR2.Project.Attribute.Create
+                     A := PA.Create
                        (Name  => Id,
                         Index => Index,
                         Value => Values.First_Element);
 
                   else
-                     A := GPR2.Project.Attribute.Create
+                     A := PA.Create
                        (Name   => Id,
                         Index  => Index,
                         Values => Values);
@@ -2930,8 +3087,8 @@ package body GPR2.Parser.Project is
       ----------------------
 
       procedure Record_Attribute
-        (Set  : in out GPR2.Project.Attribute.Set.Object;
-         A    : GPR2.Project.Attribute.Object;
+        (Set  : in out PA.Set.Object;
+         A    : PA.Object;
          Sloc : Source_Reference.Object)
       is
          Include : Boolean := True;
@@ -2943,7 +3100,7 @@ package body GPR2.Parser.Project is
 
          if Include and then Set.Contains (A) then
             declare
-               Old : constant GPR2.Project.Attribute.Object := Set.Element
+               Old : constant PA.Object := Set.Element
                  (A.Name.Text,
                   (if A.Has_Index then A.Index
                    else GPR2.Project.Attribute_Index.Undefined));
@@ -3015,14 +3172,14 @@ package body GPR2.Parser.Project is
 
       begin
          Attrs.Insert
-           (GPR2.Project.Attribute.Create
+           (PA.Create
               (Name    => Create_Name (PRA.Name),
                Value   => Get_Value_Reference
                             (To_Lower (To_String (Self.Name)), Sloc),
                Default => True));
 
          Attrs.Insert
-           (GPR2.Project.Attribute.Create
+           (PA.Create
               (Name    => Create_Name (PRA.Project_Dir),
                Value   => Get_Value_Reference (Self.File.Dir_Name, Sloc),
                Default => True));

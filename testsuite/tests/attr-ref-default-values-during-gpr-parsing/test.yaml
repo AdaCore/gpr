@@ -1,0 +1,5 @@
+description:
+    Test Self project attribute default value reference
+driver: build_and_run
+project_file: test
+main: main
