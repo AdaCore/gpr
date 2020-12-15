@@ -613,6 +613,9 @@ private
    function Has_Any_Interfaces (Self : Object) return Boolean is
      (Self.Has_Library_Interface or else Self.Has_Interfaces);
 
+   function Is_Abstract (Self : Object) return Boolean is
+     (Self.Kind = K_Abstract);
+
    function Is_Library_Standalone (Self : Object) return Boolean is
       (Self.Library_Standalone /= No);
 

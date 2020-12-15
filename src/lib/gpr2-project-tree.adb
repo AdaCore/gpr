@@ -2285,6 +2285,55 @@ package body GPR2.Project.Tree is
          Paths         : Path_Name.Set.Object;
          Tmp_Attr      : Project.Attribute.Object;
 
+         function Is_Implicitly_Abstract
+           (View : Project.View.Object) return Boolean;
+         --  Returns True if project can be recognised as abstract project.
+         --  I.e. not inherited from non abstract project and has empty one of
+         --  source list defining attributes.
+
+         ----------------------------
+         -- Is_Implicitly_Abstract --
+         ----------------------------
+
+         function Is_Implicitly_Abstract
+           (View : Project.View.Object) return Boolean
+         is
+
+            function Is_Defined_Empty (Attr : Name_Type) return Boolean;
+            --  Returns True if attribute defined as empty list in view
+
+            ----------------------
+            -- Is_Defined_Empty --
+            ----------------------
+
+            function Is_Defined_Empty (Attr : Name_Type) return Boolean is
+               Tmp_Attr : Attribute.Object;
+            begin
+               return View.Check_Attribute (Attr, Result => Tmp_Attr)
+                 and then Tmp_Attr.Values.Is_Empty;
+            end Is_Defined_Empty;
+
+         begin
+            if View.Is_Abstract then
+               return True;
+            end if;
+
+            if View.Is_Extending
+              and then not Is_Implicitly_Abstract (View.Extended)
+            then
+               --  Project extending non abstract one is not abstract
+
+               return False;
+            end if;
+
+            --  We need at least Source_Dirs, Source_Files, or Languages
+            --  explicitly empty.
+
+            return Is_Defined_Empty (PRA.Source_Dirs)
+              or else Is_Defined_Empty (PRA.Source_Files)
+              or else Is_Defined_Empty (PRA.Languages);
+         end Is_Implicitly_Abstract;
+
       begin
          Parser.Project.Process
            (P_Data.Trees.Project,
@@ -2475,15 +2524,10 @@ package body GPR2.Project.Tree is
 
             P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
-            if P_Data.Kind = K_Standard then
-               --  A project with empty source dir and/or empty languages list
-               --  is considered abstract
-
-               --  We need at least Source_Dirs or Languages explicitly empty,
-               --  and the other either default or empty
-               if View.Is_Abstract then
-                  P_Data.Kind := K_Abstract;
-               end if;
+            if P_Data.Kind = K_Standard
+              and then Is_Implicitly_Abstract (View)
+            then
+               P_Data.Kind := K_Abstract;
             end if;
 
             if P_Data.Kind = K_Standard then
