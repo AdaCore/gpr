@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -1403,6 +1403,16 @@ package body GPR2.Parser.Project is
                  (Packs.Element (Name_Type (Pack)).Attributes);
                Attr := Packs.Element
                  (Name_Type (Pack)).Attributes.Element (Name, Index);
+
+            else
+               Fill_Indexed_Values (GPR2.Project.Attribute.Set.Empty_Set);
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "package """ & String (Pack)
+                     & """ not declared in project """
+                     & String (Project) & '"',
+                     Get_Source_Reference (Self.File, Node)));
             end if;
 
          elsif View.Is_Defined then
@@ -1454,15 +1464,6 @@ package body GPR2.Parser.Project is
                               "associative array value not found",
                               Get_Source_Reference (Self.File, Node)));
                      end if;
-
-                  else
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "attribute """ & String (Name)
-                           & """ is not defined in project """
-                           & String (Project) & '"',
-                           Get_Source_Reference (Self.File, Node)));
                   end if;
                end if;
 
@@ -1480,16 +1481,6 @@ package body GPR2.Parser.Project is
                               "associative array value not found",
                               Get_Source_Reference (Self.File, Node)));
                      end if;
-
-                  else
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "attribute """ & String (Name)
-                           & """ is not defined in project """
-                           & String (Project) & """ package """ & String (Pack)
-                           & '"',
-                           Get_Source_Reference (Self.File, Node)));
                   end if;
                end if;
 
@@ -1514,13 +1505,27 @@ package body GPR2.Parser.Project is
                   Get_Source_Reference (Self.File, Node)));
          end if;
 
-         return (if Attr.Is_Defined
-                 then (Values         => Attr.Values,
-                       Single         => Attr.Kind = PRA.Single,
-                       Indexed_Values => Indexed_Values)
-                 else (Values         => <>,
-                       Single         => False,
-                       Indexed_Values => Indexed_Values));
+         return Result : Item_Values do
+            Result.Indexed_Values := Indexed_Values;
+            if Attr.Is_Defined then
+               Result.Values := Attr.Values;
+               Result.Single := Attr.Kind = PRA.Single;
+            else
+               if PRA.Exists (Q_Name) then
+                  Result.Single := PRA.Get (Q_Name).Value = PRA.Single;
+               else
+                  Result.Single := False;
+               end if;
+               if Result.Single then
+                  Result.Values :=
+                    GPR2.Containers.Source_Value_Type_List.To_Vector
+                      (New_Item => GPR2.Source_Reference.Value.Object
+                         (GPR2.Source_Reference.Value.Create
+                            (Sloc, GPR2.No_Value)),
+                       Length   => 1);
+               end if;
+            end if;
+         end return;
       end Get_Attribute_Ref;
 
       -------------------

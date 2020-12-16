@@ -1,0 +1,5 @@
+description:
+    Test undefined attribute ref
+driver: build_and_run
+project_file: test
+main: main

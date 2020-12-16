@@ -1,0 +1,9 @@
+with "child1";
+project Prj1 is
+
+   package Compiler is
+      E := Prj1.Naming'Casing & "E";
+   end Compiler;
+
+   G := Child1.Naming'Casing & "G";
+end Prj1;

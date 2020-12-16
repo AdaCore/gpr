@@ -1,0 +1,5 @@
+project Child is
+   package Naming is
+     for Implementation_Suffix ("Ada") use ".ada";
+   end Naming;
+end Child;

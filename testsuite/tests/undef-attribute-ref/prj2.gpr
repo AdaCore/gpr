@@ -1,0 +1,5 @@
+with "child1";
+project Prj2 is
+
+   G := Child1.Naming'Casing & "G";
+end Prj2;
