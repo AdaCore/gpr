@@ -2772,11 +2772,21 @@ package body GPR2.Project.Tree is
             end Check_Directory;
 
          begin
-            if View.Is_Library and then View.Is_Shared_Library then
-               if View.Check_Attribute
-                    (PRA.Library_Version, Recursive => True, Result => Attr)
-                 and then not View.Tree.Is_Windows_Target
-                 --  Library_Version attribute has no effect on Windows
+            if View.Kind in K_Standard | K_Library | K_Aggregate_Library
+              and then Check_Object_Dir_Exists
+            then
+               Check_Directory
+                 (PRA.Object_Dir, "object",
+                  Project.View.Object_Directory'Access);
+            end if;
+
+            if View.Is_Library then
+               --  Library_Version attribute has no effect on Windows
+
+               if not View.Tree.Is_Windows_Target
+                 and then View.Is_Shared_Library
+                 and then View.Check_Attribute
+                   (PRA.Library_Version, Recursive => True, Result => Attr)
                then
                   declare
                      AV      : constant Source_Reference.Value.Object :=
@@ -2787,8 +2797,8 @@ package body GPR2.Project.Tree is
                   begin
                      if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
                        or else not Regexp.Match
-                         (Lib_Ver (Lib_Ver'First + Lib_Fn'Length
-                                   .. Lib_Ver'Last),
+                         (Lib_Ver
+                            (Lib_Ver'First + Lib_Fn'Length .. Lib_Ver'Last),
                           Version_Regexp)
                      then
                         Self.Messages.Append
@@ -2800,25 +2810,7 @@ package body GPR2.Project.Tree is
                      end if;
                   end;
                end if;
-            end if;
 
-            if View.Kind in K_Standard | K_Library | K_Aggregate_Library
-              and then Check_Object_Dir_Exists
-            then
-               Check_Directory
-                 (PRA.Object_Dir, "object",
-                  Project.View.Object_Directory'Access);
-            end if;
-
-            if View.Kind = K_Standard
-              and then Check_Exec_Dir_Exists
-            then
-               Check_Directory
-                 (PRA.Exec_Dir, "exec",
-                  Project.View.Executable_Directory'Access);
-            end if;
-
-            if View.Is_Library then
                Check_Directory
                  (PRA.Library_Dir, "library",
                   Project.View.Library_Directory'Access,
@@ -2848,6 +2840,13 @@ package body GPR2.Project.Tree is
             end if;
 
             case View.Kind is
+               when K_Standard =>
+                  if Check_Exec_Dir_Exists then
+                     Check_Directory
+                       (PRA.Exec_Dir, "exec",
+                        Project.View.Executable_Directory'Access);
+                  end if;
+
                when Aggregate_Kind =>
                   for Agg of View.Aggregated loop
                      if Agg.Is_Externally_Built then
