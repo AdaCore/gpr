@@ -1351,27 +1351,22 @@ package body GPR2.Parser.Project is
                      Attrs.Include (Attr);
                   end if;
 
-               elsif Name_Type (To_Lower (Name)) = PRA.Target then
+               elsif Name = PRA.Target then
                   --  Project'Target case
                   Attr := GPR2.Project.Attribute.Create
                     (Get_Identifier_Reference
-                       (Self.Path_Name,
-                        Sloc_Range (Node),
-                        Name_Type (To_Lower (Name))),
+                       (Self.Path_Name, Sloc_Range (Node), Name),
                      Value   => Get_Value_Reference
-                       (Value_Not_Empty (Tree.Target),
-                        Sloc),
+                       (Value_Not_Empty (Tree.Target), Sloc),
                      Default => True,
                      Frozen  => True);
                   Attrs.Include (Attr);
 
-               elsif Name_Type (To_Lower (Name)) = PRA.Canonical_Target then
+               elsif Name = PRA.Canonical_Target then
                   --  Project'Target case
                   Attr := GPR2.Project.Attribute.Create
                     (Get_Identifier_Reference
-                       (Self.Path_Name,
-                        Sloc_Range (Node),
-                        Name_Type (To_Lower (Name))),
+                       (Self.Path_Name, Sloc_Range (Node), Name),
                      Value   => Get_Value_Reference
                        (Value_Not_Empty (Tree.Target (Canonical => True)),
                         Sloc),
@@ -1379,15 +1374,11 @@ package body GPR2.Parser.Project is
                      Frozen  => True);
                   Attrs.Include (Attr);
 
-               elsif Name_Type (To_Lower (Name)) = PRA.Runtime
-                 and then Index /= PAI.Undefined
-               then
+               elsif Name = PRA.Runtime and then Index /= PAI.Undefined then
                   --  Project'Runtime (<lang>)
                   Attr := GPR2.Project.Attribute.Create
                     (Get_Identifier_Reference
-                       (Self.Path_Name,
-                        Sloc_Range (Node),
-                        Name_Type (To_Lower (Name))),
+                       (Self.Path_Name, Sloc_Range (Node), Name),
                      Index   => Index,
                      Value   => Get_Value_Reference
                        (Value_Type (Tree.Runtime (Name_Type (Index.Text))),
@@ -1420,41 +1411,34 @@ package body GPR2.Parser.Project is
                if not View.Check_Attribute (Name, Index, Result => Attr) then
                   --  Special case for Target & Runtime, that always default
                   --  to the configuration value
-                  if Name_Type (To_Lower (Name)) = PRA.Target then
+                  if Name = PRA.Target then
                      --  Project'Target case
                      Attr := GPR2.Project.Attribute.Create
                        (Get_Identifier_Reference
-                          (Self.Path_Name,
-                           Sloc_Range (Node),
-                           Name_Type (To_Lower (Name))),
+                          (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
-                          (Value_Not_Empty (Tree.Target),
-                           Sloc),
+                          (Value_Not_Empty (Tree.Target), Sloc),
                         Default => True,
                         Frozen  => True);
 
-                  elsif Name_Type (To_Lower (Name)) = PRA.Canonical_Target then
+                  elsif Name = PRA.Canonical_Target then
                      --  Project'Target case
                      Attr := GPR2.Project.Attribute.Create
                        (Get_Identifier_Reference
-                          (Self.Path_Name,
-                           Sloc_Range (Node),
-                           Name_Type (To_Lower (Name))),
+                          (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
                           (Value_Not_Empty (Tree.Target (Canonical => True)),
                            Sloc),
                         Default => True,
                         Frozen  => True);
 
-                  elsif Name_Type (To_Lower (Name)) = PRA.Runtime
+                  elsif Name = PRA.Runtime
                     and then Index /= PAI.Undefined
                   then
                      --  Project'Runtime (<lang>)
                      Attr := GPR2.Project.Attribute.Create
                        (Get_Identifier_Reference
-                          (Self.Path_Name,
-                           Sloc_Range (Node),
-                           Name_Type (To_Lower (Name))),
+                          (Self.Path_Name, Sloc_Range (Node), Name),
                         Index   => Index,
                         Value   => Get_Value_Reference
                           (Value_Type (Tree.Runtime (Name_Type (Index.Text))),
