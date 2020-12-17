@@ -2,14 +2,6 @@
 langkit/build
 langkit/src/gpr.qx
 *~
-main
-main.exe
-*.o
-b__*.ad*
-*.stderr
-*.stdout
-*.bexch
-*.ali
 
 # Python artifacts
 *.pyc
