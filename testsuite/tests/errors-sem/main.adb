@@ -59,8 +59,10 @@ exception
             begin
                Text_IO.Put_Line ("> " & F (I - 1 .. F'Last));
                Text_IO.Put_Line (M.Level'Img);
-               Text_IO.Put_Line (M.Sloc.Line'Img);
-               Text_IO.Put_Line (M.Sloc.Column'Img);
+               if M.Sloc.Has_Source_Reference then
+                  Text_IO.Put_Line (M.Sloc.Line'Img);
+                  Text_IO.Put_Line (M.Sloc.Column'Img);
+               end if;
                Text_IO.Put_Line (M.Message);
             end;
          end loop;

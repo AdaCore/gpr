@@ -1,4 +1,5 @@
 
 abstract project last is
    for Source_Dirs use ("libsrc");
+   for Source_Files use ();
 end last;

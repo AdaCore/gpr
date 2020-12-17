@@ -2847,18 +2847,52 @@ package body GPR2.Project.Tree is
                end if;
             end if;
 
-            if View.Kind in Aggregate_Kind then
-               for Agg of View.Aggregated loop
-                  if Agg.Is_Externally_Built then
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "cannot aggregate externally built project """
-                           & String (Agg.Name) & '"',
-                           Sloc => View.Attribute (PRA.Project_Files)));
-                  end if;
-               end loop;
-            end if;
+            case View.Kind is
+               when Aggregate_Kind =>
+                  for Agg of View.Aggregated loop
+                     if Agg.Is_Externally_Built then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "cannot aggregate externally built project """
+                              & String (Agg.Name) & '"',
+                              Sloc => View.Attribute (PRA.Project_Files)));
+                     end if;
+                  end loop;
+
+               when K_Abstract =>
+                  declare
+                     A1 : Attribute.Object;
+                     H1 : constant Boolean :=
+                            View.Check_Attribute
+                              (PRA.Source_Dirs, Result => A1);
+                     A2 : Attribute.Object;
+                     H2 : constant Boolean :=
+                            View.Check_Attribute
+                              (PRA.Source_Files, Result => A2);
+                     A3 : Attribute.Object;
+                     H3 : constant Boolean :=
+                            View.Check_Attribute
+                              (PRA.Languages, Result => A3);
+                  begin
+                     if (H1 or else H2 or else H3)
+                       and then not (H1 and then A1.Values.Is_Empty)
+                       and then not (H2 and then A2.Values.Is_Empty)
+                       and then not (H3 and then A3.Values.Is_Empty)
+                     then
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "non-empty set of sources can't be defined in an"
+                              & " abstract project",
+                              Source_Reference.Create
+                                (View.Path_Name.Value, 0, 0)));
+                     end if;
+                  end;
+
+               when others =>
+                  null;
+            end case;
          end;
       end Validity_Check;
 
