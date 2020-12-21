@@ -1,0 +1,2 @@
+description: test gpr2ls multi-unit deps with/without compilation
+driver: python_script

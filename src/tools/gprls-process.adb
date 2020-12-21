@@ -246,6 +246,7 @@ begin
       --  The maps should have Value_Path keys to support case-insensitive FS.
 
       use type Project.Source.Object;
+      use all type Project.Source.Naming_Exception_Kind;
 
       function Path_Equal
         (Left, Right : Project.Source.Object) return Boolean
@@ -714,19 +715,38 @@ begin
       --  Check all sources and notify when no ALI file is present
 
       for S of Sources loop
-         for CU of S.Source.Units loop
+         For_Units : for CU of S.Source.Units loop
             if S.Artifacts.Has_Dependency (CU.Index)
               and then not S.Artifacts.Dependency (CU.Index).Exists
             then
                Full_Closure := False;
-               Text_IO.Put_Line
-                 ("Can't find ALI "
-                  & String
-                    (if CU.Index > 1
-                     then S.Artifacts.Dependency (CU.Index).Simple_Name & " "
-                     else "") & "file for " & S.Source.Path_Name.Value);
+
+               if S.Has_Naming_Exception
+                 and then S.Naming_Exception = Project.Source.Multi_Unit
+               then
+                  --  In case of multi-unit we have no information until the
+                  --  unit is compiled. There is no need to report that there
+                  --  is missing ALI in this case. But we report that the
+                  --  status for this file is unknown.
+
+                  Text_IO.Put_Line
+                    ("UNKNOWN status for "
+                     & "file " & S.Source.Path_Name.Value);
+
+                  exit For_Units;
+
+               else
+                  Text_IO.Put_Line
+                    ("Can't find ALI "
+                     & String
+                       (if CU.Index > 1
+                        then S.Artifacts.Dependency (CU.Index).Simple_Name
+                             & " "
+                        else "")
+                     & "file for " & S.Source.Path_Name.Value);
+               end if;
             end if;
-         end loop;
+         end loop For_Units;
       end loop;
 
       --  We gathered all the sources:

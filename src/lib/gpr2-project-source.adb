@@ -253,7 +253,7 @@ package body GPR2.Project.Source is
      (Source           : GPR2.Source.Object;
       View             : Project.View.Object;
       Is_Interface     : Boolean;
-      Naming_Exception : Naming_Exception_Value;
+      Naming_Exception : Naming_Exception_Kind;
       Is_Compilable    : Boolean;
       Aggregated       : Boolean := False) return Object is
    begin

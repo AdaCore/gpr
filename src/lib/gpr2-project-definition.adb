@@ -959,7 +959,7 @@ package body GPR2.Project.Definition is
          Match                  : Boolean := False;
 
          Source_Is_In_Interface : Boolean := False;
-         Naming_Exception       : Project.Source.Naming_Exception_Value := No;
+         Naming_Exception       : Project.Source.Naming_Exception_Kind := No;
          Units                  : Unit.List.Object;  --  For Ada
          Kind                   : Unit.Library_Unit_Type;
          Source                 : GPR2.Source.Object;
