@@ -1,9 +1,11 @@
 langkit/src/* no-precommit-check
 testsuite/tests/*/*.ads no-precommit-check
 testsuite/tests/*/*.adb no-precommit-check
+testsuite/tests/*/*.ada no-precommit-check
 testsuite/tests/*/*.gpr no-precommit-check
 testsuite/tests/*/*/*.ads no-precommit-check
 testsuite/tests/*/*/*.adb no-precommit-check
+testsuite/tests/*/*/*.ada no-precommit-check
 testsuite/tests/*/*/*.gpr no-precommit-check
 testsuite/tests/*/*.c no-precommit-check
 testsuite/tests/*/*.h no-precommit-check
