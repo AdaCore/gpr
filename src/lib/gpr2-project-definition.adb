@@ -1194,8 +1194,8 @@ package body GPR2.Project.Definition is
                             Src_Dir_Set.Find (Project_Source);
                   begin
                      if Project.Source.Set.Has_Element (CS) then
-                        if Src_Dir_Set (CS).Has_Naming_Exception
-                          < Project_Source.Has_Naming_Exception
+                        if not Src_Dir_Set (CS).Has_Naming_Exception
+                          and then Project_Source.Has_Naming_Exception
                         then
                            --  We are here only when
                            --  Src_Dir_Set (CS).Has_Naming_Exception is False
@@ -1871,11 +1871,11 @@ package body GPR2.Project.Definition is
 
             for C in Ada_Except_Usage.Iterate loop
                declare
-                  Key  : constant Value_Type :=
-                           Naming_Exceptions_Usage.Key (C);
-                  Item : constant
-                    Naming_Exceptions_Usage.Constant_Reference_Type :=
-                      Ada_Except_Usage (C);
+                  package NEU renames Naming_Exceptions_Usage;
+
+                  Key  : constant Value_Type := NEU.Key (C);
+                  Item : constant NEU.Constant_Reference_Type :=
+                           Ada_Except_Usage (C);
                begin
                   pragma Assert (Key (Key'Last) in 'B' | 'S', Key);
 
@@ -1997,6 +1997,7 @@ package body GPR2.Project.Definition is
 
             Set_Source (Def.Tree.all, SW);
          end loop;
+
          Def.Sources     := Def_Sources;
          Def.Sources_Map := Def_Src_Map;
       end;

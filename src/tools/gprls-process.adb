@@ -167,8 +167,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -- Show_Tree_Load_Errors --
    ---------------------------
 
-   procedure Show_Tree_Load_Errors
-   is
+   procedure Show_Tree_Load_Errors is
       Has_Error : Boolean := False;
    begin
       for C in Tree.Log_Messages.Iterate
@@ -224,6 +223,7 @@ begin
    end if;
 
    --  Show errors and warnings from the load stage
+
    Show_Tree_Load_Errors;
 
    if Opt.Only_Display_Paths then
@@ -247,10 +247,12 @@ begin
 
       use type Project.Source.Object;
 
-      function Path_Equal (Left, Right : Project.Source.Object) return Boolean
+      function Path_Equal
+        (Left, Right : Project.Source.Object) return Boolean
       is (Left = Right and then Left.Path_Name.Value = Right.Path_Name.Value);
 
-      function Path_Less (Left, Right : Project.Source.Object) return Boolean
+      function Path_Less
+        (Left, Right : Project.Source.Object) return Boolean
       is (Left.View.Namespace_Root.Name < Right.View.Namespace_Root.Name
           or else (Left.View.Namespace_Root.Name
                    = Right.View.Namespace_Root.Name
@@ -291,11 +293,9 @@ begin
       ----------------------
 
       procedure Display_Closures is
-
-         Closures : Project.Source.Set.Object;
-
          use type Ada.Containers.Count_Type;
 
+         Closures : Project.Source.Set.Object;
       begin
          if Sources.Is_Empty then
             Finish_Program (E_Errors, "no main specified for closure");
@@ -319,9 +319,9 @@ begin
          Text_IO.New_Line;
 
          declare
-            Output : String_Vector.Vector;
             package String_Sorting is new String_Vector.Generic_Sorting;
 
+            Output : String_Vector.Vector;
          begin
             for R of Closures loop
                if not R.Source.Is_Runtime then
@@ -395,11 +395,11 @@ begin
                   Text_IO.Put ("    ");
 
                   case Status is
-                  when OK =>
-                     Text_IO.Put ("  OK ");
+                     when OK =>
+                        Text_IO.Put ("  OK ");
 
-                  when Not_Same =>
-                     Text_IO.Put (" DIF ");
+                     when Not_Same =>
+                        Text_IO.Put (" DIF ");
                   end case;
                end if;
 
@@ -420,6 +420,7 @@ begin
                Main_Unit : Unit.Object;
 
                procedure Print_Unit_From (Src : Path_Name.Object);
+
                function  Print_Unit (U_Sec : Unit.Object) return Boolean;
 
                procedure Dependence_Output
@@ -472,11 +473,13 @@ begin
 
                      if U_Sec.Is_Any_Flag_Set then
                         Text_IO.Put ("     Flags  =>");
+
                         for Flag in Unit.Flag'Range loop
                            if U_Sec.Is_Flag_Set (Flag) then
                               Text_IO.Put (' ' & Unit.Image (Flag));
                            end if;
                         end loop;
+
                         Text_IO.New_Line;
                      end if;
                   else
@@ -553,7 +556,6 @@ begin
 
                   S.Dependencies (Dependence_Output'Access);
                end if;
-
             end;
          end loop;
       end Display_Normal;
@@ -567,9 +569,11 @@ begin
          --  Fill the various caches to get the sources from simple filenames
          --  and artefacts
 
-         for CV in Tree.Iterate ((Project.I_Extended => False, others => True))
+         for CV in
+           Tree.Iterate ((Project.I_Extended => False, others => True))
          loop
-            for S of Project.Tree.Element (CV).Sources (Need_Update => False)
+            for S of
+              Project.Tree.Element (CV).Sources (Need_Update => False)
             loop
                declare
                   Artifacts : Project.Source.Artifact.Object;
@@ -662,13 +666,13 @@ begin
          --  - Or we're not, and we will use all the compilable sources (from
          --    the root project or the entire tree, depending on All_Sources).
 
-         for CV in Tree.Iterate ((Project.I_Extended => False, others => True))
+         for CV in
+           Tree.Iterate ((Project.I_Extended => False, others => True))
          loop
             for S_Cur in Project.Tree.Element (CV).Sources
               (Need_Update => False).Iterate (Filter => S_Compilable)
             loop
-               if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
-               then
+               if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
                   Sources.Insert (Element (S_Cur), Position, Inserted);
 
                   --  Source could be already in the set because we
@@ -695,8 +699,7 @@ begin
          for S_Cur in Tree.Root_Project.Sources
            (Need_Update => False).Iterate (Filter => S_Compilable)
          loop
-            if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
-            then
+            if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
                Sources.Insert (Element (S_Cur));
             end if;
          end loop;
