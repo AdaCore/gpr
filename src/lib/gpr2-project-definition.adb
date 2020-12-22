@@ -570,6 +570,7 @@ package body GPR2.Project.Definition is
       -----------------
 
       procedure Handle_File (Path : GPR2.Path_Name.Full_Name) is
+         use all type GPR2.Project.Source.Naming_Exception_Kind;
          use all type Unit.Library_Unit_Type;
 
          --  The implementation works as follows:
@@ -958,7 +959,7 @@ package body GPR2.Project.Definition is
          Match                  : Boolean := False;
 
          Source_Is_In_Interface : Boolean := False;
-         Has_Naming_Exception   : Boolean := False;
+         Naming_Exception       : Project.Source.Naming_Exception_Value := No;
          Units                  : Unit.List.Object;  --  For Ada
          Kind                   : Unit.Library_Unit_Type;
          Source                 : GPR2.Source.Object;
@@ -997,7 +998,7 @@ package body GPR2.Project.Definition is
                if Match then
                   --  Got some naming exceptions for the source
 
-                  Has_Naming_Exception := True;
+                  Naming_Exception := Yes;
 
                   if Language_Is_Ada then
                      --  For Ada, fill the compilation units
@@ -1017,6 +1018,7 @@ package body GPR2.Project.Definition is
                               if Value.Has_At_Pos then
                                  Index      := Value.At_Pos;
                                  Is_Indexed := True;
+                                 Naming_Exception := Multi_Unit;
                               else
                                  Index := 1;
                               end if;
@@ -1182,8 +1184,8 @@ package body GPR2.Project.Definition is
                                            View                 => View,
                                            Is_Interface         =>
                                              Is_Interface,
-                                           Has_Naming_Exception =>
-                                             Has_Naming_Exception,
+                                           Naming_Exception     =>
+                                             Naming_Exception,
                                            Is_Compilable        =>
                                              Is_Compilable (Language));
 
@@ -1812,12 +1814,12 @@ package body GPR2.Project.Definition is
 
                      A_Set.Insert
                        (Project.Source.Create
-                          (Source               => P.Source,
-                           View                 => P.View,
-                           Is_Interface         => Is_Interface,
-                           Has_Naming_Exception => P.Has_Naming_Exception,
-                           Is_Compilable        => P.Is_Compilable,
-                           Aggregated           => True));
+                          (Source           => P.Source,
+                           View             => P.View,
+                           Is_Interface     => Is_Interface,
+                           Naming_Exception => P.Naming_Exception,
+                           Is_Compilable    => P.Is_Compilable,
+                           Aggregated       => True));
                   end;
                end loop;
 

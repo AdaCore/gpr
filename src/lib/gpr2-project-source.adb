@@ -250,18 +250,17 @@ package body GPR2.Project.Source is
    ------------
 
    function Create
-     (Source               : GPR2.Source.Object;
-      View                 : Project.View.Object;
-      Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean;
-      Is_Compilable        : Boolean;
-      Aggregated           : Boolean := False) return Object
-   is
+     (Source           : GPR2.Source.Object;
+      View             : Project.View.Object;
+      Is_Interface     : Boolean;
+      Naming_Exception : Naming_Exception_Value;
+      Is_Compilable    : Boolean;
+      Aggregated       : Boolean := False) return Object is
    begin
       return Object'
         (Source,
          Definition.Weak (View),
-         Is_Interface, Has_Naming_Exception, Is_Compilable, Aggregated, False);
+         Is_Interface, Naming_Exception, Is_Compilable, Aggregated, False);
    end Create;
 
    ------------------

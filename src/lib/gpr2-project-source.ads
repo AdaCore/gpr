@@ -35,6 +35,11 @@ package GPR2.Project.Source is
    use type GPR2.Source.Object;
    use type GPR2.Unit.Library_Unit_Type;
 
+   type Naming_Exception_Value is (No, Yes, Multi_Unit);
+
+   subtype Naming_Exception_Kind is
+     Naming_Exception_Value range Yes .. Multi_Unit;
+
    type Object is tagged private;
 
    Undefined : constant Object;
@@ -49,12 +54,12 @@ package GPR2.Project.Source is
    overriding function "=" (Left, Right : Object) return Boolean;
 
    function Create
-     (Source               : GPR2.Source.Object;
-      View                 : Project.View.Object;
-      Is_Interface         : Boolean;
-      Has_Naming_Exception : Boolean;
-      Is_Compilable        : Boolean;
-      Aggregated           : Boolean := False) return Object
+     (Source           : GPR2.Source.Object;
+      View             : Project.View.Object;
+      Is_Interface     : Boolean;
+      Naming_Exception : Naming_Exception_Value;
+      Is_Compilable    : Boolean;
+      Aggregated       : Boolean := False) return Object
      with Pre => Source.Is_Defined
                  and then View.Is_Defined
                  and then (not Aggregated
@@ -92,6 +97,10 @@ package GPR2.Project.Source is
 
    function Has_Naming_Exception (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
+   --  Returns whether the source comes from a naming exception
+
+   function Naming_Exception (Self : Object) return Naming_Exception_Kind
+     with Pre => Self.Is_Defined and then Self.Has_Naming_Exception;
    --  Returns whether the source comes from a naming exception
 
    function Has_Aggregating_View (Self : Object) return Boolean
@@ -175,11 +184,12 @@ private
       --  and its View. Otherwise we've got memory leak after release view and
       --  valgrind detected mess in memory deallocations at the process exit.
 
-      Is_Interface         : Boolean := False;
-      Has_Naming_Exception : Boolean := False;
-      Is_Compilable        : Boolean := False;
-      Aggregated           : Boolean := False;
-      Inherited            : Boolean := False; -- From extended project
+      Is_Interface     : Boolean                := False;
+      Naming_Exception : Naming_Exception_Value := No;
+      Is_Compilable    : Boolean                := False;
+      Aggregated       : Boolean                := False;
+      Inherited        : Boolean                := False;
+      --  From extended project
    end record;
 
    Undefined : constant Object :=
@@ -202,7 +212,10 @@ private
      (Self.Is_Interface);
 
    function Has_Naming_Exception (Self : Object) return Boolean is
-     (Self.Has_Naming_Exception);
+     (Self.Naming_Exception in Naming_Exception_Kind);
+
+   function Naming_Exception (Self : Object) return Naming_Exception_Kind is
+     (Self.Naming_Exception);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Source.Path_Name);

@@ -75,7 +75,7 @@ package body GPR2.Project.Source.Artifact is
       Src  : constant GPR2.Source.Object := Source.Source;
       Main : constant GPR2.Project.Source.Object :=
                (if Source.Has_Other_Part
-                  and then Source.Has_Naming_Exception
+                  and then Source.Naming_Exception in Naming_Exception_Kind
                   and then Src.Has_Single_Unit
                   and then Src.Kind = Unit.S_Spec
                   and then not Force_Spec
