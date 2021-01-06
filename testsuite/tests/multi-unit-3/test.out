@@ -1,6 +1,8 @@
 No build
+using project file /multi.gpr
 UNKNOWN status for file /src/code.ada
 With build
+using project file /multi.gpr
 /obj/code~1.o
    Pck
-         OK /src/code.ada
+      OK /src/code.ada
