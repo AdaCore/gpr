@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -194,9 +194,7 @@ private
       --  From extended project
    end record;
 
-   Undefined : constant Object :=
-                 (Source => GPR2.Source.Undefined,
-                  others => <>);
+   Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
