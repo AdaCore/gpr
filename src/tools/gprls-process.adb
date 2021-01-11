@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -667,13 +667,13 @@ begin
          --  - Or we're not, and we will use all the compilable sources (from
          --    the root project or the entire tree, depending on All_Sources).
 
-         for CV in
-           Tree.Iterate ((Project.I_Extended => False, others => True))
-         loop
-            for S_Cur in Project.Tree.Element (CV).Sources
-              (Need_Update => False).Iterate (Filter => S_Compilable)
+         for View of Tree loop
+            for S_Cur in View.Sources (Need_Update => False).Iterate
+                           (Filter => S_Compilable)
             loop
-               if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
+               if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
+                 and then not Element (S_Cur).Is_Overriden
+               then
                   Sources.Insert (Element (S_Cur), Position, Inserted);
 
                   --  Source could be already in the set because we
@@ -730,8 +730,7 @@ begin
                   --  status for this file is unknown.
 
                   Text_IO.Put_Line
-                    ("UNKNOWN status for "
-                     & "file " & S.Source.Path_Name.Value);
+                    ("UNKNOWN status for file " & S.Source.Path_Name.Value);
 
                   exit For_Units;
 

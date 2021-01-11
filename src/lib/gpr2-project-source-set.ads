@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -71,6 +71,11 @@ package GPR2.Project.Source.Set is
       Source : Project.Source.Object) return Boolean
      with Pre => Source.Is_Defined;
    --  Returns True if Self constains Source
+
+   procedure Delete
+     (Self : in out Object; Source : Project.Source.Object)
+     with Pre => Source.Is_Defined;
+   --  Deletes source from set
 
    procedure Replace
      (Self   : in out Object;

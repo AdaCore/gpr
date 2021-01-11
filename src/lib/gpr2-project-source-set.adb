@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -73,6 +73,16 @@ package body GPR2.Project.Source.Set is
    begin
       return Self.S.Contains (Source);
    end Contains;
+
+   ------------
+   -- Delete --
+   ------------
+
+   procedure Delete
+     (Self : in out Object; Source : Project.Source.Object) is
+   begin
+      Self.S.Delete (Source);
+   end Delete;
 
    -------------
    -- Element --

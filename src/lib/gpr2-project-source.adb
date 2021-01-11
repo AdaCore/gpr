@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -414,6 +414,34 @@ package body GPR2.Project.Source is
    begin
       return Definition.Strong (Self.View).Is_Main (Self);
    end Is_Main;
+
+   ------------------
+   -- Is_Overriden --
+   ------------------
+
+   function Is_Overriden (Self : Object) return Boolean is
+      use type Project.View.Object;
+      Try : Object;
+   begin
+      if not View (Self).Check_Source (Self.Path_Name.Simple_Name, Try)
+        or else View (Try) /= View (Self)
+      then
+         return True;
+
+      elsif not Self.Source.Has_Units then
+         return False;
+      end if;
+
+      for U of Self.Source.Units loop
+         if Definition.Check_Source_Unit (View (Self), U, Try)
+           and then View (Try) = View (Self)
+         then
+            return False;
+         end if;
+      end loop;
+
+      return True;
+   end Is_Overriden;
 
    ----------------
    -- Other_Part --

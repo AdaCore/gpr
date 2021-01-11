@@ -36,7 +36,6 @@ with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
-with GPR2.Unit;
 
 with GNAT.OS_Lib;
 with GNAT.Regexp;
@@ -79,10 +78,16 @@ package body GPR2.Project.Tree is
    --  Return True on success and set Result.
    --  Return False if source not found and remain Result untouched.
 
+   function Check_Source
+     (View   : Project.View.Object;
+      Unit   : GPR2.Unit.Object;
+      Result : in out Source.Object) return Boolean;
+   --  Get source by unit name and kind from the same subtree with the View.
+
    function Has_Source
      (View : Project.View.Object; Name : Simple_Name) return Boolean
    is
-     (Source_Keys.Contains (View.Tree.Rooted_Sources, Key (View, Name)));
+     (View.Tree.Rooted_Sources.Contains (Key (View, Name)));
    --  Return True if source with such filename found in project namespace
    --  subtree.
 
@@ -92,9 +97,12 @@ package body GPR2.Project.Tree is
      (View.Tree.Context (View.Context));
    --  Returns context of the project view
 
-   procedure Set_Source
-     (Self : in out Object; Source : Project.Source.Object);
+   procedure Set_Source (Source : Project.Source.Object);
    --  Insert source into internal Tree container indexed by Root of subtree
+   --  project name and simple source filename.
+
+   procedure Remove_Source (Source : Project.Source.Object);
+   --  Remove Source from internal Tree container indexed by Root of subtree
    --  project name and simple source filename.
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
@@ -305,12 +313,31 @@ package body GPR2.Project.Tree is
       Name   : Simple_Name;
       Result : in out Source.Object) return Boolean
    is
-      Position : constant Source_Set.Cursor :=
-                   Source_Keys.Find
-                     (View.Tree.Rooted_Sources, Key (View, Name));
+      Position : constant Source_Maps.Cursor :=
+                   View.Tree.Rooted_Sources.Find (Key (View, Name));
    begin
-      if Source_Set.Has_Element (Position) then
-         Result := Source_Set.Element (Position);
+      if Source_Maps.Has_Element (Position) then
+         Result := Source_Maps.Element (Position);
+         return True;
+      else
+         return False;
+      end if;
+   end Check_Source;
+
+   ------------------
+   -- Check_Source --
+   ------------------
+
+   function Check_Source
+     (View   : Project.View.Object;
+      Unit   : GPR2.Unit.Object;
+      Result : in out Source.Object) return Boolean
+   is
+      Position : constant Source_Maps.Cursor :=
+                   View.Tree.Rooted_Sources.Find (Key (View, Unit));
+   begin
+      if Source_Maps.Has_Element (Position) then
+         Result := Source_Maps.Element (Position);
          return True;
       else
          return False;
@@ -2155,6 +2182,40 @@ package body GPR2.Project.Tree is
       return View;
    end Register_View;
 
+   -------------------
+   -- Remove_Source --
+   -------------------
+
+   procedure Remove_Source (Source : Project.Source.Object) is
+
+      Self : constant access Object := Source.View.Tree;
+
+      procedure Remove_If_Proper (Key : String);
+
+      ----------------------
+      -- Remove_If_Proper --
+      ----------------------
+
+      procedure Remove_If_Proper (Key : String) is
+         Position : Source_Maps.Cursor := Self.Rooted_Sources.Find (Key);
+      begin
+         if Source_Maps.Has_Element (Position)
+           and then Self.Rooted_Sources (Position).View = Source.View
+         then
+            Self.Rooted_Sources.Delete (Position);
+         end if;
+      end Remove_If_Proper;
+
+   begin
+      Remove_If_Proper (Key (Source));
+
+      if Source.Source.Has_Units then
+         for U of Source.Source.Units loop
+            Remove_If_Proper (Key (Source.View, U));
+         end loop;
+      end if;
+   end Remove_Source;
+
    ------------------
    -- Root_Project --
    ------------------
@@ -2945,18 +3006,39 @@ package body GPR2.Project.Tree is
    -- Set_Source --
    ----------------
 
-   procedure Set_Source
-     (Self : in out Project.Tree.Object; Source : Project.Source.Object)
-   is
-      Position : Source_Set.Cursor;
-      Inserted : Boolean;
-   begin
-      Self.Rooted_Sources.Insert (Source, Position, Inserted);
+   procedure Set_Source (Source : Project.Source.Object) is
 
-      if not Inserted
-        and then Source.View.Is_Extending (Self.Rooted_Sources (Position).View)
-      then
-         Self.Rooted_Sources.Replace_Element (Position, Source);
+      Self : constant access Object := Source.View.Tree;
+
+      procedure Insert_Or_Replace (Key : String);
+      --  Insert or replace the source into Rooted_Sources container with given
+      --  Key.
+
+      -----------------------
+      -- Insert_Or_Replace --
+      -----------------------
+
+      procedure Insert_Or_Replace (Key : String) is
+         Position : Source_Maps.Cursor;
+         Inserted : Boolean;
+      begin
+         Self.Rooted_Sources.Insert (Key, Source, Position, Inserted);
+
+         if not Inserted
+           and then Source.View.Is_Extending
+                      (Source_Maps.Element (Position).View)
+         then
+            Self.Rooted_Sources.Replace_Element (Position, Source);
+         end if;
+      end Insert_Or_Replace;
+
+   begin
+      Insert_Or_Replace (Key (Source));
+
+      if Source.Source.Has_Units then
+         for U of Source.Source.Units loop
+            Insert_Or_Replace (Key (Source.View, U));
+         end loop;
       end if;
    end Set_Source;
 
@@ -3225,9 +3307,11 @@ package body GPR2.Project.Tree is
 begin
    --  Export routines to Definitions to avoid cyclic dependencies
 
-   Definition.Register     := Register_View'Access;
-   Definition.Check_Source := Check_Source'Access;
-   Definition.Has_Source   := Has_Source'Access;
-   Definition.Set_Source   := Set_Source'Access;
-   Definition.Get_Context  := Get_Context'Access;
+   Definition.Register          := Register_View'Access;
+   Definition.Check_Source      := Check_Source'Access;
+   Definition.Check_Source_Unit := Check_Source'Access;
+   Definition.Has_Source        := Has_Source'Access;
+   Definition.Set_Source        := Set_Source'Access;
+   Definition.Remove_Source     := Remove_Source'Access;
+   Definition.Get_Context       := Get_Context'Access;
 end GPR2.Project.Tree;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,11 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Containers.Hashed_Sets;
 with Ada.Iterator_Interfaces;
-with Ada.Strings.Hash;
-with Ada.Strings.Unbounded;
 
 with GPR2.Containers;
 with GPR2.Context;
@@ -39,13 +35,18 @@ pragma Elaborate (GPR2.Project.Configuration);
 with GPR2.Project.View.Set;
 with GPR2.Project.Source;
 with GPR2.Project.Unit_Info;
-with GPR2.Project.Registry.Attribute;
 
 pragma Warnings (Off);
 with System.OS_Constants;
 pragma Warnings (On);
 
+private with Ada.Containers.Indefinite_Ordered_Maps;
+private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Vectors;
+private with Ada.Strings.Hash;
+private with Ada.Strings.Unbounded;
+private with GPR2.Project.Registry.Attribute;
+private with GPR2.Unit;
 
 package GPR2.Project.Tree is
 
@@ -433,8 +434,15 @@ private
    function Key
      (View : Project.View.Object; Source : Simple_Name) return String
    is
-     (To_Lower (View.Namespace_Root.Name)
+     (Path_Name.To_OS_Case (View.Namespace_Root.Path_Name.Value)
       & '|' & Path_Name.To_OS_Case (String (Source)));
+
+   function Key
+     (View : Project.View.Object; Unit : GPR2.Unit.Object) return String
+   is
+     (Path_Name.To_OS_Case (View.Namespace_Root.Path_Name.Value)
+      & (if Unit.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B')
+      & To_Lower (Unit.Name));
 
    function Key (Item : Source.Object) return String is
      (Key (Item.View, Item.Path_Name.Simple_Name));
@@ -443,16 +451,14 @@ private
      (Ada.Strings.Hash (Key (Item)));
 
    function Same_Key (Left, Right : Source.Object) return Boolean is
-      (Key (Left) = Key (Right));
+     (Key (Left) = Key (Right));
 
-   package Source_Set is new Ada.Containers.Hashed_Sets
-     (Element_Type        => Source.Object,
-      Hash                => To_Hash,
-      Equivalent_Elements => Same_Key,
-      "="                 => Same_Key);
-
-   package Source_Keys is new Source_Set.Generic_Keys
-     (String, Key, Ada.Strings.Hash, "=");
+   package Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Key_Type        => String,
+      Element_Type    => Source.Object,
+      Hash            => Ada.Strings.Hash,
+      Equivalent_Keys => "=",
+      "="             => Source."=");
 
    type Two_Contexts is array (Context_Kind) of GPR2.Context.Object;
    --  Root and Aggregate contexts
@@ -465,7 +471,7 @@ private
       Runtime          : View.Object;
       Units            : Name_View.Map;
       Sources          : Filename_View.Map;
-      Rooted_Sources   : Source_Set.Set;
+      Rooted_Sources   : Source_Maps.Map;
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
       Implicit_With    : Containers.Filename_Set;

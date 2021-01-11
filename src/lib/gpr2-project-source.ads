@@ -83,6 +83,10 @@ package GPR2.Project.Source is
    --  Returns True if the source is taken into aggregating library source set
    --  from the aggregated project.
 
+   function Is_Overriden (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Mean that the source is overriden with another extending project
+
    function Is_Compilable (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if the source is compilable, meaning that a compiler is

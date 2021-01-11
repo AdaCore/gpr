@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -34,7 +34,6 @@ with Ada.Text_IO;
 with GNAT.MD5;
 with GNAT.OS_Lib;
 
-with GPR2.Unit;
 with GPR2.Unit.List;
 with GPR2.Message;
 with GPR2.Path_Name.Set;
@@ -1287,6 +1286,9 @@ package body GPR2.Project.Definition is
 
          procedure Source_Message (Src : Project.Source.Object);
 
+         procedure Exclude_Recursively
+           (View : in out Project.View.Object; Source : Project.Source.Object);
+
          ----------------
          -- Add_Source --
          ----------------
@@ -1341,6 +1343,25 @@ package body GPR2.Project.Definition is
             end if;
          end Add_Source;
 
+         -------------------------
+         -- Exclude_Recursively --
+         -------------------------
+
+         procedure Exclude_Recursively
+           (View : in out Project.View.Object; Source : Project.Source.Object)
+         is
+            Def : constant Ref := Get_RW (View);
+         begin
+            Def.Sources.Delete (Source);
+            Def.Sources_Map.Delete (Source.Path_Name.Simple_Name);
+
+            Remove_Source (Source);
+
+            if Def.Extended.Is_Defined then
+               Exclude_Recursively (Def.Extended, Source);
+            end if;
+         end Exclude_Recursively;
+
          --------------------
          -- Source_Message --
          --------------------
@@ -1390,6 +1411,9 @@ package body GPR2.Project.Definition is
                  (if Mode = Extended_Copy
                   then Change_Actual_View (Source, View)
                   else Source);
+
+            elsif Mode = Extended_Copy then
+               Exclude_Recursively (Def.Extended, Source);
             end if;
          end loop;
       end Insert;
@@ -1470,15 +1494,22 @@ package body GPR2.Project.Definition is
          Filename   : constant GPR2.Path_Name.Full_Name :=
                         Directories.Compose (Root, Attr_Value.Text);
          F          : Text_IO.File_Type;
-         Buffer     : String (1 .. 1_024);
-         Last       : Natural;
       begin
          Text_IO.Open (F, Text_IO.In_File, Filename);
 
          while not Text_IO.End_Of_File (F) loop
-            Text_IO.Get_Line (F, Buffer, Last);
-            Include_Simple_Filename
-              (Set, Buffer (Buffer'First .. Last), Attr_Value);
+            declare
+               use Ada.Strings;
+               Line : constant String :=
+                        Fixed.Trim
+                          (Text_IO.Get_Line (F),
+                           Maps.Constants.Control_Set,
+                           Maps.Constants.Control_Set);
+            begin
+               if Line /= "" then
+                  Include_Simple_Filename (Set, Line, Attr_Value);
+               end if;
+            end;
          end loop;
 
          Text_IO.Close (F);
@@ -1997,7 +2028,7 @@ package body GPR2.Project.Definition is
               (Inserted or else SW.Source.Language /= "Ada",
                String (SW.Path_Name.Simple_Name) & " duplicated");
 
-            Set_Source (Def.Tree.all, SW);
+            Set_Source (SW);
          end loop;
 
          Def.Sources     := Def_Sources;
