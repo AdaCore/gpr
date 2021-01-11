@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -249,7 +249,7 @@ package body GPR2.Project.Tree is
       end GNAT_Compilers_Prefix;
 
       Prefix_From_Root : constant Optional_Name_Type :=
-                           GNAT_Compilers_Prefix (Self.Root_Project);
+                           GNAT_Compilers_Prefix (Self.Root);
       --  Try to find prefix from root project compiler package
 
    begin
@@ -375,7 +375,7 @@ package body GPR2.Project.Tree is
 
    function Context (Self : Object) return GPR2.Context.Object is
    begin
-      return Self.Root_Project.Context;
+      return Self.Root.Context;
    end Context;
 
    -------------------------
@@ -996,7 +996,7 @@ package body GPR2.Project.Tree is
 
    function Has_Context (Self : Object) return Boolean is
    begin
-      return not Self.Root_Project.Context.Is_Empty;
+      return not Self.Root.Context.Is_Empty;
    end Has_Context;
 
    -----------------
@@ -1312,7 +1312,7 @@ package body GPR2.Project.Tree is
          raise Project_Error with Project_Path.Value & " syntax error";
       end if;
 
-      pragma Assert (Definition.Check_Circular_References (Self.Root_Project));
+      pragma Assert (Definition.Check_Circular_References (Self.Root));
    end Load;
 
    -------------------
@@ -1360,8 +1360,7 @@ package body GPR2.Project.Tree is
       -- Actual_Target --
       -------------------
 
-      function Actual_Target return Name_Type
-      is
+      function Actual_Target return Name_Type is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Target /= No_Name and then Target /= "all" then
@@ -1370,7 +1369,7 @@ package body GPR2.Project.Tree is
             return Target;
          end if;
 
-         if Self.Root_Project.Check_Attribute
+         if Self.Root.Check_Attribute
            (PRA.Target, Recursive => True, Result => Tmp_Attr)
          then
             --  Check if the project explicitly defines the attribute or if
@@ -1491,11 +1490,11 @@ package body GPR2.Project.Tree is
             return Name_Type (LRT);
          end if;
 
-         if Self.Root_Project.Check_Attribute
+         if Self.Root.Check_Attribute
            (PRA.Runtime, Attribute_Index.Create (Language.Text),
             Recursive => True, Result => Tmp_Attr)
          then
-            return Attr_As_Abs_Path (Tmp_Attr, Self.Root_Project);
+            return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
          end if;
 
          return No_Name;
@@ -1559,11 +1558,11 @@ package body GPR2.Project.Tree is
          --  are meaningful or not
          Self.Messages.Clear;
 
-         if Self.Root_Project.Is_Externally_Built then
+         if Self.Root.Is_Externally_Built then
             --  If we have externally built project, configure only the root
             --  one.
 
-            Add_Languages (Self.Root_Project);
+            Add_Languages (Self.Root);
 
          else
             --  If we have non externally built project, configure the none
@@ -1584,7 +1583,7 @@ package body GPR2.Project.Tree is
                  (Level   => Message.Warning,
                   Message => "no language for the projects tree: "
                   & "configuration skipped",
-                  Sloc    => Self.Root_Project.Attributes.Languages));
+                  Sloc    => Self.Root.Attributes.Languages));
             return;
          end if;
 
@@ -1612,7 +1611,7 @@ package body GPR2.Project.Tree is
             Conf := Project.Configuration.Create
               (Conf_Descriptions,
                Actual_Target,
-               Self.Root_Project.Path_Name,
+               Self.Root.Path_Name,
                Self.Base);
          end;
 
@@ -2180,8 +2179,8 @@ package body GPR2.Project.Tree is
       then
          return Self.Conf.Runtime (Language);
 
-      elsif Self.Root /= View.Undefined
-        and then Self.Root_Project.Check_Attribute
+      elsif Self.Root.Is_Defined
+        and then Self.Root.Check_Attribute
           (PRA.Runtime,
            Index => GPR2.Project.Attribute_Index.Create
              (Value_Type (Language), Case_Sensitive => False),
@@ -2751,8 +2750,8 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Warning,
-                              '"' & PN.Relative_Path
-                                      (Self.Root_Project.Path_Name).Value
+                              '"'
+                              & PN.Relative_Path (Self.Root.Path_Name).Value
                               & """ cannot relocate absolute "
                               & (if Human_Name = ""
                                  then ""
@@ -2951,7 +2950,6 @@ package body GPR2.Project.Tree is
    is
       Position : Source_Set.Cursor;
       Inserted : Boolean;
-
    begin
       Self.Rooted_Sources.Insert (Source, Position, Inserted);
 
@@ -2966,9 +2964,10 @@ package body GPR2.Project.Tree is
    -- Target --
    ------------
 
-   function Target (Self      : Object;
-                    Canonical : Boolean := False) return Name_Type
+   function Target
+     (Self : Object; Canonical : Boolean := False) return Name_Type
    is
+
       function Normalized (Target : Name_Type) return Name_Type
         with Inline;
 
@@ -2976,8 +2975,7 @@ package body GPR2.Project.Tree is
       -- Normalized --
       ----------------
 
-      function Normalized (Target : Name_Type) return Name_Type
-      is
+      function Normalized (Target : Name_Type) return Name_Type is
       begin
          if Self.Base.Is_Defined then
             declare
@@ -2994,6 +2992,7 @@ package body GPR2.Project.Tree is
       end Normalized;
 
       TA : Attribute.Object;
+
    begin
       if Self.Has_Configuration
         and then Self.Configuration.Corresponding_View.Check_Attribute
@@ -3002,8 +3001,8 @@ package body GPR2.Project.Tree is
       then
          return Name_Type (TA.Value.Text);
 
-      elsif Self.Root /= View.Undefined
-        and then Self.Root_Project.Check_Attribute
+      elsif Self.Root.Is_Defined
+        and then Self.Root.Check_Attribute
                    (PRA.Target, Recursive => True, Result => TA)
       then
          return Name_Type (TA.Value.Text);
