@@ -43,6 +43,13 @@ procedure Main is
 
    PV : Path_Name.Object;
 
+   FH : constant GPR2.Path_Name.Object :=
+          GPR2.Path_Name.Create_Directory
+            ("/gnatmail/gpr2/x86-windows/gpr2/install/share/gpr");
+   TH : constant GPR2.Path_Name.Object :=
+          GPR2.Path_Name.Create_Directory
+            ("/gnatmail/gpr2/x86-windows/gpr2-test/src/testsuite/tests/m");
+
 begin
    Text_IO.Put_Line ("1: " & String (Path_Name.Relative_Path (P1, P2).Name));
    Text_IO.Put_Line ("2: " & String (Path_Name.Relative_Path (P3, P2).Name));
@@ -73,4 +80,5 @@ begin
    Text_IO.Put_Line ("F: " & String (PV.Name));
    PV := PV.Change_Extension ("ef");
    Text_IO.Put_Line ("G: " & String (PV.Name));
+   Text_IO.Put_Line ("H: " & String (Path_Name.Relative_Path (FH, TH).Name));
 end Main;

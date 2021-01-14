@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -606,7 +606,7 @@ package body GPR2.Path_Name is
 
       --  Cut common prefix at a directory separator
 
-      while Pi > P'First and then P (Pi) /= '/' loop
+      while Pi > P'First and then (P (Pi) /= '/' or else T (Pi) /= '/') loop
          Pi := Pi - 1;
       end loop;
 

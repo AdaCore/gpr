@@ -14,3 +14,4 @@ D: subdir/one.a
 E: subdir/one.bcd
 F: subdir/one.ef
 G: subdir/one.ef
+H: ../../../../../gpr2/install/share/gpr/
