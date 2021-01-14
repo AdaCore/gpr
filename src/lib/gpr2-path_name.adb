@@ -574,57 +574,46 @@ package body GPR2.Path_Name is
 
       use Ada.Strings.Maps;
       use Ada.Strings.Fixed;
+      use GNATCOLL.Utils;
 
-      Pathname : constant String := To_String (Self.Dir_Name);
-      To_Path  : constant String := To_String (To.Dir_Name);
+      Dir_Sep_Set : constant Character_Set := To_Set ("\/");
 
-      --  Local variables
+      P : constant String := To_String (Self.Dir_Name);
+      T : constant String := To_String (To.Dir_Name);
 
-      Dir_Sep_Map : constant Character_Mapping := To_Mapping ("\", "/");
-
-      P  : String (1 .. Pathname'Length) := Pathname;
-      T  : String (1 .. To_Path'Length) := To_Path;
-
-      Pi : Natural; -- common prefix ending
-      N  : Natural := 0;
+      Pi : Positive := P'First; -- common prefix ending
+      Ti : Positive := P'First;
+      N  : Natural;
 
    begin
-      --  Use canonical directory separator
-
-      Strings.Fixed.Translate (Source => P, Mapping => Dir_Sep_Map);
-      Strings.Fixed.Translate (Source => T, Mapping => Dir_Sep_Map);
-
       --  First check for common prefix
 
-      Pi := 1;
+      loop
+         if Is_Directory_Separator (P (Ti))
+           and then Is_Directory_Separator (T (Ti))
+         then
+            Pi := Ti;
 
-      while Pi < P'Last
-        and then Pi < T'Last
-        and then To_OS_Case (P (Pi)) = To_OS_Case (T (Pi)) loop
-         Pi := Pi + 1;
-      end loop;
+         elsif To_OS_Case (P (Ti)) /= To_OS_Case (T (Ti)) then
+            exit;
+         end if;
 
-      --  Cut common prefix at a directory separator
+         exit when Ti in P'Last | T'Last;
 
-      while Pi > P'First and then (P (Pi) /= '/' or else T (Pi) /= '/') loop
-         Pi := Pi - 1;
+         Ti := Ti + 1;
       end loop;
 
       --  Count directory under prefix in P, these will be replaced by the
       --  corresponding number of "..".
 
-      N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), "/");
-
-      if T (T'Last) /= '/' then
-         N := N + 1;
-      end if;
+      N := Strings.Fixed.Count (T (Pi + 1 .. T'Last), Dir_Sep_Set);
 
       return Create_Directory
         (Filename_Type (String'(N * "../")
          & (if Pi = P'Last and then N = 0
-           then "./"
-           else P (Pi + 1 .. P'Last))),
-         Filename_Optional (To_Path));
+            then "./"
+            else P (Pi + 1 .. P'Last))),
+         Filename_Optional (T));
    end Relative_Path;
 
    -----------------
