@@ -29,6 +29,7 @@ with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded.Equal_Case_Insensitive;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
@@ -2539,9 +2540,8 @@ package body GPR2.Parser.Project is
                         Message => "full associative array expression " &
                           "requires simple attribute reference"));
 
-               elsif not Ada.Strings.Equal_Case_Insensitive
-                 (To_String (Values.Indexed_Values.Attribute_Pack),
-                  To_String (Pack_Name))
+               elsif not Ada.Strings.Unbounded.Equal_Case_Insensitive
+                 (Values.Indexed_Values.Attribute_Pack, Pack_Name)
                then
                   Tree.Log_Messages.Append
                     (Message.Create
@@ -2589,7 +2589,7 @@ package body GPR2.Parser.Project is
                       Get_Variable_Values (Var).Values;
          begin
             if Value.Length = 1 then
-               Case_Values.Prepend (Value.First_Element.Text);
+               Case_Values.Append (Value.First_Element.Text);
 
                --  Set status to close for now, this will be open when a
                --  when_clause will match the value pushed just above on
@@ -2612,7 +2612,7 @@ package body GPR2.Parser.Project is
 
                --  Then remove the case value
 
-               Case_Values.Delete_First;
+               Case_Values.Delete_Last;
 
                --  Skip all nodes for this construct
 
@@ -2662,7 +2662,7 @@ package body GPR2.Parser.Project is
                begin
                   Is_Case_Item_Matches :=
                     Is_Case_Item_Matches
-                    or else (Value = Case_Values.First_Element);
+                    or else (Value = Case_Values.Last_Element);
                end Handle_String;
 
             begin
