@@ -1185,7 +1185,7 @@ package body GPR2.Parser.Project is
       --  vector. The first value is then removed when exiting from the case
       --  statement. This is to support nested case statements.
 
-      Is_Open     : Boolean := True;
+      Is_Open : Boolean := True;
       --  Is_Open is a parsing barrier, it is True when parsing can be
       --  conducted and False otherwise. Is_Open is set to False when enterring
       --  a case construct. It is then set to True/False depending on the case
@@ -1200,10 +1200,10 @@ package body GPR2.Parser.Project is
       --  declaration. This is used to check for recursive definition.
       --     for Att (Idx) use Att (Idx) & ("some", "other", "value");
 
-      In_Pack              : Boolean := False;
-      Pack_Name            : Unbounded_String;
-      Pack_Attrs           : PA.Set.Object;
-      Pack_Vars            : GPR2.Project.Variable.Set.Object;
+      In_Pack    : Boolean := False;
+      Pack_Name  : Unbounded_String;
+      Pack_Attrs : PA.Set.Object;
+      Pack_Vars  : GPR2.Project.Variable.Set.Object;
 
       Undefined_Attribute_Count          : Natural := 0;
       Previous_Undefined_Attribute_Count : Natural := 0;
@@ -1252,8 +1252,7 @@ package body GPR2.Parser.Project is
             return PA.Object;
          --  Returns default value using Attrs for referenced default.
 
-         procedure Fill_Indexed_Values
-           (Attrs : PA.Set.Object);
+         procedure Fill_Indexed_Values (Attrs : PA.Set.Object);
          --  fill Indexed_Values if Index is undefined and Q_Name allows Index
 
          -------------------
@@ -1266,11 +1265,11 @@ package body GPR2.Parser.Project is
             return PA.Object
          is
 
-            Result       : PA.Object;
+            Result : PA.Object;
             --  Return value.
 
-            Q_Name       : constant PRA.Qualified_Name :=
-                             PRA.Create (Attribute_Name, Pack);
+            Q_Name : constant PRA.Qualified_Name :=
+                       PRA.Create (Attribute_Name, Pack);
             --  Requested attribute qualified name
 
             procedure Fill_Result (Def : PRA.Def);
@@ -1301,9 +1300,9 @@ package body GPR2.Parser.Project is
                  (if Def.Index = PRA.No
                   then PAI.Undefined
                   else PAI.Create
-                    (SR.Value.Object
-                         (SR.Value.Create
-                              (Project_SRef, Name)), False, False));
+                         (SR.Value.Object
+                            (SR.Value.Create
+                               (Project_SRef, Name)), False, False));
                --  Index created from attribute definition
 
                function Create_Attribute
@@ -1324,9 +1323,8 @@ package body GPR2.Parser.Project is
                      Attr := PA.Create
                        (Name   => Attr_Id,
                         Index  => Index,
-                        Values =>
-                          Containers.Source_Value_Type_List.To_Vector
-                            (Value, 1));
+                        Values => Containers.Source_Value_Type_List.To_Vector
+                                    (Value, 1));
                   else
                      Attr := PA.Create (Attr_Id, Index, Value);
                   end if;
@@ -2359,231 +2357,226 @@ package body GPR2.Parser.Project is
             Expr  : constant Term_List := F_Expr (Node);
             N_Str : constant Name_Type :=
                       Get_Name_Type (Name.As_Single_Tok_Node);
-         begin
-            declare
-               function Create_Index return PAI.Object;
-               --  Create index with "at" part if exists
 
-               procedure Create_And_Register_Attribute
-                 (Index  : PAI.Object;
-                  Values : Containers.Source_Value_List;
-                  Single : Boolean);
-               --  Create attribute and register it if needed
+            function Create_Index return PAI.Object;
+            --  Create index with "at" part if exists
 
-               Q_Name  : constant PRA.Qualified_Name :=
-                           PRA.Create
-                             (N_Str,
-                              Optional_Name_Type (To_String (Pack_Name)));
+            procedure Create_And_Register_Attribute
+              (Index  : PAI.Object;
+               Values : Containers.Source_Value_List;
+               Single : Boolean);
+            --  Create attribute and register it if needed
 
-               Values   : constant Item_Values := Get_Term_List (Expr);
-               A        : PA.Object;
-               Is_Valid : Boolean := True;
-               --  Set to False if the attribute definition is invalid
+            Q_Name : constant PRA.Qualified_Name :=
+                       PRA.Create
+                         (N_Str, Optional_Name_Type (To_String (Pack_Name)));
 
-               Id       : constant Source_Reference.Identifier.Object :=
-                            Get_Identifier_Reference
-                              (Self.Path_Name,
-                               Sloc_Range (Name),
-                               N_Str);
-               --  The attribute name & sloc
+            Values   : constant Item_Values := Get_Term_List (Expr);
+            A        : PA.Object;
+            Is_Valid : Boolean := True;
+            --  Set to False if the attribute definition is invalid
 
-               Sloc     : constant Source_Reference.Object :=
-                            Get_Source_Reference (Self.File, Node);
+            Id : constant Source_Reference.Identifier.Object :=
+                   Get_Identifier_Reference
+                     (Self.Path_Name, Sloc_Range (Name), N_Str);
+            --  The attribute name & sloc
 
-               -----------------------------------
-               -- Create_And_Register_Attribute --
-               -----------------------------------
+            Sloc : constant Source_Reference.Object :=
+                     Get_Source_Reference (Self.File, Node);
 
-               procedure Create_And_Register_Attribute
-                 (Index  : PAI.Object;
-                  Values : Containers.Source_Value_List;
-                  Single : Boolean) is
-               begin
-                  if Single then
-                     pragma Assert (Expr.Children_Count >= 1);
+            -----------------------------------
+            -- Create_And_Register_Attribute --
+            -----------------------------------
 
-                     A := PA.Create
-                       (Name  => Id,
-                        Index => Index,
-                        Value => Values.First_Element);
-
-                  else
-                     A := PA.Create
-                       (Name   => Id,
-                        Index  => Index,
-                        Values => Values);
-                  end if;
-
-                  --  Record attribute with proper casing definition if found
-
-                  if PRA.Exists (Q_Name) then
-                     declare
-                        Def : constant PRA.Def := PRA.Get (Q_Name);
-
-                     begin
-                        if (Single and then Values.First_Element.Text = "")
-                          or else (not Single and then Values.Length = 0)
-                        then
-                           case Def.Empty_Value is
-                              when PRA.Allow =>
-                                 null;
-
-                              when PRA.Ignore =>
-                                 Tree.Log_Messages.Append
-                                   (Message.Create
-                                      (Level   => Message.Warning,
-                                       Sloc    => Sloc,
-                                       Message => "Empty attribute "
-                                                  & PRA.Image (Q_Name)
-                                                  & " ignored"));
-                                 Is_Valid := False;
-
-                              when PRA.Error =>
-                                 Tree.Log_Messages.Append
-                                   (Message.Create
-                                      (Level   => Message.Error,
-                                       Sloc    => Sloc,
-                                       Message => "Attribute "
-                                                  & PRA.Image (Q_Name)
-                                                  & " can't be empty"));
-                           end case;
-                        end if;
-
-                        --  We need to special case the Switches attribute
-                        --  which may have an index with a language or a source
-                        --  filename. On case-sensitive system like Linux this
-                        --  means that we need to have the language handled
-                        --  without case-sensitivity but the source must be
-                        --  handled with case taken into account.
-
-                        Case_Switches_Index : declare
-                           Index_Case_Sensitive : Boolean :=
-                                                    Def.Index_Case_Sensitive;
-                        begin
-                           --  Check for source filename by looking for an
-                           --  extenssion separator or if the index is defined
-                           --  as a language. If Language is not defined
-                           --  the project tree will use the default languages
-                           --  and none of them have a dot in their name.
-
-                           if Index.Is_Defined
-                             and then not Index.Is_Others
-                             and then A.Name.Text = PRA.Switches
-                           then
-                              --  No extension found, this is a language which
-                              --  is inconditionally non case-sensitive.
-
-                              Index_Case_Sensitive :=
-                                Is_Switches_Index_Case_Sensitive (Index.Value);
-                           end if;
-
-                           A.Set_Case
-                             (Index_Case_Sensitive,
-                              Def.Value_Case_Sensitive);
-                        end Case_Switches_Index;
-                     end;
-                  end if;
-
-                  if Is_Valid then
-                     if In_Pack then
-                        Record_Attribute (Pack_Attrs, A, Sloc);
-                     else
-                        Record_Attribute (Attrs, A, Sloc);
-                     end if;
-                  end if;
-               end Create_And_Register_Attribute;
-
-               ------------------
-               -- Create_Index --
-               ------------------
-
-               function Create_Index return PAI.Object is
-                  Str_Lit : String_Literal_At;
-                  At_Lit  : Num_Literal;
-               begin
-                  if Index.Kind = GPR_Others_Designator then
-                     return PAI.Create
-                       (Get_Value_Reference
-                          (Self.Path_Name, Sloc_Range (Index), "others"),
-                        Is_Others      => True,
-                        Case_Sensitive => False);
-
-                  else
-                     Str_Lit := Index.As_String_Literal_At;
-                     At_Lit  := Str_Lit.F_At_Lit;
-
-                     return PAI.Create
-                       (Get_Value_Reference
-                          (Self.Path_Name, Sloc_Range (Index),
-                           Get_Value_Type (Str_Lit.F_Str_Lit),
-                           At_Pos => -- Ati),
-                             (if At_Lit = No_GPR_Node
-                              then 0
-                              else Positive'Wide_Wide_Value (At_Lit.Text))),
-                        Is_Others      => False,
-                        Case_Sensitive => False);
-                  end if;
-               end Create_Index;
-
-               I_Sloc : constant PAI.Object :=
-                          (if Present (Index)
-                           then Create_Index
-                           else PAI.Undefined);
-
-               use PAI;
-               use PRA;
+            procedure Create_And_Register_Attribute
+              (Index  : PAI.Object;
+               Values : Containers.Source_Value_List;
+               Single : Boolean) is
             begin
-               if I_Sloc = PAI.Undefined
-                 and then PRA.Exists (Q_Name)
-                 and then PRA.Get (Q_Name).Index /= PRA.No
-               then
-                  if not Values.Indexed_Values.Filled then
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message => "full associative array expression " &
-                             "requires simple attribute reference"));
+               if Single then
+                  pragma Assert (Expr.Children_Count >= 1);
 
-                  elsif not Ada.Strings.Equal_Case_Insensitive
-                    (To_String (Values.Indexed_Values.Attribute_Pack),
-                     To_String (Pack_Name))
-                  then
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message => "not the same package as " &
-                             To_String (Pack_Name)));
-
-                  elsif not Ada.Strings.Equal_Case_Insensitive
-                    (To_String (Values.Indexed_Values.Attribute_Name),
-                     String (N_Str))
-                  then
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message => "full associative array expression " &
-                             "must reference the same attribute """ &
-                             String (N_Str) & '"'));
-
-                  else
-                     for V of Values.Indexed_Values.Values loop
-                        Create_And_Register_Attribute
-                          (Index  => V.Index,
-                           Values => V.Values,
-                           Single => V.Single);
-                     end loop;
-                  end if;
+                  A := PA.Create
+                    (Name  => Id,
+                     Index => Index,
+                     Value => Values.First_Element);
 
                else
-                  Create_And_Register_Attribute
-                    (Index  => I_Sloc,
-                     Values => Values.Values,
-                     Single => Values.Single);
+                  A := PA.Create
+                    (Name   => Id,
+                     Index  => Index,
+                     Values => Values);
                end if;
-            end;
+
+               --  Record attribute with proper casing definition if found
+
+               if PRA.Exists (Q_Name) then
+                  declare
+                     Def : constant PRA.Def := PRA.Get (Q_Name);
+
+                  begin
+                     if (Single and then Values.First_Element.Text = "")
+                       or else (not Single and then Values.Length = 0)
+                     then
+                        case Def.Empty_Value is
+                           when PRA.Allow =>
+                              null;
+
+                           when PRA.Ignore =>
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Warning,
+                                    Sloc    => Sloc,
+                                    Message => "Empty attribute "
+                                    & PRA.Image (Q_Name)
+                                    & " ignored"));
+                              Is_Valid := False;
+
+                           when PRA.Error =>
+                              Tree.Log_Messages.Append
+                                (Message.Create
+                                   (Level   => Message.Error,
+                                    Sloc    => Sloc,
+                                    Message => "Attribute "
+                                    & PRA.Image (Q_Name)
+                                    & " can't be empty"));
+                        end case;
+                     end if;
+
+                     --  We need to special case the Switches attribute
+                     --  which may have an index with a language or a source
+                     --  filename. On case-sensitive system like Linux this
+                     --  means that we need to have the language handled
+                     --  without case-sensitivity but the source must be
+                     --  handled with case taken into account.
+
+                     Case_Switches_Index : declare
+                        Index_Case_Sensitive : Boolean :=
+                                                 Def.Index_Case_Sensitive;
+                     begin
+                        --  Check for source filename by looking for an
+                        --  extenssion separator or if the index is defined
+                        --  as a language. If Language is not defined
+                        --  the project tree will use the default languages
+                        --  and none of them have a dot in their name.
+
+                        if Index.Is_Defined
+                          and then not Index.Is_Others
+                          and then A.Name.Text = PRA.Switches
+                        then
+                           --  No extension found, this is a language which
+                           --  is inconditionally non case-sensitive.
+
+                           Index_Case_Sensitive :=
+                             Is_Switches_Index_Case_Sensitive (Index.Value);
+                        end if;
+
+                        A.Set_Case
+                          (Index_Case_Sensitive,
+                           Def.Value_Case_Sensitive);
+                     end Case_Switches_Index;
+                  end;
+               end if;
+
+               if Is_Valid then
+                  if In_Pack then
+                     Record_Attribute (Pack_Attrs, A, Sloc);
+                  else
+                     Record_Attribute (Attrs, A, Sloc);
+                  end if;
+               end if;
+            end Create_And_Register_Attribute;
+
+            ------------------
+            -- Create_Index --
+            ------------------
+
+            function Create_Index return PAI.Object is
+               Str_Lit : String_Literal_At;
+               At_Lit  : Num_Literal;
+            begin
+               if Index.Kind = GPR_Others_Designator then
+                  return PAI.Create
+                    (Get_Value_Reference
+                       (Self.Path_Name, Sloc_Range (Index), "others"),
+                     Is_Others      => True,
+                     Case_Sensitive => False);
+
+               else
+                  Str_Lit := Index.As_String_Literal_At;
+                  At_Lit  := Str_Lit.F_At_Lit;
+
+                  return PAI.Create
+                    (Get_Value_Reference
+                       (Self.Path_Name, Sloc_Range (Index),
+                        Get_Value_Type (Str_Lit.F_Str_Lit),
+                        At_Pos => -- Ati),
+                          (if At_Lit = No_GPR_Node
+                           then 0
+                           else Positive'Wide_Wide_Value (At_Lit.Text))),
+                     Is_Others      => False,
+                     Case_Sensitive => False);
+               end if;
+            end Create_Index;
+
+            I_Sloc : constant PAI.Object :=
+                       (if Present (Index)
+                        then Create_Index
+                        else PAI.Undefined);
+
+            use PAI;
+            use PRA;
+         begin
+            if I_Sloc = PAI.Undefined
+              and then PRA.Exists (Q_Name)
+              and then PRA.Get (Q_Name).Index /= PRA.No
+            then
+               if not Values.Indexed_Values.Filled then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message => "full associative array expression " &
+                          "requires simple attribute reference"));
+
+               elsif not Ada.Strings.Equal_Case_Insensitive
+                 (To_String (Values.Indexed_Values.Attribute_Pack),
+                  To_String (Pack_Name))
+               then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message => "not the same package as " &
+                          To_String (Pack_Name)));
+
+               elsif not Ada.Strings.Equal_Case_Insensitive
+                 (To_String (Values.Indexed_Values.Attribute_Name),
+                  String (N_Str))
+               then
+                  Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Sloc,
+                        Message => "full associative array expression " &
+                          "must reference the same attribute """ &
+                          String (N_Str) & '"'));
+
+               else
+                  for V of Values.Indexed_Values.Values loop
+                     Create_And_Register_Attribute
+                       (Index  => V.Index,
+                        Values => V.Values,
+                        Single => V.Single);
+                  end loop;
+               end if;
+
+            else
+               Create_And_Register_Attribute
+                 (Index  => I_Sloc,
+                  Values => Values.Values,
+                  Single => Values.Single);
+            end if;
          end Parse_Attribute_Decl;
 
          -----------------------------
@@ -2658,7 +2651,7 @@ package body GPR2.Parser.Project is
             function Parser (Node : GPR_Node'Class) return Visit_Status is
                Status : constant Visit_Status := Into;
 
-               procedure Handle_String   (Node : String_Literal);
+               procedure Handle_String (Node : String_Literal);
 
                -------------------
                -- Handle_String --
