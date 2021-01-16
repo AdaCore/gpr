@@ -1180,31 +1180,34 @@ package body GPR2.Parser.Project is
 
       --  The parsing status for case statement (possibly nested)
 
+      Actual : Containers.Filename_Set;
+      --  Naming exception source filenames from active case alternatives
+
       Case_Values : Containers.Value_List;
       --  The case-values to match against the case-item. Each time a case
       --  statement is enterred the value for the case is prepended into this
       --  vector. The first value is then removed when exiting from the case
       --  statement. This is to support nested case statements.
+      --  First character in each element mean is the case-item is open or
+      --  closed. Other characters contain case value.
 
-      Is_Open : Boolean := True;
-      --  Is_Open is a parsing barrier, it is True when parsing can be
-      --  conducted and False otherwise. Is_Open is set to False when enterring
-      --  a case construct. It is then set to True/False depending on the case
-      --  When Is_Open is False no parsing should be done, that is all node
-      --  should be ignored except the Case_Item ones.
-
-      --  Package orientated state, when parsing is in a package In_Pack is
-      --  set and Pack_Name contains the name of the package and all parsed
-      --  attributes are recorded into Pack_Attrs set.
-      --
-      --  Att_Name and Idx_Name are the name for the currently parsed attribute
-      --  declaration. This is used to check for recursive definition.
-      --     for Att (Idx) use Att (Idx) & ("some", "other", "value");
+      function Is_Open return Boolean is
+        (Case_Values.Is_Empty or else Case_Values.Last_Element (1) = '+');
+      --  Is_Open is a parsing barrier, it is True when whole parsing can be
+      --  conducted and False otherwise. When it is False the naming exceptions
+      --  source filenames collected into Object.Skip_Src container to ignore
+      --  at the Update_Sources stage. When it is True, the entire parsing
+      --  processes and naming exception source filenames collected into Actual
+      --  to remove it from Object.Skip_Src at the end of parsing.
 
       In_Pack    : Boolean := False;
       Pack_Name  : Unbounded_String;
       Pack_Attrs : PA.Set.Object;
       Pack_Vars  : GPR2.Project.Variable.Set.Object;
+      --  Package orientated state, when parsing is in a package In_Pack is
+      --  set and Pack_Name contains the name of the package and all parsed
+      --  attributes are recorded into Pack_Attrs set and all
+      --  parsed variables are recorded into Pack_Vars.
 
       Undefined_Attribute_Count          : Natural := 0;
       Previous_Undefined_Attribute_Count : Natural := 0;
@@ -2315,8 +2318,7 @@ package body GPR2.Parser.Project is
       function Parser (Node : GPR_Node'Class) return Visit_Status is
          Status : Visit_Status := Into;
 
-         procedure Parse_Attribute_Decl (Node : Attribute_Decl)
-           with Pre => Is_Open;
+         procedure Parse_Attribute_Decl (Node : Attribute_Decl);
          --  Parse attribute declaration and append it into Attrs set
 
          procedure Parse_Variable_Decl (Node : Variable_Decl)
@@ -2385,6 +2387,14 @@ package body GPR2.Parser.Project is
             Sloc : constant Source_Reference.Object :=
                      Get_Source_Reference (Self.File, Node);
 
+            use PAI;
+            use PRA;
+
+            Is_Name_Exception : constant Boolean :=
+                                  Name_Type (To_Lower (N_Str)) in
+                                    Spec | Specification | Body_N
+                                    | Implementation;
+
             -----------------------------------
             -- Create_And_Register_Attribute --
             -----------------------------------
@@ -2392,7 +2402,10 @@ package body GPR2.Parser.Project is
             procedure Create_And_Register_Attribute
               (Index  : PAI.Object;
                Values : Containers.Source_Value_List;
-               Single : Boolean) is
+               Single : Boolean)
+            is
+               Position : Containers.Filename_Source_Reference_Package.Cursor;
+               Inserted : Boolean;
             begin
                if Single then
                   pragma Assert (Expr.Children_Count >= 1);
@@ -2480,10 +2493,22 @@ package body GPR2.Parser.Project is
                end if;
 
                if Is_Valid then
-                  if In_Pack then
-                     Record_Attribute (Pack_Attrs, A, Sloc);
-                  else
-                     Record_Attribute (Attrs, A, Sloc);
+                  if Is_Open then
+                     if In_Pack then
+                        Record_Attribute (Pack_Attrs, A, Sloc);
+
+                        if Is_Name_Exception then
+                           Actual.Include (Filename_Type (A.Value.Text));
+                        end if;
+
+                     else
+                        Record_Attribute (Attrs, A, Sloc);
+                     end if;
+
+                  elsif Is_Name_Exception then
+                     Self.Skip_Src.Insert
+                       (Filename_Type (A.Value.Text), A.Value,
+                        Position, Inserted);
                   end if;
                end if;
             end Create_And_Register_Attribute;
@@ -2525,10 +2550,8 @@ package body GPR2.Parser.Project is
                         then Create_Index
                         else PAI.Undefined);
 
-            use PAI;
-            use PRA;
          begin
-            if I_Sloc = PAI.Undefined
+            if not I_Sloc.Is_Defined
               and then PRA.Exists (Q_Name)
               and then PRA.Get (Q_Name).Index /= PRA.No
             then
@@ -2589,25 +2612,18 @@ package body GPR2.Parser.Project is
                       Get_Variable_Values (Var).Values;
          begin
             if Value.Length = 1 then
-               Case_Values.Append (Value.First_Element.Text);
+               Case_Values.Append ('-' & Value.First_Element.Text);
 
                --  Set status to close for now, this will be open when a
                --  when_clause will match the value pushed just above on
                --  the vector.
 
-               Is_Open := False;
-
                declare
                   Childs : constant Case_Item_List := F_Items (Node);
                begin
-                  Check_Case_Item : for C in 1 .. Children_Count (Childs) loop
-                     Visit_Child (Child (GPR_Node (Childs), C));
-
-                     --  Exit this look as soon as a case item has matched.
-                     --  We do not want an other clause to match if an open
-                     --  case-item has already been found and handled.
-                     exit Check_Case_Item when Is_Open;
-                  end loop Check_Case_Item;
+                  for C in 1 .. Children_Count (Childs) loop
+                     Visit_Child (Child (Childs, C));
+                  end loop;
                end;
 
                --  Then remove the case value
@@ -2618,12 +2634,7 @@ package body GPR2.Parser.Project is
 
                Status := Over;
 
-               Is_Open := True;
-
-            elsif Has_Error then
-               null;
-
-            else
+            elsif not Has_Error then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -2642,49 +2653,46 @@ package body GPR2.Parser.Project is
 
             function Parser (Node : GPR_Node'Class) return Visit_Status;
 
-            Is_Case_Item_Matches : Boolean := False;
+            Case_Value   : constant String := Case_Values.Last_Element;
+            Is_That_Case : Boolean := False;
 
             ------------
             -- Parser --
             ------------
 
             function Parser (Node : GPR_Node'Class) return Visit_Status is
-               Status : constant Visit_Status := Into;
-
-               procedure Handle_String (Node : String_Literal);
-
-               -------------------
-               -- Handle_String --
-               -------------------
-
-               procedure Handle_String (Node : String_Literal) is
-                  Value : constant Value_Type := Unquote (To_UTF8 (Node.Text));
-               begin
-                  Is_Case_Item_Matches :=
-                    Is_Case_Item_Matches
-                    or else (Value = Case_Values.Last_Element);
-               end Handle_String;
-
             begin
                case Kind (Node) is
                   when GPR_String_Literal =>
-                     Handle_String (Node.As_String_Literal);
+                     Is_That_Case :=
+                       Unquote (To_UTF8 (Node.Text))
+                         = Case_Value (2 .. Case_Value'Last);
 
                   when GPR_Others_Designator =>
-                     Is_Case_Item_Matches := True;
+                     Is_That_Case := True;
 
                   when others =>
-                     null;
+                     return Into;
                end case;
 
-               return Status;
+               return (if Is_That_Case then Stop else Over);
             end Parser;
 
-            Choices_Node : constant Choices := F_Choice (Node);
-
          begin
-            Traverse (Choices_Node, Parser'Access);
-            Is_Open := Is_Case_Item_Matches;
+            case Case_Value (1) is
+               when '-' =>
+                  Traverse (F_Choice (Node), Parser'Access);
+
+                  if Is_That_Case then
+                     Case_Values (Case_Values.Last) (1) := '+';
+                  end if;
+
+               when '+' =>
+                  Case_Values (Case_Values.Last) (1) := '^';
+
+               when others =>
+                  null;
+            end case;
          end Parse_Case_Item;
 
          ------------------------
@@ -3019,10 +3027,7 @@ package body GPR2.Parser.Project is
          procedure Visit_Child (Child : GPR_Node) is
          begin
             if Present (Child) then
-               Status :=
-                 Traverse
-                   (Node  => Child,
-                    Visit => Parser'Access);
+               Status := Traverse (Node => Child, Visit => Parser'Access);
             end if;
          end Visit_Child;
 
@@ -3058,10 +3063,14 @@ package body GPR2.Parser.Project is
 
          else
             --  We are on a closed parsing mode, only handle case alternatives
+            --  and Spec and Body attributes
 
             case Kind (Node) is
                when GPR_Case_Item =>
                   Parse_Case_Item (Node.As_Case_Item);
+
+               when GPR_Attribute_Decl =>
+                  Parse_Attribute_Decl (Node.As_Attribute_Decl);
 
                when others =>
                   null;
@@ -3186,6 +3195,10 @@ package body GPR2.Parser.Project is
       loop
          Traverse (Root (Self.Unit), Parser'Access);
          exit when Stop_Iteration;
+      end loop;
+
+      for F of Actual loop
+         Self.Skip_Src.Exclude (F);
       end loop;
    end Process;
 

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -107,14 +107,20 @@ package GPR2.Containers is
 
    subtype Source_Value_List is Source_Value_Type_List.Vector;
 
+   function Image (Values : Source_Value_List) return String;
+   --  Returns a string representation of the list of values
+
    package Value_Source_Reference_Package is
      new Ada.Containers.Indefinite_Ordered_Maps
        (Value_Type, Source_Reference.Value.Object);
 
    subtype Value_Source_Reference is Value_Source_Reference_Package.Map;
 
-   function Image (Values : Source_Value_List) return String;
-   --  Returns a string representation of the list of values
+   package Filename_Source_Reference_Package is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (Filename_Type, Source_Reference.Value.Object);
+
+   subtype Filename_Source_Reference is Filename_Source_Reference_Package.Map;
 
    package Source_Value_Type_Set is new Ada.Containers.Indefinite_Ordered_Sets
      (Source_Reference.Value.Object);

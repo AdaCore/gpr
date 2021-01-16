@@ -1787,6 +1787,12 @@ package body GPR2.Project.Definition is
          end loop;
       end if;
 
+      --  Remove naming exception sources from inactive case alternatives
+
+      for File of Def.Trees.Project.Skip_Sources loop
+         Include_Simple_Filename (Excluded_Sources, File.Text, File);
+      end loop;
+
       --  If we have attribute Source_List_File
 
       if Def.Attrs.Has_Source_List_File then

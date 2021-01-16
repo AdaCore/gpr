@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -135,6 +135,10 @@ package GPR2.Parser.Project is
      with Pre => Self.Is_Defined;
    --  Returns the GPR_Parser analysis unit
 
+   function Skip_Sources
+     (Self : Object) return Containers.Filename_Source_Reference;
+   --  Source filenames to skip due to inactive case items
+
 private
 
    type Object is tagged record
@@ -148,11 +152,19 @@ private
       Unit      : Analysis_Unit := No_Analysis_Unit;
       Types     : GPR2.Project.Typ.Set.Object;
       Context   : Analysis_Context := No_Analysis_Context;
+      Skip_Src  : Containers.Filename_Source_Reference;
+      --  Naming exception source files to be ignored due to inactive case
+      --  alternatives.
    end record;
 
    Undefined : constant Object := (others => <>);
 
    function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
+
+   function Skip_Sources
+     (Self : Object) return Containers.Filename_Source_Reference
+   is
+     (Self.Skip_Src);
 
 end GPR2.Parser.Project;
