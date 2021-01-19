@@ -119,7 +119,7 @@ class AdaContextClause(AdaPreludeNode):
 
 
 class AdaSkip(AdaPreludeNode):
-    pass
+    error_node = True
 
 
 class AdaUse(AdaContextClause):
