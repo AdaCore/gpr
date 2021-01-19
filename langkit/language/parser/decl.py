@@ -324,10 +324,10 @@ A.add_rules(
 
         Or(
             AdaSubp(A.ada_subp_kind, A.static_name),
+            AdaPkgBody("package", Lex.Identifier("body"), A.static_name),
             AdaPkg(
                 Private("private"), "package", A.static_name
             ),
-            AdaPkgBody("package", Lex.Identifier("body"), A.static_name),
         )
     ),
     ada_prelude=AdaPrelude(A.ada_context, A.ada_library_item),
