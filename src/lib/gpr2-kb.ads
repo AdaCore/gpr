@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -478,14 +478,18 @@ private
       Messages                : Log.Object;
 
       Is_Default              : Boolean := False;
-      --  ??? Used to call gprconfig to actually create the configuration
-      --  project: to be removed when this is all done locally
+      Schema_File             : GPR2.Path_Name.Object :=
+                                  GPR2.Path_Name.Undefined;
    end record;
    --  Check_Executable_Regexp is set to True if at least some of the
    --  executable names are specified as regular expressions. In such a case,
    --  a slightly slower algorithm is used to search for compilers.
    --  No_Compilers is the list of languages that require no compiler, and thus
    --  should not be searched on the PATH.
+   --  Schema_File is reflevant when Is_Default id False. In that case the
+   --  first .xsd file found in the given knowledge base directory is taken
+   --  as a schema for the knowledge base. The file name is stored to later
+   --  get access to schema again for validating additional KB chunks.
 
    function Name_As_Directory (Dir : String) return String;
    --  Ensures that Dir ends with a directory separator

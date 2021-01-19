@@ -1,0 +1,4 @@
+string_argument: error: string_argument:1:31: Unexpected element "configuration2": expecting "compiler_description|configuration|targetset|fallback_targets"
+invalid.xml: error: /invalid.xml:5:13: Unexpected element "foo": expecting "close parent"
+string_argument: error: string_argument:1:31: Unexpected element "configuration2": expecting "compiler_description|configuration|targetset|fallback_targets"
+invalid.xml: error: /invalid.xml:5:13: Unexpected element "foo": expecting "close parent"

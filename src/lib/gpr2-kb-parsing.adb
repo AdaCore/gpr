@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -36,6 +36,8 @@ with DOM.Core.Documents;
 with Input_Sources.File;
 with Input_Sources.Strings;
 with Schema.Dom_Readers;
+with Schema.Schema_Readers;
+with Schema.Validators;
 with Sax.Readers;
 with Unicode.CES.Utf8;
 
@@ -81,6 +83,27 @@ package body GPR2.KB.Parsing is
      with Pre => Base.Is_Defined and then DOM.Core."/=" (Root_Node, null);
    --  Parses a single top-level KB node. From_File used for diagnostics
 
+   function Get_Default_Schema_Grammar
+     (Base : in out Object) return Schema.Validators.XML_Grammar
+     with Pre => Base.Is_Defined and then Base.Is_Default;
+   --  Returns grammar defined in default knowledge base. The first .xsd file
+   --  from the embedded knowledge base is used. If not a single .xsd
+   --  file was found or the schema file contains errors, returns No_Grammar.
+   --  In addition, if schema is invalid corresponding error is added to
+   --  Base.Messages.
+
+   function Get_Non_Default_Schema_Grammar
+     (Base : in out Object) return Schema.Validators.XML_Grammar
+     with Pre => Base.Is_Defined and then not Base.Is_Default;
+   --  Returns grammar defined for given knowledge base. If schema file
+   --  is not defined or contains errors, returns No_Grammar.
+   --  In addition, if schema is invalid corresponding error is added to
+   --  Base.Messages.
+
+   procedure Free_Reader
+     (Reader : in out Schema.Dom_Readers.Tree_Reader'Class);
+   --  Frees the reader itself and the associated Document
+
    Embed_Pseudo_Dir : constant String :=
                         "embedded_kb" & Directory_Operations.Dir_Separator;
    --  Used for reporting potential errors in the embeded base
@@ -105,9 +128,9 @@ package body GPR2.KB.Parsing is
       Flags   : Parsing_Flags;
       Content : Value_Not_Empty)
    is
-      use DOM.Core, DOM.Core.Nodes;
       use Input_Sources.Strings;
       use Schema.Dom_Readers;
+      use Schema.Validators;
       use Sax.Readers;
 
       use GNATCOLL.Traces;
@@ -115,15 +138,32 @@ package body GPR2.KB.Parsing is
       String_Argument : constant String := "string_argument";
       Reader          : Schema.Dom_Readers.Tree_Reader;
       Input           : String_Input;
-
+      Grammar         : XML_Grammar;
    begin
       Trace (Main_Trace, "Parsing string");
       Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
       Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
 
+      if Flags (Validation) then
+         if Self.Is_Default then
+            Grammar := Get_Default_Schema_Grammar (Self);
+         else
+            Grammar := Get_Non_Default_Schema_Grammar (Self);
+         end if;
+
+         if Grammar = No_Grammar and then Self.Messages.Has_Error then
+            return;
+         end if;
+
+         Reader.Set_Grammar (Grammar);
+      end if;
+
+      Set_Public_Id (Input, String_Argument);
+
       Open (Unicode.CES.Byte_Sequence (String (Content)),
             Unicode.CES.Utf8.Utf8_Encoding,
             Input);
+
       Parse (Reader, Input);
       Close (Input);
 
@@ -133,13 +173,19 @@ package body GPR2.KB.Parsing is
          Flags,
          Embed_Pseudo_Dir & String_Argument);
 
-      declare
-         Doc : Document := Get_Tree (Reader);
-      begin
-         Free (Doc);
-      end;
+      Free_Reader (Reader);
 
-      Free (Reader);
+   exception
+      when XML_Validation_Error =>
+         Self.Messages.Append
+           (Message.Create
+              (Message.Error,
+               Get_Error_Message (Reader),
+               Source_Reference.Object
+                 (Source_Reference.Create
+                      (Embed_Pseudo_Dir & String_Argument, 0, 0))));
+         Close (Input);
+         Free_Reader (Reader);
    end Add;
 
    ---------------------
@@ -209,6 +255,23 @@ package body GPR2.KB.Parsing is
       return Result;
    end Default_Content;
 
+   -----------------
+   -- Free_Reader --
+   -----------------
+
+   procedure Free_Reader
+     (Reader : in out Schema.Dom_Readers.Tree_Reader'Class)
+   is
+      use DOM.Core;
+      use DOM.Core.Nodes;
+      use Schema.Dom_Readers;
+
+      Doc : Document := Get_Tree (Reader);
+   begin
+      Free (Doc);
+      Free (Reader);
+   end Free_Reader;
+
    -------------------
    -- Get_Attribute --
    -------------------
@@ -229,6 +292,93 @@ package body GPR2.KB.Parsing is
          return Node_Value (Attr);
       end if;
    end Get_Attribute;
+
+   --------------------------------
+   -- Get_Default_Schema_Grammar --
+   --------------------------------
+
+   function Get_Default_Schema_Grammar
+     (Base : in out Object) return Schema.Validators.XML_Grammar
+   is
+      use GNAT.Directory_Operations;
+      use Input_Sources.Strings;
+      use Schema.Schema_Readers;
+      use Schema.Validators;
+      use GPR2.Containers.Name_Value_Map_Package;
+
+      KB_Content : constant GPR2.Containers.Name_Value_Map := Default_Content;
+      Cur        : Cursor := KB_Content.First;
+      Schema     : Schema_Reader;
+      Input      : String_Input;
+      Result     : XML_Grammar;
+   begin
+      while Cur /= No_Element loop
+         if File_Extension (String (Key (Cur))) = ".xsd" then
+            Open
+              (Containers.Name_Value_Map_Package.Element (Cur),
+               Unicode.CES.Utf8.Utf8_Encoding,
+               Input);
+            Parse (Schema, Input);
+            Close (Input);
+            Result := Get_Grammar (Schema);
+            Free (Schema);
+            return Result;
+         end if;
+
+         Next (Cur);
+      end loop;
+
+      return No_Grammar;
+   exception
+      when XML_Validation_Error =>
+         Base.Messages.Append
+           (Message.Create
+              (Message.Error,
+               Get_Error_Message (Schema),
+               Source_Reference.Object
+                 (Source_Reference.Create
+                      (Embed_Pseudo_Dir & String (Key (Cur)), 0, 0))));
+         return No_Grammar;
+   end Get_Default_Schema_Grammar;
+
+   ------------------------------------
+   -- Get_Non_Default_Schema_Grammar --
+   ------------------------------------
+
+   function Get_Non_Default_Schema_Grammar
+     (Base : in out Object) return Schema.Validators.XML_Grammar
+   is
+      use Input_Sources.File;
+      use Schema.Schema_Readers;
+      use Schema.Validators;
+
+      Schema     : Schema_Reader;
+      Input      : File_Input;
+      Result     : XML_Grammar;
+   begin
+      if not Base.Schema_File.Is_Defined then
+         return No_Grammar;
+      end if;
+
+      Open (Base.Schema_File.Value, Input);
+      Parse (Schema, Input);
+      Close (Input);
+      Result := Get_Grammar (Schema);
+      Free (Schema);
+
+      return Result;
+
+   exception
+      when XML_Validation_Error =>
+         Base.Messages.Append
+           (Message.Create
+              (Message.Error,
+               Get_Error_Message (Schema),
+               Source_Reference.Object
+                 (Source_Reference.Create
+                      (Base.Schema_File.Value, 0, 0))));
+         return No_Grammar;
+   end Get_Non_Default_Schema_Grammar;
 
    --------------------------
    -- Node_Value_As_String --
@@ -259,10 +409,9 @@ package body GPR2.KB.Parsing is
    is
       use GNAT.Directory_Operations;
       use GNATCOLL.Traces;
-      use DOM.Core;
-      use DOM.Core.Nodes;
       use Input_Sources.Strings;
       use Schema.Dom_Readers;
+      use Schema.Validators;
       use Sax.Readers;
 
       use GPR2.Containers.Name_Value_Map_Package;
@@ -330,12 +479,21 @@ package body GPR2.KB.Parsing is
          return Input_Sources.Input_Source_Access (Input);
       end Resolve_Entity;
 
-      Reader : Resolving_Reader;
-      Input  : String_Input;
-      Cur    : Containers.Name_Value_Map_Package.Cursor;
+      Reader  : Resolving_Reader;
+      Input   : String_Input;
+      Cur     : Containers.Name_Value_Map_Package.Cursor;
+      Grammar : Schema.Validators.XML_Grammar;
    begin
       Result.Initialized := True;
+      Result.Is_Default := True;
       KB_Content := Default_Content;
+
+      if Flags (Validation) then
+         Grammar := Get_Default_Schema_Grammar (Result);
+         if Grammar = No_Grammar and then Result.Messages.Has_Error then
+            return Result;
+         end if;
+      end if;
 
       Cur := KB_Content.First;
 
@@ -346,11 +504,32 @@ package body GPR2.KB.Parsing is
             Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
             Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
 
+            if Flags (Validation) then
+               Reader.Set_Grammar (Grammar);
+            end if;
+
             Open
               (Containers.Name_Value_Map_Package.Element (Cur),
                Unicode.CES.Utf8.Utf8_Encoding,
                Input);
-            Parse (Reader, Input);
+
+            begin
+               Parse (Reader, Input);
+            exception
+               when XML_Validation_Error =>
+                  Result.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        Get_Error_Message (Reader),
+                        Source_Reference.Object
+                          (Source_Reference.Create
+                               (Embed_Pseudo_Dir & String (Key (Cur)),
+                                0, 0))));
+                  Close (Input);
+                  Free_Reader (Reader);
+                  return Result;
+            end;
+
             Close (Input);
 
             Parse_Knowledge_Base
@@ -359,13 +538,7 @@ package body GPR2.KB.Parsing is
                Flags,
                Embed_Pseudo_Dir & String (Key (Cur)));
 
-            declare
-               Doc : Document := Get_Tree (Reader);
-            begin
-               Free (Doc);
-            end;
-
-            Free (Reader);
+            Free_Reader (Reader);
          end if;
 
          Next (Cur);
@@ -385,6 +558,10 @@ package body GPR2.KB.Parsing is
    is
       use GPR2.Path_Name;
       use Ada.Directories;
+      use Input_Sources.File;
+      use Schema.Validators;
+
+      Grammar : Schema.Validators.XML_Grammar;
 
       procedure Parse_Single_File (File : GPR2.Path_Name.Object);
       --  Parses a single .xml file containing KB chunks
@@ -395,8 +572,6 @@ package body GPR2.KB.Parsing is
 
       procedure Parse_Single_File (File : GPR2.Path_Name.Object) is
          use GNATCOLL.Traces;
-         use DOM.Core, DOM.Core.Nodes;
-         use Input_Sources.File;
          use Schema.Dom_Readers;
          use Sax.Readers;
 
@@ -407,8 +582,28 @@ package body GPR2.KB.Parsing is
          Reader.Set_Feature (Schema_Validation_Feature, Flags (Validation));
          Reader.Set_Feature (Validation_Feature, False);  --  Do not use DTD
 
+         if Flags (Validation) then
+            Reader.Set_Grammar (Grammar);
+         end if;
+
          Open (String (File.Value), Input);
-         Parse (Reader, Input);
+
+         begin
+            Parse (Reader, Input);
+         exception
+            when XML_Validation_Error =>
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     Get_Error_Message (Reader),
+                     Source_Reference.Object
+                       (Source_Reference.Create
+                            (File.Value, 0, 0))));
+               Close (Input);
+               Free_Reader (Reader);
+               return;
+         end;
+
          Close (Input);
 
          Parse_Knowledge_Base
@@ -416,19 +611,47 @@ package body GPR2.KB.Parsing is
             DOM.Core.Documents.Get_Element (Get_Tree (Reader)),
             Flags, File.Value);
 
-         declare
-            Doc : Document := Get_Tree (Reader);
-         begin
-            Free (Doc);
-         end;
-
-         Free (Reader);
+         Free_Reader (Reader);
       end Parse_Single_File;
 
       Search : Search_Type;
       File   : Directory_Entry_Type;
 
    begin
+      if Flags (Validation) then
+
+         if Self.Is_Default then
+            Grammar := Get_Default_Schema_Grammar (Self);
+
+         else
+            if not Self.Schema_File.Is_Defined and then Location.Is_Directory
+            then
+               --  No schema file found yet for this KB, looking for one
+
+               Start_Search
+                 (Search,
+                  Directory => String (Location.Value),
+                  Pattern   => "*.xsd",
+                  Filter    => (Ordinary_File => True, others => False));
+
+               if More_Entries (Search) then
+                  Get_Next_Entry (Search, File);
+                  Self.Schema_File := Create_File
+                    (Filename_Type (Ada.Directories.Full_Name ((File))));
+               end if;
+
+               End_Search (Search);
+            end if;
+
+            Grammar := Get_Non_Default_Schema_Grammar (Self);
+         end if;
+
+         if Grammar = No_Grammar and then Self.Messages.Has_Error then
+            return;
+         end if;
+
+      end if;
+
       if Location.Is_Directory then
          Start_Search
            (Search,

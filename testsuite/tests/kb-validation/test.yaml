@@ -1,0 +1,5 @@
+description:
+    A test for the validation of KB
+driver: build_and_run
+project_file: kb_validation
+main: main
