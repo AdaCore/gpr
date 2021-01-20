@@ -414,10 +414,10 @@ begin
          for S of Sources loop
             declare
                View      : constant Project.View.Object := S.View;
-               Obj_File  : Path_Name.Object;
-               Unit_Info : Project.Unit_Info.Object;
                Artifacts : constant Project.Source.Artifact.Object :=
                              S.Artifacts;
+               Obj_File  : Path_Name.Object;
+               Unit_Info : Project.Unit_Info.Object;
                Main_Unit : Unit.Object;
 
                procedure Print_Unit_From (Src : Path_Name.Object);
