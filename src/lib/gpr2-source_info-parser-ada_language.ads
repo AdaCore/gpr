@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,9 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package GPR2.Source_Info.Parser.Ada_Language
-  with Elaborate_Body
-is
+package GPR2.Source_Info.Parser.Ada_Language is
 
    Language : aliased constant Name_Type := "Ada";
 

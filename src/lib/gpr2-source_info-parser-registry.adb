@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -29,6 +29,7 @@ with Ada.Containers.Indefinite_Ordered_Maps;
 
 pragma Warnings (Off);
 with GPR2.Source_Info.Parser.ALI;
+with GPR2.Source_Info.Parser.Ada_Language;
 pragma Warnings (On);
 
 package body GPR2.Source_Info.Parser.Registry is

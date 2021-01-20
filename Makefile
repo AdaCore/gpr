@@ -2,7 +2,7 @@
 ##                                                                          ##
 ##                            GPR2 PROJECT LIBRARY                          ##
 ##                                                                          ##
-##          Copyright (C) 2016-2020, Free Software Foundation, Inc.         ##
+##          Copyright (C) 2016-2021, Free Software Foundation, Inc.         ##
 ##                                                                          ##
 ## This library is free software;  you can redistribute it and/or modify it ##
 ## under terms of the  GNU General Public License  as published by the Free ##
@@ -56,7 +56,6 @@ GPRINSTALL=gprinstall
 ifeq ($(SOURCE_DIR),.)
 RBD=
 GPR2=gpr2.gpr
-GPR2LAL=gpr2-lal.gpr
 GPR2TOOLS=gpr2-tools.gpr
 GPR2KB=src/kb/collect_kb.gpr
 GPR2KBDIR=src/kb/gprconfig_kb
@@ -65,7 +64,6 @@ LANGKIT_GENERATED_SRC=langkit/build
 else
 RBD=--relocate-build-tree
 GPR2=$(SOURCE_DIR)/gpr2.gpr
-GPR2LAL=$(SOURCE_DIR)/gpr2-lal.gpr
 GPR2TOOLS=$(SOURCE_DIR)/gpr2-tools.gpr
 GPR2KB=$(SOURCE_DIR)/src/kb/collect_kb.gpr
 GPR2KBDIR=$(SOURCE_DIR)/src/kb/gprconfig_kb
@@ -109,15 +107,11 @@ kb:
 	$(SOURCE_DIR)/src/kb/collect_kb -o $(SOURCE_DIR)/src/kb/config.kb \
 		$(GPR2KBDIR)
 
-build: ${LIBGPR2_TYPES:%=build-%} ${LIBGPR2_TYPES:%=buildlal-%}
+build: ${LIBGPR2_TYPES:%=build-%}
 
 build-%:
 	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2)
-
-buildlal-%:
-	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
-		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2LAL)
 
 build-tools:
 	$(BUILDER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
@@ -131,24 +125,14 @@ uninstall:
 ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
 	$(UNINSTALLER) --install-name=gpr2 $(GPR2)
 endif
-ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-lal))
-	$(UNINSTALLER) --install-name=gpr2-lal $(GPR2LAL)
-endif
 
-install: uninstall ${LIBGPR2_TYPES:%=install-%} \
-		${LIBGPR2_TYPES:%=installlal-%} install-tools
+install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE \
 		--build-var=GPR2_BUILD $(GPR2)
-
-installlal-%:
-	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
-		-XLANGKIT_SUPPORT_BUILD=$* \
-		--build-name=$* --build-var=LIBRARY_TYPE \
-		--build-var=GPR2_BUILD $(GPR2LAL)
 
 install-tools:
 	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \

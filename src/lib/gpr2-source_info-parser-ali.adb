@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -23,7 +23,9 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Formatting;
+with Ada.Exceptions;
 with Ada.Streams.Stream_IO;
+with Ada.Text_IO;
 
 with GNATCOLL.Utils;
 
@@ -32,9 +34,6 @@ with GPR2.Project.Unit_Info;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.View;
 with GPR2.Source_Info.Parser.Registry;
-
-with Ada.Exceptions;
-with Ada.Text_IO;
 
 package body GPR2.Source_Info.Parser.ALI is
 

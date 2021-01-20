@@ -27,8 +27,8 @@ with GPR_Parser.Common;
 
 with GPR2.Project.Source;
 with GPR2.Source_Info.Parser.Registry;
-with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Identifier.Set;
+with GPR2.Source_Reference.Identifier;
 with GPR2.Unit;
 
 package body GPR2.Source_Info.Parser.Ada_Language is
@@ -283,5 +283,5 @@ package body GPR2.Source_Info.Parser.Ada_Language is
    end Unregister;
 
 begin
-   Parser.Registry.Register (Handle);
+   GPR2.Source_Info.Parser.Registry.Register (Handle);
 end GPR2.Source_Info.Parser.Ada_Language;
