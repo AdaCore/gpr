@@ -33,6 +33,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.View;
 with GPR2.Source;
+with GPR2.Source_Info;
 with GPR2.Version;
 
 with GPRtools.Util;
@@ -355,6 +356,8 @@ begin
 
       procedure Display_Normal is
 
+         use type Source_Info.Backend;
+
          procedure Output_Source (S : Project.Source.Object);
 
          -------------------
@@ -371,6 +374,7 @@ begin
             --  are equal, assume the file didn't change.
 
             if S.Source.Is_Parsed
+              and then S.Source.Used_Backend = Source_Info.LI
               and then S.Source.Build_Timestamp = S.Source.Timestamp
             then
                Status := OK;
