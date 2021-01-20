@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,16 +16,14 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Conversions;
 with Ada.Directories;
-with Ada.Strings.Wide_Wide_Unbounded;
+
+with GNAT.Case_Util;
 
 with Langkit_Support.Text;
 
-with Libadalang.Analysis;
-with Libadalang.Common;
-
-with GNAT.Case_Util;
+with GPR_Parser.Analysis;
+with GPR_Parser.Common;
 
 with GPR2.Project.Source;
 with GPR2.Source_Info.Parser.Registry;
@@ -47,230 +45,163 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       Source : Project.Source.Object)
    is
       use GNAT;
-      use Libadalang.Analysis;
-
-      use Ada.Strings.Wide_Wide_Unbounded;
-      use Ada.Characters.Conversions;
-
-      use Libadalang.Common;
-
+      use GPR_Parser.Analysis;
+      use GPR_Parser.Common;
       use Langkit_Support.Text;
-
-      Ctx    : constant Analysis_Context := Create_Context;
-      A_Unit : constant Analysis_Unit    :=
-                 Get_From_File
-                   (Ctx, Source.Path_Name.Value, Reparse => True);
-
-      function To_String (T : Unbounded_Text_Type) return String is
-        (To_String (To_Wide_Wide_String (T)));
 
       Index : Integer := 0;
       --  Source index, incremented every time we parse a compilation unit
 
-      function Callback (Node : Ada_Node'Class) return Visit_Status;
+      U_Withed : Source_Reference.Identifier.Set.Object;
+      W_Found  : Containers.Name_Set;
+
+      function Callback (Node : GPR_Node'Class) return Visit_Status;
       --  LibAdaLang parser's callback
 
       --------------
       -- Callback --
       --------------
 
-      function Callback (Node : Ada_Node'Class) return Visit_Status is
+      function Callback (Node : GPR_Node'Class) return Visit_Status is
          use all type GPR2.Unit.Flag;
+
+         function Process_Defining_Name
+           (N : GPR_Node'Class) return Unbounded_String;
+
+         ---------------------------
+         -- Process_Defining_Name --
+         ---------------------------
+
+         function Process_Defining_Name
+           (N : GPR_Node'Class) return Unbounded_String is
+         begin
+            case N.Kind is
+               when GPR_Prefix =>
+                  declare
+                     P : constant Prefix := N.As_Prefix;
+                  begin
+                     return Process_Defining_Name (P.F_Prefix)
+                       & "." & Process_Defining_Name (P.F_Suffix);
+                  end;
+
+               when GPR_Identifier =>
+                  return +To_UTF8 (N.Text);
+
+               when GPR_Expr_List =>
+                  pragma Assert (N.As_Expr_List.Children_Count = 1);
+
+                  return Process_Defining_Name
+                    (N.As_Expr_List.Child (N.As_Expr_List.First_Child_Index));
+
+               when others =>
+                  raise Constraint_Error
+                    with "unexpected node in process_defining_name";
+            end case;
+         end Process_Defining_Name;
+
       begin
-         if Node = No_Ada_Node then
+         if Node = No_GPR_Node then
             return Over;
          end if;
 
          case Node.Kind is
-            when Ada_Compilation_Unit =>
-               if Node.As_Compilation_Unit.Is_Null then
-                  return Over;
-               end if;
-
+            when GPR_Ada_With =>
                declare
-                  function Process_Defining_Name
-                    (N : Ada_Node'Class) return Unbounded_String;
+                  N    : constant Ada_With := Node.As_Ada_With;
+                  Sloc : constant Source_Reference.Object :=
+                           Source_Reference.Object
+                             (Source_Reference.Create
+                                (Filename => Source.Path_Name.Value,
+                                 Line     => Natural
+                                   (Node.Sloc_Range.Start_Line),
+                                 Column   => Natural
+                                   (Node.Sloc_Range.Start_Column)));
 
-                  ---------------------------
-                  -- Process_Defining_Name --
-                  ---------------------------
+                  procedure Register (Name : String);
+                  --  Register Name and parent if any
 
-                  function Process_Defining_Name
-                    (N : Ada_Node'Class) return Unbounded_String is
+                  --------------
+                  -- Register --
+                  --------------
+
+                  procedure Register (Name : String) is
+                     subtype O is Source_Reference.Identifier.Object;
+
+                     N      : constant Name_Type := Name_Type (Name);
+                     B_Name : constant String :=
+                                Directories.Base_Name (Name);
+                     Item   : constant O :=
+                                O (Source_Reference.Identifier.Create
+                                   (Sloc, Name_Type (Name)));
                   begin
-                     case N.Kind is
-                        when Ada_Identifier =>
-                           return +To_UTF8 (N.Text);
+                     if not W_Found.Contains (N) then
+                        U_Withed.Insert (Item);
+                        W_Found.Include (N);
+                     end if;
 
-                        when Ada_Dotted_Name =>
-                           return Process_Defining_Name
-                             (N.As_Dotted_Name.F_Prefix) & (+".") &
-                           (+To_UTF8 (N.As_Dotted_Name.F_Suffix.Text));
+                     if B_Name /= Name then
+                        Register (B_Name);
+                     end if;
+                  end Register;
 
-                        when others =>
-                           pragma Assert (False);
-                           return +("");
-                     end case;
-                  end Process_Defining_Name;
-
-                  U_Prelude  : constant Ada_Node_List :=
-                                 Node.As_Compilation_Unit.F_Prelude;
-                  U_Body     : constant Ada_Node :=
-                                 Node.As_Compilation_Unit.F_Body;
-
-                  U_Name        : Unbounded_String;
-                  U_Sep_From    : Unbounded_String;
-                  U_Kind        : Unit.Library_Unit_Type;
-                  L_Type        : Unit.Library_Item_Type;
-                  U_Withed      : Source_Reference.Identifier.Set.Object;
-                  W_Found       : Containers.Name_Set;
-
-                  --  ??? For now we don't parse those:
-                  U_Main        : constant Unit.Main_Type :=
-                                    Unit.None;
-                  U_Flags       : Unit.Flags_Set :=
-                                    Unit.Default_Flags;
                begin
-                  if U_Prelude.Is_Null or else U_Body.Is_Null then
-                     return Over;
+                  Register (-(Process_Defining_Name (N.F_Packages)));
+               end;
+
+               return Over;
+
+            when GPR_Ada_Library_Item =>
+               declare
+                  N          : constant Ada_Library_Item :=
+                                 Node.As_Ada_Library_Item;
+                  U_Name     : Unbounded_String;
+                  U_Sep_From : Unbounded_String;
+                  U_Flags    : Unit.Flags_Set :=
+                                 Unit.Default_Flags;
+                  U_Kind     : Unit.Library_Unit_Type;
+                  L_Type     : Unit.Library_Item_Type;
+                  U_Main     : constant Unit.Main_Type :=
+                                 Unit.None;
+               begin
+                  --  Check generic
+
+                  U_Flags (Is_Generic) := not N.F_Generic_Stub.Is_Null;
+
+                  --  Check separate
+
+                  if not N.F_Separate.Is_Null then
+                     U_Kind := Unit.S_Separate;
+
+                     U_Sep_From :=
+                       Process_Defining_Name (N.F_Separate.F_Parent_Name);
                   end if;
 
-                  --  Unit name, fully qualified.
-                  --  The Unit and its parents are also the first direct
-                  --  dependencies that we register.
+                  --  Check Spec/Body
 
-                  declare
-                     Is_First_Iteration : Boolean := True;
-                  begin
-                     for UN of Node.As_Compilation_Unit.
-                       P_Syntactic_Fully_Qualified_Name
-                     loop
-                        if Is_First_Iteration then
-                           U_Name := +To_String (UN);
-                        else
-                           U_Name := U_Name & (+".") & (+To_String (UN));
-                        end if;
+                  case N.F_Main.Kind is
+                     when GPR_Ada_Pkg =>
+                        L_Type := Unit.Is_Package;
+                        U_Name := Process_Defining_Name
+                          (N.F_Main.As_Ada_Pkg.F_Name);
+                        U_Kind := Unit.S_Spec;
 
-                        Is_First_Iteration := False;
-                     end loop;
-                  exception
-                     when Property_Error =>
-                        return Over;
-                  end;
+                     when GPR_Ada_Pkg_Body =>
+                        L_Type := Unit.Is_Package;
+                        U_Name := Process_Defining_Name
+                          (N.F_Main.As_Ada_Pkg_Body.F_Name);
+                        U_Kind := Unit.S_Body;
 
-                  --  Get the direct dependencies, if any
-
-                  for WC of U_Prelude loop
-                     if WC.Kind = Ada_With_Clause then
-                        for P of WC.As_With_Clause.F_Packages loop
-                           --  We record this package and all parent if any
-                           declare
-                              Sloc : constant Source_Reference.Object :=
-                                       Source_Reference.Object
-                                         (Source_Reference.Create
-                                           (Filename => Source.Path_Name.Value,
-                                            Line     => Natural
-                                              (WC.Sloc_Range.Start_Line),
-                                            Column   => Natural
-                                              (WC.Sloc_Range.Start_Column)));
-
-                              procedure Register (Name : String);
-                              --  Register Name and parent if any
-
-                              --------------
-                              -- Register --
-                              --------------
-
-                              procedure Register (Name : String) is
-                                 subtype O
-                                   is Source_Reference.Identifier.Object;
-
-                                 N      : constant Name_Type :=
-                                            Name_Type (Name);
-                                 B_Name : constant String :=
-                                            Directories.Base_Name (Name);
-                                 Item   : constant O :=
-                                            O (Source_Reference.Identifier.
-                                                Create
-                                                 (Sloc, Name_Type (Name)));
-                              begin
-                                 if not W_Found.Contains (N) then
-                                    U_Withed.Insert (Item);
-                                    W_Found.Include (N);
-                                 end if;
-
-                                 if B_Name /= Name then
-                                    Register (B_Name);
-                                 end if;
-                              end Register;
-
-                           begin
-                              Register (-(Process_Defining_Name (P)));
-                           end;
-                        end loop;
-                     end if;
-                  end loop;
-
-                  --  Unit kind
-
-                  case U_Body.Kind is
-                     when Ada_Library_Item =>
-                        case Node.As_Compilation_Unit.P_Unit_Kind is
-                           when Analysis_Unit_Kind'(Unit_Specification) =>
-                              U_Kind := Unit.S_Spec;
-                           when Analysis_Unit_Kind'(Unit_Body)          =>
-                              U_Kind := Unit.S_Body;
-                        end case;
-
-                        case U_Body.As_Library_Item.F_Item.Kind is
-                           when Ada_Generic_Package_Decl =>
-                              U_Flags (Is_Generic) := True;
-                              L_Type := Unit.Is_Package;
-
-                           when Ada_Generic_Subp_Decl =>
-                              U_Flags (Is_Generic) := True;
-                              L_Type := Unit.Is_Subprogram;
-
-                           when Ada_Subp_Decl
-                              | Ada_Null_Subp_Decl
-                              | Ada_Subp_Body
-                              | Ada_Generic_Subp_Instantiation
-                              =>
-                              L_Type := Unit.Is_Subprogram;
-
-                           when Ada_Package_Decl
-                              | Ada_Package_Body
-                              | Ada_Generic_Package_Instantiation
-                              =>
-                              L_Type := Unit.Is_Package;
-
-                           when others =>
-                              pragma Assert
-                                (False,
-                                 U_Body.As_Library_Item.F_Item.Kind'Img);
-                        end case;
-
-                     when Ada_Subunit =>
-                        U_Kind := Unit.S_Separate;
-                        U_Sep_From := Process_Defining_Name
-                                        (U_Body.As_Subunit.F_Name);
-
-                        case U_Body.As_Subunit.F_Body.Kind is
-                           when Ada_Package_Body =>
-                              L_Type := Unit.Is_Package;
-                           when Ada_Subp_Body =>
-                              L_Type := Unit.Is_Subprogram;
-                           when others =>
-                              pragma Assert
-                                (False, U_Body.As_Subunit.F_Body.Kind'Img);
-                        end case;
-
-                        pragma Assert
-                          (Length (U_Name) > Length (U_Sep_From) + 1);
+                     when GPR_Ada_Subp =>
+                        L_Type := Unit.Is_Subprogram;
+                        U_Name := Process_Defining_Name
+                          (N.F_Main.As_Ada_Subp.F_Name);
+                        U_Kind := Unit.S_Body;
 
                      when others =>
                         pragma Assert (False);
                   end case;
+
+                  --  Use mixed-casing for the unit name
 
                   declare
                      Unit_Name : String := -U_Name;
@@ -286,7 +217,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      U_Name := +Unit_Name;
                   end;
 
+                  pragma Assert (Length (U_Name) > Length (U_Sep_From) + 1);
+
                   --  Construct the unit and add it to "Found"
+
+                  --  Note that this parser supports only a single unit per
+                  --  file. So only index 1 will be used. But this is made
+                  --  so to support a full parser if one is implemented.
 
                   Index := Index + 1;
 
@@ -319,6 +256,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                return Into;
          end case;
       end Callback;
+
+      Ctx    : constant Analysis_Context := Create_Context;
+      A_Unit : constant Analysis_Unit    :=
+                 Get_From_File
+                   (Ctx, Source.Path_Name.Value,
+                    Rule    => Ada_Prelude_Rule,
+                    Reparse => True);
 
    begin
       Data.Clear;
