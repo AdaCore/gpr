@@ -2504,7 +2504,6 @@ package body GPR2.Project.Tree is
             ----------------------
 
             function Is_Defined_Empty (Attr : Name_Type) return Boolean is
-               Tmp_Attr : Attribute.Object;
             begin
                return View.Check_Attribute (Attr, Result => Tmp_Attr)
                  and then Tmp_Attr.Values.Is_Empty;
@@ -2713,27 +2712,59 @@ package body GPR2.Project.Tree is
 
             P_Data.Kind := P_Data.Trees.Project.Qualifier;
 
-            if P_Data.Kind = K_Standard
-              and then Is_Implicitly_Abstract (View)
-            then
-               P_Data.Kind := K_Abstract;
-            end if;
-
             if P_Data.Kind = K_Standard then
-               --  If Library_Name, Library_Dir are declared, then the project
-               --  is a library project.
-               --  Note: Library_Name may be inherited from an extended project
-               --  while Library_Dir has to be defined in the project
+               if Is_Implicitly_Abstract (View) then
+                  if P_Data.Trees.Project.Explicit_Qualifier then
+                     --  Error message depend on Tmp_Attr because this
+                     --  attribute was used to detect that project has no
+                     --  sources.
 
-               if View.Check_Attribute (PRA.Library_Name,
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "a standard project must have "
+                           & (if Tmp_Attr.Name.Text = PRA.Source_Dirs
+                              then "source directories"
+                              elsif Tmp_Attr.Name.Text = PRA.Languages
+                              then "languages"
+                              else "sources"),
+                           Tmp_Attr));
+                  else
+                     P_Data.Kind := K_Abstract;
+                  end if;
+
+               elsif View.Check_Attribute (PRA.Library_Name,
                                         Recursive => True,
                                         Result    => Tmp_Attr)
                  and then Tmp_Attr.Value.Text /= ""
                  and then View.Check_Attribute (PRA.Library_Dir,
-                                                Result    => Tmp_Attr)
+                                                Result => Tmp_Attr)
                  and then Tmp_Attr.Value.Text /= ""
                then
-                  P_Data.Kind := K_Library;
+                  --  If Library_Name, Library_Dir are declared, then the
+                  --  project is a library project.
+                  --  Note: Library_Name may be inherited from an extended
+                  --  project while Library_Dir has to be defined in the
+                  --  project.
+
+                  if P_Data.Trees.Project.Explicit_Qualifier then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "a standard project cannot be a library project",
+                           Tmp_Attr));
+                  else
+                     P_Data.Kind := K_Library;
+                  end if;
+
+               elsif View.Is_Extending and then View.Extended.Is_Library
+                 and then P_Data.Trees.Project.Explicit_Qualifier
+               then
+                  Self.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        "a standard project cannot extend a library project",
+                        P_Data.Trees.Project.Extended));
                end if;
             end if;
 

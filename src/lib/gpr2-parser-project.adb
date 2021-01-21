@@ -841,6 +841,7 @@ package body GPR2.Parser.Project is
             --  pass.
 
             if Present (Qual) then
+               Project.Expl_Qual := True;
                Project.Qualifier :=
                  (case Kind (Qual) is
                      when GPR_Project_Qualifier_Abstract

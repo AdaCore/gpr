@@ -90,6 +90,10 @@ package GPR2.Parser.Project is
    --  kind may be different as computed based on the attributes present on
    --  the project.
 
+   function Explicit_Qualifier (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True if project qualifier defined explicitly
+
    function Has_Extended (Self : Object) return Boolean;
    --  Returns True if an extended project is defined
 
@@ -145,6 +149,7 @@ private
       Name      : Unbounded_String;
       File      : GPR2.Path_Name.Object;
       Qualifier : Project_Kind := K_Standard;
+      Expl_Qual : Boolean      := False; -- Explicit qualifier
       Externals : Containers.Name_List;
       Imports   : GPR2.Project.Import.Set.Object;
       Extended  : GPR2.Project.Import.Object;
@@ -166,5 +171,8 @@ private
      (Self : Object) return Containers.Filename_Source_Reference
    is
      (Self.Skip_Src);
+
+   function Explicit_Qualifier (Self : Object) return Boolean is
+     (Self.Expl_Qual);
 
 end GPR2.Parser.Project;
