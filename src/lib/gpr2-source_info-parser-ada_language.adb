@@ -28,7 +28,6 @@ with GPR_Parser.Common;
 with GPR2.Project.Source;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
-with GPR2.Source_Reference.Identifier;
 with GPR2.Unit;
 
 package body GPR2.Source_Info.Parser.Ada_Language is
@@ -55,11 +54,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       U_Withed : Source_Reference.Identifier.Set.Object;
       W_Found  : Containers.Name_Set;
 
+      Parsed   : Boolean := False;
+      --  If something has been parsed on this source file, then Parsed is set
+      --  to True and New_Data will replace Data parameter.
+
       function Callback (Node : GPR_Node'Class) return Visit_Status;
       --  LibAdaLang parser's callback
-
-      function Capitalize_Unit_Name (Name : String) return Name_Type;
-      --  Use mixed-case for the unit name stored into the unit object
 
       --------------
       -- Callback --
@@ -70,6 +70,28 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
          function Process_Defining_Name
            (N : GPR_Node'Class) return Unbounded_String;
+
+         function Capitalize_Unit_Name
+           (Name : String) return Name_Type with Inline;
+         --  Use mixed-case for the unit name stored into the unit object
+
+         --------------------------
+         -- Capitalize_Unit_Name --
+         --------------------------
+
+         function Capitalize_Unit_Name (Name : String) return Name_Type is
+            Unit_Name : String := Name;
+         begin
+            Case_Util.To_Mixed (Unit_Name);
+
+            for I in Unit_Name'First + 1 .. Unit_Name'Last loop
+               if Unit_Name (I - 1) = '.' then
+                  Unit_Name (I) := Case_Util.To_Upper (Unit_Name (I));
+               end if;
+            end loop;
+
+            return Name_Type (Unit_Name);
+         end Capitalize_Unit_Name;
 
          ---------------------------
          -- Process_Defining_Name --
@@ -154,6 +176,16 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                return Over;
 
             when GPR_Ada_Library_Item =>
+               --  Note that this parser supports only a single unit per
+               --  file. So only index 1 will be used. But this is made
+               --  so to support a full parser if one is implemented.
+
+               Index := Index + 1;
+
+               --  As the parser only support a single unit per file the
+               --  index should always be 1.
+               pragma Assert (Index = 1);
+
                declare
                   N          : constant Ada_Library_Item :=
                                  Node.As_Ada_Library_Item;
@@ -167,15 +199,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   --  Check generic
 
                   U_Flags (Is_Generic) := not N.F_Generic_Stub.Is_Null;
-
-                  --  Check separate
-
-                  if not N.F_Separate.Is_Null then
-                     U_Kind := Unit.S_Separate;
-
-                     U_Sep_From :=
-                       Process_Defining_Name (N.F_Separate.F_Parent_Name);
-                  end if;
 
                   --  Check Spec/Body
 
@@ -193,40 +216,40 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                         U_Kind := Unit.S_Body;
 
                      when GPR_Ada_Subp =>
+                        --  Keep the unit kind information. Indeed,
+                        --  the Ada parser do not make the difference
+                        --  between the a procedure spec or body but
+                        --  this information has been already computed
+                        --  based on the naming scheme while adding
+                        --  the files to the view.
+
+                        if Index = 1 then
+                           U_Kind := Data.CU_List.First_Element.Kind;
+                        end if;
+
                         L_Type := Unit.Is_Subprogram;
                         U_Name := Process_Defining_Name
                           (N.F_Main.As_Ada_Subp.F_Name);
-                        U_Kind := Unit.S_Body;
 
                      when others =>
                         pragma Assert (False);
                   end case;
 
-                  --  Use mixed-casing for the unit name
+                  --  Check separate
 
-                  declare
-                     Unit_Name : String := -U_Name;
-                  begin
-                     Case_Util.To_Mixed (Unit_Name);
+                  if not N.F_Separate.Is_Null then
+                     U_Kind := Unit.S_Separate;
 
-                     for I in Unit_Name'First + 1 .. Unit_Name'Last loop
-                        if Unit_Name (I - 1) = '.' then
-                           Unit_Name (I) := Case_Util.To_Upper (Unit_Name (I));
-                        end if;
-                     end loop;
+                     U_Sep_From :=
+                       Process_Defining_Name (N.F_Separate.F_Parent_Name);
 
-                     U_Name := +Unit_Name;
-                  end;
+                     U_Name :=  U_Sep_From & '.' & U_Name;
 
-                  pragma Assert (Length (U_Name) > Length (U_Sep_From) + 1);
+                     pragma Assert
+                       (Length (U_Name) > Length (U_Sep_From) + 1);
+                  end if;
 
-                  --  Construct the unit and add it to "Found"
-
-                  --  Note that this parser supports only a single unit per
-                  --  file. So only index 1 will be used. But this is made
-                  --  so to support a full parser if one is implemented.
-
-                  Index := Index + 1;
+                  --  Construct the unit
 
                   declare
                      CU : constant Unit.Object :=
@@ -247,7 +270,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                         Data.Kind := U_Kind;
                      end if;
 
-                     Data.CU_List.Append (CU);
+                     --  Note that we do not append but actually replace the
+                     --  new unit created with all informations (dependencies,
+                     --  generic, etc...).
+
+                     Data.CU_List (Index) := CU;
+
+                     Parsed := True;
                   end;
                end;
 
@@ -258,24 +287,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          end case;
       end Callback;
 
-      --------------------------
-      -- Capitalize_Unit_Name --
-      --------------------------
-
-      function Capitalize_Unit_Name (Name : String) return Name_Type is
-         Unit_Name : String := Name;
-      begin
-         Case_Util.To_Mixed (Unit_Name);
-
-         for I in Unit_Name'First + 1 .. Unit_Name'Last loop
-            if Unit_Name (I - 1) = '.' then
-               Unit_Name (I) := Case_Util.To_Upper (Unit_Name (I));
-            end if;
-         end loop;
-
-         return Name_Type (Unit_Name);
-      end Capitalize_Unit_Name;
-
       Ctx    : constant Analysis_Context := Create_Context;
       A_Unit : constant Analysis_Unit    :=
                  Get_From_File
@@ -284,12 +295,17 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                     Reparse => True);
 
    begin
-      Data.Clear;
+      Data.Dependencies.Clear;
 
       Traverse (A_Unit.Root, Callback'Access);
 
-      Data.Parsed := Source_Info.Source;
-      Data.Is_Ada := True;
+      if Parsed then
+         Data.Parsed := Source_Info.Source;
+         Data.Is_Ada := True;
+
+      else
+         Data.Parsed := Source_Info.None;
+      end if;
    end Compute;
 
    ----------------

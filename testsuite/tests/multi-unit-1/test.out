@@ -79,8 +79,9 @@ sep.adb
     withed units = { Ada Ada.Text_IO }
   - compilation unit at 2
     unit name    = U.W
-    kind         = S_SEPARATE
-    withed units = { GNAT GNAT.Regexp }
+    kind         = S_BODY_ONLY
+    object file  = sep~2.o
+    deps file    = sep~2.ali
 u.adb
   single-unit          = FALSE
   has naming exception = TRUE
@@ -90,6 +91,5 @@ u.adb
   - compilation unit at 2
     unit name    = U
     kind         = S_BODY
-    withed units = { GNAT GNAT.OS_Lib }
     object file  = u~2.o
     deps file    = u~2.ali
