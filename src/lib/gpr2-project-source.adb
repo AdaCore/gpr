@@ -590,8 +590,6 @@ package body GPR2.Project.Source is
          return;
       end if;
 
-      Clarify_Unit_Type;
-
       for BK in Source_Info.Implemented_Backend loop
          if Source_Info.Parser.Registry.Exists (Language, BK) then
             declare
