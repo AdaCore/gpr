@@ -1389,6 +1389,19 @@ package body GPR2.Project.Tree is
       --  Returns the runtime to use during configuration for the specified
       --  language.
 
+      function Toolchain_Name
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+      --  Returns toolchain name specified by Toolchain_Name attribute
+
+      function Toolchain_Version
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+      --  Returns toolchain version specified by Required_Toolchain_Version
+      --  attribute.
+
+      function Toolchain_Path
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+      --  Returns toolchain search path specified by Toolchain_Path attribute
+
       -------------------
       -- Actual_Target --
       -------------------
@@ -1533,6 +1546,68 @@ package body GPR2.Project.Tree is
          return No_Name;
       end Runtime;
 
+      --------------------
+      -- Toolchain_Name --
+      --------------------
+
+      function Toolchain_Name
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+      is
+         Tmp_Attr : GPR2.Project.Attribute.Object;
+      begin
+         if Self.Root.Check_Attribute
+           (PRA.Toolchain_Name, Attribute_Index.Create (Language.Text),
+            Recursive => True, Result => Tmp_Attr)
+           and then Tmp_Attr.Value.Text /= ""
+         then
+            return Name_Type (Tmp_Attr.Value.Text);
+         end if;
+
+         return No_Name;
+      end Toolchain_Name;
+
+      --------------------
+      -- Toolchain_Path --
+      --------------------
+
+      function Toolchain_Path
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+      is
+         Tmp_Attr : GPR2.Project.Attribute.Object;
+      begin
+         if Self.Root.Check_Attribute
+           (PRA.Toolchain_Path, Attribute_Index.Create (Language.Text),
+            Recursive => True, Result => Tmp_Attr)
+           and then Tmp_Attr.Value.Text /= ""
+         then
+            return Name_Type (GNAT.OS_Lib.Normalize_Pathname
+                              (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
+         end if;
+
+         return No_Name;
+      end Toolchain_Path;
+
+      -----------------------
+      -- Toolchain_Version --
+      -----------------------
+
+      function Toolchain_Version
+        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+      is
+         Tmp_Attr : GPR2.Project.Attribute.Object;
+      begin
+         if Self.Root.Check_Attribute
+           (PRA.Required_Toolchain_Version,
+            Attribute_Index.Create (Language.Text),
+            Recursive => True, Result => Tmp_Attr)
+           and then Tmp_Attr.Value.Text /= ""
+         then
+            return Name_Type (Tmp_Attr.Value.Text);
+         end if;
+
+         return No_Name;
+      end Toolchain_Version;
+
    begin
 
       if GNAT_Prefix = "" then
@@ -1631,10 +1706,10 @@ package body GPR2.Project.Tree is
                Conf_Descriptions (Descr_Index) :=
                  Project.Configuration.Create
                    (Language => Name_Type (L.Text),
-                    Version  => No_Name,
+                    Version  => Toolchain_Version (L),
                     Runtime  => Runtime (L),
-                    Path     => No_Name,
-                    Name     => No_Name);
+                    Path     => Toolchain_Path (L),
+                    Name     => Toolchain_Name (L));
             end loop;
 
             if not Self.Base.Is_Defined then

@@ -609,10 +609,19 @@ package body GPR2.KB is
                         "can't find a toolchain "
                         & "for the following configuration: language '"
                         & To_String (Comp.Language_Case) & "', target '"
-                        & String (On_Target) & "', "
+                        & String (On_Target) & "'"
                         & (if Comp.Runtime = Null_Unbounded_String then
-                              "default runtime"
-                           else "'" & To_String (Comp.Runtime) & "'"),
+                              ", default runtime"
+                           else ", runtime '" & To_String (Comp.Runtime) & "'")
+                        & (if Comp.Version /= Null_Unbounded_String then
+                               ", version '" & To_String (Comp.Version) & "'"
+                          else "")
+                        & (if Comp.Path.Is_Defined then
+                               ", path '" & Comp.Path.Value & "'"
+                           else "")
+                        & (if Comp.Name /= Null_Unbounded_String then
+                               ", name '" & To_String (Comp.Name) & "'"
+                           else ""),
                         Source_Reference.Create ("embedded_kb/kb", 0, 0)));
                end if;
             end;

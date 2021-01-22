@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -740,6 +740,30 @@ begin
    --  toolchain_name
    Add
      (Create (Toolchain_Name),
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere,
+      Is_Toolchain_Config  => True);
+
+   --  toolchain_path
+   Add
+     (Create (Toolchain_Path),
+      Index                => Yes,
+      Others_Allowed       => False,
+      Index_Case_Sensitive => False,
+      Value                => Single,
+      Value_Case_Sensitive => True,
+      Read_Only            => False,
+      Is_Allowed_In        => Everywhere,
+      Is_Toolchain_Config  => True);
+
+   --  required_toolchain_version
+   Add
+     (Create (Required_Toolchain_Version),
       Index                => Yes,
       Others_Allowed       => False,
       Index_Case_Sensitive => False,

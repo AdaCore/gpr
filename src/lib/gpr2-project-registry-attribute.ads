@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -300,6 +300,8 @@ package GPR2.Project.Registry.Attribute is
    Required_Artifacts          : constant Name_Type := "required_artifacts";
    Remote_Host                 : constant Name_Type := "remote_host";
    Required_Switches           : constant Name_Type := "required_switches";
+   Required_Toolchain_Version  : constant Name_Type :=
+                                   "required_toolchain_version";
    Response_File_Format        : constant Name_Type := "response_file_format";
    Response_File_Switches      : constant Name_Type :=
                                    "response_file_switches";
@@ -340,6 +342,7 @@ package GPR2.Project.Registry.Attribute is
    Toolchain_Version           : constant Name_Type := "toolchain_version";
    Toolchain_Name              : constant Name_Type := "toolchain_name";
    Toolchain_Description       : constant Name_Type := "toolchain_description";
+   Toolchain_Path              : constant Name_Type := "toolchain_path";
    Trailing_Required_Switches  : constant Name_Type :=
                                    "trailing_required_switches";
    Trailing_Switches           : constant Name_Type := "trailing_switches";
