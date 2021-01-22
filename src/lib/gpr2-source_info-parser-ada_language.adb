@@ -58,6 +58,9 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       function Callback (Node : GPR_Node'Class) return Visit_Status;
       --  LibAdaLang parser's callback
 
+      function Capitalize_Unit_Name (Name : String) return Name_Type;
+      --  Use mixed-case for the unit name stored into the unit object
+
       --------------
       -- Callback --
       --------------
@@ -228,7 +231,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   declare
                      CU : constant Unit.Object :=
                             Unit.Create
-                              (Name          => Name_Type (-U_Name),
+                              (Name          => Capitalize_Unit_Name (-U_Name),
                                Index         => Index,
                                Main          => U_Main,
                                Flags         => U_Flags,
@@ -254,6 +257,24 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                return Into;
          end case;
       end Callback;
+
+      --------------------------
+      -- Capitalize_Unit_Name --
+      --------------------------
+
+      function Capitalize_Unit_Name (Name : String) return Name_Type is
+         Unit_Name : String := Name;
+      begin
+         Case_Util.To_Mixed (Unit_Name);
+
+         for I in Unit_Name'First + 1 .. Unit_Name'Last loop
+            if Unit_Name (I - 1) = '.' then
+               Unit_Name (I) := Case_Util.To_Upper (Unit_Name (I));
+            end if;
+         end loop;
+
+         return Name_Type (Unit_Name);
+      end Capitalize_Unit_Name;
 
       Ctx    : constant Analysis_Context := Create_Context;
       A_Unit : constant Analysis_Unit    :=
