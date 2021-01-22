@@ -953,6 +953,7 @@ package body GPR2.Source_Info.Parser.ALI is
       ---------------------
 
       procedure Check_Separated (SU : in out Unit.Object) is
+
          Name : constant Name_Type := SU.Name;
          Lown : constant String := To_Lower (Name);
          FU   : Project.Unit_Info.Object;
@@ -971,6 +972,7 @@ package body GPR2.Source_Info.Parser.ALI is
                     Self.Cache.Constant_Reference (CS);
          begin
             pragma Assert (SU.Name = Ref.Unit.Name);
+
             Data.Parsed := Source_Info.LI;
             SU.Set_Separate_From (Ref.Unit.Separate_From);
 
@@ -1009,12 +1011,14 @@ package body GPR2.Source_Info.Parser.ALI is
             Dep  : Path_Name.Object;
          begin
             Info.Dependencies.Clear;
+
             for CU of Info.CU_List loop
                if CU.Kind in GPR2.Unit.Body_Kind
                  and then CU.Name = FU.Name
                then
                   if Src.Artifacts.Has_Dependency (CU.Index) then
                      Dep := Src.Artifacts.Dependency (CU.Index);
+
                      if Dep.Exists then
                         Compute (Self.all, Info, FU.Main_Body, Dep, CU);
                      end if;
@@ -1026,6 +1030,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
             if Info.Is_Parsed then
                CS := Self.Cache.Find (Lown);
+
                if Cache_Map.Has_Element (CS) then
                   Set_Data;
                end if;

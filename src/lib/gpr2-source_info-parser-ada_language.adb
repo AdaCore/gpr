@@ -154,14 +154,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                declare
                   N          : constant Ada_Library_Item :=
                                  Node.As_Ada_Library_Item;
+                  U_Main     : constant Unit.Main_Type := Unit.None;
                   U_Name     : Unbounded_String;
                   U_Sep_From : Unbounded_String;
-                  U_Flags    : Unit.Flags_Set :=
-                                 Unit.Default_Flags;
+                  U_Flags    : Unit.Flags_Set := Unit.Default_Flags;
                   U_Kind     : Unit.Library_Unit_Type;
                   L_Type     : Unit.Library_Item_Type;
-                  U_Main     : constant Unit.Main_Type :=
-                                 Unit.None;
                begin
                   --  Check generic
 

@@ -91,7 +91,8 @@ package body GPR2.Project.Source is
                    (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
    is
-      Tree : constant not null access Project.Tree.Object := View (Self).Tree;
+      Tree   : constant not null access Project.Tree.Object :=
+                 View (Self).Tree;
       U_Done : Containers.Name_Set;
       S_Done : Containers.Filename_Set;
       --  Fast look-up tables to avoid analysing the same unit/file multiple
@@ -526,6 +527,7 @@ package body GPR2.Project.Source is
    ------------
 
    procedure Update (Self : in out Object) is
+
       Language : constant Name_Type := Self.Source.Language;
 
       procedure Clarify_Unit_Type;
