@@ -49,7 +49,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       use GPR_Parser.Common;
       use Langkit_Support.Text;
 
-      Index : Integer := 0;
+      Index : Natural := 0;
       --  Source index, incremented every time we parse a compilation unit
 
       U_Withed : Source_Reference.Identifier.Set.Object;
