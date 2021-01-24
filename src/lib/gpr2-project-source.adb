@@ -572,7 +572,7 @@ package body GPR2.Project.Source is
                   pragma Assert
                     (U.Kind not in S_Spec | S_Body,
                      "can't find """ & String (U.Name) & """ for "
-                     & U.Kind'Img);
+                     & U.Kind'Img & " in """ & Self.Path_Name.Value & '"');
                end if;
 
                if U.Kind = S_Spec and then not US.Element (CU).Has_Body then
