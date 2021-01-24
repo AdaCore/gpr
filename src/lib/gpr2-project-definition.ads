@@ -35,6 +35,7 @@ with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 with GPR2.Project.Unit_Info.Set;
+with GPR2.Source_Info;
 with GPR2.Unit;
 
 limited with GPR2.Project.Tree;
@@ -44,6 +45,7 @@ private package GPR2.Project.Definition is
    use type Attribute_Index.Object;
    use type View.Object;
    use type Path_Name.Object;
+   use type Source_Info.Backend_Set;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded trees. That is there is always a single instance of
@@ -251,7 +253,9 @@ private package GPR2.Project.Definition is
    procedure Update_Sources
      (Def           : in out Data;
       View          : Project.View.Object;
-      Stop_On_Error : Boolean);
+      Stop_On_Error : Boolean;
+      Backends      : Source_Info.Backend_Set)
+     with Pre => View.Is_Defined and then Backends /= Source_Info.No_Backends;
    --  Ensure that the view definition sources are up-to-date. This is needed
    --  before computing the dependencies of a source in the project tree. This
    --  routine is called where needed and is there for internal use only.
@@ -259,6 +263,8 @@ private package GPR2.Project.Definition is
    --  then the exception Project_Error raised. If Stop_On_Error is False then
    --  no exception is raised and errors can be discovered only from the
    --  Log.Object taken from the View.Tree.Log_Messages call.
+   --  Backends parameter defines the set of parser that can be used to parse
+   --  the source information.
 
    procedure Set_Default_Attributes (Def : in out Data);
    --  Set default and inherited attributes for the project view

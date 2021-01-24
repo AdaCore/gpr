@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -189,6 +189,11 @@ begin
      (Config, Self.All_Projects'Unrestricted_Access,
       "-U",
       Help => "Browse the entire project tree");
+
+   Define_Switch
+     (Config, Self.Source_Parser'Unrestricted_Access,
+      Long_Switch => "--source-parser",
+      Help        => "Allow to use source parser to get dependencies");
 
    Getopt (Config, Concatenate => False);
 

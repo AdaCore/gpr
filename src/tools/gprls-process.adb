@@ -236,7 +236,9 @@ begin
 
    --  Make sure the sources are up to date
 
-   Tree.Update_Sources;
+   Tree.Update_Sources
+     (Backends => (Source_Info.Source => Opt.Source_Parser,
+                   Source_Info.LI     => True));
 
    --
    --  Main processing

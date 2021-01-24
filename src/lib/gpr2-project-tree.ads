@@ -32,9 +32,11 @@ with GPR2.Message;
 with GPR2.Project.Configuration;
 pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
+
 with GPR2.Project.View.Set;
 with GPR2.Project.Source;
 with GPR2.Project.Unit_Info;
+with GPR2.Source_Info;
 
 pragma Warnings (Off);
 with System.OS_Constants;
@@ -54,6 +56,7 @@ package GPR2.Project.Tree is
 
    use type GPR2.Context.Object;
    use type GPR2.Project.View.Object;
+   use type Source_Info.Backend_Set;
 
    type Object is tagged limited private
      with Constant_Indexing => Constant_Reference,
@@ -327,8 +330,9 @@ package GPR2.Project.Tree is
    procedure Update_Sources
      (Self          : Object;
       Stop_On_Error : Boolean := True;
-      With_Runtime  : Boolean := False)
-     with Pre => Self.Is_Defined;
+      With_Runtime  : Boolean := False;
+      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
+     with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
    --  Ensures that all views' sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
@@ -336,6 +340,8 @@ package GPR2.Project.Tree is
    --  an error message exists in log after processing one of project files in
    --  tree. If Stop_On_Error is False then no exception is raised and errors
    --  can be discovered from the Log.Object taken from Log_Messages call.
+   --  Backends parameter defines the set of parsers that can be used to parse
+   --  the source information.
 
    procedure Register_Project_Search_Path
      (Self : in out Object;

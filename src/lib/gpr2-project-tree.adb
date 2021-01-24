@@ -3396,13 +3396,14 @@ package body GPR2.Project.Tree is
    procedure Update_Sources
      (Self          : Object;
       Stop_On_Error : Boolean := True;
-      With_Runtime  : Boolean := False) is
+      With_Runtime  : Boolean := False;
+      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends) is
    begin
       Self.Self.Rooted_Sources.Clear;
 
       for V of Self.Views_Set loop
          if With_Runtime or else not V.Is_Runtime then
-            Definition.Get (V).Update_Sources (V, Stop_On_Error);
+            Definition.Get (V).Update_Sources (V, Stop_On_Error, Backends);
          end if;
       end loop;
 

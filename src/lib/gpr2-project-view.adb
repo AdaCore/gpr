@@ -38,6 +38,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
 with GPR2.Source;
+with GPR2.Source_Info;
 with GPR2.Project.Unit_Info;
 
 with System.Assertions;
@@ -65,11 +66,15 @@ package body GPR2.Project.View is
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
 
-   procedure Update_Sources (Self : Object)
+   procedure Update_Sources
+     (Self     : Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
      with Pre => Self.Is_Defined;
    --  Ensure that the view sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
+   --  Backends parameter defines the set of parsers that can be used to parse
+   --  the source information.
 
    function Apply_Root_And_Subdirs
      (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
@@ -1551,9 +1556,12 @@ package body GPR2.Project.View is
    -- Update_Sources --
    --------------------
 
-   procedure Update_Sources (Self : Object) is
+   procedure Update_Sources
+     (Self     : Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends) is
    begin
-      Get_Ref (Self).Update_Sources (Self, Stop_On_Error => True);
+      Get_Ref (Self).Update_Sources
+        (Self, Stop_On_Error => True, Backends => Backends);
    end Update_Sources;
 
    --------------

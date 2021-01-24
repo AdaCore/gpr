@@ -34,6 +34,7 @@ package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
    use type GPR2.Unit.Library_Unit_Type;
+   use type Source_Info.Backend_Set;
 
    type Naming_Exception_Kind is (No, Yes, Multi_Unit);
 
@@ -178,7 +179,10 @@ package GPR2.Project.Source is
    --  Returns the project's source containing the separate for Self's unit at
    --  the given index.
 
-   procedure Update (Self : in out Object);
+   procedure Update
+     (Self     : in out Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
+     with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
    --  Ensure that the project source is parsed/updated if needed
 
 private

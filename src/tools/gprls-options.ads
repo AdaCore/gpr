@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -56,6 +56,8 @@ package GPRls.Options is
 
    function Print_Object_Files (Self : Object) return Boolean;
 
+   function Source_Parser (Self : Object) return Boolean;
+
    function Dependency_Mode (Self : Object) return Boolean;
 
    function Closure_Mode (Self : Object) return Boolean;
@@ -81,6 +83,7 @@ private
       Closure_Mode          : Boolean := False;
       All_Projects          : Boolean := False;
       Only_Display_Paths    : Boolean := False;
+      Source_Parser         : Boolean := False;
 
       Verbose_Parsing : Integer := 0;
    end record;
@@ -111,6 +114,9 @@ private
 
    function Print_Object_Files (Self : Object) return Boolean is
      (Self.Print_Object_Files);
+
+   function Source_Parser (Self : Object) return Boolean is
+     (Self.Source_Parser);
 
    function Dependency_Mode (Self : Object) return Boolean is
      (Self.Dependency_Mode);

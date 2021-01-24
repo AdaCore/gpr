@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -44,16 +44,23 @@ package GPR2.Source_Info is
 
    Undefined : constant Object;
 
-   type Backend is (None, LI, Source, Auto);
+   type Backend is (None, LI, Source);
    --  None   : not yet parsed, no information
    --  LI     : information from compiler generated data (.ali or .d)
    --  Parser : information from source
-   --  Auto   : information to be retrieved from ALI if present
-   --           or Parser otherwise.
 
    subtype Implemented_Backend is Backend range LI .. Source;
    --  The implemented backends. These are the values that are possible
    --  when checking which backend has been used to compute a specific data.
+
+   type Backend_Set is array (Implemented_Backend) of Boolean;
+   --  Set of backends to use in parser
+
+   All_Backends : constant Backend_Set;
+   --  All backends allowed
+
+   No_Backends : constant Backend_Set;
+   --  No backends allowed
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns True if Self is defined
@@ -251,6 +258,9 @@ private
    --  the compilation unit(s) for Ada sources.
 
    Undefined : constant Object := (others => <>);
+
+   All_Backends : constant Backend_Set := (others => True);
+   No_Backends  : constant Backend_Set := (others => False);
 
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
 

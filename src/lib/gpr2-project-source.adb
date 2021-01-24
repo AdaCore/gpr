@@ -526,8 +526,10 @@ package body GPR2.Project.Source is
    -- Update --
    ------------
 
-   procedure Update (Self : in out Object) is
-
+   procedure Update
+     (Self     : in out Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
+   is
       Language : constant Name_Type := Self.Source.Language;
 
       procedure Clarify_Unit_Type;
@@ -590,8 +592,10 @@ package body GPR2.Project.Source is
          return;
       end if;
 
-      for BK in Source_Info.Implemented_Backend loop
-         if Source_Info.Parser.Registry.Exists (Language, BK) then
+      for BK in Backends'Range loop
+         if Backends (BK)
+           and then Source_Info.Parser.Registry.Exists (Language, BK)
+         then
             declare
                Backend : constant not null access
                  Source_Info.Parser.Object'Class :=

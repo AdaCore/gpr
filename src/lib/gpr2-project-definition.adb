@@ -267,7 +267,8 @@ package body GPR2.Project.Definition is
    procedure Update_Sources
      (Def           : in out Data;
       View          : Project.View.Object;
-      Stop_On_Error : Boolean)
+      Stop_On_Error : Boolean;
+      Backends      : Source_Info.Backend_Set)
    is
       use type MD5.Binary_Message_Digest;
       use type Project.Attribute.Object;
@@ -1971,7 +1972,7 @@ package body GPR2.Project.Definition is
          begin
             for S of Def.Sources loop
                SW := S;
-               SW.Update;
+               SW.Update (Backends);
                Def_Sources.Insert (SW);
                Def_Src_Map.Insert
                  (SW.Path_Name.Simple_Name, SW, Position, Inserted);
