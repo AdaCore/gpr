@@ -1965,30 +1965,32 @@ package body GPR2.Project.Definition is
 
       Source_Info.Parser.Registry.Clear_Cache;
 
-      declare
-         Def_Sources : Project.Source.Set.Object;
-         Def_Src_Map : Simple_Name_Source.Map;
-         Position    : Simple_Name_Source.Cursor;
-         Inserted    : Boolean;
-         SW          : Project.Source.Object;
-      begin
-         for S of Def.Sources loop
-            SW := S;
-            SW.Update;
-            Def_Sources.Insert (SW);
-            Def_Src_Map.Insert
-              (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+      if not View.Is_Extended then
+         declare
+            Def_Sources : Project.Source.Set.Object;
+            Def_Src_Map : Simple_Name_Source.Map;
+            Position    : Simple_Name_Source.Cursor;
+            Inserted    : Boolean;
+            SW          : Project.Source.Object;
+         begin
+            for S of Def.Sources loop
+               SW := S;
+               SW.Update;
+               Def_Sources.Insert (SW);
+               Def_Src_Map.Insert
+                 (SW.Path_Name.Simple_Name, SW, Position, Inserted);
 
-            pragma Assert
-              (Inserted or else SW.Source.Language /= "Ada",
-               String (SW.Path_Name.Simple_Name) & " duplicated");
+               pragma Assert
+                 (Inserted or else SW.Source.Language /= "Ada",
+                  String (SW.Path_Name.Simple_Name) & " duplicated");
 
-            Set_Source (SW);
-         end loop;
+               Set_Source (SW);
+            end loop;
 
-         Def.Sources     := Def_Sources;
-         Def.Sources_Map := Def_Src_Map;
-      end;
+            Def.Sources     := Def_Sources;
+            Def.Sources_Map := Def_Src_Map;
+         end;
+      end if;
 
       if Stop_On_Error
         and then Message_Count < Tree.Log_Messages.Count
