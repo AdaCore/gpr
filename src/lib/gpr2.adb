@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -141,6 +141,28 @@ package body GPR2 is
 
       return Result;
    end To_Hex_String;
+
+   --------------
+   -- To_Mixed --
+   --------------
+
+   function To_Mixed (A : String) return String is
+      use Ada.Characters.Handling;
+      Ucase  : Boolean := True;
+      Result : String (A'Range);
+   begin
+      for J in A'Range loop
+         if Ucase then
+            Result (J) := To_Upper (A (J));
+         else
+            Result (J) := To_Lower (A (J));
+         end if;
+
+         Ucase := A (J) in '_' | '.';
+      end loop;
+
+      return Result;
+   end To_Mixed;
 
    -------------
    -- Unquote --

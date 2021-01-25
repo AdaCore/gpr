@@ -765,10 +765,6 @@ package body GPR2.Project.Definition is
                end if;
             end if;
 
-            --  Casing for the unit is all lowercase
-
-            Translate (Result, Maps.Constants.Lower_Case_Map);
-
             --  In the standard GNAT naming scheme, check for special cases:
             --  children or separates of A, G, I or S, and run time sources.
 
@@ -875,7 +871,7 @@ package body GPR2.Project.Definition is
 
             Success := True;
 
-            return Name_Type (To_String (Result));
+            return Name_Type (To_Mixed (To_String (Result)));
 
             <<Invalid>>
 

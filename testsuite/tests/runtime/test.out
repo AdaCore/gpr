@@ -19,4 +19,4 @@ A:   source_dirs -> .../adainclude
  > adainclude/a-tags.adb     Kind: S_BODY   unit: ada.tags
  > adainclude/a-tags.ads     Kind: S_SPEC   unit: ada.tags
  > adainclude/a-uncdea.ads   Kind: S_SPEC_ONLY   unit: ada.unchecked_deallocation
- > adainclude/ada.ads        Kind: S_SPEC_ONLY   unit: ada
+ > adainclude/ada.ads        Kind: S_SPEC_ONLY   unit: Ada

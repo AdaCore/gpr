@@ -209,6 +209,8 @@ private
    function "-"
      (Source : Unbounded_String) return String renames To_String;
 
+   function To_Mixed (A : String) return String;
+
    function Get_Tools_Directory return String;
    --  Get the GNAT prefix
 

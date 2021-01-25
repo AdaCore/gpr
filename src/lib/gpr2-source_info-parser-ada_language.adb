@@ -18,8 +18,6 @@
 
 with Ada.Directories;
 
-with GNAT.Case_Util;
-
 with Langkit_Support.Text;
 
 with GPR_Parser.Analysis;
@@ -43,7 +41,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       Data   : in out Source_Info.Object'Class;
       Source : Project.Source.Object)
    is
-      use GNAT;
       use GPR_Parser.Analysis;
       use GPR_Parser.Common;
       use Langkit_Support.Text;
@@ -70,28 +67,6 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
          function Process_Defining_Name
            (N : GPR_Node'Class) return Unbounded_String;
-
-         function Capitalize_Unit_Name
-           (Name : String) return Name_Type with Inline;
-         --  Use mixed-case for the unit name stored into the unit object
-
-         --------------------------
-         -- Capitalize_Unit_Name --
-         --------------------------
-
-         function Capitalize_Unit_Name (Name : String) return Name_Type is
-            Unit_Name : String := Name;
-         begin
-            Case_Util.To_Mixed (Unit_Name);
-
-            for I in Unit_Name'First + 1 .. Unit_Name'Last loop
-               if Unit_Name (I - 1) = '.' then
-                  Unit_Name (I) := Case_Util.To_Upper (Unit_Name (I));
-               end if;
-            end loop;
-
-            return Name_Type (Unit_Name);
-         end Capitalize_Unit_Name;
 
          ---------------------------
          -- Process_Defining_Name --
@@ -254,7 +229,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   declare
                      CU : constant Unit.Object :=
                             Unit.Create
-                              (Name          => Capitalize_Unit_Name (-U_Name),
+                              (Name          => Name_Type (-U_Name),
                                Index         => Index,
                                Main          => U_Main,
                                Flags         => U_Flags,

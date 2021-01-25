@@ -3,7 +3,7 @@ main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = main
+    unit name    = Main
     kind         = S_BODY_ONLY
     withed units = { ada ada.directories ada.exceptions ada.text_io gpr2 gpr2.context gpr2.path_name gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source gpr2.source_info gpr2.source_info.parser gpr2.source_info.parser.ada_language pkg1 pkg2 }
     object file  = main.ali
@@ -20,21 +20,21 @@ pkg1.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = pkg1
+    unit name    = Pkg1
     kind         = S_BODY
     object file  = pkg1.ali
 pkg1.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = pkg1
+    unit name    = Pkg1
     kind         = S_SPEC
     object file  = pkg1.ali
 pkg2.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = pkg2
+    unit name    = Pkg2
     kind         = S_BODY
     withed units = { u1 }
     object file  = pkg2.ali
@@ -42,7 +42,7 @@ pkg2.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
-    unit name    = pkg2
+    unit name    = Pkg2
     kind         = S_SPEC
     object file  = pkg2.ali
 few_units.ada

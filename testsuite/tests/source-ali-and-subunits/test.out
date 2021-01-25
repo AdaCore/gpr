@@ -1,9 +1,9 @@
 /p-c.o
-   p.c
+   P.C
       OK /p-c.adb
 /p.o
-   p
+   P
       OK /p.adb
 /q.o
-   q
+   Q
       OK /q.adb

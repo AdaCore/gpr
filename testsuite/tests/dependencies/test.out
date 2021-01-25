@@ -1,6 +1,6 @@
 Project: Demo
 
- > src/abc-plop.ads   unit: Abc.Plop
+ > src/abc-plop.ads   unit: ABC.Plop
 ..... DIRECT
    > src/api.adb
    > src/api.ads
@@ -8,11 +8,11 @@ Project: Demo
    > src/api.adb
    > src/api.ads
 
- > src/abc.adb   unit: Abc
+ > src/abc.adb   unit: ABC
 ..... DIRECT
 ..... CLOSURE
 
- > src/abc.ads   unit: Abc
+ > src/abc.ads   unit: ABC
 ..... DIRECT
 ..... CLOSURE
 
