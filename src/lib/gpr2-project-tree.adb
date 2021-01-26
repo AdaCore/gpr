@@ -2982,15 +2982,48 @@ package body GPR2.Project.Tree is
                         A));
 
                else
-                  if not PRA.Get (Q_Name).Is_Allowed_In (P_Kind) then
-                     --  for backward compatibility, emit warnings
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "attribute """ & String (A.Name.Text)
-                           & """ cannot be used in " & Image (P_Kind) & 's',
-                           A));
-                  end if;
+                  declare
+                     Allowed : constant PRA.Allowed_In :=
+                                 PRA.Get (Q_Name).Is_Allowed_In;
+                     Found : Natural := 0;
+                     Allow : Project_Kind;
+                  begin
+                     if not Allowed (P_Kind) then
+                        for A in Allowed'Range loop
+                           if Allowed (A) then
+                              Found := Found + 1;
+                              exit when Found > 1;
+                              Allow := A;
+                           end if;
+                        end loop;
+
+                        pragma Assert (Found > 0);
+
+                        if Found = 1 or else Allow = K_Aggregate then
+                           --  If one or Aggregate_Kind allowed use including
+                           --  error message.
+
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 '"' & String (A.Name.Text)
+                                 & """ is only valid in "
+                                 & Image (Allow) & 's',
+                                 A));
+                        else
+                           --  If more than one is allowed use excluding
+                           --  error message.
+
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "attribute """ & String (A.Name.Text)
+                                 & """ cannot be used in "
+                                 & Image (P_Kind) & 's',
+                                 A));
+                        end if;
+                     end if;
+                  end;
 
                   Check_Def (PRA.Get (Q_Name), A);
                end if;
