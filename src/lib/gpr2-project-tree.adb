@@ -1415,7 +1415,7 @@ package body GPR2.Project.Tree is
          end if;
 
          if Self.Root.Check_Attribute
-           (PRA.Target, Recursive => True, Result => Tmp_Attr)
+           (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
          then
             --  Check if the project explicitly defines the attribute or if
             --  this comes from a default value
@@ -1537,7 +1537,7 @@ package body GPR2.Project.Tree is
 
          if Self.Root.Check_Attribute
            (PRA.Runtime, Attribute_Index.Create (Language.Text),
-            Recursive => True, Result => Tmp_Attr)
+            Check_Extended => True, Result => Tmp_Attr)
          then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
          end if;
@@ -1556,7 +1556,7 @@ package body GPR2.Project.Tree is
       begin
          if Self.Root.Check_Attribute
            (PRA.Toolchain_Name, Attribute_Index.Create (Language.Text),
-            Recursive => True, Result => Tmp_Attr)
+            Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (Tmp_Attr.Value.Text);
@@ -1576,7 +1576,7 @@ package body GPR2.Project.Tree is
       begin
          if Self.Root.Check_Attribute
            (PRA.Toolchain_Path, Attribute_Index.Create (Language.Text),
-            Recursive => True, Result => Tmp_Attr)
+            Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (GNAT.OS_Lib.Normalize_Pathname
@@ -1598,7 +1598,7 @@ package body GPR2.Project.Tree is
          if Self.Root.Check_Attribute
            (PRA.Required_Toolchain_Version,
             Attribute_Index.Create (Language.Text),
-            Recursive => True, Result => Tmp_Attr)
+            Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (Tmp_Attr.Value.Text);
@@ -2325,8 +2325,8 @@ package body GPR2.Project.Tree is
           (PRA.Runtime,
            Index => GPR2.Project.Attribute_Index.Create
              (Value_Type (Language), Case_Sensitive => False),
-           Recursive => True,
-           Result => TA)
+           Check_Extended => True,
+           Result         => TA)
       then
          return Name_Type (TA.Value.Text);
 
@@ -2823,12 +2823,13 @@ package body GPR2.Project.Tree is
                      P_Data.Kind := K_Abstract;
                   end if;
 
-               elsif View.Check_Attribute (PRA.Library_Name,
-                                        Recursive => True,
-                                        Result    => Tmp_Attr)
+               elsif View.Check_Attribute
+                       (PRA.Library_Name,
+                        Check_Extended => True,
+                        Result         => Tmp_Attr)
                  and then Tmp_Attr.Value.Text /= ""
-                 and then View.Check_Attribute (PRA.Library_Dir,
-                                                Result => Tmp_Attr)
+                 and then View.Check_Attribute
+                            (PRA.Library_Dir, Result => Tmp_Attr)
                  and then Tmp_Attr.Value.Text /= ""
                then
                   --  If Library_Name, Library_Dir are declared, then the
@@ -3129,7 +3130,8 @@ package body GPR2.Project.Tree is
                if not View.Tree.Is_Windows_Target
                  and then View.Is_Shared_Library
                  and then View.Check_Attribute
-                   (PRA.Library_Version, Recursive => True, Result => Attr)
+                            (PRA.Library_Version,
+                             Check_Extended => True, Result => Attr)
                then
                   declare
                      AV      : constant Source_Reference.Value.Object :=
@@ -3172,7 +3174,8 @@ package body GPR2.Project.Tree is
                end if;
 
                if not View.Check_Attribute
-                        (PRA.Library_Name, Recursive => True, Result => Attr)
+                        (PRA.Library_Name,
+                         Check_Extended => True, Result => Attr)
                then
                   Self.Messages.Append
                     (Message.Create
@@ -3381,7 +3384,7 @@ package body GPR2.Project.Tree is
 
       elsif Self.Root.Is_Defined
         and then Self.Root.Check_Attribute
-                   (PRA.Target, Recursive => True, Result => TA)
+                   (PRA.Target, Check_Extended => True, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 

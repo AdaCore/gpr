@@ -360,22 +360,22 @@ package body GPR2.Project.View is
    ---------------------
 
    function Check_Attribute
-     (Self      : Object;
-      Name      : Name_Type;
-      Index     : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos    : Natural                := 0;
-      Recursive : Boolean                := False;
-      Result    : out Project.Attribute.Object) return Boolean is
+     (Self           : Object;
+      Name           : Name_Type;
+      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos         : Natural                := 0;
+      Check_Extended : Boolean                := False;
+      Result         : out Project.Attribute.Object) return Boolean is
    begin
       Result := Definition.Get_RO (Self).Attrs.Element (Name, Index, At_Pos);
 
-      if Recursive
+      if Check_Extended
         and then (not Result.Is_Defined
                   or else Result.Is_Default)
         and then Self.Is_Extending
       then
          return Self.Extended.Check_Attribute
-           (Name, Index, At_Pos, Recursive, Result);
+           (Name, Index, At_Pos, Check_Extended, Result);
       end if;
 
       return Result.Is_Defined;
@@ -639,9 +639,10 @@ package body GPR2.Project.View is
    --------------------
 
    function Has_Attributes
-     (Self  : Object;
-      Name  : Optional_Name_Type     := No_Name;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+     (Self           : Object;
+      Name           : Optional_Name_Type     := No_Name;
+      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
+      Check_Extended : Boolean                := False)
       return Boolean
    is
       use Project.Attribute.Set;
@@ -650,13 +651,23 @@ package body GPR2.Project.View is
       Def : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
       if Name = No_Name and then not Index.Is_Defined then
-         return not Def.Attrs.Is_Empty;
+         if not Def.Attrs.Is_Empty then
+            return True;
+         end if;
 
       elsif Name /= No_Name then
-         return Def.Attrs.Contains (Name, Index);
+         if Def.Attrs.Contains (Name, Index) then
+            return True;
+         end if;
 
+      elsif not Attributes (Self, Name, Index).Is_Empty then
+         return True;
+      end if;
+
+      if Check_Extended and then Def.Extended.Is_Defined then
+         return Def.Extended.Has_Attributes (Name, Index, Check_Extended);
       else
-         return not Attributes (Self, Name, Index).Is_Empty;
+         return False;
       end if;
    end Has_Attributes;
 
@@ -1015,7 +1026,7 @@ package body GPR2.Project.View is
 
       return GPR2.Path_Name.Create_File
         (Filename_Type (To_String (File_Name)),
-         Directory =>  Filename_Optional (Self.Library_Directory.Dir_Name));
+         Directory => Filename_Optional (Self.Library_Directory.Dir_Name));
    end Library_Filename;
 
    ------------------
@@ -1026,8 +1037,7 @@ package body GPR2.Project.View is
       Attr : Project.Attribute.Object;
    begin
       return (if Self.Check_Attribute
-                    (Registry.Attribute.Library_Kind,
-                     Recursive => True, Result => Attr)
+                   (PRA.Library_Kind, Check_Extended => True, Result => Attr)
               then Name_Type (Attr.Value.Text)
               else "static");
    end Library_Kind;
@@ -1094,8 +1104,8 @@ package body GPR2.Project.View is
         and then
           Self.Check_Attribute
             (Project.Registry.Attribute.Library_Standalone,
-             Recursive => True,
-             Result => Attr)
+             Check_Extended => True,
+             Result         => Attr)
       then
          return Standalone_Library_Kind'Value (Attr.Value.Text);
 

@@ -177,27 +177,31 @@ package GPR2.Project.View is
    --  Attributes
 
    function Has_Attributes
-     (Self  : Object;
-      Name  : Optional_Name_Type     := No_Name;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+     (Self           : Object;
+      Name           : Optional_Name_Type     := No_Name;
+      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
+      Check_Extended : Boolean                := False)
       return Boolean
      with Pre => Self.Is_Defined;
    --  Returns true if the project view has some attributes defined. If Name
    --  and/or Index are set it returns True if an attribute with the given
    --  Name and/or Index is defined.
+   --  If Check_Extended parameter is True then the presence of an attribute is
+   --  also checked in extended projects.
 
    function Check_Attribute
-     (Self      : Object;
-      Name      : Name_Type;
-      Index     : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos    : Natural                := 0;
-      Recursive : Boolean                := False;
-      Result    : out Project.Attribute.Object) return Boolean
+     (Self           : Object;
+      Name           : Name_Type;
+      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos         : Natural                := 0;
+      Check_Extended : Boolean                := False;
+      Result         : out Project.Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True and set Result to attribute if attribute exists or has
    --  default value, returns False and set Result to Undefined otherwise.
-   --  If Recursive is set, and the attribute is not defined in the view, and
-   --  the view is extending, then the extended project attribute is checked.
+   --  If Check_Extended is set, and the attribute is not defined in the view,
+   --  and the view is extending, then the extended project attribute is
+   --  checked.
 
    function Attributes
      (Self  : Object;
@@ -428,7 +432,9 @@ package GPR2.Project.View is
    function Library_Kind (Self : Object) return Name_Type
      with Pre  => Self.Is_Defined
                   and then Self.Is_Library,
-          Post => Self.Has_Attributes (Project.Registry.Attribute.Library_Kind)
+          Post => Self.Has_Attributes
+                    (Project.Registry.Attribute.Library_Kind,
+                     Check_Extended => True)
                   or else Library_Kind'Result = "static";
    --  Returns the library kind, "static" if the corresponding attribute is not
    --  defined.
