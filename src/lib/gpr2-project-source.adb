@@ -597,10 +597,19 @@ package body GPR2.Project.Source is
            and then Source_Info.Parser.Registry.Exists (Language, BK)
          then
             declare
+               use type Source_Info.Implemented_Backend;
+
                Backend : constant not null access
                  Source_Info.Parser.Object'Class :=
                    Source_Info.Parser.Registry.Get (Language, BK);
             begin
+               if BK = Source_Info.LI then
+                  --  Need to clarify unit type before call to ALI parser to
+                  --  detect when spec only Ada source has related ALI file.
+
+                  Clarify_Unit_Type;
+               end if;
+
                Source_Info.Parser.Compute
                  (Self   => Backend,
                   Data   => Self.Source,
