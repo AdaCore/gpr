@@ -1,0 +1,6 @@
+description:
+    check invalid aggregate detection
+    no project files, naming package, non abstract imported
+driver: build_and_run
+project_file: test
+main: main

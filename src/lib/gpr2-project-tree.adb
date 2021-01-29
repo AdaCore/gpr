@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
 with Ada.Containers.Ordered_Maps;
 with Ada.Environment_Variables;
 with Ada.Directories;
@@ -2440,94 +2439,112 @@ package body GPR2.Project.Tree is
             return Path_Name.Set.Object
          is
 
-            View_Dir        : constant GPR2.Path_Name.Object :=
-                                Path_Name.Create_Directory
-                                  (Filename_Optional
-                                     (View.Path_Name.Dir_Name));
-            --  View root directory
-
-            Pattern         : constant GPR2.Path_Name.Object :=
-                                (if OS_Lib.Is_Absolute_Path (Projects.Text)
-                                 then Path_Name.Create_File
-                                   (Filename_Optional (Projects.Text),
-                                    Path_Name.No_Resolution)
-                                 else View_Dir.Compose
-                                   (Filename_Optional (Projects.Text)));
-
-            --  The absolute path pattern to get matching files
-
-            Dir_Part        : constant Filename_Optional :=
-                                Filename_Optional (Pattern.Relative_Path
-                                                   (View_Dir).Value);
-            --  The dir part without the trailing directory separator
-
-            Filename_Part   : constant Filename_Optional :=
-                                Filename_Optional (Pattern.Simple_Name);
-            --  The filename pattern of matching files
-
-            Filename        : constant Filename_Optional :=
-                                (if Ada.Strings.Fixed.Index
-                                   (String (Filename_Part),
-                                    Wildcards,
-                                    Going => Ada.Strings.Backward) = 0
-                                 then Filename_Part
-                                 else "");
-            --  "" if Filename part is a regular expression otherwise the
-            --  filename to locate.
-
-            Filename_Regexp : constant GNAT.Regexp.Regexp :=
-                                GPR2.Compile_Regexp (Filename_Part);
-            --  regexp pattern for matching Filename
-
             Files           : GPR2.Path_Name.Set.Object;
             --  matching files
 
-            procedure Handle_File
-              (File : GPR2.Path_Name.Object);
-            procedure Is_Directory_Handled
-              (Directory : GPR2.Path_Name.Object;
-               Do_Visit  : out Boolean);
+            procedure Get_Files;
+
             procedure Log (Level : GPR2.Message.Level_Value; Msg : String);
 
-            -----------------
-            -- Handle_File --
-            -----------------
+            ---------------
+            -- Get_Files --
+            ---------------
 
-            procedure Handle_File
-              (File : GPR2.Path_Name.Object) is
+            procedure Get_Files is
+
+               View_Dir        : constant GPR2.Path_Name.Object :=
+                                   Path_Name.Create_Directory
+                                     (Filename_Optional
+                                        (View.Path_Name.Dir_Name));
+               --  View root directory
+
+               Pattern         : constant GPR2.Path_Name.Object :=
+                                   (if OS_Lib.Is_Absolute_Path (Projects.Text)
+                                    then Path_Name.Create_File
+                                      (Filename_Optional (Projects.Text),
+                                       Path_Name.No_Resolution)
+                                    else View_Dir.Compose
+                                      (Filename_Optional (Projects.Text)));
+               --  The absolute path pattern to get matching files
+
+               Dir_Part        : constant Filename_Optional :=
+                                   Filename_Optional (Pattern.Relative_Path
+                                                      (View_Dir).Value);
+               --  The dir part without the trailing directory separator
+
+               Filename_Part   : constant Filename_Optional :=
+                                   Filename_Optional (Pattern.Simple_Name);
+               --  The filename pattern of matching files
+
+               Filename        : constant Filename_Optional :=
+                                   (if Ada.Strings.Fixed.Index
+                                      (String (Filename_Part),
+                                       Wildcards,
+                                       Going => Ada.Strings.Backward) = 0
+                                    then Filename_Part
+                                    else "");
+               --  "" if Filename part is a regular expression otherwise the
+               --  filename to locate.
+
+               Filename_Regexp : constant GNAT.Regexp.Regexp :=
+                                   GPR2.Compile_Regexp (Filename_Part);
+               --  regexp pattern for matching Filename
+
+               procedure Handle_File
+                 (File : GPR2.Path_Name.Object);
+               procedure Is_Directory_Handled
+                 (Directory : GPR2.Path_Name.Object;
+                  Do_Visit  : out Boolean);
+
+               -----------------
+               -- Handle_File --
+               -----------------
+
+               procedure Handle_File
+                 (File : GPR2.Path_Name.Object) is
+               begin
+                  if GNAT.Regexp.Match (String (File.Simple_Name),
+                                        Filename_Regexp)
+                    and then not Files.Contains (File)
+                  then
+                     Files.Append (File);
+                  end if;
+               end Handle_File;
+
+               --------------------------
+               -- Is_Directory_Handled --
+               --------------------------
+
+               procedure Is_Directory_Handled
+                 (Directory : GPR2.Path_Name.Object;
+                  Do_Visit  : out Boolean) is
+               begin
+                  if Filename = "" then
+                     Do_Visit := True;
+                  else
+                     Do_Visit := False;
+                     declare
+                        File : constant GPR2.Path_Name.Object :=
+                                 Directory.Compose (Filename);
+                        use Ada.Directories;
+                     begin
+                        if File.Exists
+                          and then not Files.Contains (File)
+                          and then Kind (File.Value) /= Directories.Directory
+                        then
+                           Files.Append (File);
+                        end if;
+                     end;
+                  end if;
+               end Is_Directory_Handled;
+
             begin
-               if GNAT.Regexp.Match (String (File.Simple_Name),
-                                     Filename_Regexp)
-                 and then not Files.Contains (File)
-               then
-                  Files.Append (File);
-               end if;
-            end Handle_File;
-
-            --------------------------
-            -- Is_Directory_Handled --
-            --------------------------
-
-            procedure Is_Directory_Handled
-              (Directory : GPR2.Path_Name.Object;
-               Do_Visit  : out Boolean) is
-            begin
-               if Filename = "" then
-                  Do_Visit := True;
-               else
-                  Do_Visit := False;
-                  declare
-                     File : constant GPR2.Path_Name.Object :=
-                              Directory.Compose (Filename);
-                  begin
-                     if File.Exists
-                       and then not Files.Contains (File)
-                     then
-                        Files.Append (File);
-                     end if;
-                  end;
-               end if;
-            end Is_Directory_Handled;
+               View.Foreach
+                 (Directory_Pattern => Dir_Part,
+                  Source            => Projects,
+                  File_CB           => Handle_File'Access,
+                  Directory_CB      => Is_Directory_Handled'Access);
+            end Get_Files;
 
             ---------
             -- Log --
@@ -2539,14 +2556,12 @@ package body GPR2.Project.Tree is
             end Log;
 
          begin
-            View.Foreach
-              (Directory_Pattern => Dir_Part,
-               Source            => Projects,
-               File_CB           => Handle_File'Access,
-               Directory_CB      => Is_Directory_Handled'Access);
+            if Projects.Text /= "" then
+               Get_Files;
+            end if;
 
             if Files.Is_Empty then
-               Log (Message.Error, Projects.Text & " file not found");
+               Log (Message.Error, "file """ & Projects.Text & """ not found");
             end if;
 
             return Files;

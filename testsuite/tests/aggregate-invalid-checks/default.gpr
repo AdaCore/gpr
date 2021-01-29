@@ -1,0 +1,6 @@
+project Default is
+   --  Check that these attributes are properly rejected in a
+   --  non aggregate project
+
+   for Project_Files use ("a.gpr");
+end Default;

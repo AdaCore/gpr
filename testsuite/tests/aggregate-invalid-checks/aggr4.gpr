@@ -1,0 +1,8 @@
+aggregate project Aggr4 is
+   --  Invalid: prj1.gpr is only searched relative to the aggregate
+   --  project's directory, not in the project path. Also we test that
+   --  "." is an implicit directory in Project_Files.
+
+   for Project_Files use ("prj1.gpr");
+   for Project_Path use ("prj1");
+end Aggr4;

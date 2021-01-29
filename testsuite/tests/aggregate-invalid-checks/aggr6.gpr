@@ -1,0 +1,3 @@
+aggregate project Aggr6 is
+   for Project_Files use ("default.gpr");
+end Aggr6;

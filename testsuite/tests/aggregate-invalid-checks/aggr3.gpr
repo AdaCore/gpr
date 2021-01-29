@@ -1,0 +1,5 @@
+with "abstr.gpr"; --  valid
+with "foo.gpr";  --  Invalid
+aggregate project Aggr3 is
+   for Project_Files use ("prj1/prj1.gpr");
+end Aggr3;

@@ -1,0 +1,7 @@
+aggregate project Aggr5 is
+   --  Invalid: no file name specified
+
+   for Project_Files use ("./",
+                          ".",
+                          "");
+end Aggr5;

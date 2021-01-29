@@ -1,0 +1,3 @@
+aggregate project Aggr1 is
+   --  Missing Project_Files attribute is invalid
+end Aggr1;
