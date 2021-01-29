@@ -2,6 +2,8 @@ testing aggr1.gpr
 aggr1.gpr: error: Attribute "project_files" must be specified in aggregate project
 testing aggr2.gpr
 aggr2.gpr:4:04: error: package "Naming" cannot be used in aggregate projects
+testing aggr3.gpr
+aggr3.gpr:4:08: error: can only import abstract projects, not "Foo"
 testing aggr4.gpr
 aggr4.gpr:6:27: error: file "prj1.gpr" not found
 testing aggr5.gpr

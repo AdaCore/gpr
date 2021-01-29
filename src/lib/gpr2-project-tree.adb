@@ -3202,6 +3202,19 @@ package body GPR2.Project.Tree is
                      end if;
                   end loop;
 
+                  if View.Has_Imports then
+                     for Imported of View.Imports loop
+                        if not Imported.Is_Abstract then
+                           Self.Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 "can only import abstract projects, not """
+                                 & String (Imported.Name) & '"',
+                                 Sloc => View.Attribute (PRA.Project_Files)));
+                        end if;
+                     end loop;
+                  end if;
+
                when K_Abstract =>
                   declare
                      A1 : Attribute.Object;

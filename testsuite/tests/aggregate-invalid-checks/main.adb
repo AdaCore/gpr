@@ -55,6 +55,7 @@ procedure Main is
 begin
    Test ("aggr1.gpr");
    Test ("aggr2.gpr");
+   Test ("aggr3.gpr");
    Test ("aggr4.gpr");
    Test ("aggr5.gpr");
    Test ("aggr6.gpr");
