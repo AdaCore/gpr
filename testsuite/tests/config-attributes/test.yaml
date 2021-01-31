@@ -1,0 +1,5 @@
+description:
+    A test for the optional configuration attributes
+driver: build_and_run
+project_file: config_attributes
+main: main

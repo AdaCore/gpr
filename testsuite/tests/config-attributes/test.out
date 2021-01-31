@@ -1,0 +1,4 @@
+name 'toto'
+path '/toto'
+version 'toto'
+version 'toto', path '/toto', name 'toto'

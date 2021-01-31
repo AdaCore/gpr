@@ -1,0 +1,7 @@
+with "gpr2";
+
+project config_attributes is
+
+   for Main use ("main.adb");
+
+end config_attributes;

@@ -1,0 +1,5 @@
+project Prj is
+   for Toolchain_Name ("ada") use external ("TC_NAME", "");
+   for Toolchain_Path ("ada") use external ("TC_PATH", "");
+   for Required_Toolchain_Version ("ada") use external ("TC_VERSION", "");
+end Prj;
