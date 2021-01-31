@@ -878,7 +878,7 @@ package body GPR2.Project.Definition is
 
             Success := False;
 
-            return Name_Type (String'("0"));  --  Some dummy unit name
+            return "0"; -- Some dummy unit name
          end Compute_Unit_From_Filename;
 
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
