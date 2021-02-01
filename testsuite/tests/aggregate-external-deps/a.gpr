@@ -1,4 +1,4 @@
-project A is
+abstract project A is
    type OS_Kind is ("Windows", "Linux");
    OS : OS_Kind := external ("OS", "Windows");
 

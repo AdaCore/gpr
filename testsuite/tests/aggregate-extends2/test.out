@@ -3,7 +3,7 @@
    Pck:   Compiler
       Default_Switches (Ada) -> -g
 
-[B]      K_STANDARD
+[B]      K_ABSTRACT
    Var = var is one
 
 [Agg]    K_AGGREGATE_LIBRARY
@@ -19,7 +19,7 @@
    Pck:   Compiler
       Default_Switches (Ada) -> -g
 
-[B]      K_STANDARD
+[B]      K_ABSTRACT
    Var = var is two
 
 [A]      K_STANDARD

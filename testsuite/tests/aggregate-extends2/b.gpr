@@ -1,4 +1,4 @@
-project B extends "conf" is
+abstract project B extends "conf" is
    Var := "";
 
    case Conf.K is

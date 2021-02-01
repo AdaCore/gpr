@@ -1,7 +1,7 @@
 [Conf]   K_STANDARD
 V:   K -> one
 
-[B]      K_STANDARD
+[B]      K_ABSTRACT
 V:   Var -> var is one
 
 [Agg]    K_AGGREGATE_LIBRARY
@@ -14,7 +14,7 @@ V:   Var -> var is one
 [Conf]   K_STANDARD
 V:   K -> two
 
-[B]      K_STANDARD
+[B]      K_ABSTRACT
 V:   Var -> var is two
 
 [A]      K_STANDARD
