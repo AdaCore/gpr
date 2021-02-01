@@ -1,5 +1,5 @@
 /files/aggr.gpr semantic error
-aggr.gpr:11:01: error: notfound.gpr file not found
-aggr.gpr:12:01: error: notexist/relative4.gpr file not found
+aggr.gpr:11:01: error: file "notfound.gpr" not found
+aggr.gpr:12:01: error: file "notexist/relative4.gpr" not found
 aggr.gpr:13:01: error: "/files/invalid*/" is not a valid directory
-aggr.gpr:13:01: error: invalid*/**/project7.gpr file not found
+aggr.gpr:13:01: error: file "invalid*/**/project7.gpr" not found
