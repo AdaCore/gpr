@@ -2493,8 +2493,10 @@ package body GPR2.Project.Tree is
                procedure Handle_File
                  (File : GPR2.Path_Name.Object);
                procedure Is_Directory_Handled
-                 (Directory : GPR2.Path_Name.Object;
-                  Do_Visit  : out Boolean);
+                 (Directory       : GPR2.Path_Name.Object;
+                  Is_Root_Dir     : Boolean;
+                  Do_Dir_Visit    : in out Boolean;
+                  Do_Subdir_Visit : in out Boolean);
 
                -----------------
                -- Handle_File --
@@ -2517,12 +2519,13 @@ package body GPR2.Project.Tree is
 
                procedure Is_Directory_Handled
                  (Directory : GPR2.Path_Name.Object;
-                  Do_Visit  : out Boolean) is
+                  Is_Root_Dir     : Boolean;
+                  Do_Dir_Visit    : in out Boolean;
+                  Do_Subdir_Visit : in out Boolean) is
+                  pragma Unreferenced (Is_Root_Dir, Do_Subdir_Visit);
                begin
-                  if Filename = "" then
-                     Do_Visit := True;
-                  else
-                     Do_Visit := False;
+                  if Filename /= "" then
+                     Do_Dir_Visit := False;
                      declare
                         File : constant GPR2.Path_Name.Object :=
                                  Directory.Compose (Filename);

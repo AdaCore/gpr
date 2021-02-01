@@ -24,6 +24,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
@@ -31,6 +32,7 @@ with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 
 with GNAT.MD5;
+with GNAT.Regexp;
 
 with GPR2.Containers;
 with GPR2.Unit.List;
@@ -1803,50 +1805,100 @@ package body GPR2.Project.Definition is
       else
          --  Handle Source_Dirs
 
-         for Dir of View.Source_Directories.Values loop
-            --  Keep reference for error messages
+         declare
+            use GNAT.Regexp;
 
-            Source_Dir_Ref := Source_Reference.Object (Dir);
+            package Regexp_List is new Ada.Containers.Indefinite_Vectors
+              (Positive, GNAT.Regexp.Regexp);
 
-            declare
-               procedure Is_Directory_Handled
-                 (Directory : GPR2.Path_Name.Object;
-                  Handled   : out Boolean);
+            Ignored_Sub_Dirs_Values  : GPR2.Project.Attribute.Object;
+            --  Ignore_Source_Sub_Dirs attribute values
 
-               --------------------------
-               -- Is_Directory_Handled --
-               --------------------------
+            Ignored_Sub_Dirs_Regexps : Regexp_List.Vector;
+            --  Ignore_Source_Sub_Dirs attribute regexps
 
-               procedure Is_Directory_Handled
-                 (Directory : GPR2.Path_Name.Object;
-                  Handled   : out Boolean)
-               is
-                  Position : GPR2.Containers.Filename_Type_Set.Cursor;
+         begin
+            --  Fill Ignored_Sub_Dirs_Regexps vector. "" pattern is not added
+
+            if View.Check_Attribute
+              (Name   => PRA.Ignore_Source_Sub_Dirs,
+               Result => Ignored_Sub_Dirs_Values)
+            then
+               for V of Ignored_Sub_Dirs_Values.Values loop
+                  if V.Text /= "" then
+                     Ignored_Sub_Dirs_Regexps.Append
+                       (GPR2.Compile_Regexp (Filename_Optional (V.Text)));
+                  end if;
+               end loop;
+            end if;
+
+            for Dir of View.Source_Directories.Values loop
+               --  Keep reference for error messages
+
+               Source_Dir_Ref := Source_Reference.Object (Dir);
+
+               declare
+
+                  procedure Is_Directory_Handled
+                    (Directory       : GPR2.Path_Name.Object;
+                     Is_Root_Dir     : Boolean;
+                     Do_Dir_Visit    : in out Boolean;
+                     Do_Subdir_Visit : in out Boolean);
+
+                  --------------------------
+                  -- Is_Directory_Handled --
+                  --------------------------
+
+                  procedure Is_Directory_Handled
+                    (Directory       : GPR2.Path_Name.Object;
+                     Is_Root_Dir     : Boolean;
+                     Do_Dir_Visit    : in out Boolean;
+                     Do_Subdir_Visit : in out Boolean)
+                  is
+                     Position : GPR2.Containers.Filename_Type_Set.Cursor;
+                  begin
+                     --  Handle ignored source dirs
+
+                     if not Is_Root_Dir then
+                        for Ignored_Sub_Dir of Ignored_Sub_Dirs_Regexps loop
+                           if GNAT.Regexp.Match
+                             (String (Directory.Simple_Name), Ignored_Sub_Dir)
+                           then
+                              --  Ignore this matching sub dir tree.
+
+                              Do_Dir_Visit := False;
+                              Do_Subdir_Visit := False;
+                              return;
+                           end if;
+                        end loop;
+                     end if;
+
+                     --  If Directory already inserted in Visited_Dirs,
+                     --  Do_Dir_Visit is set to False.
+
+                     Visited_Dirs.Insert (New_Item => Directory.Name,
+                                          Position => Position,
+                                          Inserted => Do_Dir_Visit);
+                  end Is_Directory_Handled;
+
                begin
-                  --  If Directory already inserted in Visited_Dirs,
-                  --  Handled is set to False.
+                  View.Foreach
+                    (Directory_Pattern  => GPR2.Filename_Optional (Dir.Text),
+                     Source             => Dir,
+                     File_CB            => Handle_File'Access,
+                     Directory_CB       => Is_Directory_Handled'Access);
+               end;
 
-                  Visited_Dirs.Insert (New_Item => Directory.Name,
-                                       Position => Position,
-                                       Inserted => Handled);
-               end Is_Directory_Handled;
+               Def.Sources.Union (Src_Dir_Set);
 
-            begin
-               View.Foreach
-                 (Directory_Pattern  => GPR2.Filename_Optional (Dir.Text),
-                  Source             => Dir,
-                  File_CB            => Handle_File'Access,
-                  Directory_CB       => Is_Directory_Handled'Access);
-            end;
+               for S of Src_Dir_Set loop
+                  Def.Sources_Map_Insert (S);
+               end loop;
 
-            Def.Sources.Union (Src_Dir_Set);
-
-            for S of Src_Dir_Set loop
-               Def.Sources_Map_Insert (S);
+               Src_Dir_Set.Clear;
             end loop;
 
-            Src_Dir_Set.Clear;
-         end loop;
+         end;
 
          if View.Has_Packages (PRP.Naming) then
             --  Check all naming exceptions is used only in the original

@@ -526,7 +526,10 @@ package body GPR2.Project.View is
       File_CB           : not null access procedure
         (File : GPR2.Path_Name.Object);
       Directory_CB      : access procedure
-        (Directory : GPR2.Path_Name.Object; Do_Visit : out Boolean) := null)
+        (Directory       : GPR2.Path_Name.Object;
+         Is_Root_Dir     : Boolean;
+         Do_Dir_Visit    : in out Boolean;
+         Do_Subdir_Visit : in out Boolean) := null)
    is
       use GNAT.OS_Lib;
 
@@ -552,8 +555,9 @@ package body GPR2.Project.View is
                        (Filename_Optional (Dir (Dir'First .. Last))).Value);
 
       procedure Handle_Directory
-        (Dir       : Filename_Type;
-         Recursive : Boolean);
+        (Dir         : Filename_Type;
+         Recursive   : Boolean;
+         Is_Root_Dir : Boolean := False);
       --  Handle the specified directory, that is read all files in Dir and
       --  eventually call recursivelly Handle_Directory if a recursive read
       --  is specified.
@@ -563,27 +567,31 @@ package body GPR2.Project.View is
       ----------------------
 
       procedure Handle_Directory
-        (Dir       : Filename_Type;
-         Recursive : Boolean)
+        (Dir         : Filename_Type;
+         Recursive   : Boolean;
+         Is_Root_Dir : Boolean := False)
       is
          use all type Directories.File_Kind;
 
-         Dir_Search : Directories.Search_Type;
-         Dir_Entry  : Directories.Directory_Entry_Type;
-         Do_Visit   : Boolean := True;
+         Dir_Search      : Directories.Search_Type;
+         Dir_Entry       : Directories.Directory_Entry_Type;
+         Do_Dir_Visit    : Boolean := True;
+         Do_Subdir_Visit : Boolean := Recursive;
       begin
          if Directory_CB /= null then
             Directory_CB
               (GPR2.Path_Name.Create_Directory
                  (Dir, GPR2.Path_Name.No_Resolution),
-               Do_Visit);
+               Is_Root_Dir,
+               Do_Dir_Visit,
+               Do_Subdir_Visit);
          end if;
 
-         if Do_Visit or else Recursive then
+         if Do_Dir_Visit or else Do_Subdir_Visit then
             Directories.Start_Search
               (Dir_Search, String (Dir), "",
-               Filter => (Directory     => Recursive,
-                          Ordinary_File => Do_Visit,
+               Filter => (Directory     => Do_Subdir_Visit,
+                          Ordinary_File => Do_Dir_Visit,
                           Special_File  => False));
 
             while Directories.More_Entries (Dir_Search) loop
@@ -602,7 +610,7 @@ package body GPR2.Project.View is
                      then
                         Handle_Directory
                           (Filename_Type (Directories.Full_Name (Dir_Entry)),
-                           Recursive);
+                           Do_Subdir_Visit);
                      end if;
 
                   when Special_File =>
@@ -622,7 +630,9 @@ package body GPR2.Project.View is
       end Handle_Directory;
 
    begin
-      Handle_Directory (Filename_Type (Root_Dir), Recursive => Recursive);
+      Handle_Directory (Filename_Type (Root_Dir),
+                        Recursive   => Recursive,
+                        Is_Root_Dir => True);
    end Foreach;
 
    ---------------------------

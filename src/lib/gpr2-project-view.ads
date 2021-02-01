@@ -576,14 +576,19 @@ package GPR2.Project.View is
       File_CB           : not null access procedure
         (File : GPR2.Path_Name.Object);
       Directory_CB      : access procedure
-        (Directory : GPR2.Path_Name.Object; Do_Visit : out Boolean) := null)
+        (Directory       : GPR2.Path_Name.Object;
+         Is_Root_Dir     : Boolean;
+         Do_Dir_Visit    : in out Boolean;
+         Do_Subdir_Visit : in out Boolean) := null)
       with Pre => Self.Is_Defined;
-   --  Visit Dir_Name (recursive if "**" at end) calling callbacks on each
-   --  directory/file visited.
-   --  When entering a Directory, Is_Visited callback can avoid Dir's
-   --  files to be handled. If recursive, sub directories are always visited.
-   --  Visit_File is called for each regular file found.
-   --  source reference Ref used when messages added to Self.Tree's log
+   --  Visit Directory_Pattern (recursive if "**" at end) calling callbacks
+   --  on each directory/file visited.
+   --  When entering a Directory, Directory_CB callback can avoid Directory's
+   --  files to be handled. If recursive mode, sub directories are visited if
+   --  Do_Subdir_Visit is True.
+   --  Is_Root_Dir is set when entering the top level dir.
+   --  File_CB is called for each regular file found.
+   --  Source reference is used when messages added to Self.Tree's log
 
 private
 

@@ -1,0 +1,5 @@
+description:
+    check ignore_source_sub_dirs attribute implementation
+driver: build_and_run
+project_file: test
+main: main

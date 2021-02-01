@@ -1,0 +1,6 @@
+with "gpr2";
+project Test is
+   for source_dirs use ("a/**", "b/**");
+   for ignore_source_sub_dirs use ("", "a", "b*");
+   for main use ("main.adb");
+end Test;
