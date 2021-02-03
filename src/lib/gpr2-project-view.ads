@@ -40,6 +40,7 @@ with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Reference.Value;
+with GPR2.View_Ids;
 
 limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
@@ -60,6 +61,20 @@ package GPR2.Project.View is
 
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
+
+   function Id (Self : Object) return GPR2.View_Ids.View_Id;
+   --  Returns a unique Id for Self
+
+   function Is_Extension_Of (Self : Object; View : Object) return Boolean;
+   --  Returns whether Self extends View
+
+   function Is_Extended_By (Self : Object; View : Object) return Boolean;
+   --  Returns whether Self is extended by View
+
+   function Instance_Of (Self : Object) return GPR2.View_Ids.View_Id;
+   --  Returns the unique Id of the innest view extended by Self. For example,
+   --  if A extends all B and B extends all C, Instance_Of (A) returns Id (C).
+   --  If A is not an extended all project Instance_Of (A) = Id (A).
 
    function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example

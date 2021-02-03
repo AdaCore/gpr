@@ -795,6 +795,15 @@ package body GPR2.Project.View is
       end if;
    end Has_Variables;
 
+   --------
+   -- Id --
+   --------
+
+   function Id (Self : Object) return GPR2.View_Ids.View_Id is
+   begin
+      return Definition.Get_RO (Self).Unique_Id;
+   end Id;
+
    -------------
    -- Imports --
    -------------
@@ -828,6 +837,15 @@ package body GPR2.Project.View is
       Add (Self);
       return Result;
    end Imports;
+
+   -----------------
+   -- Instance_Of --
+   -----------------
+
+   function Instance_Of (Self : Object) return GPR2.View_Ids.View_Id is
+   begin
+      return Definition.Get_RO (Self).Instance_Of;
+   end Instance_Of;
 
    ------------------------
    -- Invalidate_Sources --
@@ -871,6 +889,15 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Extending /= Null_Weak_Ref;
    end Is_Extended;
 
+   --------------------
+   -- Is_Extended_By --
+   --------------------
+
+   function Is_Extended_By (Self : Object; View : Object) return Boolean is
+   begin
+      return View.Is_Extension_Of (Self);
+   end Is_Extended_By;
+
    ------------------
    -- Is_Extending --
    ------------------
@@ -903,6 +930,22 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Trees.Project.Is_Extending_All;
    end Is_Extending_All;
+
+   ---------------------
+   -- Is_Extension_Of --
+   ---------------------
+
+   function Is_Extension_Of (Self : Object; View : Object) return Boolean is
+      use GPR2.View_Ids;
+   begin
+      if Self.Id = View.Id then
+         return True;
+      elsif not Self.Is_Extending then
+         return False;
+      else
+         return Self.Extended.Is_Extension_Of (View);
+      end if;
+   end Is_Extension_Of;
 
    -------------------------
    -- Is_Externally_Built --
@@ -1634,7 +1677,8 @@ package body GPR2.Project.View is
       --  Lookup in the imported next
 
       if Data.Imports.Contains (Name) then
-         return Data.Imports.Element (Name);
+         return Data.Tree.Instance_Of
+            (Data.Imports.Element (Name).Instance_Of);
       end if;
 
       --  Try configuration project

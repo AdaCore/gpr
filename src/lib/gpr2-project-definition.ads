@@ -37,6 +37,7 @@ with GPR2.Project.View;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Info;
 with GPR2.Unit;
+with GPR2.View_Ids;
 
 limited with GPR2.Project.Tree;
 
@@ -53,8 +54,9 @@ private package GPR2.Project.Definition is
    --  Imports contains the list of all imported projects for Project.
 
    type Tree is record
-      Project : Parser.Project.Object;
-      Imports : Parser.Project.Set.Object;
+      Project  : Parser.Project.Object;
+      Imports  : Parser.Project.Set.Object;
+      Extended : Parser.Project.Object;
    end record;
 
    package Simple_Name_Source is
@@ -82,19 +84,22 @@ private package GPR2.Project.Definition is
 
       --  Actual values for the view
 
-      Extending   : Weak_Reference;
-      Extended    : View.Object;
-      Aggregate   : Weak_Reference;
-      Imports     : Project_View_Store.Map;
-      Aggregated  : Project_View_Store.Map;
-      Attrs       : Project.Attribute.Set.Object;
-      Vars        : Project.Variable.Set.Object;
-      Packs       : Project.Pack.Set.Object;
-      Types       : Project.Typ.Set.Object;
-      Sources     : Project.Source.Set.Object;
-      Sources_Map : Simple_Name_Source.Map;
-      Units       : Unit_Info.Set.Object;
-      Root_View   : Weak_Reference;
+      Extending       : Weak_Reference;
+      Extended        : View.Object;
+      Aggregate       : Weak_Reference;
+      Imports         : Project_View_Store.Map;
+      Limited_Imports : Project_View_Store.Map;
+      Aggregated      : Project_View_Store.Map;
+      Attrs           : Project.Attribute.Set.Object;
+      Vars            : Project.Variable.Set.Object;
+      Packs           : Project.Pack.Set.Object;
+      Types           : Project.Typ.Set.Object;
+      Sources         : Project.Source.Set.Object;
+      Sources_Map     : Simple_Name_Source.Map;
+      Units           : Unit_Info.Set.Object;
+      Unique_Id       : GPR2.View_Ids.View_Id;
+      Instance_Of     : GPR2.View_Ids.View_Id;
+      Root_View       : Weak_Reference;
       --  Either root aggregated project view, or just root view of the tree
 
       --  Some general information
