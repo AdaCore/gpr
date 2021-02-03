@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -124,7 +124,11 @@ private
       --  List of externals directly or indirectly visible
       Signature         : Context.Binary_Signature :=
                             Context.Default_Signature;
-      Status            : Relation_Status := Root;
+      Is_Root           : Boolean := False;
+      --  A view will have Is_Root set to True only of root of tree. In
+      --  practice three views are considered as root projects: the view
+      --  associated with the loaded main project file, the config view and
+      --  the runtime view.
       Kind              : Project_Kind;
       Sources_Signature : Context.Binary_Signature :=
                             Context.Default_Signature;

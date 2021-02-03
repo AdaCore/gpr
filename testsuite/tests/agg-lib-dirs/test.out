@@ -4,9 +4,9 @@ sa_lib.gpr:5:25: warning: library directory "lib" not found
 sa_lib3.gpr: error: aggregate library ALI directory cannot be shared with object directory of aggregated project "sa_lib"
 sa_lib3.gpr: error: aggregate library ALI directory cannot be shared with object directory of aggregated project "sa_lib2"
 testing sa_lib4.gpr
-sa_lib4.gpr:4:28: warning: library ALI directory "lib2" not found
 sa_lib2.gpr:4:25: warning: library directory "lib2" not found
 sa_lib.gpr:5:25: warning: library directory "lib" not found
+sa_lib4.gpr:4:28: warning: library ALI directory "lib2" not found
 sa_lib4.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "sa_lib"
 sa_lib4.gpr: error: aggregate library ALI directory cannot be shared with library directory of aggregated project "sa_lib2"
 sa_lib4.gpr: error: aggregate library directory cannot be shared with object directory of aggregated project "slib"

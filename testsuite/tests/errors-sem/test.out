@@ -1,12 +1,12 @@
 Messages found:
+> /errors-sem/last.gpr
+ERROR
+non-empty set of sources can't be defined in an abstract project
 > /errors-sem/second.gpr
 ERROR
  3
  26
 attribute "Project_Files" must be a list
-> /errors-sem/last.gpr
-ERROR
-non-empty set of sources can't be defined in an abstract project
 > /errors-sem/demo.gpr
 ERROR
  11

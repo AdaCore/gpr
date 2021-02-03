@@ -34,9 +34,12 @@ pragma Elaborate (GPR2.Project.Configuration);
 --  Elaborate to avoid a circular dependency due to default Elaborate_Body
 
 with GPR2.Project.View.Set;
+with GPR2.Project.View.Vector;
 with GPR2.Project.Source;
 with GPR2.Project.Unit_Info;
 with GPR2.Source_Info;
+with GPR2.View_Ids;
+with GPR2.View_Ids.DAGs;
 
 pragma Warnings (Off);
 with System.OS_Constants;
@@ -44,9 +47,9 @@ pragma Warnings (On);
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
-private with Ada.Containers.Vectors;
 private with Ada.Strings.Hash;
 private with Ada.Strings.Unbounded;
+
 private with GPR2.Project.Registry.Attribute;
 private with GPR2.Unit;
 
@@ -174,6 +177,9 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
+
+   function Ordered_Views (Self : Object) return View.Vector.Object
+     with Pre => Self.Is_Defined;
 
    function Has_View_For
      (Self    : Object;
@@ -424,6 +430,19 @@ package GPR2.Project.Tree is
    Target_Name : constant Name_Type;
    --  Native host target
 
+   ------------------------
+   -- Internal functions --
+   ------------------------
+
+   function Instance_Of
+      (Self        : Object;
+       Instance_Id : GPR2.View_Ids.View_Id) return View.Object
+     with Pre => Self.Is_Defined
+                   and then GPR2.View_Ids.Is_Defined (Instance_Id);
+   --  Given a view id return the effective view that should be used. The
+   --  function is mainly used to get the effective view in case a project has
+   --  been extended using extends all.
+
 private
 
    package Name_View is
@@ -459,6 +478,12 @@ private
    function Same_Key (Left, Right : Source.Object) return Boolean is
      (Key (Left) = Key (Right));
 
+   package Id_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (GPR2.View_Ids.View_Id, View.Object,
+      Hash            => GPR2.View_Ids.Hash,
+      Equivalent_Keys => GPR2.View_Ids."=");
+   --  Maps View_Ids to View objects
+
    package Source_Maps is new Ada.Containers.Indefinite_Hashed_Maps
      (Key_Type        => String,
       Element_Type    => Source.Object,
@@ -490,13 +515,15 @@ private
       Views            : aliased View_Maps.Map;
       Views_Set        : View.Set.Object; -- All projects in registration order
       Context          : Two_Contexts;    -- Root and aggregate contexts
+      View_Ids         : aliased Id_Maps.Map;
+      View_Instances   : aliased Id_Maps.Map;
+      View_DAG         : GPR2.View_Ids.DAGs.DAG;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
    is (Left.Self = Right.Self);
 
-   package Project_View_Store is
-     new Ada.Containers.Vectors (Positive, View.Object);
+   package Project_View_Store renames GPR2.Project.View.Vector.Vector;
 
    type Cursor is record
       Views   : Project_View_Store.Vector;

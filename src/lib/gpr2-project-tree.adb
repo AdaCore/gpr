@@ -38,7 +38,7 @@ with GPR2.Project.Name_Values;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
-
+with GPR2.View_Ids.Set;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
@@ -53,6 +53,7 @@ package body GPR2.Project.Tree is
    package PC renames Project.Configuration;
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
+   package IDS renames GPR2.View_Ids;
 
    Is_Windows_Host : constant Boolean :=
                        GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
@@ -64,6 +65,12 @@ package body GPR2.Project.Tree is
    Wildcards       : constant Ada.Strings.Maps.Character_Set :=
                        Ada.Strings.Maps.To_Set ("?*");
    --  Wild chars for filename pattern
+
+   procedure Error
+      (Self : in out Object;
+       Msg  : String;
+       Sloc : Source_Reference.Object'Class);
+   --  Append an error to Self.Messages
 
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
@@ -126,32 +133,30 @@ package body GPR2.Project.Tree is
    function Recursive_Load
      (Self          : Object;
       Filename      : Path_Name.Object;
-      Status        : Relation_Status;
-      Root_Context  : out GPR2.Context.Object;
+      Context       : Context_Kind;
+      Root_Context  : in out GPR2.Context.Object;
       Messages      : out Log.Object;
-      Circularities : out Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
         then Starting_From.Qualifier in Aggregate_Kind);
-   --  Load a project filename recursively and returns the corresponding root
-   --  view. Starting_From if set is the aggregate library starting point for
+   --  Load a project Filename recursively and returns the corresponding root
+   --  view.
+   --  Context indicates if project is loaded using the root context or the
+   --  root aggregate context.
+   --  Root_Context is the new context (either the root one of the aggregate
+   --  one). Note that it might be different from Self.Context (Root) and
+   --  Self.Context(Aggregate) which are containing the previous context at
+   --  this stage.
+   --  Messages is the message handler that receives all messages emited
+   --  during the recursive load
+   --  Starting_From if set is the aggregate library starting point for
    --  the parsing. It is passed here for detecting circular dependencies.
 
    function Create_Runtime_View (Self : Object) return View.Object
      with Pre => Self.Is_Defined
                  and then Self.Has_Configuration;
    --  Create the runtime view given the configuration project
-
-   function Get
-     (Tree      : Project.Tree.Object;
-      Path_Name : GPR2.Path_Name.Object;
-      Context   : Context_Kind;
-      Status    : Relation_Status) return Project.View.Object;
-   --  Returns the project view corresponding to Path_Name and Status.
-   --  If Aggregated is True then the view should be taken from aggregated
-   --  subtree.
-   --  Returns Undefined if project view is not found.
 
    function Get
      (Tree    : Project.Tree.Object;
@@ -161,11 +166,19 @@ package body GPR2.Project.Tree is
    --  If Aggregated is True then view should be taken from aggregated subtree.
    --  Returns Undefined if project view is not found.
 
-   procedure Fill_Externals_From_Environment
+   function Get_View_By_Id
+      (Tree : Project.Tree.Object;
+       Id   : IDS.View_Id)
+       return Project.View.Object;
+   --  Given a View_Id Id returns the associated view if it exists. Returns
+   --  Project.View.Undefined otherwise.
+
+   procedure Update_Context
      (Context   : in out GPR2.Context.Object;
       Externals : Containers.Name_List);
-   --  If any of externals is not available in context, try to get it from
-   --  process environment and put into the context.
+   --  For all externals in Externals, if external is not already present in
+   --  the context, fetch its value from the environment and insert it into the
+   --  context.
 
    procedure Get_File
      (Self            : Object;
@@ -463,11 +476,11 @@ package body GPR2.Project.Tree is
 
          Add_Attribute (PRA.Languages, "ada");
 
-         Data.Tree   := Self.Self;
-         Data.Status := Root;
-         Data.Kind   := K_Standard;
-         Data.Path   := Path_Name.Create_Directory
-                          (Filename_Type (RTD.Value.Text));
+         Data.Tree    := Self.Self;
+         Data.Kind    := K_Standard;
+         Data.Path    := Path_Name.Create_Directory
+                           (Filename_Type (RTD.Value.Text));
+         Data.Is_Root := True;
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => PRA.Runtime,
@@ -497,32 +510,17 @@ package body GPR2.Project.Tree is
       return Position.Views (Position.Current);
    end Element;
 
-   -------------------------------------
-   -- Fill_Externals_From_Environment --
-   -------------------------------------
+   -----------
+   -- Error --
+   -----------
 
-   procedure Fill_Externals_From_Environment
-     (Context   : in out GPR2.Context.Object;
-      Externals : Containers.Name_List) is
+   procedure Error
+     (Self : in out Object;
+      Msg  : String;
+      Sloc : Source_Reference.Object'Class) is
    begin
-      for E of Externals loop
-         --  Fill all known external in the environment variables
-
-         if not Context.Contains (E)
-           and then Environment_Variables.Exists (String (E))
-         then
-            declare
-               V : constant String := Environment_Variables.Value (String (E));
-            begin
-               if V /= "" then
-                  --  Treat empty environment valiable like absent
-
-                  Context.Insert (E, V);
-               end if;
-            end;
-         end if;
-      end loop;
-   end Fill_Externals_From_Environment;
+      Self.Messages.Append (Message.Create (Message.Error, Msg, Sloc));
+   end Error;
 
    -----------
    -- First --
@@ -619,6 +617,14 @@ package body GPR2.Project.Tree is
                Append (I);
             end if;
          end loop;
+
+         for I of Definition.Get_RO (View).Limited_Imports loop
+            if Iter.Kind (I_Recursive) then
+               For_Project (I);
+            else
+               Append (I);
+            end if;
+         end loop;
       end For_Imports;
 
       -----------------
@@ -679,36 +685,6 @@ package body GPR2.Project.Tree is
    ---------
    -- Get --
    ---------
-
-   function Get
-     (Tree      : Project.Tree.Object;
-      Path_Name : GPR2.Path_Name.Object;
-      Context   : Context_Kind;
-      Status    : Relation_Status) return Project.View.Object
-   is
-      Position : constant View_Maps.Cursor :=
-                   Tree.Views.Find
-                     (GPR2.Path_Name.To_OS_Case (Path_Name.Value));
-   begin
-      if View_Maps.Has_Element (Position) then
-         for V of View_Maps.Element (Position) loop
-            declare
-               Defs : constant Definition.Const_Ref := Definition.Get_RO (V);
-            begin
-               pragma Assert (Defs.Tree.all = Tree);
-
-               if Defs.Context = Context
-                 and then (Defs.Status = Status
-                           or else Status /= Project.Aggregated)
-               then
-                  return V;
-               end if;
-            end;
-         end loop;
-      end if;
-
-      return Project.View.Undefined;
-   end Get;
 
    function Get
      (Tree    : Project.Tree.Object;
@@ -1013,6 +989,21 @@ package body GPR2.Project.Tree is
       end if;
    end Get_View;
 
+   --------------------
+   -- Get_View_By_Id --
+   --------------------
+
+   function Get_View_By_Id
+     (Tree : Project.Tree.Object;
+      Id   : IDS.View_Id) return Project.View.Object is
+   begin
+      if Tree.View_Ids.Contains (Id) then
+         return Tree.View_Ids (Id);
+      else
+         return Project.View.Undefined;
+      end if;
+   end Get_View_By_Id;
+
    -----------------------
    -- Has_Configuration --
    -----------------------
@@ -1096,6 +1087,17 @@ package body GPR2.Project.Tree is
          return True;
       end if;
    end Has_View_For;
+
+   -----------------
+   -- Instance_Of --
+   -----------------
+
+   function Instance_Of
+     (Self        : Object;
+      Instance_Id : GPR2.View_Ids.View_Id) return View.Object is
+   begin
+      return Self.View_Instances.Element (Instance_Id);
+   end Instance_Of;
 
    ------------------------
    -- Invalidate_Sources --
@@ -1202,7 +1204,6 @@ package body GPR2.Project.Tree is
 
       Project_Path  : Path_Name.Object;
       Root_Context  : GPR2.Context.Object := Context;
-      Circularities : Boolean;
       Def           : Definition.Ref;
 
    begin
@@ -1225,7 +1226,7 @@ package body GPR2.Project.Tree is
          end if;
 
          if Config.Has_Externals then
-            Fill_Externals_From_Environment (Root_Context, Config.Externals);
+            Update_Context (Root_Context, Config.Externals);
          end if;
 
          Definition.Bind_Configuration_To_Tree (Self.Conf, Self.Self);
@@ -1237,6 +1238,7 @@ package body GPR2.Project.Tree is
             --  Set and record the tree now, needed for the parsing
 
             P_Data.Tree := Self.Self;
+            P_Data.Is_Root := True;
 
             --  Parse the configuration project, no need for full/complex
             --  parsing as a configuration project is a simple project no
@@ -1297,7 +1299,11 @@ package body GPR2.Project.Tree is
       end loop;
 
       Self.Root := Recursive_Load
-        (Self, Project_Path, Root, Root_Context, Self.Messages, Circularities);
+        (Self,
+         Filename      => Project_Path,
+         Context       => Root,
+         Root_Context  => Self.Context (Root),
+         Messages      => Self.Messages);
 
       --  Do nothing more if there are errors during the parsing
 
@@ -1814,6 +1820,38 @@ package body GPR2.Project.Tree is
       end if;
    end Next;
 
+   -------------------
+   -- Ordered_Views --
+   -------------------
+
+   function Ordered_Views (Self : Object) return View.Vector.Object is
+      use GPR2.View_Ids;
+      use GPR2.View_Ids.DAGs;
+      Result : View.Vector.Object;
+
+      procedure Insert (V : View.Object);
+
+      ------------
+      -- Insert --
+      ------------
+
+      procedure Insert (V : View.Object) is
+      begin
+         if V.Is_Extending and then V.Instance_Of = V.Extended.Instance_Of
+         then
+            Insert (V.Extended);
+         end if;
+         Result.Append (V);
+      end Insert;
+
+   begin
+      for Id of Self.View_DAG.Topological_Sort loop
+         Insert (Self.Instance_Of (Id));
+      end loop;
+
+      return Result;
+   end Ordered_Views;
+
    --------------------------
    -- Project_Search_Paths --
    --------------------------
@@ -1845,10 +1883,9 @@ package body GPR2.Project.Tree is
    function Recursive_Load
      (Self          : Object;
       Filename      : Path_Name.Object;
-      Status        : Relation_Status;
-      Root_Context  : out GPR2.Context.Object;
+      Context       : Context_Kind;
+      Root_Context  : in out GPR2.Context.Object;
       Messages      : out Log.Object;
-      Circularities : out Boolean;
       Starting_From : View.Object := View.Undefined) return View.Object
    is
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
@@ -1861,6 +1898,11 @@ package body GPR2.Project.Tree is
         (Filename : Path_Name.Object;
          Status   : Relation_Status;
          Parent   : View.Object) return View.Object;
+
+      function Is_Limited
+         (View         : GPR2.Project.View.Object;
+          Import_Path  : Path_Name.Object) return Boolean;
+      --  Returns True if the Import_Path is a limited with in View.
 
       procedure Add_Paths_Messages;
       --  Add into Messages the path of the detected circularity
@@ -1876,9 +1918,6 @@ package body GPR2.Project.Tree is
       Sets          : Data_Set.Map;
       Project_Stack : Path_Name.Set.Object;
       --  Path to the root of the tree from the currently processing project
-
-      Limited_Count : Natural := 0;
-      --  Number of limited imports in the Paths
 
       ------------------------
       -- Add_Paths_Messages --
@@ -1909,29 +1948,35 @@ package body GPR2.Project.Tree is
          Status   : Relation_Status;
          Parent   : View.Object) return View.Object
       is
-         View : Project.View.Object :=
-                  Self.Get
-                    (Filename,
-                     Context => (if Recursive_Load.Status = Aggregated
-                                 then Aggregate else Root),
-                     Status  => Status);
+         Id   : constant IDS.View_Id :=
+                  IDS.Create
+                    (Project_File => Filename, Context => Context);
+         View : Project.View.Object := Self.Get_View_By_Id (Id);
+
       begin
+         --  If the view is already defined just return it
+
          if not View.Is_Defined then
             declare
                Data : Definition.Data := Load (Filename);
             begin
                --  If there are parsing errors, do not go further
 
-               if Messages.Has_Element
-                 (Information => False, Warning => False)
-               then
+               if Messages.Has_Error then
                   return View;
                end if;
+
+               --  Compute directory used as project file directory
+               --  This is influenced by the Project_Dir parameters used on
+               --  load to simulate that a project is in another location.
 
                Data.Path := (if Self.Project_Dir.Is_Defined
                              then Self.Project_Dir
                              else Path_Name.Create_Directory
                                     (Filename_Type (Filename.Dir_Name)));
+
+               --  If parent view is an aggregate or an extending project keep
+               --  track of the relationship.
 
                case Status is
                   when Extended =>
@@ -1942,208 +1987,194 @@ package body GPR2.Project.Tree is
                      null;
                end case;
 
-               --  Let's setup the full external environment for project
+               --  Update context associated with the the list of
+               --  externals defined in that project file.
 
-               Fill_Externals_From_Environment (Root_Context, Data.Externals);
+               Update_Context (Root_Context, Data.Externals);
 
-               --  Create the view, needed to be able to reference it if it is
-               --  an aggregate project as it becomes the new Context_View.
+               --  At this stage even if not complete we can create the view
+               --  and register it so that we can have references to it.
 
-               Data.Status  := Status;
-               Data.Context := (if Recursive_Load.Status = Aggregated
-                                then Aggregate else Root);
+               if Status = Root then
+                  Data.Is_Root := True;
+               end if;
 
+               Data.Context     := Context;
+               Data.Unique_Id   := Id;
+               Data.Instance_Of := Id;
                View := Register_View (Data);
+
+               --  Keep track of the view in View_Ids
+               --  It is important to note that this ensures we don't start to
+               --  recurse infinitely while loading a project tree.
+
+               View.Tree.View_Ids.Include (Data.Unique_Id, View);
             end;
 
             declare
                Data : constant Definition.Ref := Definition.Get_RW (View);
-
-               procedure Push
-                 (Path_Name   : GPR2.Path_Name.Object;
-                  Project     : GPR2.Project.Import.Object;
-                  Is_Extended : Boolean := False);
-               --  Record a new project as seen and record path
-
-               procedure Pop;
-               --  Remove last record pushed
-
-               function Is_Limited (Item : Path_Name.Object) return Boolean is
-                 (Data.Trees.Project.Imports.Element (Item).Is_Limited);
-
-               ---------
-               -- Pop --
-               ---------
-
-               procedure Pop is
-                  Last : constant Path_Name.Object :=
-                           Project_Stack.Last_Element;
-               begin
-                  if not Sets (Last).Extended and then Is_Limited (Last) then
-                     Limited_Count := Limited_Count - 1;
-                  end if;
-
-                  Project_Stack.Delete_Last;
-                  Sets.Delete (Last);
-               end Pop;
-
-               ----------
-               -- Push --
-               ----------
-
-               procedure Push
-                 (Path_Name   : GPR2.Path_Name.Object;
-                  Project     : GPR2.Project.Import.Object;
-                  Is_Extended : Boolean := False) is
-               begin
-                  if not Is_Extended and then Is_Limited (Path_Name) then
-                     Limited_Count := Limited_Count + 1;
-                  end if;
-
-                  Sets.Insert
-                    (Path_Name, Recursive_Load.Data'(Project, Is_Extended));
-                  Project_Stack.Append (Path_Name);
-               end Push;
-
             begin
-               Data.Root_View :=
-                 (if (Status = Aggregated and then not Parent.Is_Library)
-                    or else Status = Root
-                  then Definition.Weak (View)
-                  else Definition.Get_RO (Parent).Root_View);
 
-               pragma Assert
-                 (View.Namespace_Root.Is_Defined, String (View.Name));
+               --  Set root view regarding context namespace
+               --  ??? (need more explanation)
 
-               --  Now load all imported projects. If we are parsing the root
-               --  project or an aggregate project then the context view become
-               --  this project.
+               if Status = Root
+                  or else (Status = Aggregated and then not Parent.Is_Library)
+               then
+                  --  This is the root project or an aggregate project. This
+                  --  create a new namespace (i.e root in the subtree)
+
+                  Data.Root_View := Definition.Weak (View);
+
+               else
+                  --  ??? what happens if a project is withed inside several
+                  --  aggregate projects ???
+
+                  Data.Root_View := Definition.Get_RO (Parent).Root_View;
+               end if;
+
+               --  Load all imported projects
 
                for Project of Data.Trees.Imports loop
                   declare
-                     Is_Limited : constant Boolean :=
-                                    Data.Trees.Project.Imports.Element
-                                      (Project.Path_Name).Is_Limited;
-                  begin
-                     if Recursive_Load.Filename = Project.Path_Name then
-                        --  We are importing the root-project
-
-                        if not Is_Limited and then Limited_Count = 0 then
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "circular dependency detected",
-                                 Sets.Element
-                                   (Project_Stack.First_Element).Project));
-
-                           Add_Paths_Messages;
-
-                           --  Then finally add current project which is
-                           --  the root of the circularity.
-
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "imports " & Project.Path_Name.Value,
-                                 Data.Trees.Project.Imports.Element
-                                   (Project.Path_Name)));
-
-                           Circularities := True;
-                        end if;
-
-                     elsif Sets.Contains (Project.Path_Name) then
-                        --  We are importing a project already imported
-
-                        if not Is_Limited and then Limited_Count = 0 then
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "circular dependency detected",
-                                 Data.Trees.Project.Imports.Element
-                                        (Project.Path_Name)));
-
-                           Add_Paths_Messages;
-
-                           Circularities := True;
-                        end if;
-
-                     elsif Starting_From.Is_Defined
-                       and then Starting_From.Path_Name = Project.Path_Name
-                     then
-                        --  We are importing Starting_From which is an
-                        --  aggregate project taken as root project.
-
-                        if not Is_Limited and then Limited_Count = 0 then
-                           Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "imports " & Project.Path_Name.Value,
-                                 Data.Trees.Project.Imports.Element
-                                   (Project.Path_Name)));
-
-                           Add_Paths_Messages;
-
-                           Circularities := True;
-                        end if;
-
-                     else
-                        Push
+                     Imported_View : constant GPR2.Project.View.Object :=
+                        Internal
                           (Project.Path_Name,
-                           Data.Trees.Project.Imports.Element
-                             (Project.Path_Name));
+                           Status    => Imported,
+                           Parent    => View);
+                  begin
+                     if Imported_View.Is_Defined then
+                        --  limited with and with are tracked separately due
+                        --  their very distinct nature.
 
-                        Data.Imports.Insert
-                          (Project.Name,
-                           Internal
-                             (Project.Path_Name,
-                              Status => Imported,
-                              Parent => View));
+                        if Is_Limited (View, Project.Path_Name) then
+                           Data.Limited_Imports.Insert
+                              (Project.Name, Imported_View);
+                        else
 
-                        Pop;
+                           Data.Imports.Insert (Project.Name, Imported_View);
+                        end if;
                      end if;
                   end;
                end loop;
 
                --  Load the extended project if any
-
-               if Data.Trees.Project.Has_Extended then
+               if Data.Trees.Extended.Is_Defined then
                   declare
-                     Path_Name : constant GPR2.Path_Name.Object :=
-                                   Create
-                                     (Data.Trees.Project.Extended.Path_Name
-                                      .Name,
-                                      Search_Paths
-                                        (Filename, Self.Search_Paths));
+                     Extended_View : constant GPR2.Project.View.Object :=
+                                       Internal
+                                         (Data.Trees.Extended.Path_Name,
+                                          Status => Extended,
+                                          Parent => View);
 
                   begin
-                     if Path_Name.Exists then
-                        Push (Path_Name, Data.Trees.Project.Extended, True);
+                     if Extended_View.Is_Defined then
+                        Data.Extended := Extended_View;
 
-                        Data.Extended :=
-                          Internal
-                            (Path_Name,
-                             Status => Extended,
-                             Parent => View);
+                        --  If this is an extending all project in that case
+                        --  current project is an instance of the extended
+                        --  project.
 
-                        Pop;
-
-                     else
-                        Add_Paths_Messages;
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Message => "extended project file """
-                              & String (Path_Name.Name)
-                              & """ not found",
-                              Sloc    => Data.Trees.Project.Extended));
+                        if Data.Trees.Project.Is_Extending_All then
+                           Data.Instance_Of :=
+                              Definition.Get_RO (Data.Extended).Instance_Of;
+                        end if;
                      end if;
                   end;
                end if;
             end;
          end if;
 
+         --  At this stage the view is complete. Update mappings
+         --  (i.e effective view for extends and extends all) and DAG to
+         --  order the views.
+
+         declare
+            use IDS;
+            Unique_ID   : constant View_Id := View.Id;
+            Instance_Of : constant View_Id := View.Instance_Of;
+         begin
+            pragma Assert (Is_Defined (Unique_ID));
+            pragma Assert (Is_Defined (Instance_Of));
+
+            --  Update View_Instances mapping
+
+            if View.Tree.View_Instances.Contains (Instance_Of) then
+               --  An instance is already registed
+               declare
+                  Previous_View : constant GPR2.Project.View.Object :=
+                     View.Tree.View_Instances.Element (Instance_Of);
+               begin
+                  if View.Is_Extension_Of (Previous_View) then
+                     --  If the current view is an extension of the previously
+                     --  registered extension, then the current view is now
+                     --  the official instance.
+
+                     View.Tree.View_Instances.Include (Instance_Of, View);
+
+                  elsif not View.Is_Extended_By (Previous_View) then
+                     --  If the current view is not extendedby the previous and
+                     --  not an extension of it then it means that the project
+                     --  structure leads to incompatible instances of a view.
+                     --  In that case raise an error.
+
+                     raise Project_Error with "invalid structure";
+                  end if;
+               end;
+            else
+               View.Tree.View_Instances.Include (Instance_Of, View);
+            end if;
+
+            --  Finally update the DAG structure that will define the
+            --  processing order for the views.
+
+            declare
+               Predecessors : GPR2.View_Ids.Set.Object;
+            begin
+               if View.Has_Imports then
+                  for Import of View.Imports loop
+                     Predecessors.Include (Import.Instance_Of);
+                  end loop;
+               end if;
+
+               View.Tree.View_DAG.Update_Vertex
+                  (Vertex       => Instance_Of,
+                   Predecessors => Predecessors);
+            end;
+
+            --  Add aggregate dependency
+
+            if Parent.Is_Defined and then Status = Aggregated then
+               View.Tree.View_DAG.Update_Vertex
+                  (Vertex      => Parent.Instance_Of,
+                   Predecessor => Instance_Of);
+            end if;
+
+            --  Add dependency on extended if not a "extends all"
+
+            if View.Is_Extending
+              and then View.Extended.Instance_Of /= Instance_Of
+            then
+               View.Tree.View_DAG.Update_Vertex
+                  (Vertex      => Instance_Of,
+                   Predecessor => View.Extended.Instance_Of);
+            end if;
+         end;
+
          return View;
       end Internal;
+
+      ----------------
+      -- Is_Limited --
+      ----------------
+
+      function Is_Limited
+         (View        : GPR2.Project.View.Object;
+          Import_Path : Path_Name.Object) return Boolean is
+      begin
+         return Definition.Get_RO
+            (View).Trees.Project.Imports.Element (Import_Path).Is_Limited;
+      end Is_Limited;
 
       ----------
       -- Load --
@@ -2197,6 +2228,32 @@ package body GPR2.Project.Tree is
                   end if;
                end;
             end loop;
+
+            if Data.Trees.Project.Has_Extended then
+               declare
+                  Extended          : constant GPR2.Project.Import.Object :=
+                                        Data.Trees.Project.Extended;
+                  Extended_Name     : constant Filename_Type :=
+                                        Extended.Path_Name.Name;
+                  Extended_Filename : constant Path_Name.Object :=
+                                        Create (Extended_Name, Paths);
+               begin
+                  if Extended_Filename.Exists then
+                     Data.Trees.Extended := Parser.Project.Parse
+                        (Extended_Filename, Self.Implicit_With, Messages);
+                  else
+                     Add_Paths_Messages;
+
+                     Messages.Append
+                       (GPR2.Message.Create
+                          (Level   => Message.Error,
+                           Message => "extended project file """
+                                        & String (Extended_Name)
+                                        & """ not found",
+                           Sloc    => Data.Trees.Project.Extended));
+                  end if;
+               end;
+            end if;
          end if;
 
          return Data;
@@ -2214,9 +2271,10 @@ package body GPR2.Project.Tree is
          end loop;
       end if;
 
-      Circularities := False;
-
-      return Internal (Filename, Status, Starting_From);
+      return Internal
+         (Filename => Filename,
+          Status   => (if Context = Aggregate then Aggregated else Root),
+          Parent   => Starting_From);
    end Recursive_Load;
 
    ----------------------------------
@@ -2379,8 +2437,7 @@ package body GPR2.Project.Tree is
 
       --  Take missing external values from environment
 
-      Fill_Externals_From_Environment
-        (Self.Context (GPR2.Context.Root), Root.Externals);
+      Update_Context (Self.Context (GPR2.Context.Root), Root.Externals);
 
       Set_Context (Self, Changed);
 
@@ -2414,9 +2471,7 @@ package body GPR2.Project.Tree is
       Changed : access procedure (Project : View.Object) := null)
    is
 
-      procedure Set_View
-        (View           : Project.View.Object;
-         Aggregate_Only : Boolean := False);
+      procedure Set_View (View : Project.View.Object);
       --  Set the context for the given view
 
       procedure Validity_Check (View : Project.View.Object);
@@ -2429,10 +2484,7 @@ package body GPR2.Project.Tree is
       -- Set_View --
       --------------
 
-      procedure Set_View
-        (View           : Project.View.Object;
-         Aggregate_Only : Boolean := False)
-      is
+      procedure Set_View (View : Project.View.Object) is
          use type GPR2.Context.Binary_Signature;
 
          P_Data        : constant Definition.Ref := Definition.Get (View);
@@ -2653,40 +2705,70 @@ package body GPR2.Project.Tree is
 
          if View.Qualifier not in Aggregate_Kind then
             if P_Data.Attrs.Contains (PRA.Project_Files) then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     """project_files"" is only valid in aggregate projects",
-                     P_Data.Attrs.Element (PRA.Project_Files)));
+               Self.Error
+                  ("""project_files"" is only valid in aggregate projects",
+                   P_Data.Attrs.Element (PRA.Project_Files));
             else
                New_Signature := View.Context.Signature (P_Data.Externals);
             end if;
 
          elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
-            --  Aggregate project can't have Project_Files attribute
-
-            Self.Messages.Append
-              (Message.Create
-                 (Message.Error,
-                  "Attribute ""project_files"" must be specified in"
-                  & " aggregate project",
-                  Source_Reference.Create (View.Path_Name.Value, 0, 0)));
+            --  Aggregate project must have Project_Files attribute
+            Self.Error
+               ("Attribute ""project_files"" must be specified in"
+                & " aggregate project",
+                Source_Reference.Create (View.Path_Name.Value, 0, 0));
 
          else
             --  If an aggregate project and an attribute external is defined
             --  then remove the dependency on the corresponding externals.
 
-            for C in P_Data.Attrs.Iterate (Name => PRA.External) loop
-               declare
-                  P : Containers.Name_Type_List.Cursor :=
-                        P_Data.Externals.Find
-                          (Name_Type (P_Data.Attrs (C).Index.Text));
-               begin
-                  if Containers.Name_Type_List.Has_Element (P) then
-                     P_Data.Externals.Delete (P);
-                  end if;
-               end;
-            end loop;
+            if P_Data.Is_Root then
+               for C in P_Data.Attrs.Iterate (Name => PRA.External) loop
+                  declare
+                     P : Containers.Name_Type_List.Cursor :=
+                           P_Data.Externals.Find
+                             (Name_Type (P_Data.Attrs (C).Index.Text));
+                  begin
+                     if Containers.Name_Type_List.Has_Element (P) then
+                        P_Data.Externals.Delete (P);
+                     end if;
+                  end;
+               end loop;
+            end if;
+
+            if P_Data.Is_Root then
+               --  This is the root aggregate project which defines the context
+               --  for all aggregated projects.
+
+               --  Starts from the root context
+
+               Self.Context (Aggregate) := Self.Context (GPR2.Context.Root);
+
+               --  And then adjust context based on External attribute values
+               --  inside the root aggregate project.
+
+               for C in P_Data.Attrs.Iterate (PRA.External) loop
+                  declare
+                     use all type PRA.Value_Kind;
+
+                     External : constant Attribute.Object := P_Data.Attrs (C);
+                     Position : GPR2.Context.Key_Value.Cursor;
+                     Inserted : Boolean;
+                  begin
+                     --  Check for the validity of the external attribute here
+                     --  as the validity check will come after it is fully
+                     --  loaded/resolved.
+
+                     if External.Kind = Single then
+                        Self.Context (Aggregate).Insert
+                          (Name_Type (External.Index.Text),
+                           External.Value.Text,
+                           Position, Inserted);
+                     end if;
+                  end;
+               end loop;
+            end if;
 
             --  Now we can record the aggregated projects based on the possibly
             --  new Project_Files attribute value. This attribute may be set
@@ -2711,47 +2793,31 @@ package body GPR2.Project.Tree is
                   then
                      --  Duplicate in the project_files attribute
 
-                     if Aggregate_Only then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Warning,
-                              "duplicate aggregated project "
-                              & String (Pathname.Base_Name),
-                              Project));
-                     end if;
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Warning,
+                           "duplicate aggregated project "
+                           & String (Pathname.Base_Name),
+                           Project));
 
                   elsif Pathname.Exists then
                      declare
-                        Ctx           : GPR2.Context.Object;
                         Messages      : Log.Object;
-                        Circularities : Boolean;
                         A_View        : constant GPR2.Project.View.Object :=
                                           Recursive_Load
                                             (Self          => Self,
                                              Filename      => Pathname,
-                                             Status        => Aggregated,
-                                             Root_Context  => Ctx,
+                                             Context       => Aggregate,
+                                             Root_Context  => Self.Context
+                                                                (Aggregate),
                                              Messages      => Messages,
-                                             Circularities => Circularities,
                                              Starting_From => View);
                      begin
                         --  If there was error messages during the parsing of
                         --  the aggregated project, just return now.
 
-                        if Messages.Has_Error or else Circularities then
-                           if Circularities then
-                              Self.Messages.Append
-                                (Message.Create
-                                   (Message.Error,
-                                    "circular dependency detected",
-                                    Project));
-                           end if;
-
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "aggregate " & Project.Text,
-                                 Project));
+                        if Messages.Has_Error then
+                           Self.Error ("aggregate " & Project.Text, Project);
 
                            --  And copy back all messages from the recursive
                            --  load routine above.
@@ -2770,43 +2836,12 @@ package body GPR2.Project.Tree is
                      end;
 
                   else
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Error,
-                           "file """ & Project.Text & """ not found",
-                           Project));
+                     Self.Error
+                        ("file """ & Project.Text & """ not found", Project);
                      exit;
                   end if;
                end loop;
             end loop;
-
-            if P_Data.Status = Root then
-               --  And finaly also record the External definition if any into
-               --  the aggregate project context.
-
-               Self.Context (Aggregate) := Self.Context (GPR2.Context.Root);
-
-               for C in P_Data.Attrs.Iterate (PRA.External) loop
-                  declare
-                     use all type PRA.Value_Kind;
-
-                     External : constant Attribute.Object := P_Data.Attrs (C);
-                     Position : GPR2.Context.Key_Value.Cursor;
-                     Inserted : Boolean;
-                  begin
-                     --  Check for the validity of the external attribute here
-                     --  as the validity check will come after it is fully
-                     --  loaded/resolved.
-
-                     if External.Kind = Single then
-                        Self.Context (Aggregate).Insert
-                          (Name_Type (External.Index.Text),
-                           External.Value.Text,
-                           Position, Inserted);
-                     end if;
-                  end;
-               end loop;
-            end if;
 
             New_Signature := View.Context.Signature (P_Data.Externals);
          end if;
@@ -2913,12 +2948,9 @@ package body GPR2.Project.Tree is
          procedure Check_Def (Def : PRA.Def; A : Attribute.Object) is
          begin
             if Def.Index = PRA.No and then A.Has_Index then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "attribute """ & String (A.Name.Text)
-                     & """ cannot have index",
-                     A));
+               Self.Error
+                  ("attribute """ & String (A.Name.Text)
+                   & """ cannot have index", A);
             end if;
 
             if Def.Value = PRA.Single and then A.Kind = PRA.List then
@@ -3284,33 +3316,54 @@ package body GPR2.Project.Tree is
          Self.Runtime := Create_Runtime_View (Self);
       end if;
 
-      --  First ensure that we now load all projects inside aggregate library
+      begin
+         declare
+            Closure_Found : Boolean := True;
+            Closure       : GPR2.View_Ids.Set.Object;
+         begin
+            --  First do a pass on the subtree that starts from root of
+            --  projects not part of any aggregates. In case there is an
+            --  aggregate, the root project will be an aggregate and after
+            --  processing that subtree we are sure that aggregate context is
+            --  set correctly.
 
-      for View in Self.Iterate
-        (Filter => (F_Aggregate | F_Aggregate_Library => True,
-                    others                            => False))
-      loop
-         Set_View (Element (View), Aggregate_Only => True);
-      end loop;
+            for View of Self.Ordered_Views loop
+               if not View.Has_Aggregate_Context then
+                  Set_View (View);
+                  Closure.Insert (View.Id);
+               end if;
+            end loop;
 
-      --  Propagate the change in the project Tree. That is for each project in
-      --  the tree we need to update the corresponding view. We do not handle
-      --  the aggregated projects here. Those projects are handled specifically
-      --  in Set_View. This is needed as parsing the aggregate project may
-      --  change the Project_Files attribute and so the actual aggregated
-      --  project. So we cannot use the current aggregated project list.
+            --  Now evaluate the remaining views
 
-      if not Has_Error then
-         for View of Self loop
-            Set_View (View);
-         end loop;
-      end if;
+            loop
+               for View of Self.Ordered_Views loop
+                  if not Closure.Contains (View.Id) then
+                     Closure_Found := False;
+                     Closure.Insert (View.Id);
+                     Set_View (View);
+                  end if;
+               end loop;
+
+               exit when Closure_Found;
+               Closure_Found := True;
+            end loop;
+         end;
+
+      exception
+         when GPR2.View_Ids.DAGs.DAG_Error =>
+            Self.Messages.Append
+               (Message.Create
+                  (Message.Error, "circular dependency detected",
+                   Source_Reference.Create
+                      (Self.Root_Project.Path_Name.Value, 0, 0)));
+      end;
 
       if not Has_Error then
          --  We now have an up-to-date tree, do some validity checks if there
          --  is no issue detected yet.
 
-         for View of Self loop
+         for View of Self.Ordered_Views loop
             Validity_Check (View);
          end loop;
       end if;
@@ -3437,8 +3490,38 @@ package body GPR2.Project.Tree is
       Self.Sources.Clear;
       Self.Messages.Clear;
       Self.Views.Clear;
+      Self.View_Ids.Clear;
+      Self.View_Instances.Clear;
+      Self.View_DAG.Clear;
       Self.Views_Set.Clear;
    end Unload;
+
+   --------------------
+   -- Update_Context --
+   --------------------
+
+   procedure Update_Context
+     (Context   : in out GPR2.Context.Object;
+      Externals : Containers.Name_List) is
+   begin
+      for External of Externals loop
+         if not Context.Contains (External) then
+            --  The external is not present in the current context. Try to
+            --  fetch its value from the environment and insert it in the
+            --  context.
+
+            declare
+               External_Value : constant String :=
+                                  Environment_Variables.Value
+                                    (String (External), "");
+            begin
+               if External_Value /= "" then
+                  Context.Insert (External, External_Value);
+               end if;
+            end;
+         end if;
+      end loop;
+   end Update_Context;
 
    --------------------
    -- Update_Sources --

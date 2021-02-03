@@ -61,7 +61,6 @@ package body GPR2.Project.Configuration is
       Data : Definition.Data;
    begin
       Data.Trees.Project := Self.Project;
-      Data.Status        := Root;
       Data.Kind          := K_Configuration;
       Data.Tree          := Tree;
       Data.Path          := Path_Name.Create_Directory
