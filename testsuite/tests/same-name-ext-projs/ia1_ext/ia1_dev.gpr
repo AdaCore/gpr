@@ -1,0 +1,3 @@
+project Ia1_Dev extends "../ia1/ia1_ext.gpr" is
+   for Object_Dir use "objs";
+end Ia1_Dev;

@@ -1,0 +1,5 @@
+with "ia1_ext.gpr";
+project Main_Master extends "main.gpr" is
+   for Object_Dir use "objs_master";
+end Main_Master;
+

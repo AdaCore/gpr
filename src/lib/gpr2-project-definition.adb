@@ -142,6 +142,82 @@ package body GPR2.Project.Definition is
       return True;
    end Check_Circular_References;
 
+   ------------------------------
+   -- Check_Same_Name_Extended --
+   ------------------------------
+
+   procedure Check_Same_Name_Extended (View : Project.View.Object) is
+      procedure Check_View (View : Project.View.Object);
+      --  Checks in View tree (extended, aggregated, imported) that
+      --  any extending list contains unique project name.
+
+      ----------------
+      -- Check_View --
+      ----------------
+
+      procedure Check_View (View : Project.View.Object) is
+         OK    : Boolean;
+         CN    : Containers.Name_Type_Set.Cursor;
+
+         Names : Containers.Name_Set;
+         --  set of already found extended's name.
+
+         procedure Check_Extending (View : Project.View.Object);
+         --  If View is extending, checks that extended projects list contains
+         --  unique project's names.
+
+         ---------------------
+         -- Check_Extending --
+         ---------------------
+
+         procedure Check_Extending (View : Project.View.Object) is
+         begin
+            if View.Is_Extending then
+               Names.Insert (View.Name, CN, OK);
+
+               if not OK then
+                  declare
+                     Extending : constant Project.View.Object :=
+                                   (if View.Is_Extended
+                                    then View.Extending
+                                    else View);
+                  begin
+                     View.Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Sloc    => GPR2.Source_Reference.Value.Create
+                             (Filename => Extending.Path_Name.Value,
+                              Line     => 0,
+                              Column   => 0,
+                              Text     => ""),
+                           Message =>
+                             "cannot extend a project with the same name"));
+                  end;
+               end if;
+
+               Check_Extending (View.Extended);
+            end if;
+         end Check_Extending;
+
+         Def  : constant Const_Ref := Get_RO (View);
+
+      begin
+         Check_Extending (View);
+
+         for V of Def.Imports loop
+            Check_View (V);
+         end loop;
+
+         for V of Def.Aggregated loop
+            Check_View (V);
+         end loop;
+
+      end Check_View;
+
+   begin
+      Check_View (View);
+   end Check_Same_Name_Extended;
+
    -----------------------
    -- Is_Sources_Loaded --
    -----------------------

@@ -282,6 +282,9 @@ private package GPR2.Project.Definition is
 
    function Is_Sources_Loaded (View : Project.View.Object) return Boolean
      with Pre => View.Is_Defined;
-   --  Return True if Sources already updated once.
+   --  Return True if Sources already updated once
+
+   procedure Check_Same_Name_Extended (View : Project.View.Object);
+   --  Report "cannot extend a project with the same name" errors
 
 end GPR2.Project.Definition;

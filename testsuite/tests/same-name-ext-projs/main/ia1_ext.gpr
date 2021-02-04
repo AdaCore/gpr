@@ -1,0 +1,5 @@
+project Ia1_Ext extends "../ia1_ext/ia1_dev_ext.gpr" is
+   for Source_Files use ("ia1.ads");
+   for Object_Dir use "objs";
+end Ia1_Ext;
+

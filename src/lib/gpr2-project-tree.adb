@@ -1340,7 +1340,10 @@ package body GPR2.Project.Tree is
 
          Set_Context (Self, Context);
 
-      else
+         Definition.Check_Same_Name_Extended (Self.Root);
+      end if;
+
+      if Self.Messages.Has_Error then
          raise Project_Error with Project_Path.Value & " syntax error";
       end if;
 
