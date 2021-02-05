@@ -18,5 +18,6 @@ V:   K -> two
 V:   Var -> var is two
 
 [A]      K_STANDARD
+A:   Object_Dir -> a
 V:   Var -> var is two
 

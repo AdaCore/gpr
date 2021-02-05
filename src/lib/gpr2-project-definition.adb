@@ -62,6 +62,96 @@ package body GPR2.Project.Definition is
    function Languages (Def : Data) return Containers.Source_Value_List is
      (Def.Attrs.Languages.Values);
 
+   ----------------------------------
+   -- Check_Aggregate_Library_Dirs --
+   ----------------------------------
+
+   procedure Check_Aggregate_Library_Dirs (View : Project.View.Object) is
+      procedure Process_Aggregate (Proj : Project.View.Object);
+      --  Recursive procedure to check the aggregated projects, as they may
+      --  also be aggregated library projects.
+
+      -----------------------
+      -- Process_Aggregate --
+      -----------------------
+
+      procedure Process_Aggregate (Proj : Project.View.Object) is
+      begin
+         if Proj.Kind = K_Aggregate_Library then
+            for V of Get_RO (Proj).Aggregated loop
+               if V.Kind not in K_Aggregate_Library | K_Configuration
+                 | K_Abstract
+                 and then View.Library_Ali_Directory = V.Object_Directory
+               then
+                  View.Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => GPR2.Source_Reference.Value.Create
+                          (Filename => View.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => ""),
+                        Message =>
+                          "aggregate library ALI directory cannot be shared " &
+                          "with object directory of aggregated project """ &
+                          String (V.Path_Name.Base_Name) & """"));
+               elsif V.Is_Library
+                 and then View.Library_Ali_Directory = V.Library_Directory
+               then
+                  View.Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => GPR2.Source_Reference.Value.Create
+                          (Filename => View.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => ""),
+                        Message =>
+                          "aggregate library ALI directory cannot be shared " &
+                          "with library directory of aggregated project """ &
+                          String (V.Path_Name.Base_Name) & """"));
+               elsif V.Kind not in K_Aggregate_Library | K_Configuration
+                 | K_Abstract
+                 and then View.Library_Directory = V.Object_Directory
+               then
+                  View.Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => GPR2.Source_Reference.Value.Create
+                          (Filename => View.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => ""),
+                        Message =>
+                          "aggregate library directory cannot be shared " &
+                          "with object directory of aggregated project """ &
+                          String (V.Path_Name.Base_Name) & """"));
+               elsif V.Is_Library
+                 and then View.Library_Directory = V.Library_Directory
+               then
+                  View.Tree.Log_Messages.Append
+                    (Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => GPR2.Source_Reference.Value.Create
+                          (Filename => View.Path_Name.Value,
+                           Line     => 0,
+                           Column   => 0,
+                           Text     => ""),
+                        Message =>
+                          "aggregate library directory cannot be shared " &
+                          "with library directory of aggregated project """ &
+                          String (V.Path_Name.Base_Name) & """"));
+               end if;
+
+               Process_Aggregate (V);
+
+            end loop;
+         end if;
+      end Process_Aggregate;
+   begin
+      Process_Aggregate (View);
+   end Check_Aggregate_Library_Dirs;
+
    -------------------------------
    -- Check_Circular_References --
    -------------------------------

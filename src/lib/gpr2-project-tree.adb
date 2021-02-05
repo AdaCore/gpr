@@ -1341,6 +1341,7 @@ package body GPR2.Project.Tree is
          Set_Context (Self, Context);
 
          Definition.Check_Same_Name_Extended (Self.Root);
+         Definition.Check_Aggregate_Library_Dirs (Self.Root);
       end if;
 
       if Self.Messages.Has_Error then

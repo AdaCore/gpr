@@ -1,0 +1,3 @@
+project slib is
+   for source_dirs use ("ssrc");
+end slib;

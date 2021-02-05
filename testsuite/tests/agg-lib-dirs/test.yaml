@@ -1,0 +1,6 @@
+description:
+    aggregate library and library ALI dir check
+    (not shared with aggregated project dirs)
+driver: build_and_run
+project_file: test
+main: main

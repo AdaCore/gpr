@@ -2,5 +2,6 @@
 with "b.gpr";
 
 project A is
+   for Object_Dir use "a";
    Var := B.Var;
 end A;

@@ -1,0 +1,10 @@
+project Sa_Lib2 is
+   for Languages    use ("Ada");
+   for Source_Dirs use ("lib2_src");
+   for Library_Dir  use "lib2";
+   for Library_Kind use "dynamic";
+   for Library_Interface use ("ada_lib2");
+   for Library_Name use "sa2";
+--  for Library_Standalone use "encapsulated";
+end Sa_Lib2;
+

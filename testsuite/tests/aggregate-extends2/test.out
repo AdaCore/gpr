@@ -23,6 +23,7 @@
    Var = var is two
 
 [A]      K_STANDARD
+   Object_Dir -> a
    Var = var is two
    Pck:   Compiler
       Default_Switches (Ada) -> -g

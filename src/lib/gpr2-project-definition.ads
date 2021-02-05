@@ -287,4 +287,8 @@ private package GPR2.Project.Definition is
    procedure Check_Same_Name_Extended (View : Project.View.Object);
    --  Report "cannot extend a project with the same name" errors
 
+   procedure Check_Aggregate_Library_Dirs (View : Project.View.Object);
+   --  Report aggregate library (ALI)? directory cannot be shared with
+   --  (object|library) directory of aggregated project errors
+
 end GPR2.Project.Definition;

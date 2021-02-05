@@ -2,6 +2,8 @@
 with "b.gpr";
 
 project A extends "conf" is
+
+   for Object_Dir use "a";
    Var := B.Var;
 
    package Compiler extends Conf.Compiler is

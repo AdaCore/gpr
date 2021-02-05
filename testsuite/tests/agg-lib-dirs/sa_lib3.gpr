@@ -1,0 +1,9 @@
+aggregate library project Sa_Lib3 is
+   for Project_Files use ("sa_lib.gpr", "sa_lib2.gpr");
+   for Library_Dir  use ".";
+   for Library_ALI_Dir use ".";
+   for Library_Kind use "dynamic";
+   for Library_Interface use ("ada_lib");
+   for Library_Name use "sa3";
+   for Library_Standalone use "standard";
+end Sa_Lib3;
