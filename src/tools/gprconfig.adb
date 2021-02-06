@@ -1,0 +1,606 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--                           GPR2 PROJECT MANAGER                           --
+--                                                                          --
+--                       Copyright (C) 2021, AdaCore                        --
+--                                                                          --
+-- This is  free  software;  you can redistribute it and/or modify it under --
+-- terms of the  GNU  General Public License as published by the Free Soft- --
+-- ware  Foundation;  either version 3,  or (at your option) any later ver- --
+-- sion.  This software is distributed in the hope  that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public --
+-- License for more details.  You should have received  a copy of the  GNU  --
+-- General Public License distributed with GNAT; see file  COPYING. If not, --
+-- see <http://www.gnu.org/licenses/>.                                      --
+--                                                                          --
+------------------------------------------------------------------------------
+
+with Ada.Command_Line;
+with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Directories;
+with Ada.IO_Exceptions;
+with Ada.Exceptions;
+with Ada.Text_IO;
+with Ada.Strings.Fixed;
+with Ada.Strings.Unbounded;
+
+with GNAT.Command_Line;
+with GNAT.Directory_Operations;
+with GNAT.OS_Lib;
+with GNAT.String_Split;
+
+with GNATCOLL.Traces;
+
+with GPR2.KB;
+with GPR2.Log;
+with GPR2.Message;
+with GPR2.Path_Name.Set;
+with GPR2.Project.Configuration;
+with GPR2.Version;
+
+with GPRtools.Util;
+
+pragma Warnings (Off);
+with System.OS_Constants;
+pragma Warnings (On);
+
+procedure GPRconfig is
+   use Ada.Strings.Unbounded;
+   use GNAT.Command_Line;
+   use GPR2;
+   use GPR2.KB;
+   use GPR2.Project.Configuration;
+
+   Knowledge_Base : KB.Object;
+
+   type Verbosity_Kind is (Quiet, Default, Verbose);
+
+   Opt_Verbosity    : Verbosity_Kind := Default;
+   Opt_Version      : aliased Boolean;
+   Opt_Target       : aliased GNAT.OS_Lib.String_Access;
+   Opt_Show_Targets : aliased Boolean;
+   Opt_Show_MI      : aliased Boolean;
+   Opt_Show_Known   : aliased Boolean;
+   Opt_Batch        : aliased Boolean;
+   Opt_O            : aliased GNAT.OS_Lib.String_Access;
+   Opt_DB           : Boolean := False;
+   Opt_Validate     : aliased Boolean;
+   Opt_Fallback     : aliased Boolean;
+
+   KB_Flags         : Parsing_Flags := Default_Flags;
+
+   Cmd_Config       : Command_Line_Configuration;
+
+   KB_Locations     : GPR2.Path_Name.Set.Object;
+
+   function "=" (L, R : Description) return Boolean is
+     (Language (L) = Language (R));
+   --  Compares descriptions. Only one description per language is expected.
+
+   package Description_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+     (Name_Type, Description);
+
+   Description_Map : Description_Maps.Map;
+
+   procedure Register_Cmd_Options;
+   --  Registers accepted gprconfig switches
+
+   procedure Value_Callback (Switch, Value : String);
+   --  Parses command line switches
+
+   procedure Report_Error_And_Exit (Msg : String);
+   --  Outputs error message and raises Exit_From_Command_Line
+
+   function Parse_Config_Parameter (Config : String) return Description;
+   --  Parses the value of --config switch into Decription
+
+   function Get_Settings (Map : Description_Maps.Map) return Description_Set;
+   --  Turns the map of processed config parameters into Description_Set
+
+   ------------------
+   -- Get_Settings --
+   ------------------
+
+   function Get_Settings (Map : Description_Maps.Map) return Description_Set is
+      Result : Description_Set (1 .. Integer (Map.Length));
+      Idx    : Positive := 1;
+   begin
+      for Descr of Map loop
+         Result (Idx) := Descr;
+         Idx := Idx + 1;
+      end loop;
+
+      return Result;
+   end Get_Settings;
+
+   ----------------------------
+   -- Parse_Config_Parameter --
+   ----------------------------
+
+   function Parse_Config_Parameter (Config : String) return Description is
+      use GNAT.String_Split;
+
+      function Positional_Parameters return Boolean;
+      --  Returns True if configuration parameters are given in a positional
+      --  form,  i.e. --config=language:ada,runtime:sjlj.
+      --  Also checks that the two modes are not mixed up,
+      --  reports error otherwise.
+
+      procedure Check_Positional;
+      --  Checks that positional prefixes are not duplicated
+
+      function Get_Description_Param
+        (Slices : Slice_Set; Pos : Slice_Number) return Optional_Name_Type
+      is
+        (if not Has_Element (Slices, Pos) or else Slice (Slices, Pos) = ""
+         then No_Name else Optional_Name_Type (Slice (Slices, Pos)));
+      --  Returns parameter of configuration for given position or No_Name
+      --  if corresponding position is empty/absent. Reports error ans fails
+      --  if prefix is not followed by a value.
+
+      function Get_Description_Param
+        (Slices : Slice_Set; Prefix : String) return Optional_Name_Type;
+      --  Returns parameter of configuration for given Prefix or No_Name
+      --  if corresponding position is empty/absent.
+
+      Slices : constant Slice_Set := Create (Config, ",");
+
+      ----------------------
+      -- Check_Positional --
+      ----------------------
+
+      procedure Check_Positional is
+         use Ada.Strings.Fixed;
+
+         Language_Set : Boolean := False;
+         Version_Set  : Boolean := False;
+         Runtime_Set  : Boolean := False;
+         Path_Set     : Boolean := False;
+         Name_Set     : Boolean := False;
+      begin
+         for Slice of Slices loop
+            if Head (Slice, 9) = "language:" then
+               if Language_Set then
+                  Report_Error_And_Exit
+                    ("Configuration parameter language specified twice in "
+                     & Config);
+               else
+                  Language_Set := True;
+               end if;
+
+            elsif Head (Slice, 8) = "version:" then
+               if Version_Set then
+                  Report_Error_And_Exit
+                    ("Configuration parameter version specified twice in "
+                     & Config);
+               else
+                  Version_Set := True;
+               end if;
+
+            elsif Head (Slice, 8) = "runtime:" then
+               if Runtime_Set then
+                  Report_Error_And_Exit
+                    ("Configuration parameter runtime specified twice in "
+                     & Config);
+               else
+                  Runtime_Set := True;
+               end if;
+
+            elsif Head (Slice, 5) = "path:" then
+               if Path_Set then
+                  Report_Error_And_Exit
+                    ("Configuration parameter path specified twice in "
+                     & Config);
+               else
+                  Path_Set := True;
+               end if;
+
+            elsif Head (Slice, 5) = "name:" then
+               if Name_Set then
+                  Report_Error_And_Exit
+                    ("Configuration parameter name specified twice in "
+                     & Config);
+               else
+                  Name_Set := True;
+               end if;
+
+            end if;
+         end loop;
+      end Check_Positional;
+
+      ---------------------------
+      -- Get_Description_Param --
+      ---------------------------
+
+      function Get_Description_Param
+        (Slices : Slice_Set; Prefix : String) return Optional_Name_Type
+      is
+         use Ada.Strings.Fixed;
+
+         Pref     : constant String := Prefix & ":";
+         Pref_Len : constant Positive := Pref'Length;
+      begin
+         for Slice of Slices loop
+            if Head (Slice, Pref_Len) = Pref then
+               if Slice = Pref then
+                  Report_Error_And_Exit
+                    ("Parameter value for " & Prefix & " not specified in """
+                     & Config & """");
+               end if;
+
+               return
+                 Optional_Name_Type
+                   (Slice (Slice'First + Pref_Len .. Slice'Last));
+            end if;
+         end loop;
+
+         return No_Name;
+      end Get_Description_Param;
+
+      ---------------------------
+      -- Positional_Parameters --
+      ---------------------------
+
+      function Positional_Parameters return Boolean is
+         use Ada.Strings.Fixed;
+
+         Positional_Present     : Boolean := False;
+         Not_Positional_Present : Boolean := False;
+      begin
+         for Slice of Slices loop
+            if Slice = ""
+              or else (Head (Slice, 9) /= "language:"
+                        and then Head (Slice, 8) /= "version:"
+                        and then Head (Slice, 8) /= "runtime:"
+                        and then Head (Slice, 5) /= "path:"
+                        and then Head (Slice, 5) /= "name:")
+            then
+               Not_Positional_Present := True;
+            else
+               Positional_Present := True;
+            end if;
+
+            if Not_Positional_Present and then Positional_Present then
+               Report_Error_And_Exit
+                 ("Mixing positional and not positional parameters in """
+                  & Config & """");
+            end if;
+         end loop;
+
+         return Positional_Present;
+      end Positional_Parameters;
+
+      Result : Description;
+   begin
+      if Slice_Count (Slices) > 5 then
+         Report_Error_And_Exit
+           ("Too many arguments in configuration """ & Config & """");
+      end if;
+
+      if Positional_Parameters then
+         Check_Positional;
+
+         if Get_Description_Param (Slices, "language") = No_Name then
+            Report_Error_And_Exit
+              ("Language not specified if " & Config);
+         end if;
+
+         Result := Project.Configuration.Create
+           (Language => Get_Description_Param (Slices, "language"),
+            Version  => Get_Description_Param (Slices, "version"),
+            Runtime  => Get_Description_Param (Slices, "runtime"),
+            Path     => Get_Description_Param (Slices, "path"),
+            Name     => Get_Description_Param (Slices, "name"));
+      else
+         if Get_Description_Param (Slices, 1) = No_Name then
+            Report_Error_And_Exit
+              ("Language not specified if " & Config);
+         end if;
+
+         Result := Project.Configuration.Create
+           (Language => Get_Description_Param (Slices, 1),
+            Version  => Get_Description_Param (Slices, 2),
+            Runtime  => Get_Description_Param (Slices, 3),
+            Path     => Get_Description_Param (Slices, 4),
+            Name     => Get_Description_Param (Slices, 5));
+      end if;
+
+      return Result;
+   end Parse_Config_Parameter;
+
+   --------------------------
+   -- Register_Cmd_Options --
+   --------------------------
+
+   procedure Register_Cmd_Options is
+   begin
+      Define_Switch
+        (Cmd_Config, Opt_Version'Access,
+         Long_Switch => "--version",
+         Help        => "Display version and exit");
+      Define_Switch
+        (Cmd_Config,
+         Switch      => "-h",
+         Long_Switch => "--help",
+         Help        => "Display usage and exit");
+      Define_Switch
+        (Cmd_Config, Opt_Target'Access,
+         Long_Switch => "--target=",
+         Help        =>
+           "Select specified target or ""all"" for any target" & ASCII.LF
+         & "   ("
+         & System.OS_Constants.Target_Name
+         & " by default)",
+         Argument    => "target");
+      Define_Switch
+        (Cmd_Config, Opt_Show_Targets'Access,
+         Long_Switch => "--show-targets",
+         Help        => "List all compiler targets available");
+      Define_Switch
+        (Cmd_Config, Opt_Show_MI'Access,
+         Long_Switch => "--mi-show-compilers",
+         Help        =>
+           "List all compilers available in a parser-friendly way");
+      Define_Switch
+        (Cmd_Config, Opt_Show_Known'Access,
+         Long_Switch => "--show-known-compilers",
+         Help        =>
+           "List names of all known compilers");
+      Define_Switch
+        (Cmd_Config, Opt_Batch'Access,
+         Long_Switch => "--batch",
+         Help        => "Batch mode, no interactive compiler selection");
+      Define_Switch
+        (Cmd_Config, Value_Callback'Unrestricted_Access,
+         Switch => "-v",
+         Help   => "Verbose mode");
+      Define_Switch
+        (Cmd_Config, Value_Callback'Unrestricted_Access,
+         Switch => "-q",
+         Help   => "Quiet mode");
+      Define_Switch
+        (Cmd_Config, Opt_O'Access,
+         Switch   => "-o:",
+         Help     =>
+           "Name and directory of the output file"  & ASCII.LF
+           & "  (default is default.cgpr)",
+         Argument => "file");
+      Define_Switch
+        (Cmd_Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--db:",
+         Help        =>
+           "Parse DIR as an additional knowledge base" & ASCII.LF
+           & " --db-                  Do not load the standard knowledge base",
+         Argument    => "dir");
+      --  ??? Do we still want to point to the KB in file format
+      --  if it can be found?
+      Define_Switch
+        (Cmd_Config, Opt_Validate'Access,
+         Long_Switch => "--validate",
+         Help        =>
+           "Validate contents of the knowledge base before loading");
+      Define_Switch
+        (Cmd_Config, Opt_Fallback'Access,
+         Long_Switch => "--fallback-targets",
+         Help        =>
+           "Look for native toolchains of different architecture");
+      Define_Switch
+        (Cmd_Config, Value_Callback'Unrestricted_Access,
+         Long_Switch => "--config=",
+         Help        =>
+           "Preselect a compiler."
+           & ASCII.LF
+           & "  CONFIG=language[,version[,runtime[,path[,name]]]]"
+           & ASCII.LF
+           & "  Name is either one of the names of the blocks"
+           & " in the knowledge base"
+           & ASCII.LF
+           & "  ('GCC', 'GCC-28',...) or the base name of an executable"
+           & " ('gcc', 'gnatmake')."
+           & ASCII.LF
+           & "  An empty string can be specified for any of the"
+           & " optional parameters,"
+           & ASCII.LF
+           & "  otherwise positional prefixes can be used:"
+           & ASCII.LF
+           & "  --config=language:ada,runtime:zfp equals to "
+           & "--config=ada,,zfp.",
+         Argument    => "config");
+
+      Set_Usage (Cmd_Config, Usage => "[switches]");
+
+   end Register_Cmd_Options;
+
+   ---------------------------
+   -- Report_Error_And_Exit --
+   ---------------------------
+
+   procedure Report_Error_And_Exit (Msg : String) is
+   begin
+      Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error, Msg);
+      raise Exit_From_Command_Line;
+   end Report_Error_And_Exit;
+
+   --------------------
+   -- Value_Callback --
+   --------------------
+
+   procedure Value_Callback (Switch, Value : String) is
+      Descr : Project.Configuration.Description;
+   begin
+      if Switch = "--db" then
+         if Value = "-" then
+            Opt_DB := True;
+         else
+            declare
+               KB_Norm : constant String :=
+                           GNAT.OS_Lib.Normalize_Pathname (Value);
+               KB_Path : GPR2.Path_Name.Object;
+            begin
+               if GNAT.OS_Lib.Is_Directory (KB_Norm) then
+                  KB_Path :=
+                    GPR2.Path_Name.Create_Directory
+                      (GPR2.Filename_Type (KB_Norm));
+
+               elsif GNAT.OS_Lib.Is_Regular_File (KB_Norm) then
+                  KB_Path :=
+                    GPR2.Path_Name.Create_File (GPR2.Filename_Type (KB_Norm));
+
+               else
+                  Report_Error_And_Exit
+                    (KB_Norm & " is not a file or directory");
+
+               end if;
+
+               KB_Locations.Append (KB_Path);
+            end;
+         end if;
+
+      elsif Switch = "--config" then
+         Descr := Parse_Config_Parameter (Value);
+         if Description_Map.Contains (Language (Descr)) then
+            Report_Error_And_Exit
+              ("Multiple --config specified for " & String (Language (Descr)));
+         end if;
+         Description_Map.Include (Language (Descr), Descr);
+
+      elsif Switch = "-q" then
+         Opt_Verbosity := Quiet;
+
+      elsif Switch = "-v" then
+         Opt_Verbosity := Verbose;
+
+      end if;
+   end Value_Callback;
+
+   Config_Contents          : Unbounded_String;
+   Selected_Target          : Unbounded_String;
+   Output_File              : Unbounded_String;
+   Config_Log               : Log.Object;
+   Output                   : Ada.Text_IO.File_Type;
+   Default_Config_File_Name : constant String := "default.cgpr";
+begin
+
+   GNATCOLL.Traces.Parse_Config_File;
+   GPRtools.Util.Set_Program_Name ("gprconfig");
+
+   Register_Cmd_Options;
+
+   Getopt (Cmd_Config);
+
+   if Opt_Version then
+      GPR2.Version.Display
+        ("GPRCONFIG", "2006",  Version_String => GPR2.Version.Long_Value);
+      GPR2.Version.Display_Free_Software;
+      return;
+   end if;
+
+   KB_Flags (Validation) := Opt_Validate;
+
+   if Opt_Verbosity = Verbose then
+      GNATCOLL.Traces.Set_Active
+        (GNATCOLL.Traces.Create
+           ("KNOWLEDGE_BASE"), True);
+      GNATCOLL.Traces.Set_Active
+        (GNATCOLL.Traces.Create
+           ("KNOWLEDGE_BASE.PARSING_TRACE"), True);
+      GNATCOLL.Traces.Set_Active
+        (GNATCOLL.Traces.Create
+           ("KNOWLEDGE_BASE.MATHCING"), True);
+      GNATCOLL.Traces.Set_Active
+        (GNATCOLL.Traces.Create
+           ("KNOWLEDGE_BASE.COMPILER_ITERATOR"), True);
+   end if;
+
+   if Opt_DB then
+      Knowledge_Base := Create_Empty;
+   else
+      Knowledge_Base := Create_Default (KB_Flags);
+   end if;
+
+   for KB_Location of KB_Locations loop
+      Knowledge_Base.Add (KB_Flags, KB_Location);
+   end loop;
+
+   for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
+     (Information => Opt_Verbosity = Verbose,
+      Warning     => Opt_Verbosity = Verbose)
+   loop
+      Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+   end loop;
+   if Knowledge_Base.Has_Error then
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "Invalid setup of the gprconfig knowledge base");
+      return;
+   end if;
+
+   if Opt_Target.all = "" then
+      Selected_Target := To_Unbounded_String (System.OS_Constants.Target_Name);
+   else
+      Selected_Target := To_Unbounded_String (Opt_Target.all);
+   end if;
+
+   if Opt_O.all = "" then
+      if Opt_Target.all = "" then
+         Output_File := To_Unbounded_String (Default_Config_File_Name);
+      else
+         Output_File := To_Unbounded_String (Opt_Target.all & ".cgpr");
+      end if;
+   else
+      Output_File := To_Unbounded_String (Opt_O.all);
+   end if;
+
+   if Opt_Batch then
+      Config_Contents := Configuration
+        (Self     => Knowledge_Base,
+         Settings => Get_Settings (Description_Map),
+         Target   => Name_Type (To_String (Selected_Target)),
+         Messages => Config_Log,
+         Fallback => Opt_Fallback);
+   else
+      Report_Error_And_Exit ("Interactive mode not implemented yet.");
+   end if;
+
+   for Msg of Config_Log loop
+      Ada.Text_IO.Put_Line (Msg.Format);
+   end loop;
+
+   if Config_Contents /= Null_Unbounded_String then
+      Ada.Text_IO.Create
+        (Output, Ada.Text_IO.Out_File, To_String (Output_File));
+
+      Ada.Text_IO.Put_Line
+        (Output, "--  This gpr configuration file was generated by gprconfig");
+      Ada.Text_IO.Put_Line (Output, "--  using this command line:");
+      Ada.Text_IO.Put (Output, "--  " & Ada.Command_Line.Command_Name);
+      for I in 1 .. Ada.Command_Line.Argument_Count loop
+         Ada.Text_IO.Put (Output, ' ');
+         Ada.Text_IO.Put (Output, Ada.Command_Line.Argument (I));
+      end loop;
+      Ada.Text_IO.New_Line (Output);
+      Ada.Text_IO.Put (Output, "--  from ");
+      Ada.Text_IO.Put (Output, GNAT.Directory_Operations.Get_Current_Dir);
+      Ada.Text_IO.New_Line (Output);
+
+      Ada.Text_IO.Put_Line (Output, To_String (Config_Contents));
+      Ada.Text_IO.Close (Output);
+   end if;
+
+exception
+   when Ada.Directories.Name_Error | Ada.IO_Exceptions.Use_Error =>
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "Could not create the file " & To_String (Output_File));
+
+   when Invalid_Switch | Exit_From_Command_Line =>
+      GNAT.OS_Lib.OS_Exit (1);
+
+   when E : others =>
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "Unrecoverable error in GPRconfig :"
+         & Ada.Exceptions.Exception_Information (E));
+      GNAT.OS_Lib.OS_Exit (1);
+end GPRconfig;

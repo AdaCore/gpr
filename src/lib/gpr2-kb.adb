@@ -2453,10 +2453,12 @@ package body GPR2.KB is
                File        : Directory_Entry_Type;
                Filter      : Ada.Directories.Filter_Type;
             begin
-               Trace
-                 (Main_Trace,
-                  "Potential error: .. is generally not meant as a regexp,"
-                  & " and should be quoted in this case, as in \.\.");
+               if File_Re = ".." then
+                  Trace
+                    (Main_Trace,
+                     "Potential error: .. is generally not meant as a regexp,"
+                     & " and should be quoted in this case, as in \.\.");
+               end if;
 
                if Path_To_Check (Last) = '/' then
                   Trace
