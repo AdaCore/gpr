@@ -3,3 +3,4 @@ description:
 driver: build_and_run
 project_file: config_attributes
 main: main
+timeout: 720

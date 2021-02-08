@@ -20,8 +20,6 @@ class PythonScriptDriver(BaseDriver):
     one. Use this driver when no other one fits.
     """
 
-    default_process_timeout = 300
-
     def run(self):
         builder_and_runner = BuilderAndRunner(self)
 

@@ -25,8 +25,6 @@ class BuildAndRunDriver(BaseDriver):
     (test.out file).
     """
 
-    default_process_timeout = 300
-
     # gpr2 test program builder handling coverage, and gpr2 test & tools
     # launcher supporting coverage & valgrind mode.
     builder_and_runner = None
