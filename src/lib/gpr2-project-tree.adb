@@ -1375,6 +1375,8 @@ package body GPR2.Project.Tree is
       Conf        : Project.Configuration.Object;
       GNAT_Prefix : constant String := Get_Tools_Directory;
       Default_Cfg : Path_Name.Object;
+      Lang_Sloc   : Attribute.Object;
+      --  Keep languages attribute for Sloc parameter in error message
 
       function Actual_Target return Name_Type;
       --  Returns the target, depending on the parsing stage
@@ -1448,9 +1450,16 @@ package body GPR2.Project.Tree is
                   Sloc    => View.Attributes.Languages));
          end if;
 
-         for L of View.Languages loop
-            Languages.Include (L);
-         end loop;
+         if View.Has_Languages then
+            for L of View.Languages loop
+               Languages.Include (L);
+            end loop;
+
+            --  Keep languages attribute for possible error message Sloc
+            --  parameter.
+
+            Lang_Sloc := View.Attributes.Languages;
+         end if;
       end Add_Languages;
 
       -------------------------
@@ -1693,14 +1702,17 @@ package body GPR2.Project.Tree is
                  (Level   => Message.Warning,
                   Message => "no language for the projects tree: "
                   & "configuration skipped",
-                  Sloc    => Self.Root.Attributes.Languages));
+                  Sloc    => (if Lang_Sloc.Is_Defined
+                              then Lang_Sloc
+                              else Source_Reference.Create
+                                     (Self.Root.Path_Name.Value, 0, 0))));
             return;
          end if;
 
          declare
             Descr_Index       : Natural := 0;
             Conf_Descriptions : Project.Configuration.Description_Set
-                                 (1 .. Positive (Languages.Length));
+                                  (1 .. Positive (Languages.Length));
          begin
             for L of Languages loop
                Descr_Index := Descr_Index + 1;
