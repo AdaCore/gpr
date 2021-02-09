@@ -1,0 +1,4 @@
+project B is
+   for Object_Dir use "b";
+end B;
+

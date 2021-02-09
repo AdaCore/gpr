@@ -1,0 +1,6 @@
+aggregate library project Aggl is
+   for Project_Files use ("aggl1.gpr");
+   for Library_Name use "aggl";
+   for Library_Dir  use "..";
+end Aggl;
+
