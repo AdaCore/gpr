@@ -20,6 +20,7 @@ with Ada.Directories;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
+with GPR2.Log;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -99,13 +100,16 @@ begin
    Project.Tree.Load (Prj, Create ("build.gpr"), Ctx);
 
    Display (Prj.Root_Project);
+
+   Prj.Unload;
+   Project.Tree.Load (Prj, Create ("prj.gpr"), Ctx);
 exception
    when GPR2.Project_Error =>
       if Prj.Has_Messages then
          Text_IO.Put_Line ("Messages found:");
 
-         for M of Prj.Log_Messages.all loop
-            Text_IO.Put_Line (M.Format);
+         for C in Prj.Log_Messages.Iterate (False, True, True, True, True) loop
+            Text_IO.Put_Line (Log.Element (C).Format);
          end loop;
       end if;
 end Main;

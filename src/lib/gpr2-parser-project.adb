@@ -2849,7 +2849,7 @@ package body GPR2.Parser.Project is
                      Message =>
                        "project '" & String (Project) & "' is undefined"));
 
-            elsif not View.Packages.Contains (P_Name) then
+            elsif not View.Has_Packages (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -2909,7 +2909,7 @@ package body GPR2.Parser.Project is
                      Message =>
                        "project '" & String (Project) & "' is undefined"));
 
-            elsif not View.Packages.Contains (P_Name) then
+            elsif not View.Has_Packages (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,

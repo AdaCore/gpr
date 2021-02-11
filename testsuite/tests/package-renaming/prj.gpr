@@ -1,0 +1,5 @@
+with "abst.gpr";
+project Prj is
+   package Compiler renames Abst.Compiler;
+end Prj;
+
