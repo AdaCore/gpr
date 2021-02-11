@@ -1,0 +1,8 @@
+with "../import";
+project Prj4 is
+
+  V := Import.Toto.V;
+
+  --V := V2 ("Ada");
+
+end Prj4;

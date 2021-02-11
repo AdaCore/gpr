@@ -1,0 +1,41 @@
+project Prj is
+
+  --for Toto use "toto";
+
+  --for Object_Dir use (".");
+
+  --for Object_Dir ("Ada") use ".";
+
+  --for Source_Dirs use ".";
+  Suffix := ".ads";
+  --package Builder renames Imported.Builder;
+
+  package Naming is
+    --for Specification_Suffix use Suffix;
+  end Naming;
+
+  Var := "toto";
+
+  case Var is
+    when others =>
+  end case;
+
+  package Forbiden is
+  end Forbiden;
+
+  --package Naming is
+  --end Naming;
+
+  type T is ("toto", "titi");
+
+  --type T is ("tata", "tutu");
+
+  --type Var is ("one", "two");
+
+  --X : U := "toto";
+
+  Y : Prj.U := "toto";
+
+  --Var := ();
+
+end Prj;

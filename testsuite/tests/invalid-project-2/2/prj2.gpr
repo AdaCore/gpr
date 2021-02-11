@@ -1,0 +1,9 @@
+project Prj2 is
+
+  --V := Naming'Dot_Replacement;
+
+    V := Unknown_Project'Object_Dir;
+
+  --V := Import.Naming'Casing;
+
+end Prj2;

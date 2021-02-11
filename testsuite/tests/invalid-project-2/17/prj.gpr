@@ -1,0 +1,24 @@
+with "../import";
+project Prj is
+
+
+
+  type T_Type is ("one", "two", "three");
+  T : T_Type := external ("T","one");
+
+  case T is
+    when "one" =>
+       for Object_Dir use "one";
+    --1when "one" =>
+    --   for Object_Dir use "two";
+    --2when "four" =>
+    --   for Object_Dir use "four";
+  end case;
+
+  --3type T2_Type is ("one", "two", "one");
+
+   V1 := Import.Builder'Switches("Ada");
+  --5V2 := Import.Naming'Toto;
+end Prj;
+
+    

@@ -1,0 +1,9 @@
+with "../import";
+project Prj2 is
+  --V := Naming'Dot_Replacement;
+
+  --V := Import'Source_Dirs;
+
+  V := Unknown.Naming'Dot_Replacement;
+
+end Prj2;
