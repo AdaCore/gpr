@@ -460,9 +460,10 @@ package body GPR2.Project.Definition is
 
       package Source_Path_To_Sloc is new
         Ada.Containers.Indefinite_Ordered_Maps
-          (Value_Type, Source_Reference.Object);
+          (Filename_Type, Source_Reference.Object);
       --  Same as above but for the Interfaces attribute, so here we are using
-      --  Value_Type instead of Name_Type since we're dealing with filenames.
+      --  Filename_Type instead of Name_Type since we're dealing with
+      --  filenames.
 
       package Attribute_List is new
         Ada.Containers.Doubly_Linked_Lists (Project.Attribute.Object);
@@ -470,17 +471,13 @@ package body GPR2.Project.Definition is
 
       package Source_Path_To_Attribute_List is new
         Ada.Containers.Indefinite_Ordered_Maps
-          (Key_Type     => Value_Type,
+          (Key_Type     => Filename_Type,
            Element_Type => Attribute_List.List,
            "="          => Attribute_List."=");
       --  Used for the Ada_Naming_Exceptions container which maps a filename to
       --  the list of naming attributes (Body/Spec) that reference it.
 
-      package Naming_Exceptions_Usage is new
-        Ada.Containers.Indefinite_Ordered_Maps
-          (Key_Type     => Value_Type,
-           Element_Type => Source_Reference.Value.Object,
-           "="          => Source_Reference.Value."=");
+      package Naming_Exceptions_Usage renames Value_Source_Reference_Package;
 
       procedure Register_Units
         (Source : Project.Source.Object;
@@ -498,7 +495,7 @@ package body GPR2.Project.Definition is
       --  Extended_Copy   : the new source is ignored
       --  Aggregated_Copy : an error is raised
 
-      package Source_Set renames Containers.Value_Type_Set;
+      package Source_Set renames Containers.Filename_Type_Set;
 
       procedure Handle_File (File : GPR2.Path_Name.Object);
       --  Processes the given file: see if it should be added to the view's
@@ -595,7 +592,7 @@ package body GPR2.Project.Definition is
 
       Ada_Naming_Exceptions : Source_Path_To_Attribute_List.Map;
       Ada_Except_Usage      : Naming_Exceptions_Usage.Map;
-      Other_Except_Usage    : Naming_Exceptions_Usage.Map;
+      Other_Except_Usage    : Filename_Source_Reference;
 
       Visited_Dirs          : GPR2.Containers.Filename_Set;
       --  List of already visited directories to avoid looking twice at the
@@ -620,7 +617,8 @@ package body GPR2.Project.Definition is
             declare
                A               : constant Attribute.Object :=
                                    Attribute.Set.Element (CA);
-               Source          : constant Value_Type := A.Value.Text;
+               Source          : constant Filename_Type :=
+                                   Filename_Type (A.Value.Text);
                Attributes      : Attribute_List.List :=
                                    Attribute_List.Empty_List;
                Insert_Position : Source_Path_To_Attribute_List.Cursor;
@@ -650,12 +648,12 @@ package body GPR2.Project.Definition is
       procedure Fill_Other_Naming_Exceptions
         (Set : Project.Attribute.Set.Object)
       is
-         CE : Naming_Exceptions_Usage.Cursor;
+         CE : Filename_Source_Reference_Package.Cursor;
          OK : Boolean;
       begin
          for A of Set loop
             for V of A.Values loop
-               Other_Except_Usage.Insert (V.Text, V, CE, OK);
+               Other_Except_Usage.Insert (Filename_Type (V.Text), V, CE, OK);
 
                if not OK then
                   Tree.Append_Message
@@ -721,7 +719,7 @@ package body GPR2.Project.Definition is
          --         - Exit.
 
          procedure Check_Naming_Exceptions
-           (Basename : Value_Type;
+           (Basename : Filename_Type;
             Language : Name_Type;
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type);
@@ -756,7 +754,7 @@ package body GPR2.Project.Definition is
          -----------------------------
 
          procedure Check_Naming_Exceptions
-           (Basename : Value_Type;
+           (Basename : Filename_Type;
             Language : Name_Type;
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type)
@@ -774,7 +772,7 @@ package body GPR2.Project.Definition is
                     (PRA.Specification_Exceptions,
                      Attribute_Index.Create (Value_Type (Language)),
                      Result => Attr)
-                 and then Attr.Has_Value (Basename)
+                 and then Attr.Has_Value (Value_Type (Basename))
                then
                   Match := True;
                   Kind  := Unit.S_Spec;
@@ -783,7 +781,7 @@ package body GPR2.Project.Definition is
                     (PRA.Implementation_Exceptions,
                      Attribute_Index.Create (Value_Type (Language)),
                      Result => Attr)
-                 and then Attr.Has_Value (Basename)
+                 and then Attr.Has_Value (Value_Type (Basename))
                then
                   Match := True;
                   Kind  := Unit.S_Body;
@@ -1051,7 +1049,7 @@ package body GPR2.Project.Definition is
 
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
-         Basename  : constant Value_Type := Value_Type (File.Simple_Name);
+         Basename  : constant Filename_Type := File.Simple_Name;
 
          Match                  : Boolean := False;
 
@@ -1157,7 +1155,7 @@ package body GPR2.Project.Definition is
                   --  If no naming exception matched, try with naming scheme
 
                   Check_Naming_Scheme
-                    (Basename => Basename,
+                    (Basename => Value_Type (Basename),
                      Language => Language,
                      Match    => Match,
                      Kind     => Kind);
@@ -1193,7 +1191,7 @@ package body GPR2.Project.Definition is
                            loop
                               if not Naming_Exception_Equal
                                        (Attribute.Set.Element (CA),
-                                        Basename, 1)
+                                        Value_Type (Basename), 1)
                               then
                                  return True;
                               end if;
@@ -1367,7 +1365,7 @@ package body GPR2.Project.Definition is
                   & """)",
                   Sloc));
          else
-            Set.Insert (Value, Position, Inserted);
+            Set.Insert (Filename_Type (Value), Position, Inserted);
          end if;
       end Include_Simple_Filename;
 
@@ -1398,8 +1396,8 @@ package body GPR2.Project.Definition is
 
             File                   : constant Path_Name.Object :=
                                        Src.Source.Path_Name;
-            Basename               : constant Value_Type :=
-                                       Value_Type (File.Base_Name);
+            Basename               : constant Filename_Type :=
+                                       File.Simple_Name;
             Language               : constant Name_Type := Src.Source.Language;
             Language_Is_Ada        : constant Boolean := Language = "Ada";
             Units                  : Unit.List.Object;
@@ -1427,8 +1425,6 @@ package body GPR2.Project.Definition is
 
             if Source_Is_In_Interface then
                Interface_Sources.Exclude (Basename);
-            elsif Interface_Units.Is_Empty then
-               Interface_Sources.Exclude (Value_Type (File.Simple_Name));
             end if;
 
             Def.Sources.Insert (Src);
@@ -1498,8 +1494,7 @@ package body GPR2.Project.Definition is
                      null;
                end case;
 
-            elsif not Excluded_Sources.Contains
-                        (Value_Type (Source.Path_Name.Simple_Name))
+            elsif not Excluded_Sources.Contains (Source.Path_Name.Simple_Name)
             then
                --  Do not just insert into Def.Sources: we need to do the same
                --  operations as in Handle_File, except that the Source object
@@ -1841,7 +1836,7 @@ package body GPR2.Project.Definition is
 
          for Source of Def.Attrs.Interfaces.Values loop
             Interface_Sources.Insert
-              (Source.Text, Source_Reference.Object (Source),
+              (Filename_Type (Source.Text), Source_Reference.Object (Source),
                Position_In_Sources, Inserted);
 
             if not Inserted then
@@ -1922,7 +1917,7 @@ package body GPR2.Project.Definition is
                for P of Agg.Sources loop
                   In_Interface :=
                     Interface_Sources.Contains
-                      (String (P.Source.Path_Name.Base_Name));
+                      (P.Source.Path_Name.Simple_Name);
 
                   if P.Source.Has_Units then
                      for CU of P.Source.Units loop
@@ -2163,7 +2158,7 @@ package body GPR2.Project.Definition is
          declare
             Sloc        : constant Source_Reference.Object :=
                             Source_Path_To_Sloc.Element (Cur);
-            Source_Path : constant Value_Type :=
+            Source_Path : constant Filename_Type :=
                             Source_Path_To_Sloc.Key (Cur);
          begin
             Tree.Append_Message
