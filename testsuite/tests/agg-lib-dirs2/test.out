@@ -1,0 +1,3 @@
+testing good/aggl.gpr
+testing aggl/aggl.gpr
+aggl.gpr: error: aggregate library ALI directory cannot be shared with object directory of aggregated project "a"

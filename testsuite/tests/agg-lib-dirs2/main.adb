@@ -53,6 +53,6 @@ procedure Main is
    end Test;
 
 begin
-   Test ("sa_lib3.gpr");
-   Test ("sa_lib4.gpr");
+   Test ("good/aggl.gpr");
+   Test ("aggl/aggl.gpr");
 end Main;
