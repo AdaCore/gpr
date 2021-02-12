@@ -29,6 +29,9 @@ project GPR2.Tools is
    type Target_type is ("Windows_NT", "UNIX");
    Target : Target_Type := external ("OS", "UNIX");
 
+   type Tools_Prefix_Type is ("gpr", "gpr2");
+   Tools_Prefix : Tools_Prefix_Type := external ("GPR2_TOOLS_PREFIX", "gpr");
+
    Processors := External ("PROCESSORS", "0");
 
    for Source_Dirs use ("src/tools");
@@ -90,11 +93,11 @@ project GPR2.Tools is
    -------------
 
    package Builder is
-      for Executable ("gprinstall-main.adb") use "gpr2install";
-      for Executable ("gprclean-main.adb") use "gpr2clean";
-      for Executable ("gprname-main.adb") use "gpr2name";
-      for Executable ("gprls-main.adb") use "gpr2ls";
-      for Executable ("gprconfig.adb") use "gpr2config";
+      for Executable ("gprinstall-main.adb") use Tools_Prefix & "install";
+      for Executable ("gprclean-main.adb") use Tools_Prefix & "clean";
+      for Executable ("gprname-main.adb") use Tools_Prefix & "name";
+      for Executable ("gprls-main.adb") use Tools_Prefix & "ls";
+      for Executable ("gprconfig.adb") use Tools_Prefix & "config";
 
       for Switches (others) use ("-m", "-j" & Processors);
    end Builder;

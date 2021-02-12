@@ -55,6 +55,9 @@ GPRINSTALL=gprinstall
 # Whether to enable coverage (empty for no, any other value for yes)
 COVERAGE=
 
+# Whether to use gpr<name> or the alternate gpr2<name> tools names
+GPR2_TOOLS_PREFIX=gpr
+
 # check for out-of-tree build
 ifeq ($(SOURCE_DIR),.)
 RBD=
@@ -110,10 +113,11 @@ else
 endif
 
 GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
+	-XGPR2_TOOLS_PREFIX=${GPR2_TOOLS_PREFIX} \
 	-aP ${LANGKIT_GENERATED_SRC}/lib/gnat \
 	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC}
 
-BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
+BUILDER=gprbuild -v -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
             ${COVERAGE_BUILD_FLAGS}
 INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
 CLEANER=gprclean -q $(RBD)
@@ -153,7 +157,7 @@ ifneq ($(COVERAGE),)
 	mkdir -p $(SOURCE_DIR)/.build/$(BUILD)
 
 	# TODO remove when gnatcoverage limitations fixed
-	# TODO remove also gpr2-parser-project.adb gpr2-project-view.adb patches 
+	# TODO remove also gpr2-parser-project.adb gpr2-project-view.adb patches
 	echo "gpr2-source_info.ads" > $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
 	echo "gpr2-path_name.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
 	echo "gpr2-project-attribute_index.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
@@ -221,7 +225,7 @@ setup: langkit/build
 	echo "GPR2KBDIR=$(GPR2KBDIR)" >> makefile.setup
 
 setup2: setup
-	echo "GPRINSTALL=.build/$(BUILD)/obj-tools/gpr2install" >> makefile.setup
+	echo "GPRINSTALL=.build/$(BUILD)/obj-tools/$(GPR2_TOOLS_PREFIX)install" >> makefile.setup
 
 langkit:
 	mkdir -p langkit

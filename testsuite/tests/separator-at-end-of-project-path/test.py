@@ -8,9 +8,9 @@ for var in ["GPR_PROJECT_PATH", "ADA_PROJECT_PATH"]:
 
 # Check that gpr2-projects package is able to handle such environment without
 # raising an exception.
-p = BuilderAndRunner().run(['gpr2clean', '-Pp'])
+p = BuilderAndRunner().run(['gprclean', '-Pp'])
 if p.status != 0:
-    print('gpr2clean returned ' + str(p.status))
+    print('gprclean returned ' + str(p.status))
     print(p.err)
     print(p.out)
 else:

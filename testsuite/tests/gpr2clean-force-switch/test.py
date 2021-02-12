@@ -12,7 +12,7 @@ bnr.run(['gprbuild', '-p', '-q', '-Pp'])
 os.chmod('main.ali', stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
 
 # clean project in normal mode
-bnr.run(['gpr2clean', '-Pp'])
+bnr.run(['gprclean', '-Pp'])
 
 # check read only main.ali not deleted
 if not os.path.exists('main.ali'):
@@ -20,7 +20,7 @@ if not os.path.exists('main.ali'):
 
 else:
     # clean project forcing deletions
-    bnr.run(['gpr2clean', '-f', '-Pp'])
+    bnr.run(['gprclean', '-f', '-Pp'])
 
     # check read only main.ali deleted
     if os.path.exists('main.ali'):
