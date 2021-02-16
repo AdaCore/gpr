@@ -158,7 +158,6 @@ ifneq ($(COVERAGE),)
 
 	# TODO remove when gnatcoverage limitations fixed
 	# TODO remove also gpr2-parser-project.adb gpr2-project-view.adb patches
-	echo "gpr2-source_info.ads" > $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
 	echo "gpr2-path_name.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
 	echo "gpr2-project-attribute_index.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
 	echo "gpr2-project-attribute-set.adb" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt

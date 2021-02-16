@@ -177,8 +177,7 @@ package GPR2.Source_Info is
       Is_Indexed    : Boolean)
      with Post => Self.Is_Ada;
 
-   procedure Update (Self : in out Object) is null
-     with Pre'Class => Self.Is_Defined;
+   procedure Update (Self : in out Object) with Pre'Class => Self.Is_Defined;
    --  Update source information. The default implementation does nothing. The
    --  actual work must be done for Source or Project.Source object and depends
    --  on different parser (language or LI based).
