@@ -1342,6 +1342,7 @@ package body GPR2.Project.Tree is
 
          Definition.Check_Same_Name_Extended (Self.Root);
          Definition.Check_Aggregate_Library_Dirs (Self.Root);
+         Definition.Check_Package_Naming (Self.Root);
       end if;
 
       if Self.Messages.Has_Error then

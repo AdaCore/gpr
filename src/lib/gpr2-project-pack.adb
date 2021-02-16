@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -157,13 +157,11 @@ package body GPR2.Project.Pack is
    ---------------------
 
    function Separate_Suffix
-     (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object
+     (Self : Object) return Project.Attribute.Object
    is
-      Lang : constant Value_Type := Value_Type (Language);
    begin
       return Self.Attribute
-        (Registry.Attribute.Separate_Suffix, Attribute_Index.Create (Lang));
+        (Registry.Attribute.Separate_Suffix);
    end Separate_Suffix;
 
    ----------------------------

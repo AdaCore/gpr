@@ -1,0 +1,5 @@
+project Import8 is
+    package Naming is
+        for Dot_Replacement use ".a.";
+    end Naming;
+end Import8;

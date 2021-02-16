@@ -1,0 +1,14 @@
+testing agg.gpr
+import8.gpr:3:13: error: ".a." is illegal for Dot_Replacement
+abst.gpr:6:12: error: Dot_Replacement cannot be empty
+abst.gpr:8:12: error: body_suffix("") for language Ada is also defined for language Ada
+abst.gpr:9:12: error: Separate_Suffix cannot be empty
+import9.gpr:5:13: error: "- -" is illegal for Dot_Replacement
+import9.gpr:6:13: error: spec_suffix(".ada") for language C is also defined for language Ada
+import10.gpr:3:12: error: ".." is illegal for Dot_Replacement
+extended.gpr:6:12: error: "--0" is illegal for Dot_Replacement
+extending.gpr:6:12: error: "a" is illegal for Dot_Replacement
+extending.gpr:7:12: error: "a" is illegal for spec_suffix: must have a dot
+extending.gpr:8:12: error: "b" is illegal for body_suffix: must have a dot
+extending.gpr:9:12: error: "c" is illegal for separate_suffix: must have a dot
+aggregated.gpr:6:12: error: invalid value for casing

@@ -51,6 +51,8 @@ package body GPR2.Project.Definition is
 
    use GNAT;
 
+   package ACH renames Ada.Characters.Handling;
+   package ASF renames Ada.Strings.Fixed;
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
 
@@ -231,6 +233,272 @@ package body GPR2.Project.Definition is
       Next_View (View);
       return True;
    end Check_Circular_References;
+
+   --------------------------
+   -- Check_Package_Naming --
+   --------------------------
+
+   procedure Check_Package_Naming (View : Project.View.Object) is
+      procedure Check_View (View : Project.View.Object);
+      --  Checks in View tree Casing, Dot_Replacement and Suffix attributes
+      --  values.
+
+      ----------------
+      -- Check_View --
+      ----------------
+
+      procedure Check_View (View : Project.View.Object) is
+
+         package Suffix_Lang_Maps is
+           new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
+
+         use type Suffix_Lang_Maps.Cursor;
+
+         Suffix_Lang_Map : Suffix_Lang_Maps.Map;
+         --  key=suffix value; value=first language registering suffix use
+         --  map used to detect/report multiple use of a suffix.
+
+         Naming_Package : constant GPR2.Project.Pack.Object :=
+                             View.Naming_Package;
+         --  view's naming package.
+
+         procedure Log_Error
+           (Level     : Message.Level_Value;
+            Msg       : String;
+            Attribute : Project.Attribute.Object);
+         --  log naming package's  attribute problem at 'Attribute' source ref
+
+         procedure Check_Casing;
+         --  check casing is in expected range
+
+         procedure Check_Dot_Replacement;
+         --  check dot_replacement is not illegal
+
+         use type Project.Attribute.Object;
+
+         procedure Check_Illegal_Suffix
+           (Attribute_Name : Name_Type;
+            Language       : Name_Type;
+            Attribute      : Project.Attribute.Object)
+           with Pre => Attribute /= Project.Attribute.Undefined;
+         --  check Spec_Suffix, Body_Suffix or Separate_Suffix is not illegal
+
+         ------------------
+         -- Check_Casing --
+         ------------------
+
+         procedure Check_Casing is
+            Casing : Project.Attribute.Object;
+         begin
+            if Naming_Package.Check_Attribute (PRA.Casing, Result => Casing)
+              and then ACH.To_Lower (Casing.Value.Text) not in
+              "lowercase" | "uppercase" | "mixedcase"
+            then
+               Log_Error (Message.Error, "invalid value for casing", Casing);
+            end if;
+         end Check_Casing;
+
+         ---------------------------
+         -- Check_Dot_Replacement --
+         ---------------------------
+
+         procedure Check_Dot_Replacement is
+            Dot_Replacement : constant Project.Attribute.Object :=
+                                Naming_Package.Attribute (PRA.Dot_Replacement);
+            Value           : constant String :=
+                                Dot_Replacement.Value.Text;
+            Not_OK          : Boolean := False;
+            subtype Printable_ASCII is Character range '!' .. '~';
+         begin
+            --  It must not be empty
+            --  It cannot start or end with an alphanumeric character
+            --  It cannot be a single underscore
+            --  It cannot start with an underscore followed by an alphanumeric
+            --  It cannot contain a dot '.' unless the entire string is "."
+            --  It cannot include a space or a char that is not printable ASCII
+
+            if Value = No_Value then
+               Log_Error
+                 (Message.Error,
+                  "Dot_Replacement cannot be empty",
+                  Dot_Replacement);
+
+            elsif ACH.Is_Alphanumeric (Value (Value'First))
+              or else ACH.Is_Alphanumeric (Value (Value'Last))
+              or else (Value (Value'First) = '_'
+                       and then (Value'Length = 1
+                                 or else ACH.Is_Alphanumeric
+                                   (Value (Value'First + 1))))
+              or else (Value'Length > 1
+                       and then ASF.Index
+                         (Source => Value, Pattern => ".") > 0)
+            then
+               Not_OK := True;
+
+            else
+               for J in Value'Range loop
+                  if not (Value (J) in Printable_ASCII) then
+                     Not_OK := True;
+                     exit;
+                  end if;
+               end loop;
+            end if;
+
+            if Not_OK then
+               Log_Error
+                 (Message.Error,
+                  """" & Value & """ is illegal for Dot_Replacement",
+                  Dot_Replacement);
+            end if;
+         end Check_Dot_Replacement;
+
+         --------------------------
+         -- Check_Illegal_Suffix --
+         --------------------------
+
+         procedure Check_Illegal_Suffix
+           (Attribute_Name : Name_Type;
+            Language       : Name_Type;
+            Attribute      : Project.Attribute.Object)
+         is
+            Value    : constant Value_Type := Attribute.Value.Text;
+            Dot_Repl : constant Value_Type :=
+                         Naming_Package.Attribute
+                            (PRA.Dot_Replacement).Value.Text;
+         begin
+            if Value'Length = 0 then
+               if Attribute_Name = PRA.Separate_Suffix then
+                  Log_Error
+                    (Message.Error,
+                     "Separate_Suffix cannot be empty",
+                     Attribute);
+               end if;
+            elsif ASF.Index (Value, ".") = 0 then
+               Log_Error
+                 (Message.Error,
+                  """" & Value & """ is illegal for "
+                  & String (Attribute_Name) & ": must have a dot",
+                  Attribute);
+
+               return;
+            end if;
+
+            --  Case of dot replacement is a single dot, and first character of
+            --  suffix is also a dot.
+
+            if Value'Length /= 0
+              and then Dot_Repl'Length /= 0
+              and then Dot_Repl = "."
+              and then Value (Value'First) = '.'
+            then
+               for Index in Value'First + 1 .. Value'Last loop
+                  --  If there are multiple dots in the name
+
+                  if Value (Index) = '.' then
+                     --  A letter is illegal following the initial dot
+
+                     if ACH.Is_Letter (Value (Value'First + 1)) then
+                        Log_Error
+                          (Message.Error,
+                           """" & Value & """ is illegal for "
+                           & String (Attribute_Name)
+                           & ": ambiguous prefix when "
+                           & "Dot_Replacement is a dot",
+                           Attribute);
+                     end if;
+
+                     return;
+                  end if;
+               end loop;
+            end if;
+
+            --  detect/report multiple use of same suffix.
+            --  Separate_Suffix = Body_Suffix ("Ada") is allowed.
+            declare
+               Associated_Lang : constant Suffix_Lang_Maps.Cursor :=
+                                   Suffix_Lang_Map.Find (Value);
+            begin
+               if Associated_Lang /= Suffix_Lang_Maps.No_Element then
+                  if Attribute_Name = PRA.Separate_Suffix
+                    and then Naming_Package.Has_Body_Suffix ("Ada")
+                    and then Naming_Package.Body_Suffix
+                      ("Ada").Value.Text = Value
+                  then
+                     return;
+                  end if;
+
+                  Log_Error
+                    (Message.Error,
+                     String (Attribute_Name) & "(""" & String (Value)
+                     & """) for language " & String (Language)
+                     & " is also defined for language "
+                     & String (Suffix_Lang_Maps.Element (Associated_Lang)),
+                     Attribute);
+               else
+                  Suffix_Lang_Map.Include (Value, Language);
+               end if;
+            end;
+
+         end Check_Illegal_Suffix;
+
+         ---------------
+         -- Log_Error --
+         ---------------
+
+         procedure Log_Error
+           (Level     : Message.Level_Value;
+            Msg       : String;
+            Attribute : Project.Attribute.Object)
+         is
+         begin
+            View.Tree.Log_Messages.Append
+              (Message.Create
+                 (Level   => Level,
+                  Sloc    => Attribute,
+                  Message => Msg));
+         end Log_Error;
+
+      begin
+         if View.Has_Packages (PRP.Naming) then
+            Check_Casing;
+            Check_Dot_Replacement;
+
+            if View.Kind /= K_Aggregate and then View.Has_Languages then
+               for L of View.Languages loop
+                  declare
+                     Language : constant Name_Type := Name_Type (L.Text);
+                  begin
+                     if Naming_Package.Has_Spec_Suffix (Language) then
+                        Check_Illegal_Suffix
+                          (PRA.Spec_Suffix,
+                           Language,
+                           Naming_Package.Spec_Suffix (Language));
+                     end if;
+
+                     if Naming_Package.Has_Body_Suffix (Language) then
+                        Check_Illegal_Suffix
+                          (PRA.Body_Suffix,
+                           Language,
+                           Naming_Package.Body_Suffix (Language));
+                     end if;
+                  end;
+               end loop;
+            end if;
+
+            if Naming_Package.Has_Separate_Suffix then
+               Check_Illegal_Suffix
+                 (PRA.Separate_Suffix,
+                  "Ada",
+                  Naming_Package.Separate_Suffix);
+            end if;
+         end if;
+      end Check_View;
+
+   begin
+      for C in View.Tree.Iterate loop
+         Check_View (Project.Tree.Element (C));
+      end loop;
+   end Check_Package_Naming;
 
    ------------------------------
    -- Check_Same_Name_Extended --
@@ -857,11 +1125,11 @@ package body GPR2.Project.Definition is
             --  Separate_Suffix is only valid for Ada
 
             if Language = "Ada"
-              and then Naming.Has_Separate_Suffix (Language)
+              and then Naming.Has_Separate_Suffix
             then
                Check_Separate : declare
                   Sep_Suffix : constant Project.Attribute.Object :=
-                                 Naming.Separate_Suffix (Language);
+                                 Naming.Separate_Suffix;
                begin
                   if Ends_With (Basename, Sep_Suffix.Value.Text) then
                      Match := True;
@@ -896,7 +1164,7 @@ package body GPR2.Project.Definition is
                               when Unit.Body_Kind =>
                                 Naming.Body_Suffix ("ada").Value.Text,
                               when S_Separate     =>
-                                Naming.Separate_Suffix ("ada").Value.Text);
+                                Naming.Separate_Suffix.Value.Text);
             begin
                if Length (Result) > Suffix'Length then
                   Delete
