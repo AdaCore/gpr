@@ -136,7 +136,7 @@ kb:
 
 build: ${LIBGPR2_TYPES:%=build-%}
 
-build-%:
+build-%: kb
 ifeq ($(COVERAGE),)
 	$(SOURCE_DIR);$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2)
