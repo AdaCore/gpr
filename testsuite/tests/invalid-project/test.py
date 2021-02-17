@@ -1,7 +1,7 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
 
 
 subprocess = BuilderAndRunner()
 
-subprocess.call(["gprls", "-Pp"])
-subprocess.call(["gprls", "-Pgprbuild_O629_023"])
+subprocess.call([GPRLS, "-Pp"])
+subprocess.call([GPRLS, "-Pgprbuild_O629_023"])

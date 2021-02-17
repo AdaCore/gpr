@@ -11,6 +11,12 @@ COV_TRACES_DIR = 'GNATCOV_TRACES_DIR'
 COV_LEVEL = 'GNATCOV_LEVEL'
 COV_IGNORED_SRC_FILES = 'GNATCOV_IGNORED_SRC_FILES'
 
+GPR = os.environ['GPR2_TOOLS_PREFIX'] if 'GPR2_TOOLS_PREFIX' in os.environ \
+      else 'gpr'
+GPRLS = GPR + 'ls'
+GPRCLEAN = GPR + 'clean'
+GPRINSTALL = GPR + 'install'
+
 
 class BuilderAndRunner(object):
     """

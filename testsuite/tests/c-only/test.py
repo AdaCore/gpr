@@ -1,3 +1,3 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN
 
-BuilderAndRunner().call(["gprclean", "prj.gpr"])
+BuilderAndRunner().call([GPRCLEAN, "prj.gpr"])

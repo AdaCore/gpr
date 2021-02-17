@@ -1,6 +1,6 @@
 import os
 
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRCLEAN
 
 # Set environment with project paths terminated by path separator ':' or ';'
 for var in ["GPR_PROJECT_PATH", "ADA_PROJECT_PATH"]:
@@ -8,7 +8,7 @@ for var in ["GPR_PROJECT_PATH", "ADA_PROJECT_PATH"]:
 
 # Check that gpr2-projects package is able to handle such environment without
 # raising an exception.
-p = BuilderAndRunner().run(['gprclean', '-Pp'])
+p = BuilderAndRunner().run([GPRCLEAN, '-Pp'])
 if p.status != 0:
     print('gprclean returned ' + str(p.status))
     print(p.err)

@@ -1,6 +1,6 @@
 import os
 
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
 
 bnr = BuilderAndRunner()
 OK = True
@@ -19,7 +19,7 @@ for line in open("run.out"):
     OK = False
     print('2:' + line)
 
-bnr.run(['gpr2install', '-p', '-q', '-Pmylib/mylib.gpr',
+bnr.run([GPRINSTALL, '-p', '-q', '-Pmylib/mylib.gpr',
          '--prefix=' + os.path.join(os.getcwd(), 'install')], output='run.out')
 
 for line in open("run.out"):

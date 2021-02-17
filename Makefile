@@ -49,14 +49,14 @@ ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
 	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
 GPRINSTALL=gprinstall
 
+# Whether to use gpr<name> or the alternate gpr2<name> tools names
+GPR2_TOOLS_PREFIX=gpr
+
 # Load current setup if any
 -include makefile.setup
 
 # Whether to enable coverage (empty for no, any other value for yes)
 COVERAGE=
-
-# Whether to use gpr<name> or the alternate gpr2<name> tools names
-GPR2_TOOLS_PREFIX=gpr
 
 # check for out-of-tree build
 ifeq ($(SOURCE_DIR),.)
@@ -223,6 +223,7 @@ setup: langkit/build
 	echo "TARGET=$(TARGET)" >> makefile.setup
 	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
 	echo "GPR2KBDIR=$(GPR2KBDIR)" >> makefile.setup
+	echo "GPR2_TOOLS_PREFIX=$(GPR2_TOOLS_PREFIX)" >> makefile.setup
 
 setup2: setup
 	echo "GPRINSTALL=.build/$(BUILD)/obj-tools/$(GPR2_TOOLS_PREFIX)install" >> makefile.setup

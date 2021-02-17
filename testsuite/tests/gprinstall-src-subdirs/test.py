@@ -2,19 +2,19 @@ import os
 import sys
 
 from e3.os.process import Run
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
 
 bnr = BuilderAndRunner()
 
 p = Run(['gprbuild', '-p', 'mylib/mylib.gpr'])
 
-p = bnr.run(['gpr2install', '-p',
+p = bnr.run([GPRINSTALL, '-p',
              '--prefix=' + os.path.join(os.getcwd(), 'inst'),
              'mylib/mylib.gpr'])
 
 p = Run(['gprbuild', '-p', '-f', '--src-subdirs=instr', 'mylib/mylib.gpr'])
 
-p = bnr.run(['gpr2install', '-p',
+p = bnr.run([GPRINSTALL, '-p',
              '--prefix=' + os.path.join(os.getcwd(), 'inst'),
              '--sources-subdir=include/mylib/instr',
              '--src-subdirs=instr',

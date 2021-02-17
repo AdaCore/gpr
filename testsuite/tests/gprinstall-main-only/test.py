@@ -2,7 +2,7 @@ import os
 
 from e3.env import Env
 from e3.fs import cp
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
 
 if Env().host.platform.endswith('windows'):
     exeext = '.exe'
@@ -10,7 +10,7 @@ if Env().host.platform.endswith('windows'):
 else:
     exeext = ""
 
-p = BuilderAndRunner().run(['gpr2install', '-p',
+p = BuilderAndRunner().run([GPRINSTALL, '-p',
                             '--prefix=' + os.path.join(os.getcwd(), 'inst'),
                             'inst.gpr'])
 

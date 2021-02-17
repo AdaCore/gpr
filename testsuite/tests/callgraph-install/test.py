@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL
 
 
 def run(args):
@@ -23,20 +23,20 @@ instl_prefix = "--prefix=" + os.getcwd() + "/instl"
 
 # Test a standard project
 subprocess.check_output("gprbuild -p -q prj.gpr", shell=True)
-run(["gpr2install", "-p", inst_prefix, "prj.gpr"])
+run([GPRINSTALL, "-p", inst_prefix, "prj.gpr"])
 check_exists("inst/lib/prj/pck.ci")
 check_exists('inst/lib/prj/pck2.ci')
 
-run(["gpr2install", "-p", "--uninstall", inst_prefix, "prj.gpr"])
+run([GPRINSTALL, "-p", "--uninstall", inst_prefix, "prj.gpr"])
 check_exists('inst/lib/prj/pck.ci', invert=True)
 check_exists('inst/lib/prj/pck2.ci', invert=True)
 
 # Test a library project
 subprocess.check_output("gprbuild -p -q lib.gpr", shell=True)
-run(["gpr2install", "-p", instl_prefix, "lib.gpr"])
+run([GPRINSTALL, "-p", instl_prefix, "lib.gpr"])
 check_exists('instl/lib/lib/pck.ci')
 check_exists('instl/lib/lib/pck2.ci')
 
-run(["gpr2install", "-p", "--uninstall", instl_prefix, "lib.gpr"])
+run([GPRINSTALL, "-p", "--uninstall", instl_prefix, "lib.gpr"])
 check_exists('instl/lib/lib/pck.ci', invert=True)
 check_exists('instl/lib/lib/pck2.ci', invert=True)

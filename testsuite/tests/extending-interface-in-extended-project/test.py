@@ -1,3 +1,3 @@
-from testsuite_support.builder_and_runner import BuilderAndRunner
+from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS
 
-BuilderAndRunner().call(["gprls", "-Pimp4/imp4"])
+BuilderAndRunner().call([GPRLS, "-Pimp4/imp4"])
