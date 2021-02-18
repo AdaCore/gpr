@@ -59,7 +59,9 @@ class BuildAndRunDriver(BaseDriver):
                 runtimes=["rtp"],
                 comp_is_cross=True,
             )
-            env["PATH"] = os.path.join(fake_dir, "bin") + os.path.pathsep + env["PATH"]
+            env["PATH"] = (os.path.join(fake_dir, "bin")
+                           + os.path.pathsep
+                           + os.environ.get("PATH"))
 
         # Build the program and run it
         self.builder_and_runner.build(
