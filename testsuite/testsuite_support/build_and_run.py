@@ -25,47 +25,46 @@ class BuildAndRunDriver(BaseDriver):
     (test.out file).
     """
 
-    # gpr2 test program builder handling coverage, and gpr2 test & tools
-    # launcher supporting coverage & valgrind mode.
-    builder_and_runner = None
-
     def set_up(self):
         super(BuildAndRunDriver, self).set_up()
 
-        project_file = self.test_env.get('project_file', None)
-        main = self.test_env.get('main', None)
+        project_file = self.test_env.get("project_file", None)
+        main = self.test_env.get("main", None)
 
         if not project_file or not isinstance(project_file, str):
             raise TestAbortWithError(
-                'test.yaml: please define a "project_file" string field')
+                'test.yaml: please define a "project_file" string field'
+            )
         if not main or not isinstance(main, str):
-            raise TestAbortWithError(
-                'test.yaml: please define a "main" string field')
+            raise TestAbortWithError('test.yaml: please define a "main" string field')
 
         self.project_file = project_file
         self.main_program = main
-        self.fake_ada_target = self.test_env.get('fake_ada_target', None)
+        self.fake_ada_target = self.test_env.get("fake_ada_target", None)
 
         self.builder_and_runner = BuilderAndRunner(self)
 
     def run(self):
-        env = dict(os.environ)
+        env = {}
 
         # If we are requested to run with a fake toolchain, set it up now
         if self.fake_ada_target:
-            fake_dir = self.working_dir('fake-ada')
+            fake_dir = self.working_dir("fake-ada")
             create_fake_ada_compiler(
-               self,
-               comp_dir=fake_dir, comp_target=self.fake_ada_target,
-               gnat_version="21.0w", gcc_version="8.4.3", runtimes=["rtp"],
-               comp_is_cross=True)
-            env['PATH'] = (
-                os.path.join(fake_dir, 'bin') + os.path.pathsep + env['PATH'])
+                self,
+                comp_dir=fake_dir,
+                comp_target=self.fake_ada_target,
+                gnat_version="21.0w",
+                gcc_version="8.4.3",
+                runtimes=["rtp"],
+                comp_is_cross=True,
+            )
+            env["PATH"] = os.path.join(fake_dir, "bin") + os.path.pathsep + env["PATH"]
 
         # Build the program and run it
-        self.builder_and_runner.build(project=self.project_file,
-                                      args=['-g1', '-q', '-p', '-bargs',
-                                            '-Es'],
-                                      env=env)
-        self.builder_and_runner.run([os.path.join('.', self.main_program)],
-                                    env=env)
+        self.builder_and_runner.build(
+            project=self.project_file,
+            args=["-g1", "-q", "-p", "-bargs", "-Es"],
+            env=env,
+        )
+        self.builder_and_runner.run([os.path.join(".", self.main_program)], env=env)
