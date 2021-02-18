@@ -1,0 +1,4 @@
+aggregate project Third_Level is
+   for External ("LEAF_VAR") use "value_from_third_level";
+   for Project_Files use ("leaf.gpr");
+end Third_Level;

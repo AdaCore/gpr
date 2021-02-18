@@ -1,6 +1,7 @@
 import e3.testsuite
 
-from testsuite_support.build_and_run import BuildAndRunDriver
+from .build_and_run import BuildAndRunDriver
+from .basic import BasicDriver
 from testsuite_support.gnatcov import GNATcov
 from testsuite_support.python_script import PythonScriptDriver
 
@@ -11,6 +12,7 @@ class Testsuite(e3.testsuite.Testsuite):
     test_driver_map = {
         'build_and_run': BuildAndRunDriver,
         'python_script': PythonScriptDriver,
+        'basic': BasicDriver
     }
 
     def add_options(self, parser):

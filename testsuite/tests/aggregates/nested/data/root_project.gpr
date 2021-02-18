@@ -1,0 +1,4 @@
+aggregate project Root_Project is
+   for External ("LEAF_VAR") use "value_from_root";
+   for Project_Files use ("second_level.gpr");
+end Root_Project;

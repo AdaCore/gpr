@@ -1,0 +1,2 @@
+description: Ensure nested aggregates are parsed correctly
+driver: basic
