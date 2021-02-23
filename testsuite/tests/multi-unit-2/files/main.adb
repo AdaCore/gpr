@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2021, AdaCore                     --
+--                     Copyright (C) 2019-2020, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,8 +16,14 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr2";
 
-project P is
-    for Main use ("main.adb");
-end P;
+with Pkg1;
+with Pkg2;
+
+
+procedure Main is
+begin
+   Pkg1.Sep;
+   Pkg2.Sep;
+
+end Main;

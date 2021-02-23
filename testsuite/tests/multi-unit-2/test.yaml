@@ -1,5 +1,3 @@
 description:
     R604-015 multi-unit test
-driver: build_and_run
-project_file: p
-main: main
+driver: python_script

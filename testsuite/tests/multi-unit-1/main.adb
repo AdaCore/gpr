@@ -31,8 +31,6 @@ with GPR2.Source;
 
 with GPR2.Source_Info.Parser.Ada_Language;
 
-with U;
-
 procedure Main is
    use Ada;
 
@@ -86,9 +84,8 @@ procedure Main is
 
 
 begin
-   U.V;
 
-   Tree.Load (Filename => Project.Create ("multi.gpr"),
+   Tree.Load (Filename => Project.Create ("files/multi.gpr"),
               Context  => Ctx);
 
    for S of Tree.Root_Project.Sources loop

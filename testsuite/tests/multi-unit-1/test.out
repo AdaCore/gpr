@@ -1,11 +1,10 @@
-U.V.
 main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
     unit name    = Main
     kind         = S_BODY_ONLY
-    withed units = { ada ada.directories ada.exceptions ada.text_io gpr2 gpr2.context gpr2.path_name gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source gpr2.source_info gpr2.source_info.parser gpr2.source_info.parser.ada_language u }
+    withed units = { ada pkg u }
     object file  = main.o
     deps file    = main.ali
 pkg.adb
@@ -51,7 +50,7 @@ main.adb
   - compilation unit at 1
     unit name    = Main
     kind         = S_BODY_ONLY
-    withed units = { Ada Ada.Directories Ada.Exceptions Ada.Text_IO GPR2 GPR2.Context GPR2.Path_Name GPR2.Project GPR2.Project.Tree GPR2.Project.Source GPR2.Project.Source.Artifact GPR2.Project.Source.Set GPR2.Source GPR2.Source_Info GPR2.Source_Info.Parser GPR2.Source_Info.Parser.Ada_Language U }
+    withed units = { U Ada Pkg }
     object file  = main.o
     deps file    = main.ali
 pkg.adb

@@ -29,9 +29,6 @@ with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Source;
 
-with Pkg1;
-with Pkg2;
-
 with GPR2.Source_Info.Parser.Ada_Language;
 
 procedure Main is
@@ -81,12 +78,9 @@ procedure Main is
    end Print;
 
 begin
-   Pkg1.Sep;
-   Pkg2.Sep;
-
    --  Source_Info.Parser.Ada_Language.Unregister;
 
-   Tree.Load (Filename => Project.Create ("p.gpr"),
+   Tree.Load (Filename => Project.Create ("files/p.gpr"),
               Context  => Ctx);
 
    for S of Tree.Root_Project.Sources loop

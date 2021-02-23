@@ -20,4 +20,17 @@ with "gpr2";
 
 project P is
     for Main use ("main.adb");
+
+    package Naming is
+       for Implementation ("Pkg1.Sep") use "sub.adb" at 1;
+       for Implementation ("Pkg2.Sep") use "sub.adb" at 2;
+       for Spec ("U1") use "few_units.ada" at 1;
+       for Spec ("U2") use "few_units.ada" at 3;
+       for Spec ("U3") use "few_units.ada" at 5;
+       for Spec ("U4") use "few_units.ada" at 7;
+       for Body ("U1") use "few_units.ada" at 2;
+       for Body ("U2") use "few_units.ada" at 4;
+       for Body ("U3") use "few_units.ada" at 6;
+       for Body ("U3.P") use "few_units.ada" at 8;
+    end Naming;
 end P;

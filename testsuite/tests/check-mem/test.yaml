@@ -1,4 +1,4 @@
 description: Check memory leaks
 driver: python_script
 control:
-- [SKIP, "env.valgrind", "Too long when run from valgrind"]
+- [XFAIL, "env.valgrind or env.gnatcov", "Too long when run from valgrind, gnatcov not releasing memory"]
