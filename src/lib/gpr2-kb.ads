@@ -84,9 +84,9 @@ package GPR2.KB is
 
    function Default_Location return GPR2.Path_Name.Object
      with Post => Default_Location'Result.Is_Defined;
-   --  Returns the default location of the knowledge database. This is based on
-   --  the location of gprconfig in path. If gprconfig is not found, raises
-   --  Default_Location_Error.
+   --  Returns the default location of the knowledge database. This is based
+   --  on the location of gprbuild in path. If the default location cannot
+   --  be found or doesn't exist, raises Default_Location_Error.
 
    function Create
      (Flags      : Parsing_Flags := Targetset_Only_Flags;

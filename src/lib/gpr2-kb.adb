@@ -969,23 +969,27 @@ package body GPR2.KB is
       use GNATCOLL.VFS;
       use GNATCOLL.VFS_Utils;
 
-      GPRconfig : Filesystem_String_Access :=
-                    Locate_Exec_On_Path ("gprconfig");
+      GPRbuild : Filesystem_String_Access :=
+                    Locate_Exec_On_Path ("gprbuild");
       Dir       : Virtual_File;
    begin
-      if GPRconfig = null then
-         return GPR2.Path_Name.Undefined;
+      if GPRbuild = null then
+         raise Default_Location_Error;
       end if;
 
-      Dir := Get_Parent (Create (Dir_Name (GPRconfig.all)));
+      Dir := Get_Parent (Create (Dir_Name (GPRbuild.all)));
 
-      Free (GPRconfig);
+      Free (GPRbuild);
 
       if Dir = No_File then
          raise Default_Location_Error;
       end if;
 
       Dir := Dir.Join ("share").Join ("gprconfig");
+
+      if not OS_Lib.Is_Directory (Dir.Display_Full_Name) then
+         raise Default_Location_Error;
+      end if;
 
       return GPR2.Path_Name.Create_Directory
                (Filename_Type (Dir.Display_Full_Name));
