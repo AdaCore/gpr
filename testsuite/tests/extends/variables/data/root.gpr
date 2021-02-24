@@ -1,0 +1,6 @@
+with "b.gpr";
+
+project Root is
+   B_Variable1 := B.Variable1;
+   B_Variable2 := B.Variable2;
+end Root;

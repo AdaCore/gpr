@@ -1,0 +1,4 @@
+project A is
+   Variable1 := "original value1";
+   Variable2 := "original value2";
+end A;

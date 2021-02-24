@@ -22,6 +22,7 @@ with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Project.Variable;
 with GPR2.Project.View;
+with GPR2.Project.Name_Values;
 with Test_Assert;
 
 package body Test_GPR is
@@ -47,6 +48,7 @@ package body Test_GPR is
       V : GPR2.Project.View.Object;
       Context : GPR2.Context.Context_Kind := GPR2.Context.Root;
       use all type GPR2.Context.Context_Kind;
+      use all type GPR2.Project.Name_Values.Value_Kind;
    begin
       if Aggregate_Context then
          Context := GPR2.Context.Aggregate;
@@ -60,16 +62,23 @@ package body Test_GPR is
       A.Assert
          (Tree.Has_View_For
             (GPR2.Optional_Name_Type (View), Context),
-         "cannot find view " & View);
+         "tree should have view " & View);
       V := Tree.View_For (GPR2.Optional_Name_Type (View), Context);
       A.Assert (V.Has_Variables (Name => GPR2.Optional_Name_Type (Variable)),
-                "view " & View & " does not have any variables");
+                "view " & View & " should have variable " &
+                Variable & " defined");
 
       declare
          Var : GPR2.Project.Variable.Object;
       begin
          Var := V.Variable (GPR2.Optional_Name_Type (Variable));
-         A.Assert (Var.Value.Text, Value);
+         A.Assert (Var.Is_Defined, "expect the variable to be defined");
+         IO.Put_Line (Variable & " (image): " & Var.Image);
+         if Var.Kind = Single then
+            A.Assert (Var.Value.Text, Value);
+         else
+            A.Assert (False, "variable " & Variable & " is of type list");
+         end if;
       end;
    end Assert_Variable;
 
@@ -122,7 +131,7 @@ package body Test_GPR is
       IO.Put_Line ("messages during project loading " & Filename);
       Error_Message_Count := Put_Tree_Messages (Tree);
       A.Assert (Error_Message_Count, 0,
-                "expect at least 0 error messages");
+                "expect no error messages");
    end Load_With_No_Errors;
 
 end Test_GPR;

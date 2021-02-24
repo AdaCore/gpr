@@ -1,0 +1,3 @@
+project B extends "a.gpr" is
+    Variable1 := "extended value1";
+end B;
