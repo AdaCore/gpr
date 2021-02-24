@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -61,8 +61,7 @@ package GPR2.Project.Configuration is
    --  A configuration description, for a language, a version, specific
    --  runtime, etc.
 
-   type Description_Set is array (Positive range <>) of Description
-     with Dynamic_Predicate => Description_Set'Length > 0;
+   type Description_Set is array (Positive range <>) of Description;
    --  A set of description
 
    Default_Description : constant Description_Set;
@@ -97,7 +96,8 @@ package GPR2.Project.Configuration is
       Target     : Name_Type;
       Project    : GPR2.Path_Name.Object;
       Base       : in out GPR2.KB.Object)
-      return Object;
+      return Object
+   with Pre => Settings'Length > 0;
    --  Creates a configuration based on the settings requested.
    --  Project parameter need to log error if happen.
 

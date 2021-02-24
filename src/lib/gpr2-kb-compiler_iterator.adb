@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2020, AdaCore                        --
+--                    Copyright (C) 2020-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -306,8 +306,7 @@ package body GPR2.KB.Compiler_Iterator is
       Extra_Dirs : String := "")
    is
       use GNATCOLL.Traces;
-      Selected_Targets_Set : constant Targets_Set_Id :=
-                               Base.Query_Targets_Set (On_Target);
+      Selected_Targets_Set : Targets_Set_Id;
 
       Dirs : GPR2.Containers.Value_List;
       Map  : GPR2.Containers.Value_Set;
@@ -429,6 +428,8 @@ package body GPR2.KB.Compiler_Iterator is
       if Extra_Dirs /= "" then
          Process_Path (Extra_Dirs, 'E', Prepend_To_List => True);
       end if;
+
+      Get_Targets_Set (Base, String (On_Target), Selected_Targets_Set);
 
       Dir := First (Dirs);
       while Has_Element (Dir) loop

@@ -181,12 +181,6 @@ package body GPR2.KB is
      (Compilers : in out Compiler_Lists.List;
       Cursor    : Compiler_Lists.Cursor;
       Selected  : Boolean);
-   procedure Set_Selection
-     (Comp     : in out Compiler;
-      Selected : Boolean);
-   --  Toggle the selection status of a compiler in the list.
-   --  This does not check that the selection is consistent though (use
-   --  Is_Supported_Config to do this test)
 
    function Match
      (Filter    : Compilers_Filter_Lists.List;
@@ -233,6 +227,17 @@ package body GPR2.KB is
    --  Merge the contents of Config into Packages, so that each attributes ends
    --  up in the right package, and the packages are not duplicated.
 
+   procedure Update_With_Compiler_Runtime
+     (Self : in out Object;
+      Comp : Compiler);
+   --  Update the knowledge base with additional runtime specific chunks
+   --  if a given compiler has any.
+
+   function Create_Filter
+     (Self  : Object;
+      Descr : Project.Configuration.Description) return Compiler;
+   --  Transform Description into Compiler object
+
    ---------
    -- Add --
    ---------
@@ -262,6 +267,215 @@ package body GPR2.KB is
    begin
       Parsing.Add (Self, Flags, Content);
    end Add;
+
+   -------------------
+   -- All_Compilers --
+   -------------------
+
+   function All_Compilers
+     (Self     : in out Object;
+      Settings : Project.Configuration.Description_Set;
+      Target   : Name_Type;
+      Messages : in out GPR2.Log.Object) return Compiler_Array
+   is
+      use Compiler_Lists;
+      use Ada.Containers;
+      use KB.Compiler_Iterator;
+      use Project.Configuration;
+
+      Compilers : Compiler_Lists.List;
+      Filters   : Compiler_Lists.List;
+
+      type Boolean_Array  is array (Count_Type range <>) of Boolean;
+
+      type All_Iterator (Count : Count_Type) is new
+        GPR2.KB.Compiler_Iterator.Object with record
+         Filter_Matched : Boolean_Array (1 .. Count) := (others => False);
+         Filters        : Compiler_Lists.List;
+         Compilers      : Compiler_Lists.List;
+      end record;
+
+      overriding
+      procedure Callback
+        (Iterator          : in out All_Iterator;
+         Base              : in out Object;
+         Comp              : Compiler;
+         Runtime_Specified : Boolean;
+         From_Extra_Dir    : Boolean;
+         Continue          : out Boolean);
+      --  Search all compilers on path, preselecting the first one matching
+      --  each of the filters.
+
+      function Display_Before (Comp1, Comp2 : Compiler) return Boolean;
+      --  Whether Comp1 should be displayed before Comp2 when displaying lists
+      --  of compilers. This ensures that similar languages are grouped,
+      --  among othe things.
+
+      package Compiler_Sort is
+        new Compiler_Lists.Generic_Sorting (Display_Before);
+
+      --------------
+      -- Callback --
+      --------------
+
+      overriding
+      procedure Callback
+        (Iterator          : in out All_Iterator;
+         Base              : in out Object;
+         Comp              : Compiler;
+         Runtime_Specified : Boolean;
+         From_Extra_Dir    : Boolean;
+         Continue          : out Boolean)
+      is
+         New_Comp : Compiler := Comp;
+         C        : Compiler_Lists.Cursor;
+         Index    : Count_Type := 1;
+      begin
+         --  Do nothing if a runtime needs to be specified, as this is only for
+         --  interactive use.
+
+         if not Runtime_Specified then
+            if Iterator.Filter_Matched /=
+              (Iterator.Filter_Matched'Range => True)
+            then
+               C := First (Iterator.Filters);
+               while Has_Element (C) loop
+                  if not Iterator.Filter_Matched (Index)
+                    and then Filter_Match
+                      (Base, Comp => Comp, Filter => Element (C))
+                  then
+                     Set_Selection (New_Comp, True);
+                     Iterator.Filter_Matched (Index) := True;
+                     exit;
+                  end if;
+
+                  Index := Index + 1;
+                  Next (C);
+               end loop;
+            end if;
+
+            --  Ignore compilers from extra directories, unless they have been
+            --  selected because of a --config argument
+
+            if Is_Selected (New_Comp) or else not From_Extra_Dir then
+               GNATCOLL.Traces.Trace
+                 (Main_Trace,
+                  "Adding compiler to interactive menu "
+                  & To_String (Comp)
+                  & " selected=" & Is_Selected (New_Comp)'Img);
+               Append (Iterator.Compilers, New_Comp);
+            end if;
+         end if;
+
+         Continue := True;
+      end Callback;
+
+      --------------------
+      -- Display_Before --
+      --------------------
+
+      function Display_Before (Comp1, Comp2 : Compiler) return Boolean is
+
+         type Compare_Type is (Before, Equal, After);
+         function Compare
+           (Name1, Name2 : Unbounded_String) return Compare_Type;
+         --  Compare alphabetically two strings
+
+         -------------
+         -- Compare --
+         -------------
+
+         function Compare
+           (Name1, Name2 : Unbounded_String) return Compare_Type is
+         begin
+            if Name1 = Null_Unbounded_String then
+               if Name2 = Null_Unbounded_String then
+                  return Equal;
+               else
+                  return Before;
+               end if;
+
+            elsif Name2 = Null_Unbounded_String then
+               return After;
+            end if;
+
+            if Name1 < Name2 then
+               return Before;
+            elsif Name1 > Name2 then
+               return After;
+            else
+               return Equal;
+            end if;
+
+         end Compare;
+      begin
+         case Compare (Comp1.Language_LC, Comp2.Language_LC) is
+         when Before =>
+            return True;
+
+         when After =>
+            return False;
+
+         when Equal =>
+            if Comp1.Path_Order < Comp2.Path_Order then
+               return True;
+
+            elsif Comp2.Path_Order < Comp1.Path_Order then
+               return False;
+
+            else
+               --  If the "default" attribute was specified for <runtime>,
+               --  this only impacts the batch mode. We still want to sort
+               --  the runtimes alphabetically in the interactive display.
+
+               case Compare (Comp1.Runtime, Comp2.Runtime) is
+                  when Before =>
+                     return True;
+                  when After =>
+                     return False;
+                  when Equal =>
+                     return Compare (Comp1.Version, Comp2.Version) = Before;
+               end case;
+            end if;
+         end case;
+      end Display_Before;
+
+      Iter : All_Iterator (Settings'Length);
+   begin
+      for Setting of Settings loop
+         if Is_Language_With_No_Compiler
+           (Self, Language (Setting))
+         then
+            Compilers.Append (Create_Filter (Self, Setting));
+         else
+            Filters.Append (Create_Filter (Self, Setting));
+         end if;
+      end loop;
+
+      Iter.Filters := Filters;
+      Foreach_In_Path
+        (Self       => Iter,
+         Base       => Self,
+         On_Target  => Target,
+         Extra_Dirs => Extra_Dirs_From_Filters (Filters));
+
+      Splice (Target => Compilers,
+              Before => Compiler_Lists.No_Element,
+              Source => Iter.Compilers);
+
+      if Compilers.Is_Empty then
+         return No_Compilers;
+      end if;
+
+      Compiler_Sort.Sort (Compilers);
+
+      return Res : Compiler_Array (1 .. Integer (Compilers.Length)) do
+         for Idx in Res'Range loop
+            Res (Idx) := Compilers.First_Element;
+            Compilers.Delete_First;
+         end loop;
+      end return;
+   end All_Compilers;
 
    -------------------------------------
    -- Complete_Command_Line_Compilers --
@@ -685,117 +899,12 @@ package body GPR2.KB is
       Fallback : Boolean := False)
       return Ada.Strings.Unbounded.Unbounded_String
    is
-      use GNATCOLL.Traces;
       use Project.Configuration;
 
       Filters              : Compiler_Lists.List;
       Compilers            : Compiler_Lists.List;
       Selected_Target      : Unbounded_String;
       Runtime_Specific_KB  : Object;
-
-      function Create_Filter
-        (Descr : Project.Configuration.Description) return Compiler;
-      --  Transform Description into Compiler object
-
-      -------------------
-      -- Create_Filter --
-      -------------------
-
-      function Create_Filter
-        (Descr : Project.Configuration.Description) return Compiler
-      is
-         Result : Compiler;
-
-         LC            : constant String :=
-                           To_Lower (Language (Descr));
-         Exec_Suffix   : OS_Lib.String_Access :=
-                           OS_Lib.Get_Executable_Suffix;
-
-         function Legacy_Name_Support
-           (Name : String; Lang : String) return String;
-         --  For Ada, gnatmake was previously used to detect a GNAT compiler.
-         --  However, as gnatmake may not be present in all the GNAT
-         --  distributions, gnatls is now used. For upward compatibility,
-         --  replace gnatmake with gnatls, so that a GNAT compiler may
-         --  be decteted.
-
-         -------------------------
-         -- Legacy_Name_Support --
-         -------------------------
-
-         function Legacy_Name_Support
-           (Name : String; Lang : String) return String
-         is
-            use Ada.Strings.Fixed;
-
-            Idx : constant Natural := Index (Name, "gnatmake");
-         begin
-            if Lang = "ada" and then Idx >= Name'First then
-               return Replace_Slice (Name, Idx, Idx + 7, "gnatls");
-            else
-               return Name;
-            end if;
-         end Legacy_Name_Support;
-
-      begin
-         Result.Language_Case :=
-           To_Unbounded_String (String (Language (Descr)));
-         Result.Language_LC := To_Unbounded_String (LC);
-
-         if Is_Language_With_No_Compiler (Self, Name_Type (LC)) then
-            Trace (Main_Trace, "Language " & LC & " requires no compiler");
-            Result.Complete := True;
-            Result.Selected := True;
-            Result.Targets_Set := All_Target_Sets;
-            return Result;
-         end if;
-
-         Result.Version := To_Unbounded_String (String (Version (Descr)));
-         Result.Runtime := To_Unbounded_String (String (Runtime (Descr)));
-
-         if Result.Runtime /= Null_Unbounded_String
-           and then GNAT.OS_Lib.Is_Absolute_Path (To_String (Result.Runtime))
-         then
-            --  If the runtime is a full path, set Runtime and
-            --  Runtime_Dir to the same value.
-            Result.Runtime_Dir := Result.Runtime;
-         end if;
-
-         if Path (Descr) /= No_Filename then
-            declare
-               Compiler_Path : constant Filename_Type := Path (Descr);
-            begin
-
-               if Compiler_Path (Compiler_Path'Last) =
-                 OS_Lib.Directory_Separator
-               then
-                  Result.Path := GPR2.Path_Name.Create_Directory
-                    (Compiler_Path);
-               else
-                  Result.Path := GPR2.Path_Name.Create_Directory
-                    (Compiler_Path & OS_Lib.Directory_Separator);
-               end if;
-
-            end;
-         end if;
-
-         if Name (Descr) /= No_Name then
-            Result.Name :=
-              To_Unbounded_String
-                (GNAT.Directory_Operations.Base_Name
-                   (Legacy_Name_Support
-                      (String (Name (Descr)), LC),
-                    Exec_Suffix.all));
-         end if;
-
-         GNAT.OS_Lib.Free (Exec_Suffix);
-
-         Result.Complete := False;
-
-         Trace (Main_Trace, "Language " & LC & " requires a compiler");
-
-         return Result;
-      end Create_Filter;
 
       Configuration_String : Unbounded_String;
 
@@ -804,9 +913,9 @@ package body GPR2.KB is
          if Is_Language_With_No_Compiler
            (Self, Language (Setting))
          then
-            Compilers.Append (Create_Filter (Setting));
+            Compilers.Append (Create_Filter (Self, Setting));
          else
-            Filters.Append (Create_Filter (Setting));
+            Filters.Append (Create_Filter (Self, Setting));
          end if;
       end loop;
 
@@ -830,48 +939,46 @@ package body GPR2.KB is
       Runtime_Specific_KB := Self;
 
       for Comp of Compilers loop
-         if Comp.Selected
-           and then Comp.Runtime_Dir /= Null_Unbounded_String
-         then
-            declare
-               RTS  : constant String := To_String (Comp.Runtime_Dir);
-               Last : Natural := RTS'Last;
-            begin
-               if RTS (Last) = '/' or else
-                 RTS (Last) = GNAT.OS_Lib.Directory_Separator
-               then
-                  Last := Last - 1;
-               end if;
-
-               if Last - RTS'First > 6 and then
-                 RTS (Last - 5 .. Last) = "adalib" and then
-                 (RTS (Last - 6) = GNAT.OS_Lib.Directory_Separator or else
-                       (RTS (Last - 6) = '/'))
-               then
-                  Last := Last - 6;
-               else
-                  Last := RTS'Last;
-               end if;
-
-               if GNAT.OS_Lib.Is_Directory (RTS (RTS'First .. Last)) then
-                  Trace
-                    (Main_Trace,
-                     "Parsing runtime-specific KB chunks at "
-                     & RTS (RTS'First .. Last));
-                  Runtime_Specific_KB.Add
-                    (Default_Flags,
-                     GPR2.Path_Name.Create_Directory
-                       (Filename_Type (RTS (RTS'First .. Last))));
-               end if;
-
-            end;
-         end if;
+         Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp);
       end loop;
 
       Configuration_String := Runtime_Specific_KB.Generate_Configuration
         (Compilers, To_String (Selected_Target), Messages);
 
       return Configuration_String;
+   end Configuration;
+
+   -------------------
+   -- Configuration --
+   -------------------
+
+   function Configuration
+     (Self      : in out Object;
+      Selection : Compiler_Array;
+      Target    : Name_Type;
+      Messages  : in out GPR2.Log.Object)
+      return Ada.Strings.Unbounded.Unbounded_String
+   is
+      Configuration_String : Unbounded_String;
+      Runtime_Specific_KB  : Object;
+      Compilers            : Compiler_Lists.List;
+   begin
+
+      --  Runtime dir may have additional knowledge base chunks specific to
+      --  given runtime. We do not want to include them in Self, otherwise
+      --  it becomes unusable for other runtimes/compilers.
+      Runtime_Specific_KB := Self;
+
+      for Comp of Selection loop
+         Update_With_Compiler_Runtime (Runtime_Specific_KB, Comp);
+         Compilers.Append (Comp);
+      end loop;
+
+      Configuration_String := Runtime_Specific_KB.Generate_Configuration
+        (Compilers, String (Target), Messages);
+
+      return Configuration_String;
+
    end Configuration;
 
    ------------
@@ -961,6 +1068,110 @@ package body GPR2.KB is
       return Result;
    end Create_Empty;
 
+   -------------------
+   -- Create_Filter --
+   -------------------
+
+   function Create_Filter
+     (Self  : Object;
+      Descr : Project.Configuration.Description) return Compiler
+   is
+      use GNATCOLL.Traces;
+      use Project.Configuration;
+
+      Result : Compiler;
+
+      LC            : constant String :=
+                        To_Lower (Language (Descr));
+      Exec_Suffix   : OS_Lib.String_Access :=
+                        OS_Lib.Get_Executable_Suffix;
+
+      function Legacy_Name_Support
+        (Name : String; Lang : String) return String;
+      --  For Ada, gnatmake was previously used to detect a GNAT compiler.
+      --  However, as gnatmake may not be present in all the GNAT
+      --  distributions, gnatls is now used. For upward compatibility,
+      --  replace gnatmake with gnatls, so that a GNAT compiler may
+      --  be detected.
+
+      -------------------------
+      -- Legacy_Name_Support --
+      -------------------------
+
+      function Legacy_Name_Support
+        (Name : String; Lang : String) return String
+      is
+         use Ada.Strings.Fixed;
+
+         Idx : constant Natural := Index (Name, "gnatmake");
+      begin
+         if Lang = "ada" and then Idx >= Name'First then
+            return Replace_Slice (Name, Idx, Idx + 7, "gnatls");
+         else
+            return Name;
+         end if;
+      end Legacy_Name_Support;
+
+   begin
+      Result.Language_Case :=
+        To_Unbounded_String (String (Language (Descr)));
+      Result.Language_LC := To_Unbounded_String (LC);
+
+      if Is_Language_With_No_Compiler (Self, Name_Type (LC)) then
+         Trace (Main_Trace, "Language " & LC & " requires no compiler");
+         Result.Complete := True;
+         Result.Selected := True;
+         Result.Targets_Set := All_Target_Sets;
+         return Result;
+      end if;
+
+      Result.Version := To_Unbounded_String (String (Version (Descr)));
+      Result.Runtime := To_Unbounded_String (String (Runtime (Descr)));
+
+      if Result.Runtime /= Null_Unbounded_String
+        and then GNAT.OS_Lib.Is_Absolute_Path (To_String (Result.Runtime))
+      then
+         --  If the runtime is a full path, set Runtime and
+         --  Runtime_Dir to the same value.
+         Result.Runtime_Dir := Result.Runtime;
+      end if;
+
+      if Path (Descr) /= No_Filename then
+         declare
+            Compiler_Path : constant Filename_Type := Path (Descr);
+         begin
+
+            if Compiler_Path (Compiler_Path'Last) =
+              OS_Lib.Directory_Separator
+            then
+               Result.Path := GPR2.Path_Name.Create_Directory
+                 (Compiler_Path);
+            else
+               Result.Path := GPR2.Path_Name.Create_Directory
+                 (Compiler_Path & OS_Lib.Directory_Separator);
+            end if;
+
+         end;
+      end if;
+
+      if Name (Descr) /= No_Name then
+         Result.Name :=
+           To_Unbounded_String
+             (GNAT.Directory_Operations.Base_Name
+                (Legacy_Name_Support
+                   (String (Name (Descr)), LC),
+                 Exec_Suffix.all));
+      end if;
+
+      GNAT.OS_Lib.Free (Exec_Suffix);
+
+      Result.Complete := False;
+
+      Trace (Main_Trace, "Language " & LC & " requires a compiler");
+
+      return Result;
+   end Create_Filter;
+
    --------------------------------------
    -- Default_Knowledge_Base_Directory --
    --------------------------------------
@@ -1048,6 +1259,80 @@ package body GPR2.KB is
       Result.Append (N_Target);
       return Result;
    end Fallback_List;
+
+   ---------------------------
+   -- Filter_Compilers_List --
+   ---------------------------
+
+   procedure Filter_Compilers_List
+     (Self       : Object;
+      Compilers  : in out Compiler_Array;
+      For_Target : Name_Type)
+   is
+      use GNATCOLL.Traces;
+
+      For_Target_Set : constant Targets_Set_Id :=
+                         Self.Query_Targets_Set (For_Target);
+      Check_List     : Compiler_Lists.List;
+   begin
+      Increase_Indent (Main_Trace, "Filtering the list of compilers");
+
+      for Idx in Compilers'Range loop
+
+         if not Compilers (Idx).Selected then
+
+            if For_Target_Set /= All_Target_Sets
+              and then Compilers (Idx).Targets_Set /= All_Target_Sets
+              and then Compilers (Idx).Targets_Set /= For_Target_Set
+            then
+               Compilers (Idx).Selectable := False;
+               Trace
+                 (Main_Trace,
+                  "Incompatible target for: " & To_String (Compilers (Idx)));
+               goto Next_Compiler;
+            end if;
+
+            for Other_Compiler of Compilers loop
+               if Other_Compiler.Language_LC = Compilers (Idx).Language_LC
+                 and then Other_Compiler.Selected
+               then
+                  Compilers (Idx).Selectable := False;
+                  Trace
+                    (Main_Trace,
+                     "Already selected language for: "
+                     & To_String (Compilers (Idx)));
+                  goto Next_Compiler;
+               end if;
+            end loop;
+
+            --  We need to check if the resulting selection would
+            --  lead to a supported configuration.
+
+            Compilers (Idx).Selected := True;
+            for Comp of Compilers loop
+               Check_List.Append (Comp);
+            end loop;
+            Compilers (Idx).Selected := False;
+
+            if not Is_Supported_Config (Self, Check_List) then
+               Compilers (Idx).Selectable := False;
+               Trace
+                 (Main_Trace,
+                  "Unsupported config for: "
+                  & To_String (Compilers (Idx)));
+               goto Next_Compiler;
+            end if;
+
+            Compilers (Idx).Selectable := True;
+
+         end if;
+
+         <<Next_Compiler>>
+         Check_List.Clear;
+      end loop;
+
+      Decrease_Indent (Main_Trace);
+   end Filter_Compilers_List;
 
    ------------------
    -- Filter_Match --
@@ -1768,6 +2053,28 @@ package body GPR2.KB is
       end loop;
       return True;
    end Is_Supported_Config;
+
+   --------------------------
+   -- Known_Compiler_Names --
+   --------------------------
+
+   function Known_Compiler_Names (Self : Object) return Unbounded_String is
+      use Compiler_Description_Maps;
+
+      Result : Unbounded_String;
+      Cur    : Compiler_Description_Maps.Cursor := Self.Compilers.First;
+   begin
+      while Has_Element (Cur) loop
+         if Result /= Null_Unbounded_String then
+            Append (Result, ",");
+         end if;
+         Append (Result, String (Key (Cur)));
+
+         Next (Cur);
+      end loop;
+
+      return Result;
+   end Known_Compiler_Names;
 
    -----------
    -- Match --
@@ -2576,7 +2883,7 @@ package body GPR2.KB is
 
       Tgt : constant String := String (Target);
    begin
-      if Target = "" then
+      if Target = "all" then
          return All_Target_Sets;
       end if;
 
@@ -2612,6 +2919,39 @@ package body GPR2.KB is
    begin
       null;
    end Release;
+
+   -------------
+   -- Runtime --
+   -------------
+
+   function Runtime
+     (Comp      : Compiler;
+      Alternate : Boolean := False) return Optional_Name_Type is
+   begin
+      if Alternate then
+         if Comp.Runtime /= Null_Unbounded_String then
+            if Comp.Alt_Runtime /= Null_Unbounded_String then
+               return Optional_Name_Type
+                 (To_String (Comp.Runtime)
+                  & "["
+                  & To_String (Comp.Alt_Runtime)
+                  & "]");
+            else
+               return Optional_Name_Type (To_String (Comp.Runtime));
+            end if;
+         else
+            return No_Name;
+         end if;
+      end if;
+
+      if Comp.Alt_Runtime /= Null_Unbounded_String then
+         return Optional_Name_Type (To_String (Comp.Alt_Runtime));
+      elsif Comp.Runtime /= Null_Unbounded_String then
+         return Optional_Name_Type (To_String (Comp.Runtime));
+      else
+         return No_Name;
+      end if;
+   end Runtime;
 
    -------------------
    -- Set_Selection --
@@ -2891,5 +3231,50 @@ package body GPR2.KB is
       end loop;
       return To_String (Result);
    end To_String;
+
+   ----------------------------------
+   -- Update_With_Compiler_Runtime --
+   ----------------------------------
+
+   procedure Update_With_Compiler_Runtime
+     (Self : in out Object; Comp : Compiler) is
+   begin
+      if Comp.Selected
+        and then Comp.Runtime_Dir /= Null_Unbounded_String
+      then
+         declare
+            RTS  : constant String := To_String (Comp.Runtime_Dir);
+            Last : Natural := RTS'Last;
+         begin
+            if RTS (Last) = '/' or else
+              RTS (Last) = GNAT.OS_Lib.Directory_Separator
+            then
+               Last := Last - 1;
+            end if;
+
+            if Last - RTS'First > 6 and then
+              RTS (Last - 5 .. Last) = "adalib" and then
+              (RTS (Last - 6) = GNAT.OS_Lib.Directory_Separator or else
+                    (RTS (Last - 6) = '/'))
+            then
+               Last := Last - 6;
+            else
+               Last := RTS'Last;
+            end if;
+
+            if GNAT.OS_Lib.Is_Directory (RTS (RTS'First .. Last)) then
+               GNATCOLL.Traces.Trace
+                 (Main_Trace,
+                  "Parsing runtime-specific KB chunks at "
+                  & RTS (RTS'First .. Last));
+               Self.Add
+                 (Default_Flags,
+                  GPR2.Path_Name.Create_Directory
+                    (Filename_Type (RTS (RTS'First .. Last))));
+            end if;
+
+         end;
+      end if;
+   end Update_With_Compiler_Runtime;
 
 end GPR2.KB;

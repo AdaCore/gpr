@@ -207,10 +207,100 @@ package GPR2.KB is
    --  Gets the list of fallback targets for a given target. The list will
    --  contain at least the given target itself.
 
+   -----------------------
+   -- Interactive usage --
+   -----------------------
+
    type Compiler is private;
    --  Describes one of the compilers found on the PATH
 
    No_Compiler : constant Compiler;
+
+   type Compiler_Array is array (Positive range <>) of Compiler;
+   --  List of compilers
+
+   No_Compilers : constant Compiler_Array;
+
+   procedure Set_Selection  (Comp : in out Compiler; Selected : Boolean);
+   --  Toggles the selection status of a compiler in the list
+
+   function Is_Selected (Comp : Compiler) return Boolean;
+   --  Returns the selection status of the compiler
+
+   function Is_Selectable (Comp : Compiler) return Boolean;
+   --  Returns wether compiler can be selected with the already existing
+   --  selection.
+
+   function Requires_Compiler (Comp : Compiler) return Boolean;
+   --  Returns wether Compiler is a real compiler or a placeholder
+   --  for a language that does not require a compiler
+
+   function Target (Comp : Compiler) return Name_Type
+     with Pre => Requires_Compiler (Comp);
+   --  Returns target of the compiler
+
+   function Executable (Comp : Compiler) return Name_Type
+     with Pre => Requires_Compiler (Comp);
+   --  Returns executable of the compiler
+
+   function Path (Comp : Compiler) return Name_Type
+     with Pre => Requires_Compiler (Comp);
+   --  Returns path to the compiler
+
+   function Language (Comp : Compiler) return Name_Type;
+   --  Returns language of the compiler
+
+   function Name (Comp : Compiler) return Name_Type
+     with Pre => Requires_Compiler (Comp);
+   --  Returns name of the compiler
+
+   function Version (Comp : Compiler) return Name_Type
+     with Pre => Requires_Compiler (Comp);
+   --  Returns version of the compiler
+
+   function Runtime
+     (Comp      : Compiler;
+      Alternate : Boolean := False) return Optional_Name_Type
+     with Pre => Requires_Compiler (Comp);
+   --  Returns runtime of the compiler. When the same runtime gets found twice
+   --  due to e.g. a symbolic link that matches a regexp in the knowledge base
+   --  is pointing at another runtime and Alternate is set to True,
+   --  returns "runtime [alt_runtime]".
+
+   function All_Compilers
+     (Self     : in out Object;
+      Settings : Project.Configuration.Description_Set;
+      Target   : Name_Type;
+      Messages : in out GPR2.Log.Object) return Compiler_Array;
+   --  Returns the list of all compilers for given target, or all compilers
+   --  for any target when "all" is passed as Target.
+   --  Settings affect the selection status of the compilers, but do not
+   --  exclude any compilers from the resulting list.
+
+   function Configuration
+     (Self      : in out Object;
+      Selection : Compiler_Array;
+      Target    : Name_Type;
+      Messages  : in out GPR2.Log.Object)
+      return Ada.Strings.Unbounded.Unbounded_String
+     with Pre  => Self.Is_Defined and then Selection'Length > 0,
+          Post => Configuration'Result /= Null_Unbounded_String
+                  or else Messages.Has_Error;
+   --  Creates configuration string based on the selected compilers in
+   --  Selection.
+
+   function Known_Compiler_Names (Self : Object) return Unbounded_String;
+   --  Return a comma-separated list of known compilers
+
+   procedure Filter_Compilers_List
+     (Self       : Object;
+      Compilers  : in out Compiler_Array;
+      For_Target : Name_Type);
+   --  Based on the currently selected compilers, check which other compilers
+   --  can or cannot be selected by the user.
+   --  This is not the case if the resulting selection in Compilers is not a
+   --  supported config (multiple compilers for the same language, set of
+   --  compilers explicitly marked as unsupported in the knowledge base,...).
 
 private
 
@@ -294,6 +384,36 @@ private
                     Selected        => False,
                     Complete        => True,
                     Path_Order      => 0);
+
+   No_Compilers : constant Compiler_Array :=
+                    Compiler_Array'(1 .. 0 => No_Compiler);
+
+   function Is_Selected (Comp : Compiler) return Boolean is
+     (Comp.Selected);
+
+   function Is_Selectable (Comp : Compiler) return Boolean is
+     (Comp.Selectable);
+
+   function Target (Comp : Compiler) return Name_Type is
+     (Name_Type (To_String (Comp.Target)));
+
+   function Requires_Compiler (Comp : Compiler) return Boolean is
+     (Comp.Executable /= Null_Unbounded_String);
+
+   function Executable (Comp : Compiler) return Name_Type is
+     (Name_Type (To_String (Comp.Executable)));
+
+   function Path (Comp : Compiler) return Name_Type is
+     (Name_Type (Comp.Path.Dir_Name));
+
+   function Language (Comp : Compiler) return Name_Type is
+     (Name_Type (To_String (Comp.Language_Case)));
+
+   function Name (Comp : Compiler) return Name_Type is
+     (Name_Type (To_String (Comp.Name)));
+
+   function Version (Comp : Compiler) return Name_Type is
+     (Name_Type (To_String (Comp.Version)));
 
    package Compiler_Lists is new
      Ada.Containers.Indefinite_Doubly_Linked_Lists (Compiler);

@@ -18,7 +18,9 @@
 
 with Ada.Command_Line;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Characters.Handling;
 with Ada.Directories;
+with Ada.Integer_Text_IO;
 with Ada.IO_Exceptions;
 with Ada.Exceptions;
 with Ada.Text_IO;
@@ -32,6 +34,7 @@ with GNAT.String_Split;
 
 with GNATCOLL.Traces;
 
+with GPR2.Containers;
 with GPR2.KB;
 with GPR2.Log;
 with GPR2.Message;
@@ -46,6 +49,7 @@ with System.OS_Constants;
 pragma Warnings (On);
 
 procedure GPRconfig is
+   use Ada.Containers;
    use Ada.Strings.Unbounded;
    use GNAT.Command_Line;
    use GPR2;
@@ -98,6 +102,110 @@ procedure GPRconfig is
    function Get_Settings (Map : Description_Maps.Map) return Description_Set;
    --  Turns the map of processed config parameters into Description_Set
 
+   procedure Display_Compilers_For_Parser
+     (Base       : KB.Object;
+      Compilers  : in out Compiler_Array;
+      For_Target : Name_Type);
+   --  Display the list of found compilers for use by an external parser
+
+   procedure Select_Compilers_Interactively
+     (Base       : in out KB.Object;
+      Compilers  : in out Compiler_Array;
+      For_Target : Name_Type);
+   --  Asks the user for compilers to be selected
+
+   procedure Show_Command_Line_Config
+     (Compilers : Compiler_Array; Target : String);
+   --  Displays the batch command line that would have the same effect as the
+   --  current selection of compilers.
+
+   ----------------------------------
+   -- Display_Compilers_For_Parser --
+   ----------------------------------
+
+   procedure Display_Compilers_For_Parser
+     (Base       : KB.Object;
+      Compilers  : in out Compiler_Array;
+      For_Target : Name_Type)
+   is
+      use Ada.Text_IO;
+
+      Comp   : Compiler;
+
+      function "&" (L : String; R : Optional_Name_Type) return String is
+        (L & String (R));
+
+      procedure Put_Rank (Comp : Compiler; Idx : Positive);
+      --  Outputs prefix with rank and selection
+
+      procedure Put_Rank (Comp : Compiler; Idx : Positive) is
+      begin
+         if Is_Selected (Comp) then
+            Put ("*");
+            Ada.Integer_Text_IO.Put (Idx, Width => 3);
+         else
+            Ada.Integer_Text_IO.Put (Idx, Width => 4);
+         end if;
+      end Put_Rank;
+   begin
+      Base.Filter_Compilers_List (Compilers, For_Target);
+
+      for Idx in Compilers'Range loop
+
+         Comp := Compilers (Idx);
+
+         if Is_Selectable (Comp) and then Requires_Compiler (Comp) then
+            Put_Rank (Comp, Idx);
+            Put_Line (" target:" & Target (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line
+              (" normalized_target:" & Base.Normalized_Target (Target (Comp)));
+            Put_Rank (Comp, Idx);
+            Put_Line (" executable:" & Executable (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line (" path:" & Path (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line (" lang:" & Language (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line (" name:" & Name (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line (" version:" & KB.Version (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line (" runtime:" & Runtime (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line
+              (" native:"
+               & Boolean'Image
+                 (Base.Normalized_Target
+                      (Name_Type (System.OS_Constants.Target_Name)) =
+                        Base.Normalized_Target (Target (Comp))));
+
+         elsif Is_Selectable (Comp) then
+
+            Put_Rank (Comp, Idx);
+            Put_Line (" target:");
+            Put_Rank (Comp, Idx);
+            Put_Line
+              (" normalized_target:unknown");
+            Put_Rank (Comp, Idx);
+            Put_Line (" executable:");
+            Put_Rank (Comp, Idx);
+            Put_Line (" path:");
+            Put_Rank (Comp, Idx);
+            Put_Line (" lang:" & Language (Comp));
+            Put_Rank (Comp, Idx);
+            Put_Line (" name:");
+            Put_Rank (Comp, Idx);
+            Put_Line (" version:");
+            Put_Rank (Comp, Idx);
+            Put_Line (" runtime:");
+            Put_Rank (Comp, Idx);
+            Put_Line (" native:FALSE");
+         end if;
+
+      end loop;
+   end Display_Compilers_For_Parser;
+
    ------------------
    -- Get_Settings --
    ------------------
@@ -119,6 +227,7 @@ procedure GPRconfig is
    ----------------------------
 
    function Parse_Config_Parameter (Config : String) return Description is
+      use Ada.Characters.Handling;
       use GNAT.String_Split;
 
       function Positional_Parameters return Boolean;
@@ -160,47 +269,57 @@ procedure GPRconfig is
          Name_Set     : Boolean := False;
       begin
          for Slice of Slices loop
-            if Head (Slice, 9) = "language:" then
+            if To_Lower (Head (Slice, 9)) = "language:" then
                if Language_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter language specified twice in "
-                     & Config);
+                     & Config
+                     & ASCII.LF
+                     & "Invalid configuration specified with --config");
                else
                   Language_Set := True;
                end if;
 
-            elsif Head (Slice, 8) = "version:" then
+            elsif To_Lower (Head (Slice, 8)) = "version:" then
                if Version_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter version specified twice in "
-                     & Config);
+                     & Config
+                     & ASCII.LF
+                     & "Invalid configuration specified with --config");
                else
                   Version_Set := True;
                end if;
 
-            elsif Head (Slice, 8) = "runtime:" then
+            elsif To_Lower (Head (Slice, 8)) = "runtime:" then
                if Runtime_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter runtime specified twice in "
-                     & Config);
+                     & Config
+                     & ASCII.LF
+                     & "Invalid configuration specified with --config");
                else
                   Runtime_Set := True;
                end if;
 
-            elsif Head (Slice, 5) = "path:" then
+            elsif To_Lower (Head (Slice, 5)) = "path:" then
                if Path_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter path specified twice in "
-                     & Config);
+                     & Config
+                     & ASCII.LF
+                     & "Invalid configuration specified with --config");
                else
                   Path_Set := True;
                end if;
 
-            elsif Head (Slice, 5) = "name:" then
+            elsif To_Lower (Head (Slice, 5)) = "name:" then
                if Name_Set then
                   Report_Error_And_Exit
                     ("Configuration parameter name specified twice in "
-                     & Config);
+                     & Config
+                     & ASCII.LF
+                     & "Invalid configuration specified with --config");
                else
                   Name_Set := True;
                end if;
@@ -222,11 +341,13 @@ procedure GPRconfig is
          Pref_Len : constant Positive := Pref'Length;
       begin
          for Slice of Slices loop
-            if Head (Slice, Pref_Len) = Pref then
+            if To_Lower (Head (Slice, Pref_Len)) = Pref then
                if Slice = Pref then
                   Report_Error_And_Exit
                     ("Parameter value for " & Prefix & " not specified in """
-                     & Config & """");
+                     & Config & """"
+                     & ASCII.LF
+                     & "Invalid configuration specified with --config");
                end if;
 
                return
@@ -250,11 +371,11 @@ procedure GPRconfig is
       begin
          for Slice of Slices loop
             if Slice = ""
-              or else (Head (Slice, 9) /= "language:"
-                        and then Head (Slice, 8) /= "version:"
-                        and then Head (Slice, 8) /= "runtime:"
-                        and then Head (Slice, 5) /= "path:"
-                        and then Head (Slice, 5) /= "name:")
+              or else (To_Lower (Head (Slice, 9)) /= "language:"
+                        and then To_Lower (Head (Slice, 8)) /= "version:"
+                        and then To_Lower (Head (Slice, 8)) /= "runtime:"
+                        and then To_Lower (Head (Slice, 5)) /= "path:"
+                        and then To_Lower (Head (Slice, 5)) /= "name:")
             then
                Not_Positional_Present := True;
             else
@@ -264,7 +385,9 @@ procedure GPRconfig is
             if Not_Positional_Present and then Positional_Present then
                Report_Error_And_Exit
                  ("Mixing positional and not positional parameters in """
-                  & Config & """");
+                  & Config & """"
+                  & ASCII.LF
+                  & "Invalid configuration specified with --config");
             end if;
          end loop;
 
@@ -275,7 +398,9 @@ procedure GPRconfig is
    begin
       if Slice_Count (Slices) > 5 then
          Report_Error_And_Exit
-           ("Too many arguments in configuration """ & Config & """");
+           ("Too many arguments in configuration """ & Config & """"
+            & ASCII.LF
+            & "Invalid configuration specified with --config");
       end if;
 
       if Positional_Parameters then
@@ -283,7 +408,9 @@ procedure GPRconfig is
 
          if Get_Description_Param (Slices, "language") = No_Name then
             Report_Error_And_Exit
-              ("Language not specified if " & Config);
+              ("Language not specified if " & Config
+               & ASCII.LF
+               & "Invalid configuration specified with --config");
          end if;
 
          Result := Project.Configuration.Create
@@ -295,7 +422,9 @@ procedure GPRconfig is
       else
          if Get_Description_Param (Slices, 1) = No_Name then
             Report_Error_And_Exit
-              ("Language not specified if " & Config);
+              ("Language not specified if " & Config
+               & ASCII.LF
+               & "Invalid configuration specified with --config");
          end if;
 
          Result := Project.Configuration.Create
@@ -422,6 +551,146 @@ procedure GPRconfig is
       raise Exit_From_Command_Line;
    end Report_Error_And_Exit;
 
+   ------------------------------------
+   -- Select_Compilers_Interactively --
+   ------------------------------------
+
+   procedure Select_Compilers_Interactively
+     (Base       : in out KB.Object;
+      Compilers  : in out Compiler_Array;
+      For_Target : Name_Type)
+   is
+      use Ada.Text_IO;
+
+      Input : Unbounded_String;
+      Comp  : Compiler;
+   begin
+      loop
+         Base.Filter_Compilers_List (Compilers, For_Target);
+
+         Put_Line ("--------------------------------------------------");
+         Put_Line
+           ("gprconfig has found the following compilers on your PATH.");
+         Put_Line
+           ("Only those matching the target and the selected compilers"
+            & " are displayed.");
+
+         for Idx in Compilers'Range loop
+            Comp := Compilers (Idx);
+
+            if Is_Selectable (Comp) then
+
+               if Is_Selected (Comp) then
+                  Put ("*");
+                  Ada.Integer_Text_IO.Put (Idx, Width => 3);
+               else
+                  Ada.Integer_Text_IO. Put (Idx, Width => 4);
+               end if;
+
+               Put (". ");
+
+               if Requires_Compiler (Comp) then
+                  Put
+                    (String (Name (Comp))
+                     & " for "
+                     & String (Language (Comp))
+                     & " in "
+                     & String (Path (Comp)));
+                  if For_Target = "all" then
+                     Put (" on " & String (Target (Comp)));
+                  end if;
+                  Put (" version "
+                     & String (KB.Version (Comp)));
+                  if Runtime (Comp, True) = No_Name then
+                     New_Line;
+                  else
+                     Put_Line
+                       (" ("
+                        & String (Runtime (Comp, True))
+                        & " runtime)");
+                  end if;
+
+               else
+                  Put_Line
+                    (String (Language (Comp)) & " (no compiler required)");
+               end if;
+
+            end if;
+         end loop;
+
+         Put
+           ("Select or unselect the following compiler (or ""s"" to save): ");
+         Input := To_Unbounded_String (Get_Line);
+
+         exit when To_String (Input) = "s";
+
+         declare
+            Choice : Positive;
+         begin
+            Choice := Positive'Value (To_String (Input));
+
+            if Choice > Compilers'Last then
+               Put_Line ("Unrecognized choice");
+
+            else
+
+               if Is_Selected (Compilers (Choice)) then
+                  Set_Selection (Compilers (Choice), False);
+               else
+
+                  Set_Selection (Compilers (Choice), True);
+               end if;
+            end if;
+
+         exception
+            when Constraint_Error =>
+               Put_Line ("Unrecognized choice");
+         end;
+
+      end loop;
+   end Select_Compilers_Interactively;
+
+   ------------------------------
+   -- Show_Command_Line_Config --
+   ------------------------------
+
+   procedure Show_Command_Line_Config
+     (Compilers : Compiler_Array; Target : String)
+   is
+      use Ada.Text_IO;
+   begin
+      if Compilers = No_Compilers then
+         return;
+      end if;
+
+      New_Line;
+      Put_Line ("You can regenerate the same config file in batch mode");
+      Put_Line (" with the following command line:");
+      Put ("gprconfig --batch");
+      Put (" --target=");
+      Put (Target);
+
+      for Comp of Compilers loop
+         if Is_Selected (Comp) then
+            Put (" --config=");
+
+            if Requires_Compiler (Comp) then
+               Put
+                 (String (Language (Comp)) & ","
+                  & String (KB.Version (Comp)) & ","
+                  & String (Runtime (Comp)) & ","
+                  & String (Path (Comp)) & ","
+                  & String (Name (Comp)));
+            else
+               Put (String (Language (Comp)) & ",,,,");
+            end if;
+         end if;
+      end loop;
+
+      New_Line;
+      New_Line;
+   end Show_Command_Line_Config;
+
    --------------------
    -- Value_Callback --
    --------------------
@@ -496,6 +765,11 @@ begin
       return;
    end if;
 
+   if Opt_Batch and then Opt_Target.all = "all" then
+      Report_Error_And_Exit
+        ("-- target=all not allowed in --batch mode");
+   end if;
+
    KB_Flags (Validation) := Opt_Validate;
 
    if Opt_Verbosity = Verbose then
@@ -533,11 +807,23 @@ begin
       Ada.Text_IO.Put_Line
         (Ada.Text_IO.Standard_Error,
          "Invalid setup of the gprconfig knowledge base");
+      GNAT.OS_Lib.OS_Exit (1);
+      return;
+   end if;
+
+   if Opt_Show_Known then
+      Ada.Text_IO.Put_Line
+        ("The known compilers are: "
+         & To_String (Knowledge_Base.Known_Compiler_Names));
       return;
    end if;
 
    if Opt_Target.all = "" then
-      Selected_Target := To_Unbounded_String (System.OS_Constants.Target_Name);
+      Selected_Target :=
+        To_Unbounded_String
+          (String
+             (Knowledge_Base.Normalized_Target
+                (Name_Type (System.OS_Constants.Target_Name))));
    else
       Selected_Target := To_Unbounded_String (Opt_Target.all);
    end if;
@@ -560,12 +846,96 @@ begin
          Messages => Config_Log,
          Fallback => Opt_Fallback);
    else
-      Report_Error_And_Exit ("Interactive mode not implemented yet.");
+      if Opt_Show_Targets then
+         Selected_Target := To_Unbounded_String ("all");
+      end if;
+
+      declare
+         Compilers : Compiler_Array := Knowledge_Base.All_Compilers
+           (Settings => Get_Settings (Description_Map),
+            Target   => Name_Type (To_String (Selected_Target)),
+            Messages => Config_Log);
+
+         Set_Of_Targets : GPR2.Containers.Name_Set;
+      begin
+
+         if Opt_Show_Targets or else Opt_Verbosity = Verbose then
+
+            Ada.Text_IO.Put_Line ("List of targets supported by a compiler:");
+
+            for Comp of Compilers loop
+               Set_Of_Targets.Include
+                 (Knowledge_Base.Normalized_Target (Target (Comp)));
+            end loop;
+
+            for Tgt of Set_Of_Targets loop
+
+               Ada.Text_IO.Put (String (Tgt));
+
+               if String (Tgt) = System.OS_Constants.Target_Name then
+                  Ada.Text_IO.Put_Line (" (native target)");
+               else
+                  Ada.Text_IO.New_Line;
+               end if;
+            end loop;
+
+         end if;
+
+         if Opt_Show_Targets then
+            return;
+         end if;
+
+         if Compilers'Length = 0 then
+            if Selected_Target = Null_Unbounded_String then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "No compilers found for target "
+                  & To_String (Selected_Target));
+            else
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "No compilers found");
+            end if;
+            GNAT.OS_Lib.OS_Exit (1);
+            return;
+         end if;
+
+         if Opt_Show_MI then
+            Display_Compilers_For_Parser
+              (Knowledge_Base, Compilers,
+               Name_Type (To_String (Selected_Target)));
+            return;
+         else
+            Select_Compilers_Interactively
+              (Knowledge_Base, Compilers,
+               Name_Type (To_String (Selected_Target)));
+            Show_Command_Line_Config (Compilers, To_String (Selected_Target));
+         end if;
+
+         Config_Contents := Configuration
+           (Self      => Knowledge_Base,
+            Selection => Compilers,
+            Target    => Name_Type (To_String (Selected_Target)),
+            Messages  => Config_Log);
+      end;
+
    end if;
 
-   for Msg of Config_Log loop
-      Ada.Text_IO.Put_Line (Msg.Format);
-   end loop;
+   if Config_Log.Has_Error then
+
+      for Msg of Config_Log loop
+         Ada.Text_IO.Put_Line (Msg.Format);
+      end loop;
+
+      Ada.Text_IO.Put_Line ("Generation of configuration files failed");
+      GNAT.OS_Lib.OS_Exit (1);
+      return;
+   else
+
+      for Msg of Config_Log loop
+         Ada.Text_IO.Put_Line (Msg.Format);
+      end loop;
+   end if;
 
    if Config_Contents /= Null_Unbounded_String then
       Ada.Text_IO.Create
@@ -596,6 +966,14 @@ exception
 
    when Invalid_Switch | Exit_From_Command_Line =>
       GNAT.OS_Lib.OS_Exit (1);
+
+   when Invalid_Parameter =>
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "Missing parameter for switch: -" & Full_Switch);
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "try ""gprconfig --help"" for more information.");
 
    when E : others =>
       Ada.Text_IO.Put_Line

@@ -25,6 +25,7 @@
 with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Environment_Variables;
+with Ada.Exceptions;
 with Ada.Strings.Fixed;
 
 with GNAT.Directory_Operations;
@@ -181,6 +182,17 @@ package body GPR2.KB.Parsing is
            (Message.Create
               (Message.Error,
                Get_Error_Message (Reader),
+               Source_Reference.Object
+                 (Source_Reference.Create
+                      (Embed_Pseudo_Dir & String_Argument, 0, 0))));
+         Close (Input);
+         Free_Reader (Reader);
+
+      when E : XML_Fatal_Error =>
+         Self.Messages.Append
+           (Message.Create
+              (Message.Error,
+               Ada.Exceptions.Exception_Message (E),
                Source_Reference.Object
                  (Source_Reference.Create
                       (Embed_Pseudo_Dir & String_Argument, 0, 0))));
@@ -528,6 +540,19 @@ package body GPR2.KB.Parsing is
                   Close (Input);
                   Free_Reader (Reader);
                   return Result;
+
+               when E : XML_Fatal_Error =>
+                  Result.Messages.Append
+                    (Message.Create
+                       (Message.Error,
+                        Ada.Exceptions.Exception_Message (E),
+                        Source_Reference.Object
+                          (Source_Reference.Create
+                               (Embed_Pseudo_Dir & String (Key (Cur)),
+                                0, 0))));
+                  Close (Input);
+                  Free_Reader (Reader);
+                  return Result;
             end;
 
             Close (Input);
@@ -596,6 +621,18 @@ package body GPR2.KB.Parsing is
                  (Message.Create
                     (Message.Error,
                      Get_Error_Message (Reader),
+                     Source_Reference.Object
+                       (Source_Reference.Create
+                            (File.Value, 0, 0))));
+               Close (Input);
+               Free_Reader (Reader);
+               return;
+
+            when E : XML_Fatal_Error =>
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     Ada.Exceptions.Exception_Message (E),
                      Source_Reference.Object
                        (Source_Reference.Create
                             (File.Value, 0, 0))));
