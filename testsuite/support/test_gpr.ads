@@ -23,13 +23,15 @@ package Test_GPR is
    procedure Load_With_No_Errors
       (Tree     : in out GPR2.Project.Tree.Object;
        Filename : String;
-       Context  : GPR2.Context.Object := GPR2.Context.Empty);
+       Context  : GPR2.Context.Object := GPR2.Context.Empty;
+       Config_Filename : String := "");
    --  Load a project file and assert that no errors is found during loading.
    --  if an error is found during project tree load then GPR2.Project_Error
    --  is raised.
    --
    --  Filename: path to the project file to load
    --  Context: context to pass to the project file
+   --  Config_Filename: Config file filename to load
 
    procedure Assert_Variable
       (Tree     : GPR2.Project.Tree.Object;
@@ -40,4 +42,5 @@ package Test_GPR is
    --  Check if variable Variable in project View of Tree has the right value.
    --  If the project has been loaded inside an aggregate set Aggregate_Context
    --  to True.
+
 end Test_GPR;

@@ -23,6 +23,7 @@ with GPR2.Path_Name;
 with GPR2.Project.Variable;
 with GPR2.Project.View;
 with GPR2.Project.Name_Values;
+with GPR2.Project.Configuration;
 with Test_Assert;
 
 package body Test_GPR is
@@ -109,22 +110,31 @@ package body Test_GPR is
    -------------------------
 
    procedure Load_With_No_Errors
-      (Tree     : in out GPR2.Project.Tree.Object;
-       Filename : String;
-       Context  : GPR2.Context.Object := GPR2.Context.Empty)
+      (Tree            : in out GPR2.Project.Tree.Object;
+       Filename        : String;
+       Context         : GPR2.Context.Object := GPR2.Context.Empty;
+       Config_Filename : String := "")
    is
       Error_Message_Count : Integer := 0;
+      Config_Project : GPR2.Project.Configuration.Object;
    begin
+      if Config_Filename'Length > 0 then
+         Config_Project := GPR2.Project.Configuration.Load
+            (GPR2.Path_Name.Create_File
+               (GPR2.Filename_Optional (Config_Filename)), "all");
+      end if;
+
       begin
          Tree.Load
             (GPR2.Path_Name.Create_File (GPR2.Filename_Optional (Filename)),
-             Context);
+             Context,
+             Config => Config_Project);
       exception
          when GPR2.Project_Error =>
             IO.Put_Line ("messages during project loading error" & Filename);
             Error_Message_Count := Put_Tree_Messages (Tree);
             A.Assert (Error_Message_Count > 0,
-                      "expect at least 1 error message");
+                      "got at least 1 error message");
             raise GPR2.Project_Error;
       end;
 
