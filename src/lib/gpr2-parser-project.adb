@@ -1201,10 +1201,23 @@ package body GPR2.Parser.Project is
       --  possibly the given package.
 
       function Get_Variable_Ref
-        (Project : Name_Type;
-         Node    : Identifier;
-         Pack    : Identifier := No_Identifier) return Item_Values;
+        (Variable   : Name_Type;
+         Source_Ref : Source_Reference.Object;
+         Project    : Optional_Name_Type := No_Name;
+         Pack       : Optional_Name_Type := No_Name;
+         From_View  : GPR2.Project.View.Object := GPR2.Project.View.Undefined)
+        return Item_Values;
       --  Return the value for a variable reference in the given project
+      --
+      --  Variable:   the variable name to retrieve
+      --  Source_Ref: the location of the variable reference
+      --  Project:    the project name in which to look for the variable
+      --              if No_Name it lookup is done in From_View
+      --  Pack:       the package in which which to look for the variable. If
+      --              No_Name it assumes the variable is declared at toplevel
+      --  From_View:  the reference view from where to start the search. If
+      --              set to Undefined search starts from the currently
+      --              processed view.
 
       function Is_Limited_Import
         (Self : Object; Project : Name_Type) return Boolean;
@@ -2102,16 +2115,46 @@ package body GPR2.Parser.Project is
       ----------------------
 
       function Get_Variable_Ref
-        (Project : Name_Type;
-         Node    : Identifier;
-         Pack    : Identifier := No_Identifier) return Item_Values
+        (Variable   : Name_Type;
+         Source_Ref : Source_Reference.Object;
+         Project    : Optional_Name_Type := No_Name;
+         Pack       : Optional_Name_Type := No_Name;
+         From_View  : GPR2.Project.View.Object := GPR2.Project.View.Undefined)
+        return Item_Values
       is
          use type PRA.Value_Kind;
+
+         procedure Error (Msg : String := "") with Inline;
+         --  Emit an error message that starts with
+         --  "variable VARIABLE undefined". If Msg is not the empty string then
+         --  append "(MSG)".
 
          function Get_Pack_Var
            (Pack : GPR2.Project.Pack.Object;
             Name : Name_Type) return Item_Values with Inline;
-         --  Returns the variable value Pack.Name
+         --  Returns the variable value Pack.Name. If not found an error added
+
+         -----------
+         -- Error --
+         -----------
+
+         procedure Error (Msg : String := "") is
+         begin
+            if Msg'Length = 0 then
+               Tree.Log_Messages.Append
+                  (Message.Create
+                     (Message.Error,
+                      "variable " & String (Variable) & " undefined",
+                      Source_Ref));
+            else
+               Tree.Log_Messages.Append
+                  (Message.Create
+                     (Message.Error,
+                      "variable " & String (Variable) & " undefined (" &
+                      Msg & ")",
+                      Source_Ref));
+            end if;
+         end Error;
 
          ------------------
          -- Get_Pack_Var --
@@ -2130,59 +2173,112 @@ package body GPR2.Parser.Project is
                           Single         => V.Kind = PRA.Single,
                           Indexed_Values => Unfilled_Indexed_Values);
                end;
-
             else
+               Error;
                return Empty_Item_Values;
             end if;
          end Get_Pack_Var;
 
-         Name : constant Name_Type := Get_Name_Type (Node);
-         View : constant GPR2.Project.View.Object :=
-                  Process.View.View_For (Project);
-
-         Result : Item_Values := Empty_Item_Values;
-
       begin
-         if not View.Is_Defined then
-            --  Some maybe Project is actually a local package
+         if Project = No_Name and then not From_View.Is_Defined then
+            --  Working from the current view that is processed. In that case
+            --  use Packs and Vars variables as the view has not been updated
+            --  yet.
 
-            if Packs.Contains (Project) then
-               Result := Get_Pack_Var (Packs.Element (Project), Name);
+            if Pack = No_Name then
+               --  Look first if the variable is declared explicitely in the
+               --  project itself otherwise iterate on the extended project
+               --  chain.
+               if Vars.Contains (Variable) then
+                  return (Values => Vars (Variable).Values,
+                          Single => Vars (Variable).Kind = PRA.Single,
+                          Indexed_Values => Unfilled_Indexed_Values);
+               elsif View.Is_Extending then
+                  return Get_Variable_Ref (Variable   => Variable,
+                                           From_View  => View.Extended,
+                                           Source_Ref => Source_Ref);
+               else
+                  Error;
+               end if;
+            else
 
-            elsif not Is_Builtin_Project_Name (Project) then
-               Tree.Log_Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "project " & String (Project) & " is undefined",
-                     Get_Source_Reference (Self.File, Node)));
+               if In_Pack and then Pack = Name_Type (To_String (Pack_Name))
+               then
+                  --  If in the package currently processed use Pack_Vars to
+                  --  find the value.
+                  if Pack_Vars.Contains (Variable) then
+                     return (Values => Pack_Vars (Variable).Values,
+                             Single => Pack_Vars (Variable).Kind = PRA.Single,
+                             Indexed_Values => Unfilled_Indexed_Values);
+                  else
+                     Error;
+                  end if;
+               else
+                  --  Otherwise search into the already parsed packages
+                  if Packs.Contains (Pack) then
+                     return Get_Pack_Var (Packs.Element (Pack), Variable);
+                  else
+                     Error ("package " & String (Pack) & " undefined");
+                  end if;
+               end if;
             end if;
 
-         else
-            if Present (Pack) then
-               --  reference is : Project.Pack.Var_Name
-               Check_Pack : declare
-                  P_Name : constant Name_Type := Get_Name_Type (Pack);
-               begin
-                  if View.Has_Packages (P_Name) then
-                     Result := Get_Pack_Var
-                       (View.Packages.Element (P_Name), Name);
+         elsif Project /= No_Name then
+            --  We have a reference to subproject, resolve it and recurse
+            declare
+               Var_View : constant GPR2.Project.View.Object :=
+                  (if From_View.Is_Defined then From_View.View_For (Project)
+                   else View.View_For (Project));
+            begin
+               if not Var_View.Is_Defined then
+                  if To_Lower (Project) = "project" then
+                     --  If no project called project is defined then assume
+                     --  project is the current project.
+                     return Get_Variable_Ref (Variable   => Variable,
+                                              Pack       => Pack,
+                                              From_View  => From_View,
+                                              Source_Ref => Source_Ref);
+                  else
+                     Error ("project " & String (Project) & " undefined");
                   end if;
-               end Check_Pack;
-
-            elsif View.Has_Variables (Name) then
-               --  reference is : Project.Var_Name
-               declare
-                  V : constant GPR2.Project.Variable.Object :=
-                        View.Variable (Name);
-               begin
-                  Result := (Values         => V.Values,
+               else
+                  return Get_Variable_Ref (Variable   => Variable,
+                                           Pack       => Pack,
+                                           From_View  => Var_View,
+                                           Source_Ref => Source_Ref);
+               end if;
+            end;
+         else
+            --  From_View contains the variable we are looking at
+            if Pack = No_Name then
+               if From_View.Has_Variables (Variable) then
+                  declare
+                     V : constant GPR2.Project.Variable.Object :=
+                        From_View.Variable (Variable);
+                  begin
+                     return (Values         => V.Values,
                              Single         => V.Kind = PRA.Single,
                              Indexed_Values => Unfilled_Indexed_Values);
-               end;
+                  end;
+               elsif From_View.Is_Extending then
+                  return Get_Variable_Ref (Variable   => Variable,
+                                           From_View  => From_View.Extended,
+                                           Source_Ref => Source_Ref);
+               else
+                  Error;
+               end if;
+
+            else
+               if From_View.Has_Packages (Pack) then
+                  return Get_Pack_Var (From_View.Packages.Element (Pack),
+                                       Variable);
+               else
+                  Error ("package " & String (Pack) & " not undefined");
+               end if;
             end if;
          end if;
 
-         return Result;
+         return Empty_Item_Values;
       end Get_Variable_Ref;
 
       -------------------------
@@ -2192,13 +2288,15 @@ package body GPR2.Parser.Project is
       function Get_Variable_Values
         (Node : Variable_Reference) return Item_Values
       is
-         use type PRA.Value_Kind;
-
+         --  A reference a to variable values has the following format:
+         --  name_1[.name_2[.name_3]]['Attribute]
          Name_1  : constant Identifier := F_Variable_Name1 (Node);
          Name_2  : constant Identifier := F_Variable_Name2 (Node);
          Name_3  : constant Identifier := F_Variable_Name3 (Node);
          Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
          Name    : constant Name_Type := Name_Type (To_UTF8 (Name_1.Text));
+         Source_Ref : constant Source_Reference.Object :=
+            Get_Source_Reference (Self.File, Node);
       begin
          if Present (Att_Ref) then
             if Present (Name_2) then
@@ -2238,68 +2336,57 @@ package body GPR2.Parser.Project is
                   end;
                end if;
             end if;
-
-         elsif Present (Name_3) then
-            --  Project.Pack.Name
-            return Get_Variable_Ref (Name, Name_3, Name_2);
-
-         elsif Present (Name_2) then
-            --  Project.Name or Package.Name
-            return Get_Variable_Ref (Name, Name_2);
-
-         elsif In_Pack and then Pack_Vars.Contains (Name) then
-            --  Name (being defined into the current package)
-            return
-              (Values         => Pack_Vars (Name).Values,
-               Single         => Pack_Vars (Name).Kind =
-                   GPR2.Project.Registry.Attribute.Single,
-               Indexed_Values => Unfilled_Indexed_Values);
-
-         elsif Vars.Contains (Name) then
-            --  Name (being defined in current project)
-            return
-              (Values         => Vars (Name).Values,
-               Single         =>
-                 Vars (Name).Kind = GPR2.Project.Registry.Attribute.Single,
-               Indexed_Values => Unfilled_Indexed_Values);
-
          else
-            declare
-               Result : Item_Values := Empty_Item_Values;
-            begin
-               if Self.Extended.Is_Defined then
-                  declare
-                     View : constant GPR2.Project.View.Object :=
-                              Process.View.View_For
-                                (Self.Extended.Path_Name.Base_Name);
-                  begin
-                     if View.Is_Defined
-                       and then View.Has_Variables (Name)
-                     then
-                        declare
-                           V : constant GPR2.Project.Variable.Object :=
-                                 View.Variable (Name);
-                        begin
-                           Result :=
-                             (Values         => V.Values,
-                              Single         => V.Count_Values = 1,
-                              Indexed_Values => Unfilled_Indexed_Values);
-                        end;
-                     end if;
-                  end;
+            --  This is a reference to a variable
+            if Present (Name_3) then
+               --  A 3 words variable reference can only be of the form:
+               --  <project_name>.<package_name>.<variable_name>
+               return Get_Variable_Ref (
+                  Project    => Name_Type (To_UTF8 (Name_1.Text)),
+                  Pack       => Name_Type (To_UTF8 (Name_2.Text)),
+                  Variable   => Name_Type (To_UTF8 (Name_3.Text)),
+                  Source_Ref => Source_Ref);
+            elsif Present (Name_2) then
+               --  A 2 words variable reference can only be of the form:
+               --  1- <project_name>.<variable_name>
+               --  2- <package_name>.<variable_name>
+               if Process.View.View_For
+                  (Name_Type (To_UTF8 (Name_1.Text))).Is_Defined
+               then
+                  return Get_Variable_Ref (
+                     Project    => Name_Type (To_UTF8 (Name_1.Text)),
+                     Variable   => Name_Type (To_UTF8 (Name_2.Text)),
+                     Source_Ref => Source_Ref);
+               else
+                  return Get_Variable_Ref (
+                     Pack       => Name_Type (To_UTF8 (Name_1.Text)),
+                     Variable   => Name_Type (To_UTF8 (Name_2.Text)),
+                     Source_Ref => Source_Ref);
                end if;
-
-               if Result = Empty_Item_Values then
-                  Tree.Log_Messages.Append
-                    (Message.Create
-                       (Level   => Message.Error,
-                        Sloc    => Get_Source_Reference (Self.File, Node),
-                        Message =>
-                          "variable '" & String (Name) & "' is undefined"));
-               end if;
-
-               return Result;
-            end;
+            else
+               --  A 1 word variable can only refer to a variable declared
+               --  implicitely (in case of extends) or explicitely in the
+               --  current project itself.
+               declare
+                  Variable : constant Name_Type :=
+                     Name_Type (To_UTF8 (Name_1.Text));
+               begin
+                  if In_Pack and then Pack_Vars.Contains (Variable) then
+                     --  If we are in the context of a package we don't need
+                     --  the package prefix to refer to variables explicitely
+                     --  declared in the package.
+                     return Get_Variable_Ref (
+                        Pack       => Name_Type (To_String (Pack_Name)),
+                        Variable   => Variable,
+                        Source_Ref => Source_Ref);
+                  else
+                     --  This is a reference to a variable in the current
+                     --  project scope
+                     return Get_Variable_Ref (Variable   => Variable,
+                                              Source_Ref => Source_Ref);
+                  end if;
+               end;
+            end if;
          end if;
       end Get_Variable_Values;
 
