@@ -1875,6 +1875,9 @@ package body GPR2.Project.Tree is
       Messages      : out Log.Object;
       Starting_From : View.Object := View.Undefined) return View.Object
    is
+
+      type Relation_Status is (Root, Imported, Extended, Aggregate_Lib);
+
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
       PP          : Attribute.Object;
 
@@ -1882,9 +1885,10 @@ package body GPR2.Project.Tree is
       --  Returns the Data definition for the given project
 
       function Internal
-        (Filename : Path_Name.Object;
-         Status   : Relation_Status;
-         Parent   : View.Object) return View.Object;
+        (Filename  : Path_Name.Object;
+         Aggregate : View.Object;
+         Status    : Relation_Status;
+         Parent    : View.Object) return View.Object;
 
       function Is_Limited
          (View         : GPR2.Project.View.Object;
@@ -1931,9 +1935,10 @@ package body GPR2.Project.Tree is
       --------------
 
       function Internal
-        (Filename : Path_Name.Object;
-         Status   : Relation_Status;
-         Parent   : View.Object) return View.Object
+        (Filename  : Path_Name.Object;
+         Aggregate : View.Object;
+         Status    : Relation_Status;
+         Parent    : View.Object) return View.Object
       is
          Id   : constant IDS.View_Id :=
                   IDS.Create
@@ -1965,14 +1970,12 @@ package body GPR2.Project.Tree is
                --  If parent view is an aggregate or an extending project keep
                --  track of the relationship.
 
-               case Status is
-                  when Extended =>
-                     Data.Extending := Definition.Weak (Parent);
-                  when Aggregated =>
-                     Data.Aggregate := Definition.Weak (Parent);
-                  when others =>
-                     null;
-               end case;
+               if Status = Extended then
+                  Data.Extending := Definition.Weak (Parent);
+               end if;
+               if Aggregate.Is_Defined then
+                  Data.Aggregate := Definition.Weak (Aggregate);
+               end if;
 
                --  Update context associated with the the list of
                --  externals defined in that project file.
@@ -1982,11 +1985,8 @@ package body GPR2.Project.Tree is
                --  At this stage even if not complete we can create the view
                --  and register it so that we can have references to it.
 
-               if Status = Root then
-                  Data.Is_Root := True;
-               end if;
-
                Data.Context     := Context;
+               Data.Is_Root     := Status = Root;
                Data.Unique_Id   := Id;
                Data.Instance_Of := Id;
                View := Register_View (Data);
@@ -2005,9 +2005,7 @@ package body GPR2.Project.Tree is
                --  Set root view regarding context namespace
                --  ??? (need more explanation)
 
-               if Status = Root
-                  or else (Status = Aggregated and then not Parent.Is_Library)
-               then
+               if not Parent.Is_Defined then
                   --  This is the root project or an aggregate project. This
                   --  create a new namespace (i.e root in the subtree)
 
@@ -2025,10 +2023,11 @@ package body GPR2.Project.Tree is
                for Project of Data.Trees.Imports loop
                   declare
                      Imported_View : constant GPR2.Project.View.Object :=
-                        Internal
-                          (Project.Path_Name,
-                           Status    => Imported,
-                           Parent    => View);
+                                       Internal
+                                         (Project.Path_Name,
+                                          Aggregate => Aggregate,
+                                          Status    => Imported,
+                                          Parent    => View);
                   begin
                      if Imported_View.Is_Defined then
                         --  limited with and with are tracked separately due
@@ -2051,9 +2050,9 @@ package body GPR2.Project.Tree is
                      Extended_View : constant GPR2.Project.View.Object :=
                                        Internal
                                          (Data.Trees.Extended.Path_Name,
-                                          Status => Extended,
-                                          Parent => View);
-
+                                          Aggregate => Aggregate,
+                                          Status    => Extended,
+                                          Parent    => View);
                   begin
                      if Extended_View.Is_Defined then
                         Data.Extended := Extended_View;
@@ -2070,6 +2069,15 @@ package body GPR2.Project.Tree is
                   end;
                end if;
             end;
+
+         elsif Aggregate.Is_Defined then
+            --  View is already defined, but if the project is re-referenced
+            --  from an aggregate library, we need to update the aggregate
+            --  field
+
+            --  ??? Data.Aggregate should be a list, not a single value, so
+            --  that we don't risk overwriting a value
+            Definition.Get_RW (View).Aggregate := Definition.Weak (Aggregate);
          end if;
 
          --  At this stage the view is complete. Update mappings
@@ -2131,9 +2139,9 @@ package body GPR2.Project.Tree is
 
             --  Add aggregate dependency
 
-            if Parent.Is_Defined and then Status = Aggregated then
+            if not Parent.Is_Defined and then Aggregate.Is_Defined then
                View.Tree.View_DAG.Update_Vertex
-                  (Vertex      => Parent.Instance_Of,
+                  (Vertex      => Aggregate.Instance_Of,
                    Predecessor => Instance_Of);
             end if;
 
@@ -2258,10 +2266,25 @@ package body GPR2.Project.Tree is
          end loop;
       end if;
 
-      return Internal
-         (Filename => Filename,
-          Status   => (if Context = Aggregate then Aggregated else Root),
-          Parent   => Starting_From);
+      if Context = Aggregate then
+         --  Aggregate project only: aggregate libraries are handled
+         --  differently as they do not use an aggregate context.
+
+         return Internal
+           (Filename  => Filename,
+            Aggregate => Starting_From,
+            Status    => Root,
+            Parent    => GPR2.Project.View.Undefined);
+
+      else
+         return Internal
+           (Filename  => Filename,
+            Aggregate => Starting_From,
+            Status    => (if Starting_From.Is_Defined
+                          then Aggregate_Lib
+                          else Root),
+            Parent    => Starting_From);
+      end if;
    end Recursive_Load;
 
    ----------------------------------
@@ -2471,7 +2494,8 @@ package body GPR2.Project.Tree is
       -- Set_View --
       --------------
 
-      procedure Set_View (View : Project.View.Object) is
+      procedure Set_View (View : Project.View.Object)
+      is
          use type GPR2.Context.Binary_Signature;
 
          P_Data        : constant Definition.Ref := Definition.Get (View);
@@ -2790,13 +2814,20 @@ package body GPR2.Project.Tree is
                   elsif Pathname.Exists then
                      declare
                         Messages      : Log.Object;
+                        Context       : constant Context_Kind :=
+                                          (if View.Kind = K_Aggregate_Library
+                                           then Root
+                                           else Aggregate);
+                        View_Context  : GPR2.Context.Object :=
+                                          (if Context = Aggregate
+                                           then Self.Context (Aggregate)
+                                           else View.Context);
                         A_View        : constant GPR2.Project.View.Object :=
                                           Recursive_Load
                                             (Self          => Self,
                                              Filename      => Pathname,
-                                             Context       => Aggregate,
-                                             Root_Context  => Self.Context
-                                                                (Aggregate),
+                                             Context       => Context,
+                                             Root_Context  => View_Context,
                                              Messages      => Messages,
                                              Starting_From => View);
                      begin
@@ -3244,7 +3275,10 @@ package body GPR2.Project.Tree is
                      end if;
                   end loop;
 
-                  if View.Has_Imports then
+                  --  aggregate library project can have regular imports,
+                  --  while aggregate projects can't.
+
+                  if View.Kind = K_Aggregate and then View.Has_Imports then
                      for Imported of View.Imports loop
                         if not Imported.Is_Abstract then
                            Self.Messages.Append
