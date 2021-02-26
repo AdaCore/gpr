@@ -238,6 +238,11 @@ package body GPR2.KB is
       Descr : Project.Configuration.Description) return Compiler;
    --  Transform Description into Compiler object
 
+   function Configuration_Node_Image
+     (Config : Configuration_Type) return Unbounded_String;
+   --  Returns partial image of <configuration> node that is used in verbose
+   --  output to explain unsupported configuration.
+
    ---------
    -- Add --
    ---------
@@ -980,6 +985,39 @@ package body GPR2.KB is
       return Configuration_String;
 
    end Configuration;
+
+   ------------------------------
+   -- Configuration_Node_Image --
+   ------------------------------
+
+   function Configuration_Node_Image
+     (Config : Configuration_Type) return Unbounded_String
+   is
+      Result : Unbounded_String;
+   begin
+      for Comp_Filter of Config.Compilers_Filters loop
+         Append
+           (Result,
+            "<compilers negate='" & Comp_Filter.Negate'Img & "'>" & ASCII.LF);
+
+         for Filter of Comp_Filter.Compiler loop
+            Append
+              (Result,
+               "  <compiler name='"
+               & To_String (Filter.Name) & "' version='"
+               & To_String (Filter.Version) & "' runtime='"
+               & To_String (Filter.Runtime) & "' language='"
+               & To_String (Filter.Language_LC) & "' />"
+               & ASCII.LF);
+         end loop;
+
+         Append (Result, "</compilers>" & ASCII.LF);
+      end loop;
+
+      Append (Result, "<config supported='" & Config.Supported'Img & "' />");
+
+      return Result;
+   end Configuration_Node_Image;
 
    ------------
    -- Create --
@@ -2046,6 +2084,11 @@ package body GPR2.KB is
                GNATCOLL.Traces.Trace
                  (Match_Trace,
                   "Selected compilers are not compatible, because of:");
+               GNATCOLL.Traces.Trace
+                 (Match_Trace,
+                  To_String
+                    (Configuration_Node_Image
+                         (Configuration_Lists.Element (Config))));
                return False;
             end if;
          end if;
