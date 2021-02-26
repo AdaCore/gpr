@@ -1193,6 +1193,11 @@ package body GPR2.Parser.Project is
         (Node : Variable_Reference) return Item_Values;
       --  Parse and return the value for the given variable reference
 
+      function Get_Attribute_Index
+        (Node : Attribute_Reference;
+         Pack : Optional_Name_Type := No_Name) return PAI.Object;
+      --  Get the attribute index, if any, or PAI.Undefined
+
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : Attribute_Reference;
@@ -1292,6 +1297,45 @@ package body GPR2.Parser.Project is
       Undefined_Attribute_Count          : Natural := 0;
       Previous_Undefined_Attribute_Count : Natural := 0;
 
+      -------------------------
+      -- Get_Attribute_Index --
+      -------------------------
+
+      function Get_Attribute_Index
+        (Node : Attribute_Reference;
+         Pack : Optional_Name_Type := No_Name) return PAI.Object
+      is
+         Name           : constant Name_Type :=
+                            Get_Name_Type
+                              (Single_Tok_Node (F_Attribute_Name (Node)));
+         I_Node         : constant GPR_Node := F_Attribute_Index (Node);
+         Q_Name         : constant PRA.Qualified_Name :=
+                            PRA.Create (Name, Pack);
+         Case_Sensitive : Boolean;
+
+      begin
+         if not Present (I_Node) then
+            return PAI.Undefined;
+         end if;
+
+         if I_Node.Kind in GPR_Others_Designator_Range then
+            return PAI.I_Others;
+         end if;
+
+         if Name = PRA.Switches then
+            Case_Sensitive := Is_Switches_Index_Case_Sensitive
+              (Get_Value_Type (I_Node.As_Single_Tok_Node));
+         elsif PRA.Exists (Q_Name) then
+            Case_Sensitive := PRA.Get (Q_Name).Index_Case_Sensitive;
+         else
+            Case_Sensitive := True;
+         end if;
+
+         return PAI.Create
+           (Get_Value_Type (I_Node.As_Single_Tok_Node),
+            Case_Sensitive);
+      end Get_Attribute_Index;
+
       -----------------------
       -- Get_Attribute_Ref --
       -----------------------
@@ -1309,20 +1353,10 @@ package body GPR2.Parser.Project is
          Name   : constant Name_Type :=
                     Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
-         Q_Name : constant PRA.Qualified_Name := PRA.Create (Name, Pack);
+         Q_Name : constant PRA.Qualified_Name :=
+                    PRA.Create (Name, Pack);
 
-         I_Node : constant GPR_Node := F_Attribute_Index (Node);
-         Index  : constant PAI.Object :=
-                    (if Present (I_Node)
-                     then PAI.Create
-                       (Get_Value_Type (I_Node.As_Single_Tok_Node),
-                        (if Name = PRA.Switches
-                         then Is_Switches_Index_Case_Sensitive
-                                (Get_Value_Type (I_Node.As_Single_Tok_Node))
-                         else (if PRA.Exists (Q_Name)
-                               then PRA.Get (Q_Name).Index_Case_Sensitive
-                               else True)))
-                     else PAI.Undefined);
+         Index  : constant PAI.Object := Get_Attribute_Index (Node, Pack);
          View   : constant GPR2.Project.View.Object :=
                     Process.View.View_For (Project);
 
