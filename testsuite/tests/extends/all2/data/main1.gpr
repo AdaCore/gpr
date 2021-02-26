@@ -1,0 +1,7 @@
+with "shared1.gpr";
+with "lib1.gpr";
+
+project Main1 is
+    Variable := Shared1.Variable;
+    for Object_Dir use "main1-" & Variable;
+end Main1;

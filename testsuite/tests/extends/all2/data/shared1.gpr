@@ -1,0 +1,4 @@
+abstract project Shared1 is
+   Variable := "shared1";
+end Shared1;
+
