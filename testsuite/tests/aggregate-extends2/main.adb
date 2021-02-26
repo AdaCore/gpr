@@ -30,6 +30,10 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
+   Indent : Natural := 0;
+
+   procedure Put_Indent;
+
    procedure Display (Prj : Project.View.Object);
 
    procedure Display (Att : Project.Attribute.Object);
@@ -37,6 +41,16 @@ procedure Main is
    procedure Display (Var : Project.Variable.Object);
 
    procedure Changed_Callback (Prj : Project.View.Object);
+
+   ----------------
+   -- Put_Indent --
+   ----------------
+
+   procedure Put_Indent is
+      Space : constant String (1 .. Indent) := (others => ' ');
+   begin
+      Text_IO.Put (Space);
+   end Put_Indent;
 
    ----------------------
    -- Changed_Callback --
@@ -53,7 +67,8 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & String (Att.Name.Text));
+      Put_Indent;
+      Text_IO.Put (String (Att.Name.Text));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -69,7 +84,8 @@ procedure Main is
 
    procedure Display (Var : Project.Variable.Object) is
    begin
-      Text_IO.Put ("   " & String (Var.Name.Text) & " =");
+      Put_Indent;
+      Text_IO.Put (String (Var.Name.Text) & " =");
       for V of Var.Values loop
          Text_IO.Put (" " & V.Text);
       end loop;
@@ -80,40 +96,59 @@ procedure Main is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
    begin
-      Text_IO.Put ('[' & String (Prj.Name) & "] ");
-      Text_IO.Set_Col (10);
-      Text_IO.Put_Line (Prj.Qualifier'Img);
+      Text_IO.Put_Line ('[' & String (Prj.Name) & "] " & Prj.Qualifier'Img);
+      Indent := Indent + 3;
 
-      if Prj.Has_Attributes then
-         for A of Prj.Attributes loop
+      for I of Prj.Imports loop
+         Put_Indent;
+         Text_IO.Put ("with       ");
+         Indent := Indent + 3;
+         Display (I);
+         Indent := Indent - 3;
+      end loop;
+
+      if Prj.Is_Extending then
+         Put_Indent;
+         Text_IO.Put ("extends   ");
+         Indent := Indent + 3;
+         Display (Prj.Extended);
+         Indent := Indent - 3;
+      end if;
+
+      for A of Prj.Attributes loop
+         Display (A);
+      end loop;
+
+      for V of Prj.Variables loop
+         Display (V);
+      end loop;
+
+      for Pck of Prj.Packages loop
+         Put_Indent;
+         Text_IO.Put_Line ("Pck:   " & String (Pck.Name));
+         Indent := Indent + 3;
+         for A of Pck.Attributes loop
             Display (A);
          end loop;
-      end if;
 
-      if Prj.Has_Variables then
-         for V of Prj.Variables loop
-            Display (V);
+         for Var of Pck.Variables loop
+            Display (Var);
          end loop;
-      end if;
+         Indent := Indent - 3;
+      end loop;
 
-      if Prj.Has_Packages then
-         for Pck of Prj.Packages loop
-            Text_IO.Put_Line ("   Pck:   " & String (Pck.Name));
-            for A of Pck.Attributes loop
-               Text_IO.Put ("   ");
-               Display (A);
-            end loop;
-
-            if Pck.Has_Variables then
-               for Var of Prj.Variables loop
-                  Text_IO.Put ("   ");
-                  Display (Var);
-               end loop;
-            end if;
+      if Prj.Kind in Aggregate_Kind then
+         for Agg of Prj.Aggregated loop
+            Put_Indent;
+            Text_IO.Put ("aggregates ");
+            Indent := Indent + 3;
+            Display (Agg);
+            Indent := Indent - 3;
          end loop;
       end if;
 
       Text_IO.New_Line;
+      Indent := Indent - 3;
    end Display;
 
    Prj : Project.Tree.Object;
@@ -122,7 +157,5 @@ procedure Main is
 begin
    Project.Tree.Load (Prj, Create ("agg.gpr"), Ctx);
 
-   for P of Prj loop
-      Display (P);
-   end loop;
+   Display (Prj.Root_Project);
 end Main;

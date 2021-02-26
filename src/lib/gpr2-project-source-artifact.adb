@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -162,14 +162,14 @@ package body GPR2.Project.Source.Artifact is
                   Base : constant Filename_Type := BN & At_Suffix (CU.Index);
                begin
                   if Source.Aggregated then
-                     Deps_Lib.Insert
-                       (CU.Index,
-                        GPR2.Path_Name.Create_File
-                          (Base & D_Suffix,
-                           Filename_Type
-                             (Source.Aggregating_View.Library_Ali_Directory
-                              .Value)));
-
+                     for View of Source.Aggregating_Views loop
+                        Deps_Lib.Insert
+                          (CU.Index,
+                           GPR2.Path_Name.Create_File
+                             (Base & D_Suffix,
+                              Filename_Type
+                                (View.Library_Ali_Directory.Value)));
+                     end loop;
                   else
                      Object_Files.Insert
                        (CU.Index,
@@ -193,13 +193,13 @@ package body GPR2.Project.Source.Artifact is
       elsif Source.Aggregated then
          --  For aggregated library the .ali is also copied into the
          --  aggregate library directory.
-
-         Deps_Lib.Insert
-           (1,
-            GPR2.Path_Name.Create_File
-              (BN & D_Suffix,
-               Filename_Type
-                 (Source.Aggregating_View.Library_Ali_Directory.Value)));
+         for Agg_Lib of Source.Aggregating_Views loop
+            Deps_Lib.Insert
+              (1,
+               GPR2.Path_Name.Create_File
+                 (BN & D_Suffix,
+                  Filename_Type (Agg_Lib.Library_Ali_Directory.Value)));
+         end loop;
 
       else
          Object_Files.Insert

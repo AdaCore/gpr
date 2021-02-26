@@ -118,7 +118,7 @@ package GPR2.Project.View is
 
    function Imports
      (Self : Object; Recursive : Boolean := False) return Set.Object
-     with Pre => Self.Is_Defined and then Self.Has_Imports;
+     with Pre => Self.Is_Defined;
    --  Returns all imported project views
 
    function Is_Extending
@@ -153,13 +153,9 @@ package GPR2.Project.View is
    function Aggregated (Self : Object) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
 
-   function Aggregate (Self : Object) return Object
-     with Pre  => Self.Is_Defined and then Self.Is_Aggregated,
-          Post => Aggregate'Result.Kind in Aggregate_Kind;
-
-   function Is_Aggregated (Self : Object) return Boolean
+   function Aggregate_Libraries (Self : Object) return Set.Object
      with Pre => Self.Is_Defined;
-   --  Returns True if Self is part of an aggregate project
+   --  Returns the list of aggregate library projects that contain Self
 
    function Is_Aggregated_In_Library (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -295,8 +291,8 @@ package GPR2.Project.View is
    --  Returns true if the project view has some packages defined
 
    function Packages (Self : Object) return Pack.Set.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Packages,
-          Post => Packages'Result.Length > 0;
+     with Pre  => Self.Is_Defined,
+          Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
    --  Get the list of packages defined in the project
 
    function Pack (Self : Object; Name : Name_Type) return Pack.Object
@@ -577,8 +573,7 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined
        and then (not Self.Is_Library
                  or else Self.Library_Name = Name
-                 or else (Self.Is_Aggregated_In_Library
-                          and then Self.Aggregate.Library_Name = Name));
+                 or else Self.Is_Aggregated_In_Library);
    --  Returns binder artifact files from main procedure name for standard
    --  project or from library name for library project.
 

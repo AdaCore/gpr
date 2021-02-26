@@ -24,6 +24,7 @@
 
 with GPR2.Unit;
 with GPR2.Project.View;
+with GPR2.Project.View.Set;
 with GPR2.Source;
 with GPR2.Source_Info;
 
@@ -115,9 +116,10 @@ package GPR2.Project.Source is
    --  Returns True if Self has an aggregating view defined, that is source
    --  is part of an aggregate library.
 
-   function Aggregating_View (Self : Object) return Project.View.Object
+   function Aggregating_Views (Self : Object) return Project.View.Set.Object
      with Pre  => Self.Is_Defined and then Self.Has_Aggregating_View,
-          Post => Aggregating_View'Result.Kind = K_Aggregate_Library;
+          Post => (for all Agg of Aggregating_Views'Result =>
+                     Agg.Kind = K_Aggregate_Library);
    --  Returns the aggregating view
 
    function Is_Main (Self : Object) return Boolean

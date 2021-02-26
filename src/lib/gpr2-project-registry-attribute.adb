@@ -477,7 +477,7 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => In_Aggregates);
+      Is_Allowed_In        => (K_Aggregate => True, others => False));
 
    --  library_dir
    Add

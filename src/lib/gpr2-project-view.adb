@@ -97,14 +97,19 @@ package body GPR2.Project.View is
    --  Used to have different binder exchange file names when binding different
    --  languages.
 
-   ---------------
-   -- Aggregate --
-   ---------------
+   -------------------------
+   -- Aggregate_Libraries --
+   -------------------------
 
-   function Aggregate (Self : Object) return GPR2.Project.View.Object is
+   function Aggregate_Libraries (Self : Object) return Set.Object is
+      Result : Set.Object;
    begin
-      return Definition.Strong (Definition.Get_RO (Self).Aggregate);
-   end Aggregate;
+      for Id of Definition.Get_RO (Self).Agg_Libraries loop
+         Result.Include (Self.Tree.Instance_Of (Id));
+      end loop;
+
+      return Result;
+   end Aggregate_Libraries;
 
    ----------------
    -- Aggregated --
@@ -857,26 +862,15 @@ package body GPR2.Project.View is
         GPR2.Context.Default_Signature;
    end Invalidate_Sources;
 
-   -------------------
-   -- Is_Aggregated --
-   -------------------
-
-   function Is_Aggregated (Self : Object) return Boolean is
-      use Definition_References;
-   begin
-      return Definition.Get_RO (Self).Aggregate /= Null_Weak_Ref;
-   end Is_Aggregated;
-
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------
 
    function Is_Aggregated_In_Library (Self : Object) return Boolean is
-      use type Weak_Reference;
       Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      return Ref.Aggregate /= Definition_References.Null_Weak_Ref
-        and then Definition.Strong (Ref.Aggregate).Kind = K_Aggregate_Library;
+
+      return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
 
    -----------------

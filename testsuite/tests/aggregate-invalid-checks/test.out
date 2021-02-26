@@ -12,3 +12,5 @@ aggr5.gpr:5:27: error: file "." not found
 aggr5.gpr:6:27: error: file "" not found
 testing aggr6.gpr
 default.gpr:5:08: error: "project_files" is only valid in aggregate projects
+testing aggr7.gpr
+aggr7.gpr:2:08: error: "External" is only valid in aggregate projects

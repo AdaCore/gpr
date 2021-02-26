@@ -118,6 +118,6 @@ private
    Runtime_View_Id : constant View_Id := (Kind => Runtime_Id);
 
    function Is_Defined (Id : View_Id) return Boolean
-     is (Id /= Null_View_Id);
+     is (Id /= Undefined);
 
 end GPR2.View_Ids;

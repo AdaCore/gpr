@@ -49,14 +49,15 @@ package body GPR2.Project.Source is
    --  Returns Object with changed actual view for the case when source was
    --  derived from extended project.
 
-   ----------------------
-   -- Aggregating_View --
-   ----------------------
+   -----------------------
+   -- Aggregating_Views --
+   -----------------------
 
-   function Aggregating_View (Self : Object) return Project.View.Object is
+   function Aggregating_Views (Self : Object) return Project.View.Set.Object
+   is
    begin
-      return Definition.Strong (Self.View).Aggregate;
-   end Aggregating_View;
+      return Definition.Strong (Self.View).Aggregate_Libraries;
+   end Aggregating_Views;
 
    ---------------
    -- Artifacts --

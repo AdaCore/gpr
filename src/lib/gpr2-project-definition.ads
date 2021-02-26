@@ -38,6 +38,7 @@ with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Info;
 with GPR2.Unit;
 with GPR2.View_Ids;
+with GPR2.View_Ids.Set;
 
 limited with GPR2.Project.Tree;
 
@@ -86,7 +87,7 @@ private package GPR2.Project.Definition is
 
       Extending       : Weak_Reference;
       Extended        : View.Object;
-      Aggregate       : Weak_Reference;
+      Agg_Libraries   : GPR2.View_Ids.Set.Object;
       Imports         : Project_View_Store.Map;
       Limited_Imports : Project_View_Store.Map;
       Aggregated      : Project_View_Store.Map;

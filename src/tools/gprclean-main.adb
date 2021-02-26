@@ -398,7 +398,9 @@ procedure GPRclean.Main is
 
       if View.Is_Library then
          if View.Is_Aggregated_In_Library then
-            Binder_Artifacts (View.Aggregate.Library_Name);
+            for Lib of View.Aggregate_Libraries loop
+               Binder_Artifacts (Lib.Library_Name);
+            end loop;
          else
             if not Opts.Remain_Useful then
                Delete_File (View.Library_Filename.Value);

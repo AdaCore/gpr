@@ -59,4 +59,5 @@ begin
    Test ("aggr4.gpr");
    Test ("aggr5.gpr");
    Test ("aggr6.gpr");
+   Test ("aggr7.gpr");
 end Main;

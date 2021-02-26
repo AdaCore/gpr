@@ -115,8 +115,6 @@ package GPR2.Project is
 
 private
 
-   type Relation_Status is (Root, Imported, Extended, Aggregated);
-
    type Definition_Base is abstract tagged record
       Id                : Natural := 0;
       Path              : Path_Name.Object;

@@ -19,7 +19,6 @@
 with Ada.Text_IO;
 
 with GPR2.Context;
-with GPR2.Log;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
@@ -31,9 +30,27 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
+   Indent : Natural := 0;
+
+   procedure Put_Indent;
+
    procedure Display (Prj : Project.View.Object);
 
+   procedure Display (Att : Project.Attribute.Object);
+
+   procedure Display (Var : Project.Variable.Object);
+
    procedure Changed_Callback (Prj : Project.View.Object);
+
+   ----------------
+   -- Put_Indent --
+   ----------------
+
+   procedure Put_Indent is
+      Space : constant String (1 .. Indent) := (others => ' ');
+   begin
+      Text_IO.Put (Space);
+   end Put_Indent;
 
    ----------------------
    -- Changed_Callback --
@@ -48,36 +65,90 @@ procedure Main is
    -- Display --
    -------------
 
+   procedure Display (Att : Project.Attribute.Object) is
+   begin
+      Put_Indent;
+      Text_IO.Put (String (Att.Name.Text));
+
+      if Att.Has_Index then
+         Text_IO.Put (" (" & Att.Index.Text & ")");
+      end if;
+
+      Text_IO.Put (" ->");
+
+      for V of Att.Values loop
+         Text_IO.Put (" " & V.Text);
+      end loop;
+      Text_IO.New_Line;
+   end Display;
+
+   procedure Display (Var : Project.Variable.Object) is
+   begin
+      Put_Indent;
+      Text_IO.Put (String (Var.Name.Text) & " =");
+      for V of Var.Values loop
+         Text_IO.Put (" " & V.Text);
+      end loop;
+      Text_IO.New_Line;
+   end Display;
+
    procedure Display (Prj : Project.View.Object) is
       use GPR2.Project.Attribute.Set;
       use GPR2.Project.Variable.Set.Set;
    begin
-      Text_IO.Put ('[' & String (Prj.Name) & "] ");
-      Text_IO.Set_Col (10);
-      Text_IO.Put_Line (Prj.Qualifier'Img);
+      Text_IO.Put_Line ('[' & String (Prj.Name) & "] " & Prj.Qualifier'Img);
+      Indent := Indent + 3;
 
-      if Prj.Has_Attributes then
-         for A in Prj.Attributes.Iterate loop
-            Text_IO.Put
-              ("A:   " & String (Attribute.Set.Element (A).Name.Text));
-            Text_IO.Put (" ->");
+      for I of Prj.Imports loop
+         Put_Indent;
+         Text_IO.Put ("with       ");
+         Indent := Indent + 3;
+         Display (I);
+         Indent := Indent - 3;
+      end loop;
 
-            for V of Element (A).Values loop
-               Text_IO.Put (" " & V.Text);
-            end loop;
-            Text_IO.New_Line;
+      if Prj.Is_Extending then
+         Put_Indent;
+         Text_IO.Put ("extends   ");
+         Indent := Indent + 3;
+         Display (Prj.Extended);
+         Indent := Indent - 3;
+      end if;
+
+      for A of Prj.Attributes loop
+         Display (A);
+      end loop;
+
+      for V of Prj.Variables loop
+         Display (V);
+      end loop;
+
+      for Pck of Prj.Packages loop
+         Put_Indent;
+         Text_IO.Put_Line ("Pck:   " & String (Pck.Name));
+         Indent := Indent + 3;
+         for A of Pck.Attributes loop
+            Display (A);
+         end loop;
+
+         for Var of Pck.Variables loop
+            Display (Var);
+         end loop;
+         Indent := Indent - 3;
+      end loop;
+
+      if Prj.Kind in Aggregate_Kind then
+         for Agg of Prj.Aggregated loop
+            Put_Indent;
+            Text_IO.Put ("aggregates ");
+            Indent := Indent + 3;
+            Display (Agg);
+            Indent := Indent - 3;
          end loop;
       end if;
 
-      if Prj.Has_Variables then
-         for V in Prj.Variables.Iterate loop
-            Text_IO.Put ("V:   " & String (Key (V)));
-            Text_IO.Put (" -> ");
-            Text_IO.Put (Element (V).Value.Text);
-            Text_IO.New_Line;
-         end loop;
-      end if;
       Text_IO.New_Line;
+      Indent := Indent - 3;
    end Display;
 
    Prj : Project.Tree.Object;
@@ -86,18 +157,5 @@ procedure Main is
 begin
    Project.Tree.Load (Prj, Create ("agg.gpr"), Ctx);
 
-   for P of Prj loop
-      Display (P);
-   end loop;
-exception
-   when Project_Error =>
-      for C in Prj.Log_Messages.Iterate
-        (Information => False,
-         Warning     => True,
-         Error       => True,
-         Read        => False,
-         Unread      => True)
-      loop
-         Text_IO.Put_Line (GPR2.Log.Element (C).Format);
-      end loop;
+   Display (Prj.Root_Project);
 end Main;
