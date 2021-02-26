@@ -1,0 +1,5 @@
+with "shared2.gpr";
+project Main2 extends all "main1" is
+    Variable := "main2-" & Main1.Variable;
+    for Object_Dir use Variable;
+end Main2;

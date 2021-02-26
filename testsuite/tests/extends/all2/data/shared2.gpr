@@ -1,0 +1,3 @@
+abstract project shared2 extends all "shared1" is
+   Variable := "shared2";
+end shared2;
