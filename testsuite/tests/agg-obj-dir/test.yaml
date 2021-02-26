@@ -4,4 +4,4 @@ driver: build_and_run
 project_file: test
 main: main
 control:
-- [SKIP, "True", "Since U209-054 fixed"]
+- [XFAIL, "True", "Since U209-054 fixed"]
