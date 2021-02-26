@@ -1,0 +1,6 @@
+with "c.gpr";
+
+project B is
+   Variable1 := C.Variable1;
+   Variable2 := C.Variable2;
+end B;
