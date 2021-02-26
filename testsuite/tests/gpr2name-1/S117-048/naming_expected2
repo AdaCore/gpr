@@ -1,0 +1,37 @@
+abstract project P_Naming is
+
+   package Naming is
+      for Spec ("A") use "a.ads";
+      for Spec ("B") use "b.ads";
+      for Spec ("C") use "c.ads";
+      for Spec ("D") use "d.ads";
+      for Spec ("E") use "e.ads";
+      for Spec ("F") use "f.ads";
+      for Spec ("G") use "g.ads";
+      for Spec ("H") use "h.ads";
+      for Spec ("I") use "i.ads";
+      for Spec ("J") use "j.ads";
+      for Spec ("K") use "k.ads";
+      for Spec ("L") use "l.ads";
+      for Spec ("M") use "m.ads";
+      for Spec ("N") use "n.ads";
+      for Spec ("O") use "o.ads";
+      for Spec ("P") use "p.ads";
+      for Spec ("Q") use "q.ads";
+      for Spec ("R") use "r.ads";
+      for Spec ("S") use "s.ads";
+      for Spec ("T") use "t.ads";
+      for Spec ("U") use "u.ads";
+      for Spec ("V") use "v.ads";
+      for Spec ("W") use "w.ads";
+      for Spec ("X") use "x.ads";
+      for Spec ("Y") use "y.ads";
+      for Spec ("Z") use "z.ads";
+
+      for Implementation_Exceptions ("C") use ("a.c", "b.c", "c.c", "d.c", "e.c",
+         "f.c", "g.c", "h.c", "i.c", "j.c", "k.c", "l.c", "m.c", "n.c", "o.c",
+         "p.c", "q.c", "r.c", "s.c", "t.c", "u.c", "v.c", "w.c", "x.c", "y.c",
+         "z.c");
+   end Naming;
+
+end P_Naming;

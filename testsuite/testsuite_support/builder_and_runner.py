@@ -15,6 +15,7 @@ GPR = os.environ["GPR2_TOOLS_PREFIX"] if "GPR2_TOOLS_PREFIX" in os.environ else 
 GPRLS = GPR + "ls"
 GPRCLEAN = GPR + "clean"
 GPRINSTALL = GPR + "install"
+GPRNAME = GPR + "name"
 
 
 class BuilderAndRunner(object):
