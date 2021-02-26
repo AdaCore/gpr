@@ -1,0 +1,3 @@
+project C extends all "a.gpr" is
+    Variable1 := "extended value";
+end C;

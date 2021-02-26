@@ -1,0 +1,3 @@
+aggregate project Second_Level is
+   for Project_Files use ("third_level.gpr");
+end Second_Level;
