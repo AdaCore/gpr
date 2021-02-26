@@ -21,6 +21,7 @@ project Demo is
    package Compiler is
       for Switches ("others") use ("-g1");
       for Switches (others) use ("-g2");
+      for Switches (others) use Compiler'Switches (others) & ("-g3");
    end Compiler;
 
 end Demo;
