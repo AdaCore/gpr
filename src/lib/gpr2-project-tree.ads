@@ -84,15 +84,15 @@ package GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      Config           : Configuration.Object    := Configuration.Undefined;
-      Project_Dir      : Path_Name.Object        := Path_Name.Undefined;
-      Build_Path       : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type      := No_Name;
-      Src_Subdirs      : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib : Boolean                 := True;
-      Absent_Dir_Error : Boolean                 := False;
-      Implicit_With    : Containers.Filename_Set :=
-                           Containers.Empty_Filename_Set)
+      Config           : Configuration.Object      := Configuration.Undefined;
+      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type        := No_Name;
+      Src_Subdirs      : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib : Boolean                   := True;
+      Absent_Dir_Error : Boolean                   := False;
+      Implicit_With    : GPR2.Path_Name.Set.Object :=
+                           GPR2.Path_Name.Set.Empty_Set)
      with Pre => Filename.Is_Defined
                  and then (not Filename.Is_Implicit_Project
                            or else Project_Dir.Is_Defined);
@@ -114,18 +114,18 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Project_Dir       : Path_Name.Object     := Path_Name.Undefined;
-      Build_Path        : Path_Name.Object     := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type   := No_Name;
-      Src_Subdirs       : Optional_Name_Type   := No_Name;
-      Check_Shared_Lib  : Boolean              := True;
-      Absent_Dir_Error  : Boolean              := False;
-      Implicit_With     : Containers.Filename_Set :=
-                            Containers.Empty_Filename_Set;
-      Target            : Optional_Name_Type       := No_Name;
+      Project_Dir       : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type        := No_Name;
+      Src_Subdirs       : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib  : Boolean                   := True;
+      Absent_Dir_Error  : Boolean                   := False;
+      Implicit_With     : GPR2.Path_Name.Set.Object :=
+                            GPR2.Path_Name.Set.Empty_Set;
+      Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
                             Containers.Name_Value_Map_Package.Empty_Map;
-      Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
+      Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
@@ -505,7 +505,7 @@ private
       Rooted_Sources   : Source_Maps.Map;
       Messages         : aliased Log.Object;
       Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
-      Implicit_With    : Containers.Filename_Set;
+      Implicit_With    : Path_Name.Set.Object;
       Project_Dir      : Path_Name.Object;
       Build_Path       : Path_Name.Object;
       Subdirs          : Unbounded_String;

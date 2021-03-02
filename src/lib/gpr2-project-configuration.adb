@@ -254,7 +254,7 @@ package body GPR2.Project.Configuration is
    begin
       Result.Project :=
         Parser.Project.Parse
-          (Filename, Containers.Empty_Filename_Set, Result.Messages);
+          (Filename, GPR2.Path_Name.Set.Empty_Set, Result.Messages);
 
       --  Continue only if there is no parsing error on the configuration
       --  project.

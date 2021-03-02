@@ -28,6 +28,7 @@ with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Pack.Set;
@@ -54,7 +55,7 @@ package GPR2.Parser.Project is
 
    function Parse
      (Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
+      Implicit_With : GPR2.Path_Name.Set.Object;
       Messages      : out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.

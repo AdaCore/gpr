@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -74,7 +74,7 @@ package GPRtools.Options is
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;
       Src_Subdirs              : Unbounded_String;
-      Implicit_With            : GPR2.Containers.Filename_Set;
+      Implicit_With            : GPR2.Path_Name.Set.Object;
       Maximum_Processes        : Natural := 0;
 
       Skip_Default_KB          : aliased Boolean := False;

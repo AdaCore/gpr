@@ -38,7 +38,6 @@ with Langkit_Support.Text;
 with GPR2.Builtin;
 with GPR2.Message;
 with GPR2.Parser.Registry;
-with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
@@ -124,7 +123,7 @@ package body GPR2.Parser.Project is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
+      Implicit_With : GPR2.Path_Name.Set.Object;
       Messages      : out Log.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
@@ -429,7 +428,7 @@ package body GPR2.Parser.Project is
       --  create the project tree and setup the project context.
 
       Project := Parse_Stage_1
-        (Unit, Filename, GPR2.Containers.Empty_Filename_Set, Messages);
+        (Unit, Filename, GPR2.Path_Name.Set.Empty_Set, Messages);
 
       --  Then record langkit tree data with project. Those data will be
       --  used for later parsing when creating view of projects with a
@@ -458,7 +457,7 @@ package body GPR2.Parser.Project is
 
    function Parse
      (Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
+      Implicit_With : GPR2.Path_Name.Set.Object;
       Messages      : out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
@@ -555,9 +554,10 @@ package body GPR2.Parser.Project is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
+      Implicit_With : GPR2.Path_Name.Set.Object;
       Messages      : out Log.Object) return Object
    is
+      use type GPR2.Path_Name.Object;
 
       Project : Object;
       --  The project being constructed
@@ -1015,8 +1015,6 @@ package body GPR2.Parser.Project is
 
                if not Cur_Child.Is_Null then
                   declare
-                     use type GPR2.Path_Name.Object;
-
                      Path : constant GPR2.Path_Name.Object :=
                               Get_Raw_Path (Cur_Child.As_String_Literal);
                   begin
@@ -1094,23 +1092,17 @@ package body GPR2.Parser.Project is
 
       --  Import --implicit-with options
 
-      for W of Implicit_With loop
-         declare
-            use GPR2.Path_Name;
-            PN : constant GPR2.Path_Name.Object :=
-                   Create_File (W, No_Resolution);
-         begin
-            if PN /= Filename
-              and then not Project.Imports.Contains (PN)
-            then
-               Project.Imports.Insert
-                 (GPR2.Project.Import.Create
-                    (PN,
-                     Source_Reference.Object
-                       (Source_Reference.Create (Filename.Value, 0, 0)),
-                     Is_Limited => True));
-            end if;
-         end;
+      for PN of Implicit_With loop
+         if PN /= Filename
+           and then not Project.Imports.Contains (PN)
+         then
+            Project.Imports.Insert
+              (GPR2.Project.Import.Create
+                 (PN,
+                  Source_Reference.Object
+                    (Source_Reference.Create (Filename.Value, 0, 0)),
+                  Is_Limited => True));
+         end if;
       end loop;
 
       return Project;
