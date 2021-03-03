@@ -29,7 +29,8 @@ class Manage(ManageScript):
                           grammar=gpr_grammar,
                           lib_name='GPR_Parser',
                           default_charset='iso-8859-1',
-                          verbosity=args.verbosity)
+                          verbosity=args.verbosity,
+                          case_insensitive=True)
 
 
 ada_header = """
