@@ -66,8 +66,9 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    procedure Put_Line (Str : String; Lvl : Verbosity_Level);
    --  Call Ada.Text_IO.Put_Line (Str) if Opt.Verbosity is at least Lvl
 
-   procedure Show_Tree_Load_Errors;
-   --  Print errors/warnings following a project tree load
+   function Show_Tree_Load_Errors return Boolean;
+   --  Print errors/warnings following a project tree load.
+   --  Returns True if error exists.
 
    -------------------
    -- Display_Paths --
@@ -168,7 +169,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -- Show_Tree_Load_Errors --
    ---------------------------
 
-   procedure Show_Tree_Load_Errors is
+   function Show_Tree_Load_Errors return Boolean is
       Has_Error : Boolean := False;
    begin
       for C in Tree.Log_Messages.Iterate
@@ -182,7 +183,10 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          Has_Error := True;
       end loop;
 
-      if not Has_Error then
+      if Has_Error then
+         return True;
+
+      else
          for C in Tree.Log_Messages.Iterate
            (Information => False,
             Warning     => True,
@@ -193,6 +197,8 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
             Put_Line (Log.Element (C).Format, Regular);
          end loop;
       end if;
+
+      return False;
    end Show_Tree_Load_Errors;
 
 begin
@@ -211,27 +217,19 @@ begin
          Default_KB        => not Opt.Skip_Default_KB,
          Custom_KB         => Opt.KB_Locations));
 
-   --  The configuration step could fail because the language list has been
-   --  set to empty ("for Languages use ()"), in this case just exit.
-   --  In other cases this is an error.
-
-   if not Tree.Has_Configuration then
-      if not Tree.Root_Project.Has_Languages then
-         Finish_Program (E_Success);
-      else
-         raise Processing_Error;
-      end if;
-   end if;
-
-   --  Show errors and warnings from the load stage
-
-   Show_Tree_Load_Errors;
-
    if Opt.Only_Display_Paths then
       --  For the "gprls -v" usage
 
       Display_Paths;
-      Finish_Program (E_Success);
+      return;
+   end if;
+
+   --  Show errors and warnings from the load stage
+
+   if Show_Tree_Load_Errors then
+      --  Terminate process if error was printed
+
+      return;
    end if;
 
    --  Make sure the sources are up to date
@@ -715,7 +713,7 @@ begin
       --  Do nothing if no source was found
 
       if Sources.Is_Empty then
-         Finish_Program (E_Success);
+         return;
       end if;
 
       --  Check all sources and notify when no ALI file is present
@@ -775,9 +773,11 @@ begin
 
 exception
    when Project_Error | Processing_Error =>
-      Show_Tree_Load_Errors;
+      if Show_Tree_Load_Errors then
+         null;
+      end if;
+
       Finish_Program
         (E_Errors,
-         "unable to process project file " &
-           String (Opt.Project_File.Name));
+         "unable to process project file " & String (Opt.Project_File.Name));
 end GPRls.Process;
