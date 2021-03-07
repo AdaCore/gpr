@@ -66,9 +66,8 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    procedure Put_Line (Str : String; Lvl : Verbosity_Level);
    --  Call Ada.Text_IO.Put_Line (Str) if Opt.Verbosity is at least Lvl
 
-   function Show_Tree_Load_Errors return Boolean;
+   procedure Show_Tree_Load_Errors;
    --  Print errors/warnings following a project tree load.
-   --  Returns True if error exists.
 
    -------------------
    -- Display_Paths --
@@ -169,23 +168,21 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -- Show_Tree_Load_Errors --
    ---------------------------
 
-   function Show_Tree_Load_Errors return Boolean is
-      Has_Error : Boolean := False;
+   procedure Show_Tree_Load_Errors is
    begin
-      for C in Tree.Log_Messages.Iterate
-        (Information => False,
-         Warning     => False,
-         Error       => True,
-         Read        => False,
-         Unread      => True)
-      loop
-         Put_Line (Log.Element (C).Format, Quiet);
-         Has_Error := True;
-      end loop;
+      if Tree.Log_Messages.Has_Error then
+         --  In case both warnings and errors are present, only displpay the
+         --  errors as they are probably responsible for the warnings.
 
-      if Has_Error then
-         return True;
-
+         for C in Tree.Log_Messages.Iterate
+           (Information => False,
+            Warning     => False,
+            Error       => True,
+            Read        => False,
+            Unread      => True)
+         loop
+            Put_Line (Log.Element (C).Format, Quiet);
+         end loop;
       else
          for C in Tree.Log_Messages.Iterate
            (Information => False,
@@ -197,8 +194,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
             Put_Line (Log.Element (C).Format, Regular);
          end loop;
       end if;
-
-      return False;
    end Show_Tree_Load_Errors;
 
 begin
@@ -226,9 +221,11 @@ begin
 
    --  Show errors and warnings from the load stage
 
-   if Show_Tree_Load_Errors then
-      --  Terminate process if error was printed
+   Show_Tree_Load_Errors;
 
+   --  Terminate process if error was printed
+
+   if Tree.Log_Messages.Has_Error then
       return;
    end if;
 
@@ -773,9 +770,7 @@ begin
 
 exception
    when Project_Error | Processing_Error =>
-      if Show_Tree_Load_Errors then
-         null;
-      end if;
+      Show_Tree_Load_Errors;
 
       Finish_Program
         (E_Errors,
