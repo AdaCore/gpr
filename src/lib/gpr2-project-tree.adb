@@ -2875,7 +2875,6 @@ package body GPR2.Project.Tree is
                         --  As in GPR1 ignore it.
 
                         Found := True;
-                        exit;
 
                      elsif P_Data.Aggregated.Contains
                        (Name_Type (Pathname.Value))
@@ -2889,7 +2888,6 @@ package body GPR2.Project.Tree is
                               & String (Pathname.Base_Name),
                               Project));
                         Found := True;
-                        exit;
 
                      elsif Pathname.Exists then
                         declare
@@ -2920,7 +2918,6 @@ package body GPR2.Project.Tree is
                         end;
 
                         Found := True;
-                        exit;
                      end if;
                   end loop;
 
