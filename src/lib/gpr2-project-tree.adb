@@ -3100,9 +3100,8 @@ package body GPR2.Project.Tree is
                            Self.Messages.Append
                              (Message.Create
                                 (Message.Error,
-                                 "attribute """ & String (A.Name.Text)
-                                 & """ cannot be used in package "
-                                 & String (P.Name),
+                                 "attribute """ & PRA.Image (Q_Name)
+                                 & """ cannot be used in " & Image (P_Kind),
                                  A));
                         end if;
 
