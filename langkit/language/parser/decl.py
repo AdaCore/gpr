@@ -141,13 +141,13 @@ class AdaMain(AdaPreludeNode):
     name = AbstractField(type=T.Expr)
 
 
-class AdaSubpKind(AdaPreludeNode):
+class AdaEntityKind(AdaPreludeNode):
     enum_node = True
-    alternatives = ["procedure", "function"]
+    alternatives = ["procedure", "function", "package"]
 
 
 class AdaSubp(AdaMain):
-    subp_kind = Field(type=AdaSubpKind)
+    subp_kind = Field(type=AdaEntityKind)
     name = Field(type=T.Expr)
 
 
@@ -175,11 +175,12 @@ class AdaGeneric(AdaPreludeNode):
 
 
 class AdaWithFormal(AdaPreludeNode):
+    kind = Field(T.AdaEntityKind)
     skips = Field(type=T.AdaSkip.list)
 
 
 class AdaAccessSubp(AdaPreludeNode):
-    subp_kind = Field(type=AdaSubpKind)
+    subp_kind = Field(type=AdaEntityKind)
     skips = Field(type=T.AdaSkip.list)
 
 
@@ -305,8 +306,9 @@ A.add_rules(
     ada_context_skip=List(Or(Skip(AdaSkip),)),
     ada_use_clause=AdaUse("use", A.ada_context_skip.dont_skip(";"), ";"),
     ada_pragma=AdaPragma("pragma", A.ada_context_skip.dont_skip(";"), ";"),
-    ada_subp_kind=Or(AdaSubpKind.alt_procedure(l_id("procedure")),
-                     AdaSubpKind.alt_function(l_id("function"))),
+    ada_subp_kind=Or(AdaEntityKind.alt_procedure(l_id("procedure")),
+                     AdaEntityKind.alt_function(l_id("function"))),
+    ada_pkg_kind=AdaEntityKind.alt_package("package"),
     ada_library_item=AdaLibraryItem(
 
         Opt(AdaGeneric(
@@ -319,7 +321,7 @@ A.add_rules(
 
                     # We want to parse the subprogram or package's starting
                     # keyword explicitly, because it cannot be skipped.
-                    Or(l_id('procedure'), l_id('function'), 'package'),
+                    Or(A.ada_subp_kind, A.ada_pkg_kind),
 
                     A.ada_context_skip.dont_skip(";")
                 ),
