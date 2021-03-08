@@ -59,7 +59,7 @@ package body GPR2.Project.Tree is
                          with Warnings => Off;
 
    Version_Regexp  : constant Regexp.Regexp :=
-                      Regexp.Compile (".[0-9]+(.[0-9]+)?");
+                      Regexp.Compile ("[.][0-9]+([.][0-9]+)?.*");
 
    Wildcards       : constant Ada.Strings.Maps.Character_Set :=
                        Ada.Strings.Maps.To_Set ("?*");
