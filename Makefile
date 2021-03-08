@@ -238,6 +238,9 @@ langkit/build: langkit
 ###########
 
 clean: ${LIBGPR2_TYPES:%=clean-%}
+	rm -f src/kb/collect_kb
+	rm -f src/kb/config.kb
+	rm -rf src/kb/obj
 
 clean-%:
 	-$(CLEANER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPR2)
