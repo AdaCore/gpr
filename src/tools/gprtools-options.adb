@@ -457,7 +457,7 @@ package body GPRtools.Options is
                  "Can't split '" & Value & "' to name and value";
             end if;
 
-            Self.Context.Insert
+            Self.Context.Include
               (GPR2.Name_Type (Value (Value'First .. Idx - 1)),
                Value (Idx + 1 .. Value'Last));
          end;
