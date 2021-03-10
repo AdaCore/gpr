@@ -1011,11 +1011,14 @@ package body GPR2.Project.Definition is
          --  If success, set Match to True and Kind to the appropriate value.
 
          function Compute_Unit_From_Filename
-           (File    : Path_Name.Object;
-            Kind    : Unit.Library_Unit_Type;
-            Success : out Boolean) return Name_Type;
+           (File     : Path_Name.Object;
+            Kind     : Unit.Library_Unit_Type;
+            Last_Dot : out Natural;
+            Success  : out Boolean) return Name_Type;
          --  For an Ada source and given its kind, try to compute a valid unit
          --  name. Success takes True if such a valid name is found.
+         --  Set Last_Dot to last dot index in result to split separate unit
+         --  name.
 
          -----------------------------
          -- Check_Naming_Exceptions --
@@ -1144,9 +1147,10 @@ package body GPR2.Project.Definition is
          --------------------------------
 
          function Compute_Unit_From_Filename
-           (File    : Path_Name.Object;
-            Kind    : Unit.Library_Unit_Type;
-            Success : out Boolean) return Name_Type
+           (File     : Path_Name.Object;
+            Kind     : Unit.Library_Unit_Type;
+            Last_Dot : out Natural;
+            Success  : out Boolean) return Name_Type
          is
             use Ada.Strings;
             use Ada.Strings.Maps;
@@ -1195,9 +1199,14 @@ package body GPR2.Project.Definition is
 
                         Replace_Slice
                           (Result, I, I + Dot_Repl'Length - 1, ".");
+
+                        Last_Dot := I;
                      end loop;
                   end;
                end if;
+
+            else
+               Last_Dot := Index (Result, Dot_Repl, Going => Backward);
             end if;
 
             --  In the standard GNAT naming scheme, check for special cases:
@@ -1432,11 +1441,13 @@ package body GPR2.Project.Definition is
                      --  For Ada, create a single compilation unit
 
                      declare
+                        Last_Dot  : Natural;
                         Unit_Name : constant Name_Type :=
                                       Compute_Unit_From_Filename
-                                        (File    => File,
-                                         Kind    => Kind,
-                                         Success => Match);
+                                        (File     => File,
+                                         Kind     => Kind,
+                                         Last_Dot => Last_Dot,
+                                         Success  => Match);
 
                         function Has_Conflict_NE
                           (Attr_Name : Name_Type) return Boolean;
@@ -1444,6 +1455,30 @@ package body GPR2.Project.Definition is
                         --  Attr_Name and index Unit_Name, and return True if
                         --  at least one of the matching attributes references
                         --  a different (source,index) than the current one.
+
+                        procedure Append_Unit
+                          (Name : Name_Type; Sep_From : Optional_Name_Type);
+                        --  Append unit into Units
+
+                        -----------------
+                        -- Append_Unit --
+                        -----------------
+
+                        procedure Append_Unit
+                          (Name : Name_Type; Sep_From : Optional_Name_Type) is
+                        begin
+                           Units.Append
+                             (Unit.Create
+                                (Name          => Name,
+                                 Index         => 1,
+                                 Main          => Unit.None,
+                                 Flags         => Unit.Default_Flags,
+                                 Lib_Unit_Kind => Kind,
+                                 Lib_Item_Kind => Unit.Is_Package,
+                                 Dependencies  =>
+                                   Source_Reference.Identifier.Set.Empty_Set,
+                                 Sep_From      => Sep_From));
+                        end Append_Unit;
 
                         ---------------------
                         -- Has_Conflict_NE --
@@ -1483,17 +1518,17 @@ package body GPR2.Project.Definition is
                               return;
                            end if;
 
-                           Units.Append
-                             (Unit.Create
-                                (Name          => Unit_Name,
-                                 Index         => 1,
-                                 Main          => Unit.None,
-                                 Flags         => Unit.Default_Flags,
-                                 Lib_Unit_Kind => Kind,
-                                 Lib_Item_Kind => Unit.Is_Package,
-                                 Dependencies  =>
-                                   Source_Reference.Identifier.Set.Empty_Set,
-                                 Sep_From      => No_Name));
+                           if Kind = Unit.S_Separate then
+                              pragma Assert
+                                (Last_Dot in
+                                   Unit_Name'First + 1 .. Unit_Name'Last - 1);
+
+                              Append_Unit
+                                (Unit_Name (Last_Dot + 1 .. Unit_Name'Last),
+                                 Unit_Name (Unit_Name'First .. Last_Dot - 1));
+                           else
+                              Append_Unit (Unit_Name, No_Name);
+                           end if;
                         end if;
                      end;
                   end if;
