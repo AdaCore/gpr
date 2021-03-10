@@ -3261,37 +3261,6 @@ package body GPR2.Project.Tree is
             end if;
 
             if View.Is_Library then
-               --  Library_Version attribute has no effect on Windows
-
-               if not View.Tree.Is_Windows_Target
-                 and then View.Is_Shared_Library
-                 and then View.Check_Attribute
-                            (PRA.Library_Version,
-                             Check_Extended => True, Result => Attr)
-               then
-                  declare
-                     AV      : constant Source_Reference.Value.Object :=
-                                 Attr.Value;
-                     Lib_Ver : constant Value_Type := AV.Text;
-                     Lib_Fn  : constant Value_Type :=
-                                 Value_Type (View.Library_Filename.Name);
-                  begin
-                     if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
-                       or else not Regexp.Match
-                         (Lib_Ver
-                            (Lib_Ver'First + Lib_Fn'Length .. Lib_Ver'Last),
-                          Version_Regexp)
-                     then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              '"' & Lib_Ver
-                              & """ not correct format for Library_Version",
-                              Sloc => AV));
-                     end if;
-                  end;
-               end if;
-
                Check_Directory
                  (PRA.Library_Dir, "library",
                   Project.View.Library_Directory'Access,
