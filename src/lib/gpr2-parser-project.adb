@@ -539,7 +539,7 @@ package body GPR2.Parser.Project is
             Project.Name := To_Unbounded_String ("Config");
          end if;
 
-         --  Finaly register this project into the registry
+         --  Finally register this project into the registry
 
          Registry.Register (Filename, Project);
 
@@ -1246,7 +1246,7 @@ package body GPR2.Parser.Project is
 
       function Is_Switches_Index_Case_Sensitive
         (Value : Value_Type) return Boolean;
-      --  Check wether the switches index is case senstive or not. This is
+      --  Check whether the switches index is case sensitive or not. This is
       --  needed as the Switches index can have language (non case-sensitive)
       --  and filename which can be case sensitive depending on the OS.
 

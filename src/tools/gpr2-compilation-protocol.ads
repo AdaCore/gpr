@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -189,7 +189,7 @@ package GPR2.Compilation.Protocol is
       Root_Dir : String;
       Files    : File_Data_Set.Vector);
    --  Send a set of filenames and associated timestamps. Will receive a OK or
-   --  KO with the list of files to be transfered to the slave.
+   --  KO with the list of files to be transferred to the slave.
 
    procedure Send_End_Of_Compilation (Channel : Communication_Channel);
    --  Send an end of compilation signal, the slave will at this point be able

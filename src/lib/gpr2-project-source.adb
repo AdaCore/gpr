@@ -216,7 +216,7 @@ package body GPR2.Project.Source is
 
                      Output (SU);
 
-                     --  Finaly, for the Closure mode add the dependencies
+                     --  Finally, for the Closure mode add the dependencies
                      --  of withed unit from the direct withed spec and
                      --  bodies.
 

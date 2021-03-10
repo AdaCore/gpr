@@ -618,7 +618,7 @@ package body GPR2.Project.Definition is
    procedure Set_Default_Attributes (Def : in out Data) is
 
       procedure Inherite_Attribute (Name : Name_Type);
-      --  Take attribute from extended project and put it inot current one
+      --  Take attribute from extended project and put it into current one
       --  if it exists in extended and is not defined in the current one.
 
       procedure Union_Attribute (Name : Name_Type);

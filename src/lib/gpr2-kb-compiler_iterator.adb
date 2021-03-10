@@ -242,7 +242,7 @@ package body GPR2.KB.Compiler_Iterator is
             end;
          end loop For_All_Files_In_Dir;
       else
-         --  Do not search all entries in the directory, but check explictly
+         --  Do not search all entries in the directory, but check explicitly
          --  for the compilers. This results in a lot less system calls, and
          --  thus is faster.
 

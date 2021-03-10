@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2020, AdaCore                        --
+--                       Copyright (C) 2021, AdaCore                        --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,8 +22,8 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  This object represents an atribute index. Such index can be "others" or any
---  string representing a lnagugage or a source filename for example.
+--  This object represents an attribute index. Such index can be "others" or
+--  any string representing a language or a source filename for example.
 
 with GPR2.Source_Reference.Value;
 

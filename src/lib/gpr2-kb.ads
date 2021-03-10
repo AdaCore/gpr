@@ -427,7 +427,7 @@ private
    function "="
      (Dummy_Left  : Regpat.Pattern_Matcher;
       Dummy_Right : Regpat.Pattern_Matcher) return Boolean is (False);
-   --  Always consideres two Pattern_Matchers different as there is no way
+   --  Always considers two Pattern_Matchers to be different as there is no way
    --  to actually compare them.
 
    package Pattern_Matcher_Holders is new Ada.Containers.Indefinite_Holders

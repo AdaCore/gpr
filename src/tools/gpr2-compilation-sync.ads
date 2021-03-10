@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                       Copyright (C) 2021, AdaCore                        --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -56,7 +56,7 @@ package GPR2.Compilation.Sync is
    --  by To_Slave. Total_File will be set with the total number of files
    --  checked and Total_Transferred the total number of files actually
    --  transferred (because of a time-stamp mismatch). The Root_Dir is the
-   --  directory from where the files are to be written. Finaly a Display
+   --  directory from where the files are to be written. Finally a Display
    --  routine can be passed to display messages during the transfer. Some
    --  messages are only displayed depending on Is_Debug status.
 

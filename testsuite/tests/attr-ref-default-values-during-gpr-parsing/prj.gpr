@@ -35,7 +35,7 @@ project Prj is
    --  ref to undefined root attribute.
 
    C := project'Exec_Dir;
-   --  use reference to refrence to default
+   --  use reference to reference to default
 
    D := project'Excluded_Source_Files;
    --  use reference to reference to defined

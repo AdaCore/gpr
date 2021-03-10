@@ -20,8 +20,8 @@ project Prj is
     when others =>
   end case;
 
-  package Forbiden is
-  end Forbiden;
+  package Forbidden is
+  end Forbidden;
 
   package Naming is
   end Naming;
