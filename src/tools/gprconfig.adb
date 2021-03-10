@@ -766,8 +766,14 @@ begin
    end if;
 
    if Opt_Batch and then Opt_Target.all = "all" then
-      Report_Error_And_Exit
-        ("-- target=all not allowed in --batch mode");
+      if Opt_Verbosity > Quiet then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "--target=all ignored in --batch mode");
+      end if;
+
+      GNAT.OS_Lib.Free (Opt_Target);
+      Opt_Target := new String'("");
    end if;
 
    KB_Flags (Validation) := Opt_Validate;
@@ -923,8 +929,11 @@ begin
 
    if Config_Log.Has_Error then
 
-      for Msg of Config_Log loop
-         Ada.Text_IO.Put_Line (Msg.Format);
+      for Msg_Cur in Config_Log.Iterate
+        (Information => Opt_Verbosity > Quiet,
+         Warning     => Opt_Verbosity > Quiet)
+      loop
+         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
       end loop;
 
       Ada.Text_IO.Put_Line ("Generation of configuration files failed");
@@ -932,8 +941,11 @@ begin
       return;
    else
 
-      for Msg of Config_Log loop
-         Ada.Text_IO.Put_Line (Msg.Format);
+      for Msg_Cur in Config_Log.Iterate
+        (Information => Opt_Verbosity > Quiet,
+         Warning     => Opt_Verbosity > Quiet)
+      loop
+         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
       end loop;
    end if;
 
