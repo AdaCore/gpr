@@ -33,10 +33,6 @@ class GNATcov(object):
         """ The gnatcov's trace file destination folder """
         return os.path.join(self.temp_dir, 'traces')
 
-    @property
-    def ignored_src_files(self):
-        return os.path.join(self.sid_dir, 'ignored.txt')
-
     @staticmethod
     def ensure_clean_dir(dirname):
         """

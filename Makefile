@@ -156,19 +156,7 @@ ifneq ($(COVERAGE),)
 	rm -rf $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*gnatcov-instr
 	mkdir -p $(SOURCE_DIR)/.build/$(BUILD)
 
-	# TODO remove when gnatcoverage limitations fixed
-	# TODO remove also gpr2-parser-project.adb gpr2-project-view.adb patches
-	echo "gpr2-path_name.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-	echo "gpr2-project-attribute_index.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-	echo "gpr2-project-attribute-set.adb" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-	echo "gpr2-project-attribute-set.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-	echo "gpr2-source.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-	echo "gpr2-source_info-parser-registry.adb" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-	echo "gpr2-unit.ads" >> $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt
-
-	$(COVERAGE_INSTR) \
-	--ignore-source-files @$(SOURCE_DIR)/.build/$(BUILD)/ignored.txt \
-	-P $(GPR2TOOLS)
+	$(COVERAGE_INSTR) -P $(GPR2TOOLS)
 endif
 
 ###########
@@ -187,8 +175,6 @@ ifneq ($(COVERAGE),)
 	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*.sid $(prefix)/share/gpr2/sids/
 	# exclude generated code from test coverage statistics
 	-rm $(prefix)/share/gpr2/sids/gpr_parser*
-	# copy --ignore-source-files list
-	cp $(SOURCE_DIR)/.build/$(BUILD)/ignored.txt $(prefix)/share/gpr2/sids/.
 	# copy instrumented gpr2 source files
 	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-static/gpr2-gnatcov-instr/*.ad? \
 		$(prefix)/include/gpr2.static/.

@@ -9,7 +9,6 @@ USE_VALGRIND = "USE_VALGRIND"
 USE_GNATCOV = "USE_GNATCOV"
 COV_TRACES_DIR = "GNATCOV_TRACES_DIR"
 COV_LEVEL = "GNATCOV_LEVEL"
-COV_IGNORED_SRC_FILES = "GNATCOV_IGNORED_SRC_FILES"
 
 GPR = os.environ["GPR2_TOOLS_PREFIX"] if "GPR2_TOOLS_PREFIX" in os.environ else "gpr"
 GPRLS = GPR + "ls"
@@ -58,19 +57,14 @@ class BuilderAndRunner(object):
 
                 # gnatcov calls --level switch
                 self.level = driver.env.gnatcov.covlevel
-
-                # file used when instrumenting code (see --ignore-source-files)
-                self.ignored_src_files = driver.env.gnatcov.ignored_src_files
             else:
                 self.level = None
                 self.traces_dir = None
-                self.ignored_src_files = None
         else:
             self.valgrind = USE_VALGRIND in os.environ
             self.gnatcov = USE_GNATCOV in os.environ
             self.traces_dir = os.environ.get(COV_TRACES_DIR)
             self.level = os.environ.get(COV_LEVEL)
-            self.ignored_src_files = os.environ.get(COV_IGNORED_SRC_FILES)
 
     def simple_run(
         self,
@@ -114,8 +108,6 @@ class BuilderAndRunner(object):
                 "--level",
                 self.level,
                 "--dump-trigger=atexit",
-                "--ignore-source-files",
-                "@" + self.ignored_src_files,
                 "--externally-built-projects",
                 "--projects",
                 "gpr2",
@@ -171,4 +163,3 @@ class BuilderAndRunner(object):
             env[USE_GNATCOV] = "true"
             env[COV_TRACES_DIR] = self.traces_dir
             env[COV_LEVEL] = self.level
-            env[COV_IGNORED_SRC_FILES] = self.ignored_src_files
