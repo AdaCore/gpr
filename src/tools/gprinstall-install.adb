@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -1352,6 +1352,10 @@ package body GPRinstall.Install is
          procedure Read_Project;
          --  Read project and set Content accordingly
 
+         procedure With_External_Imports (Project : GPR2.Project.View.Object);
+         --  Add all imports of externally built projects into install project
+         --  imports.
+
          procedure Write_Project;
          --  Write content into project
 
@@ -1952,6 +1956,21 @@ package body GPRinstall.Install is
             Close (File);
          end Read_Project;
 
+         ---------------------------
+         -- With_External_Imports --
+         ---------------------------
+
+         procedure With_External_Imports
+           (Project : GPR2.Project.View.Object) is
+         begin
+            for L of Project.Imports (Recursive => True) loop
+               if L.Has_Sources and then L.Is_Externally_Built then
+                  Content.Append
+                    ("with """ & String (L.Path_Name.Base_Name) & """;");
+               end if;
+            end loop;
+         end With_External_Imports;
+
          -------------------
          -- Write_Project --
          -------------------
@@ -2195,28 +2214,26 @@ package body GPRinstall.Install is
               ("--  " & GPRinstall_Tag & ' ' & Version.Long_Value);
             Add_Empty_Line;
 
-            if Project.Has_Imports then
+            if Project.Qualifier = K_Aggregate_Library then
+               for V of Project.Aggregated loop
+                  With_External_Imports (V);
+               end loop;
+
+               Add_Empty_Line;
+
+            elsif Project.Has_Imports then
                --  Handle with clauses, generate a with clauses only for
                --  project bringing some visibility to sources. No need
                --  for doing this for aggregate projects.
 
-               if Project.Qualifier /= K_Aggregate_Library then
-                  for L of Project.Imports loop
-                     if L.Has_Sources and then Is_Install_Active (L) then
-                        Content.Append
-                          ("with """ & String (L.Path_Name.Base_Name) & """;");
-                     end if;
-                  end loop;
-               end if;
-
-               --  In all cases adds externally built projects
-
-               for L of Project.Imports (Recursive => True) loop
-                  if L.Has_Sources and then L.Is_Externally_Built then
+               for L of Project.Imports loop
+                  if L.Has_Sources and then Is_Install_Active (L) then
                      Content.Append
                        ("with """ & String (L.Path_Name.Base_Name) & """;");
                   end if;
                end loop;
+
+               With_External_Imports (Project);
 
                Add_Empty_Line;
             end if;
