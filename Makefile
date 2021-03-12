@@ -47,7 +47,7 @@ BUILD_DIR     =
 SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
 ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
 	-P$(MAKEPREFIX)config/test_shared 2>/dev/null && echo "yes")
-GPRINSTALL=gprinstall
+GPRINSTALL    = gprinstall
 
 # Whether to use gpr<name> or the alternate gpr2<name> tools names
 GPR2_TOOLS_PREFIX=gpr
@@ -120,14 +120,14 @@ GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
             ${COVERAGE_BUILD_FLAGS}
 INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
-CLEANER=gprclean -q $(RBD)
+CLEANER=gprclean -eL -p $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --uninstall
 
 #########
 # build #
 #########
 
-all: kb build build-tools
+all: build-static build-tools
 
 kb:
 	gprbuild -p $(GPR2KB)
@@ -138,7 +138,7 @@ build: ${LIBGPR2_TYPES:%=build-%}
 
 build-%: kb
 ifeq ($(COVERAGE),)
-	$(SOURCE_DIR);$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
+	$(BUILDER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* $(GPR2)
 else
 	echo "gpr2 library built from gpr2-tools in coverage mode"
@@ -214,7 +214,7 @@ install-tools:
 
 .SILENT: setup setup2
 
-setup: langkit/build
+setup: langkit/build kb
 	echo "prefix=$(prefix)" > makefile.setup
 	echo "ENABLE_SHARED=$(ENABLE_SHARED)" >> makefile.setup
 	echo "BUILD=$(BUILD)" >> makefile.setup
@@ -237,11 +237,16 @@ langkit/build: langkit
 # Cleanup #
 ###########
 
-clean: ${LIBGPR2_TYPES:%=clean-%}
+distclean: clean
 	rm -f src/kb/collect_kb
 	rm -f src/kb/config.kb
 	rm -rf src/kb/obj
+	make -C langkit clean
+
+clean: clean-tools ${LIBGPR2_TYPES:%=clean-%}
 
 clean-%:
-	-$(CLEANER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* $(GPR2)
-	make -C langkit clean
+	-$(CLEANER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* -P $(GPR2)
+
+clean-tools:
+	-$(CLEANER) -P $(GPR2TOOLS)
