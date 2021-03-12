@@ -1,0 +1,14 @@
+
+project SPEC is
+
+   for Source_Dirs use (".");
+   
+   for Languages use ("Ada");
+
+   package Naming is
+      for Separate_Suffix use ".ada";
+      for Casing use "MixedCase";
+      for Dot_Replacement use external ("DOT_REPLACEMENT",".");
+   end Naming; 
+
+end SPEC;
