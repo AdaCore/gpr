@@ -1,0 +1,11 @@
+with GNAT.IO;  use GNAT.IO;
+package body Test is
+   procedure Test is
+   begin
+      Put_Line ("OK");
+   end Test;
+end Test;
+
+package Test is
+   procedure Test;
+end Test;
