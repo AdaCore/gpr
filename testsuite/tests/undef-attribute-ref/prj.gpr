@@ -5,12 +5,12 @@ project Prj is
    B := Prj'Externally_Built & "B";
 
    package Naming is
-      C := Naming'Casing & "C";
+      C := Naming'Casing & " C";
       D := Prj.Naming'Specification_Exceptions("Test") & ("D");
    end Naming;
 
    package Compiler is
-      E := Naming'Casing & "E";
+      E := Naming'Casing & " E";
       F := Naming'Specification_Exceptions("Test") & ("F");
    end Compiler;
 
@@ -19,6 +19,6 @@ project Prj is
    E := Compiler.E;
    F := Compiler.F;
 
-   G := Child.Naming'Casing & "G";
+   G := Child.Naming'Casing & " G";
    H := Child.Naming'Specification_Exceptions("Test") & "H";
 end Prj;

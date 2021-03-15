@@ -1136,7 +1136,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => False,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Default              => Create ("lowercase"));
 
    --  naming.dot_replacement
    Add

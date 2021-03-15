@@ -16,7 +16,7 @@ BEFORE: Has unread Message: TRUE
 ERROR
  4
  25
-unit 'pck._b' not valid, cannot contain dot after underscore
+unit 'pck._b' not valid, cannot contain underscore after dot
 AFTER: Has unread Message: FALSE
 
 Project: Demo3

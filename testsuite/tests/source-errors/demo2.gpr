@@ -6,6 +6,7 @@ project Demo2 is
 
    package Naming is
       for Dot_Replacement use "__";
+      for Body ("pck._b") use "pck___b.ads";
    end Naming;
 
 end Demo2;

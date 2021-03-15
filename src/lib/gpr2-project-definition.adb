@@ -47,6 +47,8 @@ with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
 with GPR2.Source_Reference.Value;
 
+with GNATCOLL.Utils;
+
 package body GPR2.Project.Definition is
 
    use GNAT;
@@ -55,6 +57,8 @@ package body GPR2.Project.Definition is
    package ASF renames Ada.Strings.Fixed;
    package PRA renames Project.Registry.Attribute;
    package PRP renames Project.Registry.Pack;
+   package SR  renames GPR2.Source_Reference;
+   package SRI renames SR.Identifier;
 
    Builtin_Naming_Package : Project.Pack.Object;
    --  The default naming package to use if no Naming package specified in the
@@ -88,7 +92,7 @@ package body GPR2.Project.Definition is
                   View.Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
-                        Sloc    => GPR2.Source_Reference.Value.Create
+                        Sloc    => SR.Value.Create
                           (Filename => View.Path_Name.Value,
                            Line     => 0,
                            Column   => 0,
@@ -103,7 +107,7 @@ package body GPR2.Project.Definition is
                   View.Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
-                        Sloc    => GPR2.Source_Reference.Value.Create
+                        Sloc    => SR.Value.Create
                           (Filename => View.Path_Name.Value,
                            Line     => 0,
                            Column   => 0,
@@ -119,7 +123,7 @@ package body GPR2.Project.Definition is
                   View.Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
-                        Sloc    => GPR2.Source_Reference.Value.Create
+                        Sloc    => SR.Value.Create
                           (Filename => View.Path_Name.Value,
                            Line     => 0,
                            Column   => 0,
@@ -134,7 +138,7 @@ package body GPR2.Project.Definition is
                   View.Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
-                        Sloc    => GPR2.Source_Reference.Value.Create
+                        Sloc    => SR.Value.Create
                           (Filename => View.Path_Name.Value,
                            Line     => 0,
                            Column   => 0,
@@ -543,7 +547,7 @@ package body GPR2.Project.Definition is
                      View.Tree.Log_Messages.Append
                        (Message.Create
                           (Level   => Message.Error,
-                           Sloc    => GPR2.Source_Reference.Value.Create
+                           Sloc    => SR.Value.Create
                              (Filename => Extending.Path_Name.Value,
                               Line     => 0,
                               Column   => 0,
@@ -712,7 +716,7 @@ package body GPR2.Project.Definition is
       use GPR2.Containers;
       use GPR2.Path_Name;
 
-      use type Source_Reference.Object;
+      use type SR.Object;
 
       Root : constant GPR2.Path_Name.Full_Name := Def.Path.Value;
 
@@ -720,15 +724,13 @@ package body GPR2.Project.Definition is
         (Name_Type, Boolean);
 
       package Unit_Name_To_Sloc is new
-        Ada.Containers.Indefinite_Ordered_Maps
-          (Name_Type, Source_Reference.Object);
+        Ada.Containers.Indefinite_Ordered_Maps (Name_Type, SR.Object);
       --  Used for the Interface_Units container which will initially store all
       --  the units from the Library_Interface attribute, as a mapping from
       --  unit names to slocs.
 
       package Source_Path_To_Sloc is new
-        Ada.Containers.Indefinite_Ordered_Maps
-          (Filename_Type, Source_Reference.Object);
+        Ada.Containers.Indefinite_Ordered_Maps (Filename_Type, SR.Object);
       --  Same as above but for the Interfaces attribute, so here we are using
       --  Filename_Type instead of Name_Type since we're dealing with
       --  filenames.
@@ -783,7 +785,7 @@ package body GPR2.Project.Definition is
       procedure Insert
         (Sources : Project.Source.Set.Object;
          Mode    : Insert_Mode;
-         Sloc    : Source_Reference.Object'Class);
+         Sloc    : SR.Object'Class);
       --  Insert Sources from an extended or aggregated project into
       --  Def.Sources. Mode is Skip for extended projects (ignore sources from
       --  the extended project that have been replaced in the extending one),
@@ -792,7 +794,7 @@ package body GPR2.Project.Definition is
       procedure Include_Simple_Filename
         (Set   : in out Source_Set.Set;
          Value : Value_Type;
-         Sloc  : Source_Reference.Value.Object);
+         Sloc  : SR.Value.Object);
       --  Includes Value into Set. If Value contains directory separator put
       --  error message into log.
 
@@ -831,7 +833,7 @@ package body GPR2.Project.Definition is
       --  This is to take into account shortened names like "Ada." (a-),
       --  "System." (s-) and so on.
 
-      Source_Dir_Ref    : Source_Reference.Object;
+      Source_Dir_Ref    : SR.Object;
 
       Included_Sources  : Source_Set.Set;
       Excluded_Sources  : Source_Set.Set;
@@ -1020,6 +1022,9 @@ package body GPR2.Project.Definition is
          --  Set Last_Dot to last dot index in result to split separate unit
          --  name.
 
+         function Right_Unit_Name (Unit_Name : String) return Boolean;
+         --  Check that unit name is correct
+
          -----------------------------
          -- Check_Naming_Exceptions --
          -----------------------------
@@ -1074,71 +1079,123 @@ package body GPR2.Project.Definition is
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type)
          is
-            function Ends_With (Str, Ending : Value_Type) return Boolean
-              with Inline;
-            --  Returns True if Str ends with the string Ending
 
-            ---------------
-            -- Ends_With --
-            ---------------
+            function Check_Suffix_And_Dot_Replacement
+              (Suffix : Project.Attribute.Object;
+               Kind   : Unit.Library_Unit_Type) return Boolean;
+            --  If right suffix for any languages and dot replacement for Ada
+            --  then returns True. Set Check_Naming_Scheme.Kind to Kind.
 
-            function Ends_With (Str, Ending : Value_Type) return Boolean is
+            --------------------------------------
+            -- Check_Suffix_And_Dot_Replacement --
+            --------------------------------------
+
+            function Check_Suffix_And_Dot_Replacement
+              (Suffix : Project.Attribute.Object;
+               Kind   : Unit.Library_Unit_Type) return Boolean
+            is
+               Ending : constant String := Suffix.Value.Text;
+
+               function Test_Charset return Boolean;
+
+               ------------------
+               -- Test_Charset --
+               ------------------
+
+               function Test_Charset return Boolean is
+                  use Ada.Strings.Maps;
+                  Casing : constant String :=
+                             ACH.To_Lower
+                               (Naming.Attribute (PRA.Casing).Value.Text);
+                  Charset : constant Character_Set :=
+                              (if Casing = "lowercase"
+                               then Constants.Lower_Set
+                               elsif Casing = "uppercase"
+                               then Constants.Upper_Set
+                               elsif Casing = "mixedcase"
+                               then Constants.Letter_Set
+                               else Null_Set);
+                  J  : Positive := Basename'First; -- Iterates over Basename
+                  DP : Positive := Basename'First;
+                  --  Next char after last dot replacement
+                  DD : Positive := Basename'First;
+                  --  Next char after last dot replacement or underscore.
+                  --  To avoid dot replacements and underscores to be one after
+                  --  another.
+
+               begin
+                  while J <= Basename'Last - Ending'Length loop
+                     if Is_In (Basename (J), Charset) then
+                        J := J + 1;
+
+                     elsif J + Dot_Repl'Length <= Basename'Last - Ending'Length
+                       and then DD < J -- Don't after underscore or dot replace
+                       and then Basename (J .. J + Dot_Repl'Length - 1)
+                       = Dot_Repl
+                     then
+                        J := J + Dot_Repl'Length;
+                        DD := J;
+                        DP := J;
+
+                     elsif Basename (J) in '0' .. '9' and then DP < J then
+                        --  Decimal can't be next char after dot replacement
+
+                        J := J + 1;
+
+                     elsif Basename (J) = '_' then
+                        if DD < J then
+                           J := J + 1;
+                           DD := J;
+                        else
+                           --  Double underscores and not dot replacement
+
+                           return False;
+                        end if;
+
+                     else
+                        return False;
+                     end if;
+                  end loop;
+
+                  return True;
+               end Test_Charset;
+
             begin
-               if Str'Length >= Ending'Length then
-                  return (Strings.Fixed.Tail
-                          (String (Str), Ending'Length)) = Ending;
+               if GNATCOLL.Utils.Ends_With (Basename, Ending)
+                 and then (Language /= "Ada"
+                           or else Test_Charset)
+               then
+                  Check_Naming_Scheme.Kind := Kind;
+                  Match := True;
+                  return True;
+
                else
                   return False;
                end if;
-            end Ends_With;
+            end Check_Suffix_And_Dot_Replacement;
 
          begin
             Match := False;
             Kind  := Unit.S_Spec;
 
-            if Naming.Has_Spec_Suffix (Language) then
-               Check_Spec : declare
-                  Spec_Suffix : constant Project.Attribute.Object :=
-                                  Naming.Spec_Suffix (Language);
-               begin
-                  if Ends_With (Basename, Spec_Suffix.Value.Text) then
-                     Match := True;
-                     Kind  := Unit.S_Spec;
-                     return;
-                  end if;
-               end Check_Spec;
-            end if;
-
-            if Naming.Has_Body_Suffix (Language) then
-               Check_Body : declare
-                  Body_Suffix : constant Project.Attribute.Object :=
-                                  Naming.Body_Suffix (Language);
-               begin
-                  if Ends_With (Basename, Body_Suffix.Value.Text) then
-                     Match := True;
-                     Kind  := Unit.S_Body;
-                     --  May be actually a Separate, we cannot know until
-                     --  we parse the file.
-
-                     return;
-                  end if;
-               end Check_Body;
-            end if;
-
-            --  Separate_Suffix is only valid for Ada
-
-            if Language = "Ada"
-              and then Naming.Has_Separate_Suffix
+            if Naming.Has_Spec_Suffix (Language)
+              and then Check_Suffix_And_Dot_Replacement
+                (Naming.Spec_Suffix (Language), Unit.S_Spec)
             then
-               Check_Separate : declare
-                  Sep_Suffix : constant Project.Attribute.Object :=
-                                 Naming.Separate_Suffix;
-               begin
-                  if Ends_With (Basename, Sep_Suffix.Value.Text) then
-                     Match := True;
-                     Kind  := Unit.S_Separate;
-                  end if;
-               end Check_Separate;
+               return;
+
+            elsif Naming.Has_Body_Suffix (Language)
+              and then Check_Suffix_And_Dot_Replacement
+                (Naming.Body_Suffix (Language), Unit.S_Body)
+            then
+               return;
+
+            elsif Language = "Ada"
+              and then Naming.Has_Separate_Suffix
+              and then Check_Suffix_And_Dot_Replacement
+                (Naming.Separate_Suffix, Unit.S_Separate)
+            then
+               return;
             end if;
          end Check_Naming_Scheme;
 
@@ -1186,7 +1243,7 @@ package body GPR2.Project.Definition is
                   Tree.Append_Message
                     (Message.Create
                        (Message.Error, "invalid name, contains dot",
-                        Source_Reference.Create (File.Value, 1, 1)));
+                        SR.Create (File.Value, 1, 1)));
                   goto Invalid;
 
                else
@@ -1248,70 +1305,9 @@ package body GPR2.Project.Definition is
 
             --  Some additional checks on the unit name
 
-            --  Double underscore not allowed
-
-            if Strings.Fixed.Index (To_String (Result), "__") /= 0 then
+            if not Right_Unit_Name (To_String (Result)) then
                goto Invalid;
             end if;
-
-            --  Must start with a letter
-
-            if not Is_In
-              (Element (Result, 1), Constants.Letter_Set or To_Set ("_"))
-            then
-               Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     "unit '" & To_String (Result)  & "' not valid,"
-                     & " should start with a letter or an underscore",
-                     Source_Dir_Ref));
-               goto Invalid;
-            end if;
-
-            --  Cannot have 2 consecutive underscores, cannot have a dot after
-            --  an underscore and should contains only alphanumeric characters.
-
-            for K in 2 .. Length (Result) loop
-               declare
-                  Prev    : constant Character := Element (Result, K - 1);
-                  Current : constant Character := Element (Result, K);
-               begin
-                  if Current = '_' then
-                     if Prev = '.' then
-                        Tree.Append_Message
-                          (Message.Create
-                             (Message.Error,
-                              "unit '" & To_String (Result)
-                              & "' not valid, cannot contain"
-                              & " dot after underscore",
-                              Source_Dir_Ref));
-                        goto Invalid;
-
-                     elsif Prev = '_' then
-                        Tree.Append_Message
-                          (Message.Create
-                             (Message.Error,
-                              "unit '" & To_String (Result)
-                              & "' not valid, two consecutive"
-                              & " underlines not permitted",
-                              Source_Dir_Ref));
-                        goto Invalid;
-                     end if;
-
-                  elsif not Characters.Handling.Is_Alphanumeric (Current)
-                    and then Current /= '.'
-                  then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "unit '" & To_String (Result)
-                           & "' not valid, should have only alpha numeric"
-                           & " characters",
-                           Source_Dir_Ref));
-                     goto Invalid;
-                  end if;
-               end;
-            end loop;
 
             Success := True;
 
@@ -1323,6 +1319,88 @@ package body GPR2.Project.Definition is
 
             return "0"; -- Some dummy unit name
          end Compute_Unit_From_Filename;
+
+         ---------------------
+         -- Right_Unit_Name --
+         ---------------------
+
+         function Right_Unit_Name (Unit_Name : String) return Boolean is
+            use Ada.Strings.Maps;
+         begin
+            --  Must start with a letter
+
+            if not Is_In
+              (Unit_Name (Unit_Name'First),
+               Constants.Letter_Set or To_Set ("_"))
+            then
+               Tree.Append_Message
+                 (Message.Create
+                    (Message.Error,
+                     "unit '" & Unit_Name  & "' not valid,"
+                     & " should start with a letter or an underscore",
+                     Source_Dir_Ref));
+               return False;
+            end if;
+
+            --  Cannot have dot and underscores one after anothers and should
+            --  contains only alphanumeric characters.
+
+            for K in Unit_Name'First + 1 .. Unit_Name'Last loop
+               declare
+                  Two_Chars : constant String := Unit_Name (K - 1 .. K);
+               begin
+                  if Two_Chars = "_." then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & Unit_Name & "' not valid,"
+                           & " cannot contain dot after underscore",
+                           Source_Dir_Ref));
+                     return False;
+
+                  elsif Two_Chars = "__" then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & Unit_Name & "' not valid,"
+                           & " two consecutive underlines not permitted",
+                           Source_Dir_Ref));
+                     return False;
+
+                  elsif Two_Chars = "._" then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & Unit_Name & "' not valid,"
+                           & " cannot contain underscore after dot",
+                           Source_Dir_Ref));
+                     return False;
+
+                  elsif Two_Chars = ".." then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & Unit_Name & "' not valid,"
+                           & " two consecutive dots not permitted",
+                           Source_Dir_Ref));
+                     return False;
+
+                  elsif not Characters.Handling.Is_Alphanumeric (Unit_Name (K))
+                    and then Unit_Name (K) not in '.' | '_'
+                  then
+                     Tree.Append_Message
+                       (Message.Create
+                          (Message.Error,
+                           "unit '" & Unit_Name & "' not valid,"
+                           & " should have only alpha numeric characters",
+                           Source_Dir_Ref));
+                     return False;
+                  end if;
+               end;
+            end loop;
+
+            return True;
+         end Right_Unit_Name;
 
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
@@ -1377,7 +1455,6 @@ package body GPR2.Project.Definition is
 
                      for Exc of Ada_Naming_Exceptions (Basename) loop
                         declare
-                           package SR renames GPR2.Source_Reference;
                            Unit_Name : constant Name_Type :=
                                          Name_Type (Exc.Index.Text);
                            Index     : Natural;
@@ -1407,17 +1484,20 @@ package body GPR2.Project.Definition is
                               --  properties for now. Others will be taken on
                               --  source parsing.
 
-                              Units.Append
-                                (Unit.Create
-                                   (Name          => Unit_Name,
-                                    Index         => Index,
-                                    Lib_Unit_Kind => Kind,
-                                    Lib_Item_Kind => Unit.Is_Package,
-                                    Main          => Unit.None,
-                                    Flags         => Unit.Default_Flags,
-                                    Dependencies  => SR.Identifier.Set
-                                                     .Empty_Set,
-                                    Sep_From      => No_Name));
+                              if Right_Unit_Name (String (Unit_Name)) then
+                                 Units.Append
+                                   (Unit.Create
+                                      (Name          => Unit_Name,
+                                       Index         => Index,
+                                       Lib_Unit_Kind => Kind,
+                                       Lib_Item_Kind => Unit.Is_Package,
+                                       Main          => Unit.None,
+                                       Flags         => Unit.Default_Flags,
+                                       Dependencies  => SRI.Set.Empty_Set,
+                                       Sep_From      => No_Name));
+                              else
+                                 Match := False;
+                              end if;
 
                            else
                               --  Duplicated source file in naming exception
@@ -1475,8 +1555,7 @@ package body GPR2.Project.Definition is
                                  Flags         => Unit.Default_Flags,
                                  Lib_Unit_Kind => Kind,
                                  Lib_Item_Kind => Unit.Is_Package,
-                                 Dependencies  =>
-                                   Source_Reference.Identifier.Set.Empty_Set,
+                                 Dependencies  => SRI.Set.Empty_Set,
                                  Sep_From      => Sep_From));
                         end Append_Unit;
 
@@ -1655,7 +1734,7 @@ package body GPR2.Project.Definition is
       procedure Include_Simple_Filename
         (Set   : in out Source_Set.Set;
          Value : Value_Type;
-         Sloc  : Source_Reference.Value.Object)
+         Sloc  : SR.Value.Object)
       is
          Position : Source_Set.Cursor;
          Inserted : Boolean;
@@ -1679,7 +1758,7 @@ package body GPR2.Project.Definition is
       procedure Insert
         (Sources : Project.Source.Set.Object;
          Mode    : Insert_Mode;
-         Sloc    : Source_Reference.Object'Class)
+         Sloc    : SR.Object'Class)
       is
          procedure Add_Source (Src : Project.Source.Object);
 
@@ -1885,7 +1964,7 @@ package body GPR2.Project.Definition is
         (Attr_Name : Name_Type;
          Set       : in out Source_Set.Set)
       is
-         Attr_Value : constant GPR2.Source_Reference.Value.Object :=
+         Attr_Value : constant SR.Value.Object :=
                         Def.Attrs.Element (Attr_Name).Value;
          Filename   : constant GPR2.Path_Name.Full_Name :=
                         Directories.Compose (Root, Attr_Value.Text);
@@ -2118,7 +2197,7 @@ package body GPR2.Project.Definition is
 
          for Unit of Def.Attrs.Library_Interface.Values loop
             Interface_Units.Insert
-              (Name_Type (Unit.Text), Source_Reference.Object (Unit),
+              (Name_Type (Unit.Text), SR.Object (Unit),
                Position_In_Units, Inserted);
 
             if not Inserted then
@@ -2139,7 +2218,7 @@ package body GPR2.Project.Definition is
 
          for Source of Def.Attrs.Interfaces.Values loop
             Interface_Sources.Insert
-              (Filename_Type (Source.Text), Source_Reference.Object (Source),
+              (Filename_Type (Source.Text), SR.Object (Source),
                Position_In_Sources, Inserted);
 
             if not Inserted then
@@ -2299,7 +2378,7 @@ package body GPR2.Project.Definition is
             for Dir of View.Source_Directories.Values loop
                --  Keep reference for error messages
 
-               Source_Dir_Ref := Source_Reference.Object (Dir);
+               Source_Dir_Ref := SR.Object (Dir);
 
                declare
 
@@ -2405,8 +2484,7 @@ package body GPR2.Project.Definition is
       --  only add the sources not already defined in the current set.
 
       if Def.Extended.Is_Defined then
-         Insert
-           (Def.Extended.Sources, Extended_Copy, Source_Reference.Undefined);
+         Insert (Def.Extended.Sources, Extended_Copy, SR.Undefined);
       end if;
 
       if Def.Attrs.Languages.Is_Defined
@@ -2443,10 +2521,8 @@ package body GPR2.Project.Definition is
 
       for Cur in Interface_Units.Iterate loop
          declare
-            Sloc      : constant Source_Reference.Object :=
-                          Unit_Name_To_Sloc.Element (Cur);
-            Unit_Name : constant Name_Type :=
-                          Unit_Name_To_Sloc.Key (Cur);
+            Sloc      : constant SR.Object := Unit_Name_To_Sloc.Element (Cur);
+            Unit_Name : constant Name_Type := Unit_Name_To_Sloc.Key (Cur);
          begin
             Tree.Append_Message
               (Message.Create
@@ -2459,7 +2535,7 @@ package body GPR2.Project.Definition is
 
       for Cur in Interface_Sources.Iterate loop
          declare
-            Sloc        : constant Source_Reference.Object :=
+            Sloc        : constant SR.Object :=
                             Source_Path_To_Sloc.Element (Cur);
             Source_Path : constant Filename_Type :=
                             Source_Path_To_Sloc.Key (Cur);
@@ -2519,9 +2595,7 @@ begin
 
    Builtin_Naming_Package :=
      Project.Pack.Create
-       (Source_Reference.Identifier.Object
-          (Source_Reference.Identifier.Create
-             (Source_Reference.Builtin, PRP.Naming)),
+       (SRI.Object (SRI.Create (SR.Builtin, PRP.Naming)),
         Project.Attribute.Set.Empty_Set,
         Project.Variable.Set.Set.Empty_Map);
 end GPR2.Project.Definition;
