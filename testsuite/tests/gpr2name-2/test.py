@@ -10,9 +10,9 @@ def run(args):
     print(bnr.check_output(args).out)
 
 
-# B701-008
+# ** recursive dir switch support
 try:
-    os.chdir('B701-008')
+    os.chdir('recursive-dir')
     run([GPRNAME, '-Pprj', '-d.', '-da/b', '-da/**', '-da/d', '*.spec', '*.body',
          '--ignore-duplicate-files'])
     subprocess.check_output("gprbuild -p -q -f -P prj driver.body", shell=True)

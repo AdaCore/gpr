@@ -12,9 +12,9 @@ def run(args):
     print(bnr.check_output(args).out)
 
 
-# O528-047
+# gpr2name -P switch support
 try:
-    os.chdir('O528-047')
+    os.chdir('P-switch-support')
     run([GPRNAME, '-Pprj.gpr', '*.ada'])
     subprocess.run("gprbuild -p -q -P prj.gpr main.2.ada -o main", shell=True)
     subprocess.run("./main")
@@ -24,9 +24,9 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# O711-003
+# non ada sources support
 try:
-    os.chdir('O711-003')
+    os.chdir('non-ada-sources')
     run([GPRNAME, '-Pprj.gpr', '*.ada', '-f', '*.c', '-f:c', '*.clang'])
     subprocess.run("gprbuild -p -q -P prj.gpr main.ada", shell=True)
     subprocess.run("./main")
@@ -36,9 +36,9 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# OA16-060
+# very long source file support
 try:
-    os.chdir('OA16-060')
+    os.chdir('very-long-source-file')
     run([GPRNAME, '-Pprj.gpr', '*.ad?'])
     subprocess.run("gprbuild -p -q -P prj.gpr", shell=True)
 except Exception as E:
@@ -47,9 +47,9 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# PC08-062
+# ignore-predefined-units switch support
 try:
-    os.chdir('PC08-062')
+    os.chdir('ignore-predefined-units')
     run([GPRNAME, '-Pprj.gpr', '--ignore-predefined-units', '*.ada'])
     subprocess.run("gprbuild -p -q -P prj.gpr", shell=True)
 except Exception as E:
@@ -58,9 +58,9 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# PC08-064
+# ignore-duplicate-files switch support
 try:
-    os.chdir('PC08-064')
+    os.chdir('ignore-duplicate-files')
     run([GPRNAME, '-Pprj.gpr', '-dsrc1', '-dsrc2', '*t.ada'])
     run([GPRNAME, '-Pprj.gpr', '-dsrc1', '-dsrc2', '*2.ada'])
     run([GPRNAME, '-Pprj.gpr', '-dsrc1', '-dsrc2', '--ignore-duplicate-files', '*.ada'])
@@ -71,9 +71,9 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# R404-033
+# keep unknown attributes in generated GPR
 try:
-    os.chdir('R404-033')
+    os.chdir('keep-unknown-attributes')
     run([GPRNAME, '-Pp.gpr', '*.adb'])
     print(diff('expected2', 'p.gpr'))
 except Exception as E:
@@ -82,9 +82,9 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# RB16-006
+# set GPR_TOOL to gprbuild when gpr tools are parsing GPR files
 try:
-    os.chdir('RB16-006')
+    os.chdir('external-GPR_TOOL')
     if "GPRTOOL" in os.environ:
         os.environ.pop("GPR_TOOL")
     subprocess.run('gprbuild -p -q -P test.gpr', shell=True)
@@ -97,18 +97,18 @@ except Exception as E:
 finally:
     os.chdir('..')
 
-# RB29-052
+# allow -P with path
 try:
-    os.chdir('RB29-052')
+    os.chdir('project-file-with-path')
     run([GPRNAME, '-PA/p.gpr', "-d", "src", '*'])
 except Exception as E:
     print('*** Error: %s' % str(E))
 finally:
     os.chdir('..')
 
-# S117-048
+# limit generated gpr changes
 try:
-    os.chdir('S117-048')
+    os.chdir('order-generated-content')
     run([GPRNAME, '-Pp.gpr', '-d', 'src', '*.ads', '-f*.c'])
     print(diff('naming_expected2', 'p_naming.gpr'))
     print(diff('source_list_expected', 'p_source_list.txt'))

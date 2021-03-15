@@ -15,9 +15,9 @@ warning: duplicate file init2.ada for unit Init_Duplicate will be ignored
 
 Install project Test
 
-/RB16-006/main.o
+/external-GPR_TOOL/main.o
    Main
-      OK /RB16-006/src/main.adb
+      OK /external-GPR_TOOL/src/main.adb
 
 
 
