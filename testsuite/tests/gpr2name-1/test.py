@@ -16,6 +16,7 @@ def run(args):
 try:
     os.chdir('P-switch-support')
     run([GPRNAME, '-Pprj.gpr', '*.ada'])
+    print(diff('prj.expected', 'prj.gpr'))
     subprocess.run("gprbuild -p -q -P prj.gpr main.2.ada -o main", shell=True)
     subprocess.run("./main")
 except Exception as E:
