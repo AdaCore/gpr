@@ -24,6 +24,7 @@
 
 with Ada.Directories;
 with Ada.IO_Exceptions;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
@@ -96,6 +97,10 @@ package body GPR2.Project.View is
    --  Prefix to be used for the binder exchange file name for the language.
    --  Used to have different binder exchange file names when binding different
    --  languages.
+
+   function Remove_Body_Suffix
+     (Self : Object; Name : Simple_Name) return Value_Not_Empty;
+   --  Remove body suffix from Name
 
    -------------------------
    -- Aggregate_Libraries --
@@ -469,6 +474,50 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Context;
    end Context;
+
+   ----------------
+   -- Executable --
+   ----------------
+
+   function Executable
+     (Self    : Object;
+      Source  : Simple_Name;
+      At_Pos  : Natural) return GPR2.Path_Name.Object
+   is
+      package A renames GPR2.Project.Registry.Attribute;
+
+      Builder  : constant GPR2.Project.Pack.Object := Self.Builder;
+
+      BN       : constant  Value_Not_Empty :=
+                   Remove_Body_Suffix (Self, Source);
+      BN_Index : constant Attribute_Index.Object :=
+                   Attribute_Index.Create (BN);
+      Index    : constant Attribute_Index.Object :=
+                   Attribute_Index.Create (Value_Not_Empty (Source));
+      Attr     : GPR2.Project.Attribute.Object;
+
+      function Executable
+        (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object
+      is (GPR2.Path_Name.Create_File
+          (Filename_Type (Base_Name) & Self.Executable_Suffix,
+           Filename_Optional (Self.Executable_Directory.Dir_Name)));
+      --  Full executable path for base name.
+
+   begin
+      if Builder.Is_Defined
+        and then
+          (Builder.Check_Attribute (A.Executable, Index, At_Pos, Attr)
+           or else
+             (Source /= Simple_Name (BN)
+              and then Builder.Check_Attribute
+                (A.Executable, BN_Index, At_Pos, Attr)))
+        and then At_Pos = At_Pos_Or (Attr.Index, 0)
+      then
+         return Executable (Attr.Value.Text);
+      else
+         return Executable (BN);
+      end if;
+   end Executable;
 
    --------------------------
    -- Executable_Directory --
@@ -1191,79 +1240,8 @@ package body GPR2.Project.View is
    -----------
 
    function Mains (Self : Object) return GPR2.Path_Name.Set.Object is
-      use GPR2.Project.Pack;
 
       package A renames GPR2.Project.Registry.Attribute;
-
-      Builder : constant GPR2.Project.Pack.Object := Self.Builder;
-
-      function Create
-        (Source : Value_Not_Empty;
-         At_Pos : Natural) return GPR2.Path_Name.Object;
-      --  Returns the full pathname of the main executable for the givem main
-
-      function Base_Name
-        (Simple_Name : Value_Not_Empty) return Value_Not_Empty;
-      --  Cut executable name at the first . (extension). Note that
-      --  this is not necessary the first base-name as we may have
-      --  multiple dots in the source when using non standard naming.
-      --  For example, having "main.2.ada" whe want to get on "main".
-
-      ---------------
-      -- Base_Name --
-      ---------------
-
-      function Base_Name
-        (Simple_Name : Value_Not_Empty) return Value_Not_Empty
-      is
-         Last : Positive := Simple_Name'First;
-      begin
-         while Last < Simple_Name'Last
-           and then Simple_Name (Last + 1) /= '.'
-         loop
-            Last := Last + 1;
-         end loop;
-
-         return Simple_Name (Simple_Name'First .. Last);
-      end Base_Name;
-
-      ------------
-      -- Create --
-      ------------
-
-      function Create
-        (Source : Value_Not_Empty;
-         At_Pos : Natural) return GPR2.Path_Name.Object
-      is
-         BN       : constant Value_Not_Empty := Base_Name (Source);
-         BN_Index : constant Attribute_Index.Object :=
-                      Attribute_Index.Create (BN);
-         Index    : constant Attribute_Index.Object :=
-                      Attribute_Index.Create (Source);
-         Attr     : GPR2.Project.Attribute.Object;
-
-         function Create_Path
-           (Name : Value_Not_Empty) return GPR2.Path_Name.Object
-         is
-           (GPR2.Path_Name.Create_File
-              (Filename_Type (Name) & Self.Executable_Suffix,
-               Filename_Optional (Self.Executable_Directory.Dir_Name)));
-
-      begin
-         if Builder.Is_Defined
-           and then
-             (Builder.Check_Attribute (A.Executable, Index, At_Pos, Attr)
-              or else
-                (Source /= BN
-                 and then Builder.Check_Attribute
-                   (A.Executable, BN_Index, At_Pos, Attr)))
-           and then At_Pos = At_Pos_Or (Attr.Index, 0)
-         then
-            return Create_Path (Attr.Value.Text);
-         else
-            return Create_Path (BN);
-         end if;
-      end Create;
 
       Attr : Project.Attribute.Object;
 
@@ -1271,7 +1249,8 @@ package body GPR2.Project.View is
       return Set : GPR2.Path_Name.Set.Object do
          if Self.Check_Attribute (A.Main, Result => Attr) then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text, At_Pos_Or (Main, 0)));
+               Set.Append (Self.Executable (Simple_Name (Main.Text),
+                           At_Pos_Or (Main, 0)));
             end loop;
          end if;
 
@@ -1281,7 +1260,8 @@ package body GPR2.Project.View is
            and then Self.Extended.Check_Attribute (A.Main, Result => Attr)
          then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text, At_Pos_Or (Main, 0)));
+               Set.Append (Self.Executable (Simple_Name (Main.Text),
+                           At_Pos_Or (Main, 0)));
             end loop;
          end if;
       end return;
@@ -1360,6 +1340,44 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Trees.Project.Qualifier;
    end Qualifier;
+
+   ------------------------
+   -- Remove_Body_Suffix --
+   ------------------------
+
+   function Remove_Body_Suffix
+     (Self : Object; Name : Simple_Name) return Value_Not_Empty
+   is
+      Last   : Positive := Name'First;
+      Src    : GPR2.Project.Source.Object;
+      Lang   : constant Optional_Name_Type :=
+                 (if Self.Check_Source (Name, Src)
+                  then Src.Source.Language
+                  else No_Name);
+      Naming : constant Project.Pack.Object := Self.Naming_Package;
+      Suffix : constant String :=
+                 (if Lang /= No_Name
+                  and then Naming.Has_Body_Suffix (Lang)
+                  then Naming.Body_Suffix (Lang).Value.Text
+                  else "");
+   begin
+      if Suffix'Length > 0
+        and then Name'Length > Suffix'Length
+        and then GPR2.Path_Name.To_OS_Case (Suffix) =
+        GPR2.Path_Name.To_OS_Case
+          (Ada.Strings.Fixed.Tail (String (Name), Suffix'Length))
+      then
+         Last := Name'Last - Suffix'Length;
+      else
+         while Last < Name'Last
+           and then Name (Last + 1) /= '.'
+         loop
+            Last := Last + 1;
+         end loop;
+      end if;
+
+      return Value_Not_Empty (Name (Name'First .. Last));
+   end Remove_Body_Suffix;
 
    -------------
    -- Set_Def --

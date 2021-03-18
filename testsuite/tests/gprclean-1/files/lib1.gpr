@@ -1,0 +1,13 @@
+library project Lib1 is
+   for Languages use ("Ada");
+   for Source_Dirs use ("src1/**");
+   for Object_Dir use "obj1";
+   for Library_Name use project'Name;
+   for Library_Dir use "lib1";
+   for Library_Ali_Dir use project'Library_Dir;
+   for Externally_Built use "False";
+   for Library_Kind use "static";
+   for Library_Standalone use "no";
+   for Library_Src_Dir use project'Library_Dir;
+   for Library_Auto_Init use "True";
+end Lib1;

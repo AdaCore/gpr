@@ -1,0 +1,5 @@
+with GNAT.IO;  use GNAT.IO;
+procedure main_e is
+begin
+   Put_Line ("Hello World!");
+end main_e;

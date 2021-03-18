@@ -353,14 +353,16 @@ procedure GPRclean.Main is
                   --  attributes, the executable file name included into
                   --  View.Mains below. This case is when main procedure
                   --  filename defined in command line and we have to remove
-                  --  the executable file separetely.
+                  --  the executable file separately.
 
-                  Delete_File
-                    (Path_Name.Create_File
-                       (S.Source.Path_Name.Base_Filename
-                        & View.Executable_Suffix,
-                        Filename_Type
-                          (View.Executable_Directory.Value)).Value);
+                  for U of S.Source.Units loop
+                     Delete_File
+                       (View.Executable
+                          (S.Source.Path_Name.Simple_Name,
+                           (if S.Source.Has_Single_Unit
+                            then 0
+                            else U.Index)).Value);
+                  end loop;
                end if;
             end if;
          end;
@@ -404,6 +406,24 @@ procedure GPRclean.Main is
          else
             if not Opts.Remain_Useful then
                Delete_File (View.Library_Filename.Value);
+
+               --  Delete if any library version & library major version
+
+               if not View.Is_Static_Library
+                 and then View.Has_Library_Version
+               then
+                  if View.Library_Version_Filename
+                    /= View.Library_Major_Version_Filename
+                  then
+                     Delete_File (View.Library_Version_Filename.Value);
+                  end if;
+
+                  if View.Library_Major_Version_Filename
+                    /= View.Library_Filename
+                  then
+                     Delete_File (View.Library_Major_Version_Filename.Value);
+                  end if;
+               end if;
             end if;
 
             Binder_Artifacts (View.Library_Name);
@@ -429,13 +449,31 @@ procedure GPRclean.Main is
          end;
       end if;
 
+      --  Delete source files found in library source directory
+
+      if View.Is_Library and then View.Library_Src_Directory.Is_Defined then
+         declare
+            Lib_Src_Dir : constant GPR2.Path_Name.Object :=
+                            View.Library_Src_Directory;
+         begin
+            for Source of View.Sources loop
+               declare
+                  F : constant GPR2.Path_Name.Object :=
+                        Lib_Src_Dir.Compose (Source.Path_Name.Simple_Name);
+               begin
+                  if F.Exists then
+                     Delete_File (F.Value);
+                  end if;
+               end;
+            end loop;
+         end;
+      end if;
+
       --  Removes empty directories
 
       if Opts.Remove_Empty_Dirs then
          declare
             use Ada.Directories;
-
-            Attr : Project.Attribute.Object;
 
             procedure Delete_Dir (Dir : Value_Not_Empty);
             --  Delete directory if a directory
@@ -522,12 +560,11 @@ procedure GPRclean.Main is
                   Delete_If_Not_Project (View.Library_Ali_Directory);
                end if;
 
-               if View.Check_Attribute
-                 (Project.Registry.Attribute.Library_Src_Dir, Result => Attr)
+               if View.Library_Directory /= View.Library_Src_Directory
+                 and then View.Library_Ali_Directory
+                   /= View.Library_Src_Directory
                then
-                  Delete_If_Not_Project
-                    (Path_Name.Create_Directory
-                       (Filename_Type (Attr.Value.Text)));
+                  Delete_If_Not_Project (View.Library_Src_Directory);
                end if;
             end if;
          end;

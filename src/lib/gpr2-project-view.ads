@@ -51,7 +51,6 @@ package GPR2.Project.View is
    use GPR2.Context;
 
    use type Context.Object;
-   use type Pack.Object;
 
    type Object is tagged private;
 
@@ -602,6 +601,12 @@ package GPR2.Project.View is
    --  Is_Root_Dir is set when entering the top level dir.
    --  File_CB is called for each regular file found.
    --  Source reference is used when messages added to Self.Tree's log
+
+   function Executable
+     (Self    : Object;
+      Source  : Simple_Name;
+      At_Pos  : Natural) return GPR2.Path_Name.Object;
+   --  Returns the full pathname of the main executable for the given main
 
 private
 
