@@ -117,3 +117,13 @@ except Exception as E:
     print('*** Error: %s' % str(E))
 finally:
     os.chdir('..')
+
+# source_files attributes should be removed
+try:
+    os.chdir('remove-source-files-attr')
+    run([GPRNAME, '-Pprj.gpr', '*.ada'])
+    subprocess.run("gprbuild -q -P prj.gpr", shell=True)
+except Exception as E:
+    print('*** Error: %s' % str(E))
+finally:
+    os.chdir('..')

@@ -1,0 +1,13 @@
+project Prj is
+
+   for Source_Files use ("toto.ada");
+   --  This comment should end up after Source_List_File
+
+   for Source_Dirs use (".");
+   --  This comment should stay
+
+   --  Comment before package Naming;
+   package Naming is
+   end Naming;
+
+end Prj;

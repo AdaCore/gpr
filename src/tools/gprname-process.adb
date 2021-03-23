@@ -525,6 +525,7 @@ begin
                               if Attr_Name = PRA.Languages
                                 or else Attr_Name = PRA.Source_Dirs
                                 or else Attr_Name = PRA.Source_List_File
+                                or else Attr_Name = PRA.Source_Files
                               then
                                  Remove_Child (Children_Handle, I);
                               end if;
