@@ -776,83 +776,16 @@ package body GPR2.Parser.Project is
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
-                        Message =>
-                          "missing parameters for split built-in"));
+                        Message => "missing parameters for split built-in"));
 
-               else
-                  --  We have Split ("STR", "SEP"), check that STR and
-                  --  SEP are actually simple strings.
+               --  Check that the second parameter exists
 
-                  declare
-                     Str_Node : constant Term_List :=
-                                  Child (Exprs, 1).As_Term_List;
-                     Error    : Boolean;
-                     Str      : constant Value_Type :=
-                                  Get_String_Literal (Str_Node, Error);
-                  begin
-                     if Error then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference (Filename, Str_Node),
-                              Message =>
-                                "split first parameter must be "
-                              & "a simple string"));
-
-                     elsif Str = "" then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference (Filename, Str_Node),
-                              Message =>
-                                "split first parameter must not "
-                              & "be empty"));
-                     end if;
-                  end;
-
-                  --  Check that the second parameter exists and is a string
-
-                  if Child (Exprs, 2).Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference (Filename, Exprs),
-                           Message => "split requires a second parameter"));
-                  else
-                     declare
-                        Sep_Node : constant Term_List :=
-                                     Child (Exprs, 2).As_Term_List;
-                        Error    : Boolean;
-                        Sep      : constant Value_Type :=
-                                     Get_String_Literal (Sep_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "split separator parameter must "
-                                 & "be a simple string"));
-
-                        elsif Sep = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "split separator parameter must not "
-                                 & "be empty"));
-                        end if;
-                     end;
-                  end if;
+               elsif Child (Exprs, 2).Is_Null then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message => "split requires a second parameter"));
                end if;
             end Parse_Split_Reference;
 
@@ -1994,20 +1927,58 @@ package body GPR2.Parser.Project is
                procedure Handle_Split (Node : Builtin_Function_Call) is
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
-                  Error      : Boolean with Unreferenced;
-                  Str        : constant Value_Type :=
-                                 Get_String_Literal
-                                   (Child (Parameters, 1), Error);
-                  Sep        : constant Value_Type :=
-                                 Get_String_Literal
-                                   (Child (Parameters, 2), Error);
+
+                  Str : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 1).As_Term_List);
+                  Sep : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 2).As_Term_List);
                begin
-                  for V of Builtin.Split (Str, Sep) loop
-                     New_Item := True;
-                     Record_Value
-                       (Get_Value_Reference
-                          (V, Get_Source_Reference (Self.File, Parameters)));
-                  end loop;
+                  if not Str.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 1)),
+                           Message => "Split first parameter must be a"
+                                    & " string"));
+
+                  elsif not Sep.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 2)),
+                           Message => "Split separator parameter must be a"
+                                    & " string"));
+
+                  else
+                     declare
+                        Item  : constant Value_Type :=
+                                  Str.Values.First_Element.Text;
+                        Delim : constant Value_Type :=
+                                  Sep.Values.First_Element.Text;
+                     begin
+                        if Delim = "" then
+                           Tree.Log_Messages.Append
+                             (Message.Create
+                                (Level => Message.Error,
+                                 Sloc  => Source_Reference.Object
+                                            (Sep.Values.First_Element),
+                                 Message => "Split separator parameter must"
+                                          & " not be empty"));
+
+                        elsif Item /= "" then
+                           for V of Builtin.Split (Item, Delim) loop
+                              New_Item := True;
+                              Record_Value
+                                (Get_Value_Reference
+                                   (V,
+                                    Source_Reference.Object
+                                      (Str.Values.First_Element)));
+                           end loop;
+                        end if;
+                     end;
+                  end if;
 
                   --  Skip all child nodes, we do not want to parse a second
                   --  time the string_literal.
