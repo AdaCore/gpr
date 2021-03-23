@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -63,7 +63,7 @@ package body GPR2.Builtin is
    function External_As_List
      (Context   : GPR2.Context.Object;
       Variable  : Name_Type;
-      Separator : Name_Type) return Containers.Value_List
+      Separator : Value_Not_Empty) return Containers.Value_List
    is
       use GNAT.String_Split;
 

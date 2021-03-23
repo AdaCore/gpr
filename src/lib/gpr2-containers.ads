@@ -64,8 +64,8 @@ package GPR2.Containers is
    subtype Value_List is Value_Type_List.Vector;
 
    function Create
-     (Value     : Name_Type;
-      Separator : Name_Type) return Containers.Value_List;
+     (Value     : Value_Type;
+      Separator : Value_Not_Empty) return Containers.Value_List;
    --  Create a Value_List out of a set of Value separated by Separator
 
    function Create

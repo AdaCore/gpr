@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -31,16 +31,16 @@ package body GPR2.Containers is
       with package List is
         new Ada.Containers.Indefinite_Vectors (Positive, Item);
    function Create_G
-     (Value     : Name_Type;
-      Separator : Name_Type) return List.Vector;
+     (Value     : Item;
+      Separator : Item) return List.Vector;
 
    ------------
    -- Create --
    ------------
 
    function Create_G
-     (Value     : Name_Type;
-      Separator : Name_Type) return List.Vector
+     (Value     : Item;
+      Separator : Item) return List.Vector
    is
       use GNAT.String_Split;
 
@@ -65,8 +65,8 @@ package body GPR2.Containers is
    pragma Style_Checks (Off);
 
    function Create
-     (Value     : Name_Type;
-      Separator : Name_Type) return Containers.Value_List
+     (Value     : Value_Type;
+      Separator : Value_Not_Empty) return Containers.Value_List
    is
       function Internal is
         new Create_G (Value_Type, GPR2.Containers.Value_Type_List);

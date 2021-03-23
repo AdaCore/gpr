@@ -1899,10 +1899,9 @@ package body GPR2.Parser.Project is
                                  Name_Type
                                    (Get_String_Literal
                                       (Child (Parameters, 1), Error));
-                  Sep        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 2), Error));
+                  Sep        : constant Value_Type :=
+                                 Get_String_Literal
+                                   (Child (Parameters, 2), Error);
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      New_Item := True;
@@ -1996,14 +1995,12 @@ package body GPR2.Parser.Project is
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
                   Error      : Boolean with Unreferenced;
-                  Str        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 1), Error));
-                  Sep        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 2), Error));
+                  Str        : constant Value_Type :=
+                                 Get_String_Literal
+                                   (Child (Parameters, 1), Error);
+                  Sep        : constant Value_Type :=
+                                 Get_String_Literal
+                                   (Child (Parameters, 2), Error);
                begin
                   for V of Builtin.Split (Str, Sep) loop
                      New_Item := True;
