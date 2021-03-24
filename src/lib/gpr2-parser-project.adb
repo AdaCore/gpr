@@ -2787,11 +2787,21 @@ package body GPR2.Parser.Project is
          -----------------------------
 
          procedure Parse_Case_Construction (Node : Case_Construction) is
-            Var   : constant Variable_Reference := F_Var_Ref (Node);
-            Value : constant Containers.Source_Value_List :=
-                      Get_Variable_Values (Var).Values;
+            Var     : constant Variable_Reference := F_Var_Ref (Node);
+            Value   : constant Containers.Source_Value_List :=
+                        Get_Variable_Values (Var).Values;
+            Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Var);
+
          begin
-            if Value.Length = 1 then
+            if Present (Att_Ref) then
+               --  Can't have attribute references as value in case statements
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Get_Source_Reference (Self.File, Att_Ref),
+                     Message => "attribute reference not allowed here"));
+
+            elsif Value.Length = 1 then
                Case_Values.Append ('-' & Value.First_Element.Text);
 
                --  Set status to close for now, this will be open when a

@@ -1,0 +1,14 @@
+
+project Demo is
+
+   case Project'Canonical_Target is
+     when "x86_64-linux-gnu" =>
+       Arch := "x86-64";
+     when "i686-linux-gnu" =>
+       Arch := "i686-64";
+     when others =>
+       Arch := "other";
+   end case;
+
+   for Object_Dir use Arch;
+end Demo;
