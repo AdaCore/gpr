@@ -464,11 +464,12 @@ package body GPR2.Project.Tree is
 
          Add_Attribute (PRA.Languages, "ada");
 
-         Data.Tree    := Self.Self;
-         Data.Kind    := K_Standard;
-         Data.Path    := Path_Name.Create_Directory
-                           (Filename_Type (RTD.Value.Text));
-         Data.Is_Root := True;
+         Data.Tree      := Self.Self;
+         Data.Kind      := K_Standard;
+         Data.Path      := Path_Name.Create_Directory
+                             (Filename_Type (RTD.Value.Text));
+         Data.Is_Root   := True;
+         Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => PRA.Runtime,
@@ -1973,12 +1974,6 @@ package body GPR2.Project.Tree is
                Data.Unique_Id   := Id;
                Data.Instance_Of := Id;
                View := Register_View (Data);
-
-               --  Keep track of the view in View_Ids
-               --  It is important to note that this ensures we don't start to
-               --  recurse infinitely while loading a project tree.
-
-               View.Tree.View_Ids.Include (Data.Unique_Id, View);
             end;
 
             declare
@@ -2394,25 +2389,28 @@ package body GPR2.Project.Tree is
       end Add_View;
 
    begin
-      if Def.Tree.Views_Set.Is_Empty then
-         Def.Id := 1;
-      else
-         Def.Id := Definition.Get_RO (Def.Tree.Views_Set.Last_Element).Id + 1;
-      end if;
+      --  Is the Id actually needed here?
+      Def.Id := Natural (Def.Tree.Views_Set.Length) + 1;
 
+      --  Populate the view with its definitions
       Definition.Set (View, Def);
 
+      --  Ensure Views_Set and View_Ids know about it
       Def.Tree.Views_Set.Insert (View);
 
       pragma Assert (Definition.Refcount (View) = 2);
 
-      Add_View (Path_Name.To_OS_Case (View.Path_Name.Value));
+      Def.Tree.View_Ids.Include (Def.Unique_Id, View);
 
       pragma Assert (Definition.Refcount (View) = 3);
 
-      Add_View (To_Lower (View.Name));
+      Add_View (Path_Name.To_OS_Case (View.Path_Name.Value));
 
       pragma Assert (Definition.Refcount (View) = 4);
+
+      Add_View (To_Lower (View.Name));
+
+      pragma Assert (Definition.Refcount (View) = 5);
 
       return View;
    end Register_View;

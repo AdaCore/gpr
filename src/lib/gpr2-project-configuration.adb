@@ -30,6 +30,7 @@ with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Value;
+with GPR2.View_Ids;
 
 pragma Warnings (Off);
 with System.OS_Constants;
@@ -66,6 +67,7 @@ package body GPR2.Project.Configuration is
       Data.Path          := Path_Name.Create_Directory
                               (Filename_Type
                                  (Self.Project.Path_Name.Dir_Name));
+      Data.Unique_Id     := GPR2.View_Ids.Config_View_Id;
       Self.Conf          := Definition.Register (Data);
    end Bind_To_Tree;
 
