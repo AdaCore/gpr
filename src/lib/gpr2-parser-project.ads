@@ -95,12 +95,13 @@ package GPR2.Parser.Project is
      with Pre => Self.Is_Defined;
    --  Returns True if project qualifier defined explicitly
 
-   function Has_Extended (Self : Object) return Boolean;
+   function Has_Extended (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
    --  Returns True if an extended project is defined
 
    function Is_Extending_All (Self : Object) return Boolean
-     with Pre => Self.Has_Extended;
-   --  Returns True if the extended project is an extends all
+     with Pre => Self.Is_Defined;
+   --  Returns True if the project is an extends all
 
    function Extended (Self : Object) return GPR2.Project.Import.Object
      with Pre => Self.Has_Extended;

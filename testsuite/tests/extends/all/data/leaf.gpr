@@ -1,3 +1,0 @@
-project Leaf is
-   Leaf_Value := External ("LEAF_VAR", "default_value");
-end Leaf;

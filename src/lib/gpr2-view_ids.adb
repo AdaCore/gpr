@@ -28,9 +28,14 @@ package body GPR2.View_Ids is
 
    use type GPR2.Context.Context_Kind;
 
-   ROOT_VIEWS_PREFIX    : constant Character := '%';
-   AGGR_VIEWS_PREFIX    : constant Character := '#';
-   SPECIAL_VIEWS_PREFIX : constant Character := '@';
+   ROOT_VIEWS_PREFIX    : constant Character          := '<';
+   AGGR_VIEWS_PREFIX    : constant Character          := '$';
+   SPECIAL_VIEWS_PREFIX : constant Character          := '!';
+   EXTENDED_PREFIX      : constant Character          := ':';
+
+   UNDEFINED_IMAGE      : constant Optional_Name_Type := "";
+   RUNTIME_IMAGE        : constant Name_Type          := "runtime";
+   CONFIG_IMAGE         : constant Name_Type          := "config";
 
    -------
    -- < --
@@ -62,7 +67,8 @@ package body GPR2.View_Ids is
 
    function Create
      (Project_File : GPR2.Path_Name.Object;
-      Context      : GPR2.Context.Context_Kind := Root)
+      Context      : GPR2.Context.Context_Kind := Root;
+      Extending    : View_Id := Undefined)
       return View_Id
    is
       Id_Str : Unbounded_String;
@@ -75,11 +81,15 @@ package body GPR2.View_Ids is
          raise View_Id_Error with "cannot creaste view id from relative path";
       end if;
 
-      Append (Id_Str, Project_File.Value);
+      Append (Id_Str, GPR2.Path_Name.To_OS_Case (Project_File.Value));
 
-      return (Kind    => Project_Id,
-              Id      => Id_Str,
-              Context => Context);
+      return (Kind      => Project_Id,
+              Id        => Id_Str,
+              Context   => Context,
+              Extending => (if Is_Defined (Extending)
+                            then To_Unbounded_String (String
+                              (Image (Extending)))
+                            else Null_Unbounded_String));
    end Create;
 
    ----------
@@ -98,15 +108,27 @@ package body GPR2.View_Ids is
    function Image (Self : View_Id) return Optional_Name_Type is
    begin
       case Self.Kind is
-         when Null_Id    => return "";
-         when Config_Id  => return SPECIAL_VIEWS_PREFIX & "config";
-         when Runtime_Id => return SPECIAL_VIEWS_PREFIX & "runtime";
+         when Null_Id    => return UNDEFINED_IMAGE;
+         when Config_Id  => return SPECIAL_VIEWS_PREFIX & CONFIG_IMAGE;
+         when Runtime_Id => return SPECIAL_VIEWS_PREFIX & RUNTIME_IMAGE;
          when Project_Id =>
-            if Self.Context = Root then
-               return ROOT_VIEWS_PREFIX & Name_Type (To_String (Self.Id));
-            else
-               return AGGR_VIEWS_PREFIX & Name_Type (To_String (Self.Id));
-            end if;
+            declare
+               Extending_Suffix : constant Optional_Name_Type :=
+                                    (if Length (Self.Extending) = 0
+                                     then ""
+                                     else EXTENDED_PREFIX &
+                                       Name_Type (To_String (Self.Extending)));
+            begin
+               if Self.Context = Root then
+                  return ROOT_VIEWS_PREFIX &
+                    Name_Type (To_String (Self.Id)) &
+                    Extending_Suffix;
+               else
+                  return AGGR_VIEWS_PREFIX &
+                    Name_Type (To_String (Self.Id)) &
+                    Extending_Suffix;
+               end if;
+            end;
       end case;
    end Image;
 
@@ -114,44 +136,62 @@ package body GPR2.View_Ids is
    -- Import --
    ------------
 
-   function Import (Name : Optional_Name_Type) return View_Id is
+   function Import (Name : Optional_Name_Type) return View_Id
+   is
+      Prefix        : Character;
+      Id            : Optional_Name_Type renames
+                        Name (Name'First + 1 .. Name'Last);
+      Ext_Delimiter : Natural;
+      Context       : GPR2.Context.Context_Kind;
+
    begin
-      if Name'Length = 0 then
+      if Name = UNDEFINED_IMAGE then
          return (Kind => Null_Id);
+      end if;
+
+      Prefix := Name (Name'First);
+
+      if Prefix = SPECIAL_VIEWS_PREFIX then
+         if Id = CONFIG_IMAGE then
+            return (Kind => Config_Id);
+         elsif Id = RUNTIME_IMAGE then
+            return (Kind => Runtime_Id);
+         else
+            raise View_Id_Error with "Invalid view id image";
+         end if;
+      end if;
+
+      if Prefix = ROOT_VIEWS_PREFIX then
+         Context := Root;
+
+      elsif Prefix = AGGR_VIEWS_PREFIX then
+         Context := Aggregate;
 
       else
-         declare
-            Prefix : constant Character := Name (Name'First);
-            Id     : constant String :=
-                       String (Name (Name'First + 1 .. Name'Last));
+         raise View_Id_Error with "invalid view id image";
+      end if;
 
-         begin
-            case Prefix is
-               when SPECIAL_VIEWS_PREFIX =>
-                  if Id = "config" then
-                     return (Kind => Config_Id);
+      Ext_Delimiter := 0;
 
-                  elsif Id = "runtime" then
-                     return (Kind => Config_Id);
+      for J in Id'Range loop
+         if Id (J) = EXTENDED_PREFIX then
+            Ext_Delimiter := J;
+            exit;
+         end if;
+      end loop;
 
-                  else
-                     raise View_Id_Error with "invalid view id image";
-                  end if;
-
-               when ROOT_VIEWS_PREFIX =>
-                  return (Kind    => Project_Id,
-                          Id      => To_Unbounded_String (String (Name)),
-                          Context => Root);
-
-               when AGGR_VIEWS_PREFIX =>
-                  return (Kind    => Project_Id,
-                          Id      => To_Unbounded_String (String (Name)),
-                          Context => Aggregate);
-
-               when others =>
-                  raise View_Id_Error with "invalid view id image";
-            end case;
-         end;
+      if Ext_Delimiter = 0 then
+         return (Kind      => Project_Id,
+                 Id        => To_Unbounded_String (String (Id)),
+                 Context   => Context,
+                 Extending => Null_Unbounded_String);
+      else
+         return (Kind      => Project_Id,
+                 Id        => To_Unbounded_String (String
+                                (Id (Id'First .. Ext_Delimiter - 1))),
+                 Context   => Context,
+                 Extending => To_Unbounded_String (String
+                                (Id (Ext_Delimiter + 1 .. Id'Last))));
       end if;
    end Import;
 
@@ -165,8 +205,8 @@ package body GPR2.View_Ids is
          return True;
 
       elsif Name (Name'First) = SPECIAL_VIEWS_PREFIX then
-         return Name = SPECIAL_VIEWS_PREFIX & "config"
-           or else Name = SPECIAL_VIEWS_PREFIX & "runtime";
+         return Name = SPECIAL_VIEWS_PREFIX & CONFIG_IMAGE
+           or else Name = SPECIAL_VIEWS_PREFIX & RUNTIME_IMAGE;
 
       else
          return Name (Name'First) = ROOT_VIEWS_PREFIX

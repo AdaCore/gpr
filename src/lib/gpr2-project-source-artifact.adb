@@ -99,10 +99,21 @@ package body GPR2.Project.Source.Artifact is
       Deps_Obj     : Index_Path_Name_Map.Map;
 
       function From_Hierarchy
-        (Filename : Filename_Type;
-         Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+        (View         : Project.View.Object;
+         Filename     : Filename_Type;
+         Dir_Attr     : Name_Type;
+         Full_Closure : Boolean := False) return GPR2.Path_Name.Object;
       --  Find Filename in directory defined in attribute Dir_Attr in this
       --  source view and in the extended views if the Source is inherited.
+      --  If Full_Closure is set, then the full closure of the extended
+      --  projects (in case of extends all) will be searched.
+
+      procedure Insert_If_Defined
+        (Map : in out Index_Path_Name_Map.Map;
+         Index : Natural;
+         Path  : GPR2.Path_Name.Object);
+      --  If Path is defined, include it in Map with index Index, else do
+      --  nothing.
 
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
@@ -129,30 +140,86 @@ package body GPR2.Project.Source.Artifact is
       -------------------
 
       function From_Hierarchy
-        (Filename : Filename_Type;
-         Dir_Attr : Name_Type) return GPR2.Path_Name.Object
-      is
-         View      : Project.View.Object   := Create.View;
-         Source    : Project.Source.Object := Create.Source;
-         Candidate : GPR2.Path_Name.Object;
+        (View         : Project.View.Object;
+         Filename     : Filename_Type;
+         Dir_Attr     : Name_Type;
+         Full_Closure : Boolean := False) return GPR2.Path_Name.Object is
+
+         function Get_Candidate
+           (View : Project.View.Object) return GPR2.Path_Name.Object;
+         --  If View has Dir_Attr defined, then returns the candidate file
+         --  within this directory. Returns Undefined otherwise.
+
+         -------------------
+         -- Get_Candidate --
+         -------------------
+
+         function Get_Candidate
+           (View : Project.View.Object) return GPR2.Path_Name.Object is
+         begin
+            if View.Has_Attributes (Dir_Attr) then
+               return GPR2.Path_Name.Create_File
+                 (Filename,
+                  Filename_Type
+                    (Definition.Apply_Root_And_Subdirs
+                         (View, Dir_Attr).Value));
+            else
+               return GPR2.Path_Name.Undefined;
+            end if;
+         end Get_Candidate;
+
+         Source        : constant Project.Source.Object :=
+                           View.Source
+                             (Create.Source.Path_Name, Need_Update => False);
+         Candidate     : GPR2.Path_Name.Object;
+         New_Candidate : GPR2.Path_Name.Object;
+
       begin
-         loop
-            Candidate :=
-              GPR2.Path_Name.Create_File
-                (Filename,
-                 Filename_Type
-                   (Definition.Apply_Root_And_Subdirs
-                      (View, Dir_Attr).Value));
+         Candidate := Get_Candidate (View);
 
-            exit when not Source.Inherited or else Candidate.Exists;
-            View := View.Extended;
+         if not Source.Inherited
+           or else (Candidate.Is_Defined and then Candidate.Exists)
+         then
+            return Candidate;
+         end if;
 
-            exit when not View.Has_Attributes (Dir_Attr);
-            Source := View.Source (Source.Path_Name, Need_Update => False);
-         end loop;
+         if View.Is_Extending then
+            if Full_Closure then
+               for Ext of View.Extended loop
+                  New_Candidate := From_Hierarchy
+                    (Ext, Filename, Dir_Attr, True);
 
-         return Candidate;
+                  exit when New_Candidate.Is_Defined
+                    and then New_Candidate.Exists;
+               end loop;
+            else
+               New_Candidate := From_Hierarchy
+                 (View.Extended_Root, Filename, Dir_Attr);
+            end if;
+         end if;
+
+         if New_Candidate.Is_Defined and then New_Candidate.Exists then
+            --  Found from hierarchy
+            return New_Candidate;
+         else
+            --  Project's own candidate
+            return Candidate;
+         end if;
       end From_Hierarchy;
+
+      -----------------------
+      -- Insert_If_Defined --
+      -----------------------
+
+      procedure Insert_If_Defined
+        (Map : in out Index_Path_Name_Map.Map;
+         Index : Natural;
+         Path  : GPR2.Path_Name.Object) is
+      begin
+         if Path.Is_Defined then
+            Map.Insert (Index, Path);
+         end if;
+      end Insert_If_Defined;
 
    begin
       if Src.Has_Units and then Src.Has_Index then
@@ -171,20 +238,23 @@ package body GPR2.Project.Source.Artifact is
                                 (View.Library_Ali_Directory.Value)));
                      end loop;
                   else
-                     Object_Files.Insert
-                       (CU.Index,
-                        From_Hierarchy (Base & O_Suffix, PRA.Object_Dir));
-
-                     if View.Is_Library and then Lang = "Ada" then
-                        Deps_Lib.Insert
-                          (CU.Index,
-                           From_Hierarchy
-                             (Base & D_Suffix, PRA.Library_Ali_Dir));
-                     end if;
-
-                     Deps_Obj.Insert
-                       (CU.Index,
-                        From_Hierarchy (Base & D_Suffix, PRA.Object_Dir));
+                     Insert_If_Defined
+                       (Object_Files,
+                        CU.Index,
+                        From_Hierarchy
+                          (View, Base & O_Suffix, PRA.Object_Dir, True));
+                     Insert_If_Defined
+                       (Deps_Lib,
+                        CU.Index,
+                        From_Hierarchy
+                          (View,
+                           Base & D_Suffix,
+                           PRA.Library_Ali_Dir, True));
+                     Insert_If_Defined
+                       (Deps_Obj,
+                        CU.Index,
+                        From_Hierarchy
+                          (View, Base & D_Suffix, PRA.Object_Dir, True));
                   end if;
                end;
             end if;
@@ -202,15 +272,18 @@ package body GPR2.Project.Source.Artifact is
          end loop;
 
       else
-         Object_Files.Insert
-           (1, From_Hierarchy (BN & O_Suffix, PRA.Object_Dir));
-
-         if View.Is_Library and then Lang = "Ada" then
-            Deps_Lib.Insert
-              (1, From_Hierarchy (BN & D_Suffix, PRA.Library_Ali_Dir));
-         end if;
-
-         Deps_Obj.Insert (1, From_Hierarchy (BN & D_Suffix, PRA.Object_Dir));
+         Insert_If_Defined
+           (Object_Files,
+            1,
+            From_Hierarchy (View, BN & O_Suffix, PRA.Object_Dir, True));
+         Insert_If_Defined
+           (Deps_Lib,
+            1,
+            From_Hierarchy (View, BN & D_Suffix, PRA.Library_Ali_Dir, True));
+         Insert_If_Defined
+           (Deps_Obj,
+            1,
+            From_Hierarchy (View, BN & D_Suffix, PRA.Object_Dir, True));
       end if;
 
       return Artifact.Object'

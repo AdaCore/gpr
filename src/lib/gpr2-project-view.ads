@@ -72,12 +72,6 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined and then View.Is_Defined;
    --  Returns whether Self is extended by View
 
-   function Instance_Of (Self : Object) return GPR2.View_Ids.View_Id
-     with Pre => Self.Is_Defined;
-   --  Returns the unique Id of the innest view extended by Self. For example,
-   --  if A extends all B and B extends all C, Instance_Of (A) returns Id (C).
-   --  If A is not an extended all project Instance_Of (A) = Id (A).
-
    function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
 
@@ -131,9 +125,16 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the project is extending all another project
 
-   function Extended (Self : Object) return Object
+   function Extended (Self : Object) return Set.Object
      with Pre => Self.Is_Defined and then Self.Is_Extending;
-   --  Returns the extended project
+   --  Returns the extended projects
+   --  In case of simple extension, this will contain only one view, but in
+   --  case of extends all, the views of the subtree are returned.
+
+   function Extended_Root (Self : Object) return Object
+     with Pre => Self.Is_Defined and then Self.Is_Extending;
+   --  Returns the root view of the extended subtree. In case of extends
+   --  all this will thus return the project that is explicitely extended.
 
    function Is_Extended (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -237,6 +238,8 @@ package GPR2.Project.View is
          and then Self.Has_Attributes (Name, Index)
          and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
+   --  Important note: this returns the view's raw attribute value, not the
+   --  one computed after inheritance via extends or extends all.
 
    function Attribute_Location
      (Self  : Object;

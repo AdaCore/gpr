@@ -1,3 +1,7 @@
-project C extends all "a.gpr" is
-    Variable1 := "extended value";
+with "d";
+
+project C is
+
+   Variable1 := "C with " & D.Variable1;
+
 end C;

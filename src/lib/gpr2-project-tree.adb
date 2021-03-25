@@ -155,7 +155,7 @@ package body GPR2.Project.Tree is
    --  If Aggregated is True then view should be taken from aggregated subtree.
    --  Returns Undefined if project view is not found.
 
-   function Get_View_By_Id
+   function Get_View
       (Tree : Project.Tree.Object;
        Id   : IDS.View_Id)
        return Project.View.Object;
@@ -639,11 +639,11 @@ package body GPR2.Project.Tree is
                   Data : constant Definition.Const_Ref :=
                            Definition.Get_RO (View);
                begin
-                  if Data.Extended.Is_Defined then
+                  if Data.Extended_Root.Is_Defined then
                      if Iter.Kind (I_Recursive) then
-                        For_Project (Data.Extended);
+                        For_Project (Data.Extended_Root);
                      else
-                        Append (Data.Extended);
+                        Append (Data.Extended_Root);
                      end if;
                   end if;
                end;
@@ -979,11 +979,7 @@ package body GPR2.Project.Tree is
       end if;
    end Get_View;
 
-   --------------------
-   -- Get_View_By_Id --
-   --------------------
-
-   function Get_View_By_Id
+   function Get_View
      (Tree : Project.Tree.Object;
       Id   : IDS.View_Id) return Project.View.Object is
    begin
@@ -992,7 +988,7 @@ package body GPR2.Project.Tree is
       else
          return Project.View.Undefined;
       end if;
-   end Get_View_By_Id;
+   end Get_View;
 
    -----------------------
    -- Has_Configuration --
@@ -1086,7 +1082,7 @@ package body GPR2.Project.Tree is
      (Self        : Object;
       Instance_Id : GPR2.View_Ids.View_Id) return View.Object is
    begin
-      return Self.View_Instances.Element (Instance_Id);
+      return Self.View_Ids.Element (Instance_Id);
    end Instance_Of;
 
    ------------------------
@@ -1815,24 +1811,9 @@ package body GPR2.Project.Tree is
       use GPR2.View_Ids.DAGs;
       Result : View.Vector.Object;
 
-      procedure Insert (V : View.Object);
-
-      ------------
-      -- Insert --
-      ------------
-
-      procedure Insert (V : View.Object) is
-      begin
-         if V.Is_Extending and then V.Instance_Of = V.Extended.Instance_Of
-         then
-            Insert (V.Extended);
-         end if;
-         Result.Append (V);
-      end Insert;
-
    begin
       for Id of Self.View_DAG.Topological_Sort loop
-         Insert (Self.Instance_Of (Id));
+         Result.Append (Self.Instance_Of (Id));
       end loop;
 
       return Result;
@@ -1873,7 +1854,11 @@ package body GPR2.Project.Tree is
       Starting_From : View.Object := View.Undefined) return View.Object
    is
 
-      type Relation_Status is (Root, Extended, Aggregated, Simple);
+      type Relation_Status is
+        (Root,            --  Root project
+         Extended,        --  Extended project
+         Aggregated,      --  In an aggregate project
+         Simple);         --  Import, Limited import or aggregate library
 
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
       PP          : Attribute.Object;
@@ -1882,10 +1867,11 @@ package body GPR2.Project.Tree is
       --  Returns the Data definition for the given project
 
       function Internal
-        (Filename  : Path_Name.Object;
-         Aggregate : View.Object;
-         Status    : Relation_Status;
-         Parent    : View.Object) return View.Object;
+        (Filename        : Path_Name.Object;
+         Aggregate       : View.Object;
+         Status          : Relation_Status;
+         Parent          : View.Object;
+         Extends_Ctx     : View.Vector.Object) return View.Object;
       --  Internal function doing the actual load of the tree.
       --  Filename:  the project to laod
       --  Aggregate: if defines, is set to the aggregate project that includes
@@ -1898,6 +1884,8 @@ package body GPR2.Project.Tree is
       --                an aggregate library project.
       --             "simple": a regular import.
       --  Parent:    the loading project.
+      --  Extends_Ctx: In case the project is loaded in a subtree of an
+      --               extends all, the extending project is .
 
       function Is_Limited
          (View         : GPR2.Project.View.Object;
@@ -1921,19 +1909,32 @@ package body GPR2.Project.Tree is
       --------------
 
       function Internal
-        (Filename  : Path_Name.Object;
-         Aggregate : View.Object;
-         Status    : Relation_Status;
-         Parent    : View.Object) return View.Object
+        (Filename        : Path_Name.Object;
+         Aggregate       : View.Object;
+         Status          : Relation_Status;
+         Parent          : View.Object;
+         Extends_Ctx     : View.Vector.Object) return View.Object
       is
-         Id   : constant IDS.View_Id :=
-                  IDS.Create
-                    (Project_File => Filename, Context => Context);
-         View : Project.View.Object := Self.Get_View_By_Id (Id);
+         Extending : constant IDS.View_Id :=
+                       (if Status = Extended then Parent.Id
+                        elsif not Extends_Ctx.Is_Empty
+                        then Extends_Ctx.First_Element.Id
+                        else View_Ids.Undefined);
+         --  A project can be extended either explicitly (Status is then
+         --  Extended and the parent points to the extending project), or
+         --  implicitly (withed unit of the extending project replaces withed
+         --  using of the extended project, creating an implicit extension).
+         --  In this case Extends_Ctx is not empty.
+
+         Id        : constant IDS.View_Id :=
+                       IDS.Create
+                         (Project_File => Filename,
+                          Context      => Context,
+                          Extending    => Extending);
+         View      : Project.View.Object := Self.Get_View (Id);
 
       begin
          --  If the view is already defined just return it
-
          if not View.Is_Defined then
             declare
                Data : Definition.Data := Load (Filename);
@@ -1953,15 +1954,18 @@ package body GPR2.Project.Tree is
                              else Path_Name.Create_Directory
                                     (Filename_Type (Filename.Dir_Name)));
 
-               --  If parent view is an aggregate or an extending project keep
-               --  track of the relationship.
+               --  If parent view is an extending project keep track of the
+               --  relationship.
 
                if Status = Extended then
                   Data.Extending := Definition.Weak (Parent);
+               elsif not Extends_Ctx.Is_Empty then
+                  Data.Extending :=
+                    Definition.Weak (Extends_Ctx.First_Element);
                end if;
 
-               --  Update context associated with the the list of
-               --  externals defined in that project file.
+               --  Update context associated with the the list of externals
+               --  defined in that project file.
 
                Update_Context (Self.Context (Context), Data.Externals);
 
@@ -1970,15 +1974,19 @@ package body GPR2.Project.Tree is
 
                Data.Context     := Context;
                Data.Is_Root     := Status = Root;
+               Data.Is_Imported := Status = Simple;
                Data.Unique_Id   := Id;
-               Data.Instance_Of := Id;
                View := Register_View (Data);
             end;
 
             declare
-               Data : constant Definition.Ref := Definition.Get_RW (View);
-            begin
+               Data            : constant Definition.Ref :=
+                                   Definition.Get_RW (View);
+               New_Extends_Ctx : GPR2.Project.View.Vector.Object :=
+                                   Extends_Ctx;
+               --  Extends all context for the extended project if any
 
+            begin
                --  Set root view regarding context namespace
                --  ??? (need more explanation)
 
@@ -1997,59 +2005,125 @@ package body GPR2.Project.Tree is
                     Definition.Get_RO (Parent).Agg_Libraries;
 
                   if Parent.Kind = K_Aggregate_Library then
-                     Data.Agg_Libraries.Include (Parent.Instance_Of);
+                     Data.Agg_Libraries.Include (Parent.Id);
                   end if;
+               end if;
+
+               --  Update the extends all view
+
+               if not Extends_Ctx.Is_Empty then
+                  declare
+                     --  We need to add the current view to the extended
+                     --  property of the extends all view. To this end, we
+                     --  use a local variable that will allow us to write
+                     --  its definition
+                     Temp_View : Project.View.Object :=
+                                   Extends_Ctx.First_Element;
+                  begin
+                     Definition.Get_RW (Temp_View).Extended.Include (View);
+                  end;
                end if;
 
                --  Load all imported projects
 
+               if Status = Extended then
+                  --  Temporarily add the parent to the list of
+                  --  extending projects so that we can simply loop over
+                  --  those to gather all the imports of extending projects
+
+                  New_Extends_Ctx.Prepend (Parent);
+               end if;
+
                for Project of Data.Trees.Imports loop
                   declare
-                     Imported_View : constant GPR2.Project.View.Object :=
-                                       Internal
-                                         (Project.Path_Name,
-                                          Aggregate =>
-                                            GPR2.Project.View.Undefined,
-                                          Status    => Simple,
-                                          Parent    => View);
+                     Imported_View : GPR2.Project.View.Object;
+                     Limited_With  : Boolean := False;
+
                   begin
-                     if Imported_View.Is_Defined then
+                     --  Look for the list of imported projects from the
+                     --  extending project to see if we need to substitute
+                     --  regular imports with their extended view.
+
+                     Extends_Loop :
+                     for Ext of New_Extends_Ctx loop
+                        Import_Loop :
+                        for Imp of Ext.Imports loop
+                           if Imp.Is_Extending
+                             and then
+                               Imp.Extended_Root.Path_Name = Project.Path_Name
+                           then
+                              Imported_View := Imp;
+                              exit Extends_Loop;
+                           end if;
+                        end loop Import_Loop;
+                     end loop Extends_Loop;
+
+                     if not Imported_View.Is_Defined then
+                        Imported_View :=
+                          Internal
+                            (Project.Path_Name,
+                             Aggregate   =>
+                               GPR2.Project.View.Undefined,
+                             Status      => Simple,
+                             Parent      => View,
+                             Extends_Ctx => Extends_Ctx);
+
+                        if not Imported_View.Is_Defined then
+                           --  Some issue happened
+
+                           pragma Assert (Self.Messages.Has_Error);
+
+                           return GPR2.Project.View.Undefined;
+                        end if;
+
                         --  limited with and with are tracked separately due
                         --  their very distinct nature.
 
                         if Is_Limited (View, Project.Path_Name) then
-                           Data.Limited_Imports.Insert
-                              (Project.Name, Imported_View);
-                        else
-
-                           Data.Imports.Insert (Project.Name, Imported_View);
+                           Limited_With := True;
                         end if;
+                     end if;
+
+                     if Limited_With then
+                        Data.Limited_Imports.Insert
+                          (Project.Name, Imported_View);
+
+                     else
+                        Data.Imports.Insert
+                          (Project.Name, Imported_View);
                      end if;
                   end;
                end loop;
 
-               --  Load the extended project if any
+               if Status = Extended then
+                  --  Remove Parent from New_Extends_Ctx: simple extension
+                  --  don't propagate to the subtree.
+                  New_Extends_Ctx.Delete_First;
+               end if;
+
+               --  Load the extended project if any:
+
                if Data.Trees.Extended.Is_Defined then
+                  if Data.Trees.Project.Is_Extending_All then
+                     --  Update the extends context in case we do an
+                     --  extends all: this is applied to the whole sub-tree.
+
+                     New_Extends_Ctx.Prepend (View);
+                  end if;
+
                   declare
                      Extended_View : constant GPR2.Project.View.Object :=
                                        Internal
                                          (Data.Trees.Extended.Path_Name,
-                                          Aggregate =>
+                                          Aggregate     =>
                                             GPR2.Project.View.Undefined,
-                                          Status    => Extended,
-                                          Parent    => View);
+                                          Status        => Extended,
+                                          Parent        => View,
+                                          Extends_Ctx   => New_Extends_Ctx);
                   begin
                      if Extended_View.Is_Defined then
-                        Data.Extended := Extended_View;
-
-                        --  If this is an extending all project in that case
-                        --  current project is an instance of the extended
-                        --  project.
-
-                        if Data.Trees.Project.Is_Extending_All then
-                           Data.Instance_Of :=
-                              Definition.Get_RO (Data.Extended).Instance_Of;
-                        end if;
+                        Data.Extended.Include (Extended_View);
+                        Data.Extended_Root := Extended_View;
                      end if;
                   end;
                end if;
@@ -2061,7 +2135,7 @@ package body GPR2.Project.Tree is
             --  We need to keep track of aggregate libraries
             --  closure.
 
-            Propagate_Aggregate_Library (View, Parent.Instance_Of);
+            Propagate_Aggregate_Library (View, Parent.Id);
          end if;
 
          --  At this stage the view is complete. Update mappings
@@ -2071,38 +2145,8 @@ package body GPR2.Project.Tree is
          declare
             use IDS;
             Unique_ID   : constant View_Id := View.Id;
-            Instance_Of : constant View_Id := View.Instance_Of;
          begin
             pragma Assert (Is_Defined (Unique_ID));
-            pragma Assert (Is_Defined (Instance_Of));
-
-            --  Update View_Instances mapping
-
-            if View.Tree.View_Instances.Contains (Instance_Of) then
-               --  An instance is already registed
-               declare
-                  Previous_View : constant GPR2.Project.View.Object :=
-                     View.Tree.View_Instances.Element (Instance_Of);
-               begin
-                  if View.Is_Extension_Of (Previous_View) then
-                     --  If the current view is an extension of the previously
-                     --  registered extension, then the current view is now
-                     --  the official instance.
-
-                     View.Tree.View_Instances.Include (Instance_Of, View);
-
-                  elsif not View.Is_Extended_By (Previous_View) then
-                     --  If the current view is not extendedby the previous and
-                     --  not an extension of it then it means that the project
-                     --  structure leads to incompatible instances of a view.
-                     --  In that case raise an error.
-
-                     raise Project_Error with "invalid structure";
-                  end if;
-               end;
-            else
-               View.Tree.View_Instances.Include (Instance_Of, View);
-            end if;
 
             --  Finally update the DAG structure that will define the
             --  processing order for the views.
@@ -2111,11 +2155,11 @@ package body GPR2.Project.Tree is
                Predecessors : GPR2.View_Ids.Set.Object;
             begin
                for Import of View.Imports loop
-                  Predecessors.Include (Import.Instance_Of);
+                  Predecessors.Include (Import.Id);
                end loop;
 
                View.Tree.View_DAG.Update_Vertex
-                 (Vertex       => Instance_Of,
+                 (Vertex       => Unique_ID,
                   Predecessors => Predecessors);
             end;
 
@@ -2127,25 +2171,23 @@ package body GPR2.Project.Tree is
 
                if Parent.Is_Defined then
                   View.Tree.View_DAG.Update_Vertex
-                    (Vertex      => Parent.Instance_Of,
-                     Predecessor => Instance_Of);
+                    (Vertex      => Parent.Id,
+                     Predecessor => Unique_ID);
                else
                   --  Inclusion from the root aggregate project
 
                   View.Tree.View_DAG.Update_Vertex
-                    (Vertex      => Aggregate.Instance_Of,
-                     Predecessor => Instance_Of);
+                    (Vertex      => Aggregate.Id,
+                     Predecessor => Unique_ID);
                end if;
             end if;
 
             --  Add dependency on extended if not a "extends all"
 
-            if View.Is_Extending
-              and then View.Extended.Instance_Of /= Instance_Of
-            then
+            if View.Is_Extending then
                View.Tree.View_DAG.Update_Vertex
-                  (Vertex      => Instance_Of,
-                   Predecessor => View.Extended.Instance_Of);
+                  (Vertex      => Unique_ID,
+                   Predecessor => View.Extended_Root.Id);
             end if;
          end;
 
@@ -2262,8 +2304,8 @@ package body GPR2.Project.Tree is
 
          Data.Agg_Libraries.Include (Agg_Library);
 
-         if Data.Extended.Is_Defined then
-            Propagate_Aggregate_Library (Data.Extended, Agg_Library);
+         if Data.Extended_Root.Is_Defined then
+            Propagate_Aggregate_Library (Data.Extended_Root, Agg_Library);
          end if;
 
          for Import of Data.Imports loop
@@ -2306,6 +2348,7 @@ package body GPR2.Project.Tree is
          Parent    : GPR2.Project.View.Object;
          Status    : Relation_Status;
          Result    : View.Object;
+
       begin
          if Context = GPR2.Context.Aggregate then
             --  In the closure of an aggregate project.
@@ -2361,7 +2404,8 @@ package body GPR2.Project.Tree is
            (Filename    => Filename,
             Aggregate   => Aggregate,
             Status      => Status,
-            Parent      => Parent);
+            Parent      => Parent,
+            Extends_Ctx => View.Vector.Empty_Vector);
 
          --  Update the DAG with the newly loaded tree.
          --
@@ -2818,7 +2862,7 @@ package body GPR2.Project.Tree is
             end if;
 
             if View.Is_Extending
-              and then not Is_Implicitly_Abstract (View.Extended)
+              and then not Is_Implicitly_Abstract (View.Extended_Root)
             then
                --  Project extending non abstract one is not abstract
 
@@ -3046,7 +3090,7 @@ package body GPR2.Project.Tree is
                      P_Data.Kind := K_Library;
                   end if;
 
-               elsif View.Is_Extending and then View.Extended.Is_Library
+               elsif View.Is_Extending and then View.Extended_Root.Is_Library
                  and then P_Data.Trees.Project.Explicit_Qualifier
                then
                   Self.Messages.Append
@@ -3597,7 +3641,6 @@ package body GPR2.Project.Tree is
       Self.Messages.Clear;
       Self.Views.Clear;
       Self.View_Ids.Clear;
-      Self.View_Instances.Clear;
       Self.View_DAG.Clear;
       Self.Views_Set.Clear;
    end Unload;
@@ -3641,7 +3684,7 @@ package body GPR2.Project.Tree is
    begin
       Self.Self.Rooted_Sources.Clear;
 
-      for V of Self.Views_Set loop
+      for V of reverse Self.Ordered_Views loop
          if With_Runtime or else not V.Is_Runtime then
             Definition.Get (V).Update_Sources (V, Stop_On_Error, Backends);
          end if;
@@ -3666,6 +3709,16 @@ package body GPR2.Project.Tree is
                     (V : Project.View.Object) return Boolean;
                   --  Returns True if V has Ada sources or non ada bodies
 
+                  function Source_Loc
+                    (Imp : Project.View.Object)
+                     return Source_Reference.Object'Class;
+                  --  Returns a source location for the import.
+                  --
+                  --  Can't rely on P_Data.Trees.Project.Imports as
+                  --  in case of extended projects the import may be
+                  --  implicit, so retrieval of the source location is not
+                  --  easy.
+
                   ---------------------------
                   -- Has_Essential_Sources --
                   ---------------------------
@@ -3684,6 +3737,20 @@ package body GPR2.Project.Tree is
                      return False;
                   end Has_Essential_Sources;
 
+                  function Source_Loc
+                    (Imp : Project.View.Object)
+                     return Source_Reference.Object'Class is
+                  begin
+                     if P_Data.Trees.Project.Imports.Contains (Imp.Path_Name)
+                     then
+                        return P_Data.Trees.Project.Imports.Element
+                          (Imp.Path_Name);
+                     else
+                        return Source_Reference.Create
+                          (P_Data.Trees.Project.Path_Name.Value, 0, 0);
+                     end if;
+                  end Source_Loc;
+
                begin
                   for Imp of P_Data.Imports loop
                      if Imp.Kind = K_Abstract
@@ -3701,8 +3768,7 @@ package body GPR2.Project.Tree is
                               & """ cannot import project """
                               & String (Imp.Name)
                               & """ that is not a shared library project",
-                              P_Data.Trees.Project.Imports.Element
-                                (Imp.Path_Name)));
+                              Source_Loc (Imp)));
 
                      elsif Imp.Is_Static_Library
                        and then View.Library_Standalone /= Encapsulated
@@ -3710,11 +3776,11 @@ package body GPR2.Project.Tree is
                         Self.Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "shared library project """ & String (View.Name)
+                              "shared library project """ &
+                                String (View.Name)
                               & """ cannot import static library project """
                               & String (Imp.Name) & '"',
-                              P_Data.Trees.Project.Imports.Element
-                                (Imp.Path_Name)));
+                              Source_Loc (Imp)));
 
                      elsif Imp.Is_Shared_Library
                        and then View.Library_Standalone = Encapsulated
@@ -3726,8 +3792,7 @@ package body GPR2.Project.Tree is
                               & String (View.Name)
                               & """ cannot import shared library project """
                               & String (Imp.Name) & '"',
-                              P_Data.Trees.Project.Imports.Element
-                                (Imp.Path_Name)));
+                              Source_Loc (Imp)));
                      end if;
                   end loop;
 

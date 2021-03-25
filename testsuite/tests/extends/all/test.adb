@@ -12,21 +12,19 @@ begin
    --  Ensure that a basic project with extends all is loaded correctly
    TGPR.Load_With_No_Errors (Tree, "./basic/root.gpr");
 
-   --  A_Variable1 value is A.Variable1 with A been "all extended" by C.
-   --  in C A.Variable1 is redefined from "original value" to "extended value".
-   --  We expect A.Variable1 to be equal in that case to C.Variable1.
+   --  Variable1 definition starts in B, then amended by C, then A
    TGPR.Assert_Variable
       (Tree     => Tree,
        View     => "Root",
        Variable => "A_Variable1",
-       Value    => "extended value");
+       Value    => "A extall C with D with ExtB.Var2");
 
    --  Variant of previous test in which C is referenced instead of A.
    TGPR.Assert_Variable
       (Tree     => Tree,
        View     => "Root",
-       Variable => "B_Variable1",
-       Value    => "extended value");
+       Variable => "A_Variable2",
+       Value    => "A with ExtB.Var2");
 
    --  Variant of previous test in which C is referenced instead of A, but
    --  variable value is not modified in the extension
@@ -34,7 +32,7 @@ begin
       (Tree     => Tree,
        View     => "Root",
        Variable => "B_Variable2",
-       Value    => "original value2");
+       Value    => "B.Var2");
 
    return A.Report;
 end Test;

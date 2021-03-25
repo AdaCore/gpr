@@ -1,0 +1,5 @@
+with "inc_ext";
+
+project Root extends "origin" is
+   Var2 := Origin.Var;
+end Root;

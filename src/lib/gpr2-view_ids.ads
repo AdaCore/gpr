@@ -53,14 +53,16 @@ package GPR2.View_Ids is
 
    function Create
      (Project_File : GPR2.Path_Name.Object;
-      Context      : GPR2.Context.Context_Kind := Root)
+      Context      : GPR2.Context.Context_Kind := Root;
+      Extending    : View_Id := Undefined)
       return View_Id
      with Pre  => Project_File.Is_Defined
                     and then Project_File.Has_Dir_Name,
          Post => Is_Defined (Create'Result);
-   --  Creates an Id for the view associated with Project_File either using
-   --  the root aggregate project context or the root context. Note that
-   --  Project_File should point to an absolute location (i.e
+   --  Creates an Id for the view associated with Project_File, possibly
+   --  extended by Extending_View, either using the root aggregate project
+   --  context or the root context.
+   --  Note that Project_File should point to an absolute location (i.e
    --  Project_File.Has_Dir_Name should be True).
 
    function Hash (Self : View_Id) return Ada.Containers.Hash_Type
@@ -108,8 +110,16 @@ private
          when Config_Id  => null;
          when Runtime_Id => null;
          when Project_Id =>
-            Context : GPR2.Context.Context_Kind;
-            Id      : Unbounded_String;
+            Context   : GPR2.Context.Context_Kind;
+            --  The context in which the view exists (root or aggregate)
+
+            Id        : Unbounded_String;
+            --  Represents the project itself
+
+            Extending : Unbounded_String;
+            --  If Extending is not the empty string, this is the image of
+            --  the view id that is extending the view represented by this
+            --  Id.
       end case;
    end record;
 

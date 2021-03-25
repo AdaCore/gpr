@@ -34,6 +34,7 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
+with GPR2.Project.View.Set;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Info;
 with GPR2.Unit;
@@ -81,35 +82,36 @@ private package GPR2.Project.Definition is
    --  which own a context.
 
    type Data is new Definition_Base with record
-      Trees       : Tree;
+      Trees           : Tree;
 
       --  Actual values for the view
 
-      Extending       : Weak_Reference;
-      Extended        : View.Object;
-      Agg_Libraries   : GPR2.View_Ids.Set.Object;
-      Imports         : Project_View_Store.Map;
-      Limited_Imports : Project_View_Store.Map;
-      Aggregated      : Project_View_Store.Map;
-      Attrs           : Project.Attribute.Set.Object;
-      Vars            : Project.Variable.Set.Object;
-      Packs           : Project.Pack.Set.Object;
-      Types           : Project.Typ.Set.Object;
-      Sources         : Project.Source.Set.Object;
-      Sources_Map     : Simple_Name_Source.Map;
-      Units           : Unit_Info.Set.Object;
-      Unique_Id       : GPR2.View_Ids.View_Id;
-      Instance_Of     : GPR2.View_Ids.View_Id;
-      Root_View       : Weak_Reference;
+      Extending        : Weak_Reference;
+      Extended_Root    : View.Object;
+      Extended         : View.Set.Object;
+      Agg_Libraries    : GPR2.View_Ids.Set.Object;
+      Imports          : Project_View_Store.Map;
+      Limited_Imports  : Project_View_Store.Map;
+      Is_Imported      : Boolean := False;
+      Aggregated       : Project_View_Store.Map;
+      Attrs            : Project.Attribute.Set.Object;
+      Vars             : Project.Variable.Set.Object;
+      Packs            : Project.Pack.Set.Object;
+      Types            : Project.Typ.Set.Object;
+      Sources          : Project.Source.Set.Object;
+      Sources_Map      : Simple_Name_Source.Map;
+      Units            : Unit_Info.Set.Object;
+      Unique_Id        : GPR2.View_Ids.View_Id;
+      Root_View        : Weak_Reference;
       --  Either root aggregated project view, or just root view of the tree
 
       --  Some general information
 
-      Context : GPR2.Context.Context_Kind := GPR2.Context.Root;
+      Context         : GPR2.Context.Context_Kind := GPR2.Context.Root;
       --  Use the aggregate context including External attributes or only the
       --  root context.
 
-      Tree : access Project.Tree.Object;
+      Tree            : access Project.Tree.Object;
       --  The project tree for this view
 
    end record;

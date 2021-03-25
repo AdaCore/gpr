@@ -2221,7 +2221,7 @@ package body GPR2.Parser.Project is
                           Indexed_Values => Unfilled_Indexed_Values);
                elsif View.Is_Extending then
                   return Get_Variable_Ref (Variable   => Variable,
-                                           From_View  => View.Extended,
+                                           From_View  => View.Extended_Root,
                                            Source_Ref => Source_Ref);
                else
                   Error;
@@ -2291,9 +2291,10 @@ package body GPR2.Parser.Project is
                              Indexed_Values => Unfilled_Indexed_Values);
                   end;
                elsif From_View.Is_Extending then
-                  return Get_Variable_Ref (Variable   => Variable,
-                                           From_View  => From_View.Extended,
-                                           Source_Ref => Source_Ref);
+                  return Get_Variable_Ref
+                    (Variable   => Variable,
+                     From_View  => From_View.Extended_Root,
+                     Source_Ref => Source_Ref);
                else
                   Error;
                end if;

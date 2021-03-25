@@ -111,7 +111,7 @@ procedure Main is
          Put_Indent;
          Text_IO.Put ("extends   ");
          Indent := Indent + 3;
-         Display (Prj.Extended);
+         Display (Prj.Extended_Root);
          Indent := Indent - 3;
       end if;
 

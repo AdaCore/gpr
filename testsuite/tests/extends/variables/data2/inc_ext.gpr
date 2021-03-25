@@ -1,0 +1,3 @@
+project Inc_Ext extends "inc" is
+   Var := "inc_ext";
+end Inc_Ext;

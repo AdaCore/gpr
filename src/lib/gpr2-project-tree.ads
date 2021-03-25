@@ -516,7 +516,6 @@ private
       Views_Set        : View.Set.Object; -- All projects in registration order
       Context          : Two_Contexts;    -- Root and aggregate contexts
       View_Ids         : aliased Id_Maps.Map;
-      View_Instances   : aliased Id_Maps.Map;
       View_DAG         : GPR2.View_Ids.DAGs.DAG;
    end record;
 

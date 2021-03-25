@@ -413,7 +413,7 @@ package body GPR2.Project.View is
                   or else Result.Is_Default)
         and then Self.Is_Extending
       then
-         return Self.Extended.Check_Attribute
+         return Self.Extended_Root.Check_Attribute
            (Name, Index, At_Pos, Check_Extended, Result);
       end if;
 
@@ -584,10 +584,19 @@ package body GPR2.Project.View is
    -- Extended --
    --------------
 
-   function Extended (Self : Object) return Object is
+   function Extended (Self : Object) return Set.Object is
    begin
       return Definition.Get_RO (Self).Extended;
    end Extended;
+
+   -------------------
+   -- Extended_Root --
+   -------------------
+
+   function Extended_Root (Self : Object) return Object is
+   begin
+      return Definition.Get_RO (Self).Extended_Root;
+   end Extended_Root;
 
    ---------------
    -- Extending --
@@ -757,8 +766,8 @@ package body GPR2.Project.View is
          return True;
       end if;
 
-      if Check_Extended and then Def.Extended.Is_Defined then
-         return Def.Extended.Has_Attributes (Name, Index, Check_Extended);
+      if Check_Extended and then Def.Extended_Root.Is_Defined then
+         return Def.Extended_Root.Has_Attributes (Name, Index, Check_Extended);
       else
          return False;
       end if;
@@ -805,7 +814,7 @@ package body GPR2.Project.View is
 
    begin
       return For_Prj (Self)
-        or else (Self.Is_Extending and then Self.Extended.Has_Mains);
+        or else (Self.Is_Extending and then Self.Extended_Root.Has_Mains);
    end Has_Mains;
 
    ------------------
@@ -911,15 +920,6 @@ package body GPR2.Project.View is
       return Result;
    end Imports;
 
-   -----------------
-   -- Instance_Of --
-   -----------------
-
-   function Instance_Of (Self : Object) return GPR2.View_Ids.View_Id is
-   begin
-      return Definition.Get_RO (Self).Instance_Of;
-   end Instance_Of;
-
    ------------------------
    -- Invalidate_Sources --
    ------------------------
@@ -967,18 +967,26 @@ package body GPR2.Project.View is
    function Is_Extending
      (Self : Object; Parent : Object'Class := Undefined) return Boolean
    is
-      This : Definition.Const_Ref := Definition.Get_RO (Self);
+      This : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      if not Parent.Is_Defined then
-         return This.Extended.Is_Defined;
+      if not This.Extended_Root.Is_Defined then
+         return False;
       end if;
 
-      while This.Extended.Is_Defined loop
-         if This.Extended = Object (Parent) then
+      if not Parent.Is_Defined then
+         return True;
+      end if;
+
+      for Ext of Self.Extended loop
+         if Ext = Object (Parent) then
             return True;
          end if;
 
-         This := Definition.Get_RO (This.Extended);
+         if Ext.Is_Extending then
+            if Is_Extending (Ext, Parent) then
+               return True;
+            end if;
+         end if;
       end loop;
 
       return False;
@@ -1005,7 +1013,7 @@ package body GPR2.Project.View is
       elsif not Self.Is_Extending then
          return False;
       else
-         return Self.Extended.Is_Extension_Of (View);
+         return View.Is_Extending (Self);
       end if;
    end Is_Extension_Of;
 
@@ -1034,7 +1042,8 @@ package body GPR2.Project.View is
       return (Self.Check_Attribute (Registry.Attribute.Main, Result => Mains)
           and then (Mains.Has_Value (Value_Type (Path.Base_Name))
                     or else Mains.Has_Value (Value_Type (Path.Simple_Name))))
-        or else (Self.Is_Extending and then Self.Extended.Is_Main (Source));
+        or else (Self.Is_Extending
+                 and then Self.Extended_Root.Is_Main (Source));
    end Is_Main;
 
    ----------------
@@ -1279,7 +1288,7 @@ package body GPR2.Project.View is
          --  Add also mains from extended project if defined
 
          if Self.Is_Extending
-           and then Self.Extended.Check_Attribute (A.Main, Result => Attr)
+           and then Self.Extended_Root.Check_Attribute (A.Main, Result => Attr)
          then
             for Main of Attr.Values loop
                Set.Append (Self.Executable (Simple_Name (Main.Text),
@@ -1696,7 +1705,7 @@ package body GPR2.Project.View is
 
    function View_For (Self : Object; Name : Name_Type) return View.Object is
       Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
-      Dad  : Object := Data.Extended;
+      Dad  : Object := Data.Extended_Root;
    begin
       --  Lookup in the ancestors first
 
@@ -1705,14 +1714,13 @@ package body GPR2.Project.View is
             return Dad;
          end if;
 
-         Dad := Definition.Get_RO (Dad).Extended;
+         Dad := Definition.Get_RO (Dad).Extended_Root;
       end loop;
 
       --  Lookup in the imported next
 
       if Data.Imports.Contains (Name) then
-         return Data.Tree.Instance_Of
-            (Data.Imports.Element (Name).Instance_Of);
+         return Data.Imports.Element (Name);
       end if;
 
       --  Try configuration project

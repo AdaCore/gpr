@@ -477,7 +477,7 @@ package body GPR2.Project.Definition is
                   end;
                end if;
 
-               Check_Extending (View.Extended);
+               Check_Extending (View.Extended_Root);
             end if;
          end Check_Extending;
 
@@ -519,8 +519,8 @@ package body GPR2.Project.Definition is
       if Pack.Set.Set.Has_Element (CP) then
          return Pack.Set.Set.Element (CP);
 
-      elsif Def.Extended.Is_Defined then
-         return Naming_Package (Get_RO (Def.Extended).all);
+      elsif Def.Extended_Root.Is_Defined then
+         return Naming_Package (Get_RO (Def.Extended_Root).all);
 
       elsif Def.Tree.Has_Configuration
         and then Def.Tree.Configuration.Corresponding_View.Has_Packages
@@ -556,7 +556,7 @@ package body GPR2.Project.Definition is
          Attr : Attribute.Object;
       begin
          if not Def.Attrs.Contains (Name)
-           and then Def.Extended.Check_Attribute (Name, Result => Attr)
+           and then Def.Extended_Root.Check_Attribute (Name, Result => Attr)
          then
             Def.Attrs.Insert (Attr);
          end if;
@@ -570,7 +570,7 @@ package body GPR2.Project.Definition is
          Parent : Attribute.Object;
          CT     : constant Attribute.Set.Cursor := Def.Attrs.Find (Name);
       begin
-         if Def.Extended.Check_Attribute (Name, Result => Parent) then
+         if Def.Extended_Root.Check_Attribute (Name, Result => Parent) then
             if Attribute.Set.Has_Element (CT) then
                for V of Parent.Values loop
                   if not Def.Attrs (CT).Has_Value (V.Text) then
@@ -585,7 +585,7 @@ package body GPR2.Project.Definition is
       end Union_Attribute;
 
    begin
-      if Def.Extended.Is_Defined then
+      if Def.Extended_Root.Is_Defined then
          Union_Attribute (PRA.Languages);
 
          case Def.Kind is
@@ -1748,8 +1748,8 @@ package body GPR2.Project.Definition is
 
             Remove_Source (Source);
 
-            if Def.Extended.Is_Defined then
-               Exclude_Recursively (Def.Extended, Source);
+            if Def.Extended_Root.Is_Defined then
+               Exclude_Recursively (Def.Extended_Root, Source);
             end if;
          end Exclude_Recursively;
 
@@ -1803,7 +1803,7 @@ package body GPR2.Project.Definition is
                   else Source);
 
             elsif Mode = Extended_Copy then
-               Exclude_Recursively (Def.Extended, Source);
+               Exclude_Recursively (Def.Extended_Root, Source);
             end if;
          end loop;
       end Insert;
@@ -2399,10 +2399,12 @@ package body GPR2.Project.Definition is
       end if;
 
       --  Finally get the sources from the extended project if defined. We
-      --  only add the sources not already defined in the current set.
+      --  only add the sources not already defined in the currebnt set.
 
-      if Def.Extended.Is_Defined then
-         Insert (Def.Extended.Sources, Extended_Copy, SR.Undefined);
+      if not Def.Extended.Is_Empty then
+         for Ext of Def.Extended loop
+            Insert (Ext.Sources, Extended_Copy, SR.Undefined);
+         end loop;
       end if;
 
       if Def.Attrs.Languages.Is_Defined
