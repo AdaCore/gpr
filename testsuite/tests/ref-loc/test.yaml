@@ -1,0 +1,5 @@
+description:
+    Check source location of attribute or variable references.
+driver: build_and_run
+project_file: test
+main: main

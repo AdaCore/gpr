@@ -1,0 +1,4 @@
+with "inc";
+project Attr is
+   for Object_Dir use Inc'Target;
+end Attr;

@@ -1178,6 +1178,12 @@ package body GPR2.Parser.Project is
                              Values         => <>,
                              Indexed_Values => Unfilled_Indexed_Values);
 
+      function Ensure_Source_Loc
+        (Values : Containers.Source_Value_List;
+         Sloc   : Source_Reference.Object)
+            return Containers.Source_Value_List;
+      --  Ensure the values have the proper Source_Loc
+
       function Parser (Node : GPR_Node'Class) return Visit_Status;
       --  Actual parser callabck for the project
 
@@ -1288,6 +1294,29 @@ package body GPR2.Parser.Project is
 
       Undefined_Attribute_Count          : Natural := 0;
       Previous_Undefined_Attribute_Count : Natural := 0;
+
+      -----------------------
+      -- Ensure_Source_Loc --
+      -----------------------
+
+      function Ensure_Source_Loc
+        (Values : Containers.Source_Value_List;
+         Sloc   : Source_Reference.Object)
+            return Containers.Source_Value_List
+      is
+         New_List : Containers.Source_Value_List;
+      begin
+         for V of Values loop
+            New_List.Append
+              (Source_Reference.Value.Object
+                 (Source_Reference.Value.Create
+                      (Sloc   => Sloc,
+                       Text   => V.Text,
+                       At_Pos => (if V.Has_At_Pos then V.At_Pos else 0))));
+         end loop;
+
+         return New_List;
+      end Ensure_Source_Loc;
 
       -------------------------
       -- Get_Attribute_Index --
@@ -1773,7 +1802,7 @@ package body GPR2.Parser.Project is
          return Result : Item_Values do
             Result.Indexed_Values := Indexed_Values;
             if Attr.Is_Defined then
-               Result.Values := Attr.Values;
+               Result.Values := Ensure_Source_Loc (Attr.Values, Sloc);
                Result.Single := Attr.Kind = PRA.Single;
             else
                if PRA.Exists (Q_Name) then
@@ -2194,7 +2223,8 @@ package body GPR2.Parser.Project is
                   V : constant GPR2.Project.Variable.Object :=
                         Pack.Variable (Name);
                begin
-                  return (Values         => V.Values,
+                  return (Values         => Ensure_Source_Loc (V.Values,
+                                                               Source_Ref),
                           Single         => V.Kind = PRA.Single,
                           Indexed_Values => Unfilled_Indexed_Values);
                end;
@@ -2215,8 +2245,11 @@ package body GPR2.Parser.Project is
                --  project itself otherwise iterate on the extended project
                --  chain.
                if Vars.Contains (Variable) then
-                  return (Values => Vars (Variable).Values,
-                          Single => Vars (Variable).Kind = PRA.Single,
+                  --  ??? Source ref is plain ignored here
+                  return (Values         =>
+                            Ensure_Source_Loc (Vars (Variable).Values,
+                                               Source_Ref),
+                          Single         => Vars (Variable).Kind = PRA.Single,
                           Indexed_Values => Unfilled_Indexed_Values);
                elsif View.Is_Extending then
                   return Get_Variable_Ref (Variable   => Variable,
@@ -2232,7 +2265,9 @@ package body GPR2.Parser.Project is
                   --  If in the package currently processed use Pack_Vars to
                   --  find the value.
                   if Pack_Vars.Contains (Variable) then
-                     return (Values => Pack_Vars (Variable).Values,
+                     return (Values =>
+                               Ensure_Source_Loc (Pack_Vars (Variable).Values,
+                                                  Source_Ref),
                              Single => Pack_Vars (Variable).Kind = PRA.Single,
                              Indexed_Values => Unfilled_Indexed_Values);
                   else
@@ -2282,7 +2317,8 @@ package body GPR2.Parser.Project is
                      V : constant GPR2.Project.Variable.Object :=
                         From_View.Variable (Variable);
                   begin
-                     return (Values         => V.Values,
+                     return (Values         => Ensure_Source_Loc (V.Values,
+                                                                  Source_Ref),
                              Single         => V.Kind = PRA.Single,
                              Indexed_Values => Unfilled_Indexed_Values);
                   end;
