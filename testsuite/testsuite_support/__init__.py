@@ -15,6 +15,11 @@ class Testsuite(e3.testsuite.Testsuite):
         'basic': BasicDriver
     }
 
+    @property
+    def auto_generate_text_report(self) -> bool:
+        "Generate a text report together with the raw results file"
+        return True
+
     def add_options(self, parser):
         parser.add_argument(
             "--valgrind",
