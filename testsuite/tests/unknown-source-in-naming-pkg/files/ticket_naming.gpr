@@ -1,0 +1,12 @@
+project Ticket_Naming is
+
+   for Source_Files use ();
+
+   package Naming is
+      for Spec ("unwanted_package_1") use "unwanted_package_1.ads";
+      for Body ("unwanted_package_1") use "unwanted_package_1.adb";
+      for Spec ("package_1") use "package_1.ads";
+      for Body ("package_1") use "package_1.adb";
+   end Naming;
+
+end Ticket_Naming;

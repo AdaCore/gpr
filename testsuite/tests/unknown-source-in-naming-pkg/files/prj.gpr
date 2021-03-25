@@ -1,0 +1,10 @@
+project Prj is
+
+   for Object_Dir use ".";
+   for Main use ("main.adb");
+
+   package Naming is
+      for Body ("main.do_it") use "not_found.adb";
+   end Naming;
+
+end Prj;

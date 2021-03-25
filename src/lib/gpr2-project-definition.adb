@@ -2461,7 +2461,10 @@ package body GPR2.Project.Definition is
 
                   Tree.Append_Message
                     (Message.Create
-                       (Message.Error,
+                       ((if View.Has_Attributes (PRA.Source_Files)
+                            or else View.Has_Attributes (PRA.Source_List_File)
+                         then Message.Warning
+                         else Message.Error),
                         "source file """ & Item.Text
                         & """ for unit """ & Key (Key'First .. Key'Last - 1)
                         --  Last character in Key is 'B' - Body or 'S' - Spec

@@ -1,0 +1,10 @@
+with "ticket_naming.gpr";
+
+project Ticket is
+
+   for Source_List_File use "ticket_source_list.txt";
+   for Source_Dirs use ("src");
+
+   package Naming renames Ticket_Naming.Naming;
+
+end Ticket;

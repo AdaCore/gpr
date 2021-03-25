@@ -1,0 +1,8 @@
+testing files/ticket.gpr
+ticket_naming.gpr:7:43: warning: source file "unwanted_package_1.adb" for unit "unwanted_package_1" not found
+ticket_naming.gpr:6:43: warning: source file "unwanted_package_1.ads" for unit "unwanted_package_1" not found
+testing files/ticket2.gpr
+ticket2.gpr:11:43: warning: source file "unwanted_package_1.adb" for unit "unwanted_package_1" not found
+ticket2.gpr:10:43: warning: source file "unwanted_package_1.ads" for unit "unwanted_package_1" not found
+testing files/prj.gpr
+prj.gpr:7:35: error: source file "not_found.adb" for unit "main.do_it" not found
