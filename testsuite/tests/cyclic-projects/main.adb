@@ -71,7 +71,8 @@ procedure Main is
    end Load;
 
 begin
-   Load ("a.gpr");
-   Load ("agg.gpr");
-   Load ("agg2.gpr");
+   Load ("a.gpr");     --  a -> b -> d -> a
+   Load ("agg.gpr");   --  no circularity
+   Load ("agg2.gpr");  --  agg2 -> f -> agg2
+   Load ("multi.gpr"); --  multiple circularities
 end Main;

@@ -38,6 +38,13 @@ package body GPR2.View_Ids.DAGs is
      (Self : in out DAG; Vertex : View_Id) return Node_Id;
    --  Return the Node_Id associated with a vertex name.
 
+   function Min (List : Node_Sets.Set; Map : Node_Int_Map) return Node_Id;
+   --  return the key that corresponds to the minimum value in the map
+
+   function Shortest_Path
+     (Self           : DAG;
+      Source, Target : Node_Id) return View_Ids.Vector.Object;
+
    procedure Update (Self  : in out Node_Node_Set_Maps.Map;
                      Key   : Node_Id;
                      Value : Node_Sets.Set);
@@ -96,6 +103,7 @@ package body GPR2.View_Ids.DAGs is
          Self.Vertex_Ids.Include (Node, Vertex);
          Self.Predecessors.Include (Node, Node_Sets.Empty_Set);
          Self.Successors.Include (Node, Node_Sets.Empty_Set);
+         Self.Cache_Valid := False;
 
       else
          --  A node id is already associated with Vertex
@@ -162,6 +170,8 @@ package body GPR2.View_Ids.DAGs is
       Self.Successors.Clear;
       Self.Vertex_Names.Clear;
       Self.Vertex_Ids.Clear;
+      Self.Sort_Cache.Clear;
+      Self.Cache_Valid := True;
    end Clear;
 
    --------------
@@ -173,19 +183,169 @@ package body GPR2.View_Ids.DAGs is
       return Self.Vertex_Names.Contains (Vertex);
    end Contains;
 
-   ----------
-   -- Copy --
-   ----------
+   ---------
+   -- Min --
+   ---------
 
-   procedure Copy (Self : in out DAG; Source : DAG) is
+   function Min (List : Node_Sets.Set; Map : Node_Int_Map) return Node_Id
+   is
+      Result : Node_Id;
+      Value  : Integer := Integer'Last;
    begin
-      Self.Clear;
-      Self.Next_Free_Node := Source.Next_Free_Node;
-      Self.Successors := Source.Successors;
-      Self.Predecessors := Source.Predecessors;
-      Self.Vertex_Names := Source.Vertex_Names;
-      Self.Vertex_Ids := Source.Vertex_Ids;
-   end Copy;
+      for Key of List loop
+         if Value > Map.Element (Key) then
+            Value := Map.Element (Key);
+            Result := Key;
+         end if;
+      end loop;
+
+      return Result;
+   end Min;
+
+   ---------------------
+   -- Shortest_Circle --
+   ---------------------
+
+   function Shortest_Circle (Self : DAG) return GPR2.View_Ids.Vector.Object
+   is
+      Result : GPR2.View_Ids.Vector.Object;
+   begin
+      if not Self.Has_Cycle then
+         return GPR2.View_Ids.Vector.Empty_Vector;
+      end if;
+
+      for Id of Self.Vertex_Names loop
+         Result := Shortest_Path (Self, Id, Id);
+         if not Result.Is_Empty then
+            return Result;
+         end if;
+      end loop;
+
+      raise DAG_Error with "Has_Circularity set but no circularity found";
+   end Shortest_Circle;
+
+   -------------------
+   -- Shortest_Path --
+   -------------------
+
+   function Shortest_Path
+     (Self           : DAG;
+      Source, Target : View_Id) return View_Ids.Vector.Object
+   is
+   begin
+      return Shortest_Path (Self,
+                            Self.Vertex_Names.Element (Source),
+                            Self.Vertex_Names.Element (Target));
+   end Shortest_Path;
+
+   function Shortest_Path
+     (Self           : DAG;
+      Source, Target : Node_Id) return View_Ids.Vector.Object
+   is
+      Infinite    : constant Natural := Natural (Self.Vertex_Ids.Length) + 1;
+      --  Maximum distance between two vertices is the number of nodes in the
+      --  DAG - 1, unless Source and Target are equal in which case the
+      --  maximum possible distance is the number of nodes. So infinity is
+      --  Length (Nodes) + 1.
+
+      Dist        : Node_Int_Map;
+      --  This map will keep track of minimal distance between vertices and the
+      --  source.
+
+      Prev        : Node_Node_Maps.Map;
+      --  This keeps track of the minimum distance
+
+      Non_Visited : Node_Sets.Set;
+      --  Non visited nodes
+
+      T_Id        : Node_Id renames Target;
+      S_Id        : Node_Id := Source;
+
+      U, V        : Node_Id;
+      Alt         : Natural;
+      Result      : View_Ids.Vector.Object;
+
+   begin
+      --  We use the Dikjstra algorithm to compute the shortest path.
+      --  Note that this is a slight variation so that the algorithm
+      --  can be used to compute shortest cycle on a given node.
+
+      --  Initialize Dist:
+
+      for Id of Self.Vertex_Names loop
+         if Id = T_Id then
+            --  Only known distance at startup
+            Dist.Insert (Id, 0);
+         else
+            Dist.Insert (Id, Infinite);
+         end if;
+      end loop;
+
+      --  Initialize Prev:
+
+      for Id of Self.Vertex_Names loop
+         Prev.Insert (Id, Undefined);
+      end loop;
+
+      for Id of Self.Vertex_Names loop
+         Non_Visited.Insert (Id);
+      end loop;
+
+      if S_Id = T_Id then
+         --  If Source is equal to target, default dikjstra algorithm does
+         --  not work. Add a fake node and use it as target. When iterating
+         --  on predecessors, replace all occurences of sources to that node.
+         --  If we find a path between that node and the source, it means we
+         --  have our shortest cycle.
+         Dist.Insert (Undefined, Infinite);
+         Prev.Insert (Undefined, Undefined);
+         Non_Visited.Insert (Undefined);
+         S_Id := Undefined;
+      end if;
+
+      while not Non_Visited.Is_Empty loop
+         U := Min (Non_Visited, Dist);
+         Non_Visited.Delete (U);
+
+         if U = S_Id then
+            --  We found the shortest path
+            exit;
+
+         elsif U /= Undefined then
+            for U_Pred of Self.Predecessors.Element (U) loop
+               if S_Id = Undefined and then U_Pred = T_Id then
+                  --  Handle cycle detection case
+
+                  V := Undefined;
+               else
+                  V := U_Pred;
+               end if;
+
+               Alt := Dist.Element (U) + 1;
+
+               if Alt < Dist.Element (V) then
+                  Dist.Replace (V, Alt);
+                  Prev.Replace (V, U);
+               end if;
+            end loop;
+         end if;
+      end loop;
+
+      if Dist.Element (S_Id) = Infinite then
+         --  No path between source and target
+
+         return View_Ids.Vector.Empty_Vector;
+      end if;
+
+      U := S_Id;
+      Result.Append (Self.Vertex_Ids (Source));
+      while Prev.Element (U) /= Undefined loop
+         U := Prev.Element (U);
+         Result.Append (Self.Vertex_Ids.Element (U));
+      end loop;
+
+      return Result;
+   end Shortest_Path;
 
    ----------------------
    -- Topological_Sort --
@@ -193,12 +353,32 @@ package body GPR2.View_Ids.DAGs is
 
    function Topological_Sort (Self : DAG) return View_Ids.Vector.Object
    is
-      Result       : View_Ids.Vector.Object;
-      Non_Visited  : Node_Int_Map;
-      Result_Nodes : Node_Vector;
+   begin
+      return Self.Sort_Cache;
+   end Topological_Sort;
+
+   ------------
+   -- Update --
+   ------------
+
+   procedure Update
+     (Self        : in out DAG;
+      Circularity :    out Boolean)
+   is
+      Non_Visited       : Node_Int_Map;
+      Result_Nodes      : Node_Vector;
       use Node_Node_Set_Maps;
 
    begin
+      if Self.Cache_Valid then
+         Circularity := Self.Has_Cycle;
+
+         return;
+      end if;
+
+      Self.Sort_Cache.Clear;
+      Self.Has_Cycle := False;
+
       --  First compute set of non visited nodes and the number of
       --  predecessors that should be visited first.
 
@@ -207,7 +387,7 @@ package body GPR2.View_Ids.DAGs is
                               Natural (Element (Cursor).Length));
       end loop;
 
-      while Non_Visited.Length > 0 loop
+      while not Non_Visited.Is_Empty loop
          declare
             Visited_Nodes : Node_Sets.Set;
             Excluded      : Boolean := False;
@@ -240,21 +420,26 @@ package body GPR2.View_Ids.DAGs is
             end loop;
 
             if not Excluded then
-               raise DAG_Error with "cycle detected";
+               --  Non_Visited is not empty and no more nodes to remove:
+               --  no leaf node, so there's some circular dependency.
+
+               Self.Has_Cycle := True;
+
+               exit;
             end if;
          end;
       end loop;
 
-      for Node of Result_Nodes loop
-         Result.Append (Self.Vertex_Ids.Element (Node));
-      end loop;
+      if not Self.Has_Cycle then
+         for Node of Result_Nodes loop
+            Self.Sort_Cache.Append (Self.Vertex_Ids.Element (Node));
+         end loop;
+      end if;
 
-      return Result;
-   end Topological_Sort;
-
-   ------------
-   -- Update --
-   ------------
+      --  Do not re-compute unless we add/modify vertices
+      Self.Cache_Valid := True;
+      Circularity      := Self.Has_Cycle;
+   end Update;
 
    procedure Update
      (Self  : in out Node_Node_Set_Maps.Map;
@@ -328,6 +513,8 @@ package body GPR2.View_Ids.DAGs is
          for Pred_Node of Pred_Nodes loop
             Update (Self.Successors, Pred_Node, Node);
          end loop;
+
+         Self.Cache_Valid := False;
       end;
    end Update_Vertex;
 

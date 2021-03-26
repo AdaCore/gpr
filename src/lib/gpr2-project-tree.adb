@@ -38,6 +38,7 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids.Set;
+with GPR2.View_Ids.Vector;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
 
@@ -1341,8 +1342,6 @@ package body GPR2.Project.Tree is
       if Self.Messages.Has_Error then
          raise Project_Error with Project_Path.Value & " syntax error";
       end if;
-
-      pragma Assert (Definition.Check_Circular_References (Self.Root));
    end Load;
 
    -------------------
@@ -2306,7 +2305,7 @@ package body GPR2.Project.Tree is
          Aggregate : GPR2.Project.View.Object;
          Parent    : GPR2.Project.View.Object;
          Status    : Relation_Status;
-
+         Result    : View.Object;
       begin
          if Context = GPR2.Context.Aggregate then
             --  In the closure of an aggregate project.
@@ -2358,11 +2357,61 @@ package body GPR2.Project.Tree is
             end if;
          end if;
 
-         return Internal
-           (Filename  => Filename,
-            Aggregate => Aggregate,
-            Status    => Status,
-            Parent    => Parent);
+         Result := Internal
+           (Filename    => Filename,
+            Aggregate   => Aggregate,
+            Status      => Status,
+            Parent      => Parent);
+
+         --  Update the DAG with the newly loaded tree.
+         --
+         --  ??? This is certainly not optimal, in particlar when there's
+         --  a lot of aggregates, potentially nested, in the final tree, as
+         --  Recursive_Load will be called for each aggregated project. However
+         --  that's convenient to do it there as we have a single entry point
+         --  to handle circularity issues. If performance becomes an issue, we
+         --  would need to move this DAG update to the upper level to have a
+         --  smarter handling of aggregated projects, so in Set_Context and
+         --  Load (and of course we need to propagate the list to this upper
+         --  level handling)
+
+         declare
+            Cycle       : GPR2.View_Ids.Vector.Object;
+            Prev        : View.Object;
+            Current     : View.Object;
+            Circularity : Boolean;
+         begin
+            Self.View_DAG.Update (Circularity);
+
+            if Circularity then
+               Cycle := Self.View_DAG.Shortest_Circle;
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error, "circular dependency detected",
+                     Source_Reference.Create
+                       (Filename.Value, 0, 0)));
+
+               Prev := View.Undefined;
+
+               for Id of reverse Cycle loop
+                  Current := Self.Instance_Of (Id);
+
+                  if Prev.Is_Defined then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "depends on " &
+                             String (Current.Path_Name.Value),
+                           Source_Reference.Create
+                             (Prev.Path_Name.Value, 0, 0)));
+                  end if;
+
+                  Prev := Current;
+               end loop;
+            end if;
+         end;
+
+         return Result;
       end;
    end Recursive_Load;
 
@@ -3383,46 +3432,37 @@ package body GPR2.Project.Tree is
          Self.Runtime := Create_Runtime_View (Self);
       end if;
 
+      declare
+         Closure_Found : Boolean := True;
+         Closure       : GPR2.View_Ids.Set.Object;
       begin
-         declare
-            Closure_Found : Boolean := True;
-            Closure       : GPR2.View_Ids.Set.Object;
-         begin
-            --  First do a pass on the subtree that starts from root of
-            --  projects not part of any aggregates. In case there is an
-            --  aggregate, the root project will be an aggregate and after
-            --  processing that subtree we are sure that aggregate context is
-            --  set correctly.
+         --  First do a pass on the subtree that starts from root of
+         --  projects not part of any aggregates. In case there is an
+         --  aggregate, the root project will be an aggregate and after
+         --  processing that subtree we are sure that aggregate context is
+         --  set correctly.
 
+         for View of Self.Ordered_Views loop
+            if not View.Has_Aggregate_Context then
+               Set_View (View);
+               Closure.Insert (View.Id);
+            end if;
+         end loop;
+
+         --  Now evaluate the remaining views
+
+         loop
             for View of Self.Ordered_Views loop
-               if not View.Has_Aggregate_Context then
-                  Set_View (View);
+               if not Closure.Contains (View.Id) then
+                  Closure_Found := False;
                   Closure.Insert (View.Id);
+                  Set_View (View);
                end if;
             end loop;
 
-            --  Now evaluate the remaining views
-
-            loop
-               for View of Self.Ordered_Views loop
-                  if not Closure.Contains (View.Id) then
-                     Closure_Found := False;
-                     Closure.Insert (View.Id);
-                     Set_View (View);
-                  end if;
-               end loop;
-
-               exit when Closure_Found;
-               Closure_Found := True;
-            end loop;
-         end;
-      exception
-         when GPR2.View_Ids.DAGs.DAG_Error =>
-            Self.Messages.Append
-               (Message.Create
-                  (Message.Error, "circular dependency detected",
-                   Source_Reference.Create
-                      (Self.Root_Project.Path_Name.Value, 0, 0)));
+            exit when Closure_Found;
+            Closure_Found := True;
+         end loop;
       end;
 
       if not Has_Error then

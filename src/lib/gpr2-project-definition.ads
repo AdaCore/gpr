@@ -275,12 +275,6 @@ private package GPR2.Project.Definition is
    procedure Set_Default_Attributes (Def : in out Data);
    --  Set default and inherited attributes for the project view
 
-   function Check_Circular_References
-     (View : Project.View.Object) return Boolean;
-   --  Check that references between View.Object does not create cycles.
-   --  Either returns True or raises exception about found reference circle.
-   --  Return value need to use this function in pragma Assert.
-
    procedure Sources_Map_Insert
      (Def : in out Data;
       Src : Project.Source.Object);

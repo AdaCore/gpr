@@ -1,0 +1,3 @@
+with "multic";
+project MultiB is
+end MultiB;

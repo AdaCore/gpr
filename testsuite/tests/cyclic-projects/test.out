@@ -1,4 +1,14 @@
 Messages found for a.gpr
 a.gpr: error: circular dependency detected
+a.gpr: error: depends on /b.gpr
+b.gpr: error: depends on /d.gpr
+d.gpr: error: depends on /a.gpr
 Messages found for agg2.gpr
-agg2.gpr: error: circular dependency detected
+e.gpr: error: circular dependency detected
+agg2.gpr: error: depends on /e.gpr
+e.gpr: error: depends on /agg2.gpr
+Messages found for multi.gpr
+multi.gpr: error: circular dependency detected
+multi.gpr: error: depends on /multib.gpr
+multib.gpr: error: depends on /multic.gpr
+multic.gpr: error: depends on /multi.gpr
