@@ -89,6 +89,35 @@ package body GPR2 is
       end if;
    end Get_Tools_Directory;
 
+   --------------------------
+   -- Is_Runtime_Unit_Name --
+   --------------------------
+
+   function Is_Runtime_Unit_Name (Name : Name_Type) return Boolean is
+
+      LN : constant String := To_Lower (Name);
+
+      function Is_It (Root : String) return Boolean is
+        (GNATCOLL.Utils.Starts_With (LN, Root)
+         and then (LN'Length = Root'Length
+                   or else (LN'Length > Root'Length + 1
+                            and then LN (LN'First + Root'Length) = '.')));
+      --  Returns True if LN equal to Root or starts with Root & '.' and has
+      --  length more than Root'Length + 2.
+
+   begin
+      return Is_It ("ada")
+        or else Is_It ("system")
+        or else Is_It ("interfaces")
+        or else Is_It ("gnat")
+        or else LN in "direct_io"
+                    | "calendar"
+                    | "io_exceptions"
+                    | "machine_code"
+                    | "unchecked_conversion"
+                    | "unchecked_deallocation";
+   end Is_Runtime_Unit_Name;
+
    -----------------
    -- Parent_Name --
    -----------------

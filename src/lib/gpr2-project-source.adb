@@ -22,8 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Fixed;
+
 with GPR2.Message;
 with GPR2.Project.Definition;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -32,6 +35,8 @@ with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
 
 package body GPR2.Project.Source is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    procedure Context_Clause_Dependencies
      (Self     : Object;
@@ -569,6 +574,36 @@ package body GPR2.Project.Source is
             begin
                if not US.Has_Element (CU) then
                   if Self.Source.Is_Runtime then
+                     return;
+                  end if;
+
+                  if Is_Runtime_Unit_Name (U.Name) then
+                     --  Try to find possible runtime unit name and fix unit
+                     --  name.
+
+                     declare
+                        DR : constant String :=
+                               View (Self).Naming_Package.Attribute
+                                 (PRA.Dot_Replacement).Value.Text;
+                        SN : constant String :=
+                               String (Self.Path_Name.Simple_Name);
+                        CU : Project.Unit_Info.Set.Cursor;
+                     begin
+                        if SN (SN'First + 1 .. SN'First + DR'Length) = DR then
+                           CU := Def.Units.Find
+                             (Name_Type
+                                (Ada.Strings.Fixed.Replace_Slice
+                                   (SN, SN'First + 1, SN'First + DR'Length,
+                                    ".")));
+
+                           if US.Has_Element (CU) then
+                              Def.Units (CU).Update_Name (U.Name);
+                              Def.Units.Insert (U.Name, US.Element (CU));
+                              Def.Units.Delete (CU);
+                           end if;
+                        end if;
+                     end;
+
                      return;
                   end if;
 

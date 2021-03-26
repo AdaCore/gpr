@@ -1284,21 +1284,16 @@ package body GPR2.Project.Definition is
                      --  platform before processing the project files.
 
                      if S2 = '_' and then S3 = '_' then
-                        --  Replace first _ by a dot
-                        Replace_Element (Result, 2, '.');
-
-                        --  and remove the second _
-                        Delete (Result, 3, 3);
+                        Replace_Slice (Result, 2, 3, ".");
 
                      elsif S2 = '~' then
                         Replace_Element (Result, 2, '.');
-
-                     elsif S2 = '.' then
-
-                        --  If it is potentially a run time source
-
-                        null;
                      end if;
+
+                     --  We do nothing with S2 = '.' case here because it can
+                     --  be regular package with one letter named parent. We
+                     --  will detect runtime source later at unit name
+                     --  clarification stage in Ada or ALI parser.
                   end if;
                end;
             end if;
