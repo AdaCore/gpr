@@ -2,12 +2,12 @@ Test1
 aggr.gpr:2:22: error: undefined external reference "TEST"
 aggr.gpr: error: Attribute "project_files" must be specified in aggregate project
 Test2
-b.gpr:2:27: warning: object directory "B" not found
+b.gpr:4:23: warning: object directory "B" not found
 Test3
-c.gpr:2:27: warning: object directory "C" not found
+c.gpr:4:23: warning: object directory "C" not found
 Test4
-d.gpr:2:20: warning: object directory "D" not found
+d.gpr:4:23: warning: object directory "D" not found
 Test5
-e.gpr:2:20: warning: object directory "5" not found
+e.gpr:4:23: warning: object directory "5" not found
 Test6
-f.gpr:2:20: warning: object directory "6" not found
+f.gpr:4:23: warning: object directory "6" not found
