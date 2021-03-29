@@ -3,6 +3,9 @@ testing aggl1.gpr
 A.Object_Dir:
 B.Object_Dir:/files/b
 loading files/aggl.gpr
+b.gpr:2:23: warning: object directory "b" not found
+aggl1.gpr:4:25: warning: library directory "lib" not found
+aggl.gpr: error: aggregate library ALI directory cannot be shared with object directory of aggregated project "a"
 testing aggl1.gpr
 A.Object_Dir:
 B.Object_Dir:/files/b
