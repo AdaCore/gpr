@@ -311,11 +311,14 @@ procedure GPRclean.Main is
                                  & S.Is_Aggregated'Img);
             end if;
 
-            if Opts.Mains.Contains
-                 (String (S.Source.Path_Name.Simple_Name))
+            --  Remove source simple name from Options.Mains as all Mains found
+            --  is handled at Tree level not View level.
+
+            if Options.Mains.Contains
+              (String (S.Source.Path_Name.Simple_Name))
             then
                In_Mains := True;
-               Opts.Args.Delete (String (S.Source.Path_Name.Simple_Name));
+               Options.Args.Delete (String (S.Source.Path_Name.Simple_Name));
             end if;
 
             if Is_Main or else In_Mains then
@@ -367,12 +370,6 @@ procedure GPRclean.Main is
             end if;
          end;
       end loop;
-
-      if Opts.Arg_Mains and then not Opts.Mains.Is_Empty then
-         GPRtools.Util.Fail_Program
-           ('"' & Opts.Mains.First_Element
-            & """ was not found in the sources of any project");
-      end if;
 
       if not Opts.Remain_Useful
         and then View.Has_Mains
@@ -708,6 +705,12 @@ begin
             Options);
       end if;
    end loop;
+
+   if Options.Arg_Mains and then not Options.Mains.Is_Empty then
+      GPRtools.Util.Fail_Program
+        ('"' & Options.Mains.First_Element
+         & """ was not found in the sources of any project");
+   end if;
 
    if Options.Remove_Config then
       Delete_File (Options.Config_File.Value, Options);
