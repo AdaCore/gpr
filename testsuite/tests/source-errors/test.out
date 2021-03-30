@@ -24,3 +24,15 @@ Project: Demo3
                   language: Ada    Kind: S_BODY_ONLY   unit: Pck.A
  > src2/pcka.ads
                   language: Ada    Kind: S_SPEC_ONLY   unit: Pcka
+Project: Demo4
+ > src3/main.adb
+                  language: Ada    Kind: S_BODY_ONLY   unit: Main
+Project: Demo5
+BEFORE: Has unread Message: TRUE
+> /source-errors/demo5.gpr
+ERROR
+ 3
+ 25
+"main.adb" is found in several source directories
+AFTER: Has unread Message: FALSE
+

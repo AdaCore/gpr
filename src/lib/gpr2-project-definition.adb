@@ -1642,8 +1642,8 @@ package body GPR2.Project.Definition is
                      --  Check source duplication and insert if possible or
                      --  replace if necessary.
 
-                     CS : constant Project.Source.Set.Cursor :=
-                            Src_Dir_Set.Find (Project_Source);
+                     CS             : constant Project.Source.Set.Cursor :=
+                                        Src_Dir_Set.Find (Project_Source);
                   begin
                      if Project.Source.Set.Has_Element (CS) then
                         if not Src_Dir_Set (CS).Has_Naming_Exception
@@ -1660,9 +1660,11 @@ package body GPR2.Project.Definition is
 
                         elsif Src_Dir_Set (CS).Has_Naming_Exception
                           = Project_Source.Has_Naming_Exception
+                          and then not Def.Sources.Contains (Project_Source)
                         then
                            --  We are here when duplicated sources have naming
                            --  exception or does not have it both.
+                           --  and Project_Source not already in Def.Sources
 
                            Tree.Append_Message
                              (Message.Create
