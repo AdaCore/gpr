@@ -1524,6 +1524,76 @@ package body GPR2.Project.View is
       end if;
    end Source_Path;
 
+   function Source_Path
+     (Self            : Object;
+      Name            : GPR2.Simple_Name;
+      Allow_Spec_File : Boolean;
+      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
+   is
+      CS : Definition.Simple_Name_Source.Cursor;
+   begin
+      CS := Definition.Get_RO (Self).Sources_Map.Find (Name);
+
+      if Definition.Simple_Name_Source.Has_Element (CS) then
+         return Definition.Simple_Name_Source.Element (CS).Path_Name;
+      else
+         if Allow_Unit_Name then
+            declare
+               Unit : constant Unit_Info.Object :=
+                        Self.Unit (Name        => Optional_Name_Type (Name),
+                                   Need_Update => False);
+            begin
+               if Unit.Is_Defined then
+                  if Unit.Has_Body then
+                     return Unit.Main_Body;
+                  elsif Allow_Spec_File and then Unit.Has_Spec then
+                     return Unit.Spec;
+                  end if;
+               end if;
+            end;
+         end if;
+
+         for Language of Self.Languages loop
+            declare
+               L  : constant Name_Type := Name_Type (Language.Text);
+               BS : constant Value_Type :=
+                      (if Self.Naming_Package.Has_Body_Suffix (L)
+                       then Self.Naming_Package.Body_Suffix (L).Value.Text
+                       else No_Value);
+            begin
+               if BS /= No_Value then
+                  CS := Definition.Get_RO (Self).Sources_Map.Find
+                    (Name & Simple_Name (BS));
+                  if Definition.Simple_Name_Source.Has_Element (CS) then
+                     return Definition.Simple_Name_Source.Element
+                       (CS).Path_Name;
+                  end if;
+               end if;
+
+               if Allow_Spec_File then
+                  declare
+                     SS : constant Value_Type :=
+                            (if Self.Naming_Package.Has_Spec_Suffix (L)
+                             then Self.Naming_Package.Spec_Suffix
+                               (L).Value.Text
+                             else No_Value);
+                  begin
+                     if SS /= No_Value then
+                        CS := Definition.Get_RO (Self).Sources_Map.Find
+                          (Name & Simple_Name (SS));
+                        if Definition.Simple_Name_Source.Has_Element (CS) then
+                           return Definition.Simple_Name_Source.Element
+                             (CS).Path_Name;
+                        end if;
+                     end if;
+                  end;
+               end if;
+            end;
+         end loop;
+      end if;
+      return GPR2.Path_Name.Undefined;
+   end Source_Path;
+
    -------------------------
    -- Source_Subdirectory --
    -------------------------

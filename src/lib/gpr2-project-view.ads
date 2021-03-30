@@ -377,6 +377,18 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Get full path name corresponding to the given filename
 
+   function Source_Path
+     (Self            : Object;
+      Name            : GPR2.Simple_Name;
+      Allow_Spec_File : Boolean;
+      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Get full path name corresponding to the given name
+   --  name can be the filename with or without body/spec extension
+   --  Set allow_spec_file if spec file can also be returned.
+   --  Set allow_unit_name if name can also be a unit name.
+   --  Returns body file when body & spec files are found.
+
    function Has_Source
      (Self : Object; Filename : GPR2.Simple_Name) return Boolean
      with Pre => Self.Is_Defined;

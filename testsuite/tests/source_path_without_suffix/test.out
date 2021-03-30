@@ -1,0 +1,9 @@
+Source_Path(main.2.ada,TRUE,TRUE) is main.2.ada
+Source_Path(test1,TRUE,FALSE) is test1.h
+Source_Path(test2,TRUE,FALSE) is test2.c
+Source_Path(root,FALSE,TRUE) is Undefined
+Source_Path(root,TRUE,FALSE) is root.1.ada
+Source_Path(root-child,TRUE,FALSE) is root-child.2.ada
+Source_Path(root.child,TRUE,TRUE) is root-child.2.ada
+Source_Path(root.child.child,TRUE,TRUE) is root-child-child.1.ada
+Source_Path(root.child.child,FALSE,TRUE) is Undefined

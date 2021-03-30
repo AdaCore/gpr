@@ -1,0 +1,9 @@
+project Prj is
+   for Languages use ("Ada", "C");
+   for Main use ("main.2.ada");
+   for Source_Dirs use ("src");
+   package Naming is
+      for Spec_Suffix ("aDa") use ".1.ada";
+      for Body_Suffix ("aDA") use ".2.ada";
+    end Naming;
+end Prj;

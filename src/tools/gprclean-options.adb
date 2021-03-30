@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -57,7 +57,7 @@ package body GPRclean.Options is
       Add (Self.Remove_Empty_Dirs,        Next.Remove_Empty_Dirs);
       Add (Self.Unchecked_Shared_Lib,     Next.Unchecked_Shared_Lib);
 
-      Self.Args.Union (Next.Mains);
+      Self.Mains.Union (Next.Mains);
       Self.Arg_Mains := not Self.Mains.Is_Empty;
    end Append;
 
@@ -182,6 +182,10 @@ package body GPRclean.Options is
       --  Now read arguments
 
       Options.Read_Remaining_Arguments (GPRtools.Clean);
+
+      for Arg of Options.Args loop
+         Options.Mains.Insert (Filename_Type (Arg));
+      end loop;
 
       Options.Arg_Mains := not Options.Mains.Is_Empty;
 

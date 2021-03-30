@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -40,6 +40,9 @@ package GPRclean.Options is
       Force_Deletions             : aliased Boolean := False;
 
       Arg_Mains     : Boolean;
+      Mains         : GPR2.Containers.Filename_Set;
+      --  As soon as main found in a project, it is removed from Mains_In_Cmd
+      --  and Mains is updated if extension added.
       Config_File   : Path_Name.Object;
       Remove_Config : Boolean := False;
       Subdirs       : Unbounded_String;
@@ -50,17 +53,9 @@ package GPRclean.Options is
       Project_Tree : in out Project.Tree.Object;
       Parser       : Opt_Parser := Command_Line_Parser);
 
-   function Mains (Self : Object) return GPR2.Containers.Value_Set;
-   --  Return list of mains from command line
-
    overriding procedure Append (Self : in out Object; Next : Object);
    --  Append options values from Next to Self. Could be used to concatenate
    --  additional switches from Clean project package with command line taken
    --  switches.
-
-private
-
-   function Mains (Self : Object) return GPR2.Containers.Value_Set is
-      (Self.Args);
 
 end GPRclean.Options;

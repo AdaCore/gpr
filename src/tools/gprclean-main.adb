@@ -216,6 +216,9 @@ procedure GPRclean.Main is
               (Library_Name, Number, View.Tree.Object_Suffix));
       end Partial_Path;
 
+      Mains_In_View : GPR2.Containers.Filename_Set;
+      --  mains in cmd line found in this view
+
    begin
       --  Check for additional switches in Clean package
 
@@ -337,6 +340,46 @@ procedure GPRclean.Main is
          end if;
       end if;
 
+      --  Handle mains without spec/body extension
+
+      declare
+         Removed_Mains : GPR2.Containers.Filename_Set;
+      begin
+         --  Add found sources to Found_Mains
+
+         for M of Options.Mains loop
+            declare
+               Main : constant GPR2.Path_Name.Object :=
+                        View.Source_Path
+                          (Name            => M,
+                           Allow_Spec_File => True,
+                           Allow_Unit_Name => False);
+            begin
+               if Main.Is_Defined then
+                  declare
+                     Position : GPR2.Containers.Filename_Type_Set.Cursor;
+                     Inserted : Boolean;
+                  begin
+                     Mains_In_View.Insert
+                       (New_Item => Filename_Type (Main.Simple_Name),
+                        Position => Position,
+                        Inserted => Inserted);
+                     if Inserted then
+                        Removed_Mains.Insert (M);
+                     end if;
+                  end;
+               end if;
+            end;
+         end loop;
+
+         --- Remove found mains from Mains & Mains_In_Cmd
+
+         for Arg of Removed_Mains loop
+            Options.Mains.Delete (Arg);
+         end loop;
+
+      end;
+
       for C in View.Sources (Need_Update => False).Iterate loop
          declare
             S       : constant Project.Source.Object :=
@@ -346,9 +389,8 @@ procedure GPRclean.Main is
             --  is not from list.
             In_Mains : Boolean := False;
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
-            C_Main   : Containers.Value_Type_Set.Cursor :=
-                         Options.Args.Find
-                           (String (S.Source.Path_Name.Simple_Name));
+            C_Main   : Containers.Filename_Type_Set.Cursor :=
+                         Mains_In_View.Find (S.Source.Path_Name.Simple_Name);
          begin
             if Opts.Verbose then
                Text_IO.Put_Line
@@ -359,9 +401,9 @@ procedure GPRclean.Main is
             --  Remove source simple name from Options.Mains as all Mains found
             --  is handled at Tree level not View level.
 
-            if Containers.Value_Type_Set.Has_Element (C_Main) then
+            if Containers.Filename_Type_Set.Has_Element (C_Main) then
                In_Mains := True;
-               Options.Args.Delete (C_Main);
+               Mains_In_View.Delete (C_Main);
             end if;
 
             if Is_Main or else In_Mains then
@@ -734,7 +776,7 @@ begin
         (GPR2.Message.Create
            (GPR2.Message.Error,
             "main cannot be a source of a library project: """
-            & Options.Mains.First_Element & '"',
+            & String (Options.Mains.First_Element) & '"',
             Source_Reference.Create
               (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
 
@@ -769,7 +811,7 @@ begin
 
    if Options.Arg_Mains and then not Options.Mains.Is_Empty then
       GPRtools.Util.Fail_Program
-        ('"' & Options.Mains.First_Element
+        ('"' & String (Options.Mains.First_Element)
          & """ was not found in the sources of any project");
    end if;
 

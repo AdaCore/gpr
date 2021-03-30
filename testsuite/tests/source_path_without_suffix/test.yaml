@@ -1,0 +1,5 @@
+description:
+    GPR2.Project_View.Source_Path (handling spec/body suffix & unit_name) test
+driver: build_and_run
+project_file: test
+main: main
