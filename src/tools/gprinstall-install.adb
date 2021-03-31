@@ -1780,8 +1780,10 @@ package body GPRinstall.Install is
             procedure Append (Attribute : GPR2.Project.Attribute.Object) is
             begin
                for V of Attribute.Values loop
-                  Opts.Append (V.Text);
-                  Seen.Include (Name_Type (V.Text));
+                  if V.Text /= "" then
+                     Opts.Append (V.Text);
+                     Seen.Include (Name_Type (V.Text));
+                  end if;
                end loop;
             end Append;
 
