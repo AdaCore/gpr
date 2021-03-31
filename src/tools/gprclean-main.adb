@@ -305,20 +305,22 @@ procedure GPRclean.Main is
             --  is not from list.
             In_Mains : Boolean := False;
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
+            C_Main   : Containers.Value_Type_Set.Cursor :=
+                         Options.Args.Find
+                           (String (S.Source.Path_Name.Simple_Name));
          begin
             if Opts.Verbose then
-               Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value & ' '
-                                 & S.Is_Aggregated'Img);
+               Text_IO.Put_Line
+                 ("source: " & S.Source.Path_Name.Value & ' '
+                  & S.Is_Aggregated'Img);
             end if;
 
             --  Remove source simple name from Options.Mains as all Mains found
             --  is handled at Tree level not View level.
 
-            if Options.Mains.Contains
-              (String (S.Source.Path_Name.Simple_Name))
-            then
+            if Containers.Value_Type_Set.Has_Element (C_Main) then
                In_Mains := True;
-               Options.Args.Delete (String (S.Source.Path_Name.Simple_Name));
+               Options.Args.Delete (C_Main);
             end if;
 
             if Is_Main or else In_Mains then
