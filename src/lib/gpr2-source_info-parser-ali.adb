@@ -83,7 +83,9 @@ package body GPR2.Source_Info.Parser.ALI is
         with Post => not Stream_IO.Is_Open (File.FD);
 
       function Get_Token
-        (File : in out Handle; Stop_At_LF : Boolean := False) return String
+        (File          : in out Handle;
+         Stop_At_LF    : Boolean := False;
+         May_Be_Quoted : Boolean := False) return String
         with Pre => Stream_IO.Is_Open (File.FD);
       --  Get next token on the file.
       --  If Stop_At_LF is True, then no token will be read after the current
@@ -142,7 +144,9 @@ package body GPR2.Source_Info.Parser.ALI is
       ---------------
 
       function Get_Token
-        (File : in out Handle; Stop_At_LF : Boolean := False) return String
+        (File          : in out Handle;
+         Stop_At_LF    : Boolean := False;
+         May_Be_Quoted : Boolean := False) return String
       is
          function Next_Char return Character with Inline;
          --  Get next char in buffer
@@ -154,33 +158,72 @@ package body GPR2.Source_Info.Parser.ALI is
          Cur : Content_Index := 0;
          C   : Character     := ASCII.NUL;
 
+         Quoted : Boolean := False;
+         QN     : Natural := 0;
+
          procedure Get_Word with Inline;
          --  Read a word, result will be in Tok (Tok'First .. Cur)
 
-         function Is_Sep (C : Character) return Boolean is
+         function Is_Separator return Boolean;
+         --  The C character is separator
+
+         function Is_Space return Boolean is
            (C in ' ' | ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT);
-         --  The character is separator
+         --  The C character is space
 
          --------------
          -- Get_Word --
          --------------
 
          procedure Get_Word is
-            C : Character;
          begin
             loop
                C := Next_Char;
 
-               if not Is_Sep (C) then
-                  Cur := Cur + 1;
-                  Tok (Cur) := C;
-
-               else
+               if Is_Separator then
                   File.Current := File.Current - 1;
                   exit;
+
+               else
+                  Cur := Cur + 1;
+                  Tok (Cur) := C;
                end if;
             end loop;
          end Get_Word;
+
+         ------------------
+         -- Is_Separator --
+         ------------------
+
+         function Is_Separator return Boolean is
+         begin
+            if Quoted then
+               if C = '"' then
+                  QN := QN + 1;
+                  if QN = 2 then
+                     Cur := Cur - 1;
+                     QN := 0;
+                  end if;
+
+               elsif QN = 1 then
+                  if Is_Space then
+                     return True;
+                  else
+                     Cur := Cur + 1;
+                     Tok (Cur) := C;
+
+                     raise Scan_ALI_Error with
+                       "Wrong quoted format of '" & Tok (Tok'First .. Cur)
+                       & ''';
+                  end if;
+               end if;
+
+               return False;
+
+            else
+               return Is_Space;
+            end if;
+         end Is_Separator;
 
          ---------------
          -- Next_Char --
@@ -214,17 +257,21 @@ package body GPR2.Source_Info.Parser.ALI is
             Cur := 1;
             Tok (Cur) := C;
 
-            if C = ASCII.EOT then
+            if May_Be_Quoted and then C = '"' then
+               Quoted := True;
+            end if;
+
+            if not Is_Space then
+               Get_Word;
+               exit Read_Token;
+
+            elsif C = ASCII.EOT then
                Cur := 0;
                exit Read_Token;
 
             elsif C = ASCII.LF then
                File.At_LF := True;
                File.Line := File.Line + 1;
-
-            elsif not Is_Sep (C) then
-               Get_Word;
-               exit Read_Token;
             end if;
          end loop Read_Token;
 
@@ -357,7 +404,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
          function Checksum (S : String) return Word;
 
-         function Get_Token return String;
+         function Get_Token (May_Be_Quoted : Boolean := False) return String;
 
          function Time_Stamp (S : String) return Ada.Calendar.Time;
 
@@ -397,9 +444,11 @@ package body GPR2.Source_Info.Parser.ALI is
          -- Get_Token --
          ---------------
 
-         function Get_Token return String is
+         function Get_Token (May_Be_Quoted : Boolean := False) return String is
             Tok : constant String :=
-                    IO.Get_Token (A_Handle, Stop_At_LF => True);
+                    IO.Get_Token
+                      (A_Handle, Stop_At_LF => True,
+                       May_Be_Quoted => May_Be_Quoted);
          begin
             if Tok = "" then
                raise Scan_ALI_Error with "Missed dependency field";
@@ -417,7 +466,7 @@ package body GPR2.Source_Info.Parser.ALI is
          begin
             if S'Length /= 14 then
                raise Scan_ALI_Error with
-                 "Wrong timestamp length" & S'Length'Img;
+                 "Wrong timestamp """ & S & """ length" & S'Length'Img;
             end if;
 
             T := S;
@@ -427,7 +476,7 @@ package body GPR2.Source_Info.Parser.ALI is
                & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
          end Time_Stamp;
 
-         Sfile  : constant String            := Get_Token;
+         Sfile  : constant String            := Get_Token (True);
          Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
 
@@ -802,9 +851,8 @@ package body GPR2.Source_Info.Parser.ALI is
 
          --  Skip to Units (U lines)
 
-         loop
+         while Header /= 'U' loop
             Next_Line;
-            exit when Header = 'U';
          end loop;
 
          --  Read Units + {Withs}
@@ -926,7 +974,9 @@ package body GPR2.Source_Info.Parser.ALI is
       exception
          when E : others =>
             Ada.Text_IO.Put_Line
-              ("#ALI parser " & Ada.Exceptions.Exception_Information (E));
+              ("ALI parser error: " & LI.Value
+               & ' ' & Ada.Exceptions.Exception_Information (E));
+
             IO.Close (A_Handle);
             Data.Parsed := Source_Info.None;
       end;
