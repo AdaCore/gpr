@@ -1215,6 +1215,11 @@ package body GPR2.Project.View is
       then
          return Standalone_Library_Kind'Value (Attr.Value.Text);
 
+      elsif Self.Has_Any_Interfaces then
+         --  If Library interface is defined, then Library_Standalone is
+         --  standard by default.
+         return Standard;
+
       else
          --  Library_Standalone not defined
          return No;

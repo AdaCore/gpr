@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -479,27 +479,6 @@ package body GPR2.Project.Attribute.Set is
                                 (SR.Create
                                    (VDD.Trees.Project.Path_Name.Value, 0, 0));
 
-      Standalone          : constant Source_Reference.Identifier.Object :=
-                              Source_Reference.Identifier.Object
-                                (Source_Reference.Identifier.Create
-                                   (Project_SRef, RA.Library_Standalone));
-
-      Standalone_Standard : constant Project.Attribute.Object :=
-                              Project.Attribute.Create
-                                (Standalone,
-                                 Source_Reference.Value.Object
-                                   (Source_Reference.Value.Create
-                                      (Project_SRef, "Standard")),
-                                 Default => True);
-
-      Standalone_No       : constant Project.Attribute.Object :=
-                              Project.Attribute.Create
-                                (Standalone,
-                                 Source_Reference.Value.Object
-                                   (Source_Reference.Value.Create
-                                      (Project_SRef, "No")),
-                                 Default => True);
-
       Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
 
       procedure Each_Default (Attr : Name_Type; Def : RA.Def);
@@ -631,25 +610,6 @@ package body GPR2.Project.Attribute.Set is
 
    begin
       RA.For_Each_Default (Rules, Each_Default'Access);
-
-      --  Check for Library_Standalone special case has it has different
-      --  default value in library project:
-      --
-      --  "standard" when Interface or Library_Interface is defined
-      --  "no"       all other cases.
-
-      if Pack = No_Name
-        and then VDD.Kind in K_Library | K_Aggregate_Library
-        and then not VDD.Attrs.Contains (RA.Library_Standalone)
-      then
-         if VDD.Attrs.Has_Interfaces
-           or else VDD.Attrs.Has_Library_Interface
-         then
-            Self.Insert (Standalone_Standard);
-         else
-            Self.Insert (Standalone_No);
-         end if;
-      end if;
    end Set_Defaults;
 
 begin

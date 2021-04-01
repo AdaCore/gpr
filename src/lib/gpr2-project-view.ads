@@ -651,10 +651,12 @@ private
      (Self.Has_Attributes (Registry.Attribute.Library_Version));
 
    function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Library_Interface));
+     (Self.Has_Attributes (Registry.Attribute.Library_Interface,
+                           Check_Extended => True));
 
    function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Interfaces));
+     (Self.Has_Attributes (Registry.Attribute.Interfaces,
+                           Check_Extended => True));
 
    function Has_Any_Interfaces (Self : Object) return Boolean is
      (Self.Has_Library_Interface or else Self.Has_Interfaces);
