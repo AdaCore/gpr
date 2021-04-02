@@ -10,5 +10,5 @@ library project Lib3 is
    for Library_Src_Dir use project'Library_Dir & "-src";
    for Library_Auto_Init use "True";
    for Interfaces use ("lib3.ads");
-   for Library_Version use "libprj.so.1.2";
+   for Library_Version use "liblib3.so.1.2";
 end Lib3;

@@ -411,16 +411,22 @@ procedure GPRclean.Main is
                if not View.Is_Static_Library
                  and then View.Has_Library_Version
                then
-                  if View.Library_Version_Filename
-                    /= View.Library_Major_Version_Filename
-                  then
-                     Delete_File (View.Library_Version_Filename.Value);
-                  end if;
+                  --  When library version attribute is provided, to keep all
+                  --  links seen as regular file, link target should be deleted
+                  --  after the link. Library binary files should be deleted
+                  --  starting with Library_Filename and ending with
+                  --  Library_Version_Filename
 
                   if View.Library_Major_Version_Filename
                     /= View.Library_Filename
                   then
                      Delete_File (View.Library_Major_Version_Filename.Value);
+                  end if;
+
+                  if View.Library_Version_Filename
+                    /= View.Library_Major_Version_Filename
+                  then
+                     Delete_File (View.Library_Version_Filename.Value);
                   end if;
                end if;
             end if;
