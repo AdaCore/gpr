@@ -27,3 +27,7 @@ Install project Test
 
 
 
+gprname returned 4
+prj.gpr:2:04: error: Expected Identifier, got ';'
+gprname: failed to load project tree
+
