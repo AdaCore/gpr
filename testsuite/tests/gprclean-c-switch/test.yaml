@@ -1,0 +1,2 @@
+description: test gprclean -c only delete compiler generated files switch.
+driver: python_script

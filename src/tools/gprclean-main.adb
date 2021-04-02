@@ -93,10 +93,24 @@ procedure GPRclean.Main is
    procedure Clean (View : Project.View.Object) is
       use GNATCOLL.Utils;
 
-      Obj_Dir : constant Path_Name.Object := View.Object_Directory;
-      Tree    : constant access Project.Tree.Object := View.Tree;
-      Opts    : GPRclean.Options.Object;
-
+      Obj_Dir     : constant Path_Name.Object := View.Object_Directory;
+      Tree        : constant access Project.Tree.Object := View.Tree;
+      Opts        : GPRclean.Options.Object;
+      Lib_Dir     : constant GPR2.Path_Name.Object :=
+                      (if View.Is_Library
+                       then View.Library_Directory
+                       else GPR2.Path_Name.Undefined);
+      Lib_Ali_Dir : constant GPR2.Path_Name.Object :=
+                      (if Lib_Dir.Is_Defined
+                       and then View.Library_Ali_Directory /= Lib_Dir
+                       then View.Library_Ali_Directory
+                       else GPR2.Path_Name.Undefined);
+      Lib_Src_Dir : constant GPR2.Path_Name.Object :=
+                      (if Lib_Dir.Is_Defined
+                       and then View.Library_Src_Directory /= Lib_Dir
+                       and then View.Library_Src_Directory /= Lib_Ali_Dir
+                       then View.Library_Src_Directory
+                       else GPR2.Path_Name.Undefined);
       pragma Warnings (Off);
 
       function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
@@ -123,6 +137,11 @@ procedure GPRclean.Main is
          Library_Name : GPR2.Simple_Name) return Path_Name.Object;
       --  return linker options path
 
+      function In_Library_Directories
+        (File : Path_Name.Object) return Boolean;
+      --  return true if view is a library and File is in library_dir,
+      --  library_ali_dir or library_src_dir directories
+
       ----------------------
       -- Binder_Artifacts --
       ----------------------
@@ -144,6 +163,28 @@ procedure GPRclean.Main is
       begin
          Main.Delete_File (Name, Opts);
       end Delete_File;
+
+      ----------------------------
+      -- In_Library_Directories --
+      ----------------------------
+
+      function In_Library_Directories
+        (File : Path_Name.Object) return Boolean
+      is
+      begin
+         if Lib_Dir.Is_Defined then
+            declare
+               Parent : constant Path_Name.Object :=
+                          Create_Directory (Filename_Type (Dir_Name (File)));
+            begin
+               return Parent = Lib_Dir
+                 or else Parent = Lib_Ali_Dir
+                 or else Parent = Lib_Src_Dir;
+            end;
+         else
+            return False;
+         end if;
+      end In_Library_Directories;
 
       Has_Mains : constant Boolean := View.Has_Mains;
       Attr      : Project.Attribute.Object;
@@ -348,7 +389,14 @@ procedure GPRclean.Main is
 
             if Cleanup then
                for F of S.Artifacts.List loop
-                  Delete_File (F.Value);
+                  --  As S.Artifacts contains also files generated in library
+                  --  directories, check if delete file is allowed
+
+                  if not Opts.Remain_Useful
+                    or else not In_Library_Directories (F)
+                  then
+                     Delete_File (F.Value);
+                  end if;
                end loop;
 
                if not Opts.Remain_Useful and then Opts.Arg_Mains
@@ -397,19 +445,22 @@ procedure GPRclean.Main is
          end;
       end if;
 
-      if View.Is_Library then
+      if View.Is_Library and then not Opts.Remain_Useful then
+         --  All library generated files should be deleted
+
          if View.Is_Aggregated_In_Library then
             for Lib of View.Aggregate_Libraries loop
                Binder_Artifacts (Lib.Library_Name);
             end loop;
          else
-            if not Opts.Remain_Useful then
-               Delete_File (View.Library_Filename.Value);
+            Delete_File (View.Library_Filename.Value);
 
-               --  Delete if any library version & library major version
+            --  Delete if any library version & library major version
 
-               if not View.Is_Static_Library
-                 and then View.Has_Library_Version
+            if not View.Is_Static_Library and then View.Has_Library_Version
+            then
+               if View.Library_Version_Filename
+                 /= View.Library_Major_Version_Filename
                then
                   --  When library version attribute is provided, to keep all
                   --  links seen as regular file, link target should be deleted
@@ -456,7 +507,9 @@ procedure GPRclean.Main is
 
       --  Delete source files found in library source directory
 
-      if View.Is_Library and then View.Library_Src_Directory.Is_Defined then
+      if View.Is_Library and then View.Library_Src_Directory.Is_Defined
+        and then not Opts.Remain_Useful
+      then
          declare
             Lib_Src_Dir : constant GPR2.Path_Name.Object :=
                             View.Library_Src_Directory;
