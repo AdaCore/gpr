@@ -942,8 +942,7 @@ begin
    else
 
       for Msg_Cur in Config_Log.Iterate
-        (Information => Opt_Verbosity > Quiet,
-         Warning     => Opt_Verbosity > Quiet)
+        (Information => Opt_Verbosity > Quiet)
       loop
          Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
       end loop;
