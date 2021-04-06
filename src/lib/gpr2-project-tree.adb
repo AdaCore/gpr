@@ -3301,7 +3301,8 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "cannot aggregate externally built project """
                               & String (Agg.Name) & '"',
-                              Sloc => View.Attribute (PRA.Project_Files)));
+                              Sloc => View.Attribute_Location
+                                        (PRA.Project_Files)));
                      end if;
                   end loop;
 
@@ -3316,7 +3317,8 @@ package body GPR2.Project.Tree is
                                 (Message.Error,
                                  "can only import abstract projects, not """
                                  & String (Imported.Name) & '"',
-                                 Sloc => View.Attribute (PRA.Project_Files)));
+                                 Sloc => View.Attribute_Location
+                                           (PRA.Project_Files)));
                         end if;
                      end loop;
                   end if;
@@ -3686,15 +3688,13 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "wrong value for Library_Standalone when"
                               & " Library_Interface defined",
-                              PV.Attribute
+                              PV.Attribute_Location
                                 (Registry.Attribute.Library_Standalone)));
                      end if;
 
                      --  And if a standalone library has interfaces
 
                      if not PV.Has_Any_Interfaces
-                       and then PV.Has_Attributes
-                         (Project.Registry.Attribute.Library_Standalone)
                        and then PV.Library_Standalone /= No
                      then
                         Self.Self.Messages.Append
@@ -3702,7 +3702,7 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "Library_Standalone valid only if library"
                               & " has Ada interfaces",
-                              PV.Attribute
+                              PV.Attribute_Location
                                 (Registry.Attribute.Library_Standalone)));
                      end if;
                   end if;

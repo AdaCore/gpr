@@ -238,6 +238,17 @@ package GPR2.Project.View is
          and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
 
+   function Attribute_Location
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Source_Reference.Object'Class
+     with
+       Pre => Self.Is_Defined;
+   --  Returns the source location of the attribute definition in the view if
+   --  defined, or the view's location (e.g. path_name, 0, 0) if not.
+   --  To be used in particular when generating Messages.
+
    --  Types
 
    function Has_Types

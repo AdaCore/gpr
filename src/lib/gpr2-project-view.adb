@@ -233,6 +233,25 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Attrs.Element (Name, Index);
    end Attribute;
 
+   ------------------------
+   -- Attribute_Location --
+   ------------------------
+
+   function Attribute_Location
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Source_Reference.Object'Class
+   is
+      Attr : Project.Attribute.Object;
+   begin
+      if Self.Check_Attribute (Name, Index, Result => Attr) then
+         return Attr;
+      else
+         return Source_Reference.Create (Self.Path_Name.Value, 0, 0);
+      end if;
+   end Attribute_Location;
+
    ----------------
    -- Attributes --
    ----------------
@@ -1206,12 +1225,10 @@ package body GPR2.Project.View is
    is
       Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (Project.Registry.Attribute.Library_Standalone)
-        and then
-          Self.Check_Attribute
-            (Project.Registry.Attribute.Library_Standalone,
-             Check_Extended => True,
-             Result         => Attr)
+      if Self.Check_Attribute
+        (Project.Registry.Attribute.Library_Standalone,
+         Check_Extended => True,
+         Result         => Attr)
       then
          return Standalone_Library_Kind'Value (Attr.Value.Text);
 
