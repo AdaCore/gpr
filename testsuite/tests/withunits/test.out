@@ -18,5 +18,5 @@ Project: Demo
    ABC.Plop
 
  > src/tst.ads   unit: Tst
-   API
    ABC
+   API

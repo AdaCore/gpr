@@ -1,3 +1,2 @@
-with API;
-with ABC;
+with ABC, API; --  test comma separated package list
 procedure Tst;
