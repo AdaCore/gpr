@@ -1,0 +1,19 @@
+append.gpr, no project path from command line
+ - Append @ ./
+ - Prj @ ./
+ - Dep @ dep.appended/
+prepend.gpr, no project path from command line
+ - Prepend @ ./
+ - Prj @ ./
+ - Dep @ dep.prepended/
+append.gpr, 'dep' in search path
+ - Append @ ./
+ - Prj @ ./
+ - Dep @ dep/
+prepend.gpr, 'dep' in search path
+ - Prepend @ ./
+ - Prj @ ./
+ - Dep @ dep.prepended/
+prj.gpr, 'dep' in search path
+ - Prj @ ./
+ - Dep @ dep/

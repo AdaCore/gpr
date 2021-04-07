@@ -2280,12 +2280,26 @@ package body GPR2.Project.Tree is
       if Starting_From.Is_Defined
         and then Starting_From.Check_Attribute (PRA.Project_Path, Result => PP)
       then
-         for P of PP.Values loop
-            Search_Path.Append
-              (Path_Name.Create_Directory
-                 (Filename_Type (P.Text),
-                  Filename_Type (Starting_From.Dir_Name.Value)));
-         end loop;
+         declare
+            Prepend : Boolean := False;
+            Path    : Path_Name.Object;
+         begin
+            for P of PP.Values loop
+               if P.Text = "-" then
+                  Prepend := True;
+               else
+                  Path := Path_Name.Create_Directory
+                    (Filename_Type (P.Text),
+                     Filename_Type (Starting_From.Dir_Name.Value));
+
+                  if Prepend then
+                     Search_Path.Prepend (Path);
+                  else
+                     Search_Path.Append (Path);
+                  end if;
+               end if;
+            end loop;
+         end;
       end if;
 
       declare

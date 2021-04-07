@@ -1,0 +1,4 @@
+description: Test project path prepended from aggregate
+driver: build_and_run
+project_file: test
+main: test
