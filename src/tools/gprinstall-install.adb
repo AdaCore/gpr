@@ -1514,9 +1514,12 @@ package body GPRinstall.Install is
                end if;
             end Gen_Dir_Name;
 
-            V    : String_Vector.Vector;
-            Line : Unbounded_String;
-            Attr : GPR2.Project.Attribute.Object;
+            V          : String_Vector.Vector;
+            Line       : Unbounded_String;
+            Attr       : GPR2.Project.Attribute.Object;
+            Standalone : GPR2.Project.Standalone_Library_Kind;
+            use type GPR2.Project.Standalone_Library_Kind;
+
          begin
             V.Append ("      when """ & Options.Build_Name.all & """ =>");
 
@@ -1573,13 +1576,13 @@ package body GPRinstall.Install is
                  ("         for Library_Kind use """
                   & String (Project.Library_Kind) & """;");
 
-               Attr := Project.Attribute (A.Library_Standalone);
+               Standalone := Project.Library_Standalone;
 
-               if Characters.Handling.To_Lower (Attr.Value.Text) /= "no" then
+               if Standalone /= GPR2.Project.No then
                   if not Project.Is_Static_Library then
                      V.Append
                        ("         for Library_Standalone use """
-                        & Characters.Handling.To_Lower (Attr.Value.Text)
+                        & Characters.Handling.To_Lower (Standalone'Image)
                         & """;");
                   end if;
 
