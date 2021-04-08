@@ -1,0 +1,9 @@
+project Prj is
+   for Main use ("main_b.a");
+   package Naming is
+      for Body_Suffix ("Ada") use "_b.a";
+      for Spec_Suffix ("Ada") use ".a";
+      for Separate_Suffix use "_s_b.a";
+   end Naming;
+end Prj;
+

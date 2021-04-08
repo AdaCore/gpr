@@ -1,0 +1,3 @@
+pkg.a: S_SPEC
+pkg_b.a: S_BODY
+pkg-execute_s_b.a: S_SEPARATE

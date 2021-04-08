@@ -1001,8 +1001,7 @@ package body GPR2.Project.Definition is
          is
 
             function Check_Suffix_And_Dot_Replacement
-              (Suffix : Project.Attribute.Object;
-               Kind   : Unit.Library_Unit_Type) return Boolean;
+              (Suffix : Project.Attribute.Object) return Boolean;
             --  If right suffix for any languages and dot replacement for Ada
             --  then returns True. Set Check_Naming_Scheme.Kind to Kind.
 
@@ -1011,8 +1010,7 @@ package body GPR2.Project.Definition is
             --------------------------------------
 
             function Check_Suffix_And_Dot_Replacement
-              (Suffix : Project.Attribute.Object;
-               Kind   : Unit.Library_Unit_Type) return Boolean
+              (Suffix : Project.Attribute.Object) return Boolean
             is
                Ending : constant String := Suffix.Value.Text;
 
@@ -1085,8 +1083,6 @@ package body GPR2.Project.Definition is
                  and then (Language /= "Ada"
                            or else Test_Charset)
                then
-                  Check_Naming_Scheme.Kind := Kind;
-                  Match := True;
                   return True;
 
                else
@@ -1094,28 +1090,90 @@ package body GPR2.Project.Definition is
                end if;
             end Check_Suffix_And_Dot_Replacement;
 
+            Matches_Spec     : Boolean;
+            Matches_Body     : Boolean;
+            Matches_Separate : Boolean;
+
          begin
-            Match := False;
-            Kind  := Unit.S_Spec;
-
-            if Naming.Has_Spec_Suffix (Language)
+            Matches_Spec := Naming.Has_Spec_Suffix (Language)
               and then Check_Suffix_And_Dot_Replacement
-                (Naming.Spec_Suffix (Language), Unit.S_Spec)
-            then
-               return;
+                (Naming.Spec_Suffix (Language));
 
-            elsif Naming.Has_Body_Suffix (Language)
+            Matches_Body := Naming.Has_Body_Suffix (Language)
               and then Check_Suffix_And_Dot_Replacement
-                (Naming.Body_Suffix (Language), Unit.S_Body)
-            then
-               return;
+                (Naming.Body_Suffix (Language));
 
-            elsif Language = "Ada"
+            Matches_Separate := Language = "Ada"
               and then Naming.Has_Separate_Suffix
               and then Check_Suffix_And_Dot_Replacement
-                (Naming.Separate_Suffix, Unit.S_Separate)
-            then
-               return;
+                (Naming.Separate_Suffix);
+
+            --  See GA05-012: if there's ambiguity with suffixes (e.g. one of
+            --  the suffixes if a suffix of another) we use with the most
+            --  explicit one (e.g. the longest one) that matches.
+
+            declare
+               Spec_Suffix : constant String :=
+                               (if Matches_Spec
+                                then Naming.Spec_Suffix (Language).Value.Text
+                                else "");
+               Body_Suffix : constant String :=
+                               (if Matches_Body
+                                then Naming.Body_Suffix (Language).Value.Text
+                                else "");
+               Sep_Suffix  : constant String :=
+                               (if Matches_Separate
+                                then Naming.Separate_Suffix.Value.Text
+                                else "");
+               use GNATCOLL.Utils;
+
+            begin
+               if Matches_Spec and then Matches_Body then
+                  if Spec_Suffix'Length >= Body_Suffix'Length then
+                     pragma Assert (Ends_With (Spec_Suffix, Body_Suffix));
+                     Matches_Body := False;
+                  else
+                     pragma Assert (Ends_With (Body_Suffix, Spec_Suffix));
+                     Matches_Spec := False;
+                  end if;
+               end if;
+
+               if Matches_Spec and then Matches_Separate then
+                  if Spec_Suffix'Length >= Sep_Suffix'Length then
+                     pragma Assert (Ends_With (Spec_Suffix, Sep_Suffix));
+                     Matches_Separate := False;
+                  else
+                     pragma Assert (Ends_With (Sep_Suffix, Spec_Suffix));
+                     Matches_Spec := False;
+                  end if;
+               end if;
+
+               if Matches_Body and then Matches_Separate then
+                  if Body_Suffix'Length >= Sep_Suffix'Length then
+                     pragma Assert (Ends_With (Body_Suffix, Sep_Suffix));
+                     Matches_Separate := False;
+                  else
+                     pragma Assert (Ends_With (Sep_Suffix, Body_Suffix));
+                     Matches_Body := False;
+                  end if;
+               end if;
+            end;
+
+            if Matches_Spec then
+               Match := True;
+               Kind  := Unit.S_Spec;
+
+            elsif Matches_Body then
+               Match := True;
+               Kind  := Unit.S_Body;
+
+            elsif Matches_Separate then
+               Match := True;
+               Kind  := Unit.S_Separate;
+
+            else
+               Match := False;
+               Kind  := Unit.S_Spec;
             end if;
          end Check_Naming_Scheme;
 
