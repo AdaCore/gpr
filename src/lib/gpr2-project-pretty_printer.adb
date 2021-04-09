@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -188,7 +188,8 @@ package body GPR2.Project.Pretty_Printer is
                begin
                   for Item of Node.Children loop
                      Count := Count + 1;
-                     Write_Token (To_UTF8 (Item.Text), Indent);
+                     Write_Token
+                       (To_UTF8 (Item.Text), Indent, Lower_Case => False);
 
                      if Count < Node.Children_Count then
                         Write_Token (", ", Indent);

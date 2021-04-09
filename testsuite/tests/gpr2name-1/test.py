@@ -136,3 +136,13 @@ try:
         print(p.out)
 except Exception as E:
     print('*** Error: %s' % str(E))
+
+# preserve-case-sensitive-values
+try:
+    os.chdir('preserve-case-sensitive-values')
+    run([GPRNAME, '-Pprj.gpr', '*.ad?'])
+    print(diff('expected2', 'prj.gpr'))
+except Exception as E:
+    print('*** Error: %s' % str(E))
+finally:
+    os.chdir('..')
