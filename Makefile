@@ -127,7 +127,7 @@ UNINSTALLER=$(INSTALLER) -p -f --uninstall
 # build #
 #########
 
-all: build-static build-tools
+all: ${LIBGPR2_TYPES:%=build-%} build-tools
 
 kb:
 	gprbuild -p $(GPR2KB)
@@ -144,8 +144,7 @@ else
 	echo "gpr2 library built from gpr2-tools in coverage mode"
 endif
 
-
-build-tools: coverage-instrument
+build-tools: build-static coverage-instrument
 	$(BUILDER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static $(GPR2TOOLS)
 
