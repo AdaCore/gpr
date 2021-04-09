@@ -95,9 +95,10 @@ package body GPR2.Parser.Project is
       At_Pos    : Natural := 0) return Source_Reference.Value.Object;
 
    function Get_Value_Reference
-     (Value  : Value_Type;
-      Sloc   : Source_Reference.Object;
-      At_Pos : Natural := 0) return Source_Reference.Value.Object;
+     (Value        : Value_Type;
+      Sloc         : Source_Reference.Object;
+      At_Pos       : Natural := 0;
+      From_Default : Boolean := False) return Source_Reference.Value.Object;
 
    function Get_Identifier_Reference
      (Path_Name  : GPR2.Path_Name.Object;
@@ -272,20 +273,21 @@ package body GPR2.Parser.Project is
    -------------------------
 
    function Get_Value_Reference
-     (Value  : Value_Type;
-      Sloc   : Source_Reference.Object;
-      At_Pos : Natural := 0) return Source_Reference.Value.Object
+     (Value        : Value_Type;
+      Sloc         : Source_Reference.Object;
+      At_Pos       : Natural := 0;
+      From_Default : Boolean := False) return Source_Reference.Value.Object
    is
    begin
       return Source_Reference.Value.Object
-        (Source_Reference.Value.Create (Sloc, Value, At_Pos));
+        (Source_Reference.Value.Create (Sloc, Value, At_Pos, From_Default));
    end Get_Value_Reference;
 
    function Get_Value_Reference
-     (Path_Name : GPR2.Path_Name.Object;
-      Slr       : Langkit_Support.Slocs.Source_Location_Range;
-      Value     : Value_Type;
-      At_Pos    : Natural := 0) return Source_Reference.Value.Object
+     (Path_Name    : GPR2.Path_Name.Object;
+      Slr          : Langkit_Support.Slocs.Source_Location_Range;
+      Value        : Value_Type;
+      At_Pos       : Natural := 0) return Source_Reference.Value.Object
    is
    begin
       return Source_Reference.Value.Object
@@ -1243,9 +1245,10 @@ package body GPR2.Parser.Project is
             New_List.Append
               (Source_Reference.Value.Object
                  (Source_Reference.Value.Create
-                      (Sloc   => Sloc,
-                       Text   => V.Text,
-                       At_Pos => (if V.Has_At_Pos then V.At_Pos else 0))));
+                      (Sloc         => Sloc,
+                       Text         => V.Text,
+                       At_Pos       => (if V.Has_At_Pos then V.At_Pos else 0),
+                       From_Default => V.Is_From_Default)));
          end loop;
 
          return New_List;
@@ -1648,7 +1651,8 @@ package body GPR2.Parser.Project is
                        (Get_Identifier_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
-                          (Value_Not_Empty (Tree.Target), Sloc),
+                          (Value_Not_Empty (Tree.Target), Sloc,
+                           From_Default => True),
                         Default => True,
                         Frozen  => True);
 

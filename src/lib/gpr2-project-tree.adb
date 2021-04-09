@@ -1413,8 +1413,11 @@ package body GPR2.Project.Tree is
            (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
          then
             --  Check if the project explicitly defines the attribute or if
-            --  this comes from a default value
-            if not Tmp_Attr.Is_Default then
+            --  this comes from a default value.
+
+            if not Tmp_Attr.Is_Default and then
+              not Tmp_Attr.Value.Is_From_Default
+            then
                return Name_Type (Tmp_Attr.Value.Text);
             end if;
          end if;
