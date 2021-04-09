@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -32,7 +32,7 @@ package GPR2.Source_Info.Parser.Registry is
 
    function Exists (Language : Name_Type; Kind : Backend) return Boolean
      with Pre => Kind /= None;
-   --  Returns True if the parser backend for Language if found. If Kind is
+   --  Returns True if the parser backend for Language is found. If Kind is
    --  Auto then True is returned if either an LI or Source parser exists.
 
    function Get

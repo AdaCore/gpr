@@ -1,0 +1,8 @@
+aggregate project Pa is
+for Project_Files use (
+   "p0/p0.gpr",
+   "p1/p1.gpr",
+   "p4/p4.gpr",
+   "p6/p6.gpr",
+   "p8/p8.gpr");
+end Pa;

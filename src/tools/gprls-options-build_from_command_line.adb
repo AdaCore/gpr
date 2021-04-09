@@ -111,6 +111,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    begin
       Set_Selective_Output;
       Self.Print_Sources := True;
+      Self.Source_Parser := True;
    end Set_Print_Sources;
 
    ---------------------

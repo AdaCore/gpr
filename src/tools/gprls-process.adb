@@ -33,7 +33,7 @@ with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.View;
 with GPR2.Source;
-with GPR2.Source_Info;
+with GPR2.Source_Info.Parser.Registry;
 with GPR2.Version;
 
 with GPRtools.Util;
@@ -203,7 +203,7 @@ begin
      (Filename          => Opt.Project_File,
       Project_Dir       => Opt.Project_Base,
       Context           => Opt.Project_Context,
-      Absent_Dir_Error  => True,
+      Absent_Dir_Error  => not Opt.Source_Parser,
       Target            => Opt.Get_Target,
       Language_Runtimes => Opt.RTS_Map,
       Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib,
@@ -228,6 +228,15 @@ begin
    if Tree.Log_Messages.Has_Error then
       return;
    end if;
+
+   pragma Assert
+     (not Opt.Source_Parser
+      or else GPR2.Source_Info.Parser.Registry.Exists
+        ("Ada", Source_Info.Source), "Source parser is not registered");
+
+   pragma Assert
+     (GPR2.Source_Info.Parser.Registry.Exists
+        ("Ada", Source_Info.LI), "ALI parser is not registered");
 
    --  Make sure the sources are up to date
 
@@ -308,6 +317,7 @@ begin
                if Deps.Is_Empty then
                   --  If no dependencies, use only this one because without ALI
                   --  file we don't know dependency even on itself.
+
                   Closures.Include (S);
                else
                   Closures.Union (Deps);
@@ -511,7 +521,9 @@ begin
             begin
                for U_Sec of S.Source.Units loop
                   if Artifacts.Has_Dependency (U_Sec.Index)
-                    and then Artifacts.Dependency (U_Sec.Index).Exists
+                    and then
+                      (Artifacts.Dependency (U_Sec.Index).Exists
+                       or else Opt.Source_Parser)
                   then
                      if Opt.Print_Object_Files
                        and then not S.Is_Aggregated
@@ -715,39 +727,41 @@ begin
 
       --  Check all sources and notify when no ALI file is present
 
-      for S of Sources loop
-         For_Units : for CU of S.Source.Units loop
-            if S.Artifacts.Has_Dependency (CU.Index)
-              and then not S.Artifacts.Dependency (CU.Index).Exists
-            then
-               Full_Closure := False;
-
-               if S.Has_Naming_Exception
-                 and then S.Naming_Exception = Project.Source.Multi_Unit
+      if not Opt.Source_Parser then
+         for S of Sources loop
+            For_Units : for CU of S.Source.Units loop
+               if S.Artifacts.Has_Dependency (CU.Index)
+                 and then not S.Artifacts.Dependency (CU.Index).Exists
                then
-                  --  In case of multi-unit we have no information until the
-                  --  unit is compiled. There is no need to report that there
-                  --  is missing ALI in this case. But we report that the
-                  --  status for this file is unknown.
+                  Full_Closure := False;
 
-                  Text_IO.Put_Line
-                    ("UNKNOWN status for file " & S.Source.Path_Name.Value);
+                  if S.Has_Naming_Exception
+                    and then S.Naming_Exception = Project.Source.Multi_Unit
+                  then
+                     --  In case of multi-unit we have no information until the
+                     --  unit is compiled. There is no need to report that
+                     --  there is missing ALI in this case. But we report that
+                     --  the status for this file is unknown.
 
-                  exit For_Units;
+                     Text_IO.Put_Line
+                       ("UNKNOWN status for file " & S.Source.Path_Name.Value);
 
-               else
-                  Text_IO.Put_Line
-                    ("Can't find ALI "
-                     & String
-                       (if CU.Index > 1
-                        then S.Artifacts.Dependency (CU.Index).Simple_Name
-                             & " "
-                        else "")
-                     & "file for " & S.Source.Path_Name.Value);
+                     exit For_Units;
+
+                  else
+                     Text_IO.Put_Line
+                       ("Can't find ALI "
+                        & String
+                          (if CU.Index > 1
+                           then S.Artifacts.Dependency (CU.Index).Simple_Name
+                           & " "
+                           else "")
+                        & "file for " & S.Source.Path_Name.Value);
+                  end if;
                end if;
-            end if;
-         end loop For_Units;
-      end loop;
+            end loop For_Units;
+         end loop;
+      end if;
 
       --  We gathered all the sources:
       --  Process them according to the chosen mode.
