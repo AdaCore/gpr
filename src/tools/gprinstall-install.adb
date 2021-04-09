@@ -43,11 +43,7 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
-pragma Unreferenced (GPR2.Project.View.Set);
---  Needed as a Vew.Set is used
 with GPR2.Project.Source.Set;
-pragma Unreferenced (GPR2.Project.Source.Set);
---  Needed as a Vew.Set is used
 with GPR2.Version;
 with GPR2.Source;
 with GPRtools;
