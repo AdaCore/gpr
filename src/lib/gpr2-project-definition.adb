@@ -696,7 +696,7 @@ package body GPR2.Project.Definition is
       --  signature is not the same recorded for the view, the source set
       --  need to be recomputed.
 
-      procedure Read_File
+      procedure Read_Source_List
         (Attr_Name : Name_Type;
          Set       : in out Source_Set.Set);
       --  Read from file defined in project attribute Attr_Name and insert each
@@ -1933,7 +1933,7 @@ package body GPR2.Project.Definition is
       -- Read_File --
       ---------------
 
-      procedure Read_File
+      procedure Read_Source_List
         (Attr_Name : Name_Type;
          Set       : in out Source_Set.Set)
       is
@@ -1948,20 +1948,21 @@ package body GPR2.Project.Definition is
          while not Text_IO.End_Of_File (F) loop
             declare
                use Ada.Strings;
+               use GNATCOLL.Utils;
                Line : constant String :=
                         Fixed.Trim
                           (Text_IO.Get_Line (F),
                            Maps.Constants.Control_Set,
                            Maps.Constants.Control_Set);
             begin
-               if Line /= "" then
+               if Line /= "" and then not Starts_With (Line, "-- ") then
                   Include_Simple_Filename (Set, Line, Attr_Value);
                end if;
             end;
          end loop;
 
          Text_IO.Close (F);
-      end Read_File;
+      end Read_Source_List;
 
       --------------------
       -- Register_Units --
@@ -2224,7 +2225,7 @@ package body GPR2.Project.Definition is
       --  If we have attribute Excluded_Source_List_File
 
       if Def.Attrs.Has_Excluded_Source_List_File then
-         Read_File (PRA.Excluded_Source_List_File, Excluded_Sources);
+         Read_Source_List (PRA.Excluded_Source_List_File, Excluded_Sources);
       end if;
 
       --  If we have attribute Excluded_Source_Files
@@ -2244,7 +2245,7 @@ package body GPR2.Project.Definition is
       --  If we have attribute Source_List_File
 
       if Def.Attrs.Has_Source_List_File then
-         Read_File (PRA.Source_List_File, Included_Sources);
+         Read_Source_List (PRA.Source_List_File, Included_Sources);
 
          Has_Source_List := True;
       end if;
@@ -2415,6 +2416,23 @@ package body GPR2.Project.Definition is
             end loop;
 
          end;
+
+         if Has_Source_List then
+            --  Check that we've found all the listed sources
+            for S of Included_Sources loop
+               if not Excluded_Sources.Contains (S)
+                 and then not Def.Sources_Map.Contains (S)
+               then
+                  Tree.Append_Message
+                    (Message.Create
+                       (Message.Error,
+                        "source file """ & String (S) & """ not found",
+                        (if Def.Attrs.Has_Source_List_File
+                         then Def.Attrs.Source_List_File
+                         else Def.Attrs.Source_Files)));
+               end if;
+            end loop;
+         end if;
 
          if View.Has_Packages (PRP.Naming) then
             --  Check all naming exceptions is used only in the original

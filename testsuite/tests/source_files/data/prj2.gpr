@@ -1,0 +1,4 @@
+project Prj2 is
+   for Source_Dirs use ("src");
+   for Source_List_File use "sources.lst";
+end Prj2;

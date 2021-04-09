@@ -1,0 +1,12 @@
+GPR file: data/prj.gpr
+Messages found:
+prj.gpr:3:08: error: source file "pkg.adb" not found
+prj.gpr:3:08: error: source file "pkg2.ads" not found
+GPR file: data/prj2.gpr
+Messages found:
+prj2.gpr:3:08: error: source file "source.ads" not found
+GPR file: data/prj3.gpr
+Prj3
+main.adb: S_BODY_ONLY
+Base
+pkg.ads: S_SPEC_ONLY

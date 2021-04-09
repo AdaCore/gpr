@@ -1,0 +1,5 @@
+description:
+    Check handling of Source_Files and Source_List_File attributes
+driver: build_and_run
+project_file: test
+main: main
