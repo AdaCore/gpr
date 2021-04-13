@@ -164,34 +164,39 @@ endif
 
 uninstall:
 ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
-	$(UNINSTALLER) --install-name=gpr2 $(GPR2)
+	$(UNINSTALLER) $(GPR2)
+endif
+ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
+	$(UNINSTALLER) $(GPR2TOOLS)
 endif
 
 install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
-ifneq ($(COVERAGE),)
-	mkdir -p $(prefix)/share/gpr2/sids || true
-	# copy gpr2 & gpr2-tools sid files
-	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*.sid $(prefix)/share/gpr2/sids/
-	# exclude generated code from test coverage statistics
-	-rm $(prefix)/share/gpr2/sids/gpr_parser*
-	# copy instrumented gpr2 source files
-	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-static/gpr2-gnatcov-instr/*.ad? \
-		$(prefix)/include/gpr2.static/.
-	# copy instrumented gpr2 ali files
-	cp $(SOURCE_DIR)/.build/$(BUILD)/lib-static/*.ali \
-		$(prefix)/lib/gpr2.static/.
-endif
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
 		-XLANGKIT_SUPPORT_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE \
 		--build-var=GPR2_BUILD $(GPR2)
+ifneq ($(COVERAGE),)
+ifeq ($*,static)
+	mkdir -p $(prefix)/share/gpr2/sids || true
+	# copy gpr2 & gpr2-tools sid files
+	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*.sid $(prefix)/share/gpr2/sids/
+	# exclude generated code from test coverage statistics
+	-rm $(prefix)/share/gpr2/sids/gpr_parser*
+	# copy instrumented gpr2 source files
+	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-$*/gpr2-gnatcov-instr/*.ad? \
+		$(prefix)/include/gpr2.$*/.
+	# copy instrumented gpr2 ali files
+	cp $(SOURCE_DIR)/.build/$(BUILD)/lib-$*/*.ali \
+		$(prefix)/lib/gpr2.$*/.
+endif
+endif
 
 install-tools:
 	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static --build-name=static \
-		--mode=usage --install-name=gpr2 $(GPR2TOOLS)
+		--mode=usage $(GPR2TOOLS)
 
 #########
 # setup #
