@@ -6,6 +6,8 @@
                   Default_Switches (Ada) -> -g
 
          Var = var is one
+         Pck:   Compiler
+            Default_Switches (Ada) -> -g
 
    extends   [Conf] K_ABSTRACT
          K = one
@@ -16,6 +18,8 @@
    Project_Files -> a.gpr
    Var1 = var is one
    Var2 = one
+   Pck:   Compiler
+      Default_Switches (Ada) -> -g
    aggregates [A] K_STANDARD
          with       [B] K_ABSTRACT
                extends   [Conf] K_ABSTRACT
@@ -24,6 +28,8 @@
                         Default_Switches (Ada) -> -g
 
                Var = var is two
+               Pck:   Compiler
+                  Default_Switches (Ada) -> -g
 
          extends   [Conf] K_ABSTRACT
                K = two

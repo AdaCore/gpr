@@ -825,7 +825,13 @@ package body GPR2.Project.View is
      (Self : Object;
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
-      return Definition.Get_RO (Self).Has_Packages (Name);
+      if Definition.Get_RO (Self).Has_Packages (Name) then
+         return True;
+      elsif Name /= PRP.Naming and then Self.Is_Extending then
+         return Self.Extended_Root.Has_Packages (Name);
+      else
+         return False;
+      end if;
    end Has_Packages;
 
    ----------------
@@ -1342,7 +1348,7 @@ package body GPR2.Project.View is
      (Self : Object;
       Name : Name_Type) return Project.Pack.Object is
    begin
-      return Definition.Get_RO (Self).Packs (Name);
+      return Self.Packages.Element (Name);
    end Pack;
 
    --------------
@@ -1350,8 +1356,21 @@ package body GPR2.Project.View is
    --------------
 
    function Packages (Self : Object) return Project.Pack.Set.Object is
+      Result : Project.Pack.Set.Object;
    begin
-      return Definition.Get_RO (Self).Packs;
+      if Self.Is_Extending then
+         Result := Self.Extended_Root.Packages;
+         --  Filter out Naming package that is not inherited
+         if Result.Contains (PRP.Naming) then
+            Result.Delete (PRP.Naming);
+         end if;
+      end if;
+
+      for Pack of Definition.Get_RO (Self).Packs loop
+         Result.Include (Pack.Name, Pack);
+      end loop;
+
+      return Result;
    end Packages;
 
    ---------------

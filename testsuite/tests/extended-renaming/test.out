@@ -5,3 +5,5 @@ Project: b         K_STANDARD
  compiler
    driver (Ada) -> toto
 Project: a         K_STANDARD
+ compiler
+   driver (Ada) -> toto
