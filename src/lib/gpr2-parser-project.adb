@@ -57,6 +57,7 @@ package body GPR2.Parser.Project is
    package PA renames GPR2.Project.Attribute;
    package PRA renames GPR2.Project.Registry.Attribute;
    package PAI renames GPR2.Project.Attribute_Index;
+   package ASU renames Ada.Strings.Unbounded;
 
    function Is_Builtin_Project_Name (Name : Name_Type) return Boolean is
      (To_Lower (Name) in "project" | "config" | "runtime");
@@ -70,6 +71,14 @@ package body GPR2.Parser.Project is
    function Get_Name_Type
      (Node : Single_Tok_Node'Class) return Name_Type;
    --  Returns the Name for the given node
+
+   function Get_Name_Type
+     (Node  : GPR_Node'Class;
+      First : Positive := 1;
+      Last  : Positive;
+      Sep   : String := ".") return Name_Type
+       with Pre => Last >= First and then Children_Count (Node) >= Last;
+   --  Returns the Name for the given children of given node
 
    function Get_Filename
      (Node : Single_Tok_Node'Class) return Filename_Type;
@@ -182,6 +191,26 @@ package body GPR2.Parser.Project is
    is
    begin
       return Name_Type (Get_Value_Type (Node));
+   end Get_Name_Type;
+
+   function Get_Name_Type
+     (Node  : GPR_Node'Class;
+      First : Positive := 1;
+      Last  : Positive;
+      Sep   : String := ".") return Name_Type
+   is
+      Name : ASU.Unbounded_String :=
+               ASU.To_Unbounded_String
+                 (Ada.Characters.Conversions.To_String
+                    (Text (Child (Node, First))));
+   begin
+      for C in First + 1 .. Last loop
+         ASU.Append (Name, Sep);
+         ASU.Append
+           (Name,
+            Ada.Characters.Conversions.To_String (Text (Child (Node, C))));
+      end loop;
+      return Name_Type (ASU.To_String (Name));
    end Get_Name_Type;
 
    --------------------------
@@ -2324,94 +2353,94 @@ package body GPR2.Parser.Project is
         (Node : Variable_Reference) return Item_Values
       is
          --  A reference a to variable values has the following format:
-         --  name_1[.name_2[.name_3]]['Attribute]
-         Name_1  : constant Identifier := F_Variable_Name1 (Node);
-         Name_2  : constant Identifier := F_Variable_Name2 (Node);
-         Name_3  : constant Identifier := F_Variable_Name3 (Node);
-         Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
-         Name    : constant Name_Type := Name_Type (To_UTF8 (Name_1.Text));
+         --  prj_name[.pack_name[.var_name]]['Attribute]
+         Var_Name   : constant Identifier_List := F_Variable_Name (Node);
+         Att_Ref    : constant Attribute_Reference := F_Attribute_Ref (Node);
          Source_Ref : constant Source_Reference.Object :=
-            Get_Source_Reference (Self.File, Node);
+                        Get_Source_Reference (Self.File, Node);
+
+         function Project_Name_Length
+           (List : Identifier_List) return Natural;
+         --  Returns the last Index in list of the project name part. can be
+         --  0 if List not starting with a project name
+
+         -------------------------
+         -- Project_Name_Length --
+         -------------------------
+
+         function Project_Name_Length
+           (List : Identifier_List) return Natural
+         is
+            Last : constant Natural :=
+                     (if Present (Att_Ref)
+                      then Children_Count (List)
+                      else Children_Count (List) - 1);
+            --  if not attribute reference last segment is variable name.
+
+            function Is_Valid_Project_Name (Name : Name_Type) return Boolean is
+              (Process.View.View_For (Name).Is_Defined
+               or else Self.Imports.Contains (Name)
+               or else (Self.Extended.Is_Defined
+                        and then Self.Extended.Path_Name.Base_Name = Name)
+               or else Is_Builtin_Project_Name (Name)
+               or else Name_Type (To_String (Self.Name)) = Name);
+
+         begin
+            if Last >= 1
+              and then Is_Valid_Project_Name (Get_Name_Type (List, 1, Last))
+            then
+               return Last;
+            elsif Last >= 2
+              and then Is_Valid_Project_Name
+                (Get_Name_Type (List, 1, Last - 1))
+            then
+               return Last - 1;
+            end if;
+            return 0;
+         end Project_Name_Length;
+
+         Var_Name_Length : constant Positive :=  Children_Count (Var_Name);
+         --  number of segment of variable name. cannot be 0 as var_name list
+         --  empty are not allowed in gpr_parser language.
+
+         Prj_Name_Length : constant Natural := Project_Name_Length (Var_Name);
+         --  number of segment of project name part
+
       begin
          if Present (Att_Ref) then
-            if Present (Name_2) then
-               --  This is a project/package reference:
-               --    <project>.<package>'<attribute>
-               return Get_Attribute_Ref
-                 (Project => Name,
-                  Pack    => Optional_Name_Type (To_UTF8 (Name_2.Text)),
-                  Node    => Att_Ref);
-
-            else
-               --  If a single name it can be either a project or a package
-
-               if Self.Imports.Contains (Name)
-                 or else (Self.Extended.Is_Defined
-                          and then Self.Extended.Path_Name.Base_Name = Name)
-                 or else Is_Builtin_Project_Name (Name)
-               then
-                  --  This is a project reference: <project>'<attribute>
-                  return Get_Attribute_Ref
-                    (Project => Name,
-                     Pack    => No_Name,
-                     Node    => Att_Ref);
-               else
-                  --  This is a package or self-name reference:
-                  --     <package>'<attribute> or <Self.Name>'<attribute>
-                  declare
-                     Self_Name : constant Name_Type :=
-                                   Name_Type (To_String (Self.Name));
-                  begin
-                     return Get_Attribute_Ref
-                       (Project  => Self_Name,
-                        Pack     => (if Self_Name = Name
-                                     then No_Name
-                                     else Name),
-                        Node     => Att_Ref);
-                  end;
-               end if;
-            end if;
+            --  This is a reference to an attribute
+            --  supported formats are prj'attr, pack'attr or prj.pack'attr
+            --  prj can be a child project (root.child)
+            return Get_Attribute_Ref
+              (Project => (if Prj_Name_Length = 0
+                           then (if Var_Name_Length = 1
+                             then Name_Type (To_String (Self.Name))
+                             else Get_Name_Type (Var_Name, 1,
+                               Var_Name_Length - 1))
+                           else Get_Name_Type (Var_Name, 1, Prj_Name_Length)),
+               Pack    =>
+                 (if Prj_Name_Length = Var_Name_Length
+                  then No_Name
+                  else Get_Name_Type
+                    (Var_Name, Var_Name_Length, Var_Name_Length)),
+               Node    => Att_Ref);
          else
             --  This is a reference to a variable
-            if Present (Name_3) then
-               --  A 3 words variable reference can only be of the form:
-               --  <project_name>.<package_name>.<variable_name>
-               return Get_Variable_Ref (
-                  Project    => Name_Type (To_UTF8 (Name_1.Text)),
-                  Pack       => Name_Type (To_UTF8 (Name_2.Text)),
-                  Variable   => Name_Type (To_UTF8 (Name_3.Text)),
-                  Source_Ref => Source_Ref);
-            elsif Present (Name_2) then
-               --  A 2 words variable reference can only be of the form:
-               --  1- <project_name>.<variable_name>
-               --  2- <package_name>.<variable_name>
-               if Process.View.View_For
-                  (Name_Type (To_UTF8 (Name_1.Text))).Is_Defined
-               then
-                  return Get_Variable_Ref (
-                     Project    => Name_Type (To_UTF8 (Name_1.Text)),
-                     Variable   => Name_Type (To_UTF8 (Name_2.Text)),
-                     Source_Ref => Source_Ref);
-               else
-                  return Get_Variable_Ref (
-                     Pack       => Name_Type (To_UTF8 (Name_1.Text)),
-                     Variable   => Name_Type (To_UTF8 (Name_2.Text)),
-                     Source_Ref => Source_Ref);
-               end if;
-            else
-               --  A 1 word variable can only refer to a variable declared
-               --  implicitely (in case of extends) or explicitely in the
-               --  current project itself.
-               declare
-                  Variable : constant Name_Type :=
-                     Name_Type (To_UTF8 (Name_1.Text));
-               begin
+            declare
+               Variable : constant Name_Type :=
+                            Get_Name_Type
+                               (Var_Name, Var_Name_Length, Var_Name_Length);
+            begin
+               if Var_Name_Length < 2 then
+                  --  A 1 word variable can only refer to a variable declared
+                  --  implicitely (in case of extends) or explicitely in the
+                  --  current project itself.
                   if In_Pack and then Pack_Vars.Contains (Variable) then
                      --  If we are in the context of a package we don't need
                      --  the package prefix to refer to variables explicitely
                      --  declared in the package.
-                     return Get_Variable_Ref (
-                        Pack       => Name_Type (To_String (Pack_Name)),
+                     return Get_Variable_Ref
+                       (Pack       => Name_Type (To_String (Pack_Name)),
                         Variable   => Variable,
                         Source_Ref => Source_Ref);
                   else
@@ -2420,8 +2449,34 @@ package body GPR2.Parser.Project is
                      return Get_Variable_Ref (Variable   => Variable,
                                               Source_Ref => Source_Ref);
                   end if;
-               end;
-            end if;
+               elsif Prj_Name_Length > 0
+                 and then Prj_Name_Length + 1 = Var_Name_Length
+               then
+                  --  it is a <project_name>.<variable_name>
+                  return Get_Variable_Ref
+                    (Project    =>
+                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 1),
+                     Variable   => Variable,
+                     Source_Ref => Source_Ref);
+               elsif Prj_Name_Length = 0 and then Var_Name_Length = 2 then
+                  --  it is a <package_name>.<variable_name>
+                  return Get_Variable_Ref
+                    (Pack       =>
+                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 1),
+                     Variable   => Variable,
+                     Source_Ref => Source_Ref);
+               else
+                  --  it is a <project_name>.<package_name>.<variable_name>
+                  return Get_Variable_Ref
+                    (Project    =>
+                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 2),
+                     Pack       =>
+                       Get_Name_Type
+                         (Var_Name, Var_Name_Length - 1, Var_Name_Length - 1),
+                     Variable   => Variable,
+                     Source_Ref => Source_Ref);
+               end if;
+            end;
          end if;
       end Get_Variable_Values;
 
@@ -2839,8 +2894,8 @@ package body GPR2.Parser.Project is
                     (Level   => Message.Error,
                      Sloc    => Get_Source_Reference (Self.File, Node),
                      Message => "variable '"
-                       & Get_Value_Type (F_Variable_Name1 (Var))
-                       & "' must be a simple value"));
+                     & String (Get_Name_Type (F_Variable_Name (Var), 1, 1))
+                     & "' must be a simple value"));
             end if;
          end Parse_Case_Construction;
 
@@ -2947,15 +3002,20 @@ package body GPR2.Parser.Project is
          procedure Parse_Package_Extension (Node : Package_Extension) is
             Sloc    : constant Source_Reference.Object :=
                         Get_Source_Reference (Self.File, Node);
-            Prj     : constant Identifier := F_Prj_Name (Node);
-            Project : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Prj));
-            Name    : constant Identifier := F_Pkg_Name (Node);
-            P_Name  : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Name));
+            Values     : constant Identifier_List := F_Extended_Name (Node);
+            Num_Childs : constant Positive := Children_Count (Values);
+            Project    : constant Name_Type :=
+                           (if Num_Childs > 1
+                            then Get_Name_Type
+                              (Values, Last => Num_Childs - 1)
+                            else "?");
+            P_Name     : constant Name_Type :=
+                           Get_Name_Type (Values, Num_Childs, Num_Childs);
 
-            View    : constant GPR2.Project.View.Object :=
-                        Process.View.View_For (Project);
+            View       : constant GPR2.Project.View.Object :=
+                           (if Num_Childs > 1
+                            then Process.View.View_For (Project)
+                            else GPR2.Project.View.Undefined);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -2965,7 +3025,14 @@ package body GPR2.Parser.Project is
 
             --  Check if the Project.Package reference exists
 
-            if Is_Limited_Import (Self, Project) then
+            if Num_Childs = 1 then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "project_name.package_name reference is required"));
+            elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -3005,17 +3072,22 @@ package body GPR2.Parser.Project is
          ----------------------------
 
          procedure Parse_Package_Renaming (Node : Package_Renaming) is
-            Sloc    : constant Source_Reference.Object :=
-                        Get_Source_Reference (Self.File, Node);
-            Prj     : constant Identifier := F_Prj_Name (Node);
-            Project : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Prj));
-            Name    : constant Identifier := F_Pkg_Name (Node);
-            P_Name  : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Name));
+            Sloc       : constant Source_Reference.Object :=
+                           Get_Source_Reference (Self.File, Node);
+            Values     : constant Identifier_List := F_Renamed_Name (Node);
+            Num_Childs : constant Positive := Children_Count (Values);
+            Project    : constant Name_Type :=
+                           (if Num_Childs > 1
+                            then Get_Name_Type
+                              (Values, Last => Num_Childs - 1)
+                            else "?");
+            P_Name     : constant Name_Type :=
+                           Get_Name_Type (Values, Num_Childs, Num_Childs);
 
-            View    : constant GPR2.Project.View.Object :=
-                        Process.View.View_For (Project);
+            View       : constant GPR2.Project.View.Object :=
+                           (if Num_Childs > 1
+                            then Process.View.View_For (Project)
+                            else GPR2.Project.View.Undefined);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -3025,7 +3097,14 @@ package body GPR2.Parser.Project is
 
             --  Check if the Project.Package reference exists
 
-            if Is_Limited_Import (Self, Project) then
+            if Num_Childs = 1 then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "project_name.package_name reference is required"));
+            elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -3083,30 +3162,28 @@ package body GPR2.Parser.Project is
                return Get_Source_Reference (Self.File, Node);
             end Sloc;
 
-            Name     : constant Identifier := F_Var_Name (Node);
-            Expr     : constant Term_List := F_Expr (Node);
-            Values   : constant Item_Values := Get_Term_List (Expr);
-            V_Type   : constant Type_Reference := F_Var_Type (Node);
-            V        : GPR2.Project.Variable.Object;
-            Type_Def : GPR2.Project.Typ.Object;
+            Name       : constant Identifier := F_Var_Name (Node);
+            Expr       : constant Term_List := F_Expr (Node);
+            Values     : constant Item_Values := Get_Term_List (Expr);
+            V_Type     : constant Type_Reference := F_Var_Type (Node);
+            V          : GPR2.Project.Variable.Object;
+            Type_Def   : GPR2.Project.Typ.Object;
          begin
             if not V_Type.Is_Null then
                declare
-                  Type_N1  : constant Identifier :=
-                               F_Var_Type_Name1 (V_Type);
-                  Type_N2  : constant Identifier :=
-                               F_Var_Type_Name2 (V_Type);
-                  T_Name   : constant Name_Type :=
-                               Get_Name_Type
-                                 (if Type_N2.Is_Null
-                                  then Single_Tok_Node (Type_N1)
-                                  else Single_Tok_Node (Type_N2));
+                  Type_N     : constant Identifier_List :=
+                                 F_Var_Type_Name (V_Type);
+                  Num_Childs : constant Positive := Children_Count (Type_N);
+                  T_Name     : constant Name_Type :=
+                                 Get_Name_Type
+                                   (Type_N, Num_Childs, Num_Childs);
                begin
-                  if not Type_N2.Is_Null then
+                  if Num_Childs > 1 then
                      --  We have a project prefix for the type name
                      declare
                         Project : constant Name_Type :=
-                                    Get_Name_Type (Single_Tok_Node (Type_N1));
+                                    Get_Name_Type (Type_N, 1, Num_Childs - 1,
+                                                   "-");
                      begin
                         if Self.Imports.Contains (Project) then
                            declare

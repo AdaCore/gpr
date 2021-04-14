@@ -1,0 +1,6 @@
+with "build-settings.gpr";
+project Bad4 is
+   for Main use ("main.adb");
+   package IDE extends Build is
+   end IDE;
+end Bad4;

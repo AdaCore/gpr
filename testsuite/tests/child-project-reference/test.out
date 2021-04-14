@@ -1,0 +1,57 @@
+V1:SINGLE=-1-build.settings-2-
+V2:SINGLE=-1-build.settings-2--3--4--5--6-
+V3:SINGLE=prj
+V4:SINGLE=-1-build.settings-2--3-
+V5:SINGLE=-documentation-dir-
+BST1
+testing bad1.gpr
+bad1.gpr:4:20: error: project_name.package_name reference is required
+testing bad2.gpr
+bad2.gpr:4:20: error: project_name.package_name reference is required
+testing bad3.gpr
+bad3.gpr:4:16: error: project_name.package_name reference is required
+testing bad4.gpr
+bad4.gpr:4:16: error: project_name.package_name reference is required
+testing prj.gpr
+with "build-settings.gpr";
+
+project Prj is
+
+   for Main use ("main.adb");
+
+   package Install renames Build.Settings.Install;
+
+   package IDE extends Build.Settings.IDE is
+   end IDE;
+
+   V1 := Build.Settings.BS2;
+   V2 := Build.Settings.IDE.BS5;
+   V3 := Prj'Name;
+   V4 := Prj.Install'Install_Name;
+   V5 := Prj.IDE'Documentation_Dir;
+   V6 : Build.Settings.T := "BST2";
+
+end Prj;
+
+testing build-settings.gpr
+abstract project Build.Settings extends "build.gpr" is
+
+   for Source_Dirs use ();
+   BS1 := "-1-" & Project'Name;
+   BS2 := BS1 & "-2-";
+
+   package Install is
+      for Install_Name use BS2 & "-3-";
+      BS3 := Install'Install_Name & "-4-";
+      BS4 := BS3 & "-5-";
+   end Install;
+
+   package IDE is
+      for Documentation_Dir use "-documentation-dir-";
+      BS5 := Install.BS4 & "-6-";
+   end IDE;
+
+   type T is ("BST1", "BST2");
+
+end Build.Settings;
+

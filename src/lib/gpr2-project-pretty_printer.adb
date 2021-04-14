@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Characters.Conversions;
 with Ada.Characters.Handling;
 
 with GPR_Parser.Common;
@@ -97,6 +98,12 @@ package body GPR2.Project.Pretty_Printer is
       procedure Write_Empty_Line (Always : Boolean := False);
       --  Outputs an empty line, only if the previous line was not empty
       --  already and either Always is True or Minimize_Empty_Lines is False.
+
+      procedure Write_Identifier_List
+        (List      : Identifier_List;
+         Indent    : Natural;
+         Separator : String := ".");
+      --  Output identifiers separated by separator token
 
       procedure Write_Name
         (Name       : Name_Type;
@@ -390,33 +397,8 @@ package body GPR2.Project.Pretty_Printer is
                --  This should be modified in the future to handle unlimited
                --  parent/child project hierarchies.
 
-               Write_Name
-                 (Name_Type
-                    (String'(To_UTF8 (F_Variable_Name1
-                     (Node.As_Variable_Reference).Text))),
-                  Indent);
-
-               if F_Variable_Name2
-                 (Node.As_Variable_Reference) /= No_GPR_Node
-               then
-                  Write_Token (".", Indent);
-                  Write_Name
-                    (Name_Type
-                       (String'(To_UTF8 (F_Variable_Name2
-                        (Node.As_Variable_Reference).Text))),
-                     Indent);
-
-                  if F_Variable_Name3
-                    (Node.As_Variable_Reference) /= No_GPR_Node
-                  then
-                     Write_Token (".", Indent);
-                     Write_Name
-                       (Name_Type
-                          (String'(To_UTF8 (F_Variable_Name3
-                           (Node.As_Variable_Reference).Text))),
-                        Indent);
-                  end if;
-               end if;
+               Write_Identifier_List
+                 (F_Variable_Name (Node.As_Variable_Reference), Indent);
 
                if F_Attribute_Ref
                  (Node.As_Variable_Reference) /= No_GPR_Node
@@ -479,18 +461,8 @@ package body GPR2.Project.Pretty_Printer is
             when GPR_Type_Reference =>
                --  CF above
 
-               Write_Name
-                 (Name_Type
-                    (String'(To_UTF8 (F_Var_Type_Name1
-                     (Node.As_Type_Reference).Text))),
-                  Indent);
-
-               if F_Var_Type_Name2 (Node.As_Type_Reference) /= No_GPR_Node then
-                  Write_Token
-                    (To_UTF8 (F_Var_Type_Name2
-                       (Node.As_Type_Reference).Text),
-                     Indent);
-               end if;
+               Write_Identifier_List
+                 (F_Var_Type_Name (Node.As_Type_Reference), Indent);
 
             when GPR_Package_Decl =>
                --  Package declaration node (either renaming, or with a spec)
@@ -510,17 +482,10 @@ package body GPR2.Project.Pretty_Printer is
                --  Case of a package renaming
 
                Write_Token ("renames ", Indent);
-               Write_Name
-                 (Name_Type
-                    (String'(To_UTF8 (F_Prj_Name
-                     (Node.As_Package_Renaming).Text))),
-                  Indent);
-               Write_Token (".", Indent);
-               Write_Name
-                 (Name_Type
-                    (String'(To_UTF8 (F_Pkg_Name
-                     (Node.As_Package_Renaming).Text))),
-                  Indent);
+
+               Write_Identifier_List
+                 (F_Renamed_Name (Node.As_Package_Renaming), Indent);
+
                Write_Token (";", Indent, End_Line => True);
 
             when GPR_Package_Spec =>
@@ -548,15 +513,9 @@ package body GPR2.Project.Pretty_Printer is
                --  Package extension
 
                Write_Token ("extends ", Indent);
-               Write_Name
-                 (Name_Type (String'(To_UTF8 (F_Prj_Name
-                  (Node.As_Package_Extension).Text))),
-                  Indent);
-               Write_Token (".", Indent);
-               Write_Name
-                 (Name_Type (String'(To_UTF8 (F_Pkg_Name
-                  (Node.As_Package_Extension).Text))),
-                  Indent);
+
+               Write_Identifier_List
+                 (F_Extended_Name (Node.As_Package_Extension), Indent);
 
             when GPR_Empty_Decl =>
                Write_Token ("null;", Indent, End_Line => True);
@@ -701,6 +660,28 @@ package body GPR2.Project.Pretty_Printer is
             Last_Line_Is_Empty := True;
          end if;
       end Write_Empty_Line;
+
+      ---------------------------
+      -- Write_Identifier_List --
+      ---------------------------
+
+      procedure Write_Identifier_List
+        (List      : Identifier_List;
+         Indent    : Natural;
+         Separator : String := ".")
+      is
+      begin
+         for C in 1 .. Children_Count (List) loop
+            if C /= 1 then
+               Write_Token (Separator, Indent);
+            end if;
+            Write_Name
+              (Name_Type
+                 (Ada.Characters.Conversions.To_String
+                      (GPR_Parser.Analysis.Text (Child (List, C)))),
+               Indent);
+         end loop;
+      end Write_Identifier_List;
 
       -----------------------
       -- Write_Indentation --

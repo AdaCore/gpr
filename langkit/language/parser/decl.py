@@ -66,8 +66,7 @@ class AttributeDecl(GPRNode):
 
 
 class PackageExtension(GPRNode):
-    prj_name = Field(type=T.Identifier)
-    pkg_name = Field(type=T.Identifier)
+    extended_name = Field(type=T.Identifier.list)
 
 
 class PackageDecl(GPRNode):
@@ -76,8 +75,7 @@ class PackageDecl(GPRNode):
 
 
 class PackageRenaming(GPRNode):
-    prj_name = Field(type=T.Identifier)
-    pkg_name = Field(type=T.Identifier)
+    renamed_name = Field(type=T.Identifier.list)
 
 
 class PackageSpec(GPRNode):
@@ -251,10 +249,10 @@ A.add_rules(
         "package", A.identifier, Or(A.package_renaming, A.package_spec), ";"
     ),
     package_renaming=PackageRenaming(
-        "renames", A.identifier, ".", A.identifier
+        "renames", List(A.identifier, sep=".")
     ),
     package_extension=PackageExtension(
-        "extends", A.identifier, ".", A.identifier,
+        "extends", List(A.identifier, sep=".")
     ),
     package_spec=PackageSpec(
         Opt(A.package_extension),

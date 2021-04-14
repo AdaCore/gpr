@@ -1,0 +1,25 @@
+abstract project Build.Settings extends "build.gpr" is
+   for Source_Dirs use ();
+
+   --  check project'attribute ref
+   BS1 := "-1-" & project'Name;
+   --  check project var ref
+   BS2 := BS1 & "-2-";
+
+   package Install is
+      for Install_Name use BS2 & "-3-";
+      -- check pack'attribute ref
+      BS3 := Install'Install_Name & "-4-";
+      -- check pack variable ref in package
+      BS4 := BS3 & "-5-";
+   end Install;
+
+   package IDE is
+      for Documentation_Dir use "-documentation-dir-";
+      --  check package var ref outside package
+      BS5 := Install.BS4 & "-6-";
+   end IDE;
+
+   type T is ("BST1", "BST2");
+
+end Build.Settings;

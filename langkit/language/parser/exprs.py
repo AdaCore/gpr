@@ -56,15 +56,12 @@ class BuiltinFunctionCall(GPRNode):
 
 
 class VariableReference(GPRNode):
-    variable_name1 = Field(type=T.Identifier)
-    variable_name2 = Field(type=T.Identifier)
-    variable_name3 = Field(type=T.Identifier)
+    variable_name = Field(type=T.Identifier.list)
     attribute_ref = Field(type=T.AttributeReference)
 
 
 class TypeReference(GPRNode):
-    var_type_name1 = Field(type=T.Identifier)
-    var_type_name2 = Field(type=T.Identifier)
+    var_type_name = Field(type=T.Identifier.list)
 
 
 class ProjectReference(GPRNode):
@@ -82,12 +79,10 @@ A.add_rules(
         Opt(Pick("(", Or(A.others_designator, A.string_literal), ")")),
     ),
     variable_reference=VariableReference(
-        A.identifier,
-        Opt(Pick(".", A.identifier)),
-        Opt(Pick(".", A.identifier)),
+        List(A.identifier, sep="."),
         Opt(Pick("'", A.attribute_reference)),
     ),
-    type_reference=TypeReference(A.identifier, Opt(Pick(".", A.identifier)),),
+    type_reference=TypeReference(List(A.identifier, sep="."),),
     builtin_function_call=BuiltinFunctionCall(A.identifier, A.expression_list),
     # ----------------------------------------------------------------
     expression=List(A.term, sep="&", list_cls=TermList),

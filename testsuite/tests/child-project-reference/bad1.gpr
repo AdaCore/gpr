@@ -1,0 +1,5 @@
+with "build-settings.gpr";
+project Bad1 is
+   for Main use ("main.adb");
+   package Install renames Install;
+end Bad1;
