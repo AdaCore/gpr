@@ -1,0 +1,5 @@
+description:
+    This test always fail
+driver: python_script
+control:
+- [XFAIL, "True", "This test should always fail"]
