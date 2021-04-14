@@ -1,1 +1,19 @@
-
+prj.gpr:3:07: error: unrecognized attribute "Toto"
+prj.gpr:5:07: error: attribute "Object_Dir" cannot be a list
+prj.gpr:7:07: error: attribute "Object_Dir" cannot have index
+prj.gpr:9:23: error: attribute "Source_Dirs" must be a list
+prj.gpr:11:19: error: project 'Imported' is undefined
+prj.gpr:14:05: error: full associative array expression requires simple attribute reference
+prj.gpr:31:08: error: type T already defined
+prj.gpr:35:07: error: unknown string type 'U'
+prj.gpr:37:07: error: unknown string type 'U'
+prj.gpr:37:07: error: unknown string type 'U'
+prj.gpr:18:34: error: T2_Type has duplicate value 'one'
+prj.gpr:20:25: error: package "Builder" not declared in project "Import"
+prj.gpr:20:23: error: attribute "Toto" is not defined
+prj2.gpr:3:15: error: package "Naming" not declared in project "Prj2"
+prj2.gpr:5:26: error: attribute "Object_Dir" is not defined
+prj2.gpr:7:23: error: Project "Unknown" not found
+prj2.gpr:7:23: error: Project "Unknown" not found
+prj4.gpr:4:08: error: package Toto is undefined
+prj4.gpr:6:08: error: unknown built-in 'V2'
