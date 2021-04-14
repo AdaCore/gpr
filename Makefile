@@ -177,20 +177,20 @@ install-%:
 		-XLANGKIT_SUPPORT_BUILD=$* \
 		--build-name=$* --build-var=LIBRARY_TYPE \
 		--build-var=GPR2_BUILD $(GPR2)
+
 ifneq ($(COVERAGE),)
-ifeq ($*,static)
+install-instrumented: install-static
 	mkdir -p $(prefix)/share/gpr2/sids || true
 	# copy gpr2 & gpr2-tools sid files
 	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-*/*.sid $(prefix)/share/gpr2/sids/
 	# exclude generated code from test coverage statistics
 	-rm $(prefix)/share/gpr2/sids/gpr_parser*
 	# copy instrumented gpr2 source files
-	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-$*/gpr2-gnatcov-instr/*.ad? \
-		$(prefix)/include/gpr2.$*/.
+	cp $(SOURCE_DIR)/.build/$(BUILD)/obj-static/gpr2-gnatcov-instr/*.ad? \
+		$(prefix)/include/gpr2.static/.
 	# copy instrumented gpr2 ali files
-	cp $(SOURCE_DIR)/.build/$(BUILD)/lib-$*/*.ali \
-		$(prefix)/lib/gpr2.$*/.
-endif
+	cp $(SOURCE_DIR)/.build/$(BUILD)/lib-static/*.ali \
+		$(prefix)/lib/gpr2.static/.
 endif
 
 install-tools:
