@@ -35,6 +35,8 @@ package body GPR2.Project.Registry.Attribute is
    Any_Index : constant Value_Type := (1 => ASCII.NUL);
    --  Internal index declaring that it is fit for any index request
 
+   Attribute_Delimiter : constant String := "'";
+
    Store    : Attribute_Definitions.Map;
    Defaults : Pack_Defaults.Map;
 
@@ -112,25 +114,22 @@ package body GPR2.Project.Registry.Attribute is
       -------------------
 
       procedure Index_Default is
-         Dot_At : constant Natural :=
-                    Ada.Strings.Fixed.Index (String (Name), ".");
+         Del_At : constant Natural :=
+                    Ada.Strings.Fixed.Index
+                      (String (Name), Attribute_Delimiter);
          Pack   : constant Optional_Name_Type :=
-                    (if Dot_At = 0
+                    (if Del_At = 0
                      then No_Name
-                     else Name_Type (Name (Name'First .. Dot_At - 1)));
+                     else Name_Type (Name (Name'First .. Del_At - 1)));
          Attr   : constant Name_Type :=
                     Name_Type
-                      (if Dot_At = 0
+                      (if Del_At = 0
                        then Name
-                       else Name (Dot_At + 1 .. Name'Last));
-         CP     : Pack_Defaults.Cursor := Defaults.Find (Pack);
+                       else Name (Del_At + 1 .. Name'Last));
+         CP     : Pack_Defaults.Cursor;
          OK     : Boolean;
       begin
-         if not Pack_Defaults.Has_Element (CP) then
-            Defaults.Insert (Pack, Default_References.Empty_Map, CP, OK);
-            pragma Assert (OK);
-         end if;
-
+         Defaults.Insert (Pack, Default_References.Empty_Map, CP, OK);
          Defaults (CP).Insert (Attr, Store (Name).Element);
       end Index_Default;
 
@@ -168,7 +167,7 @@ package body GPR2.Project.Registry.Attribute is
       return Qualified_Name
         (if Pack = No_Name
          then Name
-         else Name_Type (Pack) & '.' & Name);
+         else Pack & Attribute_Delimiter (1) & Name);
    end Create;
 
    function Create (Index, Value : Value_Type) return VSR.Map is
