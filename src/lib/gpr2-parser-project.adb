@@ -41,6 +41,7 @@ with GPR2.Parser.Registry;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 with GPR2.Source_Reference.Identifier;
@@ -56,6 +57,7 @@ package body GPR2.Parser.Project is
 
    package PA renames GPR2.Project.Attribute;
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
    package PAI renames GPR2.Project.Attribute_Index;
    package ASU renames Ada.Strings.Unbounded;
 
@@ -1351,9 +1353,8 @@ package body GPR2.Parser.Project is
          Indexed_Values : Indexed_Item_Values := Unfilled_Indexed_Values;
 
          function Default_Value
-           (Attribute_Name  : Name_Type := Name;
-            Attrs           : PA.Set.Object := PA.Set.Empty_Set)
-            return PA.Object;
+           (Attribute_Name : Name_Type;
+            Attrs          : PA.Set.Object) return PA.Object;
          --  Returns default value using Attrs for referenced default.
 
          procedure Fill_Indexed_Values (Attrs : PA.Set.Object);
@@ -1364,9 +1365,8 @@ package body GPR2.Parser.Project is
          -------------------
 
          function Default_Value
-           (Attribute_Name  : Name_Type := Name;
-            Attrs           : PA.Set.Object := PA.Set.Empty_Set)
-            return PA.Object
+           (Attribute_Name : Name_Type;
+            Attrs          : PA.Set.Object) return PA.Object
          is
 
             Result : PA.Object;
@@ -1539,12 +1539,16 @@ package body GPR2.Parser.Project is
          --  For a project/attribute reference we need to check the attribute
          --  definition to know wether the result is multi-valued or not.
 
-         if not PRA.Exists (PRA.Create (Name, Pack)) then
-            Tree.Log_Messages.Append
-              (Message.Create
-                 (Message.Error,
-                  "attribute """ & String (Name) & """ is not defined",
-                  Get_Source_Reference (Self.File, Node)));
+         if not PRA.Exists (Q_Name) then
+            if not In_Pack
+              or else PRP.Exists (Name_Type (To_String (Pack_Name)))
+            then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute """ & PRA.Image (Q_Name) & """ is not defined",
+                     Get_Source_Reference (Self.File, Node)));
+            end if;
 
             return Empty_Item_Values;
          end if;
