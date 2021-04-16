@@ -806,6 +806,8 @@ package body GPR2.KB.Parsing is
                end if;
             end loop;
 
+            Value.Sloc := Error_Sloc;
+
             --  Constant value is not within a nested node
 
             if Has_Static then

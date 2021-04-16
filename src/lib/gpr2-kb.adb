@@ -2976,7 +2976,7 @@ package body GPR2.KB is
             if Comp.Alt_Runtime /= Null_Unbounded_String then
                return Optional_Name_Type
                  (To_String (Comp.Runtime)
-                  & "["
+                  & " ["
                   & To_String (Comp.Alt_Runtime)
                   & "]");
             else
