@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Text_IO;
@@ -242,6 +243,14 @@ package body GPR2.KB is
      (Config : Configuration_Type) return Unbounded_String;
    --  Returns partial image of <configuration> node that is used in verbose
    --  output to explain unsupported configuration.
+
+   function GPR_Executable_Prefix_Path return String;
+   --  Tries to find the installation location of gprtools.
+   --  If current executable may be one of gprtools and is spawned with path
+   --  prefix, returns corresponding prefix directory.
+   --  Returns empty string if all approaches do not work.
+   --  When a directory is returned, it is guaranteed to end with a directory
+   --  separator.
 
    ---------
    -- Add --
@@ -1976,7 +1985,7 @@ package body GPR2.KB is
            (Comp.Path.Value, Case_Sensitive => False)
            & GNAT.OS_Lib.Directory_Separator;
       elsif Name = "GPRCONFIG_PREFIX" then
-         return Get_Tools_Directory & GNAT.OS_Lib.Directory_Separator;
+         return GPR_Executable_Prefix_Path;
       end if;
 
       raise Invalid_KB
@@ -2041,6 +2050,48 @@ package body GPR2.KB is
          First := Last + 1;
       end loop;
    end Get_Words;
+
+   --------------------------------
+   -- GPR_Executable_Prefix_Path --
+   --------------------------------
+
+   function GPR_Executable_Prefix_Path return String
+   is
+      use Ada.Directories;
+      use Ada.Strings.Fixed;
+      use GNAT.OS_Lib;
+
+      Tools_Dir : constant String := Get_Tools_Directory;
+      Exec_Name : constant String := Ada.Command_Line.Command_Name;
+
+      function Can_Be_GPRTool (S : String) return Boolean is
+        (Head (Base_Name (S), 3) = "gpr"
+          and then Base_Name (Containing_Directory (S)) = "bin");
+   begin
+
+      if Has_Directory_Separator (Exec_Name)
+        and then Can_Be_GPRTool
+          (Normalize_Pathname (Exec_Name, Resolve_Links => True))
+      then
+         --  A gprtool has been called with path prefix, we need
+         --  to return the prefix of corresponding gprtools installation,
+         --  in case it is not the first one on the path.
+
+         return
+           Containing_Directory (Containing_Directory (Exec_Name))
+           & GNAT.OS_Lib.Directory_Separator;
+      end if;
+
+      --  It's either a gprtool called by base name or another kind of tool,
+      --  in both cases we need to find gprtools on PATH.
+
+      if Tools_Dir = "" then
+         return "";
+      else
+         return Tools_Dir & GNAT.OS_Lib.Directory_Separator;
+      end if;
+
+   end GPR_Executable_Prefix_Path;
 
    ----------------------------------
    -- Is_Language_With_No_Compiler --
@@ -3192,7 +3243,7 @@ package body GPR2.KB is
          Idx  : constant String := Ada.Characters.Handling.To_Lower (Index);
       begin
          if Var_Name = "GPRCONFIG_PREFIX" then
-            return Get_Tools_Directory & GNAT.OS_Lib.Directory_Separator;
+            return GPR_Executable_Prefix_Path;
 
          elsif Index = "" then
 
