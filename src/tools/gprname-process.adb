@@ -32,6 +32,7 @@ with GPR_Parser.Analysis;
 with GPR_Parser.Common;
 with GPR_Parser.Rewriting;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -248,8 +249,22 @@ begin
 
    --  Load the raw project, as it may define config-relevant attributes
 
+   declare
+      use GPR2.Containers;
+      RTS_Map : Name_Value_Map := Name_Value_Map_Package.Empty_Map;
    begin
-      Tree.Load_Autoconf (Project_Path, Context, Check_Shared_Lib => False);
+      if Opt.RTS /= No_String then
+         RTS_Map.Insert ("Ada", Value_Type (Opt.RTS));
+      end if;
+      Tree.Load_Autoconf
+        (Project_Path, Context,
+         Check_Shared_Lib  => False,
+         Target            =>
+           (if Opt.Target = No_String then
+               No_Name
+            else
+               Name_Type (Opt.Target)),
+         Language_Runtimes => RTS_Map);
    exception
       when Project_Error  | Processing_Error =>
          Show_Tree_Load_Errors (Tree);
