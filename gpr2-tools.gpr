@@ -46,7 +46,7 @@ project GPR2.Tools is
    --------------
 
    Common_Options :=
-     ("-gnat2020", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
+     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
       "-Wall");
    --  Common options used for the Debug and Release modes
 
