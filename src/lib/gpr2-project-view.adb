@@ -87,7 +87,10 @@ package body GPR2.Project.View is
 
    function Strong (Weak : Weak_Reference) return Object;
 
-   function Builder (Self : Object) return Project.Pack.Object;
+   function Builder (Self : Object) return Project.Pack.Object is
+     (if Self.Has_Packages (Registry.Pack.Builder)
+      then Self.Packages.Element (Registry.Pack.Builder)
+      else Project.Pack.Undefined);
    --  Returns package Builder for the current project of Undefined is does not
    --  exists.
 
@@ -380,19 +383,6 @@ package body GPR2.Project.View is
 
       return "";
    end Binder_Prefix;
-
-   -------------
-   -- Builder --
-   -------------
-
-   function Builder (Self : Object) return Project.Pack.Object is
-   begin
-      if Self.Has_Packages (Registry.Pack.Builder) then
-         return Self.Packages.Element (Registry.Pack.Builder);
-      else
-         return Project.Pack.Undefined;
-      end if;
-   end Builder;
 
    ---------------------
    -- Check_Attribute --
