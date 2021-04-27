@@ -104,7 +104,8 @@ package body GPR2.Project.Registry.Attribute is
       Default              : VSR.Map            := VSR.Empty_Map;
       Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := Nowhere;
-      Is_Toolchain_Config  : Boolean            := False)
+      Is_Toolchain_Config  : Boolean            := False;
+      Config_Concatenable  : Boolean            := False)
    is
       procedure Index_Default;
       --  Save definition with default value to Defaults index
@@ -149,7 +150,8 @@ package body GPR2.Project.Registry.Attribute is
               Has_Default_In       => (if Has_Default_In = Nowhere
                                        then Is_Allowed_In
                                        else Has_Default_In),
-             Is_Toolchain_Config   => Is_Toolchain_Config));
+              Is_Toolchain_Config  => Is_Toolchain_Config,
+              Config_Concatenable  => Config_Concatenable));
 
       if not Default.Is_Empty then
          Index_Default;
@@ -553,7 +555,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  library_encapsulated_supported
    Add
@@ -564,7 +567,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => In_Configuration);
+      Is_Allowed_In        => In_Configuration,
+      Config_Concatenable  => True);
 
    --  library_auto_init
    Add
@@ -586,7 +590,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  library_options
    Add
@@ -597,7 +602,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Is_Allowed_In        => In_Library,
+      Config_Concatenable  => True);
 
    --  library_rpath_options
    Add
@@ -608,7 +614,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  library_src_dir
    Add
@@ -1006,7 +1013,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  library_install_name_option
    Add
@@ -1229,7 +1237,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  compiler.switches
    Add
@@ -1240,7 +1249,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.local_configuration_pragmas
    Add
@@ -1306,7 +1316,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.leading_required_switches
    Add
@@ -1317,7 +1328,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.trailing_required_switches
    Add
@@ -1328,7 +1340,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.pic_option
    Add
@@ -1361,7 +1374,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.object_file_suffix
    Add
@@ -1384,7 +1398,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.multi_unit_switches
    Add
@@ -1417,7 +1432,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.mapping_spec_suffix
    Add
@@ -1450,7 +1466,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.config_body_file_name
    Add
@@ -1538,7 +1555,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.dependency_driver
    Add
@@ -1560,7 +1578,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.include_path
    Add
@@ -1593,7 +1612,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  compiler.max_command_line_length
    Add
@@ -1626,7 +1646,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  builder.default_switches
    Add
@@ -1637,7 +1658,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  builder.switches
    Add
@@ -1648,7 +1670,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  builder.global_compilation_switches
    Add
@@ -1659,7 +1682,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  builder.executable
    Add
@@ -1726,7 +1750,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  binder.switches
    Add
@@ -1737,7 +1762,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  binder.driver
    Add
@@ -1759,7 +1785,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  binder.prefix
    Add
@@ -1803,7 +1830,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  linker.default_switches
    Add
@@ -1814,7 +1842,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  linker.leading_switches
    Add
@@ -1825,7 +1854,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  linker.switches
    Add
@@ -1836,7 +1866,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  linker.trailing_switches
    Add
@@ -1858,7 +1889,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  linker.map_file_option
    Add
@@ -1913,7 +1945,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  linker.export_file_format
    Add
@@ -1946,7 +1979,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  clean.source_artifact_extensions
    Add
@@ -2001,7 +2035,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  cross_reference.switches
    Add
@@ -2012,7 +2047,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  finder.default_switches
    Add
@@ -2023,7 +2059,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  finder.switches
    Add
@@ -2034,7 +2071,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  pretty_printer.default_switches
    Add
@@ -2045,7 +2083,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  pretty_printer.switches
    Add
@@ -2056,7 +2095,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  gnatstub.default_switches
    Add
@@ -2067,7 +2107,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  gnatstub.switches
    Add
@@ -2078,7 +2119,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  check.default_switches
    Add
@@ -2089,7 +2131,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  check.switches
    Add
@@ -2100,7 +2143,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  eliminate.default_switches
    Add
@@ -2111,7 +2155,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  eliminate.switches
    Add
@@ -2122,7 +2167,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  metrics.default_switches
    Add
@@ -2133,7 +2179,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Config_Concatenable  => True);
 
    --  metrics.switches
    Add
@@ -2144,7 +2191,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  ide.default_switches
    Add
@@ -2441,7 +2489,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Config_Concatenable  => True);
 
    --  origin_project
    Add

@@ -83,6 +83,10 @@ package GPR2.Project.Registry.Attribute is
       --  such attributes need to be global to the project tree, and so
       --  should not be modified after being referenced. So for example
       --  using "for Target use project'Target & "suffix"" is not allowed.
+      Config_Concatenable  : Boolean            := False;
+      --  When True the final value for the attribute is concatenated with the
+      --  value found in the Config project (if it exists) rather than
+      --  overriding it.
    end record
      with Dynamic_Predicate =>
        --  Either Index is allowed or the other parts are default
@@ -128,7 +132,8 @@ package GPR2.Project.Registry.Attribute is
       Default              : VSR.Map            := VSR.Empty_Map;
       Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := Nowhere;
-      Is_Toolchain_Config  : Boolean            := False);
+      Is_Toolchain_Config  : Boolean            := False;
+      Config_Concatenable  : Boolean            := False);
    --  add package/attribute definition in database for attribute checks
 
    --  Some common attribute names
