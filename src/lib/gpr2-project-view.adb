@@ -545,27 +545,30 @@ package body GPR2.Project.View is
    function Executable_Suffix (Self : Object) return Filename_Optional is
       package A renames GPR2.Project.Registry.Attribute;
 
-      Tree : constant not null access Project.Tree.Object := Self.Tree;
-      Attr : Project.Attribute.Object;
+      Tree    : constant not null access Project.Tree.Object := Self.Tree;
+      Attr    : Project.Attribute.Object;
+      Builder : Project.Pack.Object;
 
    begin
-      if Tree.Has_Configuration
-        and then Tree.Configuration.Corresponding_View.Check_Attribute
-                   (A.Executable_Suffix, Result => Attr)
+      Builder := Self.Builder;
+
+      if Builder.Is_Defined
+        and then Builder.Check_Attribute
+          (A.Executable_Suffix, Result => Attr)
       then
          return Filename_Optional (Attr.Value.Text);
       end if;
 
-      declare
-         Builder : constant Project.Pack.Object := Self.Builder;
-      begin
+      if Tree.Has_Configuration then
+         Builder := Tree.Configuration.Corresponding_View.Builder;
+
          if Builder.Is_Defined
            and then Builder.Check_Attribute
                       (A.Executable_Suffix, Result => Attr)
          then
             return Filename_Optional (Attr.Value.Text);
          end if;
-      end;
+      end if;
 
       return Filename_Optional (OS_Lib.Get_Executable_Suffix.all);
    end Executable_Suffix;
