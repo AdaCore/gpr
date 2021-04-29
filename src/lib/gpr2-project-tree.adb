@@ -1473,10 +1473,13 @@ package body GPR2.Project.Tree is
       -------------------------
 
       function Default_Config_File return Filename_Type is
-         Ada_RTS : constant Filename_Optional :=
-                     Filename_Optional
-                       (Containers.Value_Or_Default
-                          (Language_Runtimes, "Ada"));
+         Ada_RTS_Val : constant Value_Type :=
+                         Containers.Value_Or_Default
+                           (Language_Runtimes, "Ada");
+         Ada_RTS     : constant Filename_Optional :=
+                         (if Ada_RTS_Val = No_Value then No_Filename
+                          else Filename_Optional
+                            (Ada.Directories.Simple_Name (Ada_RTS_Val)));
       begin
          if Target not in No_Name | "all" then
             return Filename_Type (Target)
