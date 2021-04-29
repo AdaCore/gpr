@@ -185,7 +185,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          end loop;
       else
          for C in Tree.Log_Messages.Iterate
-           (Information => False,
+           (Information => Opt.Verbose_Parsing >= 1,
             Warning     => True,
             Error       => False,
             Read        => False,

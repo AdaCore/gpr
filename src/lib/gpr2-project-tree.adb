@@ -1274,7 +1274,20 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
+      --  Add full project path in the message log
+      Self.Messages.Append
+        (Message.Create
+           (Message.Information,
+            "Parsing """ & Project_Path.Value & """",
+            Source_Reference.Create (Project_Path.Value, 0, 0)));
+
       --  Add all search paths into the message log
+
+      Self.Messages.Append
+        (Message.Create
+           (Message.Information,
+            "search path:",
+            Source_Reference.Create (Project_Path.Value, 0, 0)));
 
       for P of Self.Search_Paths loop
          Self.Messages.Append
