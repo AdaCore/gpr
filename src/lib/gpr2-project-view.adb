@@ -815,12 +815,16 @@ package body GPR2.Project.View is
    ------------------
 
    function Has_Packages
-     (Self : Object;
-      Name : Optional_Name_Type := No_Name) return Boolean is
+     (Self           : Object;
+      Name           : Optional_Name_Type := No_Name;
+      Check_Extended : Boolean := True) return Boolean is
    begin
       if Definition.Get_RO (Self).Has_Packages (Name) then
          return True;
-      elsif Name /= PRP.Naming and then Self.Is_Extending then
+      elsif Check_Extended
+         and then Name /= PRP.Naming
+         and then Self.Is_Extending
+      then
          return Self.Extended_Root.Has_Packages (Name);
       else
          return False;
@@ -1338,10 +1342,24 @@ package body GPR2.Project.View is
    ----------
 
    function Pack
-     (Self : Object;
-      Name : Name_Type) return Project.Pack.Object is
+     (Self           : Object;
+      Name           : Name_Type;
+      Check_Extended : Boolean := True) return Project.Pack.Object
+   is
+      Result    : Project.Pack.Object;
+      View_Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      return Self.Packages.Element (Name);
+      if View_Data.Has_Packages (Name) then
+         Result := View_Data.Packs.Element (Name);
+      elsif Check_Extended
+         and then Name /= PRP.Naming
+         and then Self.Is_Extending
+      then
+         Result := Self.Extended_Root.Pack
+            (Name => Name, Check_Extended => Check_Extended);
+      end if;
+
+      return Result;
    end Pack;
 
    --------------

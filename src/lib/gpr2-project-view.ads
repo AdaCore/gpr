@@ -298,20 +298,33 @@ package GPR2.Project.View is
    --  Packages
 
    function Has_Packages
-     (Self : Object;
-      Name : Optional_Name_Type := No_Name) return Boolean
+     (Self           : Object;
+      Name           : Optional_Name_Type := No_Name;
+      Check_Extended : Boolean := True) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns true if the project view has some packages defined
+   --  If Name is set to No_Name then return True if the view defined some
+   --  packages. In case Check_Extended is True then this include packages
+   --  inherited from the extended view.
+   --  If Name is different from No_Name then return True if the package Name
+   --  is defined in the view. If Check_Extended is True then the function
+   --  returns also True if the package has been inherited.
 
    function Packages (Self : Object) return Pack.Set.Object
      with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
-   --  Get the list of packages defined in the project
+   --  Get the list of packages defined in the project or inherited from the
+   --  extended view.
 
-   function Pack (Self : Object; Name : Name_Type) return Pack.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Packages (Name),
+   function Pack
+      (Self           : Object;
+       Name           : Name_Type;
+       Check_Extended : Boolean := True) return Pack.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Packages
+                     (Name => Name, Check_Extended => Check_Extended),
           Post => Pack'Result.Is_Defined;
-   --  Get the package with the given Name
+   --  Get the package with the given Name. If Check_Extended is True, then
+   --  the function might return an inherited package.
 
    function Naming_Package (Self : Object) return Project.Pack.Object
      with Pre  => Self.Is_Defined,
