@@ -90,6 +90,13 @@ package body GPRinstall.Install is
    --  Keep lines when opening the manifest files. This is used by the rollback
    --  routine when an error occurs while copying the files.
 
+   function Other_Part_Need_Body
+     (Source : GPR2.Project.Source.Object) return Boolean
+   is
+     (Source.Has_Other_Part
+      and then Source.Other_Part.Source.Is_Implementation_Required);
+   --  Returns True if Source has other part and this part need body
+
    procedure Double_Buffer;
    --  Double the size of the Buffer
 
@@ -964,7 +971,7 @@ package body GPRinstall.Install is
                for D of Source.Dependencies (Closure => True) loop
                   if not Source_Copied.Contains (D)
                     and then (D.Source.Kind in Unit.Spec_Kind
-                              or else D.Source.Is_Implementation_Required)
+                              or else Other_Part_Need_Body (D))
                     and then Source.View = D.View
                   then
                      Install_Project_Source (D, Is_Interface_Closure => True);
@@ -986,6 +993,7 @@ package body GPRinstall.Install is
                Done    : Boolean := True;
                Has_Atf : Boolean := False;
                --  Has artefacts to install
+
             begin
                --  Skip sources that are removed/excluded and sources not
                --  part of the interface for standalone libraries.
@@ -995,15 +1003,16 @@ package body GPRinstall.Install is
 
                if not Project.Is_Library
                  or else Project.Library_Standalone = No
-                 or else (Source.Is_Interface or else Is_Interface_Closure)
+                 or else Source.Is_Interface
+                 or else Is_Interface_Closure
                then
                   if Src.Has_Units then
                      CUs := Src.Units;
                   end if;
 
                   if Options.All_Sources
-                    or else ((Source.Is_Interface or else Is_Interface_Closure)
-                             and then Src.Kind in Unit.Spec_Kind)
+                    or else Src.Kind in Unit.Spec_Kind
+                    or else Other_Part_Need_Body (Source)
                     or else Src.Is_Generic
                     or else (Src.Kind = S_Separate
                              and then Source.Separate_From.Source.Is_Generic)
