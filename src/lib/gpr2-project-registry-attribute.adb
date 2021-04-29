@@ -23,7 +23,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Strings.Fixed;
-
 with GPR2.Project.Registry.Pack;
 
 package body GPR2.Project.Registry.Attribute is
@@ -105,7 +104,8 @@ package body GPR2.Project.Registry.Attribute is
       Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := Nowhere;
       Is_Toolchain_Config  : Boolean            := False;
-      Config_Concatenable  : Boolean            := False)
+      Config_Concatenable  : Boolean            := False;
+      Index_Type           : Index_Value_Type   := Name_Index)
    is
       procedure Index_Default;
       --  Save definition with default value to Defaults index
@@ -151,7 +151,8 @@ package body GPR2.Project.Registry.Attribute is
                                        then Is_Allowed_In
                                        else Has_Default_In),
               Is_Toolchain_Config  => Is_Toolchain_Config,
-              Config_Concatenable  => Config_Concatenable));
+              Config_Concatenable  => Config_Concatenable,
+              Index_Type           => Index_Type));
 
       if not Default.Is_Empty then
          Index_Default;
@@ -295,7 +296,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  externally_built
    Add
@@ -355,7 +357,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Index_Type           => Language_Index);
 
    --  excluded_source_dirs
    Add
@@ -478,7 +481,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => (K_Aggregate => True, others => False));
+      Is_Allowed_In        => (K_Aggregate => True, others => False),
+      Index_Type           => Name_Index);
 
    --  library_dir
    Add
@@ -615,7 +619,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  library_src_dir
    Add
@@ -741,7 +746,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True);
+      Is_Toolchain_Config  => True,
+      Index_Type           => Language_Index);
 
    --  toolchain_name
    Add
@@ -753,7 +759,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True);
+      Is_Toolchain_Config  => True,
+      Index_Type           => Language_Index);
 
    --  toolchain_path
    Add
@@ -765,7 +772,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True);
+      Is_Toolchain_Config  => True,
+      Index_Type           => Language_Index);
 
    --  required_toolchain_version
    Add
@@ -777,7 +785,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True);
+      Is_Toolchain_Config  => True,
+      Index_Type           => Language_Index);
 
    --  toolchain_description
    Add
@@ -788,7 +797,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  object_generated
    Add
@@ -799,7 +809,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  objects_linked
    Add
@@ -810,7 +821,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  target
    Add
@@ -834,7 +846,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True);
+      Is_Toolchain_Config  => True,
+      Index_Type           => Language_Index);
 
    --  library_builder
    Add
@@ -1036,7 +1049,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  runtime_library_dir
    Add
@@ -1047,7 +1061,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  runtime_source_dir
    Add
@@ -1058,7 +1073,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  runtime_source_dirs
    Add
@@ -1069,7 +1085,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  naming.spec_suffix
    Add
@@ -1082,7 +1099,8 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
       Default              => Create (Value_Type (Specification_Suffix)),
-      Default_Is_Reference => True);
+      Default_Is_Reference => True,
+      Index_Type           => Language_Index);
 
    --  naming.body_suffix
    Add
@@ -1095,7 +1113,8 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
       Default              => Create (Value_Type (Implementation_Suffix)),
-      Default_Is_Reference => True);
+      Default_Is_Reference => True,
+      Index_Type           => Language_Index);
 
    --  naming.specification_suffix
    Add
@@ -1107,7 +1126,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create ("ada", ".ads") + Create ("c", ".h"));
+      Default              => Create ("ada", ".ads") + Create ("c", ".h"),
+      Index_Type           => Language_Index);
 
    --  naming.implementation_suffix
    Add
@@ -1119,7 +1139,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create ("ada", ".adb") + Create ("c", ".c"));
+      Default              => Create ("ada", ".adb") + Create ("c", ".c"),
+      Index_Type           => Language_Index);
 
    --  naming.separate_suffix
    Add
@@ -1169,7 +1190,8 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
       Default              => Create (Value_Type (Specification)),
-      Default_Is_Reference => True);
+      Default_Is_Reference => True,
+      Index_Type           => Name_Index);
 
    --  naming.specification
    Add
@@ -1180,7 +1202,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Name_Index);
 
    --  naming.body
    Add
@@ -1193,7 +1216,8 @@ begin
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
       Default              => Create (Value_Type (Implementation)),
-      Default_Is_Reference => True);
+      Default_Is_Reference => True,
+      Index_Type           => Name_Index);
 
    --  naming.implementation
    Add
@@ -1204,7 +1228,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Name_Index);
 
    --  naming.specification_exceptions
    Add
@@ -1215,7 +1240,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  naming.implementation_exceptions
    Add
@@ -1226,7 +1252,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.default_switches
    Add
@@ -1238,7 +1265,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.switches
    Add
@@ -1250,7 +1278,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  compiler.local_configuration_pragmas
    Add
@@ -1272,7 +1301,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.driver
    Add
@@ -1283,7 +1313,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.language_kind
    Add
@@ -1294,7 +1325,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.dependency_kind
    Add
@@ -1305,7 +1337,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.required_switches
    Add
@@ -1317,7 +1350,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.leading_required_switches
    Add
@@ -1329,7 +1363,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.trailing_required_switches
    Add
@@ -1341,7 +1376,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.pic_option
    Add
@@ -1352,7 +1388,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.path_syntax
    Add
@@ -1375,7 +1412,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.object_file_suffix
    Add
@@ -1387,7 +1425,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (".o"));
+      Default              => Create (".o"),
+      Index_Type           => Language_Index);
 
    --  compiler.object_file_switches
    Add
@@ -1399,7 +1438,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.multi_unit_switches
    Add
@@ -1410,7 +1450,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.multi_unit_object_separator
    Add
@@ -1421,7 +1462,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.mapping_file_switches
    Add
@@ -1433,7 +1475,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.mapping_spec_suffix
    Add
@@ -1444,7 +1487,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.mapping_body_suffix
    Add
@@ -1455,7 +1499,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_file_switches
    Add
@@ -1467,7 +1512,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.config_body_file_name
    Add
@@ -1478,7 +1524,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_body_file_name_index
    Add
@@ -1489,7 +1536,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_body_file_name_pattern
    Add
@@ -1500,7 +1548,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_spec_file_name
    Add
@@ -1511,7 +1560,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_spec_file_name_index
    Add
@@ -1522,7 +1572,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_spec_file_name_pattern
    Add
@@ -1533,7 +1584,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.config_file_unique
    Add
@@ -1544,7 +1596,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.dependency_switches
    Add
@@ -1556,7 +1609,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.dependency_driver
    Add
@@ -1567,7 +1621,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.include_switches
    Add
@@ -1579,7 +1634,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.include_path
    Add
@@ -1590,7 +1646,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.include_path_file
    Add
@@ -1601,7 +1658,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.object_path_switches
    Add
@@ -1613,7 +1671,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  compiler.max_command_line_length
    Add
@@ -1635,7 +1694,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  compiler.response_file_switches
    Add
@@ -1647,7 +1707,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  builder.default_switches
    Add
@@ -1659,7 +1720,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  builder.switches
    Add
@@ -1671,7 +1733,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  builder.global_compilation_switches
    Add
@@ -1683,7 +1746,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  builder.executable
    Add
@@ -1695,7 +1759,8 @@ begin
       Value_Case_Sensitive => True,
       Empty_Value          => Ignore,
       Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Is_Allowed_In        => No_Aggregates,
+      Index_Type           => File_Index);
 
    --  builder.executable_suffix
    Add
@@ -1728,7 +1793,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  gnatls.switches
    Add
@@ -1751,7 +1817,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  binder.switches
    Add
@@ -1763,7 +1830,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  binder.driver
    Add
@@ -1774,7 +1842,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  binder.required_switches
    Add
@@ -1786,7 +1855,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  binder.prefix
    Add
@@ -1797,7 +1867,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  binder.objects_path
    Add
@@ -1808,7 +1879,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  binder.objects_path_file
    Add
@@ -1819,7 +1891,8 @@ begin
       Value                => Single,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  linker.required_switches
    Add
@@ -1843,7 +1916,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  linker.leading_switches
    Add
@@ -1855,7 +1929,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  linker.switches
    Add
@@ -1867,7 +1942,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  linker.trailing_switches
    Add
@@ -1878,7 +1954,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  linker.linker_options
    Add
@@ -1991,7 +2068,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  clean.object_artifact_extensions
    Add
@@ -2002,7 +2080,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => Language_Index);
 
    --  clean.artifacts_in_exec_dir
    Add
@@ -2036,7 +2115,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  cross_reference.switches
    Add
@@ -2048,7 +2128,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  finder.default_switches
    Add
@@ -2060,7 +2141,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  finder.switches
    Add
@@ -2072,7 +2154,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  pretty_printer.default_switches
    Add
@@ -2084,7 +2167,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  pretty_printer.switches
    Add
@@ -2096,7 +2180,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  gnatstub.default_switches
    Add
@@ -2108,7 +2193,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  gnatstub.switches
    Add
@@ -2120,7 +2206,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  check.default_switches
    Add
@@ -2132,7 +2219,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  check.switches
    Add
@@ -2144,7 +2232,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  eliminate.default_switches
    Add
@@ -2156,7 +2245,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  eliminate.switches
    Add
@@ -2168,7 +2258,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  metrics.default_switches
    Add
@@ -2180,7 +2271,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => Language_Index);
 
    --  metrics.switches
    Add
@@ -2192,7 +2284,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Config_Concatenable  => True,
+      Index_Type           => FileGlob_Or_Language_Index);
 
    --  ide.default_switches
    Add
@@ -2401,7 +2494,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => File_Index);
 
    --  install.required_artifacts
    Add
@@ -2412,7 +2506,8 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Is_Allowed_In        => Everywhere,
+      Index_Type           => File_Index);
 
    --  install.mode
    Add
