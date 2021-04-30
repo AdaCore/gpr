@@ -6,6 +6,10 @@ package body Test is
    end Test;
 end Test;
 
+pragma Warnings (Off);
+private with System.OS_Interface;
+pragma Warnings (On);
+
 package Test is
    procedure Test;
 end Test;

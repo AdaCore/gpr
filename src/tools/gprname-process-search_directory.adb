@@ -346,45 +346,45 @@ begin
                         for Line of Lines loop
                            Match (Matcher, To_String (Line), Matches);
 
-                           if Matches (0) = GNAT.Regpat.No_Match then
-                              raise GPRname_Exception
-                                with "unexpected compiler output";
-                           end if;
+                           if Matches (0) /= GNAT.Regpat.No_Match then
+                              declare
+                                 Name : constant Name_Type :=
+                                          Name_Type
+                                            (Substr (Line, Matches (1)));
 
-                           declare
-                              Name : constant Name_Type :=
-                                       Name_Type (Substr (Line, Matches (1)));
+                                 Kind : constant Unit_Kind :=
+                                          (if Substr (Line, Matches (2))
+                                              = "spec"
+                                           then K_Spec else K_Body);
 
-                              Kind : constant Unit_Kind :=
-                                       (if Substr (Line, Matches (2)) = "spec"
-                                        then K_Spec else K_Body);
-
-                              Index_In_Source : constant Natural :=
-                                                  (if Is_Multi_Unit
-                                                   then (Unit_Count + 1)
-                                                   else 0);
-                           begin
-                              Put_Line
-                                ("      found unit: " & To_String (Line), Low);
-
-                              --  Add the unit to the source, unless it is a
-                              --  predefined Ada unit and the related "ignore"
-                              --  option is set.
-
-                              if not (Opt.Ignore_Predefined_Units
-                                        and then
-                                      GPRtools.Util.Is_Ada_Predefined_Unit
-                                        (Name))
-                              then
-                                 Unit_Count := Unit_Count + 1;
-                                 Src.Append_Unit
-                                   (Create (Name, Kind, Index_In_Source));
-                              else
+                                 Index_In_Source : constant Natural :=
+                                                     (if Is_Multi_Unit
+                                                      then (Unit_Count + 1)
+                                                      else 0);
+                              begin
                                  Put_Line
-                                   ("        -> predefined unit:"
-                                    & " ignored", Low);
-                              end if;
-                           end;
+                                   ("      found unit: "
+                                    & To_String (Line), Low);
+
+                                 --  Add the unit to the source, unless it is a
+                                 --  predefined Ada unit and the related
+                                 --  "ignore" option is set.
+
+                                 if not (Opt.Ignore_Predefined_Units
+                                         and then
+                                         GPRtools.Util.Is_Ada_Predefined_Unit
+                                           (Name))
+                                 then
+                                    Unit_Count := Unit_Count + 1;
+                                    Src.Append_Unit
+                                      (Create (Name, Kind, Index_In_Source));
+                                 else
+                                    Put_Line
+                                      ("        -> predefined unit:"
+                                       & " ignored", Low);
+                                 end if;
+                              end;
+                           end if;
                         end loop;
 
                         --  Unit_Count could be zero here, if we got only
