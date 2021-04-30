@@ -2607,7 +2607,7 @@ package body GPR2.Project.Tree is
            Check_Extended => True,
            Result         => TA)
       then
-         return Name_Type (TA.Value.Text);
+         return Optional_Name_Type (TA.Value.Text);
 
       else
          return No_Name;
