@@ -1286,13 +1286,12 @@ package body GPR2.Project.View is
                Set.Append (Self.Executable (Simple_Name (Main.Text),
                            At_Pos_Or (Main, 0)));
             end loop;
-         end if;
 
-         --  Add also mains from extended project if defined
-
-         if Self.Is_Extending
+         elsif Self.Is_Extending
            and then Self.Extended_Root.Check_Attribute (A.Main, Result => Attr)
          then
+            --  If not overriden, check the extended project if any
+
             for Main of Attr.Values loop
                Set.Append (Self.Executable (Simple_Name (Main.Text),
                            At_Pos_Or (Main, 0)));
