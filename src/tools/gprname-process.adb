@@ -28,6 +28,8 @@ with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 with GNAT.Regpat;
 
+with GNATCOLL.OS.Constants;
+
 with GPR_Parser.Analysis;
 with GPR_Parser.Common;
 with GPR_Parser.Rewriting;
@@ -88,6 +90,12 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Str_Hash_Case_Insensitive,
       "=",
       Source.Set."=");
+
+   use type GNATCOLL.OS.OS_Type;
+
+   Is_Windows_Host : constant Boolean :=
+                       GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
+                         with Warnings => Off;
 
    procedure Search_Directory
      (Dir_Path       : Path_Name.Object;
@@ -331,6 +339,10 @@ begin
 
       Compiler_Path :=
         Path_Name.Create_File (Filename_Type (Driver_Attr.Value.Text));
+
+      if not Compiler_Path.Exists and then Is_Windows_Host then
+         Compiler_Path := Compiler_Path.Change_Extension (".exe");
+      end if;
 
       if not Compiler_Path.Exists then
          Put_Line ("warning: invalid compiler path from configuration ("
