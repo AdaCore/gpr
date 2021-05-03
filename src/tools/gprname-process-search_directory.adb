@@ -337,61 +337,63 @@ begin
                         GNAT.OS_Lib.Free (Compiler_Args (Compiler_Args'Last));
 
                         if Status /= 0 then
-                           GPRtools.Util.Fail_Program (Compiler_Output);
-                        end if;
+                           Put_Line (Compiler_Output, None);
 
-                        --  Parse every line output by the compiler
-                        --  (one line per unit in the source)
+                        else
+                           --  Parse every line output by the compiler
+                           --  (one line per unit in the source)
 
-                        for Line of Lines loop
-                           Match (Matcher, To_String (Line), Matches);
+                           for Line of Lines loop
+                              Match (Matcher, To_String (Line), Matches);
 
-                           if Matches (0) /= GNAT.Regpat.No_Match then
-                              declare
-                                 Name : constant Name_Type :=
-                                          Name_Type
-                                            (Substr (Line, Matches (1)));
+                              if Matches (0) /= GNAT.Regpat.No_Match then
+                                 declare
+                                    Name : constant Name_Type :=
+                                             Name_Type
+                                               (Substr (Line, Matches (1)));
 
-                                 Kind : constant Unit_Kind :=
-                                          (if Substr (Line, Matches (2))
+                                    Kind : constant Unit_Kind :=
+                                             (if Substr (Line, Matches (2))
                                               = "spec"
-                                           then K_Spec else K_Body);
+                                              then K_Spec else K_Body);
 
-                                 Index_In_Source : constant Natural :=
-                                                     (if Is_Multi_Unit
-                                                      then (Unit_Count + 1)
-                                                      else 0);
-                              begin
-                                 Put_Line
-                                   ("      found unit: "
-                                    & To_String (Line), Low);
-
-                                 --  Add the unit to the source, unless it is a
-                                 --  predefined Ada unit and the related
-                                 --  "ignore" option is set.
-
-                                 if not (Opt.Ignore_Predefined_Units
-                                         and then
-                                         GPRtools.Util.Is_Ada_Predefined_Unit
-                                           (Name))
-                                 then
-                                    Unit_Count := Unit_Count + 1;
-                                    Src.Append_Unit
-                                      (Create (Name, Kind, Index_In_Source));
-                                 else
+                                    Index_In_Source : constant Natural :=
+                                                        (if Is_Multi_Unit
+                                                         then (Unit_Count + 1)
+                                                         else 0);
+                                 begin
                                     Put_Line
-                                      ("        -> predefined unit:"
-                                       & " ignored", Low);
-                                 end if;
-                              end;
+                                      ("      found unit: "
+                                       & To_String (Line), Low);
+
+                                    --  Add the unit to the source, unless it
+                                    --  is a predefined Ada unit and the
+                                    --  related "ignore" option is set.
+
+                                    if Opt.Ignore_Predefined_Units
+                                      and then
+                                        GPRtools.Util.Is_Ada_Predefined_Unit
+                                          (Name)
+                                    then
+                                       Put_Line
+                                         ("        -> predefined unit """
+                                          & String (Name) & """ ignored", Low);
+                                    else
+                                       Unit_Count := Unit_Count + 1;
+                                       Src.Append_Unit
+                                         (Create
+                                            (Name, Kind, Index_In_Source));
+                                    end if;
+                                 end;
+                              end if;
+                           end loop;
+
+                           --  Unit_Count could be zero here, if we got only
+                           --  predefined units and skipped them.
+
+                           if Unit_Count > 0 then
+                              Update_Lang_Sources_Map (Lang_Sources_Map, Src);
                            end if;
-                        end loop;
-
-                        --  Unit_Count could be zero here, if we got only
-                        --  predefined units and skipped them.
-
-                        if Unit_Count > 0 then
-                           Update_Lang_Sources_Map (Lang_Sources_Map, Src);
                         end if;
                      end;
 
