@@ -337,7 +337,7 @@ begin
                         GNAT.OS_Lib.Free (Compiler_Args (Compiler_Args'Last));
 
                         if Status /= 0 then
-                           raise GPRname_Exception with "compiler failed";
+                           GPRtools.Util.Fail_Program (Compiler_Output);
                         end if;
 
                         --  Parse every line output by the compiler
