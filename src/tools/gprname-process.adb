@@ -340,8 +340,11 @@ begin
       Compiler_Path :=
         Path_Name.Create_File (Filename_Type (Driver_Attr.Value.Text));
 
-      if not Compiler_Path.Exists and then Is_Windows_Host then
+      if Is_Windows_Host and then not Compiler_Path.Exists then
+         pragma Warnings
+           (Off, "this code can never be executed and has been deleted");
          Compiler_Path := Compiler_Path.Change_Extension (".exe");
+         pragma Warnings (On);
       end if;
 
       if not Compiler_Path.Exists then
