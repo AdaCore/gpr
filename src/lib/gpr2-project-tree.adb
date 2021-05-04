@@ -34,6 +34,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
+with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
@@ -41,6 +42,7 @@ with GPR2.View_Ids.Set;
 with GPR2.View_Ids.Vector;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
+with GNAT.String_Split;
 
 with GNATCOLL.OS.Constants;
 
@@ -168,6 +170,11 @@ package body GPR2.Project.Tree is
    --  For all externals in Externals, if external is not already present in
    --  the context, fetch its value from the environment and insert it into the
    --  context.
+
+   procedure Update_Project_Search_Path_From_Config
+     (Self : in out Object;
+      Conf : Project.Configuration.Object);
+   --  Update project search path with directories relevant to
 
    procedure Get_File
      (Self            : Object;
@@ -1132,61 +1139,22 @@ package body GPR2.Project.Tree is
    ----------
 
    procedure Load
-     (Self             : in out Object;
-      Filename         : Path_Name.Object;
-      Context          : GPR2.Context.Object;
-      Config           : PC.Object                 := PC.Undefined;
-      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
-      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type        := No_Name;
-      Src_Subdirs      : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib : Boolean                   := True;
-      Absent_Dir_Error : Boolean                   := False;
-      Implicit_With    : GPR2.Path_Name.Set.Object :=
-                           GPR2.Path_Name.Set.Empty_Set)
+     (Self                    : in out Object;
+      Filename                : Path_Name.Object;
+      Context                 : GPR2.Context.Object;
+      Config                  : PC.Object                 := PC.Undefined;
+      Project_Dir             : Path_Name.Object          :=
+                                  Path_Name.Undefined;
+      Build_Path              : Path_Name.Object          :=
+                                  Path_Name.Undefined;
+      Subdirs                 : Optional_Name_Type        := No_Name;
+      Src_Subdirs             : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib        : Boolean                   := True;
+      Absent_Dir_Error        : Boolean                   := False;
+      Implicit_With           : GPR2.Path_Name.Set.Object :=
+                                  GPR2.Path_Name.Set.Empty_Set;
+      Missing_Import_Is_Error : Boolean                   := True)
    is
-      procedure Set_Project_Search_Paths;
-      --  Set project search path for the tree
-
-      ------------------------------
-      -- Set_Project_Search_Paths --
-      ------------------------------
-
-      procedure Set_Project_Search_Paths is
-
-         GNAT_Prefix : constant String := Get_Tools_Directory;
-
-         procedure Append (Dir1, Dir2  : String)
-           with Post => Self.Search_Paths'Old.Length + 1
-                        = Self.Search_Paths.Length;
-
-         ------------
-         -- Append --
-         ------------
-
-         procedure Append (Dir1, Dir2  : String) is
-         begin
-            Self.Search_Paths.Append
-              (Path_Name.Create_Directory
-                 (Filename_Type
-                    (Directories.Compose
-                       (Directories.Compose
-                          (Directories.Compose
-                             (GNAT_Prefix, String (Self.Target)), Dir1),
-                        Dir2))));
-         end Append;
-
-      begin
-         if GNAT_Prefix /= "" then
-            --  <prefix>/<target>/share/gpr
-
-            Append ("share", "gpr");
-
-            --  <prefix>/<target>/lig/gnat
-
-            Append ("lib", "gnat");
-         end if;
-      end Set_Project_Search_Paths;
 
       Project_Path  : Path_Name.Object;
       Root_Context  : GPR2.Context.Object := Context;
@@ -1240,6 +1208,8 @@ package body GPR2.Project.Tree is
                P_Data.Packs,
                P_Data.Types);
 
+            Update_Project_Search_Path_From_Config (Self, Self.Conf);
+
             pragma Assert (P_Data.Kind = K_Configuration, P_Data.Kind'Img);
          end;
       end if;
@@ -1252,9 +1222,7 @@ package body GPR2.Project.Tree is
       Self.Implicit_With    := Implicit_With;
       Self.Absent_Dir_Error := Absent_Dir_Error;
 
-      --  Now we can initialize the project search paths
-
-      Set_Project_Search_Paths;
+      Self.Missing_Import_Is_Error := Missing_Import_Is_Error;
 
       if Filename.Is_Implicit_Project then
          Project_Path := Project_Dir;
@@ -1673,13 +1641,16 @@ package body GPR2.Project.Tree is
 
          Self.Load
            (Filename, Context,
-            Project_Dir      => Project_Dir,
-            Build_Path       => Build_Path,
-            Subdirs          => Subdirs,
-            Src_Subdirs      => Src_Subdirs,
-            Check_Shared_Lib => Check_Shared_Lib,
-            Absent_Dir_Error => False, --  Ignore obj dir for this first load
-            Implicit_With    => Implicit_With);
+            Project_Dir             => Project_Dir,
+            Build_Path              => Build_Path,
+            Subdirs                 => Subdirs,
+            Src_Subdirs             => Src_Subdirs,
+            Check_Shared_Lib        => Check_Shared_Lib,
+            Absent_Dir_Error        => False,
+            Implicit_With           => Implicit_With,
+            Missing_Import_Is_Error => False);
+         --  Ignore possible missing dirs and imported projects since they can
+         --  depend on the result of autoconfiguration.
 
          --  Ignore messages issued with this initial load: as we don't have
          --  a valid configuration here, we can't really know whether they
@@ -2269,7 +2240,9 @@ package body GPR2.Project.Tree is
                   else
                      Self.Messages.Append
                        (GPR2.Message.Create
-                          (Level   => Message.Error,
+                          (Level   => (if Self.Missing_Import_Is_Error
+                                       then Message.Error
+                                       else Message.Warning),
                            Message => "imported project file """
                                         & String (Import.Path_Name.Name)
                                         & """ not found",
@@ -3690,6 +3663,194 @@ package body GPR2.Project.Tree is
          end if;
       end loop;
    end Update_Context;
+
+   procedure Update_Project_Search_Path_From_Config
+     (Self : in out Object;
+      Conf : Project.Configuration.Object)
+   is
+      use OS_Lib;
+      Compiler     : Project.Pack.Object;
+      Drivers      : Attribute.Set.Object;
+
+      PATH         : constant String := Environment_Variables.Value ("PATH");
+      PATH_Subs    : String_Split.Slice_Set;
+
+      Given_Target : Project.Attribute.Object;
+      Canon_Target : Project.Attribute.Object;
+      Canon_Set    : Boolean := False;
+      Given_Set    : Boolean := False;
+
+      function Is_Bin_Path (T_Path : String) return Boolean is
+        (Directories.Simple_Name (T_Path) = "bin");
+
+      procedure Append (Dir : String);
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append (Dir : String) is
+      begin
+         Self.Search_Paths.Append
+           (Path_Name.Create_Directory (Filename_Type (Dir)));
+      end Append;
+
+   begin
+      if not Conf.Is_Defined then
+         return;
+      end if;
+
+      if Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
+         Compiler :=
+           Conf.Corresponding_View.Packages.Element (Registry.Pack.Compiler);
+      else
+         return;
+      end if;
+
+      if Conf.Corresponding_View.Check_Attribute
+        (Name           => Registry.Attribute.Canonical_Target,
+         Result         => Canon_Target)
+      then
+         Canon_Set := True;
+      end if;
+
+      if Conf.Corresponding_View.Check_Attribute
+        (Name           => Registry.Attribute.Target,
+         Result         => Given_Target)
+      then
+         Given_Set := True;
+      end if;
+
+      String_Split.Create
+        (PATH_Subs,
+         PATH,
+         (1 => Path_Separator),
+         String_Split.Multiple);
+
+      Drivers := Compiler.Attributes (Registry.Attribute.Driver);
+
+      --  We need to arrange toolchains in the order of appearance on PATH
+      for Sub of PATH_Subs loop
+
+         if Is_Bin_Path (Sub) then
+
+            for Driver of Drivers loop
+               if Driver.Value.Text = "" then
+                  goto Next_Driver;
+               end if;
+
+               declare
+                  Driver_Dir    : constant String :=
+                                    Normalize_Pathname
+                                      (Directories.Containing_Directory
+                                         (String (Driver.Value.Text)));
+                  Toolchain_Dir : constant String :=
+                                    Directories.Containing_Directory
+                                      (Driver_Dir);
+                  Index         : constant Name_Type :=
+                                    Name_Type (Driver.Index.Value);
+               begin
+
+                  if Driver_Dir = Normalize_Pathname (Sub) then
+
+                     if Given_Set then
+
+                        --  We only care for runtime if it is a simple name.
+                        --  Runtime specific names go with explicitly specified
+                        --  target (if it has been specifed).
+                        if Conf.Runtime (Index) /= No_Name
+                          and then not
+                            (for some C of Conf.Runtime (Index) =>
+                                    C in '/' | '\')
+                        then
+
+                           Append
+                             (Toolchain_Dir
+                              & Directory_Separator
+                              & (String (Given_Target.Value.Text))
+                              & Directory_Separator
+                              & String (Conf.Runtime (Index))
+                              & Directory_Separator
+                              & "share"
+                              & Directory_Separator
+                              & "gpr");
+                           Append
+                             (Toolchain_Dir
+                              & Directory_Separator
+                              & (String (Given_Target.Value.Text))
+                              & Directory_Separator
+                              & String (Conf.Runtime (Index))
+                              & Directory_Separator
+                              & "lib"
+                              & Directory_Separator
+                              & "gnat");
+                        end if;
+
+                        --  Explicitly specified target may be not in canonical
+                        --  form.
+
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Given_Target.Value.Text))
+                           & Directory_Separator
+                           & "share"
+                           & Directory_Separator
+                           & "gpr");
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Given_Target.Value.Text))
+                           & Directory_Separator
+                           & "lib"
+                           & Directory_Separator
+                           & "gnat");
+                     end if;
+
+                     if Canon_Set then
+                        --  Old cgpr files can miss Canonical_Target
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Canon_Target.Value.Text))
+                           & Directory_Separator
+                           & "share"
+                           & Directory_Separator
+                           & "gpr");
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Canon_Target.Value.Text))
+                           & Directory_Separator
+                           & "lib"
+                           & Directory_Separator
+                           & "gnat");
+                     end if;
+
+                     Append
+                       (Toolchain_Dir
+                        & Directory_Separator
+                        & "share"
+                        & Directory_Separator
+                        & "gpr");
+                     Append
+                       (Toolchain_Dir
+                        & Directory_Separator
+                        & "lib"
+                        & Directory_Separator
+                        & "gnat");
+
+                  end if;
+               end;
+
+               <<Next_Driver>>
+            end loop;
+
+         end if;
+
+      end loop;
+
+   end Update_Project_Search_Path_From_Config;
 
    --------------------
    -- Update_Sources --
