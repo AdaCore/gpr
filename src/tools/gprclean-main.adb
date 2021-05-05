@@ -430,7 +430,7 @@ procedure GPRclean.Main is
             end if;
 
             if Cleanup then
-               for F of S.Artifacts.List loop
+               for F of S.Artifacts.List_To_Clean loop
                   --  As S.Artifacts contains also files generated in library
                   --  directories, check if delete file is allowed
 

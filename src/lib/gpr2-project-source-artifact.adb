@@ -383,6 +383,20 @@ package body GPR2.Project.Source.Artifact is
    ----------
 
    function List (Self : Object) return GPR2.Path_Name.Set.Object is
+      Result : GPR2.Path_Name.Set.Object := Self.List_To_Clean;
+   begin
+      if Self.Has_Coverage then
+         Result.Append (Self.Coverage);
+      end if;
+
+      return Result;
+   end List;
+
+   -------------------
+   -- List_To_Clean --
+   -------------------
+
+   function List_To_Clean (Self : Object) return GPR2.Path_Name.Set.Object is
       P_Source : constant GPR2.Project.Source.Object := Self.Source;
       Source   : constant GPR2.Source.Object := P_Source.Source;
       Lang     : constant Name_Type := Source.Language;
@@ -453,12 +467,8 @@ package body GPR2.Project.Source.Artifact is
          Result.Append (Self.Callgraph);
       end if;
 
-      if Self.Has_Coverage then
-         Result.Append (Self.Coverage);
-      end if;
-
       return Result;
-   end List;
+   end List_To_Clean;
 
    -----------------
    -- Object_Code --
