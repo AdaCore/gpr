@@ -1740,6 +1740,9 @@ package body GPR2.Parser.Project is
 
          New_Item : Boolean := True;
 
+         Force_Append : Boolean := False;
+         --  When True new value are always added to list
+
          function Parser (Node : GPR_Node'Class) return Visit_Status;
 
          procedure Record_Value (Value : Source_Reference.Value.Object)
@@ -2016,15 +2019,58 @@ package body GPR2.Parser.Project is
                Status := Over;
             end Handle_Variable;
 
+            function Terms_Parser
+              (Node : GPR_Node'Class) return Visit_Status;
+            --  Parser for the terms tree
+
+            ------------------
+            -- Terms_Parser --
+            ------------------
+
+            function Terms_Parser
+              (Node : GPR_Node'Class) return Visit_Status
+            is
+            begin
+               case Kind (Node) is
+                  when GPR_Terms =>
+                     null;
+
+                  when others =>
+                     return Parser (Node);
+               end case;
+
+               return Into;
+            end Terms_Parser;
+
          begin
             case Kind (Node) is
                when GPR_Terms =>
+                  if Result.Values.Length /= 0 and then Result.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "literal string list cannot appear in a string",
+                           Get_Source_Reference (Self.File, Node)));
+                  end if;
+
                   --  We are opening not a single element but an expression
                   --  list.
                   Result.Single := False;
 
+                  --  Handle '&' found in ("A" & "B", "C") as value extension
+                  Force_Append := False;
+
+                  --  Parse Terms tree
+                  Traverse (GPR_Node (Node), Terms_Parser'Access);
+
+                  --  Handle '&' found in () & "A as values list append
+
+                  Force_Append := True;
+
+                  Status := Over;
+
                when GPR_Term_List =>
-                  --  A new value is found
+                  --  A new value parsing is starting
                   New_Item := True;
 
                when GPR_String_Literal =>
@@ -2052,7 +2098,7 @@ package body GPR2.Parser.Project is
 
          procedure Record_Value (Value : Source_Reference.Value.Object) is
          begin
-            if New_Item then
+            if New_Item or else Force_Append then
                Result.Values.Append (Value);
                New_Item := False;
 
@@ -2088,8 +2134,13 @@ package body GPR2.Parser.Project is
 
             --  If we add a list, then the final value must be a list
 
-            if not Values.Single then
+            if not Values.Single and then Result.Single then
                Result.Single := False;
+
+               --  When parsing a list '&' should be used as append to list
+               --  ("a") & "b" => ("a", "b")
+
+               Force_Append := True;
             end if;
          end Record_Values;
 
