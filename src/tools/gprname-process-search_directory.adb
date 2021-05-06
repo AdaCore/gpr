@@ -331,7 +331,7 @@ begin
                                    Language   => Ada_Lang,
                                    Unit_Based => True);
 
-                        Unit_Count : Natural := 0;
+                        Unit_Index : Natural := 0;
 
                      begin
                         GNAT.OS_Lib.Free (Compiler_Args (Compiler_Args'Last));
@@ -347,6 +347,8 @@ begin
                               Match (Matcher, To_String (Line), Matches);
 
                               if Matches (0) /= GNAT.Regpat.No_Match then
+                                 Unit_Index := Unit_Index + 1;
+
                                  declare
                                     Name : constant Name_Type :=
                                              Name_Type
@@ -359,7 +361,7 @@ begin
 
                                     Index_In_Source : constant Natural :=
                                                         (if Is_Multi_Unit
-                                                         then (Unit_Count + 1)
+                                                         then Unit_Index
                                                          else 0);
                                  begin
                                     Put_Line
@@ -379,7 +381,6 @@ begin
                                          ("        -> predefined unit """
                                           & String (Name) & """ ignored", Low);
                                     else
-                                       Unit_Count := Unit_Count + 1;
                                        Src.Append_Unit
                                          (Create
                                             (Name, Kind, Index_In_Source));
@@ -388,10 +389,7 @@ begin
                               end if;
                            end loop;
 
-                           --  Unit_Count could be zero here, if we got only
-                           --  predefined units and skipped them.
-
-                           if Unit_Count > 0 then
+                           if Src.Has_Units then
                               Update_Lang_Sources_Map (Lang_Sources_Map, Src);
                            end if;
                         end if;

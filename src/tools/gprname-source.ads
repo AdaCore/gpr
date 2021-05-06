@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -67,6 +67,9 @@ package GPRname.Source is
      with Pre => Self.Unit_Based;
    --  Returns the unit(s) declared in Self (requires Self to be unit-based)
 
+   function Has_Units (Self : Object) return Boolean;
+   --  Returns True if Self is unit based and has units
+
 private
 
    type Object (Unit_Based : Boolean) is tagged record
@@ -97,5 +100,8 @@ private
 
    function Units (Self : Object) return Unit.Vector.Object is
      (Self.Units);
+
+   function Has_Units (Self : Object) return Boolean is
+     (Self.Unit_Based and then not Self.Units.Is_Empty);
 
 end GPRname.Source;
