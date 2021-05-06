@@ -1,0 +1,2 @@
+description: Check gpr2 tools not crashing when path separator at begin or end of PATH, GPR_PROJECT_PATH, ADA_PROJECT_PATH
+driver: python_script

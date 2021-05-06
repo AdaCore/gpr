@@ -3680,8 +3680,7 @@ package body GPR2.Project.Tree is
       Canon_Set    : Boolean := False;
       Given_Set    : Boolean := False;
 
-      function Is_Bin_Path (T_Path : String) return Boolean is
-        (Directories.Simple_Name (T_Path) = "bin");
+      function Is_Bin_Path (T_Path : String) return Boolean;
 
       procedure Append (Dir : String);
 
@@ -3694,6 +3693,19 @@ package body GPR2.Project.Tree is
          Self.Search_Paths.Append
            (Path_Name.Create_Directory (Filename_Type (Dir)));
       end Append;
+
+      -----------------
+      -- Is_Bin_Path --
+      -----------------
+
+      function Is_Bin_Path (T_Path : String) return Boolean
+      is
+      begin
+         return Directories.Simple_Name (T_Path) = "bin";
+      exception
+         when Ada.IO_Exceptions.Name_Error =>
+            return False;
+      end Is_Bin_Path;
 
    begin
       if not Conf.Is_Defined then
