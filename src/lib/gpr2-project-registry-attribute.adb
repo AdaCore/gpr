@@ -1152,7 +1152,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (Value_Type (Body_Suffix)),
+      Default              => Create ("ada", Value_Type (Body_Suffix)),
       Default_Is_Reference => True);
 
    --  naming.casing
