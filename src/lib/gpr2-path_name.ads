@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -186,7 +186,7 @@ package GPR2.Path_Name is
 
    function To_OS_Case (Name : String) return String with Inline;
    --  If filenames is case insensitive converts path name to lowercase,
-   --  returns the same value othervise.
+   --  returns the same value otherwise.
 
    function Change_Extension
      (Self : Object; Extension : Value_Type) return Object
