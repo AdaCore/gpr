@@ -46,6 +46,9 @@ with GPR2.Project.View.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Version;
 with GPR2.Source;
+with GPR2.Source_Reference;
+with GPR2.Source_Reference.Value;
+
 with GPRtools;
 
 package body GPRinstall.Install is
@@ -1833,6 +1836,24 @@ package body GPRinstall.Install is
                      Opts.Append ("-l" & String (L.Library_Name));
                   end if;
                end loop;
+            end if;
+
+            --  Append Library_Options to Opts list
+
+            if Proj.Is_Library then
+               declare
+                  Library_Options : GPR2.Project.Attribute.Object;
+               begin
+                  if Proj.Check_Attribute
+                    (Name           => A.Library_Options,
+                     Check_Extended => True,
+                     Result         => Library_Options)
+                  then
+                     for Value of Library_Options.Values loop
+                        Opts.Append (Value.Text);
+                     end loop;
+                  end if;
+               end;
             end if;
 
             if Opts.Length = 0 then
