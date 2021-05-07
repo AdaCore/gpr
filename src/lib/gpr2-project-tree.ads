@@ -81,22 +81,19 @@ package GPR2.Project.Tree is
    --  Returns True if Left and Right are the same tree
 
    procedure Load
-     (Self                    : in out Object;
-      Filename                : Path_Name.Object;
-      Context                 : GPR2.Context.Object;
-      Config                  : Configuration.Object      :=
-                                  Configuration.Undefined;
-      Project_Dir             : Path_Name.Object          :=
-                                  Path_Name.Undefined;
-      Build_Path              : Path_Name.Object          :=
-                                  Path_Name.Undefined;
-      Subdirs                 : Optional_Name_Type        := No_Name;
-      Src_Subdirs             : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib        : Boolean                   := True;
-      Absent_Dir_Error        : Boolean                   := False;
-      Implicit_With           : GPR2.Path_Name.Set.Object :=
-                                  GPR2.Path_Name.Set.Empty_Set;
-      Missing_Import_Is_Error : Boolean                   := True)
+     (Self             : in out Object;
+      Filename         : Path_Name.Object;
+      Context          : GPR2.Context.Object;
+      Config           : Configuration.Object      := Configuration.Undefined;
+      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type        := No_Name;
+      Src_Subdirs      : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib : Boolean                   := True;
+      Absent_Dir_Error : Boolean                   := False;
+      Implicit_With    : GPR2.Path_Name.Set.Object :=
+                           GPR2.Path_Name.Set.Empty_Set;
+      Pre_Conf_Mode    : Boolean                   := False)
      with Pre => Filename.Is_Defined
                  and then (not Filename.Is_Implicit_Project
                            or else Project_Dir.Is_Defined);
@@ -499,32 +496,32 @@ private
    --  Root and Aggregate contexts
 
    type Object is tagged limited record
-      Self                    : access Object := null;
-      Root                    : View.Object;
-      Conf                    : Project.Configuration.Object;
-      Base                    : GPR2.KB.Object;
-      Runtime                 : View.Object;
-      Units                   : Name_View.Map;
-      Sources                 : Filename_View.Map;
-      Rooted_Sources          : Source_Maps.Map;
-      Messages                : aliased Log.Object;
-      Search_Paths            : Path_Name.Set.Object :=
-                                  Default_Search_Paths (True);
-      Implicit_With           : Path_Name.Set.Object;
-      Project_Dir             : Path_Name.Object;
-      Build_Path              : Path_Name.Object;
-      Subdirs                 : Unbounded_String;
-      Src_Subdirs             : Unbounded_String;
-      Check_Shared_Lib        : Boolean := True;
-      Absent_Dir_Error        : Boolean := False;
-      Missing_Import_Is_Error : Boolean := True;
-      Views                   : aliased View_Maps.Map;
-      Views_Set               : View.Set.Object;
+      Self             : access Object := null;
+      Root             : View.Object;
+      Conf             : Project.Configuration.Object;
+      Base             : GPR2.KB.Object;
+      Runtime          : View.Object;
+      Units            : Name_View.Map;
+      Sources          : Filename_View.Map;
+      Rooted_Sources   : Source_Maps.Map;
+      Messages         : aliased Log.Object;
+      Search_Paths     : Path_Name.Set.Object :=
+                           Default_Search_Paths (True);
+      Implicit_With    : Path_Name.Set.Object;
+      Project_Dir      : Path_Name.Object;
+      Build_Path       : Path_Name.Object;
+      Subdirs          : Unbounded_String;
+      Src_Subdirs      : Unbounded_String;
+      Check_Shared_Lib : Boolean := True;
+      Absent_Dir_Error : Boolean := False;
+      Pre_Conf_Mode    : Boolean := True;
+      Views            : aliased View_Maps.Map;
+      Views_Set        : View.Set.Object;
       --  All projects in registration order
-      Context                 : Two_Contexts;
+      Context          : Two_Contexts;
       --  Root and aggregate contexts
-      View_Ids                : aliased Id_Maps.Map;
-      View_DAG                : GPR2.View_Ids.DAGs.DAG;
+      View_Ids         : aliased Id_Maps.Map;
+      View_DAG         : GPR2.View_Ids.DAGs.DAG;
    end record;
 
    function "=" (Left, Right : Object) return Boolean

@@ -41,7 +41,6 @@ package body GPR2.Project is
    procedure Append_Default_Search_Paths
      (Paths : in out Path_Name.Set.Object)
    is
-      Prefix : constant String := Get_Tools_Directory;
 
       procedure Append (Value : String)
         with Post => (if Value'Length = 0
@@ -120,19 +119,6 @@ package body GPR2.Project is
          Add_List (Environment_Variables.Value ("ADA_PROJECT_PATH"));
       end if;
 
-      if Prefix /= "" then
-         --  <prefix>/share/gpr
-
-         Append
-           (Directories.Compose
-              (Directories.Compose (Prefix, "share"), "gpr"));
-
-         --  <prefix>/lib/gnat
-
-         Append
-           (Directories.Compose
-              (Directories.Compose (Prefix, "lib"), "gnat"));
-      end if;
    end Append_Default_Search_Paths;
 
    ------------

@@ -1139,21 +1139,19 @@ package body GPR2.Project.Tree is
    ----------
 
    procedure Load
-     (Self                    : in out Object;
-      Filename                : Path_Name.Object;
-      Context                 : GPR2.Context.Object;
-      Config                  : PC.Object                 := PC.Undefined;
-      Project_Dir             : Path_Name.Object          :=
-                                  Path_Name.Undefined;
-      Build_Path              : Path_Name.Object          :=
-                                  Path_Name.Undefined;
-      Subdirs                 : Optional_Name_Type        := No_Name;
-      Src_Subdirs             : Optional_Name_Type        := No_Name;
-      Check_Shared_Lib        : Boolean                   := True;
-      Absent_Dir_Error        : Boolean                   := False;
-      Implicit_With           : GPR2.Path_Name.Set.Object :=
-                                  GPR2.Path_Name.Set.Empty_Set;
-      Missing_Import_Is_Error : Boolean                   := True)
+     (Self             : in out Object;
+      Filename         : Path_Name.Object;
+      Context          : GPR2.Context.Object;
+      Config           : PC.Object                 := PC.Undefined;
+      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type        := No_Name;
+      Src_Subdirs      : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib : Boolean                   := True;
+      Absent_Dir_Error : Boolean                   := False;
+      Implicit_With    : GPR2.Path_Name.Set.Object :=
+                           GPR2.Path_Name.Set.Empty_Set;
+      Pre_Conf_Mode    : Boolean                   := False)
    is
 
       Project_Path  : Path_Name.Object;
@@ -1222,7 +1220,7 @@ package body GPR2.Project.Tree is
       Self.Implicit_With    := Implicit_With;
       Self.Absent_Dir_Error := Absent_Dir_Error;
 
-      Self.Missing_Import_Is_Error := Missing_Import_Is_Error;
+      Self.Pre_Conf_Mode := Pre_Conf_Mode;
 
       if Filename.Is_Implicit_Project then
          Project_Path := Project_Dir;
@@ -1312,8 +1310,14 @@ package body GPR2.Project.Tree is
          Set_Context (Self, Context);
 
          Definition.Check_Same_Name_Extended (Self.Root);
-         Definition.Check_Aggregate_Library_Dirs (Self.Root);
-         Definition.Check_Package_Naming (Self.Root);
+         if not Self.Pre_Conf_Mode then
+            --  We only need those checks if we are not in pre-confinguration
+            --  stage, otherwise we might have errors if a project refferences
+            --  corresponding attributes from a not yet found project and their
+            --  values default to empty ones.
+            Definition.Check_Aggregate_Library_Dirs (Self.Root);
+            Definition.Check_Package_Naming (Self.Root);
+         end if;
       end if;
 
       if Self.Messages.Has_Error then
@@ -1641,14 +1645,14 @@ package body GPR2.Project.Tree is
 
          Self.Load
            (Filename, Context,
-            Project_Dir             => Project_Dir,
-            Build_Path              => Build_Path,
-            Subdirs                 => Subdirs,
-            Src_Subdirs             => Src_Subdirs,
-            Check_Shared_Lib        => Check_Shared_Lib,
-            Absent_Dir_Error        => False,
-            Implicit_With           => Implicit_With,
-            Missing_Import_Is_Error => False);
+            Project_Dir      => Project_Dir,
+            Build_Path       => Build_Path,
+            Subdirs          => Subdirs,
+            Src_Subdirs      => Src_Subdirs,
+            Check_Shared_Lib => Check_Shared_Lib,
+            Absent_Dir_Error => False,
+            Implicit_With    => Implicit_With,
+            Pre_Conf_Mode    => True);
          --  Ignore possible missing dirs and imported projects since they can
          --  depend on the result of autoconfiguration.
 
@@ -2240,9 +2244,9 @@ package body GPR2.Project.Tree is
                   else
                      Self.Messages.Append
                        (GPR2.Message.Create
-                          (Level   => (if Self.Missing_Import_Is_Error
-                                       then Message.Error
-                                       else Message.Warning),
+                          (Level   => (if Self.Pre_Conf_Mode
+                                       then Message.Warning
+                                       else Message.Error),
                            Message => "imported project file """
                                         & String (Import.Path_Name.Name)
                                         & """ not found",
@@ -2266,7 +2270,9 @@ package body GPR2.Project.Tree is
                   else
                      Self.Messages.Append
                        (GPR2.Message.Create
-                          (Level   => Message.Error,
+                          (Level   => (if Self.Pre_Conf_Mode
+                                       then Message.Warning
+                                       else Message.Error),
                            Message => "extended project file """
                                         & String (Extended_Name)
                                         & """ not found",
@@ -2878,7 +2884,8 @@ package body GPR2.Project.Tree is
             P_Data.Attrs,
             P_Data.Vars,
             P_Data.Packs,
-            P_Data.Types);
+            P_Data.Types,
+            Self.Pre_Conf_Mode);
 
          if View.Qualifier not in Aggregate_Kind then
             if P_Data.Attrs.Contains (PRA.Project_Files) then
@@ -3755,7 +3762,8 @@ package body GPR2.Project.Tree is
                   Driver_Dir    : constant String :=
                                     Normalize_Pathname
                                       (Directories.Containing_Directory
-                                         (String (Driver.Value.Text)));
+                                         (String (Driver.Value.Text)),
+                                       Case_Sensitive => False);
                   Toolchain_Dir : constant String :=
                                     Directories.Containing_Directory
                                       (Driver_Dir);
@@ -3763,7 +3771,9 @@ package body GPR2.Project.Tree is
                                     Name_Type (Driver.Index.Value);
                begin
 
-                  if Driver_Dir = Normalize_Pathname (Sub) then
+                  if Driver_Dir =
+                    Normalize_Pathname (Sub, Case_Sensitive => False)
+                  then
 
                      if Given_Set then
 

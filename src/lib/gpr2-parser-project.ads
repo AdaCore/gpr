@@ -72,14 +72,15 @@ package GPR2.Parser.Project is
    --  to be used during autoconfiguration step.
 
    procedure Process
-     (Self    : in out Object;
-      Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
-      View    : GPR2.Project.View.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object;
-      Types   : in out GPR2.Project.Typ.Set.Object)
+     (Self          : in out Object;
+      Tree          : GPR2.Project.Tree.Object;
+      Context       : GPR2.Context.Object;
+      View          : GPR2.Project.View.Object;
+      Attrs         : in out GPR2.Project.Attribute.Set.Object;
+      Vars          : in out GPR2.Project.Variable.Set.Object;
+      Packs         : in out GPR2.Project.Pack.Set.Object;
+      Types         : in out GPR2.Project.Typ.Set.Object;
+      Pre_Conf_Mode : Boolean := False)
      with Pre => Self.Is_Defined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed.

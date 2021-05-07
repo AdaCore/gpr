@@ -1025,14 +1025,15 @@ package body GPR2.Parser.Project is
    -------------
 
    procedure Process
-     (Self    : in out Object;
-      Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
-      View    : GPR2.Project.View.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object;
-      Types   : in out GPR2.Project.Typ.Set.Object)
+     (Self          : in out Object;
+      Tree          : GPR2.Project.Tree.Object;
+      Context       : GPR2.Context.Object;
+      View          : GPR2.Project.View.Object;
+      Attrs         : in out GPR2.Project.Attribute.Set.Object;
+      Vars          : in out GPR2.Project.Variable.Set.Object;
+      Packs         : in out GPR2.Project.Pack.Set.Object;
+      Types         : in out GPR2.Project.Typ.Set.Object;
+      Pre_Conf_Mode : Boolean := False)
    is
 
       type Indexed_Values is record
@@ -1080,6 +1081,10 @@ package body GPR2.Parser.Project is
                             (Single         => False,
                              Values         => <>,
                              Indexed_Values => Unfilled_Indexed_Values);
+
+      function Missing_Project_Error_Level return Message.Level_Value is
+        (if Pre_Conf_Mode then Message.Warning else Message.Error);
+      --  Returns expected level for missing import messages
 
       function Ensure_Source_Loc
         (Values : Containers.Source_Value_List;
@@ -1701,7 +1706,7 @@ package body GPR2.Parser.Project is
 
             Tree.Log_Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Missing_Project_Error_Level,
                   "Project """ & String (Project) & """ not found",
                   Get_Source_Reference (Self.File, Node)));
          end if;
@@ -2293,7 +2298,11 @@ package body GPR2.Parser.Project is
                                               From_View  => From_View,
                                               Source_Ref => Source_Ref);
                   else
-                     Error ("project " & String (Project) & " is undefined");
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Missing_Project_Error_Level,
+                           "project " & String (Project) & " is undefined",
+                           Source_Ref));
                   end if;
                else
                   return Get_Variable_Ref (Variable   => Variable,
@@ -3035,7 +3044,7 @@ package body GPR2.Parser.Project is
             elsif not View.Is_Defined then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Missing_Project_Error_Level,
                      Sloc    => Sloc,
                      Message =>
                        "project '" & String (Project) & "' is undefined"));
@@ -3107,7 +3116,7 @@ package body GPR2.Parser.Project is
             elsif not View.Is_Defined then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Missing_Project_Error_Level,
                      Sloc    => Sloc,
                      Message =>
                        "project '" & String (Project) & "' is undefined"));
