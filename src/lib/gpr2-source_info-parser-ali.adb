@@ -32,6 +32,7 @@ with GNATCOLL.Utils;
 with GPR2.Path_Name;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.Source.Artifact;
+with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Info.Parser.Registry;
 
@@ -410,6 +411,12 @@ package body GPR2.Source_Info.Parser.ALI is
 
          function Time_Stamp (S : String) return Ada.Calendar.Time;
 
+         function To_Unit_Name return String;
+         --  This routine is needed only on GNAT version 7.2.2 and older,
+         --  because unit name and kind is not defined in D lines.
+         --  Get unit name from project tree if available.
+         --  Put unresolved dependency into queue to resolve it later.
+
          --------------
          -- Checksum --
          --------------
@@ -481,21 +488,69 @@ package body GPR2.Source_Info.Parser.ALI is
          Sfile  : constant String            := Get_Token (True);
          Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
+         Forth  : constant String            :=
+                    IO.Get_Token (A_Handle, Stop_At_LF => True);
+         --  Could be empty on *.adc file dependency, preprocessor files or on
+         --  GNAT version 7.2.2 and older.
 
          use GPR2.Unit;
 
-         Kind : Library_Unit_Type; -- Unit_Kind
-         Name : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True);
+         Kind : Library_Unit_Type;
+         Taken_From_Tree : Boolean := False;
+
+         ------------------
+         -- To_Unit_Name --
+         ------------------
+
+         function To_Unit_Name return String is
+            Path : constant Path_Name.Object :=
+                     Path_Name.Create_File
+                       (Simple_Name (Sfile), Path_Name.No_Resolution);
+            Tree : constant access Project.Tree.Object := View.Tree;
+            View : Project.View.Object :=
+                     Tree.Get_View (Path, Update => False);
+            Source : Project.Source.Object;
+         begin
+            if not View.Is_Defined then
+               Tree.Update_Sources
+                 (Stop_On_Error => False,
+                  With_Runtime  => True,
+                  Backends      => No_Backends);
+
+               View := Tree.Get_View (Path, Update => False);
+
+               if not View.Is_Defined then
+                  return "";
+               end if;
+            end if;
+
+            Source := View.Source (Path, Need_Update => False);
+
+            pragma Assert (Source.Is_Defined);
+
+            Taken_From_Tree := True;
+            Kind := Source.Source.Kind;
+
+            return To_Lower (Source.Source.Unit_Name);
+         end To_Unit_Name;
+
+         Name : constant String :=
+                  (if Forth = "" and then Chksum /= 0 -- GNAT 7.2.2 and older
+                   then To_Unit_Name else Forth);
          --  Unit_Name
-         --  Could be empty on *.adc file dependency
 
          function Kind_Len return Natural is
-            (if Kind in S_Spec | S_Body then 2 else 0);
+           (if Kind in S_Spec | S_Body and then not Taken_From_Tree
+            then 2 else 0);
          --  Length of suffix denoting dependency kind
 
+         function Image (Dep : Dependency) return String is
+           ('"' & To_String (Dep.Sfile) & ' ' & Formatting.Image (Dep.Stamp)
+            & ' ' & To_Hex_String (Dep.Checksum) & '"');
+
          Suffix : constant String :=
-                     (if Name'Length > 2
-                      then Name (Name'Last - 1 .. Name'Last)
+                     (if Forth'Length > 2
+                      then Forth (Forth'Last - 1 .. Forth'Last)
                       else "");
          Position : Dependency_Maps.Cursor;
          C_Cache  : Cache_Map.Cursor;
@@ -511,10 +566,11 @@ package body GPR2.Source_Info.Parser.ALI is
             Kind := S_Body;
 
          elsif Name = "" then
-            --  *.adc file dependency
+            --  *.adc and preprocessor file dependencies
+
             return;
 
-         else
+         elsif not Taken_From_Tree then
             Kind := S_Separate;
 
             if GNATCOLL.Utils.Starts_With
@@ -564,9 +620,13 @@ package body GPR2.Source_Info.Parser.ALI is
            and then Dependency_Maps.Element (Position)
                     /= (+Sfile, Stamp, Chksum)
          then
+            Ada.Text_IO.Put_Line
+              ("# " & Image ((+Sfile, Stamp, Chksum)));
+
             raise Scan_ALI_Error with
-              Name & " already in dependencies of " & LI.Value
-              & " with different data";
+              '"' & Name & """ already in dependencies of " & LI.Value
+              & " with different data "
+              & Image (Dependency_Maps.Element (Position));
          end if;
       end Fill_Dep;
 

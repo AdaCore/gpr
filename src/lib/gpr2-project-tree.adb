@@ -102,6 +102,11 @@ package body GPR2.Project.Tree is
       Result : in out Source.Object) return Boolean;
    --  Get source by unit name and kind from the same subtree with the View.
 
+   procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean);
+
+   function Ali_Parser_Is_Enabled (Tree : Object) return Boolean
+   is (Tree.Ali_Parser_Is_On);
+
    function Has_Source
      (View : Project.View.Object; Name : Simple_Name) return Boolean
    is
@@ -513,6 +518,15 @@ package body GPR2.Project.Tree is
    begin
       return Position.Views (Position.Current);
    end Element;
+
+   -----------------------
+   -- Enable_Ali_Parser --
+   -----------------------
+
+   procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean) is
+   begin
+      Tree.Ali_Parser_Is_On := Enable;
+   end Enable_Ali_Parser;
 
    -----------
    -- Error --
@@ -945,7 +959,8 @@ package body GPR2.Project.Tree is
 
    function Get_View
      (Self   : Object;
-      Source : Path_Name.Object) return Project.View.Object
+      Source : Path_Name.Object;
+      Update : Boolean := True) return Project.View.Object
    is
       Filename : constant Filename_Type :=
                    (if Source.Has_Dir_Name
@@ -956,18 +971,19 @@ package body GPR2.Project.Tree is
       if Filename_View.Has_Element (Pos) then
          return Filename_View.Element (Pos);
 
-      else
+      elsif Update then
          --  Try to update sources and check again
 
          Update_Sources (Self);
+
          Pos := Self.Sources.Find (Filename);
 
          if Filename_View.Has_Element (Pos) then
             return Filename_View.Element (Pos);
-         else
-            return Project.View.Undefined;
          end if;
       end if;
+
+      return Project.View.Undefined;
    end Get_View;
 
    function Get_View
@@ -4138,9 +4154,13 @@ package body GPR2.Project.Tree is
       With_Runtime  : Boolean := False;
       Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
-      Was_RT : Boolean := False;
+      use type Source_Info.Backend_Set;
+      Internal : constant Boolean := Backends = Source_Info.No_Backends;
+      Was_RT   : Boolean := False;
    begin
-      Self.Self.Rooted_Sources.Clear;
+      if not Internal then
+         Self.Self.Rooted_Sources.Clear;
+      end if;
 
       for V of reverse Self.Ordered_Views loop
          if V.Is_Runtime then
@@ -4160,7 +4180,7 @@ package body GPR2.Project.Tree is
            (Self.Runtime, Stop_On_Error, Backends);
       end if;
 
-      if Self.Check_Shared_Lib then
+      if not Internal and then Self.Check_Shared_Lib then
          for View of Self.Views_Set loop
             declare
                procedure Check_Shared_Lib (PV : Project.View.Object);
@@ -4381,4 +4401,6 @@ begin
    Definition.Set_Source        := Set_Source'Access;
    Definition.Remove_Source     := Remove_Source'Access;
    Definition.Get_Context       := Get_Context'Access;
+   Definition.Enable_Ali_Parser := Enable_Ali_Parser'Access;
+   Definition.Ali_Parser_Is_On  := Ali_Parser_Is_Enabled'Access;
 end GPR2.Project.Tree;

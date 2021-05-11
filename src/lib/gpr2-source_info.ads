@@ -289,7 +289,7 @@ private
    function Is_Defined (Self : Object) return Boolean is (Self /= Undefined);
 
    function Checksum (Self : Object) return Word is
-      (Self.Checksum);
+     (Self.Checksum);
 
    function Has_Units (Self : Object) return Boolean is (Self.Is_Ada);
 

@@ -59,7 +59,6 @@ package GPR2.Project.Tree is
 
    use type GPR2.Context.Object;
    use type GPR2.Project.View.Object;
-   use type Source_Info.Backend_Set;
 
    type Object is tagged limited private
      with Constant_Indexing => Constant_Reference,
@@ -319,10 +318,13 @@ package GPR2.Project.Tree is
 
    function Get_View
      (Self   : Object;
-      Source : Path_Name.Object) return Project.View.Object
+      Source : Path_Name.Object;
+      Update : Boolean := True) return Project.View.Object
      with Pre => Self.Is_Defined;
    --  Gets the view in which source file is defined, returns Undefined if the
    --  source file has not been found.
+   --  If Update is True and view with this source is not found, than Update
+   --  sources in all views and try to find again.
 
    procedure Invalidate_Sources
      (Self : Object;
@@ -339,7 +341,7 @@ package GPR2.Project.Tree is
       Stop_On_Error : Boolean := True;
       With_Runtime  : Boolean := False;
       Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
-     with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
+     with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
@@ -525,6 +527,7 @@ private
       --  Root and aggregate contexts
       View_Ids         : aliased Id_Maps.Map;
       View_DAG         : GPR2.View_Ids.DAGs.DAG;
+      Ali_Parser_Is_On : Boolean := True;
    end record;
 
    function "=" (Left, Right : Object) return Boolean

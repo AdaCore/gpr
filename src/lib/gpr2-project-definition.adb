@@ -68,6 +68,14 @@ package body GPR2.Project.Definition is
    function Languages (Def : Data) return Containers.Source_Value_List is
      (Def.Attrs.Languages.Values);
 
+   procedure Update_Sources_List
+     (Def           : in out Data;
+      View          : Project.View.Object;
+      Stop_On_Error : Boolean);
+
+   procedure Update_Sources_Parse
+     (Def : in out Data; Backends : Source_Info.Backend_Set);
+
    ----------------------------------
    -- Check_Aggregate_Library_Dirs --
    ----------------------------------
@@ -629,6 +637,32 @@ package body GPR2.Project.Definition is
       View          : Project.View.Object;
       Stop_On_Error : Boolean;
       Backends      : Source_Info.Backend_Set)
+   is
+      Tree : constant access Project.Tree.Object := View.Tree;
+   begin
+      if Backends = Source_Info.No_Backends then
+         Enable_Ali_Parser (Tree.all, False);
+      end if;
+
+      Update_Sources_List (Def, View, Stop_On_Error);
+
+      if Backends = Source_Info.No_Backends then
+         Enable_Ali_Parser (Tree.all, True);
+
+      elsif not View.Is_Extended and then Ali_Parser_Is_On (Tree.all) then
+         Source_Info.Parser.Registry.Clear_Cache;
+         Update_Sources_Parse (Def, Backends);
+      end if;
+   end Update_Sources;
+
+   -------------------------
+   -- Update_Sources_List --
+   -------------------------
+
+   procedure Update_Sources_List
+     (Def           : in out Data;
+      View          : Project.View.Object;
+      Stop_On_Error : Boolean)
    is
       use type MD5.Binary_Message_Digest;
       use type Project.Attribute.Object;
@@ -2205,11 +2239,15 @@ package body GPR2.Project.Definition is
 
          for Agg of Def.Aggregated loop
             declare
-               DA           : constant Const_Ref := Get_RO (Agg);
-               In_Interface : Boolean            := False;
+               DA           : constant Ref := Get_RW (Agg);
+               In_Interface : Boolean      := False;
                A_Set        : Project.Source.Set.Object;
             begin
-               for P of Agg.Sources loop
+               Update_Sources
+                 (DA.all, Agg, Stop_On_Error => True,
+                  Backends => Source_Info.No_Backends);
+
+               for P of Agg.Sources (Need_Update => False) loop
                   In_Interface :=
                     Interface_Sources.Contains
                       (P.Source.Path_Name.Simple_Name);
@@ -2488,35 +2526,6 @@ package body GPR2.Project.Definition is
 
       Def.Sources_Signature := Current_Signature;
 
-      Source_Info.Parser.Registry.Clear_Cache;
-
-      if not View.Is_Extended then
-         declare
-            Def_Sources : Project.Source.Set.Object;
-            Def_Src_Map : Simple_Name_Source.Map;
-            Position    : Simple_Name_Source.Cursor;
-            Inserted    : Boolean;
-            SW          : Project.Source.Object;
-         begin
-            for S of Def.Sources loop
-               SW := S;
-               SW.Update (Backends);
-               Def_Sources.Insert (SW);
-               Def_Src_Map.Insert
-                 (SW.Path_Name.Simple_Name, SW, Position, Inserted);
-
-               pragma Assert
-                 (Inserted or else SW.Source.Language /= "Ada",
-                  String (SW.Path_Name.Simple_Name) & " duplicated");
-
-               Set_Source (SW);
-            end loop;
-
-            Def.Sources     := Def_Sources;
-            Def.Sources_Map := Def_Src_Map;
-         end;
-      end if;
-
       if Stop_On_Error
         and then Message_Count < Tree.Log_Messages.Count
         and then Tree.Log_Messages.Has_Error
@@ -2524,7 +2533,37 @@ package body GPR2.Project.Definition is
          --  Some error messages have been logged, raise an exception
          raise Project_Error with "cannot retrieve the sources";
       end if;
-   end Update_Sources;
+   end Update_Sources_List;
+
+   --------------------------
+   -- Update_Sources_Parse --
+   --------------------------
+
+   procedure Update_Sources_Parse
+     (Def : in out Data; Backends : Source_Info.Backend_Set)
+   is
+      Def_Sources : Project.Source.Set.Object;
+      Def_Src_Map : Simple_Name_Source.Map;
+      Position    : Simple_Name_Source.Cursor;
+      Inserted    : Boolean;
+      SW          : Project.Source.Object;
+   begin
+      for S of Def.Sources loop
+         SW := S;
+         SW.Update (Backends);
+         Def_Sources.Insert (SW);
+         Def_Src_Map.Insert (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+
+         pragma Assert
+           (Inserted or else SW.Source.Language /= "Ada",
+            String (SW.Path_Name.Simple_Name) & " duplicated");
+
+         Set_Source (SW);
+      end loop;
+
+      Def.Sources     := Def_Sources;
+      Def.Sources_Map := Def_Src_Map;
+   end Update_Sources_Parse;
 
 begin
    --  Setup the default/built-in naming package

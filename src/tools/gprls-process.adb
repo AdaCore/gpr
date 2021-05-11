@@ -263,6 +263,7 @@ begin
       --  The maps should have Value_Path keys to support case-insensitive FS.
 
       use type Project.Source.Object;
+      use type Project.View.Object;
       use all type Project.Source.Naming_Exception_Kind;
 
       type Source_And_Index is record
@@ -272,16 +273,17 @@ begin
 
       function Path_Equal (Left, Right : Source_And_Index) return Boolean
       is (Left.Source = Right.Source
-          and then Left.Source.Path_Name.Value = Right.Source.Path_Name.Value
+          and then Left.Source.View.Namespace_Root =
+                   Right.Source.View.Namespace_Root
           and then Left.Index = Right.Index);
 
       type One_Type is range -1 .. 1;
 
-      function Compare (Left, Right : Name_Type) return One_Type
+      function Compare (Left, Right : Project.View.Object) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
-      function Compare (Left, Right : Path_Name.Full_Name) return One_Type
-      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+      --  function Compare (Left, Right : Path_Name.Full_Name) return One_Type
+      --  is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
       function Compare (Left, Right : Project.Source.Object) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
@@ -291,8 +293,7 @@ begin
 
       function Path_Less (Left, Right : Source_And_Index) return Boolean
       is (case Compare
-            (Left.Source.View.Namespace_Root.Name,
-             Right.Source.View.Namespace_Root.Name)
+            (Left.Source.View.Namespace_Root, Right.Source.View.Namespace_Root)
           is
              when -1 => True,
              when  1 => False,
@@ -300,13 +301,7 @@ begin
             (case Compare (Left.Source, Right.Source) is
                 when -1 => True,
                 when  1 => False,
-                when  0 =>
-               (case Compare
-                    (Left.Source.Path_Name.Value, Right.Source.Path_Name.Value)
-                is
-                   when -1 => True,
-                   when  1 => False,
-                   when  0 => Compare (Left.Index, Right.Index) = -1)));
+                when  0 => Compare (Left.Index, Right.Index) = -1));
 
       package Sources_By_Path is new Ada.Containers.Indefinite_Ordered_Sets
         (Source_And_Index, "<" => Path_Less, "=" => Path_Equal);
@@ -724,6 +719,15 @@ begin
 
                         Sources.Insert ((S, Index), Position, Inserted);
 
+                        if not Inserted
+                          and then S.Is_Aggregated
+                                   < Sources (Position).Source.Is_Aggregated
+                        then
+                           --  Prefer none aggregated, more information there
+
+                           Sources.Replace_Element (Position, (S, Index));
+                        end if;
+
                         return True;
                      end if;
 
@@ -813,7 +817,7 @@ begin
                      --  We prefer Is_Aggregated = False because it
                      --  has object files.
 
-                     Sources.Replace ((Element (S_Cur), 0));
+                     Sources.Replace_Element (Position, (Element (S_Cur), 0));
                   end if;
                end if;
             end loop;
@@ -840,14 +844,15 @@ begin
       if not Opt.Source_Parser and then not Opt.Gnatdist then
          for S of Sources loop
             For_Units : for CU of S.Source.Source.Units loop
-               if S.Source.Artifacts.Has_Dependency (CU.Index)
+               if CU.Kind /= Unit.S_Separate
+                 and then S.Source.Artifacts.Has_Dependency (CU.Index)
                  and then not S.Source.Artifacts.Dependency (CU.Index).Exists
                then
                   Full_Closure := False;
 
                   if S.Source.Has_Naming_Exception
                     and then S.Source.Naming_Exception
-                      = Project.Source.Multi_Unit
+                             = Project.Source.Multi_Unit
                   then
                      --  In case of multi-unit we have no information until the
                      --  unit is compiled. There is no need to report that
@@ -861,13 +866,7 @@ begin
 
                   else
                      Text_IO.Put_Line
-                       ("Can't find ALI "
-                        & String
-                          (if CU.Index > 1
-                           then S.Source.Artifacts.Dependency (CU.Index)
-                                .Simple_Name & " "
-                           else "")
-                        & "file for " & S.Source.Path_Name.Value);
+                       ("Can't find ALI file for " & S.Source.Path_Name.Value);
                   end if;
                end if;
             end loop For_Units;

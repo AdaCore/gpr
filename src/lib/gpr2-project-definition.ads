@@ -206,6 +206,12 @@ private package GPR2.Project.Definition is
    Apply_Root_And_Subdirs : access function
      (Self : View.Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
 
+   Enable_Ali_Parser : access procedure
+     (Tree : in out Project.Tree.Object; Enable : Boolean);
+
+   Ali_Parser_Is_On : access function
+     (Tree : Project.Tree.Object) return Boolean;
+
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
    -----------------------------------------------------------------------
@@ -263,7 +269,7 @@ private package GPR2.Project.Definition is
       View          : Project.View.Object;
       Stop_On_Error : Boolean;
       Backends      : Source_Info.Backend_Set)
-     with Pre => View.Is_Defined and then Backends /= Source_Info.No_Backends;
+     with Pre => View.Is_Defined;
    --  Ensure that the view definition sources are up-to-date. This is needed
    --  before computing the dependencies of a source in the project tree. This
    --  routine is called where needed and is there for internal use only.

@@ -502,26 +502,30 @@ package body GPR2.Project.Source is
 
    function Is_Overriden (Self : Object) return Boolean is
       use type Project.View.Object;
-      Try : Object;
+      Try       : Object;
+      Self_View : constant Project.View.Object := View (Self);
    begin
-      if not View (Self).Check_Source (Self.Path_Name.Simple_Name, Try)
-        or else View (Try) /= View (Self)
+      if Self_View.Check_Source (Self.Path_Name.Simple_Name, Try)
+        and then View (Try) /= Self_View
+        and then View (Try).Is_Extending (Parent => Self_View)
       then
          return True;
+      end if;
 
-      elsif not Self.Source.Has_Units then
+      if not Self.Source.Is_Ada then
          return False;
       end if;
 
-      for U of Self.Source.Units loop
-         if Definition.Check_Source_Unit (View (Self), U, Try)
-           and then View (Try) = View (Self)
+      for CU of Self.Source.Units loop
+         if Definition.Check_Source_Unit (Self_View, CU, Try)
+           and then View (Try) /= Self_View
+           and then View (Try).Is_Extending (Parent => Self_View)
          then
-            return False;
+            return True;
          end if;
       end loop;
 
-      return True;
+      return False;
    end Is_Overriden;
 
    ----------------
