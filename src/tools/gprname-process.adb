@@ -20,8 +20,10 @@ with Ada.Characters.Conversions;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
+with Ada.Strings.Wide_Wide_Unbounded;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
+with Ada.Wide_Wide_Text_IO;
 
 with GNAT.Case_Util;
 with GNAT.Directory_Operations;
@@ -803,6 +805,18 @@ begin
                      Rule     => Compilation_Unit_Rule);
 
       begin
+         if Has_Diagnostics (Unit) then
+            for D of Diagnostics (Unit) loop
+               Ada.Wide_Wide_Text_IO.Put_Line
+                 (Ada.Strings.Wide_Wide_Unbounded.To_Wide_Wide_String
+                    (D.Message));
+            end loop;
+
+            raise GPRname_Exception with
+              "could not create naming project file "
+              & Naming_Project_Path.Value;
+         end if;
+
          PP.Pretty_Print (Analysis_Unit => Unit);
 
          Stream_IO.Create

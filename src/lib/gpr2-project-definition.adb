@@ -942,7 +942,7 @@ package body GPR2.Project.Definition is
          --  Set Last_Dot to last dot index in result to split separate unit
          --  name.
 
-         function Right_Unit_Name (Unit_Name : String) return Boolean;
+         function Is_Valid_Unit_Name (Unit_Name : Name_Type) return Boolean;
          --  Check that unit name is correct
 
          -----------------------------
@@ -1278,7 +1278,7 @@ package body GPR2.Project.Definition is
 
             --  Some additional checks on the unit name
 
-            if not Right_Unit_Name (To_String (Result)) then
+            if not Is_Valid_Unit_Name (Name_Type (To_String (Result))) then
                goto Invalid;
             end if;
 
@@ -1293,87 +1293,23 @@ package body GPR2.Project.Definition is
             return "0"; -- Some dummy unit name
          end Compute_Unit_From_Filename;
 
-         ---------------------
-         -- Right_Unit_Name --
-         ---------------------
+         ------------------------
+         -- Is_Valid_Unit_Name --
+         ------------------------
 
-         function Right_Unit_Name (Unit_Name : String) return Boolean is
-            use Ada.Strings.Maps;
-         begin
-            --  Must start with a letter
+         function Is_Valid_Unit_Name (Unit_Name : Name_Type) return Boolean is
 
-            if not Is_In
-              (Unit_Name (Unit_Name'First),
-               Constants.Letter_Set or To_Set ("_"))
-            then
+            procedure On_Error (Text : String);
+
+            procedure On_Error (Text : String) is
+            begin
                Tree.Append_Message
-                 (Message.Create
-                    (Message.Error,
-                     "unit '" & Unit_Name  & "' not valid,"
-                     & " should start with a letter or an underscore",
-                     Source_Dir_Ref));
-               return False;
-            end if;
+                 (Message.Create (Message.Error, Text, Source_Dir_Ref));
+            end On_Error;
 
-            --  Cannot have dot and underscores one after anothers and should
-            --  contains only alphanumeric characters.
-
-            for K in Unit_Name'First + 1 .. Unit_Name'Last loop
-               declare
-                  Two_Chars : constant String := Unit_Name (K - 1 .. K);
-               begin
-                  if Two_Chars = "_." then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "unit '" & Unit_Name & "' not valid,"
-                           & " cannot contain dot after underscore",
-                           Source_Dir_Ref));
-                     return False;
-
-                  elsif Two_Chars = "__" then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "unit '" & Unit_Name & "' not valid,"
-                           & " two consecutive underlines not permitted",
-                           Source_Dir_Ref));
-                     return False;
-
-                  elsif Two_Chars = "._" then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "unit '" & Unit_Name & "' not valid,"
-                           & " cannot contain underscore after dot",
-                           Source_Dir_Ref));
-                     return False;
-
-                  elsif Two_Chars = ".." then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "unit '" & Unit_Name & "' not valid,"
-                           & " two consecutive dots not permitted",
-                           Source_Dir_Ref));
-                     return False;
-
-                  elsif not Characters.Handling.Is_Alphanumeric (Unit_Name (K))
-                    and then Unit_Name (K) not in '.' | '_'
-                  then
-                     Tree.Append_Message
-                       (Message.Create
-                          (Message.Error,
-                           "unit '" & Unit_Name & "' not valid,"
-                           & " should have only alpha numeric characters",
-                           Source_Dir_Ref));
-                     return False;
-                  end if;
-               end;
-            end loop;
-
-            return True;
-         end Right_Unit_Name;
+         begin
+            return Unit.Valid_Unit_Name (Unit_Name, On_Error'Access);
+         end Is_Valid_Unit_Name;
 
          Languages : constant Project.Attribute.Object := Def.Attrs.Languages;
 
@@ -1457,7 +1393,7 @@ package body GPR2.Project.Definition is
                               --  properties for now. Others will be taken on
                               --  source parsing.
 
-                              if Right_Unit_Name (String (Unit_Name)) then
+                              if Is_Valid_Unit_Name (Unit_Name) then
                                  Units.Append
                                    (Unit.Create
                                       (Name          => Unit_Name,
@@ -1630,14 +1566,13 @@ package body GPR2.Project.Definition is
                                                      Unit.Spec_Kind);
                      Project_Source : constant GPR2.Project.Source.Object :=
                                         Project.Source.Create
-                                          (Source               => Source,
-                                           View                 => View,
-                                           Is_Interface         =>
-                                             Is_Interface,
-                                           Naming_Exception     =>
+                                          (Source           => Source,
+                                           View             => View,
+                                           Is_Interface     => Is_Interface,
+                                           Naming_Exception =>
                                              Naming_Exception,
-                                           Is_Compilable        =>
-                                             Is_Compilable (Language));
+                                           Is_Compilable    => Is_Compilable
+                                                                 (Language));
 
                      --  Check source duplication and insert if possible or
                      --  replace if necessary.

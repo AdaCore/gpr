@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -172,6 +172,13 @@ package GPR2.Unit is
 
    function Image (Item : Flag) return String;
    --  Returns a string representation of Flag
+
+   function Valid_Unit_Name
+     (Unit_Name : Name_Type;
+      On_Error  : access procedure (Message : String) := null) return Boolean;
+   --  Return True if Unit_Name is valid unit name.
+   --  Returns False otherwise and calls On_Error if it is not null with
+   --  appropriate error message.
 
 private
 

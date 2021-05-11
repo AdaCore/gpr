@@ -30,6 +30,8 @@ with GPRname.Unit.Vector;
 
 with GPRtools.Util;
 
+with GPR2.Unit;
+
 separate (GPRname.Process)
 procedure Search_Directory
   (Dir_Path       : Path_Name.Object;
@@ -365,14 +367,22 @@ begin
                                                          else 0);
                                  begin
                                     Put_Line
-                                      ("      found unit: "
-                                       & To_String (Line), Low);
+                                      ("      found unit: " & To_String (Line),
+                                       Low);
 
                                     --  Add the unit to the source, unless it
                                     --  is a predefined Ada unit and the
                                     --  related "ignore" option is set.
 
-                                    if Opt.Ignore_Predefined_Units
+                                    if not GPR2.Unit.Valid_Unit_Name
+                                      (Name,
+                                       On_Error => Ada.Text_IO.Put_Line'Access)
+                                    then
+                                       --  Ignore whong unit name
+
+                                       null;
+
+                                    elsif Opt.Ignore_Predefined_Units
                                       and then
                                         GPRtools.Util.Is_Ada_Predefined_Unit
                                           (Name)
