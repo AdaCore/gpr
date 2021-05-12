@@ -1,0 +1,12 @@
+cp /files/src/prj.ads /inst/include/prj/prj.ads
+
+cp /files/lib/prj.ali /inst/lib/prj/prj.ali
+
+cp /files/lib/libprj.so.20.0w /inst/lib/prj/libprj.so.20.0w
+
+cp /inst/lib/prj/libprj.so.20.0w /inst/lib/prj/libprj.so
+
+cp /inst/lib/prj/libprj.so /inst/lib/libprj.so
+
+cp /inst/lib/prj/libprj.so.20.0w /inst/lib/libprj.so.20.0w
+

@@ -1,0 +1,39 @@
+library project Prj is
+
+   for Languages use ("Ada");
+   for Source_Dirs use ("src/**");
+   for Object_Dir use "obj";
+   for Library_Name use project'Name;
+   for Library_Dir use "lib";
+   for Library_Ali_Dir use project'Library_Dir;
+   for Externally_Built use "False";
+   for Library_Version use "lib" & project'Library_Name & ".so.20.0w";
+   for Library_Kind use "relocatable";
+   for Library_Src_Dir use project'Library_Dir;
+--   for Library_Auto_Init use "False";
+--   for Library_Interface use ("prj");
+   type Runtime_Arm_Linux_Gnueabihf_Type is
+      ("native");
+   Runtime_Arm_Linux_Gnueabihf : Runtime_Arm_Linux_Gnueabihf_Type := external ("RUNTIME_ARM_LINUX_GNUEABIHF", "native");
+   for Target use "arm-linux-gnueabihf";
+   for Runtime ("ada") use "native";
+
+   package Compiler is
+      for Default_Switches ("ada") use ("-g", "-gnato", "-gnatwa", "-gnatQ", "-gnat12");
+      for Default_Switches ("c") use ("-g", "-Wall");
+      for Default_Switches ("c++") use ("-g", "-Wall");
+   end Compiler;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-g");
+   end Builder;
+
+--   package Ide is
+--      for Gnat use "arm-linux-gnueabihf-gnat";
+--      for Gnatlist use "arm-linux-gnueabihf-gnatls";
+--      for Debugger_Command use "arm-linux-gnueabihf-gdb";
+--      for Compiler_Command ("ada") use "arm-linux-gnueabihf-gnatmake.exe";
+--      for Compiler_Command ("c") use "arm-linux-gnueabihf-gcc.exe";
+--   end Ide;
+
+end Prj;
