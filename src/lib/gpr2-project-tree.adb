@@ -3508,7 +3508,7 @@ package body GPR2.Project.Tree is
          end loop;
       end;
 
-      if not Has_Error then
+      if not Has_Error and then not Self.Pre_Conf_Mode then
          --  We now have an up-to-date tree, do some validity checks if there
          --  is no issue detected yet.
 
