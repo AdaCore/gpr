@@ -2892,11 +2892,14 @@ package body GPR2.Parser.Project is
             elsif not Has_Error then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Missing_Project_Error_Level,
                      Sloc    => Get_Source_Reference (Self.File, Node),
                      Message => "variable '"
                      & String (Get_Name_Type (F_Variable_Name (Var), 1, 1))
                      & "' must be a simple value"));
+               if Pre_Conf_Mode then
+                  Status := Over;
+               end if;
             end if;
          end Parse_Case_Construction;
 
