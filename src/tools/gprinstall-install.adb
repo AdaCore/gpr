@@ -856,13 +856,6 @@ package body GPRinstall.Install is
             Required    : Boolean);
          --  Copy items from the artifacts attribute
 
-         procedure Create_Link
-           (Src_Dir   : Path_Name.Object;
-            Link_Dir  : Path_Name.Object;
-            File_Name : Filename_Optional;
-            Link_Name : Path_Name.Object := Path_Name.Undefined);
-         --  Create link (or copy on Windows) of library file.
-
          Source_Copied : GPR2.Project.Source.Set.Object;
 
          --------------------
@@ -1183,33 +1176,6 @@ package body GPRinstall.Install is
             return True;
          end Copy_Source;
 
-         -----------------
-         -- Create_Link --
-         -----------------
-
-         procedure Create_Link
-           (Src_Dir   : Path_Name.Object;
-            Link_Dir  : Path_Name.Object;
-            File_Name : Filename_Optional;
-            Link_Name : Path_Name.Object := Path_Name.Undefined) is
-         begin
-            if Is_Windows_Host then
-               Copy_File
-                 (From       => Src_Dir,
-                  To         => Link_Dir,
-                  File       => File_Name,
-                  From_Ver   => Link_Name,
-                  Sym_Link   => False);
-            else
-               Copy_File
-                 (From       => Link_Dir,
-                  To         => Src_Dir,
-                  File       => File_Name,
-                  From_Ver   => Link_Name,
-                  Sym_Link   => True);
-            end if;
-         end Create_Link;
-
       begin
          if Has_Sources (Project) then
             --  Install the project and the extended projects if any
@@ -1235,6 +1201,15 @@ package body GPRinstall.Install is
                      Executable    => True,
                      Extract_Debug => Side_Debug);
 
+               elsif Is_Windows_Host then
+                  --  On windows host, Library_Filename is generated,
+
+                  Copy_File
+                    (From          => Project.Library_Filename,
+                     To            => Lib_Dir,
+                     Executable    => True,
+                     Extract_Debug => Side_Debug);
+
                else
                   Copy_File
                     (From          => Project.Library_Version_Filename,
@@ -1242,15 +1217,16 @@ package body GPRinstall.Install is
                      Executable    => True,
                      Extract_Debug => Side_Debug);
 
-                  Create_Link
-                    (Src_Dir   => Lib_Dir,
-                     Link_Dir  => Path_Name.Compose
+                  Copy_File
+                    (From     => Path_Name.Compose
                        (Lib_Dir,
                         Project.Library_Filename.Name),
-                     File_Name => Project.Library_Version_Filename.Simple_Name,
-                     Link_Name => Path_Name.Compose
+                     To       => Lib_Dir,
+                     File     => Project.Library_Version_Filename.Simple_Name,
+                     From_Ver => Path_Name.Compose
                        (Lib_Dir,
-                        Project.Library_Major_Version_Filename.Name));
+                        Project.Library_Major_Version_Filename.Name),
+                     Sym_Link => True);
                end if;
 
             else
@@ -1281,25 +1257,35 @@ package body GPRinstall.Install is
                   end if;
 
                elsif Link_Lib_Dir /= Lib_Dir then
-                  Create_Link
-                    (Src_Dir   => Lib_Dir,
-                     Link_Dir  => Link_Lib_Dir,
-                     File_Name => Project.Library_Filename.Name);
+                  if Is_Windows_Host then
+                     Copy_File
+                       (From       => Lib_Dir,
+                        To         => Link_Lib_Dir,
+                        File       => Project.Library_Filename.Name,
+                        Sym_Link   => False);
+                  else
+                     Copy_File
+                       (From       => Link_Lib_Dir,
+                        To         => Lib_Dir,
+                        File       => Project.Library_Filename.Name,
+                        Sym_Link   => True);
+                  end if;
 
                   --  Copy also the versioned library if any
 
-                  if Project.Has_Library_Version
+                  if not Is_Windows_Host and then Project.Has_Library_Version
                     and then
                       Project.Library_Filename.Name
                         /= Project.Library_Version_Filename.Name
                   then
-                     Create_Link
-                       (Src_Dir   => Lib_Dir,
-                        Link_Dir  => Link_Lib_Dir,
-                        File_Name => Project.Library_Version_Filename.Name,
-                        Link_Name => Path_Name.Compose
+                     Copy_File
+                       (From       => Link_Lib_Dir,
+                        To         => Lib_Dir,
+                        File       => Project.Library_Version_Filename.Name,
+                        From_Ver   => Path_Name.Compose
                           (Link_Lib_Dir,
-                           Project.Library_Major_Version_Filename.Name));
+                           Project.Library_Major_Version_Filename.Name),
+                        Sym_Link   => True);
                   end if;
                end if;
             end if;
