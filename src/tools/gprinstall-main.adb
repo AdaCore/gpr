@@ -546,6 +546,7 @@ exception
 
    when E : Usage_Error =>
       Text_IO.Put_Line ("gprinstall: " & Exception_Message (E));
+      Text_IO.Flush;
       GNAT.Command_Line.Try_Help;
 
    when Project_Error | Processing_Error =>
@@ -557,9 +558,11 @@ exception
          & (if Options.Verbose
             then Exception_Information (E)
             else Exception_Message (E)));
+      Text_IO.Flush;
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 
    when E : others =>
       Text_IO.Put_Line ("error: " & Exception_Information (E));
+      Text_IO.Flush;
       Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
 end GPRinstall.Main;
