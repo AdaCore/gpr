@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Containers.Indefinite_Holders;
 with Ada.Environment_Variables;
 with Ada.Directories;
 with Ada.IO_Exceptions;
@@ -1346,7 +1347,7 @@ package body GPR2.Project.Tree is
                             Containers.Name_Value_Map_Package.Empty_Map;
       Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
    is
-      Languages   : Containers.Source_Value_Set;
+      Languages   : Containers.Name_Set;
       Conf        : Project.Configuration.Object;
       GNAT_Prefix : constant String := Get_Tools_Directory;
       Default_Cfg : Path_Name.Object;
@@ -1357,29 +1358,52 @@ package body GPR2.Project.Tree is
       --  Returns the target, depending on the parsing stage
 
       procedure Add_Languages (View : Project.View.Object);
-      --  Add project languages into the Languages container to configure.
-      --  Warn about project has no languages.
+      --  Adds project languages into the Languages container to configure.
+      --  Warns about project has no languages.
+
+      function Conf_Descriptions return Project.Configuration.Description_Set;
+      --  Returns set of descriptions for configuration creation
 
       function Default_Config_File return Filename_Type;
       --  Returns default config filename
 
       function Runtime
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns the runtime to use during configuration for the specified
       --  language.
 
       function Toolchain_Name
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns toolchain name specified by Toolchain_Name attribute
 
       function Toolchain_Version
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns toolchain version specified by Required_Toolchain_Version
       --  attribute.
 
       function Toolchain_Path
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns toolchain search path specified by Toolchain_Path attribute
+
+      type Reconfiguration_Status is (Unchanged, Extended, Incompatible);
+
+      Reconf_Status : Reconfiguration_Status;
+
+      procedure Compare_Configurations
+        (Before : Project.Configuration.Description_Set;
+         After  : Project.Configuration.Description_Set;
+         Result : out Reconfiguration_Status);
+      --  Compares two sets of description sets to check for possible changes
+      --  that happened after autoconfiguration. For example, new languages
+      --  may be added after finding missing imports. Also, previously
+      --  unresolved constructs may cause changes in already established
+      --  descriptions (toolchain-related attribute under a case statement
+      --  depending on a variable from a missing import).
+      --  Returns Unchanged when Before and After are identical.
+      --  Returns Extended when all descriptions for languages present in
+      --  Before are identical to those in After, but there are new extra
+      --  languages in after.
+      --  Otherwise returns Incompatible and adds corresponding error messages.
 
       -------------------
       -- Actual_Target --
@@ -1430,7 +1454,7 @@ package body GPR2.Project.Tree is
 
          if View.Has_Languages then
             for L of View.Languages loop
-               Languages.Include (L);
+               Languages.Include (Name_Type (L.Text));
             end loop;
 
             --  Keep languages attribute for possible error message Sloc
@@ -1439,6 +1463,156 @@ package body GPR2.Project.Tree is
             Lang_Sloc := View.Attributes.Languages;
          end if;
       end Add_Languages;
+
+      ----------------------------
+      -- Compare_Configurations --
+      ----------------------------
+
+      procedure Compare_Configurations
+        (Before : Project.Configuration.Description_Set;
+         After  : Project.Configuration.Description_Set;
+         Result : out Reconfiguration_Status)
+      is
+         use Project.Configuration;
+
+         Found_In_After : Boolean;
+
+         function Error (Before, After : Description) return String;
+         --  Returns string with incompatible parts of descriptions
+
+         -----------
+         -- Error --
+         -----------
+
+         function Error (Before, After : Description) return String
+         is
+            Result : Unbounded_String;
+
+            procedure Append_Result
+              (Param   : String;
+               Old_Val : Optional_Name_Type;
+               New_Val : Optional_Name_Type);
+            --  Adds new parts of error message
+
+            -------------------
+            -- Append_Result --
+            -------------------
+
+            procedure Append_Result
+              (Param   : String;
+               Old_Val : Optional_Name_Type;
+               New_Val : Optional_Name_Type)
+            is
+               Msg : constant String :=
+                       Param & " """ & String (Old_Val) & """ changed to """
+                       & String (New_Val) & """";
+            begin
+               if Result = Null_Unbounded_String then
+                  Result := To_Unbounded_String (Msg);
+               else
+                  Append (Result, "; " & Msg);
+               end if;
+            end Append_Result;
+
+         begin
+            if Version (Before) /= Version (After) then
+               Append_Result ("version", Version (Before), Version (After));
+            end if;
+            if Runtime (Before) /= Runtime (After) then
+               Append_Result ("runtime", Runtime (Before), Runtime (After));
+            end if;
+            if Path (Before) /= Path (After) then
+               Append_Result
+                 ("path",
+                  Optional_Name_Type (Path (Before)),
+                  Optional_Name_Type (Path (After)));
+            end if;
+            if Name (Before) /= Name (After) then
+               Append_Result ("name", Name (Before), Name (After));
+            end if;
+
+            return  To_String (Result);
+         end Error;
+
+      begin
+         for Descr_B of Before loop
+            Found_In_After := False;
+
+            for Descr_A of After loop
+               if Language (Descr_B) = Language (Descr_A) then
+
+                  if Descr_B = Descr_A then
+                     Found_In_After := True;
+                     exit;
+                  else
+
+                     Self.Append_Message
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Message => "incompatible change for language "
+                           & String (Language (Descr_B))
+                           & " during reconfiguration",
+                           Sloc    => Source_Reference.Create
+                             (Self.Root.Path_Name.Value, 0, 0)));
+                     Self.Append_Message
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Message => Error (Descr_B, Descr_A),
+                           Sloc    => Source_Reference.Create
+                             (Self.Root.Path_Name.Value, 0, 0)));
+                     Result := Incompatible;
+                     return;
+                  end if;
+               end if;
+
+            end loop;
+
+            if not Found_In_After then
+               Self.Append_Message
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => "language " & String (Language (Descr_B))
+                     & " missing for reconfiguration",
+                     Sloc    => Source_Reference.Create
+                       (Self.Root.Path_Name.Value, 0, 0)));
+               Result := Incompatible;
+               return;
+            end if;
+
+         end loop;
+
+         if Before'Length = After'Length then
+            Result := Unchanged;
+         else
+            Result := Extended;
+         end if;
+
+      end Compare_Configurations;
+
+      -----------------------
+      -- Conf_Descriptions --
+      -----------------------
+
+      function Conf_Descriptions return Project.Configuration.Description_Set
+      is
+         Descr_Index : Natural := 0;
+         Result      : Project.Configuration.Description_Set
+                         (1 .. Positive (Languages.Length));
+      begin
+         for L of Languages loop
+            Descr_Index := Descr_Index + 1;
+
+            Result (Descr_Index) :=
+              Project.Configuration.Create
+                (Language => L,
+                 Version  => Toolchain_Version (L),
+                 Runtime  => Runtime (L),
+                 Path     => Toolchain_Path (L),
+                 Name     => Toolchain_Name (L));
+         end loop;
+
+         return Result;
+      end Conf_Descriptions;
 
       -------------------------
       -- Default_Config_File --
@@ -1481,7 +1655,7 @@ package body GPR2.Project.Tree is
       -------------
 
       function Runtime
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          function Attr_As_Abs_Path
            (Attr : Attribute.Object;
@@ -1520,7 +1694,7 @@ package body GPR2.Project.Tree is
          Tmp_Attr : Attribute.Object;
          LRT      : constant Value_Type :=
                       Containers.Value_Or_Default
-                        (Language_Runtimes, Name_Type (Language.Text));
+                        (Language_Runtimes, Language);
 
       begin
          if LRT /= No_Value then
@@ -1529,7 +1703,7 @@ package body GPR2.Project.Tree is
          end if;
 
          if Self.Root.Check_Attribute
-           (PRA.Runtime, Attribute_Index.Create (Language.Text),
+           (PRA.Runtime, Attribute_Index.Create (Value_Not_Empty (Language)),
             Check_Extended => True, Result => Tmp_Attr)
          then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
@@ -1543,12 +1717,13 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Name
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Self.Root.Check_Attribute
-           (PRA.Toolchain_Name, Attribute_Index.Create (Language.Text),
+           (PRA.Toolchain_Name,
+            Attribute_Index.Create (Value_Not_Empty (Language)),
             Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
@@ -1563,12 +1738,13 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Path
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Self.Root.Check_Attribute
-           (PRA.Toolchain_Path, Attribute_Index.Create (Language.Text),
+           (PRA.Toolchain_Path,
+            Attribute_Index.Create (Value_Not_Empty (Language)),
             Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
@@ -1584,13 +1760,13 @@ package body GPR2.Project.Tree is
       -----------------------
 
       function Toolchain_Version
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Self.Root.Check_Attribute
            (PRA.Required_Toolchain_Version,
-            Attribute_Index.Create (Language.Text),
+            Attribute_Index.Create (Value_Not_Empty (Language)),
             Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
@@ -1599,6 +1775,13 @@ package body GPR2.Project.Tree is
 
          return No_Name;
       end Toolchain_Version;
+
+      package Description_Set_Holders is new Ada.Containers.Indefinite_Holders
+        (Project.Configuration.Description_Set,
+         Project.Configuration."=");
+      Pre_Conf_Description   : Description_Set_Holders.Holder;
+      Post_Conf_Description  : Description_Set_Holders.Holder;
+      use Description_Set_Holders;
 
    begin
 
@@ -1661,24 +1844,12 @@ package body GPR2.Project.Tree is
          --  are meaningful or not
          Self.Messages.Clear;
 
-         if Self.Root.Is_Externally_Built then
-            --  If we have externally built project, configure only the root
-            --  one.
-
-            Add_Languages (Self.Root);
-
-         else
-            --  If we have non externally built project, configure the none
-            --  externally built tree part.
-
-            for C in Self.Iterate
-              (Filter =>
-                 (F_Aggregate | F_Aggregate_Library => False, others => True),
-               Status => (S_Externally_Built => False))
-            loop
-               Add_Languages (Element (C));
-            end loop;
-         end if;
+         for C in Self.Iterate
+           (Filter =>
+              (F_Aggregate | F_Aggregate_Library => False, others => True))
+         loop
+            Add_Languages (Element (C));
+         end loop;
 
          if Languages.Length = 0 then
             Self.Append_Message
@@ -1693,33 +1864,17 @@ package body GPR2.Project.Tree is
             return;
          end if;
 
-         declare
-            Descr_Index       : Natural := 0;
-            Conf_Descriptions : Project.Configuration.Description_Set
-                                  (1 .. Positive (Languages.Length));
-         begin
-            for L of Languages loop
-               Descr_Index := Descr_Index + 1;
+         Pre_Conf_Description := To_Holder (Conf_Descriptions);
 
-               Conf_Descriptions (Descr_Index) :=
-                 Project.Configuration.Create
-                   (Language => Name_Type (L.Text),
-                    Version  => Toolchain_Version (L),
-                    Runtime  => Runtime (L),
-                    Path     => Toolchain_Path (L),
-                    Name     => Toolchain_Name (L));
-            end loop;
+         if not Self.Base.Is_Defined then
+            Self.Base := GPR2.KB.Create (GPR2.KB.Default_Flags);
+         end if;
 
-            if not Self.Base.Is_Defined then
-               Self.Base := GPR2.KB.Create (GPR2.KB.Default_Flags);
-            end if;
-
-            Conf := Project.Configuration.Create
-              (Conf_Descriptions,
-               Actual_Target,
-               Self.Root.Path_Name,
-               Self.Base);
-         end;
+         Conf := Project.Configuration.Create
+           (Pre_Conf_Description.Element,
+            Actual_Target,
+            Self.Root.Path_Name,
+            Self.Base);
 
          --  Unload the project that was loaded without configuration.
          --  We need to backup the messages and default search path:
@@ -1745,6 +1900,58 @@ package body GPR2.Project.Tree is
          Check_Shared_Lib => Check_Shared_Lib,
          Absent_Dir_Error => Absent_Dir_Error,
          Implicit_With    => Implicit_With);
+
+      --  Configuration parameters might have changed, i.e. new languages
+      --  may be added from missing imported projects that have been found
+      --  after search path update from configuration data. We need to check
+      --  for that and perform a reconfiguration if necessary.
+
+      Languages.Clear;
+      for C in Self.Iterate
+        (Filter =>
+           (F_Aggregate | F_Aggregate_Library => False, others => True))
+      loop
+         Add_Languages (Element (C));
+      end loop;
+
+      Post_Conf_Description := To_Holder (Conf_Descriptions);
+
+      Compare_Configurations
+        (Pre_Conf_Description.Element,
+         Post_Conf_Description.Element,
+         Reconf_Status);
+
+      if Reconf_Status = Unchanged then
+         --  Nothing changed, no need for reconfiguration
+         return;
+      end if;
+
+      if Reconf_Status = Incompatible then
+         raise Project_Error with "reconfiguration error";
+      end if;
+
+      --  We need to reconfigure in order to account for new languages.
+
+      Conf := Project.Configuration.Create
+        (Post_Conf_Description.Element,
+         Actual_Target,
+         Self.Root.Path_Name,
+         Self.Base);
+
+      Self.Unload;
+      Self.Search_Paths := Default_Search_Paths (True);
+
+      Self.Load
+        ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
+         Context, Conf,
+         Project_Dir      => Project_Dir,
+         Build_Path       => Build_Path,
+         Subdirs          => Subdirs,
+         Src_Subdirs      => Src_Subdirs,
+         Check_Shared_Lib => Check_Shared_Lib,
+         Absent_Dir_Error => Absent_Dir_Error,
+         Implicit_With    => Implicit_With);
+
    end Load_Autoconf;
 
    ------------------------
