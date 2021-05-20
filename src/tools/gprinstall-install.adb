@@ -2538,7 +2538,11 @@ package body GPRinstall.Install is
                       and then Install_Project
                   then
                      Put_Line
-                       ("Project already installed, either:");
+                       ("Project file "
+                        & String (Project.Path_Name.Simple_Name)
+                        &  " is different from the one currently installed.");
+                     Put_Line
+                       ("Either:");
                      Put_Line
                        ("   - uninstall first using --uninstall option");
                      Put_Line
