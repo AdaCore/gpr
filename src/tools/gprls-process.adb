@@ -18,6 +18,7 @@
 
 with Ada.Calendar;
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Directories;
 with Ada.Text_IO;
 
 with GPR2.KB;
@@ -74,72 +75,71 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -------------------
 
    procedure Display_Paths is
+      Src_Path : Path_Name.Set.Object;
+      Obj_Path : Path_Name.Set.Object;
+      Curr_Dir : constant String := Ada.Directories.Current_Directory;
+
+      function Mask_Current (Dir : String) return String is
+        (if Dir = Curr_Dir then "<Current_Directory>" else Dir);
+
    begin
       Text_IO.New_Line;
       Version.Display ("GPRLS", "2018", Version_String => Version.Long_Value);
 
-      declare
-         Src_Path : Path_Name.Set.Object;
-         Obj_Path : Path_Name.Set.Object;
+      --  Source search path
 
-      begin
-         --  Source search path
-
-         for V of Tree loop
-            if V.Kind not in K_Aggregate | K_Abstract then
-               for D of V.Source_Directories.Values loop
-                  Src_Path.Append
-                    (Path_Name.Create_Directory (Filename_Type (D.Text)));
-               end loop;
-            end if;
-         end loop;
-
-         if Tree.Has_Runtime_Project then
-            for D of Tree.Runtime_Project.Source_Directories.Values loop
+      for V of Tree loop
+         if V.Kind not in K_Aggregate | K_Abstract then
+            for D of V.Source_Directories.Values loop
                Src_Path.Append
                  (Path_Name.Create_Directory (Filename_Type (D.Text)));
             end loop;
          end if;
+      end loop;
 
-         Text_IO.New_Line;
-         Text_IO.Put_Line ("Source Search Path:");
-
-         for P of Src_Path loop
-            Text_IO.Put_Line ("   " & P.Value);
+      if Tree.Has_Runtime_Project then
+         for D of Tree.Runtime_Project.Source_Directories.Values loop
+            Src_Path.Append
+              (Path_Name.Create_Directory (Filename_Type (D.Text)));
          end loop;
+      end if;
 
-         --  Object search path
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Source Search Path:");
 
-         for V of Tree loop
-            if V.Kind in K_Standard | K_Library | K_Aggregate_Library then
-               Obj_Path.Append (V.Object_Directory);
-            end if;
-         end loop;
+      for P of Src_Path loop
+         Text_IO.Put_Line ("   " & P.Value);
+      end loop;
 
-         if Tree.Has_Runtime_Project then
-            Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
+      --  Object search path
+
+      for V of Tree loop
+         if V.Kind in K_Standard | K_Library | K_Aggregate_Library then
+            Obj_Path.Append (V.Object_Directory);
          end if;
+      end loop;
 
-         Text_IO.New_Line;
-         Text_IO.Put_Line ("Object Search Path:");
+      if Tree.Has_Runtime_Project then
+         Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
+      end if;
 
-         for P of Obj_Path loop
-            Text_IO.Put_Line ("   " & P.Value);
-         end loop;
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Object Search Path:");
 
-         --  Project search path
+      for P of Obj_Path loop
+         Text_IO.Put_Line ("   " & P.Value);
+      end loop;
 
-         Text_IO.New_Line;
-         Text_IO.Put_Line ("Project Search Path:");
+      --  Project search path
 
-         Text_IO.Put_Line ("   " & "<Current_Directory>");
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Project Search Path:");
 
-         for P of Tree.Project_Search_Paths loop
-            Text_IO.Put_Line ("   " & P.Value);
-         end loop;
+      for P of Tree.Project_Search_Paths loop
+         Text_IO.Put_Line ("   " & Mask_Current (P.Value));
+      end loop;
 
-         Text_IO.New_Line;
-      end;
+      Text_IO.New_Line;
    end Display_Paths;
 
    ---------
