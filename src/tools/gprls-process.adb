@@ -80,7 +80,8 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
       Curr_Dir : constant String := Ada.Directories.Current_Directory;
 
       function Mask_Current (Dir : String) return String is
-        (if Dir = Curr_Dir then "<Current_Directory>" else Dir);
+        (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir
+         then "<Current_Directory>" else Dir);
 
    begin
       Text_IO.New_Line;
@@ -108,7 +109,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
       Text_IO.Put_Line ("Source Search Path:");
 
       for P of Src_Path loop
-         Text_IO.Put_Line ("   " & P.Value);
+         Text_IO.Put_Line ("   " & P.Dir_Name);
       end loop;
 
       --  Object search path
@@ -127,7 +128,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
       Text_IO.Put_Line ("Object Search Path:");
 
       for P of Obj_Path loop
-         Text_IO.Put_Line ("   " & P.Value);
+         Text_IO.Put_Line ("   " & P.Dir_Name);
       end loop;
 
       --  Project search path
@@ -136,7 +137,7 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
       Text_IO.Put_Line ("Project Search Path:");
 
       for P of Tree.Project_Search_Paths loop
-         Text_IO.Put_Line ("   " & Mask_Current (P.Value));
+         Text_IO.Put_Line ("   " & Mask_Current (P.Dir_Name));
       end loop;
 
       Text_IO.New_Line;
