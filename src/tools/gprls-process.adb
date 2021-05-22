@@ -93,7 +93,9 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
          if V.Kind not in K_Aggregate | K_Abstract then
             for D of V.Source_Directories.Values loop
                Src_Path.Append
-                 (Path_Name.Create_Directory (Filename_Type (D.Text)));
+                 (Path_Name.Create_Directory
+                    (Filename_Type (D.Text),
+                     Directory => Filename_Type (V.Path_Name.Dir_Name)));
             end loop;
          end if;
       end loop;
