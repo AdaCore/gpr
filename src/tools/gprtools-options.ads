@@ -54,6 +54,9 @@ package GPRtools.Options is
       --  It is install name for gprinstall --uninstall.
       --  It could be object or dependency files for gprls.
 
+      Project_Is_Defined : Boolean := False;
+      --  The project is defined in command line
+
       No_Project               : aliased Boolean := False;
       Unchecked_Shared_Lib     : aliased Boolean := False;
       Full_Path_Name_For_Brief : aliased Boolean := False;

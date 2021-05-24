@@ -163,6 +163,8 @@ package body GPRtools.Options is
            (Self.Project_File.Name, Self.Tree.Project_Search_Paths);
       end if;
 
+      Self.Project_Is_Defined := Self.Project_File.Is_Defined;
+
       if Tool /= Install then
          if not Self.Project_File.Is_Defined then
             if Self.No_Project then

@@ -223,7 +223,7 @@ begin
    --  If there is no file on the command line, check if -v is provided
    --  so that we enter the "only display paths" mode.
 
-   if not Self.Project_File.Is_Defined
+   if not Self.Project_Is_Defined
      and then Self.Files.Is_Empty
      and then Self.Verbose
    then
