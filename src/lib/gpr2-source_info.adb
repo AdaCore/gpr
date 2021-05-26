@@ -34,6 +34,28 @@ package body GPR2.Source_Info is
       return Self.LI_Timestamp;
    end Build_Timestamp;
 
+   ----------------
+   -- Check_Unit --
+   ----------------
+
+   function Check_Unit
+     (Self : Object;
+      Name : Name_Type;
+      Spec : Boolean;
+      Unit : out GPR2.Unit.Object) return Boolean is
+   begin
+      for CU of Self.CU_List loop
+         if CU.Name = Name
+           and then (CU.Kind in GPR2.Unit.Spec_Kind) = Spec
+         then
+            Unit := CU;
+            return True;
+         end if;
+      end loop;
+
+      return False;
+   end Check_Unit;
+
    -----------
    -- Clear --
    -----------
@@ -74,14 +96,46 @@ package body GPR2.Source_Info is
    -- File_Dependencies --
    -----------------------
 
-   function Dependencies (Self  : Object) return Containers.Filename_List is
+   function Dependencies
+     (Self  : Object;
+      Index : Unit_Index := 1) return Containers.Filename_List
+   is
       Result : Containers.Filename_List;
+      C_Idx  : constant Unit_Dependencies.Cursor :=
+                 Self.Dependencies.Find (Index);
    begin
-      for D of Self.Dependencies loop
-         Result.Append (Filename_Type (To_String (D.Sfile)));
-      end loop;
+      if Unit_Dependencies.Has_Element (C_Idx) then
+         for D of Self.Dependencies (C_Idx) loop
+            Result.Append (Filename_Type (To_String (D.Sfile)));
+         end loop;
+      end if;
 
       return Result;
+   end Dependencies;
+
+   procedure Dependencies
+     (Self   : Object;
+      Action : access procedure
+                 (Sfile : Simple_Name;
+                  Unit  : Name_Type;
+                  Kink  : GPR2.Unit.Library_Unit_Type);
+      Index  : Unit_Index := 1)
+   is
+      C_Idx  : constant Unit_Dependencies.Cursor :=
+                 Self.Dependencies.Find (Index);
+   begin
+      if Unit_Dependencies.Has_Element (C_Idx) then
+         for C in Unit_Dependencies.Element (C_Idx).Iterate loop
+            declare
+               Key : constant Dependency_Key := Dependency_Maps.Key (C);
+            begin
+               Action
+                 (Simple_Name (To_String (Dependency_Maps.Element (C).Sfile)),
+                  Name_Type (To_String (Key.Unit_Name)),
+                  Key.Unit_Kind);
+            end;
+         end loop;
+      end if;
    end Dependencies;
 
    --------------

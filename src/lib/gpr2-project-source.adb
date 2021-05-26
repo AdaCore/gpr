@@ -276,7 +276,8 @@ package body GPR2.Project.Source is
 
    function Dependencies
      (Self    : Object;
-      Closure : Boolean := False) return GPR2.Project.Source.Set.Object
+      Closure : Boolean := False;
+      Index   : Source_Info.Unit_Index := 1) return Project.Source.Set.Object
    is
       Deps : GPR2.Project.Source.Set.Object;
 
@@ -292,7 +293,7 @@ package body GPR2.Project.Source is
       end Insert;
 
    begin
-      Self.Dependencies (Insert'Access, Closure);
+      Self.Dependencies (Insert'Access, Closure, Index);
       return Deps;
    end Dependencies;
 
@@ -300,7 +301,8 @@ package body GPR2.Project.Source is
      (Self     : Object;
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object);
-      Closure  : Boolean := False)
+      Closure  : Boolean := False;
+      Index    : Source_Info.Unit_Index := 1)
    is
       Done : Containers.Filename_Set;
 
@@ -315,7 +317,7 @@ package body GPR2.Project.Source is
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
       begin
-         for File of Source.Dependencies loop
+         for File of Source.Dependencies (Index) loop
             Done.Insert (File, Position, Inserted);
 
             if Inserted
@@ -338,6 +340,58 @@ package body GPR2.Project.Source is
          --  dependencies from Ada parser.
          Self.Context_Clause_Dependencies (For_Each, Closure);
       end if;
+   end Dependencies;
+
+   procedure Dependencies
+     (Self     : Object;
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object;
+                    Unit   : GPR2.Unit.Object);
+      Closure  : Boolean := False;
+      Index    : Source_Info.Unit_Index := 1)
+   is
+      Done     : Containers.Name_Set;
+      Position : Containers.Name_Type_Set.Cursor;
+      Inserted : Boolean;
+
+      procedure On_Dependency
+        (Sfile : Simple_Name;
+         Unit  : Name_Type;
+         Kind  : GPR2.Unit.Library_Unit_Type);
+
+      -------------------
+      -- On_Dependency --
+      -------------------
+
+      procedure On_Dependency
+        (Sfile : Simple_Name;
+         Unit  : Name_Type;
+         Kind  : GPR2.Unit.Library_Unit_Type)
+      is
+         Src : Project.Source.Object;
+         CU  : GPR2.Unit.Object;
+
+         function "&"
+           (Left, Right : Optional_Name_Type) return Optional_Name_Type
+         is
+           (GPR2."&" (Left, Right));
+
+      begin
+         Done.Insert
+           (Unit & (if Kind in GPR2.Unit.Spec_Kind then "" else "%"),
+            Position, Inserted);
+
+         if Inserted
+           and then View (Self).Check_Source (Sfile, Src)
+           and then Src.Source.Check_Unit
+             (Unit, Kind in GPR2.Unit.Spec_Kind, CU)
+         then
+            For_Each (Src, CU);
+         end if;
+      end On_Dependency;
+
+   begin
+      Self.Source.Dependencies (On_Dependency'Access, Index);
    end Dependencies;
 
    --------------------------

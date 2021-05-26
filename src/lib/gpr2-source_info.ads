@@ -103,6 +103,16 @@ package GPR2.Source_Info is
                            or else Self.Has_Unit_At (Index));
    --  Returns the kind of Self's source at the given index
 
+   function Check_Unit
+     (Self : Object;
+      Name : Name_Type;
+      Spec : Boolean;
+      Unit : out GPR2.Unit.Object) return Boolean;
+   --  Check is the unit exists in the source file and set Unit and returns
+   --  True if found.
+   --  If Spec is True search for the unit kind in Spec_Kind.
+   --  Search for the Body_Kind or S_Separate otherwise.
+
    function Has_Unit_At
      (Self : Object; Index : Unit_Index) return Boolean
      with Pre => Self.Is_Defined and then Self.Has_Units;
@@ -161,9 +171,21 @@ package GPR2.Source_Info is
    --  Returns the dependencies in Self associated with all the compilation
    --  units for the given Unit. The result may be empty.
 
-   function Dependencies (Self : Object) return Containers.Filename_List
+   function Dependencies
+     (Self  : Object;
+      Index : Unit_Index := 1) return Containers.Filename_List
      with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns the list of source files dependencies
+
+   procedure Dependencies
+     (Self   : Object;
+      Action : access procedure
+                 (Sfile : Simple_Name;
+                  Unit  : Name_Type;
+                  Kink  : GPR2.Unit.Library_Unit_Type);
+      Index  : Unit_Index := 1)
+     with Pre => Self.Is_Defined and then Self.Has_Units;
+   --  Call Action for each of unit dependencies
 
    procedure Set
      (Self : in out Object;
@@ -239,6 +261,9 @@ private
    package Dependency_Maps is new Ada.Containers.Ordered_Maps
      (Dependency_Key, Dependency);
 
+   package Unit_Dependencies is new Ada.Containers.Ordered_Maps
+     (Unit_Index, Dependency_Maps.Map, "=" => Dependency_Maps."=");
+
    type Object is tagged record
       Is_Ada        : Boolean := False;
       Parsed        : Backend := None;
@@ -248,7 +273,7 @@ private
       Kind          : Unit.Library_Unit_Type := Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;
-      Dependencies  : Dependency_Maps.Map;
+      Dependencies  : Unit_Dependencies.Map;
    end record
      with Dynamic_Predicate =>
             Object.CU_List.Length = 0

@@ -354,6 +354,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
       subtype CU_Index is Natural range 0 .. 2;
 
+      LI_Idx  : constant Unit_Index  := Unit_Index (U_Ref.Index);
       B_Name  : constant Simple_Name := Source.Simple_Name;
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
@@ -499,6 +500,7 @@ package body GPR2.Source_Info.Parser.ALI is
          C_Cache  : Cache_Map.Cursor;
          Inserted : Boolean;
          H_Cache  : Cache_Holder;
+         C_Index  : Unit_Dependencies.Cursor;
 
       begin
          if Suffix = "%s" then
@@ -551,6 +553,9 @@ package body GPR2.Source_Info.Parser.ALI is
          end loop;
 
          Data.Dependencies.Insert
+           (LI_Idx, Dependency_Maps.Empty_Map, C_Index, Inserted);
+
+         Data.Dependencies (C_Index).Insert
            ((+Name (Name'First .. Name'Last - Kind_Len), Kind),
             (+Sfile, Stamp, Chksum), Position, Inserted);
 
@@ -732,6 +737,8 @@ package body GPR2.Source_Info.Parser.ALI is
       --------------------------
 
       procedure Set_Source_Info_Data (Cache : Cache_Holder) is
+         Inserted : Boolean;
+         Position : Unit_Dependencies.Cursor;
       begin
          pragma Assert (U_Ref.Index = Cache.Unit.Index);
          pragma Assert
@@ -751,7 +758,9 @@ package body GPR2.Source_Info.Parser.ALI is
          Data.LI_Timestamp := Cache.Timestamp;
          Data.Checksum     := Cache.Checksum;
 
-         Union (Data.Dependencies, Cache.Depends);
+         Data.Dependencies.Insert
+           (LI_Idx, Dependency_Maps.Empty_Map, Position, Inserted);
+         Union (Data.Dependencies (Position), Cache.Depends);
       end Set_Source_Info_Data;
 
       use GPR2.Unit;
@@ -958,7 +967,7 @@ package body GPR2.Source_Info.Parser.ALI is
          for K in 1 .. CU_Idx loop
             Self.Cache.Insert
               (Key (LI, Simple_Name (-CU_BN (K)), CUs (K).Kind),
-               (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
+               (CUs (K), Data.Dependencies (LI_Idx), CU_CS (K), CU_TS (K)),
                In_Cache, Inserted);
 
             pragma Assert
@@ -1020,6 +1029,8 @@ package body GPR2.Source_Info.Parser.ALI is
          procedure Set_Data is
             Ref : constant Cache_Map.Constant_Reference_Type :=
                     Self.Cache.Constant_Reference (CS);
+            Inserted : Boolean;
+            Position : Unit_Dependencies.Cursor;
          begin
             pragma Assert (SU.Name = Ref.Unit.Name);
 
@@ -1033,7 +1044,10 @@ package body GPR2.Source_Info.Parser.ALI is
             Data.Checksum     := Ref.Checksum;
             Data.LI_Timestamp := Ref.Timestamp;
 
-            Union (Data.Dependencies, Ref.Depends);
+            Data.Dependencies.Insert
+              (Unit_Index (SU.Index), Dependency_Maps.Empty_Map, Position,
+               Inserted);
+            Union (Data.Dependencies (Position), Ref.Depends);
          end Set_Data;
 
       begin

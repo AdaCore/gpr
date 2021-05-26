@@ -141,7 +141,8 @@ package GPR2.Project.Source is
 
    function Dependencies
      (Self    : Object;
-      Closure : Boolean := False) return GPR2.Project.Source.Set.Object
+      Closure : Boolean := False;
+      Index   : Source_Info.Unit_Index := 1) return Project.Source.Set.Object
      with Pre => Self.Is_Defined and then Self.Source.Has_Units;
    --  Returns the source files on which the current source file depends
    --  (potentially transitively).
@@ -150,8 +151,18 @@ package GPR2.Project.Source is
      (Self     : Object;
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object);
-      Closure  : Boolean := False);
+      Closure  : Boolean := False;
+      Index    : Source_Info.Unit_Index := 1);
    --  Call For_Each routine for each dependency source
+
+   procedure Dependencies
+     (Self     : Object;
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object;
+                    Unit   : GPR2.Unit.Object);
+      Closure  : Boolean := False;
+      Index    : Source_Info.Unit_Index := 1);
+   --  Call For_Each routine for each dependency unit with it's source
 
    --
    --  The following routines may be used for both unit-based and
