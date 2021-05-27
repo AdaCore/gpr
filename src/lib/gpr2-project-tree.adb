@@ -3516,10 +3516,15 @@ package body GPR2.Project.Tree is
                Human_Name    : String;
                Get_Directory : not null access function
                  (Self : Project.View.Object) return Path_Name.Object;
-               Mandatory     : Boolean := False);
+               Mandatory     : Boolean := False;
+               Must_Exist    : Boolean := True);
             --  Check is directory exists and warn if there is try to relocate
             --  absolute path with --relocate-build-tree gpr tool command line
             --  parameter. Similar check for attributes with directory names.
+            --
+            --  Mandatory: when set, check that the attribute is defined.
+            --  Must_Exist: when set, check that the directory exists on the
+            --    filesystem.
 
             Attr : Attribute.Object;
 
@@ -3532,19 +3537,22 @@ package body GPR2.Project.Tree is
                Human_Name    : String;
                Get_Directory : not null access function
                  (Self : Project.View.Object) return Path_Name.Object;
-               Mandatory     : Boolean := False) is
+               Mandatory     : Boolean := False;
+               Must_Exist    : Boolean := True) is
             begin
                if View.Check_Attribute (Attr_Name, Result => Attr) then
                   declare
                      AV : constant Source_Reference.Value.Object := Attr.Value;
                      PN : constant Path_Name.Object := Get_Directory (View);
                   begin
-                     if not PN.Exists then
+                     if Must_Exist
+                       and then not PN.Exists
+                     then
                         Self.Messages.Append
                           (Message.Create
                              ((if Self.Absent_Dir_Error
-                               then Message.Error
-                               else Message.Warning),
+                              then Message.Error
+                              else Message.Warning),
                               (if Human_Name = ""
                                then "D"
                                else Human_Name & " d") & "irectory """
@@ -3557,12 +3565,12 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Warning,
-                              '"'
+                                  '"'
                               & PN.Relative_Path (Self.Root.Path_Name).Value
                               & """ cannot relocate absolute "
                               & (if Human_Name = ""
-                                 then ""
-                                 else Human_Name & ' ')
+                                then ""
+                                else Human_Name & ' ')
                               & "directory",
                               Sloc => AV));
                      end if;
@@ -3583,18 +3591,24 @@ package body GPR2.Project.Tree is
             then
                Check_Directory
                  (PRA.Object_Dir, "object",
-                  Project.View.Object_Directory'Access);
+                  Project.View.Object_Directory'Access,
+                  Must_Exist => not View.Is_Aggregated_In_Library
+                                  and then not View.Is_Extended);
             end if;
 
             if View.Is_Library then
                Check_Directory
                  (PRA.Library_Dir, "library",
                   Project.View.Library_Directory'Access,
-                  Mandatory => True);
+                  Mandatory  => True,
+                  Must_Exist => not View.Is_Aggregated_In_Library
+                                  and then not View.Is_Extended);
 
                Check_Directory
                  (PRA.Library_Ali_Dir, "library ALI",
-                  Project.View.Library_Ali_Directory'Access);
+                  Project.View.Library_Ali_Directory'Access,
+                  Must_Exist => not View.Is_Aggregated_In_Library
+                                  and then not View.Is_Extended);
 
                if View.Has_Library_Interface
                  or else View.Has_Attributes (PRA.Interfaces)

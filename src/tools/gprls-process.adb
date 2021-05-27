@@ -206,7 +206,7 @@ begin
      (Filename          => Opt.Project_File,
       Project_Dir       => Opt.Project_Base,
       Context           => Opt.Project_Context,
-      Absent_Dir_Error  => not Opt.Source_Parser,
+      Absent_Dir_Error  => False,
       Target            => Opt.Get_Target,
       Language_Runtimes => Opt.RTS_Map,
       Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib,

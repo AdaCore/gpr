@@ -27,9 +27,6 @@ aggrprj1.gpr:21:08: warning: attribute "Library_Symbol_File" cannot be used in a
 aggrprj1.gpr:20:08: warning: attribute "Library_Symbol_Policy" cannot be used in aggregate projects
 aggrprj1.gpr:11:08: warning: attribute "Library_Version" cannot be used in aggregate projects
 aggrlibprj1.gpr
-libprj1.gpr:3:23: warning: object directory "obj" not found
-libprj1.gpr:5:39: warning: library directory "libprj1.lib" not found
-libprj1.gpr:7:50: warning: library ALI directory "libprj1.lib.ali" not found
 libprj1.gpr:16:50: warning: Directory "libprj1.lib.src" not found
 aggrlibprj1.gpr:5:23: warning: object directory "obj" not found
 aggrlibprj1.gpr:8:39: warning: library directory "aggrlibprj1.lib" not found
