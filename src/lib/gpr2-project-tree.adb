@@ -1280,8 +1280,9 @@ package body GPR2.Project.Tree is
       if not Self.Messages.Has_Error then
          --  Add to root view's externals, configuration project externals
 
+         Def := Definition.Get (Self.Root);
+
          if Config.Is_Defined and then Config.Has_Externals then
-            Def := Definition.Get (Self.Root);
 
             for E of Config.Externals loop
                if not Def.Externals.Contains (E) then
@@ -1293,24 +1294,20 @@ package body GPR2.Project.Tree is
          for V_Data of Self.Views_Set loop
             --  Compute the external dependencies for the views. This
             --  is the set of external used in the project and in all
-            --  imported project.
+            --  imported/extended project.
 
-            Def := Definition.Get (V_Data);
+            for E of Definition.Get_RO (V_Data).Externals loop
+               if not Def.Externals.Contains (E) then
+                  --  Note that if we have an aggregate project, then
+                  --  we are not dependent on the external if it is
+                  --  statically redefined in the aggregate project. But
+                  --  at this point we have not yet parsed the project.
+                  --
+                  --  The externals will be removed in Set_Context when
+                  --  the parsing is done.
 
-            for V of Def.Imports loop
-               for E of Definition.Get_RO (V).Externals loop
-                  if not Def.Externals.Contains (E) then
-                     --  Note that if we have an aggregate project, then
-                     --  we are not dependent on the external if it is
-                     --  statically redefined in the aggregate project. But
-                     --  at this point we have not yet parsed the project.
-                     --
-                     --  The externals will be removed in Set_Context when
-                     --  the parsing is done.
-
-                     Def.Externals.Append (E);
-                  end if;
-               end loop;
+                  Def.Externals.Append (E);
+               end if;
             end loop;
          end loop;
 

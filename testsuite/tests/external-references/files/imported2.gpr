@@ -1,0 +1,4 @@
+project imported2 is
+    Value1 := external ("EXTERNAL_WITHOUT_DEFAULT");
+    Value2 := external ("EXTERNAL_WITH_DEFAULT", "default_value");
+end imported2;

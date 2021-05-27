@@ -1,0 +1,3 @@
+aggregate project aggregate1 is
+    for Project_Files use ("aggregate2.gpr");
+end aggregate1;

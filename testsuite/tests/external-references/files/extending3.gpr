@@ -1,0 +1,6 @@
+project extending3 extends all "extending4.gpr" is
+    Value1 := Value4_1 & ".e3a";
+    Value2 := Value4_2 & ".e3b";
+    Value3_1 := Value4_1 & ".e3c";
+    Value3_2 := Value4_2 & ".e3d";
+end extending3;

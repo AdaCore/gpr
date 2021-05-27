@@ -1,0 +1,7 @@
+with "imported2";
+project imported1 is
+    Value1 := Imported2.Value1 & ".i1a";
+    Value2 := Imported2.Value2 & ".i1b";
+    Value1_1 := Imported2.Value1 & ".i1c";
+    Value1_2 := Imported2.Value2 & ".i1d";
+end imported1;
