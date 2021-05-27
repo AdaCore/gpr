@@ -1311,9 +1311,10 @@ package body GPR2.Project.Tree is
          Set_Context (Self, Context);
 
          Definition.Check_Same_Name_Extended (Self.Root);
+
          if not Self.Pre_Conf_Mode then
             --  We only need those checks if we are not in pre-confinguration
-            --  stage, otherwise we might have errors if a project refferences
+            --  stage, otherwise we might have errors if a project references
             --  corresponding attributes from a not yet found project and their
             --  values default to empty ones.
             Definition.Check_Aggregate_Library_Dirs (Self.Root);
@@ -1321,7 +1322,7 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
-      if Self.Messages.Has_Error then
+      if not Self.Pre_Conf_Mode and then Self.Messages.Has_Error then
          raise Project_Error with Project_Path.Value & " syntax error";
       end if;
    end Load;
@@ -1353,6 +1354,14 @@ package body GPR2.Project.Tree is
       Default_Cfg : Path_Name.Object;
       Lang_Sloc   : Attribute.Object;
       --  Keep languages attribute for Sloc parameter in error message
+
+      Old_Paths    : constant Path_Name.Set.Object := Self.Search_Paths;
+      --  Search paths may be affected by -aP options passed by gprtools,
+      --  so we need to keep the original search paths for the reconfiguration
+      --  stage.
+      Old_Messages : constant Log.Object := Self.Messages;
+      --  Likewise, Self may already have some messages and we don't want
+      --  to loose them when we unload the tree for conf/reconf.
 
       function Actual_Target return Name_Type;
       --  Returns the target, depending on the parsing stage
@@ -1418,8 +1427,9 @@ package body GPR2.Project.Tree is
             return Target;
          end if;
 
-         if Self.Root.Check_Attribute
-           (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
          then
             --  Check if the project explicitly defines the attribute or if
             --  this comes from a default value.
@@ -1441,8 +1451,8 @@ package body GPR2.Project.Tree is
 
       procedure Add_Languages (View : Project.View.Object) is
       begin
-         if View.Languages.Length = 0
-           and then not View.Is_Abstract
+         if not View.Is_Abstract
+           and then View.Languages.Length = 0
          then
             Self.Append_Message
               (Message.Create
@@ -1702,9 +1712,11 @@ package body GPR2.Project.Tree is
             return Name_Type (LRT);
          end if;
 
-         if Self.Root.Check_Attribute
-           (PRA.Runtime, Attribute_Index.Create (Value_Not_Empty (Language)),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Runtime,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
          then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
          end if;
@@ -1721,10 +1733,11 @@ package body GPR2.Project.Tree is
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Check_Attribute
-           (PRA.Toolchain_Name,
-            Attribute_Index.Create (Value_Not_Empty (Language)),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Toolchain_Name,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (Tmp_Attr.Value.Text);
@@ -1742,10 +1755,11 @@ package body GPR2.Project.Tree is
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Check_Attribute
-           (PRA.Toolchain_Path,
-            Attribute_Index.Create (Value_Not_Empty (Language)),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Toolchain_Path,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (GNAT.OS_Lib.Normalize_Pathname
@@ -1764,10 +1778,11 @@ package body GPR2.Project.Tree is
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Check_Attribute
-           (PRA.Required_Toolchain_Version,
-            Attribute_Index.Create (Value_Not_Empty (Language)),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Required_Toolchain_Version,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (Tmp_Attr.Value.Text);
@@ -1781,6 +1796,7 @@ package body GPR2.Project.Tree is
          Project.Configuration."=");
       Pre_Conf_Description   : Description_Set_Holders.Holder;
       Post_Conf_Description  : Description_Set_Holders.Holder;
+      Has_Errors             : Boolean;
       use Description_Set_Holders;
 
    begin
@@ -1839,29 +1855,40 @@ package body GPR2.Project.Tree is
          --  Ignore possible missing dirs and imported projects since they can
          --  depend on the result of autoconfiguration.
 
+         Has_Errors := Self.Messages.Has_Error;
+
          --  Ignore messages issued with this initial load: as we don't have
          --  a valid configuration here, we can't really know whether they
          --  are meaningful or not
          Self.Messages.Clear;
 
-         for C in Self.Iterate
-           (Filter =>
-              (F_Aggregate | F_Aggregate_Library => False, others => True))
-         loop
-            Add_Languages (Element (C));
-         end loop;
+         if not Has_Errors then
+            for C in Self.Iterate
+              (Filter =>
+                 (F_Aggregate | F_Aggregate_Library => False, others => True))
+            loop
+               Add_Languages (Element (C));
+            end loop;
 
-         if Languages.Length = 0 then
-            Self.Append_Message
-              (Message.Create
-                 (Level   => Message.Warning,
-                  Message => "no language for the projects tree: "
-                  & "configuration skipped",
-                  Sloc    => (if Lang_Sloc.Is_Defined
-                              then Lang_Sloc
-                              else Source_Reference.Create
-                                     (Self.Root.Path_Name.Value, 0, 0))));
-            return;
+            if Languages.Length = 0 then
+               Self.Append_Message
+                 (Message.Create
+                    (Level   => Message.Warning,
+                     Message => "no language for the projects tree: "
+                     & "configuration skipped",
+                     Sloc    => (if Lang_Sloc.Is_Defined
+                                 then Lang_Sloc
+                                 else Source_Reference.Create
+                                        (Self.Root.Path_Name.Value, 0, 0))));
+               return;
+            end if;
+
+         else
+            --  Generate a default config, since a critical failure occurred:
+            --  this will reload the project in normal mode and print the
+            --  relevant error messages.
+
+            Languages.Include ("ada");
          end if;
 
          Pre_Conf_Description := To_Holder (Conf_Descriptions);
@@ -1873,21 +1900,17 @@ package body GPR2.Project.Tree is
          Conf := Project.Configuration.Create
            (Pre_Conf_Description.Element,
             Actual_Target,
-            Self.Root.Path_Name,
+            Filename,
             Self.Base);
 
          --  Unload the project that was loaded without configuration.
          --  We need to backup the messages and default search path:
          --  messages issued during configuration are relevant, together with
          --  already computed search paths
-         declare
-            Old_Messages : constant Log.Object := Self.Messages;
-            Old_Paths    : constant Path_Name.Set.Object := Self.Search_Paths;
-         begin
-            Self.Unload;
-            Self.Messages := Old_Messages;
-            Self.Search_Paths := Old_Paths;
-         end;
+
+         Self.Unload;
+         Self.Messages := Old_Messages;
+         Self.Search_Paths := Old_Paths;
       end if;
 
       Self.Load
@@ -1901,12 +1924,19 @@ package body GPR2.Project.Tree is
          Absent_Dir_Error => Absent_Dir_Error,
          Implicit_With    => Implicit_With);
 
+      if Default_Cfg.Exists then
+         --  No need for reconfiguration if explicit default configuration
+         --  project has been specified.
+         return;
+      end if;
+
       --  Configuration parameters might have changed, i.e. new languages
       --  may be added from missing imported projects that have been found
       --  after search path update from configuration data. We need to check
       --  for that and perform a reconfiguration if necessary.
 
       Languages.Clear;
+
       for C in Self.Iterate
         (Filter =>
            (F_Aggregate | F_Aggregate_Library => False, others => True))
@@ -1916,18 +1946,20 @@ package body GPR2.Project.Tree is
 
       Post_Conf_Description := To_Holder (Conf_Descriptions);
 
-      Compare_Configurations
-        (Pre_Conf_Description.Element,
-         Post_Conf_Description.Element,
-         Reconf_Status);
+      if not Pre_Conf_Description.Is_Empty then
+         Compare_Configurations
+           (Pre_Conf_Description.Element,
+            Post_Conf_Description.Element,
+            Reconf_Status);
 
-      if Reconf_Status = Unchanged then
-         --  Nothing changed, no need for reconfiguration
-         return;
-      end if;
+         if Reconf_Status = Unchanged then
+            --  Nothing changed, no need for reconfiguration
+            return;
+         end if;
 
-      if Reconf_Status = Incompatible then
-         raise Project_Error with "reconfiguration error";
+         if Reconf_Status = Incompatible then
+            raise Project_Error with "reconfiguration error";
+         end if;
       end if;
 
       --  We need to reconfigure in order to account for new languages.
@@ -1939,7 +1971,8 @@ package body GPR2.Project.Tree is
          Self.Base);
 
       Self.Unload;
-      Self.Search_Paths := Default_Search_Paths (True);
+      Self.Messages := Old_Messages;
+      Self.Search_Paths := Old_Paths;
 
       Self.Load
         ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
@@ -1951,7 +1984,6 @@ package body GPR2.Project.Tree is
          Check_Shared_Lib => Check_Shared_Lib,
          Absent_Dir_Error => Absent_Dir_Error,
          Implicit_With    => Implicit_With);
-
    end Load_Autoconf;
 
    ------------------------
@@ -3724,7 +3756,7 @@ package body GPR2.Project.Tree is
          end loop;
       end if;
 
-      if Has_Error then
+      if Has_Error and then not Self.Pre_Conf_Mode then
          raise Project_Error
            with Self.Root.Path_Name.Value & " semantic error";
       end if;

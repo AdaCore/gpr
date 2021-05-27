@@ -428,7 +428,7 @@ package body GPR2.Parser.Project is
    function Parse
      (Filename      : GPR2.Path_Name.Object;
       Implicit_With : GPR2.Path_Name.Set.Object;
-      Messages      : out Log.Object) return Object
+      Messages      : in out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
@@ -511,7 +511,9 @@ package body GPR2.Parser.Project is
 
          --  Finally register this project into the registry
 
-         Registry.Register (Filename, Project);
+         if not Messages.Has_Error then
+            Registry.Register (Filename, Project);
+         end if;
 
          return Project;
       end if;
@@ -3190,9 +3192,13 @@ package body GPR2.Parser.Project is
                                            (Import.Path_Name.Name,
                                             Search_Paths);
                               Prj    : constant GPR2.Parser.Project.Object :=
-                                         Registry.Get (Path);
+                                         (if Path.Exists
+                                          then Registry.Get (Path)
+                                          else GPR2.Parser.Project.Undefined);
                            begin
-                              if Prj.Types.Contains (T_Name) then
+                              if Prj.Is_Defined
+                                and then Prj.Types.Contains (T_Name)
+                              then
                                  Type_Def := Prj.Types (T_Name);
                               end if;
                            end;
@@ -3213,9 +3219,13 @@ package body GPR2.Parser.Project is
                                           (Self.Extended.Path_Name.Name,
                                            Search_Paths);
                            Extended : constant GPR2.Parser.Project.Object :=
-                                        Registry.Get (Path);
+                                        (if Path.Exists
+                                         then Registry.Get (Path)
+                                         else GPR2.Parser.Project.Undefined);
                         begin
-                           if Extended.Types.Contains (T_Name) then
+                           if Extended.Is_Defined
+                             and then Extended.Types.Contains (T_Name)
+                           then
                               Type_Def := Extended.Types (T_Name);
                            end if;
                         end;
