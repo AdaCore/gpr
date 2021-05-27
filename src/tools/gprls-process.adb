@@ -258,25 +258,55 @@ begin
       use type Project.Source.Object;
       use all type Project.Source.Naming_Exception_Kind;
 
-      function Path_Equal
-        (Left, Right : Project.Source.Object) return Boolean
-      is (Left = Right and then Left.Path_Name.Value = Right.Path_Name.Value);
+      type Source_And_Index is record
+         Source : Project.Source.Object;
+         Index  : Natural;
+      end record;
 
-      function Path_Less
-        (Left, Right : Project.Source.Object) return Boolean
-      is (Left.View.Namespace_Root.Name < Right.View.Namespace_Root.Name
-          or else (Left.View.Namespace_Root.Name
-                   = Right.View.Namespace_Root.Name
-                   and then Left < Right)
-          or else (Left = Right
-                   and then Left.Path_Name.Value < Right.Path_Name.Value));
+      function Path_Equal (Left, Right : Source_And_Index) return Boolean
+      is (Left.Source = Right.Source
+          and then Left.Source.Path_Name.Value = Right.Source.Path_Name.Value
+          and then Left.Index = Right.Index);
+
+      type One_Type is range -1 .. 1;
+
+      function Compare (Left, Right : Name_Type) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Compare (Left, Right : Path_Name.Full_Name) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Compare (Left, Right : Project.Source.Object) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Compare (Left, Right : Natural) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Path_Less (Left, Right : Source_And_Index) return Boolean
+      is (case Compare
+            (Left.Source.View.Namespace_Root.Name,
+             Right.Source.View.Namespace_Root.Name)
+          is
+             when -1 => True,
+             when  1 => False,
+             when  0 =>
+            (case Compare (Left.Source, Right.Source) is
+                when -1 => True,
+                when  1 => False,
+                when  0 =>
+               (case Compare
+                    (Left.Source.Path_Name.Value, Right.Source.Path_Name.Value)
+                is
+                   when -1 => True,
+                   when  1 => False,
+                   when  0 => Compare (Left.Index, Right.Index) = -1)));
 
       package Sources_By_Path is new Ada.Containers.Indefinite_Ordered_Sets
-        (Project.Source.Object, "<" => Path_Less, "=" => Path_Equal);
+        (Source_And_Index, "<" => Path_Less, "=" => Path_Equal);
 
       type File_Status is
-        (OK,          --  matching timestamp
-         Not_Same);   --  non matching timestamp
+        (OK,        -- matching timestamp
+         Not_Same); -- non matching timestamp
 
       No_Obj : constant String := "<no_obj>";
 
@@ -315,13 +345,13 @@ begin
          for S of Sources loop
             declare
                Deps : constant Project.Source.Set.Object :=
-                        S.Dependencies (Closure => True);
+                        S.Source.Dependencies (Closure => True);
             begin
                if Deps.Is_Empty then
                   --  If no dependencies, use only this one because without ALI
                   --  file we don't know dependency even on itself.
 
-                  Closures.Include (S);
+                  Closures.Include (S.Source);
                else
                   Closures.Union (Deps);
                end if;
@@ -427,9 +457,9 @@ begin
       begin
          for S of Sources loop
             declare
-               View      : constant Project.View.Object := S.View;
+               View      : constant Project.View.Object := S.Source.View;
                Artifacts : constant Project.Source.Artifact.Object :=
-                             S.Artifacts;
+                             S.Source.Artifacts;
                Obj_File  : Path_Name.Object;
                Unit_Info : Project.Unit_Info.Object;
                Main_Unit : Unit.Object;
@@ -438,8 +468,16 @@ begin
 
                function  Print_Unit (U_Sec : Unit.Object) return Boolean;
 
+               procedure Print_Object (U_Sec : GPR2.Unit.Object);
+
                procedure Dependence_Output
                  (Dep_Source : Project.Source.Object);
+
+               function Has_Dependency (Index : Positive) return Boolean is
+                 (Artifacts.Has_Dependency (Index)
+                  and then
+                    (Artifacts.Dependency (Index).Exists
+                     or else Opt.Source_Parser));
 
                -----------------------
                -- Dependence_Output --
@@ -455,6 +493,49 @@ begin
                      Output_Source (S => Dep_Source);
                   end if;
                end Dependence_Output;
+
+               ------------------
+               -- Print_Object --
+               ------------------
+
+               procedure Print_Object (U_Sec : GPR2.Unit.Object) is
+               begin
+                  if Opt.Print_Object_Files
+                    and then not S.Source.Is_Aggregated
+                  then
+                     Obj_File := Artifacts.Object_Code (U_Sec.Index);
+
+                     if Obj_File.Exists then
+                        Text_IO.Put_Line (Obj_File.Value);
+                     else
+                        Text_IO.Put_Line (No_Obj);
+                     end if;
+                  end if;
+
+                  if Opt.Print_Units and then Print_Unit (U_Sec) then
+                     null;
+                  end if;
+
+                  if Opt.Print_Sources and then not Opt.Dependency_Mode then
+                     Output_Source (S.Source);
+                  end if;
+
+                  if Opt.Verbose then
+                     Unit_Info := S.Source.View.Unit (U_Sec.Name);
+
+                     if Unit_Info.Has_Spec then
+                        Print_Unit_From (Unit_Info.Spec);
+                     end if;
+
+                     if Unit_Info.Has_Body then
+                        Print_Unit_From (Unit_Info.Main_Body);
+                     end if;
+
+                     for S of Unit_Info.Separates loop
+                        Print_Unit_From (S);
+                     end loop;
+                  end if;
+               end Print_Object;
 
                ----------------
                -- Print_Unit --
@@ -522,56 +603,24 @@ begin
                end Print_Unit_From;
 
             begin
-               for U_Sec of S.Source.Units loop
-                  if Artifacts.Has_Dependency (U_Sec.Index)
-                    and then
-                      (Artifacts.Dependency (U_Sec.Index).Exists
-                       or else Opt.Source_Parser)
-                  then
-                     if Opt.Print_Object_Files
-                       and then not S.Is_Aggregated
-                     then
-                        Obj_File := Artifacts.Object_Code (U_Sec.Index);
-
-                        if Obj_File.Exists then
-                           Text_IO.Put_Line (Obj_File.Value);
-                        else
-                           Text_IO.Put_Line (No_Obj);
-                        end if;
+               if S.Index = 0 then
+                  for U_Sec of S.Source.Source.Units loop
+                     if Has_Dependency (U_Sec.Index) then
+                        Print_Object (U_Sec);
+                        exit when not Opt.Verbose;
                      end if;
+                  end loop;
 
-                     if Opt.Print_Units and then Print_Unit (U_Sec) then
-                        null;
-                     end if;
-
-                     if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                        Output_Source (S);
-                     end if;
-
-                     exit when not Opt.Verbose;
-
-                     Unit_Info := S.View.Unit (U_Sec.Name);
-
-                     if Unit_Info.Has_Spec then
-                        Print_Unit_From (Unit_Info.Spec);
-                     end if;
-
-                     if Unit_Info.Has_Body then
-                        Print_Unit_From (Unit_Info.Main_Body);
-                     end if;
-
-                     for S of Unit_Info.Separates loop
-                        Print_Unit_From (S);
-                     end loop;
-                  end if;
-               end loop;
+               elsif Has_Dependency (S.Index) then
+                  Print_Object (S.Source.Source.Units.Element (S.Index));
+               end if;
 
                if Opt.Dependency_Mode and then Opt.Print_Sources then
                   if Opt.Verbose then
                      Text_IO.Put_Line ("   depends upon");
                   end if;
 
-                  S.Dependencies (Dependence_Output'Access);
+                  S.Source.Dependencies (Dependence_Output'Access);
                end if;
             end;
          end loop;
@@ -596,16 +645,18 @@ begin
                   Artifacts : Project.Source.Artifact.Object;
 
                   function Insert_Prefer_Body
-                    (Key  : Filename_Type;
-                     Kind : GPR2.Unit.Library_Unit_Type) return Boolean;
+                    (Key   : Filename_Type;
+                     Kind  : GPR2.Unit.Library_Unit_Type;
+                     Index : Natural) return Boolean;
 
                   ------------------------
                   -- Insert_Prefer_Body --
                   ------------------------
 
                   function Insert_Prefer_Body
-                    (Key  : Filename_Type;
-                     Kind : GPR2.Unit.Library_Unit_Type) return Boolean
+                    (Key   : Filename_Type;
+                     Kind  : GPR2.Unit.Library_Unit_Type;
+                     Index : Natural) return Boolean
                   is
                      Position : Sources_By_Path.Cursor;
                      Inserted : Boolean;
@@ -615,7 +666,7 @@ begin
                      then
                         Remains.Exclude (String (Key));
 
-                        Sources.Insert (S, Position, Inserted);
+                        Sources.Insert ((S, Index), Position, Inserted);
 
                         return True;
                      end if;
@@ -625,7 +676,7 @@ begin
 
                begin
                   if not Insert_Prefer_Body
-                           (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body)
+                    (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
                     and then S.Source.Has_Units
                   then
                      Artifacts := S.Artifacts;
@@ -635,17 +686,17 @@ begin
                           and then
                             (Insert_Prefer_Body
                                (Artifacts.Dependency (CU.Index).Simple_Name,
-                                CU.Kind)
+                                CU.Kind, CU.Index)
                              or else
                              Insert_Prefer_Body
                                (Artifacts.Dependency (CU.Index).Base_Filename,
-                                CU.Kind));
+                                CU.Kind, CU.Index));
 
                         exit when Artifacts.Has_Object_Code (CU.Index)
                           and then
                            Insert_Prefer_Body
                              (Artifacts.Object_Code (CU.Index).Simple_Name,
-                              CU.Kind);
+                              CU.Kind, CU.Index);
                      end loop;
                   end if;
                end;
@@ -675,7 +726,7 @@ begin
               and then S.Is_Main
               and then S.Source.Language = Name_Type (Ada_Lang)
             then
-               Sources.Insert (S);
+               Sources.Insert ((S, 0));
             end if;
          end loop;
 
@@ -690,7 +741,7 @@ begin
                if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
                  and then not Element (S_Cur).Is_Overriden
                then
-                  Sources.Insert (Element (S_Cur), Position, Inserted);
+                  Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
 
                   --  Source could be already in the set because we
                   --  can have the same project in the All_Views
@@ -701,12 +752,12 @@ begin
 
                   if not Inserted
                     and then Element (S_Cur).Is_Aggregated
-                    < Sources_By_Path.Element (Position).Is_Aggregated
+                    < Sources_By_Path.Element (Position).Source.Is_Aggregated
                   then
                      --  We prefer Is_Aggregated = False because it
                      --  has object files.
 
-                     Sources.Replace (Element (S_Cur));
+                     Sources.Replace ((Element (S_Cur), 0));
                   end if;
                end if;
             end loop;
@@ -717,7 +768,7 @@ begin
            (Need_Update => False).Iterate (Filter => S_Compilable)
          loop
             if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
-               Sources.Insert (Element (S_Cur));
+               Sources.Insert ((Element (S_Cur), 0));
             end if;
          end loop;
       end if;
@@ -732,14 +783,15 @@ begin
 
       if not Opt.Source_Parser then
          for S of Sources loop
-            For_Units : for CU of S.Source.Units loop
-               if S.Artifacts.Has_Dependency (CU.Index)
-                 and then not S.Artifacts.Dependency (CU.Index).Exists
+            For_Units : for CU of S.Source.Source.Units loop
+               if S.Source.Artifacts.Has_Dependency (CU.Index)
+                 and then not S.Source.Artifacts.Dependency (CU.Index).Exists
                then
                   Full_Closure := False;
 
-                  if S.Has_Naming_Exception
-                    and then S.Naming_Exception = Project.Source.Multi_Unit
+                  if S.Source.Has_Naming_Exception
+                    and then S.Source.Naming_Exception
+                      = Project.Source.Multi_Unit
                   then
                      --  In case of multi-unit we have no information until the
                      --  unit is compiled. There is no need to report that
@@ -756,8 +808,8 @@ begin
                        ("Can't find ALI "
                         & String
                           (if CU.Index > 1
-                           then S.Artifacts.Dependency (CU.Index).Simple_Name
-                           & " "
+                           then S.Source.Artifacts.Dependency (CU.Index)
+                                .Simple_Name & " "
                            else "")
                         & "file for " & S.Source.Path_Name.Value);
                   end if;

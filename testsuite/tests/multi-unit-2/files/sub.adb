@@ -1,7 +1,10 @@
+with U4;
 separate (Pkg1)
 procedure Sep is
 begin
-   null;
+   if U4.Dummy > 0 then
+      raise Program_Error;
+   end if;
 end Sep;
 
 with U1;

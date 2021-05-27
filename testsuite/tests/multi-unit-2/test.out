@@ -21,6 +21,7 @@ pkg1.adb
   - compilation unit at 1
     unit name    = Pkg1
     kind         = S_BODY
+    withed units = { u4 }
     object file  = pkg1.ali
 pkg1.ads
   single-unit          = TRUE
@@ -92,6 +93,7 @@ sub.adb
   - compilation unit at 1
     unit name    = Pkg1.Sep
     kind         = S_SEPARATE
+    withed units = { U4 }
   - compilation unit at 2
     unit name    = Pkg2.Sep
     kind         = S_BODY_ONLY
@@ -156,3 +158,15 @@ few_units.ada
     unit name    = U3.P
     kind         = S_BODY_ONLY
     object file  = few_units~8.ali
+/files/few_units~2.o
+   U1
+      OK /files/few_units.ada
+/files/few_units~4.o
+   U2
+      OK /files/few_units.ada
+/files/few_units~6.o
+   U3
+      OK /files/few_units.ada
+/files/few_units~7.o
+   U4
+      OK /files/few_units.ada
