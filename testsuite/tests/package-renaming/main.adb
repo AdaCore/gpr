@@ -99,10 +99,27 @@ procedure Main is
 begin
    Project.Tree.Load (Prj, Create ("build.gpr"), Ctx);
 
+   if Prj.Has_Messages then
+      Text_IO.Put_Line ("Messages found:");
+
+      for C in Prj.Log_Messages.Iterate (False, True, True, True, True) loop
+         Text_IO.Put_Line (Log.Element (C).Format);
+      end loop;
+   end if;
+
    Display (Prj.Root_Project);
 
    Prj.Unload;
    Project.Tree.Load (Prj, Create ("prj.gpr"), Ctx);
+
+   if Prj.Has_Messages then
+      Text_IO.Put_Line ("Messages found:");
+
+      for C in Prj.Log_Messages.Iterate (False, True, True, True, True) loop
+         Text_IO.Put_Line (Log.Element (C).Format);
+      end loop;
+   end if;
+
 exception
    when GPR2.Project_Error =>
       if Prj.Has_Messages then

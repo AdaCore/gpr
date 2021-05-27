@@ -47,6 +47,7 @@ procedure Main is
            (GPR2.Project.Ensure_Extension (Project_Name),
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
+      Print_Messages;
    exception
       when Project_Error =>
          Print_Messages;

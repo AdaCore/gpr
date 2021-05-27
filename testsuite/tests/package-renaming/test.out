@@ -1,3 +1,4 @@
+Messages found:
 Build    K_STANDARD
 
  Binder
@@ -5,4 +6,4 @@ Build    K_STANDARD
  Compiler
    Switches (Ada) -> -O2
 Messages found:
-prj.gpr:3:21: error: package 'Abst.Compiler' is undefined
+prj.gpr:3:21: warning: package 'Abst.Compiler' is undefined

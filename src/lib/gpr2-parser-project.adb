@@ -3129,7 +3129,7 @@ package body GPR2.Parser.Project is
             elsif not View.Has_Packages (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Warning,
                      Sloc    => Sloc,
                      Message =>
                        "package '" & String (Project) & '.' & String (P_Name)

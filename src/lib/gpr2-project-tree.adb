@@ -72,6 +72,12 @@ package body GPR2.Project.Tree is
        Sloc : Source_Reference.Object'Class);
    --  Append an error to Self.Messages
 
+   procedure Warning
+      (Self : in out Object;
+       Msg  : String;
+       Sloc : Source_Reference.Object'Class);
+   --  Append a warning to Self.Messages
+
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
      with Post => Register_View'Result.Is_Defined;
@@ -3127,13 +3133,7 @@ package body GPR2.Project.Tree is
             Self.Pre_Conf_Mode);
 
          if View.Qualifier not in Aggregate_Kind then
-            if P_Data.Attrs.Contains (PRA.Project_Files) then
-               Self.Error
-                 ("""project_files"" is only valid in aggregate projects",
-                  P_Data.Attrs.Element (PRA.Project_Files));
-            else
-               New_Signature := View.Context.Signature (P_Data.Externals);
-            end if;
+            New_Signature := View.Context.Signature (P_Data.Externals);
 
          elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
             --  Aggregate project must have Project_Files attribute
@@ -3379,12 +3379,10 @@ package body GPR2.Project.Tree is
             end if;
 
             if Def.Value = PRA.Single and then A.Kind = PRA.List then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "attribute """ & String (A.Name.Text)
-                     & """ cannot be a list",
-                     A));
+               Self.Error
+                 ("attribute """ & String (A.Name.Text)
+                  & """ cannot be a list",
+                  A);
 
                if A.Name.Text = PRA.Object_Dir then
                   Check_Object_Dir_Exists := False;
@@ -3394,12 +3392,10 @@ package body GPR2.Project.Tree is
             end if;
 
             if Def.Value = PRA.List and then A.Kind = PRA.Single then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "attribute """ & String (A.Name.Text)
-                     & """ must be a list",
-                     A.Value));
+               Self.Error
+                 ("attribute """ & String (A.Name.Text)
+                  & """ must be a list",
+                  A.Value);
             end if;
          end Check_Def;
 
@@ -3414,12 +3410,10 @@ package body GPR2.Project.Tree is
                --  Check the package itself
 
                if not Registry.Pack.Is_Allowed_In (P.Name, P_Kind) then
-                  Self.Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "package """ & String (P.Name)
-                        & """ cannot be used in " & Image (P_Kind) & 's',
-                        P));
+                  Self.Warning
+                    ("package """ & String (P.Name)
+                     & """ cannot be used in " & Image (P_Kind) & 's',
+                     P);
                end if;
 
                --  Check package's attributes
@@ -3434,24 +3428,20 @@ package body GPR2.Project.Tree is
                         Def := PRA.Get (Q_Name);
 
                         if not Def.Is_Allowed_In (P_Kind) then
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "attribute """ & PRA.Image (Q_Name)
-                                 & """ cannot be used in " & Image (P_Kind),
-                                 A));
+                           Self.Warning
+                             ("attribute """ & PRA.Image (Q_Name)
+                              & """ cannot be used in " & Image (P_Kind),
+                              A);
                         end if;
 
                         Check_Def (Def, A);
 
                      elsif PRP.Attributes_Are_Checked (P.Name) then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "attribute """ & String (A.Name.Text)
-                              & """ not supported in package "
-                              & String (P.Name),
-                              A));
+                        Self.Warning
+                          ("attribute """ & String (A.Name.Text)
+                           & """ not supported in package "
+                           & String (P.Name),
+                           A);
                      end if;
                   end;
                end loop;
@@ -3495,24 +3485,20 @@ package body GPR2.Project.Tree is
                            --  If one or Aggregate_Kind allowed use including
                            --  error message.
 
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 '"' & String (A.Name.Text)
-                                 & """ is only valid in "
-                                 & Image (Allow) & 's',
-                                 A));
+                           Self.Warning
+                             ('"' & String (A.Name.Text)
+                              & """ is only valid in "
+                              & Image (Allow) & 's',
+                              A);
                         else
                            --  If more than one is allowed use excluding
                            --  error message.
 
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "attribute """ & String (A.Name.Text)
-                                 & """ cannot be used in "
-                                 & Image (P_Kind) & 's',
-                                 A));
+                           Self.Warning
+                             ("attribute """ & String (A.Name.Text)
+                              & """ cannot be used in "
+                              & Image (P_Kind) & 's',
+                              A);
                         end if;
                      end if;
                   end;
@@ -4329,6 +4315,18 @@ package body GPR2.Project.Tree is
 
       return View;
    end View_For;
+
+   -------------
+   -- Warning --
+   -------------
+
+   procedure Warning
+     (Self : in out Object;
+      Msg  : String;
+      Sloc : Source_Reference.Object'Class) is
+   begin
+      Self.Messages.Append (Message.Create (Message.Warning, Msg, Sloc));
+   end Warning;
 
 begin
    --  Export routines to Definitions to avoid cyclic dependencies
