@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Environment_Variables;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
@@ -24,6 +25,7 @@ with GNAT.OS_Lib;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Path_Name;
 with GPR2.Project.Source;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -95,6 +97,11 @@ procedure Main is
 
 begin
    Test_Prj ("data/prj.gpr");
+   Test_Prj ("data/prj1.gpr");
+   Ada.Environment_Variables.Set
+     ("SOURCE_LIST_FILE_PATH",
+      GPR2.Path_Name.Create_File("data/sources_absolute.lst").Value);
+   Test_Prj ("data/prj1.gpr");
    Test_Prj ("data/prj2.gpr");
    Test_Prj ("data/prj3.gpr");
 end Main;

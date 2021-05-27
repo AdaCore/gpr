@@ -25,13 +25,13 @@
 with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Containers.Indefinite_Vectors;
-with Ada.Directories;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Strings.Maps.Constants;
 with Ada.Text_IO;
 
 with GNAT.MD5;
+with GNAT.OS_Lib;
 with GNAT.Regexp;
 
 with GPR2.Containers;
@@ -638,7 +638,7 @@ package body GPR2.Project.Definition is
 
       use type SR.Object;
 
-      Root : constant GPR2.Path_Name.Full_Name := Def.Path.Value;
+      Root : constant GPR2.Path_Name.Object := Def.Path;
 
       package Name_Boolean_Map is new Ada.Containers.Indefinite_Ordered_Maps
         (Name_Type, Boolean);
@@ -1877,7 +1877,10 @@ package body GPR2.Project.Definition is
          Attr_Value : constant SR.Value.Object :=
                         Def.Attrs.Element (Attr_Name).Value;
          Filename   : constant GPR2.Path_Name.Full_Name :=
-                        Directories.Compose (Root, Attr_Value.Text);
+                        (if GNAT.OS_Lib.Is_Absolute_Path (Attr_Value.Text)
+                         then Attr_Value.Text
+                         else Root.Compose
+                           (Filename_Type (Attr_Value.Text)).Value);
          F          : Text_IO.File_Type;
       begin
          Text_IO.Open (F, Text_IO.In_File, Filename);

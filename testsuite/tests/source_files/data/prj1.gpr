@@ -1,0 +1,4 @@
+project Prj1 is
+   for Source_Dirs use ("src");
+   for Source_List_File use External ("SOURCE_LIST_FILE_PATH", "src/sources_relative.lst");
+end Prj1;
