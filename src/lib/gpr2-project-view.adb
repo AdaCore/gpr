@@ -880,6 +880,19 @@ package body GPR2.Project.View is
       end if;
    end Has_Variables;
 
+   --------------------
+   -- Hide_Unit_Body --
+   --------------------
+
+   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type) is
+      Ref : constant Definition.Ref := Definition.Get (Self);
+      CU  : constant Unit_Info.Set.Cursor := Ref.Units.Find (Unit);
+   begin
+      if Unit_Info.Set.Set.Has_Element (CU) then
+         Ref.Units (CU).Remove_Body;
+      end if;
+   end Hide_Unit_Body;
+
    --------
    -- Id --
    --------
@@ -1400,6 +1413,22 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Trees.Project.Qualifier;
    end Qualifier;
+
+   ------------------
+   -- Reindex_Unit --
+   ------------------
+
+   procedure Reindex_Unit (Self : Object; From, To : Name_Type) is
+      Ref : constant Definition.Ref := Definition.Get (Self);
+      C   : constant Unit_Info.Set.Cursor := Ref.Units.Find (From);
+   begin
+      if Unit_Info.Set.Set.Has_Element (C) then
+         Ref.Units.Include (To, Unit_Info.Set.Set.Element (C));
+         Ref.Units.Delete (From);
+      end if;
+
+      Ref.Tree.Reindex_Unit (From, To);
+   end Reindex_Unit;
 
    ------------------------
    -- Remove_Body_Suffix --

@@ -647,6 +647,12 @@ package GPR2.Project.View is
       At_Pos  : Natural) return GPR2.Path_Name.Object;
    --  Returns the full pathname of the main executable for the given main
 
+   procedure Reindex_Unit (Self : Object; From, To : Name_Type);
+   --  Change name of unit in unit index used to get unit info by unit name
+
+   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type);
+   --  Remove unit body from unit info index
+
 private
 
    type Object is new Definition_References.Ref with null record;

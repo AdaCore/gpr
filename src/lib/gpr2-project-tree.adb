@@ -2762,6 +2762,19 @@ package body GPR2.Project.Tree is
       return View;
    end Register_View;
 
+   ------------------
+   -- Reindex_Unit --
+   ------------------
+
+   procedure Reindex_Unit (Self : in out Object; From, To : Name_Type) is
+      C : constant Name_View.Cursor := Self.Units.Find (From);
+   begin
+      if Name_View.Has_Element (C) then
+         Self.Units.Include (To, Name_View.Element (C));
+         Self.Units.Delete (From);
+      end if;
+   end Reindex_Unit;
+
    -------------------
    -- Remove_Source --
    -------------------
@@ -4118,15 +4131,29 @@ package body GPR2.Project.Tree is
      (Self          : Object;
       Stop_On_Error : Boolean := True;
       With_Runtime  : Boolean := False;
-      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends) is
+      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
+   is
+      Was_RT : Boolean := False;
    begin
       Self.Self.Rooted_Sources.Clear;
 
       for V of reverse Self.Ordered_Views loop
+         if V.Is_Runtime then
+            Was_RT := True;
+         end if;
+
          if With_Runtime or else not V.Is_Runtime then
             Definition.Get (V).Update_Sources (V, Stop_On_Error, Backends);
          end if;
       end loop;
+
+      if With_Runtime and then not Was_RT and then Self.Runtime.Is_Defined then
+         --  Runtime update sources is required, but runtime project is not in
+         --  the Self.Ordered_Views.
+
+         Definition.Get (Self.Runtime).Update_Sources
+           (Self.Runtime, Stop_On_Error, Backends);
+      end if;
 
       if Self.Check_Shared_Lib then
          for View of Self.Views_Set loop

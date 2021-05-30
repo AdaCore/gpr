@@ -444,6 +444,9 @@ package GPR2.Project.Tree is
    --  function is mainly used to get the effective view in case a project has
    --  been extended using extends all.
 
+   procedure Reindex_Unit (Self : in out Object; From, To : Name_Type);
+   --  Change name of unit in view index used to get view by unit name
+
 private
 
    package Name_View is

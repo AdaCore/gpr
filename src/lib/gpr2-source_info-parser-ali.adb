@@ -49,7 +49,8 @@ package body GPR2.Source_Info.Parser.ALI is
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Path_Name.Object;
       LI     : Path_Name.Object'Class;
-      U_Ref  : in out GPR2.Unit.Object);
+      U_Ref  : in out GPR2.Unit.Object;
+      View   : Project.View.Object);
    --  Parse single ALI file
 
    procedure Union
@@ -344,7 +345,8 @@ package body GPR2.Source_Info.Parser.ALI is
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Path_Name.Object;
       LI     : Path_Name.Object'Class;
-      U_Ref  : in out GPR2.Unit.Object)
+      U_Ref  : in out GPR2.Unit.Object;
+      View   : Project.View.Object)
    is
       use all type GPR2.Unit.Library_Unit_Type;
 
@@ -891,11 +893,19 @@ package body GPR2.Source_Info.Parser.ALI is
 
             CU_Idx := CU_Idx + 1;
 
+            if U_Ref.Name = Name_Type (-U_Name) then
+               --  Keep original casing
+
+               U_Name := +String (U_Ref.Name);
+
+            else
+               View.Reindex_Unit
+                 (From => U_Ref.Name, To => Name_Type (-U_Name));
+            end if;
+
             CUs (CU_Idx) :=
               Unit.Create
-                (Name          => (if U_Ref.Name = Name_Type (-U_Name)
-                                   then U_Ref.Name -- Try to keep char case
-                                   else Name_Type (-U_Name)),
+                (Name          => Name_Type (-U_Name),
                  Index         => U_Ref.Index,
                  Lib_Unit_Kind => U_Kind,
                  Lib_Item_Kind => L_Type,
@@ -927,6 +937,19 @@ package body GPR2.Source_Info.Parser.ALI is
          end loop;
 
          if Current = 0 then
+            if (CU_Idx = 1
+                and then U_Ref.Kind = Unit.S_Body
+                and then CUs (1).Kind = Unit.S_Spec_Only)
+              or else
+                (CU_Idx = 2
+                 and then CU_BN (1) = CU_BN (2))
+            then
+               --  Body file with pragma No_Body
+
+               View.Hide_Unit_Body (U_Ref.Name);
+               View.Hide_Unit_Body (CUs (1).Name);
+            end if;
+
             Data.Parsed := Source_Info.None;
             IO.Close (A_Handle);
             return;
@@ -1084,7 +1107,8 @@ package body GPR2.Source_Info.Parser.ALI is
                      Dep := Src.Artifacts.Dependency (CU.Index);
 
                      if Dep.Exists then
-                        Compute (Self.all, Info, FU.Main_Body, Dep, CU);
+                        Compute
+                          (Self.all, Info, FU.Main_Body, Dep, CU, View);
                      end if;
                   end if;
 
@@ -1110,7 +1134,7 @@ package body GPR2.Source_Info.Parser.ALI is
             LI := Arts.Dependency (CU.Index);
 
             if LI.Exists then
-               Compute (Self.all, Data, File, LI, CU);
+               Compute (Self.all, Data, File, LI, CU, View);
             elsif CU.Kind in Unit.Body_Kind then
                Check_Separated (CU);
             end if;

@@ -83,6 +83,10 @@ package GPR2.Project.Unit_Info is
      with Pre => Self.Is_Defined and then Source.Is_Defined;
    --  Sets unit body
 
+   procedure Remove_Body (Self : in out Object)
+     with Pre => Self.Is_Defined;
+   --  Sets unit body
+
    procedure Update_Separates
      (Self : in out Object; Source : Path_Name.Object)
      with Pre => Self.Is_Defined and then Source.Is_Defined;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                       Copyright (C) 2021, AdaCore                        --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,71 +22,18 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body GPR2.Project.Unit_Info is
+with GPR2.Project.Source;
 
-   ------------
-   -- Create --
-   ------------
+package GPRls.Gnatdist is
+   --  Any modification to this subunit requires synchronization with the
+   --  GNATDIST sources.
 
-   function Create
-     (Name      : Name_Type;
-      Spec      : Path_Name.Object;
-      Main_Body : Path_Name.Object;
-      Separates : Path_Name.Set.Object) return Object is
-   begin
-      return Object'(To_Unbounded_String (String (Name)),
-                     Spec,
-                     Main_Body,
-                     Separates);
-   end Create;
+   procedure Output_ALI
+     (Source : GPR2.Project.Source.Object; Index : Positive);
+   --  Output the unit information for GNATDIST
 
-   -----------------
-   -- Remove_Body --
-   -----------------
+   procedure Output_No_ALI
+     (Source : GPR2.Project.Source.Object; Index : Natural);
+   --  Indicate that an ALI file cannot be found
 
-   procedure Remove_Body (Self : in out Object) is
-   begin
-      Self.Main_Body := Path_Name.Undefined;
-   end Remove_Body;
-
-   -----------------
-   -- Update_Body --
-   -----------------
-
-   procedure Update_Body
-     (Self : in out Object; Source : Path_Name.Object) is
-   begin
-      Self.Main_Body := Source;
-   end Update_Body;
-
-   -----------------
-   -- Update_Name --
-   -----------------
-
-   procedure Update_Name
-     (Self : in out Object; Name : Name_Type) is
-   begin
-      Self.Name := To_Unbounded_String (String (Name));
-   end Update_Name;
-
-   ----------------------
-   -- Update_Separates --
-   ----------------------
-
-   procedure Update_Separates
-     (Self : in out Object; Source : Path_Name.Object) is
-   begin
-      Self.Separates.Append (Source);
-   end Update_Separates;
-
-   -----------------
-   -- Update_Spec --
-   -----------------
-
-   procedure Update_Spec
-     (Self : in out Object; Source : Path_Name.Object) is
-   begin
-      Self.Spec := Source;
-   end Update_Spec;
-
-end GPR2.Project.Unit_Info;
+end GPRls.Gnatdist;

@@ -135,6 +135,9 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns the library type, i.e is the unit package or subroutine
 
+   function Main_Kind (Self : Object) return Main_Type
+     with Pre => Self.Is_Defined;
+
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object
      with Pre => Self.Is_Defined;
@@ -240,7 +243,10 @@ private
      (Self.Kind);
 
    function Library_Item_Kind (Self : Object) return Library_Item_Type is
-      (Self.Item_Kind);
+     (Self.Item_Kind);
+
+   function Main_Kind (Self : Object) return Main_Type is
+     (Self.Main);
 
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object

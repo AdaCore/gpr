@@ -196,6 +196,11 @@ begin
       Long_Switch => "--source-parser",
       Help        => "Allow to use source parser to get dependencies");
 
+   Define_Switch
+     (Config, Self.Gnatdist'Unrestricted_Access,
+      "-V",
+      Help => "Gnatdist specific output");
+
    Getopt (Config, Concatenate => False);
 
    --  Now read the specified files from which we will browse, if any
@@ -230,7 +235,15 @@ begin
       Self.Only_Display_Paths := True;
    end if;
 
-   if Self.Closure_Mode then
+   if Self.Gnatdist then
+      Self.Closure_Mode    := False;
+      Self.Dependency_Mode := False;
+
+      if not Self.Files.Is_Empty then
+         Self.All_Projects := True;
+      end if;
+
+   elsif Self.Closure_Mode then
       Self.Dependency_Mode := False;
       --  Closure mode has precedence over dependency mode
    end if;

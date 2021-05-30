@@ -40,6 +40,7 @@ with GPR2.Version;
 with GPRtools.Util;
 
 with GPRls.Common;
+with GPRls.Gnatdist;
 with GPRls.Options;
 
 procedure GPRls.Process (Opt : GPRls.Options.Object) is
@@ -245,7 +246,8 @@ begin
 
    Tree.Update_Sources
      (Backends => (Source_Info.Source => Opt.Source_Parser,
-                   Source_Info.LI     => True));
+                   Source_Info.LI     => True),
+      With_Runtime => Opt.Gnatdist);
 
    --
    --  Main processing
@@ -327,6 +329,8 @@ begin
 
       procedure Display_Closures;
 
+      procedure Display_Gnatdist;
+
       procedure Display_Normal;
 
       ----------------------
@@ -389,6 +393,53 @@ begin
 
          Text_IO.New_Line;
       end Display_Closures;
+
+      ----------------------
+      -- Display_Gnatdist --
+      ----------------------
+
+      procedure Display_Gnatdist is
+
+         function Has_Dependency (S : Source_And_Index) return Boolean;
+
+         --------------------
+         -- Has_Dependency --
+         --------------------
+
+         function Has_Dependency (S : Source_And_Index) return Boolean is
+            Atf : constant Project.Source.Artifact.Object :=
+                    S.Source.Artifacts;
+         begin
+            return Atf.Has_Dependency (S.Index)
+              and then Atf.Dependency (S.Index).Exists;
+         end Has_Dependency;
+
+      begin
+         for S of Sources loop
+            if not Has_Dependency (S) then
+               Gnatdist.Output_No_ALI (S.Source, S.Index);
+            end if;
+         end loop;
+
+         for S of Sources loop
+            if Has_Dependency (S) then
+               if S.Index = 0 then
+                  declare
+                     C : Source_And_Index := S;
+                  begin
+                     for CU of S.Source.Source.Units loop
+                        C.Index := CU.Index;
+                        if Has_Dependency (C) then
+                           Gnatdist.Output_ALI (S.Source, C.Index);
+                        end if;
+                     end loop;
+                  end;
+               else
+                  Gnatdist.Output_ALI (S.Source, S.Index);
+               end if;
+            end if;
+         end loop;
+      end Display_Gnatdist;
 
       --------------------
       -- Display_Normal --
@@ -781,7 +832,7 @@ begin
 
       --  Check all sources and notify when no ALI file is present
 
-      if not Opt.Source_Parser then
+      if not Opt.Source_Parser and then not Opt.Gnatdist then
          for S of Sources loop
             For_Units : for CU of S.Source.Source.Units loop
                if S.Source.Artifacts.Has_Dependency (CU.Index)
@@ -823,6 +874,9 @@ begin
 
       if Opt.Closure_Mode then
          Display_Closures;
+
+      elsif Opt.Gnatdist then
+         Display_Gnatdist;
 
       else
          Display_Normal;

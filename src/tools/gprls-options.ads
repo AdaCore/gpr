@@ -70,6 +70,8 @@ package GPRls.Options is
 
    function Verbose_Parsing (Self : Object) return Integer;
 
+   function Gnatdist (Self : Object) return Boolean;
+
    procedure Print (Self : Object);
 
 private
@@ -86,6 +88,7 @@ private
       All_Projects          : Boolean := False;
       Only_Display_Paths    : Boolean := False;
       Source_Parser         : Boolean := False;
+      Gnatdist              : Boolean := False;
       Verbose_Parsing       : Integer := 0;
    end record;
 
@@ -133,5 +136,8 @@ private
 
    function Verbose_Parsing (Self : Object) return Integer is
      (Self.Verbose_Parsing);
+
+   function Gnatdist (Self : Object) return Boolean is
+     (Self.Gnatdist);
 
 end GPRls.Options;
