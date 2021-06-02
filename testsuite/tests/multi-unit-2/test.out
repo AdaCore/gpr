@@ -47,8 +47,9 @@ pkg2.adb
   - compilation unit at 1
     unit name    = Pkg2
     kind         = S_BODY
-    withed units = { u1 }
+    withed units = { pkg u1 }
     object file  = pkg2.ali
+    dependency unit Pkg S_SPEC_ONLY in pkg.ads
     dependency unit Pkg2 S_SPEC in pkg2.ads
     dependency unit Pkg2 S_BODY in pkg2.adb
     dependency unit Pkg2.Sep S_SEPARATE in sub.adb at 2
@@ -60,10 +61,26 @@ pkg2.ads
     unit name    = Pkg2
     kind         = S_SPEC
     object file  = pkg2.ali
+    dependency unit Pkg S_SPEC_ONLY in pkg.ads
     dependency unit Pkg2 S_SPEC in pkg2.ads
     dependency unit Pkg2 S_BODY in pkg2.adb
     dependency unit Pkg2.Sep S_SEPARATE in sub.adb at 2
     dependency unit U1 S_SPEC in few_units.ada at 1
+pkg.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_BODY
+    object file  = pkg.ali
+pkg.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_SPEC_ONLY
+    object file  = pkg.ali
+    dependency unit Pkg S_SPEC_ONLY in pkg.ads
 few_units.ada
   single-unit          = FALSE
   has naming exception = TRUE
@@ -155,6 +172,20 @@ pkg2.ads
     unit name    = Pkg2
     kind         = S_SPEC
     object file  = pkg2.ali
+pkg.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_BODY
+    object file  = pkg.ali
+pkg.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_SPEC
+    object file  = pkg.ali
 few_units.ada
   single-unit          = FALSE
   has naming exception = TRUE
@@ -199,3 +230,9 @@ few_units.ada
 /files/few_units~7.o
    U4
       OK /files/few_units.ada
+/files/pkg.o
+   Pkg
+     DIF /files/pkg.adb
+/files/pkg.o
+   Pkg
+      OK /files/pkg.ads

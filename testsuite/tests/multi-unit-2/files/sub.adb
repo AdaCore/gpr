@@ -9,8 +9,10 @@ end Sep;
 
 with U1;
 
+with Pkg;
 separate (Pkg2)
 procedure Sep is
 begin
    U1.P;
+   Pkg.Var := Pkg.Var + 1;
 end Sep;
