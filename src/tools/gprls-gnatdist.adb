@@ -389,6 +389,11 @@ package body GPRls.Gnatdist is
       Afile : Path_Name.Object;
 
    begin
+      pragma Assert
+        (Src.Is_Defined,
+         "View " & String (View.Name) & " Unit " & String (W)
+         & ' ' & (if UI.Has_Body then UI.Main_Body.Value else UI.Spec.Value));
+
       if not Src.Source.Check_Unit
         (W, Spec => not UI.Has_Body, Unit => CU)
       then

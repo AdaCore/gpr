@@ -2077,9 +2077,11 @@ package body GPR2.Project.Tree is
       Source : Path_Name.Object;
       Unit   : Name_Type) is
    begin
-      Self.Units.Include (Unit, View);
-      Self.Sources.Include (Filename_Type (Source.Value), View);
-      Self.Sources.Include (Source.Simple_Name, View);
+      if not View.Is_Extended then
+         Self.Units.Include (Unit, View);
+         Self.Sources.Include (Filename_Type (Source.Value), View);
+         Self.Sources.Include (Source.Simple_Name, View);
+      end if;
    end Record_View;
 
    --------------------
