@@ -381,8 +381,7 @@ package body GPR2.Source_Info.Parser.ALI is
       procedure Fill_Unit;
       --  Add all units defined in ALI (spec, body or both)
 
-      procedure Fill_With
-        with Post => Withs.Length > Withs'Old.Length;
+      procedure Fill_With;
       --  Add all withed units into Withs below
 
       procedure Set_Source_Info_Data (Cache : Cache_Holder);
@@ -727,10 +726,15 @@ package body GPR2.Source_Info.Parser.ALI is
             Sloc : constant GPR2.Source_Reference.Object :=
                      GPR2.Source_Reference.Object
                        (Source_Reference.Create (Source.Value, 1, 1));
+            Position : Source_Reference.Identifier.Set.Cursor;
+            Inserted : Boolean;
          begin
+            --  With lines could be duplicated, ignore the next duplicated one
+
             Withs.Insert
               (Source_Reference.Identifier.Create
-                 (Sloc => Sloc, Text => Name_Type (N (1 .. U_Last))));
+                 (Sloc => Sloc, Text => Name_Type (N (1 .. U_Last))),
+              Position, Inserted);
          end;
       end Fill_With;
 
