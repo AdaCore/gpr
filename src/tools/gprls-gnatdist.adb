@@ -203,10 +203,11 @@ package body GPRls.Gnatdist is
 
    procedure Output_Name (N : Name_Type) is
    begin
-      --  Remove any encoding info (%s or %b)
-
       Output_Token (T_Name);
-      Write_Str (String (N));
+
+      --  po_gnatdist need unit name lowercased
+
+      Write_Str (To_Lower (N));
       Write_Eol;
    end Output_Name;
 
