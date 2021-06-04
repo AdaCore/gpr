@@ -1393,8 +1393,7 @@ package body GPR2.Project.Tree is
       --  Returns toolchain version specified by Required_Toolchain_Version
       --  attribute.
 
-      function Toolchain_Path
-        (Language : Name_Type) return Optional_Name_Type;
+      function Toolchain_Path (Language : Name_Type) return Filename_Optional;
       --  Returns toolchain search path specified by Toolchain_Path attribute
 
       type Reconfiguration_Status is (Unchanged, Extended, Incompatible);
@@ -1497,8 +1496,7 @@ package body GPR2.Project.Tree is
          -- Error --
          -----------
 
-         function Error (Before, After : Description) return String
-         is
+         function Error (Before, After : Description) return String is
             Result : Unbounded_String;
 
             procedure Append_Result
@@ -1531,15 +1529,18 @@ package body GPR2.Project.Tree is
             if Version (Before) /= Version (After) then
                Append_Result ("version", Version (Before), Version (After));
             end if;
+
             if Runtime (Before) /= Runtime (After) then
                Append_Result ("runtime", Runtime (Before), Runtime (After));
             end if;
+
             if Path (Before) /= Path (After) then
                Append_Result
                  ("path",
                   Optional_Name_Type (Path (Before)),
                   Optional_Name_Type (Path (After)));
             end if;
+
             if Name (Before) /= Name (After) then
                Append_Result ("name", Name (Before), Name (After));
             end if;
@@ -1553,12 +1554,11 @@ package body GPR2.Project.Tree is
 
             for Descr_A of After loop
                if Language (Descr_B) = Language (Descr_A) then
-
                   if Descr_B = Descr_A then
                      Found_In_After := True;
                      exit;
-                  else
 
+                  else
                      Self.Append_Message
                        (Message.Create
                           (Level   => Message.Error,
@@ -1567,17 +1567,19 @@ package body GPR2.Project.Tree is
                            & " during reconfiguration",
                            Sloc    => Source_Reference.Create
                              (Self.Root.Path_Name.Value, 0, 0)));
+
                      Self.Append_Message
                        (Message.Create
                           (Level   => Message.Error,
                            Message => Error (Descr_B, Descr_A),
                            Sloc    => Source_Reference.Create
                              (Self.Root.Path_Name.Value, 0, 0)));
+
                      Result := Incompatible;
+
                      return;
                   end if;
                end if;
-
             end loop;
 
             if not Found_In_After then
@@ -1754,7 +1756,7 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Path
-        (Language : Name_Type) return Optional_Name_Type
+        (Language : Name_Type) return Filename_Optional
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
@@ -1765,11 +1767,12 @@ package body GPR2.Project.Tree is
                        Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
-            return Name_Type (GNAT.OS_Lib.Normalize_Pathname
-                              (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
+            return Filename_Type
+              (GNAT.OS_Lib.Normalize_Pathname
+                 (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
          end if;
 
-         return No_Name;
+         return No_Filename;
       end Toolchain_Path;
 
       -----------------------

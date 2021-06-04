@@ -345,8 +345,7 @@ procedure GPRconfig is
                if Slice = Pref then
                   Report_Error_And_Exit
                     ("Parameter value for " & Prefix & " not specified in """
-                     & Config & """"
-                     & ASCII.LF
+                     & Config & """" & ASCII.LF
                      & "Invalid configuration specified with --config");
                end if;
 
@@ -417,7 +416,8 @@ procedure GPRconfig is
            (Language => Get_Description_Param (Slices, "language"),
             Version  => Get_Description_Param (Slices, "version"),
             Runtime  => Get_Description_Param (Slices, "runtime"),
-            Path     => Get_Description_Param (Slices, "path"),
+            Path     => Filename_Optional
+                          (Get_Description_Param (Slices, "path")),
             Name     => Get_Description_Param (Slices, "name"));
       else
          if Get_Description_Param (Slices, 1) = No_Name then
@@ -431,7 +431,7 @@ procedure GPRconfig is
            (Language => Get_Description_Param (Slices, 1),
             Version  => Get_Description_Param (Slices, 2),
             Runtime  => Get_Description_Param (Slices, 3),
-            Path     => Get_Description_Param (Slices, 4),
+            Path     => Filename_Optional (Get_Description_Param (Slices, 4)),
             Name     => Get_Description_Param (Slices, 5));
       end if;
 

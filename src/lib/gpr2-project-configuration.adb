@@ -88,7 +88,7 @@ package body GPR2.Project.Configuration is
      (Language : Name_Type;
       Version  : Optional_Name_Type := No_Name;
       Runtime  : Optional_Name_Type := No_Name;
-      Path     : Optional_Name_Type := No_Name;
+      Path     : Filename_Optional  := No_Filename;
       Name     : Optional_Name_Type := No_Name) return Description
    is
       function "+" (Str : Optional_Name_Type) return Unbounded_String
@@ -98,7 +98,7 @@ package body GPR2.Project.Configuration is
         (Language => +Language,
          Version  => +Version,
          Runtime  => +Runtime,
-         Path     => +Path,
+         Path     => +String (Path),
          Name     => +Name);
    end Create;
 

@@ -61,6 +61,10 @@ package GPR2.Project.Configuration is
    --  A configuration description, for a language, a version, specific
    --  runtime, etc.
 
+   overriding function "=" (Left, Right : Description) return Boolean;
+   --  Returns True when the Left and Right configuration descriptions are
+   --  equal.
+
    type Description_Set is array (Positive range <>) of Description;
    --  A set of description
 
@@ -70,7 +74,7 @@ package GPR2.Project.Configuration is
      (Language : Name_Type;
       Version  : Optional_Name_Type := No_Name;
       Runtime  : Optional_Name_Type := No_Name;
-      Path     : Optional_Name_Type := No_Name;
+      Path     : Filename_Optional  := No_Filename;
       Name     : Optional_Name_Type := No_Name) return Description;
    --  Returns a description for a configuration. This description object is
    --  used to retrieve the available and corresponding compilers. That is,
@@ -175,6 +179,14 @@ private
 
    function Name (Descr : Description) return Optional_Name_Type is
      (Optional_Name_Type (To_String (Descr.Name)));
+
+   overriding function "=" (Left, Right : Description) return Boolean
+   is
+     (Language (Left) = Language (Right)
+      and then Version (Left) = Version (Right)
+      and then Runtime (Left) = Runtime (Right)
+      and then Path (Left) = Path (Right)
+      and then Name (Left) = Name (Right));
 
    package Descriptions is new Ada.Containers.Vectors (Positive, Description);
 
