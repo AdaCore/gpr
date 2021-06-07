@@ -118,9 +118,14 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
       --  Object search path
 
       for V of Tree loop
-         if V.Kind in K_Standard | K_Library | K_Aggregate_Library then
-            Obj_Path.Append (V.Object_Directory);
-         end if;
+         case V.Kind is
+            when K_Standard =>
+               Obj_Path.Append (V.Object_Directory);
+            when K_Library | K_Aggregate_Library =>
+               Obj_Path.Append (V.Library_Ali_Directory);
+            when others =>
+               null;
+         end case;
       end loop;
 
       if Tree.Has_Runtime_Project then
