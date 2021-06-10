@@ -120,20 +120,9 @@ package body GPR2.Project.Source.Artifact is
                          (Src.Path_Name.Simple_Name & P_Suffix,
                           Filename_Optional (View.Object_Directory.Value));
 
-      Callgraph    : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (BN & C_Suffix,
-                          Filename_Type (View.Object_Directory.Value));
-
-      Coverage     : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (BN & Cov_Suffix,
-                          Filename_Type (View.Object_Directory.Value));
-
-      Switches     : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (BN & S_Suffix,
-                          Filename_Type (View.Object_Directory.Value));
+      Callgraph : GPR2.Path_Name.Object;
+      Coverage  : GPR2.Path_Name.Object;
+      Switches  : GPR2.Path_Name.Object;
 
       -------------------
       -- From_Hierarhy --
@@ -143,8 +132,8 @@ package body GPR2.Project.Source.Artifact is
         (View         : Project.View.Object;
          Filename     : Filename_Type;
          Dir_Attr     : Name_Type;
-         Full_Closure : Boolean := False) return GPR2.Path_Name.Object is
-
+         Full_Closure : Boolean := False) return GPR2.Path_Name.Object
+      is
          function Get_Candidate
            (View : Project.View.Object) return GPR2.Path_Name.Object;
          --  If View has Dir_Attr defined, then returns the candidate file
@@ -228,28 +217,20 @@ package body GPR2.Project.Source.Artifact is
                declare
                   Base : constant Filename_Type := BN & At_Suffix (CU.Index);
                begin
-                  if Source.Aggregated then
-                     for View of Source.Aggregating_Views loop
-                        Deps_Lib.Insert
-                          (CU.Index,
-                           GPR2.Path_Name.Create_File
-                             (Base & D_Suffix,
-                              Filename_Type
-                                (View.Library_Ali_Directory.Value)));
-                     end loop;
-                  else
+                  Insert_If_Defined
+                    (Deps_Lib,
+                     CU.Index,
+                     From_Hierarchy
+                       (View,
+                        Base & D_Suffix,
+                        PRA.Library_Ali_Dir, True));
+
+                  if View.Kind /= K_Aggregate_Library then
                      Insert_If_Defined
                        (Object_Files,
                         CU.Index,
                         From_Hierarchy
                           (View, Base & O_Suffix, PRA.Object_Dir, True));
-                     Insert_If_Defined
-                       (Deps_Lib,
-                        CU.Index,
-                        From_Hierarchy
-                          (View,
-                           Base & D_Suffix,
-                           PRA.Library_Ali_Dir, True));
                      Insert_If_Defined
                        (Deps_Obj,
                         CU.Index,
@@ -260,30 +241,34 @@ package body GPR2.Project.Source.Artifact is
             end if;
          end loop;
 
-      elsif Source.Aggregated then
-         --  For aggregated library the .ali is also copied into the
-         --  aggregate library directory.
-         for Agg_Lib of Source.Aggregating_Views loop
-            Deps_Lib.Insert
-              (1,
-               GPR2.Path_Name.Create_File
-                 (BN & D_Suffix,
-                  Filename_Type (Agg_Lib.Library_Ali_Directory.Value)));
-         end loop;
-
       else
-         Insert_If_Defined
-           (Object_Files,
-            1,
-            From_Hierarchy (View, BN & O_Suffix, PRA.Object_Dir, True));
          Insert_If_Defined
            (Deps_Lib,
             1,
             From_Hierarchy (View, BN & D_Suffix, PRA.Library_Ali_Dir, True));
-         Insert_If_Defined
-           (Deps_Obj,
-            1,
-            From_Hierarchy (View, BN & D_Suffix, PRA.Object_Dir, True));
+
+         if View.Kind /= K_Aggregate_Library then
+            Insert_If_Defined
+              (Object_Files,
+               1,
+               From_Hierarchy (View, BN & O_Suffix, PRA.Object_Dir, True));
+            Insert_If_Defined
+              (Deps_Obj,
+               1,
+               From_Hierarchy (View, BN & D_Suffix, PRA.Object_Dir, True));
+         end if;
+      end if;
+
+      if View.Kind /= K_Aggregate_Library then
+         Callgraph := GPR2.Path_Name.Create_File
+           (BN & C_Suffix,
+            Filename_Type (View.Object_Directory.Value));
+         Coverage := GPR2.Path_Name.Create_File
+           (BN & Cov_Suffix,
+            Filename_Type (View.Object_Directory.Value));
+         Switches := GPR2.Path_Name.Create_File
+           (BN & S_Suffix,
+            Filename_Type (View.Object_Directory.Value));
       end if;
 
       return Artifact.Object'

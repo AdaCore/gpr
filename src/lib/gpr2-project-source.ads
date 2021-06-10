@@ -61,11 +61,12 @@ package GPR2.Project.Source is
       Is_Interface     : Boolean;
       Naming_Exception : Naming_Exception_Kind;
       Is_Compilable    : Boolean;
-      Aggregated       : Boolean := False) return Object
+      Aggregated       : Project.View.Object := Project.View.Undefined)
+      return Object
      with Pre => Source.Is_Defined
                  and then View.Is_Defined
-                 and then (not Aggregated
-                           or else View.Is_Aggregated_In_Library);
+                 and then Aggregated.Is_Defined =
+                            (View.Kind = K_Aggregate_Library);
    --  Constructor for Object. View is where the source is defined (found from
    --  View Source_Dirs) and Extending_View is the optional view from which the
    --  project source is extended. That is, if Extending_View is defined then
@@ -79,6 +80,10 @@ package GPR2.Project.Source is
      with Pre  => Self.Is_Defined,
           Post => View'Result.Is_Defined;
    --  The view the source is in
+
+   function Aggregated (Self : Object) return Project.View.Object
+     with Pre  => Self.Is_Defined;
+   --  The view where the source is aggregated from
 
    function Is_Aggregated (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -207,10 +212,12 @@ private
       --  and its View. Otherwise we've got memory leak after release view and
       --  valgrind detected mess in memory deallocations at the process exit.
 
+      Aggregated : Project.Weak_Reference;
+      --  View where the source is aggregated from
+
       Is_Interface     : Boolean               := False;
       Naming_Exception : Naming_Exception_Kind := No;
       Is_Compilable    : Boolean               := False;
-      Aggregated       : Boolean               := False;
       Inherited        : Boolean               := False;
       --  From extended project
    end record;
@@ -221,7 +228,8 @@ private
      (Self /= Undefined);
 
    function Is_Aggregated (Self : Object) return Boolean is
-     (Self.Aggregated);
+     (not Definition_References."="
+        (Self.Aggregated, Definition_References.Null_Weak_Ref));
 
    function "<" (Left, Right : Object) return Boolean is
      (Left.Source < Right.Source);

@@ -1757,8 +1757,8 @@ package body GPR2.Project.Definition is
             Tree.Append_Message
               (Message.Create
                  (Message.Error,
-                  "project """ & String (Src.View.Name)
-                  & """, """ & Src.Source.Path_Name.Value & '"',
+                  "project """ & String (Src.Aggregated.Name)
+                  & """, """ & Src.Path_Name.Value & '"',
                   Sloc, Indent => 1));
          end Source_Message;
 
@@ -1774,8 +1774,7 @@ package body GPR2.Project.Definition is
                      Tree.Append_Message
                        (Message.Create
                           (Message.Error,
-                           "source """ & String
-                             (Source.Source.Path_Name.Simple_Name)
+                           "source """ & String (Source.Path_Name.Simple_Name)
                            & """ cannot belong to several projects",
                            Sloc));
 
@@ -2233,6 +2232,7 @@ package body GPR2.Project.Definition is
                                             (not Interface_Found
                                              and then P.Source.Kind
                                                       in Unit.Spec_Kind);
+
                   begin
                      --  An aggregate library project does not allow naming
                      --  exception. So the source naming exception status is
@@ -2241,11 +2241,11 @@ package body GPR2.Project.Definition is
                      A_Set.Insert
                        (Project.Source.Create
                           (Source           => P.Source,
-                           View             => P.View,
+                           View             => View,
                            Is_Interface     => Is_Interface,
                            Naming_Exception => P.Naming_Exception,
                            Is_Compilable    => P.Is_Compilable,
-                           Aggregated       => True));
+                           Aggregated       => P.View));
                   end;
                end loop;
 

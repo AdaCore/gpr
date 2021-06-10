@@ -54,12 +54,22 @@ package body GPR2.Project.Source is
    --  Returns Object with changed actual view for the case when source was
    --  derived from extended project.
 
+   ----------------
+   -- Aggregated --
+   ----------------
+
+   function Aggregated (Self : Object) return Project.View.Object is
+   begin
+      return (if Self.Is_Aggregated
+              then Definition.Strong (Self.Aggregated)
+              else Project.View.Undefined);
+   end Aggregated;
+
    -----------------------
    -- Aggregating_Views --
    -----------------------
 
-   function Aggregating_Views (Self : Object) return Project.View.Set.Object
-   is
+   function Aggregating_Views (Self : Object) return Project.View.Set.Object is
    begin
       return Definition.Strong (Self.View).Aggregate_Libraries;
    end Aggregating_Views;
@@ -262,12 +272,22 @@ package body GPR2.Project.Source is
       Is_Interface     : Boolean;
       Naming_Exception : Naming_Exception_Kind;
       Is_Compilable    : Boolean;
-      Aggregated       : Boolean := False) return Object is
+      Aggregated       : Project.View.Object := Project.View.Undefined)
+      return Object is
    begin
-      return Object'
-        (Source,
-         Definition.Weak (View),
-         Is_Interface, Naming_Exception, Is_Compilable, Aggregated, False);
+      return Result : Object :=
+        Object'
+          (Source,
+           Definition.Weak (View),
+           Is_Interface     => Is_Interface,
+           Naming_Exception => Naming_Exception,
+           Is_Compilable    => Is_Compilable,
+           others           => <>)
+      do
+         if Aggregated.Is_Defined then
+            Result.Aggregated := Definition.Weak (Aggregated);
+         end if;
+      end return;
    end Create;
 
    ------------------
