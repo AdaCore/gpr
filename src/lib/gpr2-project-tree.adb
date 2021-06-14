@@ -28,6 +28,7 @@ with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
+with Ada.Text_IO;
 
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute_Index;
@@ -458,7 +459,7 @@ package body GPR2.Project.Tree is
                              (Source_Reference.Builtin, Name)),
                Value => Source_Reference.Value.Object
                           (Source_Reference.Value.Create
-                             (GPR2.Source_Reference.Object
+                             (Source_Reference.Object
                                 (Source_Reference.Create (RTF.Value, 0, 0)),
                               Value))));
       end Add_Attribute;
@@ -477,7 +478,67 @@ package body GPR2.Project.Tree is
          RTF := Path_Name.Create_File
            ("runtime.gpr", Directory => Filename_Optional (RTD.Value.Text));
 
-         Add_Attribute (PRA.Source_Dirs, RTD.Value.Text & DS & "adainclude");
+         declare
+            Dirs : Containers.Source_Value_List;
+
+            procedure Add_If_Exists (Dir_Name : String);
+            --  Add directory name into Dirs if it exists
+
+            -------------------
+            -- Add_If_Exists --
+            -------------------
+
+            procedure Add_If_Exists (Dir_Name : String) is
+            begin
+               if Directories.Exists (Dir_Name) then
+                  Dirs.Append
+                    (Source_Reference.Value.Object
+                       (Source_Reference.Value.Create
+                          (Source_Reference.Object
+                             (Source_Reference.Create (RTF.Value, 0, 0)),
+                              Dir_Name)));
+               end if;
+            end Add_If_Exists;
+
+            function With_RTD_Prefix (Name : String) return String is
+              (Directories.Compose (RTD.Value.Text, Name));
+            --  Prepend the Name with
+
+            Ada_Source_Path : constant String :=
+                                With_RTD_Prefix ("ada_source_path");
+
+            use Ada.Text_IO;
+
+            File : File_Type;
+
+         begin
+            if Directories.Exists (Ada_Source_Path) then
+               Open (File, Text_IO.In_File, Ada_Source_Path);
+
+               while not End_Of_File (File) loop
+                  declare
+                     Line : constant String := Get_Line (File);
+                  begin
+                     if Line /= "" then
+                        Add_If_Exists
+                          (if OS_Lib.Is_Absolute_Path (Line) then Line
+                           else With_RTD_Prefix (Line));
+                     end if;
+                  end;
+               end loop;
+
+            else
+               Add_If_Exists (With_RTD_Prefix ("adainclude"));
+            end if;
+
+            Data.Attrs.Insert
+              (Project.Attribute.Create
+                 (Name => Source_Reference.Identifier.Object
+                            (Source_Reference.Identifier.Create
+                               (Source_Reference.Builtin, PRA.Source_Dirs)),
+                  Values => Dirs));
+         end;
+
          Add_Attribute (PRA.Object_Dir,  RTD.Value.Text & DS & "adalib");
 
          --  The only language supported is Ada
