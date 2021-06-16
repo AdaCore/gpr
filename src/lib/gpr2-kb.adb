@@ -2910,6 +2910,12 @@ package body GPR2.KB is
                            if Group_Count < Group
                              and then Group_Count + Count >= Group
                            then
+                              if Matched (Group - Group_Count) = No_Match then
+                                 Trace
+                                   (Main_Trace,
+                                    "<dir>: Matched group is empty, skipping");
+                                 return;
+                              end if;
                               Trace
                                 (Main_Trace,
                                  "<dir>: Found matched group: "
