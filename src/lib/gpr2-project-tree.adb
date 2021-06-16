@@ -527,6 +527,8 @@ package body GPR2.Project.Tree is
                   end;
                end loop;
 
+               Close (File);
+
             else
                Add_If_Exists (With_RTD_Prefix ("adainclude"));
             end if;
