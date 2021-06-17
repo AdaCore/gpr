@@ -1184,21 +1184,8 @@ package body GPR2.KB is
       end if;
 
       if Path (Descr) /= No_Filename then
-         declare
-            Compiler_Path : constant Filename_Type := Path (Descr);
-         begin
-
-            if Compiler_Path (Compiler_Path'Last) =
-              OS_Lib.Directory_Separator
-            then
-               Result.Path := GPR2.Path_Name.Create_Directory
-                 (Compiler_Path);
-            else
-               Result.Path := GPR2.Path_Name.Create_Directory
-                 (Compiler_Path & OS_Lib.Directory_Separator);
-            end if;
-
-         end;
+         Result.Path := Path_Name.Create_Directory
+                          (Path (Descr), Resolve_Links => True);
       end if;
 
       if Name (Descr) /= No_Name then

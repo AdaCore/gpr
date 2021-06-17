@@ -86,8 +86,9 @@ package GPR2.Path_Name is
    --  parameter the Directory parameter has no meaning.
 
    function Create_Directory
-     (Name      : Filename_Type;
-      Directory : Filename_Optional := "") return Object
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := "";
+      Resolve_Links : Boolean := False) return Object
      with Post => Create_Directory'Result.Is_Defined
                   and then Create_Directory'Result.Is_Directory;
    --  Creates a Path_Name_Type for a directory
