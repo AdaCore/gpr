@@ -153,7 +153,7 @@ is
 
    Compiler_Output_Regexp : constant String :=
                               "^Unit (\S+) \((spec|body)\) line (\d+), "
-                              & "file offset (\d+), file name (\S+)\r?$";
+                              & "file offset (\d+),.* file name (\S+)\r?$";
    --  Regexp used to parse the Ada compiler's output
 
    Matcher   : constant Regpat.Pattern_Matcher :=
