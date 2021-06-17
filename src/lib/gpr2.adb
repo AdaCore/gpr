@@ -82,7 +82,9 @@ package body GPR2 is
       else
          return Result : constant String :=
                            Directories.Containing_Directory
-                             (Directories.Containing_Directory (GPRls.all))
+                             (Directories.Containing_Directory
+                                (GNAT.OS_Lib.Normalize_Pathname
+                                   (GPRls.all, Resolve_Links => True)))
          do
             GNAT.OS_Lib.Free (GPRls);
          end return;

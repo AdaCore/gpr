@@ -2062,16 +2062,14 @@ package body GPR2.KB is
       use GNAT.OS_Lib;
 
       Tools_Dir : constant String := Get_Tools_Directory;
-      Exec_Name : constant String := Ada.Command_Line.Command_Name;
-
-      function Can_Be_GPRTool (S : String) return Boolean is
-        (Head (Base_Name (S), 3) = "gpr"
-          and then Base_Name (Containing_Directory (S)) = "bin");
+      Exec_Name : constant String :=
+                    Normalize_Pathname (Ada.Command_Line.Command_Name,
+                                        Resolve_Links => True);
    begin
 
       if Has_Directory_Separator (Exec_Name)
-        and then Can_Be_GPRTool
-          (Normalize_Pathname (Exec_Name, Resolve_Links => True))
+        and then Head (Base_Name (Exec_Name), 3) = "gpr"
+        and then Base_Name (Containing_Directory (Exec_Name)) = "bin"
       then
          --  A gprtool has been called with path prefix, we need
          --  to return the prefix of corresponding gprtools installation,
