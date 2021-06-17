@@ -1,0 +1,5 @@
+description:
+    Check for naming'casing value ignored on windows
+driver: python_script
+control:
+- [SKIP, "'windows' not in env.host.platform", "DEAD on not windows"]

@@ -1060,13 +1060,16 @@ package body GPR2.Project.Definition is
                              ACH.To_Lower
                                (Naming.Attribute (PRA.Casing).Value.Text);
                   Charset : constant Character_Set :=
-                              (if Casing = "lowercase"
+                              (if not File_Names_Case_Sensitive
+                                  or else Casing = "mixedcase"
+                               then Constants.Letter_Set
+                               elsif Casing = "lowercase"
                                then Constants.Lower_Set
                                elsif Casing = "uppercase"
                                then Constants.Upper_Set
-                               elsif Casing = "mixedcase"
-                               then Constants.Letter_Set
                                else Null_Set);
+                  --  On Windows, file names are case insensitive, so Casing
+                  --  attribute is irrelevant and Letter_Set is used
                   J  : Positive := Basename'First; -- Iterates over Basename
                   DP : Positive := Basename'First;
                   --  Next char after last dot replacement
