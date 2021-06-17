@@ -97,12 +97,11 @@ package GPR2.Project.Tree is
                  and then (not Filename.Is_Implicit_Project
                            or else Project_Dir.Is_Defined);
    --  Loads a root project
-   --  If Implicit_Project is True, the main project file being parsed is
-   --  deemed to be in the current working directory, even if it is not the
-   --  case. Implicit_Project is set to True when a gpr tool is invoked without
-   --  a project file and is using an implicit project file that is virtually
-   --  in the current working directory, but is physically in another
-   --  directory.
+   --  If Project_Dir is defined, the main project file being parsed is deemed
+   --  to be in this directory, even if it is not the case. Project_Dir is
+   --  defined when a gpr tool is invoked without a project file and is using
+   --  an implicit project file that is virtually in the Project_Dir, but is
+   --  physically in another directory.
 
    procedure Load_Configuration
      (Self     : in out Object;
