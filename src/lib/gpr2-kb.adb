@@ -49,12 +49,12 @@ package body GPR2.KB is
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE",
-                     GNATCOLL.Traces.From_Config);
+                     GNATCOLL.Traces.Off);
 
    Match_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                    GNATCOLL.Traces.Create
                      ("KNOWLEDGE_BASE.MATHCING",
-                      GNATCOLL.Traces.From_Config);
+                      GNATCOLL.Traces.Off);
 
    No_Compatible_Compilers : exception;
    --  Raised when any combination of compilers found can form a supported

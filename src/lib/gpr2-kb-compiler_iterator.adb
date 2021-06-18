@@ -49,7 +49,7 @@ package body GPR2.KB.Compiler_Iterator is
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE.COMPILER_ITERATOR",
-                     GNATCOLL.Traces.From_Config);
+                     GNATCOLL.Traces.Off);
 
    package CDM renames Compiler_Description_Maps;
 
