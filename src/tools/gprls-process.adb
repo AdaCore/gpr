@@ -689,9 +689,7 @@ begin
          for CV in
            Tree.Iterate ((Project.I_Extended => False, others => True))
          loop
-            for S of
-              Project.Tree.Element (CV).Sources (Need_Update => False)
-            loop
+            for S of Project.Tree.Element (CV).Sources loop
                declare
                   Artifacts : Project.Source.Artifact.Object;
 
@@ -781,7 +779,7 @@ begin
          --     - Either we're in closure mode, and we want to use the mains
          --       from the root project.
 
-         for S of Tree.Root_Project.Sources (Need_Update => False) loop
+         for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
               and then S.Source.Language = Name_Type (Ada_Lang)
@@ -795,9 +793,7 @@ begin
          --    the root project or the entire tree, depending on All_Sources).
 
          for View of Tree loop
-            for S_Cur in View.Sources (Need_Update => False).Iterate
-                           (Filter => S_Compilable)
-            loop
+            for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
                if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
                  and then not Element (S_Cur).Is_Overriden
                then
@@ -824,9 +820,7 @@ begin
          end loop;
 
       else
-         for S_Cur in Tree.Root_Project.Sources
-           (Need_Update => False).Iterate (Filter => S_Compilable)
-         loop
+         for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
             if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
                Sources.Insert ((Element (S_Cur), 0));
             end if;

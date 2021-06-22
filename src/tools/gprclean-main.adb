@@ -39,7 +39,19 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
+
+pragma Warnings (Off, "unit ""GPR2.Project.Source.Set"" is not referenced");
+--  This pragma need to workaround GNAT bug U622-047 when unit is necessary,
+--  but when set, issues warning that it is not referenced.
+--
 with GPR2.Project.Source.Set;
+--  Without this import
+--  gprclean-main.adb:386:20: error: cannot call function that returns limited
+--             view of type "Object" defined at gpr2-project-source-set.ads:32
+--  gprclean-main.adb:386:20: error: there must be a regular with_clause for
+--            package "Set" in the current unit, or in some unit in its context
+pragma Warnings (On);
+
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
@@ -380,10 +392,8 @@ procedure GPRclean.Main is
 
       end;
 
-      for C in View.Sources (Need_Update => False).Iterate loop
+      for S of View.Sources loop
          declare
-            S       : constant Project.Source.Object :=
-                        Project.Source.Set.Element (C);
             Cleanup : Boolean := True;
             --  To disable cleanup if main files list exists and the main file
             --  is not from list.

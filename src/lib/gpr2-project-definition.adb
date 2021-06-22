@@ -2247,7 +2247,7 @@ package body GPR2.Project.Definition is
                  (DA.all, Agg, Stop_On_Error => True,
                   Backends => Source_Info.No_Backends);
 
-               for P of Agg.Sources (Need_Update => False) loop
+               for P of Agg.Sources loop
                   In_Interface :=
                     Interface_Sources.Contains
                       (P.Source.Path_Name.Simple_Name);
@@ -2457,6 +2457,10 @@ package body GPR2.Project.Definition is
 
       if not Def.Extended.Is_Empty then
          for Ext of Def.Extended loop
+            Update_Sources
+              (Get (Ext).all, Ext, Stop_On_Error => True,
+               Backends => Source_Info.No_Backends);
+
             Insert (Ext.Sources, Extended_Copy, SR.Undefined);
          end loop;
       end if;

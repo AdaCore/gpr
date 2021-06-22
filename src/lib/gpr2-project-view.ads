@@ -369,12 +369,11 @@ package GPR2.Project.View is
    --  source with multiple units is not counted as an interface.
 
    function Sources
-     (Self        : Object;
-      Filter      : Source_Kind := K_All;
-      Need_Update : Boolean := True) return Project.Source.Set.Object
+     (Self   : Object;
+      Filter : Source_Kind := K_All) return Project.Source.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the sources for the view, note that this routine ensure that
-   --  the current sources are up-to-date by calling Update_Sources below.
+   --  the sources are loaded.
 
    function Source
      (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object

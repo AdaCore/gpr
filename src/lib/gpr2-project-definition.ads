@@ -163,6 +163,10 @@ private package GPR2.Project.Definition is
      (View : Project.View.Object) return Context.Object;
    --  Returns context of the project view
 
+   Are_Sources_Loaded : access function
+     (Tree : Project.Tree.Object) return Boolean;
+   --  Returns True if the sources are loaded into project tree
+
    --------------------------------------------------------------
    -- Private routines exported from GPR2.Project.View package --
    --------------------------------------------------------------

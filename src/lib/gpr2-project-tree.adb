@@ -121,6 +121,9 @@ package body GPR2.Project.Tree is
      (View.Tree.Context (View.Context));
    --  Returns context of the project view
 
+   function Are_Sources_Loaded (Tree : Object) return Boolean is
+     (Tree.Sources_Loaded);
+
    procedure Set_Source (Source : Project.Source.Object);
    --  Insert source into internal Tree container indexed by Root of subtree
    --  project name and simple source filename.
@@ -1166,9 +1169,18 @@ package body GPR2.Project.Tree is
             Definition.Get (V).Sources_Signature :=
               GPR2.Context.Default_Signature;
          end loop;
+
+         Self.Self.Sources_Loaded := False;
+
       else
          Definition.Get (View).Sources_Signature :=
            GPR2.Context.Default_Signature;
+
+         if View.Is_Aggregated_In_Library then
+            for Agg of View.Aggregate_Libraries loop
+               Self.Invalidate_Sources (Agg);
+            end loop;
+         end if;
       end if;
    end Invalidate_Sources;
 
@@ -3412,8 +3424,12 @@ package body GPR2.Project.Tree is
             --  That is if there is at least some external used otherwise the
             --  project is stable and won't change.
 
-            if Changed /= null and then Old_Signature /= New_Signature then
-               Changed (View);
+            if Old_Signature /= New_Signature then
+               if Changed /= null then
+                  Changed (View);
+               end if;
+
+               Self.Invalidate_Sources (View);
             end if;
          end if;
       end Set_View;
@@ -4198,6 +4214,7 @@ package body GPR2.Project.Tree is
    begin
       if not Internal then
          Self.Self.Rooted_Sources.Clear;
+         Self.Self.Sources_Loaded := True;
       end if;
 
       for V of reverse Self.Ordered_Views loop
@@ -4254,7 +4271,7 @@ package body GPR2.Project.Tree is
                   function Has_Essential_Sources
                     (V : Project.View.Object) return Boolean is
                   begin
-                     for S of V.Sources (Need_Update => False) loop
+                     for S of V.Sources loop
                         if S.Source.Language = "Ada"
                           or else S.Source.Kind not in GPR2.Unit.Spec_Kind
                         then
@@ -4432,13 +4449,14 @@ package body GPR2.Project.Tree is
 begin
    --  Export routines to Definitions to avoid cyclic dependencies
 
-   Definition.Register          := Register_View'Access;
-   Definition.Check_Source      := Check_Source'Access;
-   Definition.Check_Source_Unit := Check_Source'Access;
-   Definition.Has_Source        := Has_Source'Access;
-   Definition.Set_Source        := Set_Source'Access;
-   Definition.Remove_Source     := Remove_Source'Access;
-   Definition.Get_Context       := Get_Context'Access;
-   Definition.Enable_Ali_Parser := Enable_Ali_Parser'Access;
-   Definition.Ali_Parser_Is_On  := Ali_Parser_Is_Enabled'Access;
+   Definition.Register           := Register_View'Access;
+   Definition.Check_Source       := Check_Source'Access;
+   Definition.Check_Source_Unit  := Check_Source'Access;
+   Definition.Has_Source         := Has_Source'Access;
+   Definition.Set_Source         := Set_Source'Access;
+   Definition.Remove_Source      := Remove_Source'Access;
+   Definition.Get_Context        := Get_Context'Access;
+   Definition.Enable_Ali_Parser  := Enable_Ali_Parser'Access;
+   Definition.Ali_Parser_Is_On   := Ali_Parser_Is_Enabled'Access;
+   Definition.Are_Sources_Loaded := Are_Sources_Loaded'Access;
 end GPR2.Project.Tree;

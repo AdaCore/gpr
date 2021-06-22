@@ -24,6 +24,7 @@
 
 with Ada.Directories;
 with Ada.IO_Exceptions;
+with Ada.Streams;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
@@ -66,16 +67,6 @@ package body GPR2.Project.View is
 
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
-
-   procedure Update_Sources
-     (Self     : Object;
-      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
-     with Pre => Self.Is_Defined;
-   --  Ensure that the view sources are up-to-date. This is needed before
-   --  computing the dependencies of a source in the project tree. This routine
-   --  is called where needed and is there for internal use only.
-   --  Backends parameter defines the set of parsers that can be used to parse
-   --  the source information.
 
    function Apply_Root_And_Subdirs
      (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
@@ -1633,75 +1624,49 @@ package body GPR2.Project.View is
    -------------
 
    function Sources
-     (Self        : Object;
-      Filter      : Source_Kind := K_All;
-      Need_Update : Boolean := True) return Project.Source.Set.Object is
+     (Self   : Object;
+      Filter : Source_Kind := K_All) return Project.Source.Set.Object
+   is
+      use type Ada.Streams.Stream_Element_Array;
+      Data : constant Project.Definition.Ref := Project.Definition.Get (Self);
    begin
-      --  First we make sure that if needed the set of sources is up-to-date.
-      --  This only updates the set of source for the View depending on the
-      --  project deffinition. Basically it brings a list of source file and
-      --  their corresponding language into the set.
+      if not Definition.Are_Sources_Loaded (Data.Tree.all) then
+         Data.Tree.Update_Sources (With_Runtime => Self.Is_Runtime);
 
-      if Need_Update then
-         Self.Update_Sources;
+      elsif Data.Sources_Signature = GPR2.Context.Default_Signature then
+         Data.Update_Sources
+           (Self, Stop_On_Error => True, Backends => Source_Info.All_Backends);
       end if;
 
-      declare
-         Data  : constant Project.Definition.Ref :=
-                   Project.Definition.Get (Self);
-      begin
-         --  Compute and return the sources depending on the filtering
+      --  Compute and return the sources depending on the filtering
 
-         if Filter = K_All then
-            if Need_Update then
-               --  Check sources timestamp
+      if Filter = K_All then
+         return Data.Sources;
 
-               for S of Data.Sources loop
-                  if not S.Source.Check_Timestamp then
-                     Data.Sources_Signature := GPR2.Context.Default_Signature;
-                     Self.Update_Sources;
-                     exit;
+      else
+         return S_Set : Project.Source.Set.Object do
+            for S of Data.Sources loop
+               declare
+                  Is_Interface : constant Boolean :=
+                                   S.Source.Has_Units
+                                   and then S.Source.Has_Single_Unit
+                                   and then Data.Units.Contains
+                                              (S.Source.Unit_Name)
+                                   and then S.Is_Interface;
+                  --  All sources related to an interface unit are also
+                  --  taken as interface (not only the spec)???
+
+               begin
+                  if (Filter = K_Interface_Only and then Is_Interface)
+                    or else
+                      (Filter = K_Not_Interface and then not Is_Interface)
+                  then
+                     S_Set.Insert (S);
                   end if;
-               end loop;
-            end if;
-
-            return Data.Sources;
-
-         else
-            return S_Set : Project.Source.Set.Object do
-               for S of Data.Sources loop
-                  declare
-                     Is_Interface : constant Boolean :=
-                                      S.Source.Has_Units
-                                          and then
-                                      S.Source.Has_Single_Unit
-                                          and then
-                                      Data.Units.Contains (S.Source.Unit_Name)
-                                          and then
-                                      S.Is_Interface;
-                     --  All sources related to an interface unit are also
-                     --  taken as interface (not only the spec)???
-                  begin
-                     if (Filter = K_Interface_Only and then Is_Interface)
-                           or else
-                        (Filter = K_Not_Interface and then not Is_Interface)
-                     then
-                        if Need_Update
-                          and then not S.Source.Check_Timestamp
-                        then
-                           Data.Sources_Signature :=
-                             GPR2.Context.Default_Signature;
-                           S_Set := Self.Sources (Filter, Need_Update);
-                           exit;
-                        else
-                           S_Set.Insert (S);
-                        end if;
-                     end if;
-                  end;
-               end loop;
-            end return;
-         end if;
-      end;
+               end;
+            end loop;
+         end return;
+      end if;
    end Sources;
 
    ------------
@@ -1765,18 +1730,6 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Units;
    end Units;
-
-   --------------------
-   -- Update_Sources --
-   --------------------
-
-   procedure Update_Sources
-     (Self     : Object;
-      Backends : Source_Info.Backend_Set := Source_Info.All_Backends) is
-   begin
-      Get_Ref (Self).Update_Sources
-        (Self, Stop_On_Error => True, Backends => Backends);
-   end Update_Sources;
 
    --------------
    -- Variable --

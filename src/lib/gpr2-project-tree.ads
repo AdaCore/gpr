@@ -526,6 +526,7 @@ private
       View_Ids         : aliased Id_Maps.Map;
       View_DAG         : GPR2.View_Ids.DAGs.DAG;
       Ali_Parser_Is_On : Boolean := True;
+      Sources_Loaded   : Boolean := False;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
