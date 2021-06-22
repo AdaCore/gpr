@@ -380,12 +380,9 @@ package body GPRls.Gnatdist is
    procedure Output_With (Tree : Project.Tree.Object; W : Name_Type) is
       View  : constant Project.View.Object := Tree.Get_View (Unit => W);
       pragma Assert (View.Is_Defined, "Unit " & String (W));
-      UI    : constant Project.Unit_Info.Object :=
-                View.Unit (W, Need_Update => False);
+      UI    : constant Project.Unit_Info.Object := View.Unit (W);
       Src   : constant Project.Source.Object :=
-                View.Source
-                  ((if UI.Has_Body then UI.Main_Body else UI.Spec),
-                   Need_Update => False);
+                View.Source ((if UI.Has_Body then UI.Main_Body else UI.Spec));
       CU    : GPR2.Unit.Object;
       Afile : Path_Name.Object;
 

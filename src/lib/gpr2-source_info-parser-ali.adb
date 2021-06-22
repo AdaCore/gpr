@@ -507,8 +507,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      Path_Name.Create_File
                        (Simple_Name (Sfile), Path_Name.No_Resolution);
             Tree : constant access Project.Tree.Object := View.Tree;
-            View : Project.View.Object :=
-                     Tree.Get_View (Path, Update => False);
+            View : Project.View.Object := Tree.Get_View (Path);
             Source : Project.Source.Object;
          begin
             if not View.Is_Defined then
@@ -517,14 +516,14 @@ package body GPR2.Source_Info.Parser.ALI is
                   With_Runtime  => True,
                   Backends      => No_Backends);
 
-               View := Tree.Get_View (Path, Update => False);
+               View := Tree.Get_View (Path);
 
                if not View.Is_Defined then
                   return "";
                end if;
             end if;
 
-            Source := View.Source (Path, Need_Update => False);
+            Source := View.Source (Path);
 
             pragma Assert (Source.Is_Defined);
 
@@ -1145,8 +1144,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
          for J in reverse Name'Range loop
             if Name (J) = '.' then
-               FU := View.Unit
-                       (Name (Name'First .. J - 1), Need_Update => False);
+               FU := View.Unit (Name (Name'First .. J - 1));
                exit when FU.Is_Defined;
             end if;
          end loop;
@@ -1155,7 +1153,7 @@ package body GPR2.Source_Info.Parser.ALI is
             return;
          end if;
 
-         Src := View.Source (FU.Main_Body, Need_Update => False);
+         Src := View.Source (FU.Main_Body);
 
          declare
             Info : Source_Info.Object'Class := Src.Source;

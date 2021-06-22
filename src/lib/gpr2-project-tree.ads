@@ -317,8 +317,7 @@ package GPR2.Project.Tree is
 
    function Get_View
      (Self   : Object;
-      Source : Path_Name.Object;
-      Update : Boolean := True) return Project.View.Object
+      Source : Path_Name.Object) return Project.View.Object
      with Pre => Self.Is_Defined;
    --  Gets the view in which source file is defined, returns Undefined if the
    --  source file has not been found.

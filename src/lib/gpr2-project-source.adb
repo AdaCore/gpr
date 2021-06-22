@@ -547,33 +547,30 @@ package body GPR2.Project.Source is
                           (if Kind = S_Separate
                            then CU.Separate_From
                            else CU.Name);
-      Unit : constant Unit_Info.Object :=
-               View.Unit (Unit_Name, Need_Update => False);
+      Unit : constant Unit_Info.Object := View.Unit (Unit_Name);
    begin
       case Kind is
          when GPR2.Unit.Body_Kind =>
             if Unit.Spec.Is_Defined then
-               return View.Source (Unit.Spec, Need_Update => False);
+               return View.Source (Unit.Spec);
             else
                --  ??? returning first separate
-               return View.Source
-                        (Unit.Separates.First_Element, Need_Update => False);
+               return View.Source (Unit.Separates.First_Element);
             end if;
 
          when GPR2.Unit.Spec_Kind =>
             if Unit.Main_Body.Is_Defined then
-               return View.Source (Unit.Main_Body, Need_Update => False);
+               return View.Source (Unit.Main_Body);
             else
                --  ??? returning first separate
-               return View.Source
-                        (Unit.Separates.First_Element, Need_Update => False);
+               return View.Source (Unit.Separates.First_Element);
             end if;
 
          when S_Separate =>
             if Unit.Spec.Is_Defined then
-               return View.Source (Unit.Spec, Need_Update => False);
+               return View.Source (Unit.Spec);
             else
-               return View.Source (Unit.Main_Body, Need_Update => False);
+               return View.Source (Unit.Main_Body);
             end if;
       end case;
    end Other_Part;

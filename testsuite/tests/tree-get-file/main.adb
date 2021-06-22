@@ -32,21 +32,36 @@ begin
         (GPR2.Project.Ensure_Extension (Project_Name),
          GPR2.Path_Name.No_Resolution),
       Context  => Context);
+
+   Tree.Update_Sources (With_Runtime => True);
+
    if not Tree.Log_Messages.Has_Error then
       declare
-         function Check (S : GPR2.Simple_Name) return Boolean;
-         function Check (S : GPR2.Simple_Name) return Boolean is
+         use Ada.Text_IO;
+
+         OK : Boolean := True;
+
+         procedure Check (S : GPR2.Simple_Name; Should_Be : Boolean := True) is
             File : constant GPR2.Path_Name.Object := Tree.Get_File (S);
          begin
-            return File.Is_Defined and then File.Exists and then
-              File.Simple_Name = S;
+            if (File.Is_Defined and then File.Exists
+                and then File.Simple_Name = S) /= Should_Be
+            then
+               Put_Line ("Wrong for " & String (S));
+               OK := False;
+            end if;
          end Check;
+
       begin
-         if Check ("gpr2.gpr") and then Check ("main.adb") and then
-           Check ("main.o") and then Check ("gpr2-project-tree.ads") and then
-           Check ("a-textio.ads") and then not Check ("none.ads")
-         then
-            Ada.Text_IO.Put_Line ("OK");
+         Check ("gpr2.gpr");
+         Check ("main.adb");
+         Check ("main.o");
+         Check ("gpr2-project-tree.ads");
+         Check ("a-textio.ads");
+         Check ("none.ads", Should_Be => False);
+
+         if OK then
+            Put_Line ("OK");
          end if;
       end;
    end if;

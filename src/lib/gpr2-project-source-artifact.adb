@@ -158,8 +158,7 @@ package body GPR2.Project.Source.Artifact is
          end Get_Candidate;
 
          Source        : constant Project.Source.Object :=
-                           View.Source
-                             (Create.Source.Path_Name, Need_Update => False);
+                           View.Source (Create.Source.Path_Name);
          Candidate     : GPR2.Path_Name.Object;
          New_Candidate : GPR2.Path_Name.Object;
 

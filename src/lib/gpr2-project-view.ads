@@ -377,16 +377,12 @@ package GPR2.Project.View is
    --  the current sources are up-to-date by calling Update_Sources below.
 
    function Source
-     (Self        : Object;
-      File        : GPR2.Path_Name.Object;
-      Need_Update : Boolean := True) return Project.Source.Object
+     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
      with Pre => Self.Is_Defined;
    --  Get project source object corresponding to the given File
 
    function Source_Path
-     (Self        : Object;
-      Filename    : GPR2.Simple_Name;
-      Need_Update : Boolean := True) return GPR2.Path_Name.Object
+     (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Get full path name corresponding to the given filename
 
@@ -439,17 +435,13 @@ package GPR2.Project.View is
 
    --  Units
 
-   function Units
-     (Self        : Object;
-      Need_Update : Boolean := True) return Unit_Info.Set.Object
+   function Units (Self : Object) return Unit_Info.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the units for the view, note that this routine ensure that
    --  the current sources and units are up-to-date by calling Update_Sources.
 
    function Unit
-     (Self         : Object;
-      Name         : Name_Type;
-      Need_Update  : Boolean := True) return Unit_Info.Object
+     (Self : Object; Name : Name_Type) return Unit_Info.Object
      with Pre => Self.Is_Defined;
 
    function Is_Abstract (Self : Object) return Boolean

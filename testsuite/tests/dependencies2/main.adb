@@ -50,6 +50,7 @@ procedure Main is
       View : Project.View.Object;
    begin
       Project.Tree.Load (Prj, Create (Project_Name), Ctx);
+      Prj.Update_Sources;
 
       View := Prj.Root_Project;
       Text_IO.Put_Line ("Project: " & String (View.Name));

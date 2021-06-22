@@ -1492,18 +1492,11 @@ package body GPR2.Project.View is
    ------------
 
    function Source
-     (Self        : Object;
-      File        : GPR2.Path_Name.Object;
-      Need_Update : Boolean := True) return Project.Source.Object
+     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
    is
-      CS : Definition.Simple_Name_Source.Cursor;
+      CS : constant Definition.Simple_Name_Source.Cursor :=
+             Definition.Get_RO (Self).Sources_Map.Find (File.Simple_Name);
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
-      CS := Definition.Get_RO (Self).Sources_Map.Find (File.Simple_Name);
-
       if Definition.Simple_Name_Source.Has_Element (CS) then
          return Definition.Simple_Name_Source.Element (CS);
       else
@@ -1544,18 +1537,11 @@ package body GPR2.Project.View is
    -----------------
 
    function Source_Path
-     (Self        : Object;
-      Filename    : GPR2.Simple_Name;
-      Need_Update : Boolean := True) return GPR2.Path_Name.Object
+     (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
    is
-      CS : Definition.Simple_Name_Source.Cursor;
+      CS : constant Definition.Simple_Name_Source.Cursor :=
+             Definition.Get_RO (Self).Sources_Map.Find (Filename);
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
-      CS := Definition.Get_RO (Self).Sources_Map.Find (Filename);
-
       if Definition.Simple_Name_Source.Has_Element (CS) then
          return Definition.Simple_Name_Source.Element (CS).Path_Name;
       else
@@ -1569,18 +1555,16 @@ package body GPR2.Project.View is
       Allow_Spec_File : Boolean;
       Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
    is
-      CS : Definition.Simple_Name_Source.Cursor;
+      CS : Definition.Simple_Name_Source.Cursor :=
+             Definition.Get_RO (Self).Sources_Map.Find (Name);
    begin
-      CS := Definition.Get_RO (Self).Sources_Map.Find (Name);
-
       if Definition.Simple_Name_Source.Has_Element (CS) then
          return Definition.Simple_Name_Source.Element (CS).Path_Name;
       else
          if Allow_Unit_Name then
             declare
                Unit : constant Unit_Info.Object :=
-                        Self.Unit (Name        => Optional_Name_Type (Name),
-                                   Need_Update => False);
+                        Self.Unit (Name => Optional_Name_Type (Name));
             begin
                if Unit.Is_Defined then
                   if Unit.Has_Body then
@@ -1630,6 +1614,7 @@ package body GPR2.Project.View is
             end;
          end loop;
       end if;
+
       return GPR2.Path_Name.Undefined;
    end Source_Path;
 
@@ -1761,19 +1746,10 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Unit
-     (Self        : Object;
-      Name        : Name_Type;
-      Need_Update : Boolean := True) return Unit_Info.Object
-   is
-      CU : Unit_Info.Set.Cursor;
+   function Unit (Self : Object; Name : Name_Type) return Unit_Info.Object is
+      CU : constant Unit_Info.Set.Cursor :=
+             Definition.Get_RO (Self).Units.Find (Name);
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
-      CU := Definition.Get_RO (Self).Units.Find (Name);
-
       if Unit_Info.Set.Set.Has_Element (CU) then
          return Unit_Info.Set.Set.Element (CU);
       else
@@ -1785,14 +1761,8 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Units
-     (Self        : Object;
-      Need_Update : Boolean := True) return Unit_Info.Set.Object is
+   function Units (Self : Object) return Unit_Info.Set.Object is
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
       return Definition.Get_RO (Self).Units;
    end Units;
 

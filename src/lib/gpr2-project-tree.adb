@@ -879,7 +879,7 @@ package body GPR2.Project.Tree is
 
       begin
          if not Predefined_Only then
-            if View /= Project.View.Undefined then
+            if View.Is_Defined then
                Handle_Object_File_In_View (View);
 
             else
@@ -932,19 +932,16 @@ package body GPR2.Project.Tree is
 
          procedure Handle_Source_File_In_View (View : Project.View.Object) is
             Full_Path : constant Path_Name.Object :=
-                          View.Source_Path
-                            (Base_Name,
-                             Need_Update =>
-                                not Definition.Is_Sources_Loaded (View));
+                          View.Source_Path (Base_Name);
          begin
-            if Full_Path /= Path_Name.Undefined then
+            if Full_Path.Is_Defined then
                Add_File (Full_Path, False);
             end if;
          end Handle_Source_File_In_View;
 
       begin
          if not Predefined_Only then
-            if View /= Project.View.Undefined then
+            if View.Is_Defined then
                Handle_Source_File_In_View (View);
 
             else
@@ -1022,28 +1019,16 @@ package body GPR2.Project.Tree is
 
    function Get_View
      (Self   : Object;
-      Source : Path_Name.Object;
-      Update : Boolean := True) return Project.View.Object
+      Source : Path_Name.Object) return Project.View.Object
    is
-      Filename : constant Filename_Type :=
-                   (if Source.Has_Dir_Name
-                    then Filename_Type (Source.Value)
-                    else Source.Simple_Name);
-      Pos      : Filename_View.Cursor := Self.Sources.Find (Filename);
+      Pos : constant Filename_View.Cursor :=
+              Self.Sources.Find
+                (if Source.Has_Dir_Name
+                 then Filename_Type (Source.Value)
+                 else Source.Simple_Name);
    begin
       if Filename_View.Has_Element (Pos) then
          return Filename_View.Element (Pos);
-
-      elsif Update then
-         --  Try to update sources and check again
-
-         Update_Sources (Self);
-
-         Pos := Self.Sources.Find (Filename);
-
-         if Filename_View.Has_Element (Pos) then
-            return Filename_View.Element (Pos);
-         end if;
       end if;
 
       return Project.View.Undefined;
@@ -1053,23 +1038,13 @@ package body GPR2.Project.Tree is
      (Self : Object;
       Unit : Name_Type) return Project.View.Object
    is
-      Pos : Name_View.Cursor := Self.Units.Find (Unit);
+      Pos : constant Name_View.Cursor := Self.Units.Find (Unit);
    begin
       if Name_View.Has_Element (Pos) then
          return Name_View.Element (Pos);
-
-      else
-         --  Try to update the sources and check again
-
-         Update_Sources (Self);
-         Pos := Self.Units.Find (Unit);
-
-         if Name_View.Has_Element (Pos) then
-            return Name_View.Element (Pos);
-         else
-            return Project.View.Undefined;
-         end if;
       end if;
+
+      return Project.View.Undefined;
    end Get_View;
 
    function Get_View
