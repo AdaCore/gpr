@@ -716,10 +716,12 @@ package body GPR2.Project.Tree is
       -----------------
 
       procedure For_Project (View : Project.View.Object) is
+         Position : Project.View.Set.Set.Cursor;
+         Inserted : Boolean;
       begin
-         if not Seen.Contains (View) then
-            Seen.Insert (View);
+         Seen.Insert (View, Position, Inserted);
 
+         if Inserted then
             --  Handle imports
 
             if Iter.Kind (I_Imported) or else Iter.Kind (I_Recursive) then
@@ -1052,10 +1054,12 @@ package body GPR2.Project.Tree is
 
    function Get_View
      (Tree : Project.Tree.Object;
-      Id   : IDS.View_Id) return Project.View.Object is
+      Id   : IDS.View_Id) return Project.View.Object
+   is
+      CV : constant Id_Maps.Cursor := Tree.View_Ids.Find (Id);
    begin
-      if Tree.View_Ids.Contains (Id) then
-         return Tree.View_Ids (Id);
+      if Id_Maps.Has_Element (CV) then
+         return Id_Maps.Element (CV);
       else
          return Project.View.Undefined;
       end if;
@@ -2608,12 +2612,14 @@ package body GPR2.Project.Tree is
       is
          Data : constant GPR2.Project.Definition.Ref :=
                   Definition.Get_RW (View);
+         Position : GPR2.View_Ids.Set.Set.Cursor;
+         Inserted : Boolean;
       begin
-         if Data.Agg_Libraries.Contains (Agg_Library) then
+         Data.Agg_Libraries.Insert (Agg_Library, Position, Inserted);
+
+         if not Inserted then
             return;
          end if;
-
-         Data.Agg_Libraries.Include (Agg_Library);
 
          if Data.Extended_Root.Is_Defined then
             Propagate_Aggregate_Library (Data.Extended_Root, Agg_Library);
@@ -3802,6 +3808,8 @@ package body GPR2.Project.Tree is
       declare
          Closure_Found : Boolean := True;
          Closure       : GPR2.View_Ids.Set.Object;
+         Position      : GPR2.View_Ids.Set.Set.Cursor;
+         Inserted      : Boolean;
       begin
          --  First do a pass on the subtree that starts from root of
          --  projects not part of any aggregates. In case there is an
@@ -3820,9 +3828,10 @@ package body GPR2.Project.Tree is
 
          loop
             for View of Self.Ordered_Views loop
-               if not Closure.Contains (View.Id) then
+               Closure.Insert (View.Id, Position, Inserted);
+
+               if Inserted then
                   Closure_Found := False;
-                  Closure.Insert (View.Id);
                   Set_View (View);
                end if;
             end loop;
@@ -3977,23 +3986,28 @@ package body GPR2.Project.Tree is
       Externals : Containers.Name_List) is
    begin
       for External of Externals loop
-         if not Context.Contains (External) then
-            --  The external is not present in the current context. Try to
-            --  fetch its value from the environment and insert it in the
-            --  context.
+         declare
+            External_Value : constant String :=
+                               Environment_Variables.Value
+                                 (String (External), "");
+            Position : GPR2.Context.Key_Value.Cursor;
+            Inserted : Boolean;
+         begin
+            if External_Value /= "" then
+               --  The external is not present in the current context. Try to
+               --  fetch its value from the environment and insert it in the
+               --  context.
 
-            declare
-               External_Value : constant String :=
-                                  Environment_Variables.Value
-                                    (String (External), "");
-            begin
-               if External_Value /= "" then
-                  Context.Insert (External, External_Value);
-               end if;
-            end;
-         end if;
+               Context.Insert
+                 (External, External_Value, Position, Inserted);
+            end if;
+         end;
       end loop;
    end Update_Context;
+
+   --------------------------------------------
+   -- Update_Project_Search_Path_From_Config --
+   --------------------------------------------
 
    procedure Update_Project_Search_Path_From_Config
      (Self : in out Object;
@@ -4284,12 +4298,15 @@ package body GPR2.Project.Tree is
 
                   function Source_Loc
                     (Imp : Project.View.Object)
-                     return Source_Reference.Object'Class is
+                     return Source_Reference.Object'Class
+                  is
+                     Imports  : constant Project.Import.Set.Object :=
+                                  P_Data.Trees.Project.Imports;
+                     Position : constant Project.Import.Set.Cursor :=
+                                  Imports.Find (Imp.Path_Name);
                   begin
-                     if P_Data.Trees.Project.Imports.Contains (Imp.Path_Name)
-                     then
-                        return P_Data.Trees.Project.Imports.Element
-                          (Imp.Path_Name);
+                     if Project.Import.Set.Has_Element (Position) then
+                        return Project.Import.Set.Element (Position);
                      else
                         return Source_Reference.Create
                           (P_Data.Trees.Project.Path_Name.Value, 0, 0);

@@ -140,10 +140,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      Item   : constant O :=
                                 O (Source_Reference.Identifier.Create
                                    (Sloc, Name_Type (Name)));
+                     Position : Containers.Name_Type_Set.Cursor;
+                     Inserted : Boolean;
                   begin
-                     if not W_Found.Contains (N) then
+                     W_Found.Insert (N, Position, Inserted);
+
+                     if Inserted then
                         U_Withed.Insert (Item);
-                        W_Found.Include (N);
                      end if;
 
                      if B_Name /= Name then

@@ -1770,9 +1770,14 @@ package body GPR2.Project.View is
 
       --  Lookup in the imported next
 
-      if Data.Imports.Contains (Name) then
-         return Data.Imports.Element (Name);
-      end if;
+      declare
+         package DPV renames Definition.Project_View_Store;
+         Position : constant DPV.Cursor := Data.Imports.Find (Name);
+      begin
+         if DPV.Has_Element (Position) then
+            return DPV.Element (Position);
+         end if;
+      end;
 
       --  Try configuration project
 

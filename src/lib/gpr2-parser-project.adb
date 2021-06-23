@@ -922,11 +922,13 @@ package body GPR2.Parser.Project is
                   declare
                      Path : constant GPR2.Path_Name.Object :=
                               Get_Raw_Path (Cur_Child.As_String_Literal);
+                     CI : constant GPR2.Project.Import.Set.Cursor :=
+                            Project.Imports.Find (Path);
                   begin
-                     if Project.Imports.Contains (Path) then
+                     if GPR2.Project.Import.Set.Has_Element (CI) then
                         declare
                            Prev : constant GPR2.Project.Import.Object :=
-                                    Project.Imports.Element (Path);
+                                    GPR2.Project.Import.Set.Element (CI);
                         begin
                            if Prev.Path_Name = Path then
                               Messages.Append
@@ -2488,10 +2490,13 @@ package body GPR2.Parser.Project is
       -----------------------
 
       function Is_Limited_Import
-        (Self : Object; Project : Name_Type) return Boolean is
+        (Self : Object; Project : Name_Type) return Boolean
+      is
+         package PIS renames GPR2.Project.Import.Set;
+         Position : constant PIS.Cursor := Self.Imports.Find (Project);
       begin
-         return Self.Imports.Contains (Project)
-           and then Self.Imports.Element (Project).Is_Limited;
+         return PIS.Has_Element (Position)
+           and then PIS.Element (Position).Is_Limited;
       end Is_Limited_Import;
 
       --------------------------------------
@@ -3169,39 +3174,56 @@ package body GPR2.Parser.Project is
          begin
             if not V_Type.Is_Null then
                declare
+                  package PTS renames GPR2.Project.Typ.Set.Set;
+                  CT : PTS.Cursor;
+
                   Type_N     : constant Identifier_List :=
                                  F_Var_Type_Name (V_Type);
                   Num_Childs : constant Positive := Children_Count (Type_N);
                   T_Name     : constant Name_Type :=
                                  Get_Name_Type
                                    (Type_N, Num_Childs, Num_Childs);
+
+                  procedure Get_Type_Def_From
+                    (Imp : GPR2.Project.Import.Object);
+                  --  Try to find type definition from Imp by name T_Name and
+                  --  store it to Type_Def if found.
+
+                  -----------------------
+                  -- Get_Type_Def_From --
+                  -----------------------
+
+                  procedure Get_Type_Def_From
+                    (Imp : GPR2.Project.Import.Object)
+                  is
+                     Path : constant GPR2.Path_Name.Object :=
+                              GPR2.Project.Create
+                                (Imp.Path_Name.Name, Search_Paths);
+                     Types : GPR2.Project.Typ.Set.Object;
+                  begin
+                     if Path.Exists then
+                        Types := Registry.Get (Path).Types;
+                        CT := Types.Find (T_Name);
+
+                        if PTS.Has_Element (CT) then
+                           Type_Def := PTS.Element (CT);
+                        end if;
+                     end if;
+                  end Get_Type_Def_From;
+
                begin
                   if Num_Childs > 1 then
                      --  We have a project prefix for the type name
+
                      declare
-                        Project : constant Name_Type :=
-                                    Get_Name_Type (Type_N, 1, Num_Childs - 1,
-                                                   "-");
+                        package PIS renames GPR2.Project.Import.Set;
+                        Position : constant PIS.Cursor :=
+                                     Self.Imports.Find
+                                       (Get_Name_Type
+                                          (Type_N, 1, Num_Childs - 1, "-"));
                      begin
-                        if Self.Imports.Contains (Project) then
-                           declare
-                              Import : constant GPR2.Project.Import.Object :=
-                                         Self.Imports.Element (Project);
-                              Path   : constant GPR2.Path_Name.Object :=
-                                         GPR2.Project.Create
-                                           (Import.Path_Name.Name,
-                                            Search_Paths);
-                              Prj    : constant GPR2.Parser.Project.Object :=
-                                         (if Path.Exists
-                                          then Registry.Get (Path)
-                                          else GPR2.Parser.Project.Undefined);
-                           begin
-                              if Prj.Is_Defined
-                                and then Prj.Types.Contains (T_Name)
-                              then
-                                 Type_Def := Prj.Types (T_Name);
-                              end if;
-                           end;
+                        if PIS.Has_Element (Position) then
+                           Get_Type_Def_From (PIS.Element (Position));
                         end if;
                      end;
                   end if;
@@ -3209,26 +3231,13 @@ package body GPR2.Parser.Project is
                   if not Type_Def.Is_Defined
                     or else Type_Def.Count_Values = 0
                   then
-                     if Self.Types.Contains (T_Name) then
-                        Type_Def := Self.Types (T_Name);
+                     CT := Self.Types.Find (T_Name);
+
+                     if PTS.Has_Element (CT) then
+                        Type_Def := PTS.Element (CT);
 
                      elsif Self.Has_Extended then
-                        declare
-                           Path     : constant GPR2.Path_Name.Object :=
-                                        GPR2.Project.Create
-                                          (Self.Extended.Path_Name.Name,
-                                           Search_Paths);
-                           Extended : constant GPR2.Parser.Project.Object :=
-                                        (if Path.Exists
-                                         then Registry.Get (Path)
-                                         else GPR2.Parser.Project.Undefined);
-                        begin
-                           if Extended.Is_Defined
-                             and then Extended.Types.Contains (T_Name)
-                           then
-                              Type_Def := Extended.Types (T_Name);
-                           end if;
-                        end;
+                        Get_Type_Def_From (Self.Extended);
                      end if;
                   end if;
 
