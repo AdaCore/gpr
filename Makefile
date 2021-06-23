@@ -35,6 +35,7 @@
 #   ENABLE_SHARED : yes / no (or empty)
 #   BUILD         : debug release
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
+#   PROFILER      : Include gprof support instrumentation (yes / no)
 #   TARGET        : target triplet for cross-compilation
 
 HOST    = $(shell gcc -dumpmachine)
@@ -43,6 +44,7 @@ TARGET := $(shell gcc -dumpmachine)
 prefix	      := $(dir $(shell which gnatls))..
 BUILD         = release
 PROCESSORS    = 0
+PROFILER      = no
 BUILD_DIR     =
 SOURCE_DIR    := $(shell dirname "$(MAKEFILE_LIST)")
 ENABLE_SHARED := $(shell gprbuild $(GTARGET) -c -q -p \
@@ -122,7 +124,7 @@ GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
 	-XLANGKIT_GENERATED_SRC=${LANGKIT_GENERATED_SRC}
 
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
-            ${COVERAGE_BUILD_FLAGS}
+             -XPROFILER=${PROFILER} ${COVERAGE_BUILD_FLAGS}
 INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
 CLEANER=gprclean -eL -p $(RBD)
 UNINSTALLER=$(INSTALLER) -p -f --uninstall
@@ -222,6 +224,7 @@ setup:
 	echo "ENABLE_SHARED=$(ENABLE_SHARED)" >> makefile.setup
 	echo "BUILD=$(BUILD)" >> makefile.setup
 	echo "PROCESSORS=$(PROCESSORS)" >> makefile.setup
+	echo "PROFILER=$(PROFILER)" >> makefile.setup
 	echo "TARGET=$(TARGET)" >> makefile.setup
 	echo "SOURCE_DIR=$(SOURCE_DIR)" >> makefile.setup
 	echo "GPR2KBDIR=$(GPR2KBDIR)" >> makefile.setup
