@@ -177,15 +177,17 @@ endif
 # Install #
 ###########
 
-uninstall:
+uninstall-libs:
 ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2))
-	$(UNINSTALLER) $(GPR2)
-endif
-ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
-	$(UNINSTALLER) $(GPR2TOOLS)
+	$(UNINSTALLER) $(notdir $(GPR2))
 endif
 
-install: uninstall ${LIBGPR2_TYPES:%=install-%} install-tools
+uninstall-tools:
+ifneq (,$(wildcard $(prefix)/share/gpr/manifests/gpr2-tools))
+	$(UNINSTALLER) $(notdir $(GPR2TOOLS))
+endif
+
+install: uninstall-libs ${LIBGPR2_TYPES:%=install-%} install-tools
 
 install-%:
 	$(INSTALLER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* \
@@ -193,7 +195,7 @@ install-%:
 		--build-name=$* --build-var=LIBRARY_TYPE \
 		--build-var=GPR2_BUILD $(GPR2)
 
-install-tools:
+install-tools: uninstall-tools
 	$(INSTALLER) -XLIBRARY_TYPE=static -XXMLADA_BUILD=static \
 		-XLANGKIT_SUPPORT_BUILD=static --build-name=static \
 		--mode=usage $(GPR2TOOLS)
