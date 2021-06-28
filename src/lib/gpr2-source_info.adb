@@ -106,7 +106,7 @@ package body GPR2.Source_Info is
    begin
       if Unit_Dependencies.Has_Element (C_Idx) then
          for D of Self.Dependencies (C_Idx) loop
-            Result.Append (Filename_Type (To_String (D.Sfile)));
+            Result.Append (Filename_Type (D.Sfile));
          end loop;
       end if;
 
@@ -130,8 +130,8 @@ package body GPR2.Source_Info is
                Key : constant Dependency_Key := Dependency_Maps.Key (C);
             begin
                Action
-                 (Simple_Name (To_String (Dependency_Maps.Element (C).Sfile)),
-                  Name_Type (To_String (Key.Unit_Name)),
+                 (Simple_Name (Dependency_Maps.Element (C).Sfile),
+                  Name_Type (Key.Unit_Name),
                   Key.Unit_Kind);
             end;
          end loop;
