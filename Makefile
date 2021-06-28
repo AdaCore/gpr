@@ -54,9 +54,6 @@ GPRINSTALL    = gprinstall
 # Whether to use gpr<name> or the alternate gpr2<name> tools names
 GPR2_TOOLS_PREFIX=gpr
 
-# Load current setup if any
--include makefile.setup
-
 # Whether to enable coverage (empty for no, any other value for yes)
 COVERAGE=
 
@@ -86,6 +83,9 @@ GPR2KBDIR=$(SOURCE_DIR)/src/kb/gprconfig_kb
 MAKEPREFIX=$(SOURCE_DIR)/
 LANGKIT_GENERATED_SRC=$(shell pwd)/langkit/build
 endif
+
+# Load current setup if any
+-include makefile.setup
 
 # target options for cross-build
 ifeq ($(HOST),$(TARGET))
