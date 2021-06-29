@@ -3970,6 +3970,7 @@ package body GPR2.Project.Tree is
 
       Self.Units.Clear;
       Self.Sources.Clear;
+      Self.Rooted_Sources.Clear;
       Self.Messages.Clear;
       Self.Views.Clear;
       Self.View_Ids.Clear;
