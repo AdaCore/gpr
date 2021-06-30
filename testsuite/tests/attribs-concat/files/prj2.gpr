@@ -1,0 +1,3 @@
+project Prj2 is
+    A := "A" & ("B");
+end Prj2;

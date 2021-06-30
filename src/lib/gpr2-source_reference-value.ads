@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -45,9 +45,10 @@ package GPR2.Source_Reference.Value is
      with Post => Create'Result.Is_Defined;
 
    function Create
-     (Sloc   : GPR2.Source_Reference.Object;
-      Text   : Value_Type;
-      At_Pos : Natural := 0) return Text_Values.Object'Class
+     (Sloc         : GPR2.Source_Reference.Object;
+      Text         : Value_Type;
+      At_Pos       : Natural := 0;
+      From_Default : Boolean := False) return Text_Values.Object'Class
      with Post => Create'Result.Is_Defined;
 
    function Has_At_Pos (Self : Object) return Boolean
@@ -56,10 +57,17 @@ package GPR2.Source_Reference.Value is
    function At_Pos (Self : Object) return Positive
      with Pre => Self.Is_Defined and then Self.Has_At_Pos;
 
+   function Is_From_Default (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
+
 private
 
    type Object is new Text_Values.Object with record
-      At_Pos : Natural := 0;
+      At_Pos       : Natural := 0;
+      From_Default : Boolean := False;
+      --  From_Default is only relevant for Target attribute value that may
+      --  be evaluated as implicit one. The knowledge wether or not the target
+      --  is default is necessary to decide i.e. on target fallback.
    end record;
 
    Undefined : constant Object := (Text_Values.Undefined with others => <>);
@@ -73,21 +81,26 @@ private
      (Object'
         (Text_Values.Object
            (Text_Values.Create (Filename, Line, Column, Text)) with
-            At_Pos => At_Pos));
+            At_Pos => At_Pos, From_Default => False));
 
    function Create
-     (Sloc   : GPR2.Source_Reference.Object;
-      Text   : Value_Type;
-      At_Pos : Natural := 0) return Text_Values.Object'Class
+     (Sloc         : GPR2.Source_Reference.Object;
+      Text         : Value_Type;
+      At_Pos       : Natural := 0;
+      From_Default : Boolean := False) return Text_Values.Object'Class
    is
      (Object'
         (Text_Values.Object
-           (Text_Values.Create (Sloc, Text)) with At_Pos => At_Pos));
+           (Text_Values.Create (Sloc, Text)) with
+            At_Pos => At_Pos, From_Default => From_Default));
 
    function Has_At_Pos (Self : Object) return Boolean is
      (Self.At_Pos > 0);
 
    function At_Pos (Self : Object) return Positive is
      (Self.At_Pos);
+
+   function Is_From_Default (Self : Object) return Boolean is
+     (Self.From_Default);
 
 end GPR2.Source_Reference.Value;

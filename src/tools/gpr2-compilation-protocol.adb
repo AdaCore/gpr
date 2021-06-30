@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -197,10 +197,10 @@ package body GPR2.Compilation.Protocol is
       use Ada.Streams.Stream_IO;
 
       function Handle_File (Cmd : Command) return Command;
-      --  A file has been recieved, write it to disk
+      --  A file has been received, write it to disk
 
       function Handle_RAW_File (Cmd : Command) return Command;
-      --  A file has been recieved, write it to disk, no rewritte taking place
+      --  A file has been received, write it to disk, no rewrite taking place
 
       procedure Handle_Output (Cmd : in out Command);
       --  A display output is received, read it and store it into the command

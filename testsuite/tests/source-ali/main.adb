@@ -17,6 +17,7 @@
 ------------------------------------------------------------------------------
 
 with Ada.Directories;
+with Ada.Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
@@ -89,6 +90,13 @@ procedure Main is
             end if;
          end;
       end loop;
+
+   exception
+      when E : GPR2.Project_Error =>
+         Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
+         for M of Prj.Log_Messages.all loop
+            Text_IO.Put_Line (M.Format);
+         end loop;
    end Check;
 
    ---------------------

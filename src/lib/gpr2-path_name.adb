@@ -106,15 +106,16 @@ package body GPR2.Path_Name is
    -------------------
 
    function Make_Absolute
-     (Name      : Filename_Type;
-      Directory : Filename_Optional := "") return String
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := "";
+      Resolve_Links : Boolean := False) return String
    is
      (OS_Lib.Normalize_Pathname
         ((if OS_Lib.Is_Absolute_Path (String (Name)) or else Directory = ""
           then ""
           else Ensure_Directory (String (Directory)))
          & String (Name),
-         Resolve_Links => False));
+         Resolve_Links => Resolve_Links));
 
    ---------------
    -- Base_Name --
@@ -383,11 +384,12 @@ package body GPR2.Path_Name is
    ----------------------
 
    function Create_Directory
-     (Name      : Filename_Type;
-      Directory : Filename_Optional := "") return Object
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := "";
+      Resolve_Links : Boolean := False) return Object
    is
       NN : constant String :=
-             Ensure_Directory (Make_Absolute (Name, Directory));
+             Ensure_Directory (Make_Absolute (Name, Directory, Resolve_Links));
       VN : constant Unbounded_String := +NN;
    begin
       return Object'

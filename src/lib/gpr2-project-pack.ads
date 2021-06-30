@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -148,17 +148,15 @@ package GPR2.Project.Pack is
    --  Handles Body_Suffix and Implementation_Suffix
 
    function Has_Separate_Suffix
-     (Self     : Object;
-      Language : Name_Type) return Boolean
+     (Self : Object) return Boolean
      with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
    --  Returns True is package naming Self contains a Separate_Suffix attribute
 
    function Separate_Suffix
-     (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object
+     (Self : Object) return Project.Attribute.Object
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
-               and then Self.Has_Separate_Suffix (Language),
+               and then Self.Has_Separate_Suffix,
        Post => Separate_Suffix'Result.Is_Defined;
    --  Handles Separate_Suffix
 
@@ -203,12 +201,9 @@ private
    end record;
 
    function Has_Separate_Suffix
-     (Self     : Object;
-      Language : Name_Type) return Boolean
+     (Self : Object) return Boolean
    is
-     (Self.Has_Attributes
-        (Registry.Attribute.Separate_Suffix,
-         Attribute_Index.Create (Value_Type (Language))));
+     (Self.Has_Attributes (Registry.Attribute.Separate_Suffix));
 
    function Has_Spec_Suffix
      (Self     : Object;

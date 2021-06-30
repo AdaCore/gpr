@@ -1,18 +1,14 @@
 Demo     K_AGGREGATE_LIBRARY
    pcka
-       > a-obj/pcka.ads.dg
-       > a-obj/pcka.ads.rep
+       > agg-obj/pcka.ads.dg
+       > agg-obj/pcka.ads.rep
        > agg-lib/pcka.ali
-       > a-obj/pcka.ads.prep
-       > a-obj/pcka.ci
-       > a-obj/pcka.sid
+       > agg-obj/pcka.ads.prep
    pckb
-       > b-obj/pckb.ads.dg
-       > b-obj/pckb.ads.rep
+       > agg-obj/pckb.ads.dg
+       > agg-obj/pckb.ads.rep
        > agg-lib/pckb.ali
-       > b-obj/pckb.ads.prep
-       > b-obj/pckb.ci
-       > b-obj/pckb.sid
+       > agg-obj/pckb.ads.prep
 A        K_STANDARD
    pcka
        > a-obj/pcka.ads.dg

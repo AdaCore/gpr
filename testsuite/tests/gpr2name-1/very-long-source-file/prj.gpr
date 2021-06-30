@@ -1,0 +1,9 @@
+project Prj is
+   package Compiler is
+      for Switches
+        ("very_very_very_very_very_very_very_very_very_very_very_very_very_very_very_long_pkg.ads")
+        use ("-" &
+             "g");
+   end Compiler;
+end Prj;
+

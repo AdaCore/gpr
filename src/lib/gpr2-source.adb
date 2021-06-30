@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -129,7 +129,9 @@ package body GPR2.Source is
 
       for CU of Sorted_Units loop
          Append
-           (Key, To_Lower (CU.Name) & (if CU.Kind = S_Spec then 'S' else 'B'));
+           (Key,
+            To_Lower (CU.Name)
+            & (if CU.Kind in Unit.Spec_Kind then 'S' else 'B'));
       end loop;
 
       return Result : Object do

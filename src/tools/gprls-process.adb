@@ -18,6 +18,7 @@
 
 with Ada.Calendar;
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Directories;
 with Ada.Text_IO;
 
 with GPR2.KB;
@@ -33,12 +34,13 @@ with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.View;
 with GPR2.Source;
-with GPR2.Source_Info;
+with GPR2.Source_Info.Parser.Registry;
 with GPR2.Version;
 
 with GPRtools.Util;
 
 with GPRls.Common;
+with GPRls.Gnatdist;
 with GPRls.Options;
 
 procedure GPRls.Process (Opt : GPRls.Options.Object) is
@@ -67,79 +69,86 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    --  Call Ada.Text_IO.Put_Line (Str) if Opt.Verbosity is at least Lvl
 
    procedure Show_Tree_Load_Errors;
-   --  Print errors/warnings following a project tree load
+   --  Print errors/warnings following a project tree load.
 
    -------------------
    -- Display_Paths --
    -------------------
 
    procedure Display_Paths is
+      Src_Path : Path_Name.Set.Object;
+      Obj_Path : Path_Name.Set.Object;
+      Curr_Dir : constant String := Ada.Directories.Current_Directory;
+
+      function Mask_Current (Dir : String) return String is
+        (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir
+         then "<Current_Directory>" else Dir);
+
    begin
       Text_IO.New_Line;
       Version.Display ("GPRLS", "2018", Version_String => Version.Long_Value);
 
-      declare
-         Src_Path : Path_Name.Set.Object;
-         Obj_Path : Path_Name.Set.Object;
+      --  Source search path
 
-      begin
-         --  Source search path
-
-         for V of Tree loop
-            if V.Kind not in K_Aggregate | K_Abstract then
-               for D of V.Source_Directories.Values loop
-                  Src_Path.Append
-                    (Path_Name.Create_Directory (Filename_Type (D.Text)));
-               end loop;
-            end if;
-         end loop;
-
-         if Tree.Has_Runtime_Project then
-            for D of Tree.Runtime_Project.Source_Directories.Values loop
+      for V of Tree loop
+         if V.Kind not in K_Aggregate | K_Abstract then
+            for D of V.Source_Directories.Values loop
                Src_Path.Append
-                 (Path_Name.Create_Directory (Filename_Type (D.Text)));
+                 (Path_Name.Create_Directory
+                    (Filename_Type (D.Text),
+                     Directory => Filename_Type (V.Path_Name.Dir_Name)));
             end loop;
          end if;
+      end loop;
 
-         Text_IO.New_Line;
-         Text_IO.Put_Line ("Source Search Path:");
-
-         for P of Src_Path loop
-            Text_IO.Put_Line ("   " & P.Value);
+      if Tree.Has_Runtime_Project then
+         for D of Tree.Runtime_Project.Source_Directories.Values loop
+            Src_Path.Append
+              (Path_Name.Create_Directory (Filename_Type (D.Text)));
          end loop;
+      end if;
 
-         --  Object search path
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Source Search Path:");
 
-         for V of Tree loop
-            if V.Kind in K_Standard | K_Library | K_Aggregate_Library then
+      for P of Src_Path loop
+         Text_IO.Put_Line ("   " & P.Dir_Name);
+      end loop;
+
+      --  Object search path
+
+      for V of Tree loop
+         case V.Kind is
+            when K_Standard =>
                Obj_Path.Append (V.Object_Directory);
-            end if;
-         end loop;
+            when K_Library | K_Aggregate_Library =>
+               Obj_Path.Append (V.Library_Ali_Directory);
+            when others =>
+               null;
+         end case;
+      end loop;
 
-         if Tree.Has_Runtime_Project then
-            Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
-         end if;
+      if Tree.Has_Runtime_Project then
+         Obj_Path.Append (Tree.Runtime_Project.Object_Directory);
+      end if;
 
-         Text_IO.New_Line;
-         Text_IO.Put_Line ("Object Search Path:");
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Object Search Path:");
 
-         for P of Obj_Path loop
-            Text_IO.Put_Line ("   " & P.Value);
-         end loop;
+      for P of Obj_Path loop
+         Text_IO.Put_Line ("   " & P.Dir_Name);
+      end loop;
 
-         --  Project search path
+      --  Project search path
 
-         Text_IO.New_Line;
-         Text_IO.Put_Line ("Project Search Path:");
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Project Search Path:");
 
-         Text_IO.Put_Line ("   " & "<Current_Directory>");
+      for P of Tree.Project_Search_Paths loop
+         Text_IO.Put_Line ("   " & Mask_Current (P.Dir_Name));
+      end loop;
 
-         for P of Tree.Project_Search_Paths loop
-            Text_IO.Put_Line ("   " & P.Value);
-         end loop;
-
-         Text_IO.New_Line;
-      end;
+      Text_IO.New_Line;
    end Display_Paths;
 
    ---------
@@ -169,22 +178,23 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    ---------------------------
 
    procedure Show_Tree_Load_Errors is
-      Has_Error : Boolean := False;
    begin
-      for C in Tree.Log_Messages.Iterate
-        (Information => False,
-         Warning     => False,
-         Error       => True,
-         Read        => False,
-         Unread      => True)
-      loop
-         Put_Line (Log.Element (C).Format, Quiet);
-         Has_Error := True;
-      end loop;
+      if Tree.Log_Messages.Has_Error then
+         --  In case both warnings and errors are present, only displpay the
+         --  errors as they are probably responsible for the warnings.
 
-      if not Has_Error then
          for C in Tree.Log_Messages.Iterate
            (Information => False,
+            Warning     => False,
+            Error       => True,
+            Read        => False,
+            Unread      => True)
+         loop
+            Put_Line (Log.Element (C).Format, Quiet);
+         end loop;
+      else
+         for C in Tree.Log_Messages.Iterate
+           (Information => Opt.Verbose_Parsing >= 1,
             Warning     => True,
             Error       => False,
             Read        => False,
@@ -202,7 +212,7 @@ begin
      (Filename          => Opt.Project_File,
       Project_Dir       => Opt.Project_Base,
       Context           => Opt.Project_Context,
-      Absent_Dir_Error  => True,
+      Absent_Dir_Error  => False,
       Target            => Opt.Get_Target,
       Language_Runtimes => Opt.RTS_Map,
       Check_Shared_Lib  => not Opt.Unchecked_Shared_Lib,
@@ -211,34 +221,38 @@ begin
          Default_KB        => not Opt.Skip_Default_KB,
          Custom_KB         => Opt.KB_Locations));
 
-   --  The configuration step could fail because the language list has been
-   --  set to empty ("for Languages use ()"), in this case just exit.
-   --  In other cases this is an error.
+   if Opt.Only_Display_Paths then
+      --  For the "gprls -v" usage
 
-   if not Tree.Has_Configuration then
-      if not Tree.Root_Project.Has_Languages then
-         Finish_Program (E_Success);
-      else
-         raise Processing_Error;
-      end if;
+      Display_Paths;
+      return;
    end if;
 
    --  Show errors and warnings from the load stage
 
    Show_Tree_Load_Errors;
 
-   if Opt.Only_Display_Paths then
-      --  For the "gprls -v" usage
+   --  Terminate process if error was printed
 
-      Display_Paths;
-      Finish_Program (E_Success);
+   if Tree.Log_Messages.Has_Error then
+      return;
    end if;
+
+   pragma Assert
+     (not Opt.Source_Parser
+      or else GPR2.Source_Info.Parser.Registry.Exists
+        ("Ada", Source_Info.Source), "Source parser is not registered");
+
+   pragma Assert
+     (GPR2.Source_Info.Parser.Registry.Exists
+        ("Ada", Source_Info.LI), "ALI parser is not registered");
 
    --  Make sure the sources are up to date
 
    Tree.Update_Sources
      (Backends => (Source_Info.Source => Opt.Source_Parser,
-                   Source_Info.LI     => True));
+                   Source_Info.LI     => True),
+      With_Runtime => Opt.Gnatdist);
 
    --
    --  Main processing
@@ -249,27 +263,52 @@ begin
       --  The maps should have Value_Path keys to support case-insensitive FS.
 
       use type Project.Source.Object;
+      use type Project.View.Object;
       use all type Project.Source.Naming_Exception_Kind;
 
-      function Path_Equal
-        (Left, Right : Project.Source.Object) return Boolean
-      is (Left = Right and then Left.Path_Name.Value = Right.Path_Name.Value);
+      type Source_And_Index is record
+         Source : Project.Source.Object;
+         Index  : Natural;
+      end record;
 
-      function Path_Less
-        (Left, Right : Project.Source.Object) return Boolean
-      is (Left.View.Namespace_Root.Name < Right.View.Namespace_Root.Name
-          or else (Left.View.Namespace_Root.Name
-                   = Right.View.Namespace_Root.Name
-                   and then Left < Right)
-          or else (Left = Right
-                   and then Left.Path_Name.Value < Right.Path_Name.Value));
+      function Path_Equal (Left, Right : Source_And_Index) return Boolean
+      is (Left.Source = Right.Source
+          and then Left.Source.View.Namespace_Root =
+                   Right.Source.View.Namespace_Root
+          and then Left.Index = Right.Index);
+
+      type One_Type is range -1 .. 1;
+
+      function Compare (Left, Right : Project.View.Object) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      --  function Compare (Left, Right : Path_Name.Full_Name) return One_Type
+      --  is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Compare (Left, Right : Project.Source.Object) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Compare (Left, Right : Natural) return One_Type
+      is (if Left < Right then -1 elsif Left = Right then 0 else 1);
+
+      function Path_Less (Left, Right : Source_And_Index) return Boolean
+      is (case Compare
+            (Left.Source.View.Namespace_Root, Right.Source.View.Namespace_Root)
+          is
+             when -1 => True,
+             when  1 => False,
+             when  0 =>
+            (case Compare (Left.Source, Right.Source) is
+                when -1 => True,
+                when  1 => False,
+                when  0 => Compare (Left.Index, Right.Index) = -1));
 
       package Sources_By_Path is new Ada.Containers.Indefinite_Ordered_Sets
-        (Project.Source.Object, "<" => Path_Less, "=" => Path_Equal);
+        (Source_And_Index, "<" => Path_Less, "=" => Path_Equal);
 
       type File_Status is
-        (OK,          --  matching timestamp
-         Not_Same);   --  non matching timestamp
+        (OK,        -- matching timestamp
+         Not_Same); -- non matching timestamp
 
       No_Obj : constant String := "<no_obj>";
 
@@ -290,6 +329,8 @@ begin
 
       procedure Display_Closures;
 
+      procedure Display_Gnatdist;
+
       procedure Display_Normal;
 
       ----------------------
@@ -308,12 +349,13 @@ begin
          for S of Sources loop
             declare
                Deps : constant Project.Source.Set.Object :=
-                        S.Dependencies (Closure => True);
+                        S.Source.Dependencies (Closure => True);
             begin
                if Deps.Is_Empty then
                   --  If no dependencies, use only this one because without ALI
                   --  file we don't know dependency even on itself.
-                  Closures.Include (S);
+
+                  Closures.Include (S.Source);
                else
                   Closures.Union (Deps);
                end if;
@@ -351,6 +393,53 @@ begin
 
          Text_IO.New_Line;
       end Display_Closures;
+
+      ----------------------
+      -- Display_Gnatdist --
+      ----------------------
+
+      procedure Display_Gnatdist is
+
+         function Has_Dependency (S : Source_And_Index) return Boolean;
+
+         --------------------
+         -- Has_Dependency --
+         --------------------
+
+         function Has_Dependency (S : Source_And_Index) return Boolean is
+            Atf : constant Project.Source.Artifact.Object :=
+                    S.Source.Artifacts;
+         begin
+            return Atf.Has_Dependency (S.Index)
+              and then Atf.Dependency (S.Index).Exists;
+         end Has_Dependency;
+
+      begin
+         for S of Sources loop
+            if not Has_Dependency (S) then
+               Gnatdist.Output_No_ALI (S.Source, S.Index);
+            end if;
+         end loop;
+
+         for S of Sources loop
+            if Has_Dependency (S) then
+               if S.Index = 0 then
+                  declare
+                     C : Source_And_Index := S;
+                  begin
+                     for CU of S.Source.Source.Units loop
+                        C.Index := CU.Index;
+                        if Has_Dependency (C) then
+                           Gnatdist.Output_ALI (S.Source, C.Index);
+                        end if;
+                     end loop;
+                  end;
+               else
+                  Gnatdist.Output_ALI (S.Source, S.Index);
+               end if;
+            end if;
+         end loop;
+      end Display_Gnatdist;
 
       --------------------
       -- Display_Normal --
@@ -419,9 +508,9 @@ begin
       begin
          for S of Sources loop
             declare
-               View      : constant Project.View.Object := S.View;
+               View      : constant Project.View.Object := S.Source.View;
                Artifacts : constant Project.Source.Artifact.Object :=
-                             S.Artifacts;
+                             S.Source.Artifacts;
                Obj_File  : Path_Name.Object;
                Unit_Info : Project.Unit_Info.Object;
                Main_Unit : Unit.Object;
@@ -430,8 +519,16 @@ begin
 
                function  Print_Unit (U_Sec : Unit.Object) return Boolean;
 
+               procedure Print_Object (U_Sec : GPR2.Unit.Object);
+
                procedure Dependence_Output
                  (Dep_Source : Project.Source.Object);
+
+               function Has_Dependency (Index : Positive) return Boolean is
+                 (Artifacts.Has_Dependency (Index)
+                  and then
+                    (Artifacts.Dependency (Index).Exists
+                     or else Opt.Source_Parser));
 
                -----------------------
                -- Dependence_Output --
@@ -447,6 +544,49 @@ begin
                      Output_Source (S => Dep_Source);
                   end if;
                end Dependence_Output;
+
+               ------------------
+               -- Print_Object --
+               ------------------
+
+               procedure Print_Object (U_Sec : GPR2.Unit.Object) is
+               begin
+                  if Opt.Print_Object_Files
+                    and then not S.Source.Is_Aggregated
+                  then
+                     Obj_File := Artifacts.Object_Code (U_Sec.Index);
+
+                     if Obj_File.Exists then
+                        Text_IO.Put_Line (Obj_File.Value);
+                     else
+                        Text_IO.Put_Line (No_Obj);
+                     end if;
+                  end if;
+
+                  if Opt.Print_Units and then Print_Unit (U_Sec) then
+                     null;
+                  end if;
+
+                  if Opt.Print_Sources and then not Opt.Dependency_Mode then
+                     Output_Source (S.Source);
+                  end if;
+
+                  if Opt.Verbose then
+                     Unit_Info := S.Source.View.Unit (U_Sec.Name);
+
+                     if Unit_Info.Has_Spec then
+                        Print_Unit_From (Unit_Info.Spec);
+                     end if;
+
+                     if Unit_Info.Has_Body then
+                        Print_Unit_From (Unit_Info.Main_Body);
+                     end if;
+
+                     for S of Unit_Info.Separates loop
+                        Print_Unit_From (S);
+                     end loop;
+                  end if;
+               end Print_Object;
 
                ----------------
                -- Print_Unit --
@@ -514,54 +654,24 @@ begin
                end Print_Unit_From;
 
             begin
-               for U_Sec of S.Source.Units loop
-                  if Artifacts.Has_Dependency (U_Sec.Index)
-                    and then Artifacts.Dependency (U_Sec.Index).Exists
-                  then
-                     if Opt.Print_Object_Files
-                       and then not S.Is_Aggregated
-                     then
-                        Obj_File := Artifacts.Object_Code (U_Sec.Index);
-
-                        if Obj_File.Exists then
-                           Text_IO.Put_Line (Obj_File.Value);
-                        else
-                           Text_IO.Put_Line (No_Obj);
-                        end if;
+               if S.Index = 0 then
+                  for U_Sec of S.Source.Source.Units loop
+                     if Has_Dependency (U_Sec.Index) then
+                        Print_Object (U_Sec);
+                        exit when not Opt.Verbose;
                      end if;
+                  end loop;
 
-                     if Opt.Print_Units and then Print_Unit (U_Sec) then
-                        null;
-                     end if;
-
-                     if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                        Output_Source (S);
-                     end if;
-
-                     exit when not Opt.Verbose;
-
-                     Unit_Info := S.View.Unit (U_Sec.Name);
-
-                     if Unit_Info.Has_Spec then
-                        Print_Unit_From (Unit_Info.Spec);
-                     end if;
-
-                     if Unit_Info.Has_Body then
-                        Print_Unit_From (Unit_Info.Main_Body);
-                     end if;
-
-                     for S of Unit_Info.Separates loop
-                        Print_Unit_From (S);
-                     end loop;
-                  end if;
-               end loop;
+               elsif Has_Dependency (S.Index) then
+                  Print_Object (S.Source.Source.Units.Element (S.Index));
+               end if;
 
                if Opt.Dependency_Mode and then Opt.Print_Sources then
                   if Opt.Verbose then
                      Text_IO.Put_Line ("   depends upon");
                   end if;
 
-                  S.Dependencies (Dependence_Output'Access);
+                  S.Source.Dependencies (Dependence_Output'Access);
                end if;
             end;
          end loop;
@@ -579,23 +689,23 @@ begin
          for CV in
            Tree.Iterate ((Project.I_Extended => False, others => True))
          loop
-            for S of
-              Project.Tree.Element (CV).Sources (Need_Update => False)
-            loop
+            for S of Project.Tree.Element (CV).Sources loop
                declare
                   Artifacts : Project.Source.Artifact.Object;
 
                   function Insert_Prefer_Body
-                    (Key  : Filename_Type;
-                     Kind : GPR2.Unit.Library_Unit_Type) return Boolean;
+                    (Key   : Filename_Type;
+                     Kind  : GPR2.Unit.Library_Unit_Type;
+                     Index : Natural) return Boolean;
 
                   ------------------------
                   -- Insert_Prefer_Body --
                   ------------------------
 
                   function Insert_Prefer_Body
-                    (Key  : Filename_Type;
-                     Kind : GPR2.Unit.Library_Unit_Type) return Boolean
+                    (Key   : Filename_Type;
+                     Kind  : GPR2.Unit.Library_Unit_Type;
+                     Index : Natural) return Boolean
                   is
                      Position : Sources_By_Path.Cursor;
                      Inserted : Boolean;
@@ -605,7 +715,16 @@ begin
                      then
                         Remains.Exclude (String (Key));
 
-                        Sources.Insert (S, Position, Inserted);
+                        Sources.Insert ((S, Index), Position, Inserted);
+
+                        if not Inserted
+                          and then S.Is_Aggregated
+                                   < Sources (Position).Source.Is_Aggregated
+                        then
+                           --  Prefer none aggregated, more information there
+
+                           Sources.Replace_Element (Position, (S, Index));
+                        end if;
 
                         return True;
                      end if;
@@ -615,7 +734,7 @@ begin
 
                begin
                   if not Insert_Prefer_Body
-                           (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body)
+                    (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
                     and then S.Source.Has_Units
                   then
                      Artifacts := S.Artifacts;
@@ -625,17 +744,17 @@ begin
                           and then
                             (Insert_Prefer_Body
                                (Artifacts.Dependency (CU.Index).Simple_Name,
-                                CU.Kind)
+                                CU.Kind, CU.Index)
                              or else
                              Insert_Prefer_Body
                                (Artifacts.Dependency (CU.Index).Base_Filename,
-                                CU.Kind));
+                                CU.Kind, CU.Index));
 
                         exit when Artifacts.Has_Object_Code (CU.Index)
                           and then
                            Insert_Prefer_Body
                              (Artifacts.Object_Code (CU.Index).Simple_Name,
-                              CU.Kind);
+                              CU.Kind, CU.Index);
                      end loop;
                   end if;
                end;
@@ -660,12 +779,12 @@ begin
          --     - Either we're in closure mode, and we want to use the mains
          --       from the root project.
 
-         for S of Tree.Root_Project.Sources (Need_Update => False) loop
+         for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
               and then S.Source.Language = Name_Type (Ada_Lang)
             then
-               Sources.Insert (S);
+               Sources.Insert ((S, 0));
             end if;
          end loop;
 
@@ -674,13 +793,11 @@ begin
          --    the root project or the entire tree, depending on All_Sources).
 
          for View of Tree loop
-            for S_Cur in View.Sources (Need_Update => False).Iterate
-                           (Filter => S_Compilable)
-            loop
+            for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
                if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
                  and then not Element (S_Cur).Is_Overriden
                then
-                  Sources.Insert (Element (S_Cur), Position, Inserted);
+                  Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
 
                   --  Source could be already in the set because we
                   --  can have the same project in the All_Views
@@ -691,23 +808,21 @@ begin
 
                   if not Inserted
                     and then Element (S_Cur).Is_Aggregated
-                    < Sources_By_Path.Element (Position).Is_Aggregated
+                    < Sources_By_Path.Element (Position).Source.Is_Aggregated
                   then
                      --  We prefer Is_Aggregated = False because it
                      --  has object files.
 
-                     Sources.Replace (Element (S_Cur));
+                     Sources.Replace_Element (Position, (Element (S_Cur), 0));
                   end if;
                end if;
             end loop;
          end loop;
 
       else
-         for S_Cur in Tree.Root_Project.Sources
-           (Need_Update => False).Iterate (Filter => S_Compilable)
-         loop
+         for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
             if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
-               Sources.Insert (Element (S_Cur));
+               Sources.Insert ((Element (S_Cur), 0));
             end if;
          end loop;
       end if;
@@ -715,50 +830,51 @@ begin
       --  Do nothing if no source was found
 
       if Sources.Is_Empty then
-         Finish_Program (E_Success);
+         return;
       end if;
 
       --  Check all sources and notify when no ALI file is present
 
-      for S of Sources loop
-         For_Units : for CU of S.Source.Units loop
-            if S.Artifacts.Has_Dependency (CU.Index)
-              and then not S.Artifacts.Dependency (CU.Index).Exists
-            then
-               Full_Closure := False;
-
-               if S.Has_Naming_Exception
-                 and then S.Naming_Exception = Project.Source.Multi_Unit
+      if not Opt.Source_Parser and then not Opt.Gnatdist then
+         for S of Sources loop
+            For_Units : for CU of S.Source.Source.Units loop
+               if CU.Kind /= Unit.S_Separate
+                 and then S.Source.Artifacts.Has_Dependency (CU.Index)
+                 and then not S.Source.Artifacts.Dependency (CU.Index).Exists
                then
-                  --  In case of multi-unit we have no information until the
-                  --  unit is compiled. There is no need to report that there
-                  --  is missing ALI in this case. But we report that the
-                  --  status for this file is unknown.
+                  Full_Closure := False;
 
-                  Text_IO.Put_Line
-                    ("UNKNOWN status for file " & S.Source.Path_Name.Value);
+                  if S.Source.Has_Naming_Exception
+                    and then S.Source.Naming_Exception
+                             = Project.Source.Multi_Unit
+                  then
+                     --  In case of multi-unit we have no information until the
+                     --  unit is compiled. There is no need to report that
+                     --  there is missing ALI in this case. But we report that
+                     --  the status for this file is unknown.
 
-                  exit For_Units;
+                     Text_IO.Put_Line
+                       ("UNKNOWN status for file " & S.Source.Path_Name.Value);
 
-               else
-                  Text_IO.Put_Line
-                    ("Can't find ALI "
-                     & String
-                       (if CU.Index > 1
-                        then S.Artifacts.Dependency (CU.Index).Simple_Name
-                             & " "
-                        else "")
-                     & "file for " & S.Source.Path_Name.Value);
+                     exit For_Units;
+
+                  else
+                     Text_IO.Put_Line
+                       ("Can't find ALI file for " & S.Source.Path_Name.Value);
+                  end if;
                end if;
-            end if;
-         end loop For_Units;
-      end loop;
+            end loop For_Units;
+         end loop;
+      end if;
 
       --  We gathered all the sources:
       --  Process them according to the chosen mode.
 
       if Opt.Closure_Mode then
          Display_Closures;
+
+      elsif Opt.Gnatdist then
+         Display_Gnatdist;
 
       else
          Display_Normal;
@@ -776,8 +892,8 @@ begin
 exception
    when Project_Error | Processing_Error =>
       Show_Tree_Load_Errors;
+
       Finish_Program
         (E_Errors,
-         "unable to process project file " &
-           String (Opt.Project_File.Name));
+         "unable to process project file " & String (Opt.Project_File.Name));
 end GPRls.Process;

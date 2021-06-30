@@ -1,0 +1,5 @@
+description:
+    check naming package Dot_Replacement & _Suffix attributes valeus
+driver: build_and_run
+project_file: test
+main: main

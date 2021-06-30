@@ -1,0 +1,7 @@
+with "b";
+
+project D is
+
+   Variable1 := "D with " & B.Variable2;
+
+end D;

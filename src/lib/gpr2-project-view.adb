@@ -24,6 +24,8 @@
 
 with Ada.Directories;
 with Ada.IO_Exceptions;
+with Ada.Streams;
+with Ada.Strings.Fixed;
 with Ada.Text_IO;
 
 with GNAT.OS_Lib;
@@ -66,16 +68,6 @@ package body GPR2.Project.View is
    procedure Set_Def (Ref : out View.Object; Def : Definition_Base'Class);
    --  Convert definition to view
 
-   procedure Update_Sources
-     (Self     : Object;
-      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
-     with Pre => Self.Is_Defined;
-   --  Ensure that the view sources are up-to-date. This is needed before
-   --  computing the dependencies of a source in the project tree. This routine
-   --  is called where needed and is there for internal use only.
-   --  Backends parameter defines the set of parsers that can be used to parse
-   --  the source information.
-
    function Apply_Root_And_Subdirs
      (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
    --  Apply project path and subdir option for library, object and executable
@@ -86,7 +78,10 @@ package body GPR2.Project.View is
 
    function Strong (Weak : Weak_Reference) return Object;
 
-   function Builder (Self : Object) return Project.Pack.Object;
+   function Builder (Self : Object) return Project.Pack.Object is
+     (if Self.Has_Packages (Registry.Pack.Builder)
+      then Self.Packages.Element (Registry.Pack.Builder)
+      else Project.Pack.Undefined);
    --  Returns package Builder for the current project of Undefined is does not
    --  exists.
 
@@ -97,14 +92,23 @@ package body GPR2.Project.View is
    --  Used to have different binder exchange file names when binding different
    --  languages.
 
-   ---------------
-   -- Aggregate --
-   ---------------
+   function Remove_Body_Suffix
+     (Self : Object; Name : Simple_Name) return Value_Not_Empty;
+   --  Remove body suffix from Name
 
-   function Aggregate (Self : Object) return GPR2.Project.View.Object is
+   -------------------------
+   -- Aggregate_Libraries --
+   -------------------------
+
+   function Aggregate_Libraries (Self : Object) return Set.Object is
+      Result : Set.Object;
    begin
-      return Definition.Strong (Definition.Get_RO (Self).Aggregate);
-   end Aggregate;
+      for Id of Definition.Get_RO (Self).Agg_Libraries loop
+         Result.Include (Self.Tree.Instance_Of (Id));
+      end loop;
+
+      return Result;
+   end Aggregate_Libraries;
 
    ----------------
    -- Aggregated --
@@ -222,6 +226,25 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Attrs.Element (Name, Index);
    end Attribute;
+
+   ------------------------
+   -- Attribute_Location --
+   ------------------------
+
+   function Attribute_Location
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Source_Reference.Object'Class
+   is
+      Attr : Project.Attribute.Object;
+   begin
+      if Self.Check_Attribute (Name, Index, Result => Attr) then
+         return Attr;
+      else
+         return Source_Reference.Create (Self.Path_Name.Value, 0, 0);
+      end if;
+   end Attribute_Location;
 
    ----------------
    -- Attributes --
@@ -352,19 +375,6 @@ package body GPR2.Project.View is
       return "";
    end Binder_Prefix;
 
-   -------------
-   -- Builder --
-   -------------
-
-   function Builder (Self : Object) return Project.Pack.Object is
-   begin
-      if Self.Has_Packages (Registry.Pack.Builder) then
-         return Self.Packages.Element (Registry.Pack.Builder);
-      else
-         return Project.Pack.Undefined;
-      end if;
-   end Builder;
-
    ---------------------
    -- Check_Attribute --
    ---------------------
@@ -384,7 +394,7 @@ package body GPR2.Project.View is
                   or else Result.Is_Default)
         and then Self.Is_Extending
       then
-         return Self.Extended.Check_Attribute
+         return Self.Extended_Root.Check_Attribute
            (Name, Index, At_Pos, Check_Extended, Result);
       end if;
 
@@ -465,6 +475,50 @@ package body GPR2.Project.View is
       return Definition.Get_RO (Self).Context;
    end Context;
 
+   ----------------
+   -- Executable --
+   ----------------
+
+   function Executable
+     (Self    : Object;
+      Source  : Simple_Name;
+      At_Pos  : Natural) return GPR2.Path_Name.Object
+   is
+      package A renames GPR2.Project.Registry.Attribute;
+
+      Builder  : constant GPR2.Project.Pack.Object := Self.Builder;
+
+      BN       : constant  Value_Not_Empty :=
+                   Remove_Body_Suffix (Self, Source);
+      BN_Index : constant Attribute_Index.Object :=
+                   Attribute_Index.Create (BN);
+      Index    : constant Attribute_Index.Object :=
+                   Attribute_Index.Create (Value_Not_Empty (Source));
+      Attr     : GPR2.Project.Attribute.Object;
+
+      function Executable
+        (Base_Name : Value_Not_Empty) return GPR2.Path_Name.Object
+      is (GPR2.Path_Name.Create_File
+          (Filename_Type (Base_Name) & Self.Executable_Suffix,
+           Filename_Optional (Self.Executable_Directory.Dir_Name)));
+      --  Full executable path for base name.
+
+   begin
+      if Builder.Is_Defined
+        and then
+          (Builder.Check_Attribute (A.Executable, Index, At_Pos, Attr)
+           or else
+             (Source /= Simple_Name (BN)
+              and then Builder.Check_Attribute
+                (A.Executable, BN_Index, At_Pos, Attr)))
+        and then At_Pos = At_Pos_Or (Attr.Index, 0)
+      then
+         return Executable (Attr.Value.Text);
+      else
+         return Executable (BN);
+      end if;
+   end Executable;
+
    --------------------------
    -- Executable_Directory --
    --------------------------
@@ -482,27 +536,30 @@ package body GPR2.Project.View is
    function Executable_Suffix (Self : Object) return Filename_Optional is
       package A renames GPR2.Project.Registry.Attribute;
 
-      Tree : constant not null access Project.Tree.Object := Self.Tree;
-      Attr : Project.Attribute.Object;
+      Tree    : constant not null access Project.Tree.Object := Self.Tree;
+      Attr    : Project.Attribute.Object;
+      Builder : Project.Pack.Object;
 
    begin
-      if Tree.Has_Configuration
-        and then Tree.Configuration.Corresponding_View.Check_Attribute
-                   (A.Executable_Suffix, Result => Attr)
+      Builder := Self.Builder;
+
+      if Builder.Is_Defined
+        and then Builder.Check_Attribute
+          (A.Executable_Suffix, Result => Attr)
       then
          return Filename_Optional (Attr.Value.Text);
       end if;
 
-      declare
-         Builder : constant Project.Pack.Object := Self.Builder;
-      begin
+      if Tree.Has_Configuration then
+         Builder := Tree.Configuration.Corresponding_View.Builder;
+
          if Builder.Is_Defined
            and then Builder.Check_Attribute
                       (A.Executable_Suffix, Result => Attr)
          then
             return Filename_Optional (Attr.Value.Text);
          end if;
-      end;
+      end if;
 
       return Filename_Optional (OS_Lib.Get_Executable_Suffix.all);
    end Executable_Suffix;
@@ -511,10 +568,19 @@ package body GPR2.Project.View is
    -- Extended --
    --------------
 
-   function Extended (Self : Object) return Object is
+   function Extended (Self : Object) return Set.Object is
    begin
       return Definition.Get_RO (Self).Extended;
    end Extended;
+
+   -------------------
+   -- Extended_Root --
+   -------------------
+
+   function Extended_Root (Self : Object) return Object is
+   begin
+      return Definition.Get_RO (Self).Extended_Root;
+   end Extended_Root;
 
    ---------------
    -- Extending --
@@ -684,8 +750,8 @@ package body GPR2.Project.View is
          return True;
       end if;
 
-      if Check_Extended and then Def.Extended.Is_Defined then
-         return Def.Extended.Has_Attributes (Name, Index, Check_Extended);
+      if Check_Extended and then Def.Extended_Root.Is_Defined then
+         return Def.Extended_Root.Has_Attributes (Name, Index, Check_Extended);
       else
          return False;
       end if;
@@ -732,7 +798,7 @@ package body GPR2.Project.View is
 
    begin
       return For_Prj (Self)
-        or else (Self.Is_Extending and then Self.Extended.Has_Mains);
+        or else (Self.Is_Extending and then Self.Extended_Root.Has_Mains);
    end Has_Mains;
 
    ------------------
@@ -740,10 +806,20 @@ package body GPR2.Project.View is
    ------------------
 
    function Has_Packages
-     (Self : Object;
-      Name : Optional_Name_Type := No_Name) return Boolean is
+     (Self           : Object;
+      Name           : Optional_Name_Type := No_Name;
+      Check_Extended : Boolean := True) return Boolean is
    begin
-      return Definition.Get_RO (Self).Has_Packages (Name);
+      if Definition.Get_RO (Self).Has_Packages (Name) then
+         return True;
+      elsif Check_Extended
+         and then Name /= PRP.Naming
+         and then Self.Is_Extending
+      then
+         return Self.Extended_Root.Has_Packages (Name);
+      else
+         return False;
+      end if;
    end Has_Packages;
 
    ----------------
@@ -795,6 +871,19 @@ package body GPR2.Project.View is
       end if;
    end Has_Variables;
 
+   --------------------
+   -- Hide_Unit_Body --
+   --------------------
+
+   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type) is
+      Ref : constant Definition.Ref := Definition.Get (Self);
+      CU  : constant Unit_Info.Set.Cursor := Ref.Units.Find (Unit);
+   begin
+      if Unit_Info.Set.Set.Has_Element (CU) then
+         Ref.Units (CU).Remove_Body;
+      end if;
+   end Hide_Unit_Body;
+
    --------
    -- Id --
    --------
@@ -838,15 +927,6 @@ package body GPR2.Project.View is
       return Result;
    end Imports;
 
-   -----------------
-   -- Instance_Of --
-   -----------------
-
-   function Instance_Of (Self : Object) return GPR2.View_Ids.View_Id is
-   begin
-      return Definition.Get_RO (Self).Instance_Of;
-   end Instance_Of;
-
    ------------------------
    -- Invalidate_Sources --
    ------------------------
@@ -857,26 +937,15 @@ package body GPR2.Project.View is
         GPR2.Context.Default_Signature;
    end Invalidate_Sources;
 
-   -------------------
-   -- Is_Aggregated --
-   -------------------
-
-   function Is_Aggregated (Self : Object) return Boolean is
-      use Definition_References;
-   begin
-      return Definition.Get_RO (Self).Aggregate /= Null_Weak_Ref;
-   end Is_Aggregated;
-
    ------------------------------
    -- Is_Aggregated_In_Library --
    ------------------------------
 
    function Is_Aggregated_In_Library (Self : Object) return Boolean is
-      use type Weak_Reference;
       Ref : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      return Ref.Aggregate /= Definition_References.Null_Weak_Ref
-        and then Definition.Strong (Ref.Aggregate).Kind = K_Aggregate_Library;
+
+      return not Ref.Agg_Libraries.Is_Empty;
    end Is_Aggregated_In_Library;
 
    -----------------
@@ -905,18 +974,26 @@ package body GPR2.Project.View is
    function Is_Extending
      (Self : Object; Parent : Object'Class := Undefined) return Boolean
    is
-      This : Definition.Const_Ref := Definition.Get_RO (Self);
+      This : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      if not Parent.Is_Defined then
-         return This.Extended.Is_Defined;
+      if not This.Extended_Root.Is_Defined then
+         return False;
       end if;
 
-      while This.Extended.Is_Defined loop
-         if This.Extended = Object (Parent) then
+      if not Parent.Is_Defined then
+         return True;
+      end if;
+
+      for Ext of Self.Extended loop
+         if Ext = Object (Parent) then
             return True;
          end if;
 
-         This := Definition.Get_RO (This.Extended);
+         if Ext.Is_Extending then
+            if Is_Extending (Ext, Parent) then
+               return True;
+            end if;
+         end if;
       end loop;
 
       return False;
@@ -943,7 +1020,7 @@ package body GPR2.Project.View is
       elsif not Self.Is_Extending then
          return False;
       else
-         return Self.Extended.Is_Extension_Of (View);
+         return View.Is_Extending (Self);
       end if;
    end Is_Extension_Of;
 
@@ -972,7 +1049,8 @@ package body GPR2.Project.View is
       return (Self.Check_Attribute (Registry.Attribute.Main, Result => Mains)
           and then (Mains.Has_Value (Value_Type (Path.Base_Name))
                     or else Mains.Has_Value (Value_Type (Path.Simple_Name))))
-        or else (Self.Is_Extending and then Self.Extended.Is_Main (Source));
+        or else (Self.Is_Extending
+                 and then Self.Extended_Root.Is_Main (Source));
    end Is_Main;
 
    ----------------
@@ -1163,14 +1241,17 @@ package body GPR2.Project.View is
    is
       Attr : Project.Attribute.Object;
    begin
-      if Self.Has_Attributes (Project.Registry.Attribute.Library_Standalone)
-        and then
-          Self.Check_Attribute
-            (Project.Registry.Attribute.Library_Standalone,
-             Check_Extended => True,
-             Result         => Attr)
+      if Self.Check_Attribute
+        (Project.Registry.Attribute.Library_Standalone,
+         Check_Extended => True,
+         Result         => Attr)
       then
          return Standalone_Library_Kind'Value (Attr.Value.Text);
+
+      elsif Self.Has_Any_Interfaces then
+         --  If Library interface is defined, then Library_Standalone is
+         --  standard by default.
+         return Standard;
 
       else
          --  Library_Standalone not defined
@@ -1197,79 +1278,8 @@ package body GPR2.Project.View is
    -----------
 
    function Mains (Self : Object) return GPR2.Path_Name.Set.Object is
-      use GPR2.Project.Pack;
 
       package A renames GPR2.Project.Registry.Attribute;
-
-      Builder : constant GPR2.Project.Pack.Object := Self.Builder;
-
-      function Create
-        (Source : Value_Not_Empty;
-         At_Pos : Natural) return GPR2.Path_Name.Object;
-      --  Returns the full pathname of the main executable for the givem main
-
-      function Base_Name
-        (Simple_Name : Value_Not_Empty) return Value_Not_Empty;
-      --  Cut executable name at the first . (extension). Note that
-      --  this is not necessary the first base-name as we may have
-      --  multiple dots in the source when using non standard naming.
-      --  For example, having "main.2.ada" whe want to get on "main".
-
-      ---------------
-      -- Base_Name --
-      ---------------
-
-      function Base_Name
-        (Simple_Name : Value_Not_Empty) return Value_Not_Empty
-      is
-         Last : Positive := Simple_Name'First;
-      begin
-         while Last < Simple_Name'Last
-           and then Simple_Name (Last + 1) /= '.'
-         loop
-            Last := Last + 1;
-         end loop;
-
-         return Simple_Name (Simple_Name'First .. Last);
-      end Base_Name;
-
-      ------------
-      -- Create --
-      ------------
-
-      function Create
-        (Source : Value_Not_Empty;
-         At_Pos : Natural) return GPR2.Path_Name.Object
-      is
-         BN       : constant Value_Not_Empty := Base_Name (Source);
-         BN_Index : constant Attribute_Index.Object :=
-                      Attribute_Index.Create (BN);
-         Index    : constant Attribute_Index.Object :=
-                      Attribute_Index.Create (Source);
-         Attr     : GPR2.Project.Attribute.Object;
-
-         function Create_Path
-           (Name : Value_Not_Empty) return GPR2.Path_Name.Object
-         is
-           (GPR2.Path_Name.Create_File
-              (Filename_Type (Name) & Self.Executable_Suffix,
-               Filename_Optional (Self.Executable_Directory.Dir_Name)));
-
-      begin
-         if Builder.Is_Defined
-           and then
-             (Builder.Check_Attribute (A.Executable, Index, At_Pos, Attr)
-              or else
-                (Source /= BN
-                 and then Builder.Check_Attribute
-                   (A.Executable, BN_Index, At_Pos, Attr)))
-           and then At_Pos = At_Pos_Or (Attr.Index, 0)
-         then
-            return Create_Path (Attr.Value.Text);
-         else
-            return Create_Path (BN);
-         end if;
-      end Create;
 
       Attr : Project.Attribute.Object;
 
@@ -1277,17 +1287,18 @@ package body GPR2.Project.View is
       return Set : GPR2.Path_Name.Set.Object do
          if Self.Check_Attribute (A.Main, Result => Attr) then
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text, At_Pos_Or (Main, 0)));
+               Set.Append (Self.Executable (Simple_Name (Main.Text),
+                           At_Pos_Or (Main, 0)));
             end loop;
-         end if;
 
-         --  Add also mains from extended project if defined
-
-         if Self.Is_Extending
-           and then Self.Extended.Check_Attribute (A.Main, Result => Attr)
+         elsif Self.Is_Extending
+           and then Self.Extended_Root.Check_Attribute (A.Main, Result => Attr)
          then
+            --  If not overriden, check the extended project if any
+
             for Main of Attr.Values loop
-               Set.Append (Mains.Create (Main.Text, At_Pos_Or (Main, 0)));
+               Set.Append (Self.Executable (Simple_Name (Main.Text),
+                           At_Pos_Or (Main, 0)));
             end loop;
          end if;
       end return;
@@ -1334,10 +1345,24 @@ package body GPR2.Project.View is
    ----------
 
    function Pack
-     (Self : Object;
-      Name : Name_Type) return Project.Pack.Object is
+     (Self           : Object;
+      Name           : Name_Type;
+      Check_Extended : Boolean := True) return Project.Pack.Object
+   is
+      Result    : Project.Pack.Object;
+      View_Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      return Definition.Get_RO (Self).Packs (Name);
+      if View_Data.Has_Packages (Name) then
+         Result := View_Data.Packs.Element (Name);
+      elsif Check_Extended
+         and then Name /= PRP.Naming
+         and then Self.Is_Extending
+      then
+         Result := Self.Extended_Root.Pack
+            (Name => Name, Check_Extended => Check_Extended);
+      end if;
+
+      return Result;
    end Pack;
 
    --------------
@@ -1345,8 +1370,21 @@ package body GPR2.Project.View is
    --------------
 
    function Packages (Self : Object) return Project.Pack.Set.Object is
+      Result : Project.Pack.Set.Object;
    begin
-      return Definition.Get_RO (Self).Packs;
+      if Self.Is_Extending then
+         Result := Self.Extended_Root.Packages;
+         --  Filter out Naming package that is not inherited
+         if Result.Contains (PRP.Naming) then
+            Result.Delete (PRP.Naming);
+         end if;
+      end if;
+
+      for Pack of Definition.Get_RO (Self).Packs loop
+         Result.Include (Pack.Name, Pack);
+      end loop;
+
+      return Result;
    end Packages;
 
    ---------------
@@ -1366,6 +1404,60 @@ package body GPR2.Project.View is
    begin
       return Definition.Get_RO (Self).Trees.Project.Qualifier;
    end Qualifier;
+
+   ------------------
+   -- Reindex_Unit --
+   ------------------
+
+   procedure Reindex_Unit (Self : Object; From, To : Name_Type) is
+      Ref : constant Definition.Ref := Definition.Get (Self);
+      C   : constant Unit_Info.Set.Cursor := Ref.Units.Find (From);
+   begin
+      if Unit_Info.Set.Set.Has_Element (C) then
+         Ref.Units.Include (To, Unit_Info.Set.Set.Element (C));
+         Ref.Units.Delete (From);
+      end if;
+
+      Ref.Tree.Reindex_Unit (From, To);
+   end Reindex_Unit;
+
+   ------------------------
+   -- Remove_Body_Suffix --
+   ------------------------
+
+   function Remove_Body_Suffix
+     (Self : Object; Name : Simple_Name) return Value_Not_Empty
+   is
+      Last   : Positive := Name'First;
+      Src    : GPR2.Project.Source.Object;
+      Lang   : constant Optional_Name_Type :=
+                 (if Self.Check_Source (Name, Src)
+                  then Src.Source.Language
+                  else No_Name);
+      Naming : constant Project.Pack.Object := Self.Naming_Package;
+      Suffix : constant String :=
+                 (if Lang /= No_Name
+                  and then Naming.Has_Body_Suffix (Lang)
+                  then Naming.Body_Suffix (Lang).Value.Text
+                  else "");
+   begin
+      if Suffix'Length > 0
+        and then Name'Length > Suffix'Length
+        and then GPR2.Path_Name.To_OS_Case (Suffix) =
+        GPR2.Path_Name.To_OS_Case
+          (Ada.Strings.Fixed.Tail (String (Name), Suffix'Length))
+      then
+         Last := Name'Last - Suffix'Length;
+      else
+         while Last < Name'Last
+           and then Name (Last + 1) /= '.'
+         loop
+            Last := Last + 1;
+         end loop;
+      end if;
+
+      return Value_Not_Empty (Name (Name'First .. Last));
+   end Remove_Body_Suffix;
 
    -------------
    -- Set_Def --
@@ -1391,18 +1483,11 @@ package body GPR2.Project.View is
    ------------
 
    function Source
-     (Self        : Object;
-      File        : GPR2.Path_Name.Object;
-      Need_Update : Boolean := True) return Project.Source.Object
+     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
    is
-      CS : Definition.Simple_Name_Source.Cursor;
+      CS : constant Definition.Simple_Name_Source.Cursor :=
+             Definition.Get_RO (Self).Sources_Map.Find (File.Simple_Name);
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
-      CS := Definition.Get_RO (Self).Sources_Map.Find (File.Simple_Name);
-
       if Definition.Simple_Name_Source.Has_Element (CS) then
          return Definition.Simple_Name_Source.Element (CS);
       else
@@ -1443,23 +1528,85 @@ package body GPR2.Project.View is
    -----------------
 
    function Source_Path
-     (Self        : Object;
-      Filename    : GPR2.Simple_Name;
-      Need_Update : Boolean := True) return GPR2.Path_Name.Object
+     (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
    is
-      CS : Definition.Simple_Name_Source.Cursor;
+      CS : constant Definition.Simple_Name_Source.Cursor :=
+             Definition.Get_RO (Self).Sources_Map.Find (Filename);
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
-      CS := Definition.Get_RO (Self).Sources_Map.Find (Filename);
-
       if Definition.Simple_Name_Source.Has_Element (CS) then
          return Definition.Simple_Name_Source.Element (CS).Path_Name;
       else
          return GPR2.Path_Name.Undefined;
       end if;
+   end Source_Path;
+
+   function Source_Path
+     (Self            : Object;
+      Name            : GPR2.Simple_Name;
+      Allow_Spec_File : Boolean;
+      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
+   is
+      CS : Definition.Simple_Name_Source.Cursor :=
+             Definition.Get_RO (Self).Sources_Map.Find (Name);
+   begin
+      if Definition.Simple_Name_Source.Has_Element (CS) then
+         return Definition.Simple_Name_Source.Element (CS).Path_Name;
+      else
+         if Allow_Unit_Name then
+            declare
+               Unit : constant Unit_Info.Object :=
+                        Self.Unit (Name => Optional_Name_Type (Name));
+            begin
+               if Unit.Is_Defined then
+                  if Unit.Has_Body then
+                     return Unit.Main_Body;
+                  elsif Allow_Spec_File and then Unit.Has_Spec then
+                     return Unit.Spec;
+                  end if;
+               end if;
+            end;
+         end if;
+
+         for Language of Self.Languages loop
+            declare
+               L  : constant Name_Type := Name_Type (Language.Text);
+               BS : constant Value_Type :=
+                      (if Self.Naming_Package.Has_Body_Suffix (L)
+                       then Self.Naming_Package.Body_Suffix (L).Value.Text
+                       else No_Value);
+            begin
+               if BS /= No_Value then
+                  CS := Definition.Get_RO (Self).Sources_Map.Find
+                    (Name & Simple_Name (BS));
+                  if Definition.Simple_Name_Source.Has_Element (CS) then
+                     return Definition.Simple_Name_Source.Element
+                       (CS).Path_Name;
+                  end if;
+               end if;
+
+               if Allow_Spec_File then
+                  declare
+                     SS : constant Value_Type :=
+                            (if Self.Naming_Package.Has_Spec_Suffix (L)
+                             then Self.Naming_Package.Spec_Suffix
+                               (L).Value.Text
+                             else No_Value);
+                  begin
+                     if SS /= No_Value then
+                        CS := Definition.Get_RO (Self).Sources_Map.Find
+                          (Name & Simple_Name (SS));
+                        if Definition.Simple_Name_Source.Has_Element (CS) then
+                           return Definition.Simple_Name_Source.Element
+                             (CS).Path_Name;
+                        end if;
+                     end if;
+                  end;
+               end if;
+            end;
+         end loop;
+      end if;
+
+      return GPR2.Path_Name.Undefined;
    end Source_Path;
 
    -------------------------
@@ -1477,75 +1624,49 @@ package body GPR2.Project.View is
    -------------
 
    function Sources
-     (Self        : Object;
-      Filter      : Source_Kind := K_All;
-      Need_Update : Boolean := True) return Project.Source.Set.Object is
+     (Self   : Object;
+      Filter : Source_Kind := K_All) return Project.Source.Set.Object
+   is
+      use type Ada.Streams.Stream_Element_Array;
+      Data : constant Project.Definition.Ref := Project.Definition.Get (Self);
    begin
-      --  First we make sure that if needed the set of sources is up-to-date.
-      --  This only updates the set of source for the View depending on the
-      --  project deffinition. Basically it brings a list of source file and
-      --  their corresponding language into the set.
+      if not Definition.Are_Sources_Loaded (Data.Tree.all) then
+         Data.Tree.Update_Sources (With_Runtime => Self.Is_Runtime);
 
-      if Need_Update then
-         Self.Update_Sources;
+      elsif Data.Sources_Signature = GPR2.Context.Default_Signature then
+         Data.Update_Sources
+           (Self, Stop_On_Error => True, Backends => Source_Info.All_Backends);
       end if;
 
-      declare
-         Data  : constant Project.Definition.Ref :=
-                   Project.Definition.Get (Self);
-      begin
-         --  Compute and return the sources depending on the filtering
+      --  Compute and return the sources depending on the filtering
 
-         if Filter = K_All then
-            if Need_Update then
-               --  Check sources timestamp
+      if Filter = K_All then
+         return Data.Sources;
 
-               for S of Data.Sources loop
-                  if not S.Source.Check_Timestamp then
-                     Data.Sources_Signature := GPR2.Context.Default_Signature;
-                     Self.Update_Sources;
-                     exit;
+      else
+         return S_Set : Project.Source.Set.Object do
+            for S of Data.Sources loop
+               declare
+                  Is_Interface : constant Boolean :=
+                                   S.Source.Has_Units
+                                   and then S.Source.Has_Single_Unit
+                                   and then Data.Units.Contains
+                                              (S.Source.Unit_Name)
+                                   and then S.Is_Interface;
+                  --  All sources related to an interface unit are also
+                  --  taken as interface (not only the spec)???
+
+               begin
+                  if (Filter = K_Interface_Only and then Is_Interface)
+                    or else
+                      (Filter = K_Not_Interface and then not Is_Interface)
+                  then
+                     S_Set.Insert (S);
                   end if;
-               end loop;
-            end if;
-
-            return Data.Sources;
-
-         else
-            return S_Set : Project.Source.Set.Object do
-               for S of Data.Sources loop
-                  declare
-                     Is_Interface : constant Boolean :=
-                                      S.Source.Has_Units
-                                          and then
-                                      S.Source.Has_Single_Unit
-                                          and then
-                                      Data.Units.Contains (S.Source.Unit_Name)
-                                          and then
-                                      S.Is_Interface;
-                     --  All sources related to an interface unit are also
-                     --  taken as interface (not only the spec)???
-                  begin
-                     if (Filter = K_Interface_Only and then Is_Interface)
-                           or else
-                        (Filter = K_Not_Interface and then not Is_Interface)
-                     then
-                        if Need_Update
-                          and then not S.Source.Check_Timestamp
-                        then
-                           Data.Sources_Signature :=
-                             GPR2.Context.Default_Signature;
-                           S_Set := Self.Sources (Filter, Need_Update);
-                           exit;
-                        else
-                           S_Set.Insert (S);
-                        end if;
-                     end if;
-                  end;
-               end loop;
-            end return;
-         end if;
-      end;
+               end;
+            end loop;
+         end return;
+      end if;
    end Sources;
 
    ------------
@@ -1590,19 +1711,10 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Unit
-     (Self        : Object;
-      Name        : Name_Type;
-      Need_Update : Boolean := True) return Unit_Info.Object
-   is
-      CU : Unit_Info.Set.Cursor;
+   function Unit (Self : Object; Name : Name_Type) return Unit_Info.Object is
+      CU : constant Unit_Info.Set.Cursor :=
+             Definition.Get_RO (Self).Units.Find (Name);
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
-      CU := Definition.Get_RO (Self).Units.Find (Name);
-
       if Unit_Info.Set.Set.Has_Element (CU) then
          return Unit_Info.Set.Set.Element (CU);
       else
@@ -1614,28 +1726,10 @@ package body GPR2.Project.View is
    -- Units --
    -----------
 
-   function Units
-     (Self        : Object;
-      Need_Update : Boolean := True) return Unit_Info.Set.Object is
+   function Units (Self : Object) return Unit_Info.Set.Object is
    begin
-      if Need_Update then
-         Self.Update_Sources;
-      end if;
-
       return Definition.Get_RO (Self).Units;
    end Units;
-
-   --------------------
-   -- Update_Sources --
-   --------------------
-
-   procedure Update_Sources
-     (Self     : Object;
-      Backends : Source_Info.Backend_Set := Source_Info.All_Backends) is
-   begin
-      Get_Ref (Self).Update_Sources
-        (Self, Stop_On_Error => True, Backends => Backends);
-   end Update_Sources;
 
    --------------
    -- Variable --
@@ -1662,7 +1756,7 @@ package body GPR2.Project.View is
 
    function View_For (Self : Object; Name : Name_Type) return View.Object is
       Data : constant Definition.Const_Ref := Definition.Get_RO (Self);
-      Dad  : Object := Data.Extended;
+      Dad  : Object := Data.Extended_Root;
    begin
       --  Lookup in the ancestors first
 
@@ -1671,15 +1765,19 @@ package body GPR2.Project.View is
             return Dad;
          end if;
 
-         Dad := Definition.Get_RO (Dad).Extended;
+         Dad := Definition.Get_RO (Dad).Extended_Root;
       end loop;
 
       --  Lookup in the imported next
 
-      if Data.Imports.Contains (Name) then
-         return Data.Tree.Instance_Of
-            (Data.Imports.Element (Name).Instance_Of);
-      end if;
+      declare
+         package DPV renames Definition.Project_View_Store;
+         Position : constant DPV.Cursor := Data.Imports.Find (Name);
+      begin
+         if DPV.Has_Element (Position) then
+            return DPV.Element (Position);
+         end if;
+      end;
 
       --  Try configuration project
 

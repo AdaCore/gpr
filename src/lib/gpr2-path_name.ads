@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -86,8 +86,9 @@ package GPR2.Path_Name is
    --  parameter the Directory parameter has no meaning.
 
    function Create_Directory
-     (Name      : Filename_Type;
-      Directory : Filename_Optional := "") return Object
+     (Name          : Filename_Type;
+      Directory     : Filename_Optional := "";
+      Resolve_Links : Boolean := False) return Object
      with Post => Create_Directory'Result.Is_Defined
                   and then Create_Directory'Result.Is_Directory;
    --  Creates a Path_Name_Type for a directory
@@ -186,7 +187,7 @@ package GPR2.Path_Name is
 
    function To_OS_Case (Name : String) return String with Inline;
    --  If filenames is case insensitive converts path name to lowercase,
-   --  returns the same value othervise.
+   --  returns the same value otherwise.
 
    function Change_Extension
      (Self : Object; Extension : Value_Type) return Object

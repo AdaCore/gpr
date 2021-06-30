@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -66,6 +66,12 @@ package GPR2.Project.Import.Set is
 
    No_Element : constant Cursor;
 
+   function Find
+     (Self : Object; Path_Name : GPR2.Path_Name.Object) return Cursor;
+
+   function Find
+     (Self : Object; Base_Name : Name_Type) return Cursor;
+
    function Element (Position : Cursor) return Project.Import.Object
      with Post =>
        (if Has_Element (Position)
@@ -106,5 +112,15 @@ private
 
    type Constant_Reference_Type
      (Import : not null access constant Project.Import.Object) is null record;
+
+   function Find
+     (Self : Object; Path_Name : GPR2.Path_Name.Object) return Cursor
+   is
+     ((Current => Self.Set.Find (Path_Name.Base_Name)));
+
+   function Find
+     (Self : Object; Base_Name : Name_Type) return Cursor
+   is
+     ((Current => Self.Set.Find (Base_Name)));
 
 end GPR2.Project.Import.Set;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -66,7 +66,6 @@ package GPR2.Project.Registry.Pack is
    Builder         : constant Name_Type := "builder";
    Check           : constant Name_Type := "check";
    Clean           : constant Name_Type := "clean";
-   Codepeer        : constant Name_Type := "codepeer";
    Compiler        : constant Name_Type := "compiler";
    Cross_Reference : constant Name_Type := "cross_reference";
    Eliminate       : constant Name_Type := "eliminate";

@@ -1,0 +1,15 @@
+with "p_naming.gpr";
+
+project P is
+
+   for Source_List_File use "p_source_list.txt";
+   for Source_Dirs use (".");
+   for Languages use ();
+
+   package Naming renames P_Naming.Naming;
+
+   package Codepeer is
+      for Foo use "Bar";
+   end Codepeer;
+
+end P;

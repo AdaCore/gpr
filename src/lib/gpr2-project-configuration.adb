@@ -30,6 +30,7 @@ with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Value;
+with GPR2.View_Ids;
 
 pragma Warnings (Off);
 with System.OS_Constants;
@@ -66,6 +67,7 @@ package body GPR2.Project.Configuration is
       Data.Path          := Path_Name.Create_Directory
                               (Filename_Type
                                  (Self.Project.Path_Name.Dir_Name));
+      Data.Unique_Id     := GPR2.View_Ids.Config_View_Id;
       Self.Conf          := Definition.Register (Data);
    end Bind_To_Tree;
 
@@ -86,7 +88,7 @@ package body GPR2.Project.Configuration is
      (Language : Name_Type;
       Version  : Optional_Name_Type := No_Name;
       Runtime  : Optional_Name_Type := No_Name;
-      Path     : Optional_Name_Type := No_Name;
+      Path     : Filename_Optional  := No_Filename;
       Name     : Optional_Name_Type := No_Name) return Description
    is
       function "+" (Str : Optional_Name_Type) return Unbounded_String
@@ -96,7 +98,7 @@ package body GPR2.Project.Configuration is
         (Language => +Language,
          Version  => +Version,
          Runtime  => +Runtime,
-         Path     => +Path,
+         Path     => +String (Path),
          Name     => +Name);
    end Create;
 
@@ -254,7 +256,7 @@ package body GPR2.Project.Configuration is
    begin
       Result.Project :=
         Parser.Project.Parse
-          (Filename, Containers.Empty_Filename_Set, Result.Messages);
+          (Filename, GPR2.Path_Name.Set.Empty_Set, Result.Messages);
 
       --  Continue only if there is no parsing error on the configuration
       --  project.

@@ -1,0 +1,4 @@
+aggregate project Append is
+   for Project_Path use ("dep.appended");
+   for Project_Files use ("prj.gpr");
+end Append;

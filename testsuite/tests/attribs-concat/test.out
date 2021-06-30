@@ -1,0 +1,7 @@
+source_dirs=("src1","src2")
+A="AB"
+B=("A","B")
+C=("AB","C","D")
+D="ABC"
+E=("A","B","C","DE","F")
+prj2.gpr:2:16: error: literal string list cannot appear in a string

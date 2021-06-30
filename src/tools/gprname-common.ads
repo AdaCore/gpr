@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -33,11 +33,6 @@ package GPRname.Common is
    use GPR2;
 
    type Verbosity_Level_Type is (None, Low, High);
-
-   overriding function ">="
-     (Left, Right : Verbosity_Level_Type) return Boolean
-   is
-     (Verbosity_Level_Type'Pos (Left) >= Verbosity_Level_Type'Pos (Right));
 
    --
    --  String types

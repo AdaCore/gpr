@@ -1,0 +1,11 @@
+with "import7";
+with "import9";
+project Extending extends "extended" is
+    package Naming is
+       for Casing use "upperCASE";
+       for Dot_Replacement use "a";
+       for Specification_Suffix ("aDa") use "a";
+       for Implementation_Suffix ("aDA") use "b";
+       for Separate_Suffix use "c";
+    end Naming;
+end Extending;

@@ -1,0 +1,46 @@
+aggregate project Aggr is
+   Test := external ("TEST"); --  TEST external variable defines test number.
+   Var  := "0";
+
+   case Test is
+      when "1" =>
+         --  VAR is undefined: warning reported
+         Var := external ("VAR");
+      when "2" =>
+         Var := external ("VAR", "2"); --  expected Var=2
+         --  Nothing specified for b.gpr: default value will be taken
+      when "3" =>
+         for External ("VAR") use "C"; --  in c.gpr: Var=C
+         Var := external ("VAR", "3"); --  expected Var=3
+      when "4" =>
+         for External ("VAR") use "C";
+         for External ("VAR") use "D"; --  in d.gpr: Var=D
+         Var := external ("VAR", "4"); -- expected Var=4
+      when "5" =>
+         --  Env variable VAR=5
+         for External ("VAR") use "E";
+         Var := external ("VAR", "0"); --  expected Var=5
+      when "6" =>
+         --  Env variable VAR=5, -XVAR=6 given on the command line
+         Var := external ("VAR", "0"); --  expected Var=6
+         for External ("VAR") use "F" & Var;
+   end case;
+
+   case Var is --  test checks are done expecting file "x.gpr" not found errors
+      when "1" =>
+         for Project_Files use ("a.gpr");
+      when "2" =>
+         for Project_Files use ("b.gpr");
+      when "3" =>
+         for Project_Files use ("c.gpr");
+      when "4" =>
+         for Project_Files use ("d.gpr");
+      when "5" =>
+         for Project_Files use ("e.gpr");
+      when "6" =>
+         for Project_Files use ("f.gpr");
+      when others =>
+         for Project_Files use (Var & ".gpr");
+   end case;
+
+end Aggr;

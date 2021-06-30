@@ -111,6 +111,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    begin
       Set_Selective_Output;
       Self.Print_Sources := True;
+      Self.Source_Parser := True;
    end Set_Print_Sources;
 
    ---------------------
@@ -195,6 +196,11 @@ begin
       Long_Switch => "--source-parser",
       Help        => "Allow to use source parser to get dependencies");
 
+   Define_Switch
+     (Config, Self.Gnatdist'Unrestricted_Access,
+      "-V",
+      Help => "Gnatdist specific output");
+
    Getopt (Config, Concatenate => False);
 
    --  Now read the specified files from which we will browse, if any
@@ -222,14 +228,22 @@ begin
    --  If there is no file on the command line, check if -v is provided
    --  so that we enter the "only display paths" mode.
 
-   if not Self.Project_File.Is_Defined
+   if not Self.Project_Is_Defined
      and then Self.Files.Is_Empty
      and then Self.Verbose
    then
       Self.Only_Display_Paths := True;
    end if;
 
-   if Self.Closure_Mode then
+   if Self.Gnatdist then
+      Self.Closure_Mode    := False;
+      Self.Dependency_Mode := False;
+
+      if not Self.Files.Is_Empty then
+         Self.All_Projects := True;
+      end if;
+
+   elsif Self.Closure_Mode then
       Self.Dependency_Mode := False;
       --  Closure mode has precedence over dependency mode
    end if;

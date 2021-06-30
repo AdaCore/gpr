@@ -1,0 +1,5 @@
+description:
+    Check for proper handling of ambiguous naming suffix
+driver: build_and_run
+project_file: test
+main: main

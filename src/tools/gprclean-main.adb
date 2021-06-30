@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -39,7 +39,19 @@ with GPR2.Project.Configuration;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
+
+pragma Warnings (Off, "unit ""GPR2.Project.Source.Set"" is not referenced");
+--  This pragma need to workaround GNAT bug U622-047 when unit is necessary,
+--  but when set, issues warning that it is not referenced.
+--
 with GPR2.Project.Source.Set;
+--  Without this import
+--  gprclean-main.adb:386:20: error: cannot call function that returns limited
+--             view of type "Object" defined at gpr2-project-source-set.ads:32
+--  gprclean-main.adb:386:20: error: there must be a regular with_clause for
+--            package "Set" in the current unit, or in some unit in its context
+pragma Warnings (On);
+
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source;
@@ -93,10 +105,24 @@ procedure GPRclean.Main is
    procedure Clean (View : Project.View.Object) is
       use GNATCOLL.Utils;
 
-      Obj_Dir : constant Path_Name.Object := View.Object_Directory;
-      Tree    : constant access Project.Tree.Object := View.Tree;
-      Opts    : GPRclean.Options.Object;
-
+      Obj_Dir     : constant Path_Name.Object := View.Object_Directory;
+      Tree        : constant access Project.Tree.Object := View.Tree;
+      Opts        : GPRclean.Options.Object;
+      Lib_Dir     : constant GPR2.Path_Name.Object :=
+                      (if View.Is_Library
+                       then View.Library_Directory
+                       else GPR2.Path_Name.Undefined);
+      Lib_Ali_Dir : constant GPR2.Path_Name.Object :=
+                      (if Lib_Dir.Is_Defined
+                       and then View.Library_Ali_Directory /= Lib_Dir
+                       then View.Library_Ali_Directory
+                       else GPR2.Path_Name.Undefined);
+      Lib_Src_Dir : constant GPR2.Path_Name.Object :=
+                      (if Lib_Dir.Is_Defined
+                       and then View.Library_Src_Directory /= Lib_Dir
+                       and then View.Library_Src_Directory /= Lib_Ali_Dir
+                       then View.Library_Src_Directory
+                       else GPR2.Path_Name.Undefined);
       pragma Warnings (Off);
 
       function "&" (Left, Right : Name_Type) return Name_Type renames GPR2."&";
@@ -123,6 +149,11 @@ procedure GPRclean.Main is
          Library_Name : GPR2.Simple_Name) return Path_Name.Object;
       --  return linker options path
 
+      function In_Library_Directories
+        (File : Path_Name.Object) return Boolean;
+      --  return true if view is a library and File is in library_dir,
+      --  library_ali_dir or library_src_dir directories
+
       ----------------------
       -- Binder_Artifacts --
       ----------------------
@@ -144,6 +175,28 @@ procedure GPRclean.Main is
       begin
          Main.Delete_File (Name, Opts);
       end Delete_File;
+
+      ----------------------------
+      -- In_Library_Directories --
+      ----------------------------
+
+      function In_Library_Directories
+        (File : Path_Name.Object) return Boolean
+      is
+      begin
+         if Lib_Dir.Is_Defined then
+            declare
+               Parent : constant Path_Name.Object :=
+                          Create_Directory (Filename_Type (Dir_Name (File)));
+            begin
+               return Parent = Lib_Dir
+                 or else Parent = Lib_Ali_Dir
+                 or else Parent = Lib_Src_Dir;
+            end;
+         else
+            return False;
+         end if;
+      end In_Library_Directories;
 
       Has_Mains : constant Boolean := View.Has_Mains;
       Attr      : Project.Attribute.Object;
@@ -174,6 +227,9 @@ procedure GPRclean.Main is
            (GPRtools.Util.Partial_Name
               (Library_Name, Number, View.Tree.Object_Suffix));
       end Partial_Path;
+
+      Mains_In_View : GPR2.Containers.Filename_Set;
+      --  mains in cmd line found in this view
 
    begin
       --  Check for additional switches in Clean package
@@ -296,26 +352,68 @@ procedure GPRclean.Main is
          end if;
       end if;
 
-      for C in View.Sources (Need_Update => False).Iterate loop
+      --  Handle mains without spec/body extension
+
+      declare
+         Removed_Mains : GPR2.Containers.Filename_Set;
+      begin
+         --  Add found sources to Found_Mains
+
+         for M of Options.Mains loop
+            declare
+               Main : constant GPR2.Path_Name.Object :=
+                        View.Source_Path
+                          (Name            => M,
+                           Allow_Spec_File => True,
+                           Allow_Unit_Name => False);
+            begin
+               if Main.Is_Defined then
+                  declare
+                     Position : GPR2.Containers.Filename_Type_Set.Cursor;
+                     Inserted : Boolean;
+                  begin
+                     Mains_In_View.Insert
+                       (New_Item => Filename_Type (Main.Simple_Name),
+                        Position => Position,
+                        Inserted => Inserted);
+                     if Inserted then
+                        Removed_Mains.Insert (M);
+                     end if;
+                  end;
+               end if;
+            end;
+         end loop;
+
+         --- Remove found mains from Mains & Mains_In_Cmd
+
+         for Arg of Removed_Mains loop
+            Options.Mains.Delete (Arg);
+         end loop;
+
+      end;
+
+      for S of View.Sources loop
          declare
-            S       : constant Project.Source.Object :=
-                        Project.Source.Set.Element (C);
             Cleanup : Boolean := True;
             --  To disable cleanup if main files list exists and the main file
             --  is not from list.
             In_Mains : Boolean := False;
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
+            C_Main   : Containers.Filename_Type_Set.Cursor :=
+                         Mains_In_View.Find (S.Source.Path_Name.Simple_Name);
          begin
             if Opts.Verbose then
-               Text_IO.Put_Line ("source: " & S.Source.Path_Name.Value & ' '
-                                 & S.Is_Aggregated'Img);
+               Text_IO.Put_Line
+                 ("source: " & S.Source.Path_Name.Value & ' '
+                  & S.Is_Aggregated'Img);
             end if;
 
-            if Opts.Mains.Contains
-                 (String (S.Source.Path_Name.Simple_Name))
-            then
+            --  Remove source simple name from Options.Mains as all Mains found
+            --  is handled at Tree level not View level.
+
+            if Containers.Filename_Type_Set.Has_Element (C_Main) then
                In_Mains := True;
-               Opts.Args.Delete (String (S.Source.Path_Name.Simple_Name));
+               Mains_In_View.Delete (C_Main);
             end if;
 
             if Is_Main or else In_Mains then
@@ -342,8 +440,15 @@ procedure GPRclean.Main is
             end if;
 
             if Cleanup then
-               for F of S.Artifacts.List loop
-                  Delete_File (F.Value);
+               for F of S.Artifacts.List_To_Clean loop
+                  --  As S.Artifacts contains also files generated in library
+                  --  directories, check if delete file is allowed
+
+                  if not Opts.Remain_Useful
+                    or else not In_Library_Directories (F)
+                  then
+                     Delete_File (F.Value);
+                  end if;
                end loop;
 
                if not Opts.Remain_Useful and then Opts.Arg_Mains
@@ -353,24 +458,20 @@ procedure GPRclean.Main is
                   --  attributes, the executable file name included into
                   --  View.Mains below. This case is when main procedure
                   --  filename defined in command line and we have to remove
-                  --  the executable file separetely.
+                  --  the executable file separately.
 
-                  Delete_File
-                    (Path_Name.Create_File
-                       (S.Source.Path_Name.Base_Filename
-                        & View.Executable_Suffix,
-                        Filename_Type
-                          (View.Executable_Directory.Value)).Value);
+                  for U of S.Source.Units loop
+                     Delete_File
+                       (View.Executable
+                          (S.Source.Path_Name.Simple_Name,
+                           (if S.Source.Has_Single_Unit
+                            then 0
+                            else U.Index)).Value);
+                  end loop;
                end if;
             end if;
          end;
       end loop;
-
-      if Opts.Arg_Mains and then not Opts.Mains.Is_Empty then
-         GPRtools.Util.Fail_Program
-           ('"' & Opts.Mains.First_Element
-            & """ was not found in the sources of any project");
-      end if;
 
       if not Opts.Remain_Useful
         and then View.Has_Mains
@@ -396,12 +497,41 @@ procedure GPRclean.Main is
          end;
       end if;
 
-      if View.Is_Library then
+      if View.Is_Library and then not Opts.Remain_Useful then
+         --  All library generated files should be deleted
+
          if View.Is_Aggregated_In_Library then
-            Binder_Artifacts (View.Aggregate.Library_Name);
+            for Lib of View.Aggregate_Libraries loop
+               Binder_Artifacts (Lib.Library_Name);
+            end loop;
          else
-            if not Opts.Remain_Useful then
-               Delete_File (View.Library_Filename.Value);
+            Delete_File (View.Library_Filename.Value);
+
+            --  Delete if any library version & library major version
+
+            if not View.Is_Static_Library and then View.Has_Library_Version
+            then
+               if View.Library_Version_Filename
+                 /= View.Library_Major_Version_Filename
+               then
+                  --  When library version attribute is provided, to keep all
+                  --  links seen as regular file, link target should be deleted
+                  --  after the link. Library binary files should be deleted
+                  --  starting with Library_Filename and ending with
+                  --  Library_Version_Filename
+
+                  if View.Library_Major_Version_Filename
+                    /= View.Library_Filename
+                  then
+                     Delete_File (View.Library_Major_Version_Filename.Value);
+                  end if;
+
+                  if View.Library_Version_Filename
+                    /= View.Library_Major_Version_Filename
+                  then
+                     Delete_File (View.Library_Version_Filename.Value);
+                  end if;
+               end if;
             end if;
 
             Binder_Artifacts (View.Library_Name);
@@ -427,13 +557,33 @@ procedure GPRclean.Main is
          end;
       end if;
 
+      --  Delete source files found in library source directory
+
+      if View.Is_Library and then View.Library_Src_Directory.Is_Defined
+        and then not Opts.Remain_Useful
+      then
+         declare
+            Lib_Src_Dir : constant GPR2.Path_Name.Object :=
+                            View.Library_Src_Directory;
+         begin
+            for Source of View.Sources loop
+               declare
+                  F : constant GPR2.Path_Name.Object :=
+                        Lib_Src_Dir.Compose (Source.Path_Name.Simple_Name);
+               begin
+                  if F.Exists then
+                     Delete_File (F.Value);
+                  end if;
+               end;
+            end loop;
+         end;
+      end if;
+
       --  Removes empty directories
 
       if Opts.Remove_Empty_Dirs then
          declare
             use Ada.Directories;
-
-            Attr : Project.Attribute.Object;
 
             procedure Delete_Dir (Dir : Value_Not_Empty);
             --  Delete directory if a directory
@@ -520,12 +670,11 @@ procedure GPRclean.Main is
                   Delete_If_Not_Project (View.Library_Ali_Directory);
                end if;
 
-               if View.Check_Attribute
-                 (Project.Registry.Attribute.Library_Src_Dir, Result => Attr)
+               if View.Library_Directory /= View.Library_Src_Directory
+                 and then View.Library_Ali_Directory
+                   /= View.Library_Src_Directory
                then
-                  Delete_If_Not_Project
-                    (Path_Name.Create_Directory
-                       (Filename_Type (Attr.Value.Text)));
+                  Delete_If_Not_Project (View.Library_Src_Directory);
                end if;
             end if;
          end;
@@ -637,7 +786,7 @@ begin
         (GPR2.Message.Create
            (GPR2.Message.Error,
             "main cannot be a source of a library project: """
-            & Options.Mains.First_Element & '"',
+            & String (Options.Mains.First_Element) & '"',
             Source_Reference.Create
               (Project_Tree.Root_Project.Path_Name.Value, 0, 0)));
 
@@ -669,6 +818,12 @@ begin
             Options);
       end if;
    end loop;
+
+   if Options.Arg_Mains and then not Options.Mains.Is_Empty then
+      GPRtools.Util.Fail_Program
+        ('"' & String (Options.Mains.First_Element)
+         & """ was not found in the sources of any project");
+   end if;
 
    if Options.Remove_Config then
       Delete_File (Options.Config_File.Value, Options);

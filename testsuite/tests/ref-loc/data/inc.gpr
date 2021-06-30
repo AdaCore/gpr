@@ -1,0 +1,4 @@
+project Inc is
+   Var := "inc";
+   for Target use "inc";
+end Inc;

@@ -51,7 +51,6 @@ package GPR2.Project.View is
    use GPR2.Context;
 
    use type Context.Object;
-   use type Pack.Object;
 
    type Object is tagged private;
 
@@ -62,19 +61,16 @@ package GPR2.Project.View is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
 
-   function Id (Self : Object) return GPR2.View_Ids.View_Id;
+   function Id (Self : Object) return GPR2.View_Ids.View_Id
+     with Pre => Self.Is_Defined;
    --  Returns a unique Id for Self
 
    function Is_Extension_Of (Self : Object; View : Object) return Boolean;
    --  Returns whether Self extends View
 
-   function Is_Extended_By (Self : Object; View : Object) return Boolean;
+   function Is_Extended_By (Self : Object; View : Object) return Boolean
+     with Pre => Self.Is_Defined and then View.Is_Defined;
    --  Returns whether Self is extended by View
-
-   function Instance_Of (Self : Object) return GPR2.View_Ids.View_Id;
-   --  Returns the unique Id of the innest view extended by Self. For example,
-   --  if A extends all B and B extends all C, Instance_Of (A) returns Id (C).
-   --  If A is not an extended all project Instance_Of (A) = Id (A).
 
    function "<" (Left, Right : Object) return Boolean;
    --  Ordering a project object to be able to build an ordered map for example
@@ -115,7 +111,7 @@ package GPR2.Project.View is
 
    function Imports
      (Self : Object; Recursive : Boolean := False) return Set.Object
-     with Pre => Self.Is_Defined and then Self.Has_Imports;
+     with Pre => Self.Is_Defined;
    --  Returns all imported project views
 
    function Is_Extending
@@ -129,9 +125,16 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns True if the project is extending all another project
 
-   function Extended (Self : Object) return Object
+   function Extended (Self : Object) return Set.Object
      with Pre => Self.Is_Defined and then Self.Is_Extending;
-   --  Returns the extended project
+   --  Returns the extended projects
+   --  In case of simple extension, this will contain only one view, but in
+   --  case of extends all, the views of the subtree are returned.
+
+   function Extended_Root (Self : Object) return Object
+     with Pre => Self.Is_Defined and then Self.Is_Extending;
+   --  Returns the root view of the extended subtree. In case of extends
+   --  all this will thus return the project that is explicitely extended.
 
    function Is_Extended (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -150,13 +153,9 @@ package GPR2.Project.View is
    function Aggregated (Self : Object) return Set.Object
      with Pre => Self.Is_Defined and then Self.Kind in Aggregate_Kind;
 
-   function Aggregate (Self : Object) return Object
-     with Pre  => Self.Is_Defined and then Self.Is_Aggregated,
-          Post => Aggregate'Result.Kind in Aggregate_Kind;
-
-   function Is_Aggregated (Self : Object) return Boolean
+   function Aggregate_Libraries (Self : Object) return Set.Object
      with Pre => Self.Is_Defined;
-   --  Returns True if Self is part of an aggregate project
+   --  Returns the list of aggregate library projects that contain Self
 
    function Is_Aggregated_In_Library (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -239,6 +238,19 @@ package GPR2.Project.View is
          and then Self.Has_Attributes (Name, Index)
          and then Self.Attributes (Name, Index).Length = 1;
    --  Returns the Attribute with the given Name and possibly Index
+   --  Important note: this returns the view's raw attribute value, not the
+   --  one computed after inheritance via extends or extends all.
+
+   function Attribute_Location
+     (Self  : Object;
+      Name  : Name_Type;
+      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      return Source_Reference.Object'Class
+     with
+       Pre => Self.Is_Defined;
+   --  Returns the source location of the attribute definition in the view if
+   --  defined, or the view's location (e.g. path_name, 0, 0) if not.
+   --  To be used in particular when generating Messages.
 
    --  Types
 
@@ -286,20 +298,33 @@ package GPR2.Project.View is
    --  Packages
 
    function Has_Packages
-     (Self : Object;
-      Name : Optional_Name_Type := No_Name) return Boolean
+     (Self           : Object;
+      Name           : Optional_Name_Type := No_Name;
+      Check_Extended : Boolean := True) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns true if the project view has some packages defined
+   --  If Name is set to No_Name then return True if the view defined some
+   --  packages. In case Check_Extended is True then this include packages
+   --  inherited from the extended view.
+   --  If Name is different from No_Name then return True if the package Name
+   --  is defined in the view. If Check_Extended is True then the function
+   --  returns also True if the package has been inherited.
 
    function Packages (Self : Object) return Pack.Set.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Packages,
-          Post => Packages'Result.Length > 0;
-   --  Get the list of packages defined in the project
+     with Pre  => Self.Is_Defined,
+          Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
+   --  Get the list of packages defined in the project or inherited from the
+   --  extended view.
 
-   function Pack (Self : Object; Name : Name_Type) return Pack.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Packages (Name),
+   function Pack
+      (Self           : Object;
+       Name           : Name_Type;
+       Check_Extended : Boolean := True) return Pack.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Packages
+                     (Name => Name, Check_Extended => Check_Extended),
           Post => Pack'Result.Is_Defined;
-   --  Get the package with the given Name
+   --  Get the package with the given Name. If Check_Extended is True, then
+   --  the function might return an inherited package.
 
    function Naming_Package (Self : Object) return Project.Pack.Object
      with Pre  => Self.Is_Defined,
@@ -344,26 +369,33 @@ package GPR2.Project.View is
    --  source with multiple units is not counted as an interface.
 
    function Sources
-     (Self        : Object;
-      Filter      : Source_Kind := K_All;
-      Need_Update : Boolean := True) return Project.Source.Set.Object
+     (Self   : Object;
+      Filter : Source_Kind := K_All) return Project.Source.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the sources for the view, note that this routine ensure that
-   --  the current sources are up-to-date by calling Update_Sources below.
+   --  the sources are loaded.
 
    function Source
-     (Self        : Object;
-      File        : GPR2.Path_Name.Object;
-      Need_Update : Boolean := True) return Project.Source.Object
+     (Self : Object; File : GPR2.Path_Name.Object) return Project.Source.Object
      with Pre => Self.Is_Defined;
    --  Get project source object corresponding to the given File
 
    function Source_Path
-     (Self        : Object;
-      Filename    : GPR2.Simple_Name;
-      Need_Update : Boolean := True) return GPR2.Path_Name.Object
+     (Self : Object; Filename : GPR2.Simple_Name) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined;
    --  Get full path name corresponding to the given filename
+
+   function Source_Path
+     (Self            : Object;
+      Name            : GPR2.Simple_Name;
+      Allow_Spec_File : Boolean;
+      Allow_Unit_Name : Boolean) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined;
+   --  Get full path name corresponding to the given name
+   --  name can be the filename with or without body/spec extension
+   --  Set allow_spec_file if spec file can also be returned.
+   --  Set allow_unit_name if name can also be a unit name.
+   --  Returns body file when body & spec files are found.
 
    function Has_Source
      (Self : Object; Filename : GPR2.Simple_Name) return Boolean
@@ -402,17 +434,13 @@ package GPR2.Project.View is
 
    --  Units
 
-   function Units
-     (Self        : Object;
-      Need_Update : Boolean := True) return Unit_Info.Set.Object
+   function Units (Self : Object) return Unit_Info.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all the units for the view, note that this routine ensure that
    --  the current sources and units are up-to-date by calling Update_Sources.
 
    function Unit
-     (Self         : Object;
-      Name         : Name_Type;
-      Need_Update  : Boolean := True) return Unit_Info.Object
+     (Self : Object; Name : Name_Type) return Unit_Info.Object
      with Pre => Self.Is_Defined;
 
    function Is_Abstract (Self : Object) return Boolean
@@ -574,8 +602,7 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined
        and then (not Self.Is_Library
                  or else Self.Library_Name = Name
-                 or else (Self.Is_Aggregated_In_Library
-                          and then Self.Aggregate.Library_Name = Name));
+                 or else Self.Is_Aggregated_In_Library);
    --  Returns binder artifact files from main procedure name for standard
    --  project or from library name for library project.
 
@@ -604,6 +631,18 @@ package GPR2.Project.View is
    --  Is_Root_Dir is set when entering the top level dir.
    --  File_CB is called for each regular file found.
    --  Source reference is used when messages added to Self.Tree's log
+
+   function Executable
+     (Self    : Object;
+      Source  : Simple_Name;
+      At_Pos  : Natural) return GPR2.Path_Name.Object;
+   --  Returns the full pathname of the main executable for the given main
+
+   procedure Reindex_Unit (Self : Object; From, To : Name_Type);
+   --  Change name of unit in unit index used to get unit info by unit name
+
+   procedure Hide_Unit_Body (Self : Object; Unit : Name_Type);
+   --  Remove unit body from unit info index
 
 private
 
@@ -648,10 +687,12 @@ private
      (Self.Has_Attributes (Registry.Attribute.Library_Version));
 
    function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Library_Interface));
+     (Self.Has_Attributes (Registry.Attribute.Library_Interface,
+                           Check_Extended => True));
 
    function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Interfaces));
+     (Self.Has_Attributes (Registry.Attribute.Interfaces,
+                           Check_Extended => True));
 
    function Has_Any_Interfaces (Self : Object) return Boolean is
      (Self.Has_Library_Interface or else Self.Has_Interfaces);

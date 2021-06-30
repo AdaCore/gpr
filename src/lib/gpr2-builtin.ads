@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -33,9 +33,6 @@ with GPR2.Source_Reference.Value;
 
 package GPR2.Builtin is
 
-   No_Value : constant Value_Type;
-   --  No value specified, different than the empty string
-
    function External
      (Context       : GPR2.Context.Object;
       Variable      : Name_Type;
@@ -54,19 +51,15 @@ package GPR2.Builtin is
    function External_As_List
      (Context   : GPR2.Context.Object;
       Variable  : Name_Type;
-      Separator : Name_Type) return Containers.Value_List;
+      Separator : Value_Not_Empty) return Containers.Value_List;
    --  The External_As_List built-in. Returns a list of values corresponding
    --  to the data found in context's Variable split using the given separator.
 
    function Split
-     (Value     : Name_Type;
-      Separator : Name_Type) return Containers.Value_List
+     (Value     : Value_Type;
+      Separator : Value_Not_Empty) return Containers.Value_List
      renames Containers.Create;
    --  The Split built-in. Returns a list of values corresponding
    --  to the string value split using the given separator.
-
-private
-
-   No_Value : constant Value_Type := Value_Type'(1 => ASCII.NUL);
 
 end GPR2.Builtin;

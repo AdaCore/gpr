@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -41,6 +41,15 @@ package body GPR2.Project.Unit_Info is
    end Create;
 
    -----------------
+   -- Remove_Body --
+   -----------------
+
+   procedure Remove_Body (Self : in out Object) is
+   begin
+      Self.Main_Body := Path_Name.Undefined;
+   end Remove_Body;
+
+   -----------------
    -- Update_Body --
    -----------------
 
@@ -49,6 +58,16 @@ package body GPR2.Project.Unit_Info is
    begin
       Self.Main_Body := Source;
    end Update_Body;
+
+   -----------------
+   -- Update_Name --
+   -----------------
+
+   procedure Update_Name
+     (Self : in out Object; Name : Name_Type) is
+   begin
+      Self.Name := To_Unbounded_String (String (Name));
+   end Update_Name;
 
    ----------------------
    -- Update_Separates --

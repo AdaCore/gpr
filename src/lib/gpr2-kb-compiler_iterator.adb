@@ -49,7 +49,7 @@ package body GPR2.KB.Compiler_Iterator is
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE.COMPILER_ITERATOR",
-                     GNATCOLL.Traces.From_Config);
+                     GNATCOLL.Traces.Off);
 
    package CDM renames Compiler_Description_Maps;
 
@@ -242,7 +242,7 @@ package body GPR2.KB.Compiler_Iterator is
             end;
          end loop For_All_Files_In_Dir;
       else
-         --  Do not search all entries in the directory, but check explictly
+         --  Do not search all entries in the directory, but check explicitly
          --  for the compilers. This results in a lot less system calls, and
          --  thus is faster.
 

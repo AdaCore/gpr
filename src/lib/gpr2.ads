@@ -170,6 +170,12 @@ package GPR2 is
    --  Returns name prefix before last dot.
    --  Returns No_Name if there is not dot in the name.
 
+   function Is_Runtime_Unit_Name (Name : Name_Type) return Boolean;
+   --  Return True if Name is "Ada", "System", "GNAT", "Interfaces",
+   --  "Calendar", "Direct_IO", "IO_Exceptions", "Machine_Code",
+   --  "Unchecked_Conversion", "Unchecked_Deallocation" or
+   --  started with "Ada.", "System.", "GNAT.", "Interfaces.".
+
    function Compile_Regexp
      (Filename_Regexp : Filename_Optional) return GNAT.Regexp.Regexp;
    --  Returns Regexp object for Filename_Regexp pattern

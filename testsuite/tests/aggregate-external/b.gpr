@@ -1,0 +1,5 @@
+project B is
+   Var := external("VAR", "B");
+
+   for Object_Dir use Var;
+end B;

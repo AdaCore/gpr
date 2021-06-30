@@ -1,0 +1,7 @@
+with "imported1";
+project extending6 is
+    Value1 := Imported1.Value1_1 & ".e6a";
+    Value2 := Imported1.Value1_2 & ".e6b";
+    Value6_1 := Imported1.Value1_1 & ".e6c";
+    Value6_2 := Imported1.Value1_2 & ".e6d";
+end extending6;

@@ -1,0 +1,5 @@
+description:
+    Check error message for attributes referenced in case statement
+driver: build_and_run
+project_file: case_attribute
+main: main

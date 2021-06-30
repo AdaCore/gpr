@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -29,6 +29,8 @@ with GNATCOLL.Strings;
 with GPRname.Unit.Vector;
 
 with GPRtools.Util;
+
+with GPR2.Unit;
 
 separate (GPRname.Process)
 procedure Search_Directory
@@ -151,7 +153,7 @@ is
 
    Compiler_Output_Regexp : constant String :=
                               "^Unit (\S+) \((spec|body)\) line (\d+), "
-                              & "file offset (\d+), file name (\S+)\r?$";
+                              & "file offset (\d+),.* file name (\S+)\r?$";
    --  Regexp used to parse the Ada compiler's output
 
    Matcher   : constant Regpat.Pattern_Matcher :=
@@ -331,66 +333,75 @@ begin
                                    Language   => Ada_Lang,
                                    Unit_Based => True);
 
-                        Unit_Count : Natural := 0;
+                        Unit_Index : Natural := 0;
 
                      begin
                         GNAT.OS_Lib.Free (Compiler_Args (Compiler_Args'Last));
 
                         if Status /= 0 then
-                           raise GPRname_Exception with "compiler failed";
-                        end if;
+                           Put_Line (Compiler_Output, None);
 
-                        --  Parse every line output by the compiler
-                        --  (one line per unit in the source)
+                        else
+                           --  Parse every line output by the compiler
+                           --  (one line per unit in the source)
 
-                        for Line of Lines loop
-                           Match (Matcher, To_String (Line), Matches);
+                           for Line of Lines loop
+                              Match (Matcher, To_String (Line), Matches);
 
-                           if Matches (0) = GNAT.Regpat.No_Match then
-                              raise GPRname_Exception
-                                with "unexpected compiler output";
-                           end if;
+                              if Matches (0) /= GNAT.Regpat.No_Match then
+                                 Unit_Index := Unit_Index + 1;
 
-                           declare
-                              Name : constant Name_Type :=
-                                       Name_Type (Substr (Line, Matches (1)));
+                                 declare
+                                    Name : constant Name_Type :=
+                                             Name_Type
+                                               (Substr (Line, Matches (1)));
 
-                              Kind : constant Unit_Kind :=
-                                       (if Substr (Line, Matches (2)) = "spec"
-                                        then K_Spec else K_Body);
+                                    Kind : constant Unit_Kind :=
+                                             (if Substr (Line, Matches (2))
+                                              = "spec"
+                                              then K_Spec else K_Body);
 
-                              Index_In_Source : constant Natural :=
-                                                  (if Is_Multi_Unit
-                                                   then Unit_Count else 0);
-                           begin
-                              Put_Line
-                                ("      found unit: " & To_String (Line), Low);
+                                    Index_In_Source : constant Natural :=
+                                                        (if Is_Multi_Unit
+                                                         then Unit_Index
+                                                         else 0);
+                                 begin
+                                    Put_Line
+                                      ("      found unit: " & To_String (Line),
+                                       Low);
 
-                              --  Add the unit to the source, unless it is a
-                              --  predefined Ada unit and the related "ignore"
-                              --  option is set.
+                                    --  Add the unit to the source, unless it
+                                    --  is a predefined Ada unit and the
+                                    --  related "ignore" option is set.
 
-                              if not (Opt.Ignore_Predefined_Units
-                                        and then
-                                      GPRtools.Util.Is_Ada_Predefined_Unit
-                                        (Name))
-                              then
-                                 Unit_Count := Unit_Count + 1;
-                                 Src.Append_Unit
-                                   (Create (Name, Kind, Index_In_Source));
-                              else
-                                 Put_Line
-                                   ("        -> predefined unit:"
-                                    & " ignored", Low);
+                                    if not GPR2.Unit.Valid_Unit_Name
+                                      (Name,
+                                       On_Error => Ada.Text_IO.Put_Line'Access)
+                                    then
+                                       --  Ignore whong unit name
+
+                                       null;
+
+                                    elsif Opt.Ignore_Predefined_Units
+                                      and then
+                                        GPRtools.Util.Is_Ada_Predefined_Unit
+                                          (Name)
+                                    then
+                                       Put_Line
+                                         ("        -> predefined unit """
+                                          & String (Name) & """ ignored", Low);
+                                    else
+                                       Src.Append_Unit
+                                         (Create
+                                            (Name, Kind, Index_In_Source));
+                                    end if;
+                                 end;
                               end if;
-                           end;
-                        end loop;
+                           end loop;
 
-                        --  Unit_Count could be zero here, if we got only
-                        --  predefined units and skipped them.
-
-                        if Unit_Count > 0 then
-                           Update_Lang_Sources_Map (Lang_Sources_Map, Src);
+                           if Src.Has_Units then
+                              Update_Lang_Sources_Map (Lang_Sources_Map, Src);
+                           end if;
                         end if;
                      end;
 

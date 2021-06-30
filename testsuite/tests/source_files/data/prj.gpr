@@ -1,0 +1,7 @@
+project Prj is
+   for Source_Dirs use ("src/**");
+   for Source_Files use
+     ("pkg.ads",
+      "pkg.adb",
+      "pkg2.ads");
+end Prj;

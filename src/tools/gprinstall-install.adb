@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -43,13 +43,12 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
-pragma Unreferenced (GPR2.Project.View.Set);
---  Needed as a Vew.Set is used
 with GPR2.Project.Source.Set;
-pragma Unreferenced (GPR2.Project.Source.Set);
---  Needed as a Vew.Set is used
 with GPR2.Version;
 with GPR2.Source;
+with GPR2.Source_Reference;
+with GPR2.Source_Reference.Value;
+
 with GPRtools;
 
 package body GPRinstall.Install is
@@ -93,6 +92,13 @@ package body GPRinstall.Install is
    Line_Agg_Manifest : Text_IO.Count := 0;
    --  Keep lines when opening the manifest files. This is used by the rollback
    --  routine when an error occurs while copying the files.
+
+   function Other_Part_Need_Body
+     (Source : GPR2.Project.Source.Object) return Boolean
+   is
+     (Source.Has_Other_Part
+      and then Source.Other_Part.Source.Is_Implementation_Required);
+   --  Returns True if Source has other part and this part need body
 
    procedure Double_Buffer;
    --  Double the size of the Buffer
@@ -968,7 +974,7 @@ package body GPRinstall.Install is
                for D of Source.Dependencies (Closure => True) loop
                   if not Source_Copied.Contains (D)
                     and then (D.Source.Kind in Unit.Spec_Kind
-                              or else D.Source.Is_Implementation_Required)
+                              or else Other_Part_Need_Body (D))
                     and then Source.View = D.View
                   then
                      Install_Project_Source (D, Is_Interface_Closure => True);
@@ -990,6 +996,7 @@ package body GPRinstall.Install is
                Done    : Boolean := True;
                Has_Atf : Boolean := False;
                --  Has artefacts to install
+
             begin
                --  Skip sources that are removed/excluded and sources not
                --  part of the interface for standalone libraries.
@@ -999,15 +1006,16 @@ package body GPRinstall.Install is
 
                if not Project.Is_Library
                  or else Project.Library_Standalone = No
-                 or else (Source.Is_Interface or else Is_Interface_Closure)
+                 or else Source.Is_Interface
+                 or else Is_Interface_Closure
                then
                   if Src.Has_Units then
                      CUs := Src.Units;
                   end if;
 
                   if Options.All_Sources
-                    or else ((Source.Is_Interface or else Is_Interface_Closure)
-                             and then Src.Kind in Unit.Spec_Kind)
+                    or else Src.Kind in Unit.Spec_Kind
+                    or else Other_Part_Need_Body (Source)
                     or else Src.Is_Generic
                     or else (Src.Kind = S_Separate
                              and then Source.Separate_From.Source.Is_Generic)
@@ -1193,6 +1201,15 @@ package body GPRinstall.Install is
                      Executable    => True,
                      Extract_Debug => Side_Debug);
 
+               elsif Is_Windows_Host then
+                  --  On windows host, Library_Filename is generated,
+
+                  Copy_File
+                    (From          => Project.Library_Filename,
+                     To            => Lib_Dir,
+                     Executable    => True,
+                     Extract_Debug => Side_Debug);
+
                else
                   Copy_File
                     (From          => Project.Library_Version_Filename,
@@ -1256,30 +1273,19 @@ package body GPRinstall.Install is
 
                   --  Copy also the versioned library if any
 
-                  if Project.Has_Library_Version
+                  if not Is_Windows_Host and then Project.Has_Library_Version
                     and then
                       Project.Library_Filename.Name
                         /= Project.Library_Version_Filename.Name
                   then
-                     if Is_Windows_Host then
-                        Copy_File
-                          (From       => Lib_Dir,
-                           To         => Link_Lib_Dir,
-                           File       => Project.Library_Version_Filename.Name,
-                           From_Ver   => Path_Name.Compose
-                             (Link_Lib_Dir,
-                              Project.Library_Major_Version_Filename.Name),
-                           Sym_Link   => False);
-                     else
-                        Copy_File
-                          (From       => Link_Lib_Dir,
-                           To         => Lib_Dir,
-                           File       => Project.Library_Version_Filename.Name,
-                           From_Ver   => Path_Name.Compose
-                               (Link_Lib_Dir,
-                                Project.Library_Major_Version_Filename.Name),
-                           Sym_Link   => True);
-                     end if;
+                     Copy_File
+                       (From       => Link_Lib_Dir,
+                        To         => Lib_Dir,
+                        File       => Project.Library_Version_Filename.Name,
+                        From_Ver   => Path_Name.Compose
+                          (Link_Lib_Dir,
+                           Project.Library_Major_Version_Filename.Name),
+                        Sym_Link   => True);
                   end if;
                end if;
             end if;
@@ -1351,6 +1357,10 @@ package body GPRinstall.Install is
 
          procedure Read_Project;
          --  Read project and set Content accordingly
+
+         procedure With_External_Imports (Project : GPR2.Project.View.Object);
+         --  Add all imports of externally built projects into install project
+         --  imports.
 
          procedure Write_Project;
          --  Write content into project
@@ -1510,9 +1520,12 @@ package body GPRinstall.Install is
                end if;
             end Gen_Dir_Name;
 
-            V    : String_Vector.Vector;
-            Line : Unbounded_String;
-            Attr : GPR2.Project.Attribute.Object;
+            V          : String_Vector.Vector;
+            Line       : Unbounded_String;
+            Attr       : GPR2.Project.Attribute.Object;
+            Standalone : GPR2.Project.Standalone_Library_Kind;
+            use type GPR2.Project.Standalone_Library_Kind;
+
          begin
             V.Append ("      when """ & Options.Build_Name.all & """ =>");
 
@@ -1569,13 +1582,13 @@ package body GPRinstall.Install is
                  ("         for Library_Kind use """
                   & String (Project.Library_Kind) & """;");
 
-               Attr := Project.Attribute (A.Library_Standalone);
+               Standalone := Project.Library_Standalone;
 
-               if Characters.Handling.To_Lower (Attr.Value.Text) /= "no" then
+               if Standalone /= GPR2.Project.No then
                   if not Project.Is_Static_Library then
                      V.Append
                        ("         for Library_Standalone use """
-                        & Characters.Handling.To_Lower (Attr.Value.Text)
+                        & Characters.Handling.To_Lower (Standalone'Image)
                         & """;");
                   end if;
 
@@ -1776,8 +1789,10 @@ package body GPRinstall.Install is
             procedure Append (Attribute : GPR2.Project.Attribute.Object) is
             begin
                for V of Attribute.Values loop
-                  Opts.Append (V.Text);
-                  Seen.Include (Name_Type (V.Text));
+                  if V.Text /= "" then
+                     Opts.Append (V.Text);
+                     Seen.Include (Name_Type (V.Text));
+                  end if;
                end loop;
             end Append;
 
@@ -1819,6 +1834,24 @@ package body GPRinstall.Install is
                      Opts.Append ("-l" & String (L.Library_Name));
                   end if;
                end loop;
+            end if;
+
+            --  Append Library_Options to Opts list
+
+            if Proj.Is_Library then
+               declare
+                  Library_Options : GPR2.Project.Attribute.Object;
+               begin
+                  if Proj.Check_Attribute
+                    (Name           => A.Library_Options,
+                     Check_Extended => True,
+                     Result         => Library_Options)
+                  then
+                     for Value of Library_Options.Values loop
+                        Opts.Append (Value.Text);
+                     end loop;
+                  end if;
+               end;
             end if;
 
             if Opts.Length = 0 then
@@ -1951,6 +1984,21 @@ package body GPRinstall.Install is
 
             Close (File);
          end Read_Project;
+
+         ---------------------------
+         -- With_External_Imports --
+         ---------------------------
+
+         procedure With_External_Imports
+           (Project : GPR2.Project.View.Object) is
+         begin
+            for L of Project.Imports (Recursive => True) loop
+               if L.Has_Sources and then L.Is_Externally_Built then
+                  Content.Append
+                    ("with """ & String (L.Path_Name.Base_Name) & """;");
+               end if;
+            end loop;
+         end With_External_Imports;
 
          -------------------
          -- Write_Project --
@@ -2195,28 +2243,26 @@ package body GPRinstall.Install is
               ("--  " & GPRinstall_Tag & ' ' & Version.Long_Value);
             Add_Empty_Line;
 
-            if Project.Has_Imports then
+            if Project.Qualifier = K_Aggregate_Library then
+               for V of Project.Aggregated loop
+                  With_External_Imports (V);
+               end loop;
+
+               Add_Empty_Line;
+
+            elsif Project.Has_Imports then
                --  Handle with clauses, generate a with clauses only for
                --  project bringing some visibility to sources. No need
                --  for doing this for aggregate projects.
 
-               if Project.Qualifier /= K_Aggregate_Library then
-                  for L of Project.Imports loop
-                     if L.Has_Sources and then Is_Install_Active (L) then
-                        Content.Append
-                          ("with """ & String (L.Path_Name.Base_Name) & """;");
-                     end if;
-                  end loop;
-               end if;
-
-               --  In all cases adds externally built projects
-
-               for L of Project.Imports (Recursive => True) loop
-                  if L.Has_Sources and then L.Is_Externally_Built then
+               for L of Project.Imports loop
+                  if L.Has_Sources and then Is_Install_Active (L) then
                      Content.Append
                        ("with """ & String (L.Path_Name.Base_Name) & """;");
                   end if;
                end loop;
+
+               With_External_Imports (Project);
 
                Add_Empty_Line;
             end if;
@@ -2492,7 +2538,11 @@ package body GPRinstall.Install is
                       and then Install_Project
                   then
                      Put_Line
-                       ("Project already installed, either:");
+                       ("Project file "
+                        & String (Project.Path_Name.Simple_Name)
+                        &  " is different from the one currently installed.");
+                     Put_Line
+                       ("Either:");
                      Put_Line
                        ("   - uninstall first using --uninstall option");
                      Put_Line

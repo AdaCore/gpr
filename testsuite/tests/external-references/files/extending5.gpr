@@ -1,0 +1,6 @@
+project extending5 extends "extending6.gpr" is
+    Value1 := Value6_1 & ".e5a";
+    Value2 := Value6_2 & ".e5b";
+    Value5_1 := Value6_1 & ".e5c";
+    Value5_2 := Value6_2 & ".e5d";
+end extending5;

@@ -25,6 +25,9 @@ library project GPR2 is
    type Build_Type is ("debug", "release", "release_checks");
    Build : Build_Type := external ("BUILD", "debug");
 
+   type Profiler_Flag is ("yes", "no");
+   Profiler : Profiler_Flag := External ("PROFILER", "no");
+
    Processors := external ("PROCESSORS", "0");
    Langkit_Generated_Src := external ("LANGKIT_GENERATED_SRC", "langkit/build");
 
@@ -46,9 +49,16 @@ library project GPR2 is
    --------------
 
    Common_Options :=
-     ("-gnat2020", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
+     ("-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
       "-Wall");
    --  Common options used for the Debug and Release modes
+
+   case Profiler is
+      when "yes" =>
+         Common_Options := Common_Options & "-pg";
+      when "no" =>
+         null;
+   end case;
 
    Checks_Options :=
      ("-gnata", "-gnatVa", "-gnato", "-fstack-check");

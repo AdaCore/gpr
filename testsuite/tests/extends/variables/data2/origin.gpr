@@ -1,0 +1,4 @@
+with "inc";
+project Origin is
+   Var := Inc.Var;
+end Origin;

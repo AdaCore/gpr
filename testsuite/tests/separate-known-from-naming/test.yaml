@@ -1,0 +1,5 @@
+description:
+    separate name defined in naming package.
+driver: build_and_run
+project_file: main
+main: main

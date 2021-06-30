@@ -1,0 +1,34 @@
+------------------------------------------------------------------------------
+--                                                                          --
+--                           GPR2 PROJECT MANAGER                           --
+--                                                                          --
+--                     Copyright (C) 2019-2021, AdaCore                     --
+--                                                                          --
+-- This is  free  software;  you can redistribute it and/or modify it under --
+-- terms of the  GNU  General Public License as published by the Free Soft- --
+-- ware  Foundation;  either version 3,  or (at your option) any later ver- --
+-- sion.  This software is distributed in the hope  that it will be useful, --
+-- but WITHOUT ANY WARRANTY;  without even the implied warranty of MERCHAN- --
+-- TABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public --
+-- License for more details.  You should have received  a copy of the  GNU  --
+-- General Public License distributed with GNAT; see file  COPYING. If not, --
+-- see <http://www.gnu.org/licenses/>.                                      --
+--                                                                          --
+------------------------------------------------------------------------------
+
+project P is
+    for Main use ("main.adb");
+
+    package Naming is
+       for Implementation ("Pkg1.Sep") use "sub.adb" at 1;
+       for Implementation ("Pkg2.Sep") use "sub.adb" at 2;
+       for Spec ("U1") use "few_units.ada" at 1;
+       for Spec ("U2") use "few_units.ada" at 3;
+       for Spec ("U3") use "few_units.ada" at 5;
+       for Spec ("U4") use "few_units.ada" at 7;
+       for Body ("U1") use "few_units.ada" at 2;
+       for Body ("U2") use "few_units.ada" at 4;
+       for Body ("U3") use "few_units.ada" at 6;
+       for Body ("U3.P") use "few_units.ada" at 8;
+    end Naming;
+end P;

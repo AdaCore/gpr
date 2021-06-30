@@ -28,6 +28,7 @@ with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Pack.Set;
@@ -54,8 +55,8 @@ package GPR2.Parser.Project is
 
    function Parse
      (Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
-      Messages      : out Log.Object) return Object;
+      Implicit_With : GPR2.Path_Name.Set.Object;
+      Messages      : in out Log.Object) return Object;
    --  Phase-1: syntax parsing of the given project name. If an error occurs
    --  during the parsing the return object is Undefined.
 
@@ -71,14 +72,15 @@ package GPR2.Parser.Project is
    --  to be used during autoconfiguration step.
 
    procedure Process
-     (Self    : in out Object;
-      Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
-      View    : GPR2.Project.View.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object;
-      Types   : in out GPR2.Project.Typ.Set.Object)
+     (Self          : in out Object;
+      Tree          : GPR2.Project.Tree.Object;
+      Context       : GPR2.Context.Object;
+      View          : GPR2.Project.View.Object;
+      Attrs         : in out GPR2.Project.Attribute.Set.Object;
+      Vars          : in out GPR2.Project.Variable.Set.Object;
+      Packs         : in out GPR2.Project.Pack.Set.Object;
+      Types         : in out GPR2.Project.Typ.Set.Object;
+      Pre_Conf_Mode : Boolean := False)
      with Pre => Self.Is_Defined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
    --  step is to be done every time a context is changed.
@@ -94,12 +96,13 @@ package GPR2.Parser.Project is
      with Pre => Self.Is_Defined;
    --  Returns True if project qualifier defined explicitly
 
-   function Has_Extended (Self : Object) return Boolean;
+   function Has_Extended (Self : Object) return Boolean
+     with Pre => Self.Is_Defined;
    --  Returns True if an extended project is defined
 
    function Is_Extending_All (Self : Object) return Boolean
-     with Pre => Self.Has_Extended;
-   --  Returns True if the extended project is an extends all
+     with Pre => Self.Is_Defined;
+   --  Returns True if the project is an extends all
 
    function Extended (Self : Object) return GPR2.Project.Import.Object
      with Pre => Self.Has_Extended;

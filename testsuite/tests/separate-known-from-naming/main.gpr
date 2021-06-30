@@ -1,0 +1,8 @@
+with "COMPONENT.gpr";
+with "gpr2";
+project Main is
+   for source_Dirs use ("main_src");
+   for object_dir use "main_obj";
+   for exec_dir use ".";
+   for Main use ("main.adb");
+end Main;

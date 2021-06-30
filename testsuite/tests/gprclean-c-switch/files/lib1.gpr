@@ -1,0 +1,14 @@
+library project Lib1 is
+   for Languages use ("Ada");
+   for Source_Dirs use ("srclib/**");
+   for Object_Dir use "objlib";
+   for Library_Name use project'Name;
+   for Library_Dir use "lib";
+   for Library_Ali_Dir use "ali";
+   for Externally_Built use "False";
+   for Library_Version use "liblib.so.1.2";
+   for Library_Kind use "dynamic";
+   for Library_Src_Dir use "libsrc";
+   for Library_Auto_Init use "True";
+   for Library_Interface use ("lib");
+end Lib1;

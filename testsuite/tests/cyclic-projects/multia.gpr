@@ -1,0 +1,4 @@
+with "multic";
+with "multib";
+project MultiA is
+end MultiA;

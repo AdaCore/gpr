@@ -109,7 +109,7 @@ procedure Main is
 
       List_Sources (View);
 
-      delay 2.0;
+      Prj.Invalidate_Sources;
 
       Copy_Source ("api.ads");
       Copy_Source ("api.adb");

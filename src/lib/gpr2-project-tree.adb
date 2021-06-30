@@ -22,12 +22,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Indefinite_Holders;
 with Ada.Environment_Variables;
 with Ada.Directories;
 with Ada.IO_Exceptions;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
+with Ada.Text_IO;
 
 with GPR2.Parser.Project.Create;
 with GPR2.Project.Attribute_Index;
@@ -35,12 +36,15 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
 with GPR2.Project.Name_Values;
+with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Identifier;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids.Set;
+with GPR2.View_Ids.Vector;
 with GNAT.OS_Lib;
 with GNAT.Regexp;
+with GNAT.String_Split;
 
 with GNATCOLL.OS.Constants;
 
@@ -59,9 +63,6 @@ package body GPR2.Project.Tree is
                        GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
                          with Warnings => Off;
 
-   Version_Regexp  : constant Regexp.Regexp :=
-                      Regexp.Compile (".[0-9]+(.[0-9]+)?");
-
    Wildcards       : constant Ada.Strings.Maps.Character_Set :=
                        Ada.Strings.Maps.To_Set ("?*");
    --  Wild chars for filename pattern
@@ -71,6 +72,12 @@ package body GPR2.Project.Tree is
        Msg  : String;
        Sloc : Source_Reference.Object'Class);
    --  Append an error to Self.Messages
+
+   procedure Warning
+      (Self : in out Object;
+       Msg  : String;
+       Sloc : Source_Reference.Object'Class);
+   --  Append a warning to Self.Messages
 
    function Register_View
      (Def : in out Definition.Data) return Project.View.Object
@@ -96,6 +103,11 @@ package body GPR2.Project.Tree is
       Result : in out Source.Object) return Boolean;
    --  Get source by unit name and kind from the same subtree with the View.
 
+   procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean);
+
+   function Ali_Parser_Is_Enabled (Tree : Object) return Boolean
+   is (Tree.Ali_Parser_Is_On);
+
    function Has_Source
      (View : Project.View.Object; Name : Simple_Name) return Boolean
    is
@@ -108,6 +120,9 @@ package body GPR2.Project.Tree is
    is
      (View.Tree.Context (View.Context));
    --  Returns context of the project view
+
+   function Are_Sources_Loaded (Tree : Object) return Boolean is
+     (Tree.Sources_Loaded);
 
    procedure Set_Source (Source : Project.Source.Object);
    --  Insert source into internal Tree container indexed by Root of subtree
@@ -131,11 +146,9 @@ package body GPR2.Project.Tree is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Recursive_Load
-     (Self          : Object;
+     (Self          : in out Object;
       Filename      : Path_Name.Object;
       Context       : Context_Kind;
-      Root_Context  : in out GPR2.Context.Object;
-      Messages      : out Log.Object;
       Starting_From : View.Object := View.Undefined) return View.Object
      with Pre =>
        (if Starting_From.Is_Defined
@@ -144,14 +157,8 @@ package body GPR2.Project.Tree is
    --  view.
    --  Context indicates if project is loaded using the root context or the
    --  root aggregate context.
-   --  Root_Context is the new context (either the root one of the aggregate
-   --  one). Note that it might be different from Self.Context (Root) and
-   --  Self.Context(Aggregate) which are containing the previous context at
-   --  this stage.
-   --  Messages is the message handler that receives all messages emited
-   --  during the recursive load
-   --  Starting_From if set is the aggregate library starting point for
-   --  the parsing. It is passed here for detecting circular dependencies.
+   --  Starting_From if set is the aggregate or aggregate library starting
+   --  point for the parsing.
 
    function Create_Runtime_View (Self : Object) return View.Object
      with Pre => Self.Is_Defined
@@ -166,7 +173,7 @@ package body GPR2.Project.Tree is
    --  If Aggregated is True then view should be taken from aggregated subtree.
    --  Returns Undefined if project view is not found.
 
-   function Get_View_By_Id
+   function Get_View
       (Tree : Project.Tree.Object;
        Id   : IDS.View_Id)
        return Project.View.Object;
@@ -179,6 +186,11 @@ package body GPR2.Project.Tree is
    --  For all externals in Externals, if external is not already present in
    --  the context, fetch its value from the environment and insert it into the
    --  context.
+
+   procedure Update_Project_Search_Path_From_Config
+     (Self : in out Object;
+      Conf : Project.Configuration.Object);
+   --  Update project search path with directories relevant to
 
    procedure Get_File
      (Self            : Object;
@@ -450,7 +462,7 @@ package body GPR2.Project.Tree is
                              (Source_Reference.Builtin, Name)),
                Value => Source_Reference.Value.Object
                           (Source_Reference.Value.Create
-                             (GPR2.Source_Reference.Object
+                             (Source_Reference.Object
                                 (Source_Reference.Create (RTF.Value, 0, 0)),
                               Value))));
       end Add_Attribute;
@@ -469,18 +481,81 @@ package body GPR2.Project.Tree is
          RTF := Path_Name.Create_File
            ("runtime.gpr", Directory => Filename_Optional (RTD.Value.Text));
 
-         Add_Attribute (PRA.Source_Dirs, RTD.Value.Text & DS & "adainclude");
+         declare
+            Dirs : Containers.Source_Value_List;
+
+            procedure Add_If_Exists (Dir_Name : String);
+            --  Add directory name into Dirs if it exists
+
+            -------------------
+            -- Add_If_Exists --
+            -------------------
+
+            procedure Add_If_Exists (Dir_Name : String) is
+            begin
+               if Directories.Exists (Dir_Name) then
+                  Dirs.Append
+                    (Source_Reference.Value.Object
+                       (Source_Reference.Value.Create
+                          (Source_Reference.Object
+                             (Source_Reference.Create (RTF.Value, 0, 0)),
+                              Dir_Name)));
+               end if;
+            end Add_If_Exists;
+
+            function With_RTD_Prefix (Name : String) return String is
+              (Directories.Compose (RTD.Value.Text, Name));
+            --  Prepend the Name with
+
+            Ada_Source_Path : constant String :=
+                                With_RTD_Prefix ("ada_source_path");
+
+            use Ada.Text_IO;
+
+            File : File_Type;
+
+         begin
+            if Directories.Exists (Ada_Source_Path) then
+               Open (File, Text_IO.In_File, Ada_Source_Path);
+
+               while not End_Of_File (File) loop
+                  declare
+                     Line : constant String := Get_Line (File);
+                  begin
+                     if Line /= "" then
+                        Add_If_Exists
+                          (if OS_Lib.Is_Absolute_Path (Line) then Line
+                           else With_RTD_Prefix (Line));
+                     end if;
+                  end;
+               end loop;
+
+               Close (File);
+
+            else
+               Add_If_Exists (With_RTD_Prefix ("adainclude"));
+            end if;
+
+            Data.Attrs.Insert
+              (Project.Attribute.Create
+                 (Name => Source_Reference.Identifier.Object
+                            (Source_Reference.Identifier.Create
+                               (Source_Reference.Builtin, PRA.Source_Dirs)),
+                  Values => Dirs));
+         end;
+
          Add_Attribute (PRA.Object_Dir,  RTD.Value.Text & DS & "adalib");
 
          --  The only language supported is Ada
 
          Add_Attribute (PRA.Languages, "ada");
 
-         Data.Tree    := Self.Self;
-         Data.Kind    := K_Standard;
-         Data.Path    := Path_Name.Create_Directory
-                           (Filename_Type (RTD.Value.Text));
-         Data.Is_Root := True;
+         Data.Tree      := Self.Self;
+         Data.Kind      := K_Standard;
+         Data.Path      := Path_Name.Create_Directory
+                             (Filename_Type (RTD.Value.Text));
+         Data.Is_Root   := True;
+         Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
 
          Data.Trees.Project := Parser.Project.Create
            (Name      => PRA.Runtime,
@@ -509,6 +584,15 @@ package body GPR2.Project.Tree is
    begin
       return Position.Views (Position.Current);
    end Element;
+
+   -----------------------
+   -- Enable_Ali_Parser --
+   -----------------------
+
+   procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean) is
+   begin
+      Tree.Ali_Parser_Is_On := Enable;
+   end Enable_Ali_Parser;
 
    -----------
    -- Error --
@@ -617,6 +701,14 @@ package body GPR2.Project.Tree is
                Append (I);
             end if;
          end loop;
+
+         for I of Definition.Get_RO (View).Limited_Imports loop
+            if Iter.Kind (I_Recursive) then
+               For_Project (I);
+            else
+               Append (I);
+            end if;
+         end loop;
       end For_Imports;
 
       -----------------
@@ -624,10 +716,12 @@ package body GPR2.Project.Tree is
       -----------------
 
       procedure For_Project (View : Project.View.Object) is
+         Position : Project.View.Set.Set.Cursor;
+         Inserted : Boolean;
       begin
-         if not Seen.Contains (View) then
-            Seen.Insert (View);
+         Seen.Insert (View, Position, Inserted);
 
+         if Inserted then
             --  Handle imports
 
             if Iter.Kind (I_Imported) or else Iter.Kind (I_Recursive) then
@@ -641,11 +735,11 @@ package body GPR2.Project.Tree is
                   Data : constant Definition.Const_Ref :=
                            Definition.Get_RO (View);
                begin
-                  if Data.Extended.Is_Defined then
+                  if Data.Extended_Root.Is_Defined then
                      if Iter.Kind (I_Recursive) then
-                        For_Project (Data.Extended);
+                        For_Project (Data.Extended_Root);
                      else
-                        Append (Data.Extended);
+                        Append (Data.Extended_Root);
                      end if;
                   end if;
                end;
@@ -790,7 +884,7 @@ package body GPR2.Project.Tree is
 
       begin
          if not Predefined_Only then
-            if View /= Project.View.Undefined then
+            if View.Is_Defined then
                Handle_Object_File_In_View (View);
 
             else
@@ -843,19 +937,16 @@ package body GPR2.Project.Tree is
 
          procedure Handle_Source_File_In_View (View : Project.View.Object) is
             Full_Path : constant Path_Name.Object :=
-                          View.Source_Path
-                            (Base_Name,
-                             Need_Update =>
-                                not Definition.Is_Sources_Loaded (View));
+                          View.Source_Path (Base_Name);
          begin
-            if Full_Path /= Path_Name.Undefined then
+            if Full_Path.Is_Defined then
                Add_File (Full_Path, False);
             end if;
          end Handle_Source_File_In_View;
 
       begin
          if not Predefined_Only then
-            if View /= Project.View.Undefined then
+            if View.Is_Defined then
                Handle_Source_File_In_View (View);
 
             else
@@ -935,66 +1026,44 @@ package body GPR2.Project.Tree is
      (Self   : Object;
       Source : Path_Name.Object) return Project.View.Object
    is
-      Filename : constant Filename_Type :=
-                   (if Source.Has_Dir_Name
-                    then Filename_Type (Source.Value)
-                    else Source.Simple_Name);
-      Pos      : Filename_View.Cursor := Self.Sources.Find (Filename);
+      Pos : constant Filename_View.Cursor :=
+              Self.Sources.Find
+                (if Source.Has_Dir_Name
+                 then Filename_Type (Source.Value)
+                 else Source.Simple_Name);
    begin
       if Filename_View.Has_Element (Pos) then
          return Filename_View.Element (Pos);
-
-      else
-         --  Try to update sources and check again
-
-         Update_Sources (Self);
-         Pos := Self.Sources.Find (Filename);
-
-         if Filename_View.Has_Element (Pos) then
-            return Filename_View.Element (Pos);
-         else
-            return Project.View.Undefined;
-         end if;
       end if;
+
+      return Project.View.Undefined;
    end Get_View;
 
    function Get_View
      (Self : Object;
       Unit : Name_Type) return Project.View.Object
    is
-      Pos : Name_View.Cursor := Self.Units.Find (Unit);
+      Pos : constant Name_View.Cursor := Self.Units.Find (Unit);
    begin
       if Name_View.Has_Element (Pos) then
          return Name_View.Element (Pos);
-
-      else
-         --  Try to update the sources and check again
-
-         Update_Sources (Self);
-         Pos := Self.Units.Find (Unit);
-
-         if Name_View.Has_Element (Pos) then
-            return Name_View.Element (Pos);
-         else
-            return Project.View.Undefined;
-         end if;
       end if;
+
+      return Project.View.Undefined;
    end Get_View;
 
-   --------------------
-   -- Get_View_By_Id --
-   --------------------
-
-   function Get_View_By_Id
+   function Get_View
      (Tree : Project.Tree.Object;
-      Id   : IDS.View_Id) return Project.View.Object is
+      Id   : IDS.View_Id) return Project.View.Object
+   is
+      CV : constant Id_Maps.Cursor := Tree.View_Ids.Find (Id);
    begin
-      if Tree.View_Ids.Contains (Id) then
-         return Tree.View_Ids (Id);
+      if Id_Maps.Has_Element (CV) then
+         return Id_Maps.Element (CV);
       else
          return Project.View.Undefined;
       end if;
-   end Get_View_By_Id;
+   end Get_View;
 
    -----------------------
    -- Has_Configuration --
@@ -1088,7 +1157,7 @@ package body GPR2.Project.Tree is
      (Self        : Object;
       Instance_Id : GPR2.View_Ids.View_Id) return View.Object is
    begin
-      return Self.View_Instances.Element (Instance_Id);
+      return Self.View_Ids.Element (Instance_Id);
    end Instance_Of;
 
    ------------------------
@@ -1104,9 +1173,18 @@ package body GPR2.Project.Tree is
             Definition.Get (V).Sources_Signature :=
               GPR2.Context.Default_Signature;
          end loop;
+
+         Self.Self.Sources_Loaded := False;
+
       else
          Definition.Get (View).Sources_Signature :=
            GPR2.Context.Default_Signature;
+
+         if View.Is_Aggregated_In_Library then
+            for Agg of View.Aggregate_Libraries loop
+               Self.Invalidate_Sources (Agg);
+            end loop;
+         end if;
       end if;
    end Invalidate_Sources;
 
@@ -1141,58 +1219,17 @@ package body GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      Config           : PC.Object              := PC.Undefined;
-      Project_Dir      : Path_Name.Object        := Path_Name.Undefined;
-      Build_Path       : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type      := No_Name;
-      Src_Subdirs      : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib : Boolean                 := True;
-      Absent_Dir_Error : Boolean                 := False;
-      Implicit_With    : Containers.Filename_Set :=
-                           Containers.Empty_Filename_Set)
+      Config           : PC.Object                 := PC.Undefined;
+      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type        := No_Name;
+      Src_Subdirs      : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib : Boolean                   := True;
+      Absent_Dir_Error : Boolean                   := False;
+      Implicit_With    : GPR2.Path_Name.Set.Object :=
+                           GPR2.Path_Name.Set.Empty_Set;
+      Pre_Conf_Mode    : Boolean                   := False)
    is
-      procedure Set_Project_Search_Paths;
-      --  Set project search path for the tree
-
-      ------------------------------
-      -- Set_Project_Search_Paths --
-      ------------------------------
-
-      procedure Set_Project_Search_Paths is
-
-         GNAT_Prefix : constant String := Get_Tools_Directory;
-
-         procedure Append (Dir1, Dir2  : String)
-           with Post => Self.Search_Paths'Old.Length + 1
-                        = Self.Search_Paths.Length;
-
-         ------------
-         -- Append --
-         ------------
-
-         procedure Append (Dir1, Dir2  : String) is
-         begin
-            Self.Search_Paths.Append
-              (Path_Name.Create_Directory
-                 (Filename_Type
-                    (Directories.Compose
-                       (Directories.Compose
-                          (Directories.Compose
-                             (GNAT_Prefix, String (Self.Target)), Dir1),
-                        Dir2))));
-         end Append;
-
-      begin
-         if GNAT_Prefix /= "" then
-            --  <prefix>/<target>/share/gpr
-
-            Append ("share", "gpr");
-
-            --  <prefix>/<target>/lig/gnat
-
-            Append ("lib", "gnat");
-         end if;
-      end Set_Project_Search_Paths;
 
       Project_Path  : Path_Name.Object;
       Root_Context  : GPR2.Context.Object := Context;
@@ -1246,6 +1283,8 @@ package body GPR2.Project.Tree is
                P_Data.Packs,
                P_Data.Types);
 
+            Update_Project_Search_Path_From_Config (Self, Self.Conf);
+
             pragma Assert (P_Data.Kind = K_Configuration, P_Data.Kind'Img);
          end;
       end if;
@@ -1258,9 +1297,7 @@ package body GPR2.Project.Tree is
       Self.Implicit_With    := Implicit_With;
       Self.Absent_Dir_Error := Absent_Dir_Error;
 
-      --  Now we can initialize the project search paths
-
-      Set_Project_Search_Paths;
+      Self.Pre_Conf_Mode := Pre_Conf_Mode;
 
       if Filename.Is_Implicit_Project then
          Project_Path := Project_Dir;
@@ -1280,7 +1317,20 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
+      --  Add full project path in the message log
+      Self.Messages.Append
+        (Message.Create
+           (Message.Information,
+            "Parsing """ & Project_Path.Value & """",
+            Source_Reference.Create (Project_Path.Value, 0, 0)));
+
       --  Add all search paths into the message log
+
+      Self.Messages.Append
+        (Message.Create
+           (Message.Information,
+            "search path:",
+            Source_Reference.Create (Project_Path.Value, 0, 0)));
 
       for P of Self.Search_Paths loop
          Self.Messages.Append
@@ -1292,18 +1342,17 @@ package body GPR2.Project.Tree is
 
       Self.Root := Recursive_Load
         (Self,
-         Filename      => Project_Path,
-         Context       => Root,
-         Root_Context  => Self.Context (Root),
-         Messages      => Self.Messages);
+         Filename => Project_Path,
+         Context  => Root);
 
       --  Do nothing more if there are errors during the parsing
 
       if not Self.Messages.Has_Error then
          --  Add to root view's externals, configuration project externals
 
+         Def := Definition.Get (Self.Root);
+
          if Config.Is_Defined and then Config.Has_Externals then
-            Def := Definition.Get (Self.Root);
 
             for E of Config.Externals loop
                if not Def.Externals.Contains (E) then
@@ -1315,38 +1364,40 @@ package body GPR2.Project.Tree is
          for V_Data of Self.Views_Set loop
             --  Compute the external dependencies for the views. This
             --  is the set of external used in the project and in all
-            --  imported project.
+            --  imported/extended project.
 
-            Def := Definition.Get (V_Data);
+            for E of Definition.Get_RO (V_Data).Externals loop
+               if not Def.Externals.Contains (E) then
+                  --  Note that if we have an aggregate project, then
+                  --  we are not dependent on the external if it is
+                  --  statically redefined in the aggregate project. But
+                  --  at this point we have not yet parsed the project.
+                  --
+                  --  The externals will be removed in Set_Context when
+                  --  the parsing is done.
 
-            for V of Def.Imports loop
-               for E of Definition.Get_RO (V).Externals loop
-                  if not Def.Externals.Contains (E) then
-                     --  Note that if we have an aggregate project, then
-                     --  we are not dependent on the external if it is
-                     --  statically redefined in the aggregate project. But
-                     --  at this point we have not yet parsed the project.
-                     --
-                     --  The externals will be removed in Set_Context when
-                     --  the parsing is done.
-
-                     Def.Externals.Append (E);
-                  end if;
-               end loop;
+                  Def.Externals.Append (E);
+               end if;
             end loop;
          end loop;
 
          Set_Context (Self, Context);
 
          Definition.Check_Same_Name_Extended (Self.Root);
-         Definition.Check_Aggregate_Library_Dirs (Self.Root);
+
+         if not Self.Pre_Conf_Mode then
+            --  We only need those checks if we are not in pre-confinguration
+            --  stage, otherwise we might have errors if a project references
+            --  corresponding attributes from a not yet found project and their
+            --  values default to empty ones.
+            Definition.Check_Aggregate_Library_Dirs (Self.Root);
+            Definition.Check_Package_Naming (Self.Root);
+         end if;
       end if;
 
-      if Self.Messages.Has_Error then
+      if not Self.Pre_Conf_Mode and then Self.Messages.Has_Error then
          raise Project_Error with Project_Path.Value & " syntax error";
       end if;
-
-      pragma Assert (Definition.Check_Circular_References (Self.Root));
    end Load;
 
    -------------------
@@ -1357,53 +1408,83 @@ package body GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Project_Dir       : Path_Name.Object     := Path_Name.Undefined;
-      Build_Path        : Path_Name.Object     := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type   := No_Name;
-      Src_Subdirs       : Optional_Name_Type   := No_Name;
-      Check_Shared_Lib  : Boolean              := True;
-      Absent_Dir_Error  : Boolean              := False;
-      Implicit_With     : Containers.Filename_Set :=
-                            Containers.Empty_Filename_Set;
-      Target            : Optional_Name_Type       := No_Name;
+      Project_Dir       : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type        := No_Name;
+      Src_Subdirs       : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib  : Boolean                   := True;
+      Absent_Dir_Error  : Boolean                   := False;
+      Implicit_With     : GPR2.Path_Name.Set.Object :=
+                            GPR2.Path_Name.Set.Empty_Set;
+      Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
-                           Containers.Name_Value_Map_Package.Empty_Map;
-      Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
+                            Containers.Name_Value_Map_Package.Empty_Map;
+      Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
    is
-      Languages   : Containers.Source_Value_Set;
+      Languages   : Containers.Name_Set;
       Conf        : Project.Configuration.Object;
       GNAT_Prefix : constant String := Get_Tools_Directory;
       Default_Cfg : Path_Name.Object;
       Lang_Sloc   : Attribute.Object;
       --  Keep languages attribute for Sloc parameter in error message
 
+      Old_Paths    : constant Path_Name.Set.Object := Self.Search_Paths;
+      --  Search paths may be affected by -aP options passed by gprtools,
+      --  so we need to keep the original search paths for the reconfiguration
+      --  stage.
+      Old_Messages : constant Log.Object := Self.Messages;
+      --  Likewise, Self may already have some messages and we don't want
+      --  to loose them when we unload the tree for conf/reconf.
+
       function Actual_Target return Name_Type;
       --  Returns the target, depending on the parsing stage
 
       procedure Add_Languages (View : Project.View.Object);
-      --  Add project languages into the Languages container to configure.
-      --  Warn about project has no languages.
+      --  Adds project languages into the Languages container to configure.
+      --  Warns about project has no languages.
+
+      function Conf_Descriptions return Project.Configuration.Description_Set;
+      --  Returns set of descriptions for configuration creation
 
       function Default_Config_File return Filename_Type;
       --  Returns default config filename
 
       function Runtime
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns the runtime to use during configuration for the specified
       --  language.
 
       function Toolchain_Name
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns toolchain name specified by Toolchain_Name attribute
 
       function Toolchain_Version
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+        (Language : Name_Type) return Optional_Name_Type;
       --  Returns toolchain version specified by Required_Toolchain_Version
       --  attribute.
 
-      function Toolchain_Path
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type;
+      function Toolchain_Path (Language : Name_Type) return Filename_Optional;
       --  Returns toolchain search path specified by Toolchain_Path attribute
+
+      type Reconfiguration_Status is (Unchanged, Extended, Incompatible);
+
+      Reconf_Status : Reconfiguration_Status;
+
+      procedure Compare_Configurations
+        (Before : Project.Configuration.Description_Set;
+         After  : Project.Configuration.Description_Set;
+         Result : out Reconfiguration_Status);
+      --  Compares two sets of description sets to check for possible changes
+      --  that happened after autoconfiguration. For example, new languages
+      --  may be added after finding missing imports. Also, previously
+      --  unresolved constructs may cause changes in already established
+      --  descriptions (toolchain-related attribute under a case statement
+      --  depending on a variable from a missing import).
+      --  Returns Unchanged when Before and After are identical.
+      --  Returns Extended when all descriptions for languages present in
+      --  Before are identical to those in After, but there are new extra
+      --  languages in after.
+      --  Otherwise returns Incompatible and adds corresponding error messages.
 
       -------------------
       -- Actual_Target --
@@ -1418,12 +1499,16 @@ package body GPR2.Project.Tree is
             return Target;
          end if;
 
-         if Self.Root.Check_Attribute
-           (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
          then
             --  Check if the project explicitly defines the attribute or if
-            --  this comes from a default value
-            if not Tmp_Attr.Is_Default then
+            --  this comes from a default value.
+
+            if not Tmp_Attr.Is_Default and then
+              not Tmp_Attr.Value.Is_From_Default
+            then
                return Name_Type (Tmp_Attr.Value.Text);
             end if;
          end if;
@@ -1438,8 +1523,8 @@ package body GPR2.Project.Tree is
 
       procedure Add_Languages (View : Project.View.Object) is
       begin
-         if View.Languages.Length = 0
-           and then not View.Is_Abstract
+         if not View.Is_Abstract
+           and then View.Languages.Length = 0
          then
             Self.Append_Message
               (Message.Create
@@ -1451,7 +1536,7 @@ package body GPR2.Project.Tree is
 
          if View.Has_Languages then
             for L of View.Languages loop
-               Languages.Include (L);
+               Languages.Include (Name_Type (L.Text));
             end loop;
 
             --  Keep languages attribute for possible error message Sloc
@@ -1461,15 +1546,171 @@ package body GPR2.Project.Tree is
          end if;
       end Add_Languages;
 
+      ----------------------------
+      -- Compare_Configurations --
+      ----------------------------
+
+      procedure Compare_Configurations
+        (Before : Project.Configuration.Description_Set;
+         After  : Project.Configuration.Description_Set;
+         Result : out Reconfiguration_Status)
+      is
+         use Project.Configuration;
+
+         Found_In_After : Boolean;
+
+         function Error (Before, After : Description) return String;
+         --  Returns string with incompatible parts of descriptions
+
+         -----------
+         -- Error --
+         -----------
+
+         function Error (Before, After : Description) return String is
+            Result : Unbounded_String;
+
+            procedure Append_Result
+              (Param   : String;
+               Old_Val : Optional_Name_Type;
+               New_Val : Optional_Name_Type);
+            --  Adds new parts of error message
+
+            -------------------
+            -- Append_Result --
+            -------------------
+
+            procedure Append_Result
+              (Param   : String;
+               Old_Val : Optional_Name_Type;
+               New_Val : Optional_Name_Type)
+            is
+               Msg : constant String :=
+                       Param & " """ & String (Old_Val) & """ changed to """
+                       & String (New_Val) & """";
+            begin
+               if Result = Null_Unbounded_String then
+                  Result := To_Unbounded_String (Msg);
+               else
+                  Append (Result, "; " & Msg);
+               end if;
+            end Append_Result;
+
+         begin
+            if Version (Before) /= Version (After) then
+               Append_Result ("version", Version (Before), Version (After));
+            end if;
+
+            if Runtime (Before) /= Runtime (After) then
+               Append_Result ("runtime", Runtime (Before), Runtime (After));
+            end if;
+
+            if Path (Before) /= Path (After) then
+               Append_Result
+                 ("path",
+                  Optional_Name_Type (Path (Before)),
+                  Optional_Name_Type (Path (After)));
+            end if;
+
+            if Name (Before) /= Name (After) then
+               Append_Result ("name", Name (Before), Name (After));
+            end if;
+
+            return  To_String (Result);
+         end Error;
+
+      begin
+         for Descr_B of Before loop
+            Found_In_After := False;
+
+            for Descr_A of After loop
+               if Language (Descr_B) = Language (Descr_A) then
+                  if Descr_B = Descr_A then
+                     Found_In_After := True;
+                     exit;
+
+                  else
+                     Self.Append_Message
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Message => "incompatible change for language "
+                           & String (Language (Descr_B))
+                           & " during reconfiguration",
+                           Sloc    => Source_Reference.Create
+                             (Self.Root.Path_Name.Value, 0, 0)));
+
+                     Self.Append_Message
+                       (Message.Create
+                          (Level   => Message.Error,
+                           Message => Error (Descr_B, Descr_A),
+                           Sloc    => Source_Reference.Create
+                             (Self.Root.Path_Name.Value, 0, 0)));
+
+                     Result := Incompatible;
+
+                     return;
+                  end if;
+               end if;
+            end loop;
+
+            if not Found_In_After then
+               Self.Append_Message
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Message => "language " & String (Language (Descr_B))
+                     & " missing for reconfiguration",
+                     Sloc    => Source_Reference.Create
+                       (Self.Root.Path_Name.Value, 0, 0)));
+               Result := Incompatible;
+               return;
+            end if;
+
+         end loop;
+
+         if Before'Length = After'Length then
+            Result := Unchanged;
+         else
+            Result := Extended;
+         end if;
+
+      end Compare_Configurations;
+
+      -----------------------
+      -- Conf_Descriptions --
+      -----------------------
+
+      function Conf_Descriptions return Project.Configuration.Description_Set
+      is
+         Descr_Index : Natural := 0;
+         Result      : Project.Configuration.Description_Set
+                         (1 .. Positive (Languages.Length));
+      begin
+         for L of Languages loop
+            Descr_Index := Descr_Index + 1;
+
+            Result (Descr_Index) :=
+              Project.Configuration.Create
+                (Language => L,
+                 Version  => Toolchain_Version (L),
+                 Runtime  => Runtime (L),
+                 Path     => Toolchain_Path (L),
+                 Name     => Toolchain_Name (L));
+         end loop;
+
+         return Result;
+      end Conf_Descriptions;
+
       -------------------------
       -- Default_Config_File --
       -------------------------
 
       function Default_Config_File return Filename_Type is
-         Ada_RTS : constant Filename_Optional :=
-                     Filename_Optional
-                       (Containers.Value_Or_Default
-                          (Language_Runtimes, "Ada"));
+         Ada_RTS_Val : constant Value_Type :=
+                         Containers.Value_Or_Default
+                           (Language_Runtimes, "Ada");
+         Ada_RTS     : constant Filename_Optional :=
+                         (if Ada_RTS_Val = No_Value then No_Filename
+                          else Filename_Optional
+                            (Ada.Directories.Simple_Name (Ada_RTS_Val)));
       begin
          if Target not in No_Name | "all" then
             return Filename_Type (Target)
@@ -1499,7 +1740,7 @@ package body GPR2.Project.Tree is
       -------------
 
       function Runtime
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          function Attr_As_Abs_Path
            (Attr : Attribute.Object;
@@ -1538,7 +1779,7 @@ package body GPR2.Project.Tree is
          Tmp_Attr : Attribute.Object;
          LRT      : constant Value_Type :=
                       Containers.Value_Or_Default
-                        (Language_Runtimes, Name_Type (Language.Text));
+                        (Language_Runtimes, Language);
 
       begin
          if LRT /= No_Value then
@@ -1546,9 +1787,11 @@ package body GPR2.Project.Tree is
             return Name_Type (LRT);
          end if;
 
-         if Self.Root.Check_Attribute
-           (PRA.Runtime, Attribute_Index.Create (Language.Text),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Runtime,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
          then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
          end if;
@@ -1561,13 +1804,15 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Name
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Check_Attribute
-           (PRA.Toolchain_Name, Attribute_Index.Create (Language.Text),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Toolchain_Name,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (Tmp_Attr.Value.Text);
@@ -1581,20 +1826,23 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Path
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Filename_Optional
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Check_Attribute
-           (PRA.Toolchain_Path, Attribute_Index.Create (Language.Text),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Toolchain_Path,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
-            return Name_Type (GNAT.OS_Lib.Normalize_Pathname
-                              (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
+            return Filename_Type
+              (GNAT.OS_Lib.Normalize_Pathname
+                 (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
          end if;
 
-         return No_Name;
+         return No_Filename;
       end Toolchain_Path;
 
       -----------------------
@@ -1602,14 +1850,15 @@ package body GPR2.Project.Tree is
       -----------------------
 
       function Toolchain_Version
-        (Language : Source_Reference.Value.Object) return Optional_Name_Type
+        (Language : Name_Type) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Check_Attribute
-           (PRA.Required_Toolchain_Version,
-            Attribute_Index.Create (Language.Text),
-            Check_Extended => True, Result => Tmp_Attr)
+         if Self.Root.Is_Defined
+           and then Self.Root.Check_Attribute
+                      (PRA.Required_Toolchain_Version,
+                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
             return Name_Type (Tmp_Attr.Value.Text);
@@ -1617,6 +1866,14 @@ package body GPR2.Project.Tree is
 
          return No_Name;
       end Toolchain_Version;
+
+      package Description_Set_Holders is new Ada.Containers.Indefinite_Holders
+        (Project.Configuration.Description_Set,
+         Project.Configuration."=");
+      Pre_Conf_Description   : Description_Set_Holders.Holder;
+      Post_Conf_Description  : Description_Set_Holders.Holder;
+      Has_Errors             : Boolean;
+      use Description_Set_Holders;
 
    begin
 
@@ -1668,87 +1925,130 @@ package body GPR2.Project.Tree is
             Subdirs          => Subdirs,
             Src_Subdirs      => Src_Subdirs,
             Check_Shared_Lib => Check_Shared_Lib,
-            Absent_Dir_Error => False, --  Ignore obj dir for this first load
-            Implicit_With    => Implicit_With);
+            Absent_Dir_Error => False,
+            Implicit_With    => Implicit_With,
+            Pre_Conf_Mode    => True);
+         --  Ignore possible missing dirs and imported projects since they can
+         --  depend on the result of autoconfiguration.
+
+         Has_Errors := Self.Messages.Has_Error;
 
          --  Ignore messages issued with this initial load: as we don't have
          --  a valid configuration here, we can't really know whether they
          --  are meaningful or not
          Self.Messages.Clear;
 
-         if Self.Root.Is_Externally_Built then
-            --  If we have externally built project, configure only the root
-            --  one.
-
-            Add_Languages (Self.Root);
-
-         else
-            --  If we have non externally built project, configure the none
-            --  externally built tree part.
-
+         if not Has_Errors then
             for C in Self.Iterate
               (Filter =>
-                 (F_Aggregate | F_Aggregate_Library => False, others => True),
-               Status => (S_Externally_Built => False))
+                 (F_Aggregate | F_Aggregate_Library => False, others => True))
             loop
                Add_Languages (Element (C));
             end loop;
-         end if;
 
-         if Languages.Length = 0 then
-            Self.Append_Message
-              (Message.Create
-                 (Level   => Message.Warning,
-                  Message => "no language for the projects tree: "
-                  & "configuration skipped",
-                  Sloc    => (if Lang_Sloc.Is_Defined
-                              then Lang_Sloc
-                              else Source_Reference.Create
-                                     (Self.Root.Path_Name.Value, 0, 0))));
-            return;
-         end if;
-
-         declare
-            Descr_Index       : Natural := 0;
-            Conf_Descriptions : Project.Configuration.Description_Set
-                                  (1 .. Positive (Languages.Length));
-         begin
-            for L of Languages loop
-               Descr_Index := Descr_Index + 1;
-
-               Conf_Descriptions (Descr_Index) :=
-                 Project.Configuration.Create
-                   (Language => Name_Type (L.Text),
-                    Version  => Toolchain_Version (L),
-                    Runtime  => Runtime (L),
-                    Path     => Toolchain_Path (L),
-                    Name     => Toolchain_Name (L));
-            end loop;
-
-            if not Self.Base.Is_Defined then
-               Self.Base := GPR2.KB.Create (GPR2.KB.Default_Flags);
+            if Languages.Length = 0 then
+               Self.Append_Message
+                 (Message.Create
+                    (Level   => Message.Warning,
+                     Message => "no language for the projects tree: "
+                     & "configuration skipped",
+                     Sloc    => (if Lang_Sloc.Is_Defined
+                                 then Lang_Sloc
+                                 else Source_Reference.Create
+                                        (Self.Root.Path_Name.Value, 0, 0))));
+               return;
             end if;
 
-            Conf := Project.Configuration.Create
-              (Conf_Descriptions,
-               Actual_Target,
-               Self.Root.Path_Name,
-               Self.Base);
-         end;
+         else
+            --  Generate a default config, since a critical failure occurred:
+            --  this will reload the project in normal mode and print the
+            --  relevant error messages.
+
+            Languages.Include ("ada");
+         end if;
+
+         Pre_Conf_Description := To_Holder (Conf_Descriptions);
+
+         if not Self.Base.Is_Defined then
+            Self.Base := GPR2.KB.Create (GPR2.KB.Default_Flags);
+         end if;
+
+         Conf := Project.Configuration.Create
+           (Pre_Conf_Description.Element,
+            Actual_Target,
+            Filename,
+            Self.Base);
 
          --  Unload the project that was loaded without configuration.
          --  We need to backup the messages and default search path:
          --  messages issued during configuration are relevant, together with
          --  already computed search paths
-         declare
-            Old_Messages : constant Log.Object := Self.Messages;
-            Old_Paths    : constant Path_Name.Set.Object := Self.Search_Paths;
-         begin
-            Self.Unload;
-            Self.Messages := Old_Messages;
-            Self.Search_Paths := Old_Paths;
-         end;
+
+         Self.Unload;
+         Self.Messages := Old_Messages;
+         Self.Search_Paths := Old_Paths;
       end if;
+
+      Self.Load
+        ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
+         Context, Conf,
+         Project_Dir      => Project_Dir,
+         Build_Path       => Build_Path,
+         Subdirs          => Subdirs,
+         Src_Subdirs      => Src_Subdirs,
+         Check_Shared_Lib => Check_Shared_Lib,
+         Absent_Dir_Error => Absent_Dir_Error,
+         Implicit_With    => Implicit_With);
+
+      if Default_Cfg.Exists then
+         --  No need for reconfiguration if explicit default configuration
+         --  project has been specified.
+         return;
+      end if;
+
+      --  Configuration parameters might have changed, i.e. new languages
+      --  may be added from missing imported projects that have been found
+      --  after search path update from configuration data. We need to check
+      --  for that and perform a reconfiguration if necessary.
+
+      Languages.Clear;
+
+      for C in Self.Iterate
+        (Filter =>
+           (F_Aggregate | F_Aggregate_Library => False, others => True))
+      loop
+         Add_Languages (Element (C));
+      end loop;
+
+      Post_Conf_Description := To_Holder (Conf_Descriptions);
+
+      if not Pre_Conf_Description.Is_Empty then
+         Compare_Configurations
+           (Pre_Conf_Description.Element,
+            Post_Conf_Description.Element,
+            Reconf_Status);
+
+         if Reconf_Status = Unchanged then
+            --  Nothing changed, no need for reconfiguration
+            return;
+         end if;
+
+         if Reconf_Status = Incompatible then
+            raise Project_Error with "reconfiguration error";
+         end if;
+      end if;
+
+      --  We need to reconfigure in order to account for new languages.
+
+      Conf := Project.Configuration.Create
+        (Post_Conf_Description.Element,
+         Actual_Target,
+         Self.Root.Path_Name,
+         Self.Base);
+
+      Self.Unload;
+      Self.Messages := Old_Messages;
+      Self.Search_Paths := Old_Paths;
 
       Self.Load
         ((if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
@@ -1820,20 +2120,9 @@ package body GPR2.Project.Tree is
       use GPR2.View_Ids.DAGs;
       Result : View.Vector.Object;
 
-      procedure Insert (V : View.Object);
-
-      procedure Insert (V : View.Object) is
-      begin
-         if V.Is_Extending and then V.Instance_Of = V.Extended.Instance_Of
-         then
-            Insert (V.Extended);
-         end if;
-         Result.Append (V);
-      end Insert;
-
    begin
       for Id of Self.View_DAG.Topological_Sort loop
-         Insert (Self.Instance_Of (Id));
+         Result.Append (Self.Instance_Of (Id));
       end loop;
 
       return Result;
@@ -1858,9 +2147,11 @@ package body GPR2.Project.Tree is
       Source : Path_Name.Object;
       Unit   : Name_Type) is
    begin
-      Self.Units.Include (Unit, View);
-      Self.Sources.Include (Filename_Type (Source.Value), View);
-      Self.Sources.Include (Source.Simple_Name, View);
+      if not View.Is_Extended then
+         Self.Units.Include (Unit, View);
+         Self.Sources.Include (Filename_Type (Source.Value), View);
+         Self.Sources.Include (Source.Simple_Name, View);
+      end if;
    end Record_View;
 
    --------------------
@@ -1868,15 +2159,17 @@ package body GPR2.Project.Tree is
    --------------------
 
    function Recursive_Load
-     (Self          : Object;
+     (Self          : in out Object;
       Filename      : Path_Name.Object;
       Context       : Context_Kind;
-      Root_Context  : in out GPR2.Context.Object;
-      Messages      : out Log.Object;
       Starting_From : View.Object := View.Undefined) return View.Object
    is
 
-      type Relation_Status is (Root, Imported, Extended, Aggregate_Lib);
+      type Relation_Status is
+        (Root,            --  Root project
+         Extended,        --  Extended project
+         Aggregated,      --  In an aggregate project
+         Simple);         --  Import, Limited import or aggregate library
 
       Search_Path : Path_Name.Set.Object := Self.Search_Paths;
       PP          : Attribute.Object;
@@ -1885,76 +2178,81 @@ package body GPR2.Project.Tree is
       --  Returns the Data definition for the given project
 
       function Internal
-        (Filename  : Path_Name.Object;
-         Aggregate : View.Object;
-         Status    : Relation_Status;
-         Parent    : View.Object) return View.Object;
+        (Filename        : Path_Name.Object;
+         Aggregate       : View.Object;
+         Status          : Relation_Status;
+         Parent          : View.Object;
+         Extends_Ctx     : View.Vector.Object) return View.Object;
+      --  Internal function doing the actual load of the tree.
+      --  Filename:  the project to laod
+      --  Aggregate: if defines, is set to the aggregate project that includes
+      --             "Filename".
+      --  Status:    denotes the context of the load.
+      --             "root": the root project is being loaded.
+      --             "extended": the current project is extending "Filename"
+      --             "aggregated": the current project is aggregating
+      --                "filename". It can be either an aggregate project or
+      --                an aggregate library project.
+      --             "simple": a regular import.
+      --  Parent:    the loading project.
+      --  Extends_Ctx: In case the project is loaded in a subtree of an
+      --               extends all, the extending project is .
 
       function Is_Limited
          (View         : GPR2.Project.View.Object;
           Import_Path  : Path_Name.Object) return Boolean;
       --  Returns True if the Import_Path is a limited with in View.
 
-      procedure Add_Paths_Messages;
-      --  Add into Messages the path of the detected circularity
-
-      type Data is record
-         Project  : GPR2.Project.Import.Object;
-         Extended : Boolean;
-      end record;
-
-      package Data_Set is new Ada.Containers.Ordered_Maps
-        (GPR2.Path_Name.Object, Data, "<" => GPR2.Path_Name."<");
-
-      Sets          : Data_Set.Map;
-      Project_Stack : Path_Name.Set.Object;
-      --  Path to the root of the tree from the currently processing project
-
-      ------------------------
-      -- Add_Paths_Messages --
-      ------------------------
-
-      procedure Add_Paths_Messages is
-      begin
-         for Import of Project_Stack loop
-            declare
-               Def : constant Data := Sets.Element (Import);
-            begin
-               Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     (if Def.Extended then "extends" else "imports")
-                      & " " & Import.Value,
-                     Def.Project));
-            end;
-         end loop;
-      end Add_Paths_Messages;
+      procedure Propagate_Aggregate_Library
+        (View        : in out GPR2.Project.View.Object;
+         Agg_Library : GPR2.View_Ids.View_Id);
+      --  Make sure that all views in the subtree of View reference the
+      --  Aggregate Library.
+      --
+      --  This is needed if several aggregate libraries exist in the tree
+      --  and they reference the same project. This is also needed if a
+      --  subproject is withed from the regular project before being also
+      --  in the closure of the aggregate library, as in these cases the
+      --  view will already exist before the aggregate library is loaded.
 
       --------------
       -- Internal --
       --------------
 
       function Internal
-        (Filename  : Path_Name.Object;
-         Aggregate : View.Object;
-         Status    : Relation_Status;
-         Parent    : View.Object) return View.Object
+        (Filename        : Path_Name.Object;
+         Aggregate       : View.Object;
+         Status          : Relation_Status;
+         Parent          : View.Object;
+         Extends_Ctx     : View.Vector.Object) return View.Object
       is
-         Id   : constant IDS.View_Id :=
-                  IDS.Create
-                    (Project_File => Filename, Context => Context);
-         View : Project.View.Object := Self.Get_View_By_Id (Id);
+         Extending : constant IDS.View_Id :=
+                       (if Status = Extended then Parent.Id
+                        elsif not Extends_Ctx.Is_Empty
+                        then Extends_Ctx.First_Element.Id
+                        else View_Ids.Undefined);
+         --  A project can be extended either explicitly (Status is then
+         --  Extended and the parent points to the extending project), or
+         --  implicitly (withed unit of the extending project replaces withed
+         --  using of the extended project, creating an implicit extension).
+         --  In this case Extends_Ctx is not empty.
+
+         Id        : constant IDS.View_Id :=
+                       IDS.Create
+                         (Project_File => Filename,
+                          Context      => Context,
+                          Extending    => Extending);
+         View      : Project.View.Object := Self.Get_View (Id);
 
       begin
          --  If the view is already defined just return it
-
          if not View.Is_Defined then
             declare
                Data : Definition.Data := Load (Filename);
             begin
                --  If there are parsing errors, do not go further
 
-               if Messages.Has_Error then
+               if Self.Messages.Has_Error then
                   return View;
                end if;
 
@@ -1967,41 +2265,39 @@ package body GPR2.Project.Tree is
                              else Path_Name.Create_Directory
                                     (Filename_Type (Filename.Dir_Name)));
 
-               --  If parent view is an aggregate or an extending project keep
-               --  track of the relationship.
+               --  If parent view is an extending project keep track of the
+               --  relationship.
 
                if Status = Extended then
                   Data.Extending := Definition.Weak (Parent);
-               end if;
-               if Aggregate.Is_Defined then
-                  Data.Aggregate := Definition.Weak (Aggregate);
+               elsif not Extends_Ctx.Is_Empty then
+                  Data.Extending :=
+                    Definition.Weak (Extends_Ctx.First_Element);
                end if;
 
-               --  Update context associated with the the list of
-               --  externals defined in that project file.
+               --  Update context associated with the the list of externals
+               --  defined in that project file.
 
-               Update_Context (Root_Context, Data.Externals);
+               Update_Context (Self.Context (Context), Data.Externals);
 
                --  At this stage even if not complete we can create the view
                --  and register it so that we can have references to it.
 
                Data.Context     := Context;
                Data.Is_Root     := Status = Root;
+               Data.Is_Imported := Status = Simple;
                Data.Unique_Id   := Id;
-               Data.Instance_Of := Id;
                View := Register_View (Data);
-
-               --  Keep track of the view in View_Ids
-               --  It is important to note that this ensures we don't start to
-               --  recurse infinitely while loading a project tree.
-
-               View.Tree.View_Ids.Include (Data.Unique_Id, View);
             end;
 
             declare
-               Data : constant Definition.Ref := Definition.Get_RW (View);
-            begin
+               Data            : constant Definition.Ref :=
+                                   Definition.Get_RW (View);
+               New_Extends_Ctx : GPR2.Project.View.Vector.Object :=
+                                   Extends_Ctx;
+               --  Extends all context for the extended project if any
 
+            begin
                --  Set root view regarding context namespace
                --  ??? (need more explanation)
 
@@ -2016,68 +2312,141 @@ package body GPR2.Project.Tree is
                   --  aggregate projects ???
 
                   Data.Root_View := Definition.Get_RO (Parent).Root_View;
+                  Data.Agg_Libraries :=
+                    Definition.Get_RO (Parent).Agg_Libraries;
+
+                  if Parent.Kind = K_Aggregate_Library then
+                     Data.Agg_Libraries.Include (Parent.Id);
+                  end if;
+               end if;
+
+               --  Update the extends all view
+
+               if not Extends_Ctx.Is_Empty then
+                  declare
+                     --  We need to add the current view to the extended
+                     --  property of the extends all view. To this end, we
+                     --  use a local variable that will allow us to write
+                     --  its definition
+                     Temp_View : Project.View.Object :=
+                                   Extends_Ctx.First_Element;
+                  begin
+                     Definition.Get_RW (Temp_View).Extended.Include (View);
+                  end;
                end if;
 
                --  Load all imported projects
 
+               if Status = Extended then
+                  --  Temporarily add the parent to the list of
+                  --  extending projects so that we can simply loop over
+                  --  those to gather all the imports of extending projects
+
+                  New_Extends_Ctx.Prepend (Parent);
+               end if;
+
                for Project of Data.Trees.Imports loop
                   declare
-                     Imported_View : constant GPR2.Project.View.Object :=
-                                       Internal
-                                         (Project.Path_Name,
-                                          Aggregate => Aggregate,
-                                          Status    => Imported,
-                                          Parent    => View);
+                     Imported_View : GPR2.Project.View.Object;
+                     Limited_With  : Boolean := False;
+
                   begin
-                     if Imported_View.Is_Defined then
+                     --  Look for the list of imported projects from the
+                     --  extending project to see if we need to substitute
+                     --  regular imports with their extended view.
+
+                     Extends_Loop :
+                     for Ext of New_Extends_Ctx loop
+                        Import_Loop :
+                        for Imp of Ext.Imports loop
+                           if Imp.Is_Extending
+                             and then
+                               Imp.Extended_Root.Path_Name = Project.Path_Name
+                           then
+                              Imported_View := Imp;
+                              exit Extends_Loop;
+                           end if;
+                        end loop Import_Loop;
+                     end loop Extends_Loop;
+
+                     if not Imported_View.Is_Defined then
+                        Imported_View :=
+                          Internal
+                            (Project.Path_Name,
+                             Aggregate   =>
+                               GPR2.Project.View.Undefined,
+                             Status      => Simple,
+                             Parent      => View,
+                             Extends_Ctx => Extends_Ctx);
+
+                        if not Imported_View.Is_Defined then
+                           --  Some issue happened
+
+                           pragma Assert (Self.Messages.Has_Error);
+
+                           return GPR2.Project.View.Undefined;
+                        end if;
+
                         --  limited with and with are tracked separately due
                         --  their very distinct nature.
 
                         if Is_Limited (View, Project.Path_Name) then
-                           Data.Limited_Imports.Insert
-                              (Project.Name, Imported_View);
-                        else
-
-                           Data.Imports.Insert (Project.Name, Imported_View);
+                           Limited_With := True;
                         end if;
+                     end if;
+
+                     if Limited_With then
+                        Data.Limited_Imports.Insert
+                          (Project.Name, Imported_View);
+
+                     else
+                        Data.Imports.Insert
+                          (Project.Name, Imported_View);
                      end if;
                   end;
                end loop;
 
-               --  Load the extended project if any
+               if Status = Extended then
+                  --  Remove Parent from New_Extends_Ctx: simple extension
+                  --  don't propagate to the subtree.
+                  New_Extends_Ctx.Delete_First;
+               end if;
+
+               --  Load the extended project if any:
+
                if Data.Trees.Extended.Is_Defined then
+                  if Data.Trees.Project.Is_Extending_All then
+                     --  Update the extends context in case we do an
+                     --  extends all: this is applied to the whole sub-tree.
+
+                     New_Extends_Ctx.Prepend (View);
+                  end if;
+
                   declare
                      Extended_View : constant GPR2.Project.View.Object :=
                                        Internal
                                          (Data.Trees.Extended.Path_Name,
-                                          Aggregate => Aggregate,
-                                          Status    => Extended,
-                                          Parent    => View);
+                                          Aggregate     =>
+                                            GPR2.Project.View.Undefined,
+                                          Status        => Extended,
+                                          Parent        => View,
+                                          Extends_Ctx   => New_Extends_Ctx);
                   begin
                      if Extended_View.Is_Defined then
-                        Data.Extended := Extended_View;
-
-                        --  If this is an extending all project in that case
-                        --  current project is an instance of the extended
-                        --  project.
-
-                        if Data.Trees.Project.Is_Extending_All then
-                           Data.Instance_Of :=
-                              Definition.Get_RO (Data.Extended).Instance_Of;
-                        end if;
+                        Data.Extended.Include (Extended_View);
+                        Data.Extended_Root := Extended_View;
                      end if;
                   end;
                end if;
             end;
 
-         elsif Aggregate.Is_Defined then
-            --  View is already defined, but if the project is re-referenced
-            --  from an aggregate library, we need to update the aggregate
-            --  field
+         elsif Parent.Is_Defined
+           and then Parent.Kind = K_Aggregate_Library
+         then
+            --  We need to keep track of aggregate libraries
+            --  closure.
 
-            --  ??? Data.Aggregate should be a list, not a single value, so
-            --  that we don't risk overwriting a value
-            Definition.Get_RW (View).Aggregate := Definition.Weak (Aggregate);
+            Propagate_Aggregate_Library (View, Parent.Id);
          end if;
 
          --  At this stage the view is complete. Update mappings
@@ -2087,38 +2456,8 @@ package body GPR2.Project.Tree is
          declare
             use IDS;
             Unique_ID   : constant View_Id := View.Id;
-            Instance_Of : constant View_Id := View.Instance_Of;
          begin
-            pragma Assert (Unique_ID /= Null_View_Id);
-            pragma Assert (Instance_Of /= Null_View_Id);
-
-            --  Update View_Instances mapping
-
-            if View.Tree.View_Instances.Contains (Instance_Of) then
-               --  An instance is already registed
-               declare
-                  Previous_View : constant GPR2.Project.View.Object :=
-                     View.Tree.View_Instances.Element (Instance_Of);
-               begin
-                  if View.Is_Extension_Of (Previous_View) then
-                     --  If the current view is an extension of the previously
-                     --  registered extension, then the current view is now
-                     --  the official instance.
-
-                     View.Tree.View_Instances.Include (Instance_Of, View);
-
-                  elsif not View.Is_Extended_By (Previous_View) then
-                     --  If the current view is not extendedby the previous and
-                     --  not an extension of it then it means that the project
-                     --  structure leads to incompatible instances of a view.
-                     --  In that case raise an error.
-
-                     raise Project_Error with "invalid structure";
-                  end if;
-               end;
-            else
-               View.Tree.View_Instances.Include (Instance_Of, View);
-            end if;
+            pragma Assert (Is_Defined (Unique_ID));
 
             --  Finally update the DAG structure that will define the
             --  processing order for the views.
@@ -2126,33 +2465,40 @@ package body GPR2.Project.Tree is
             declare
                Predecessors : GPR2.View_Ids.Set.Object;
             begin
-               if View.Has_Imports then
-                  for Import of View.Imports loop
-                     Predecessors.Include (Import.Instance_Of);
-                  end loop;
-               end if;
+               for Import of View.Imports loop
+                  Predecessors.Include (Import.Id);
+               end loop;
 
                View.Tree.View_DAG.Update_Vertex
-                  (Vertex       => Instance_Of,
-                   Predecessors => Predecessors);
+                 (Vertex       => Unique_ID,
+                  Predecessors => Predecessors);
             end;
 
             --  Add aggregate dependency
 
-            if not Parent.Is_Defined and then Aggregate.Is_Defined then
-               View.Tree.View_DAG.Update_Vertex
-                  (Vertex      => Aggregate.Instance_Of,
-                   Predecessor => Instance_Of);
+            if Status = Aggregated then
+               --  inclusion of a project by an aggregate/aggregate library
+               --  project
+
+               if Parent.Is_Defined then
+                  View.Tree.View_DAG.Update_Vertex
+                    (Vertex      => Parent.Id,
+                     Predecessor => Unique_ID);
+               else
+                  --  Inclusion from the root aggregate project
+
+                  View.Tree.View_DAG.Update_Vertex
+                    (Vertex      => Aggregate.Id,
+                     Predecessor => Unique_ID);
+               end if;
             end if;
 
             --  Add dependency on extended if not a "extends all"
 
-            if View.Is_Extending
-              and then View.Extended.Instance_Of /= Instance_Of
-            then
+            if View.Is_Extending then
                View.Tree.View_DAG.Update_Vertex
-                  (Vertex      => Instance_Of,
-                   Predecessor => View.Extended.Instance_Of);
+                  (Vertex      => Unique_ID,
+                   Predecessor => View.Extended_Root.Id);
             end if;
          end;
 
@@ -2181,7 +2527,7 @@ package body GPR2.Project.Tree is
                      GPR2.Project.Search_Paths (Filename, Search_Path);
          Project : constant Parser.Project.Object :=
                      Parser.Project.Parse
-                       (Filename, Self.Implicit_With, Messages);
+                       (Filename, Self.Implicit_With, Self.Messages);
          Data    : Definition.Data;
       begin
          Data.Trees.Project := Project;
@@ -2193,7 +2539,7 @@ package body GPR2.Project.Tree is
 
          --  Do the following only if there are no error messages
 
-         if not Messages.Has_Error then
+         if not Self.Messages.Has_Error then
             Data.Kind := Project.Qualifier;
             Data.Externals := Data.Trees.Project.Externals;
 
@@ -2208,14 +2554,16 @@ package body GPR2.Project.Tree is
                      Data.Trees.Imports.Insert
                        (Import_Filename,
                         Parser.Project.Parse
-                          (Import_Filename, Self.Implicit_With, Messages));
+                          (Import_Filename,
+                           Self.Implicit_With,
+                           Self.Messages));
 
                   else
-                     Add_Paths_Messages;
-
-                     Messages.Append
+                     Self.Messages.Append
                        (GPR2.Message.Create
-                          (Level   => Message.Error,
+                          (Level   => (if Self.Pre_Conf_Mode
+                                       then Message.Warning
+                                       else Message.Error),
                            Message => "imported project file """
                                         & String (Import.Path_Name.Name)
                                         & """ not found",
@@ -2235,13 +2583,13 @@ package body GPR2.Project.Tree is
                begin
                   if Extended_Filename.Exists then
                      Data.Trees.Extended := Parser.Project.Parse
-                        (Extended_Filename, Self.Implicit_With, Messages);
+                        (Extended_Filename, Self.Implicit_With, Self.Messages);
                   else
-                     Add_Paths_Messages;
-
-                     Messages.Append
+                     Self.Messages.Append
                        (GPR2.Message.Create
-                          (Level   => Message.Error,
+                          (Level   => (if Self.Pre_Conf_Mode
+                                       then Message.Warning
+                                       else Message.Error),
                            Message => "extended project file """
                                         & String (Extended_Name)
                                         & """ not found",
@@ -2254,37 +2602,178 @@ package body GPR2.Project.Tree is
          return Data;
       end Load;
 
+      ---------------------------------
+      -- Propagate_Aggregate_Library --
+      ---------------------------------
+
+      procedure Propagate_Aggregate_Library
+        (View        : in out GPR2.Project.View.Object;
+         Agg_Library : GPR2.View_Ids.View_Id)
+      is
+         Data : constant GPR2.Project.Definition.Ref :=
+                  Definition.Get_RW (View);
+         Position : GPR2.View_Ids.Set.Set.Cursor;
+         Inserted : Boolean;
+      begin
+         Data.Agg_Libraries.Insert (Agg_Library, Position, Inserted);
+
+         if not Inserted then
+            return;
+         end if;
+
+         if Data.Extended_Root.Is_Defined then
+            Propagate_Aggregate_Library (Data.Extended_Root, Agg_Library);
+         end if;
+
+         for Import of Data.Imports loop
+            Propagate_Aggregate_Library (Import, Agg_Library);
+         end loop;
+
+         for Import of Data.Limited_Imports loop
+            Propagate_Aggregate_Library (Import, Agg_Library);
+         end loop;
+      end Propagate_Aggregate_Library;
+
    begin
       if Starting_From.Is_Defined
         and then Starting_From.Check_Attribute (PRA.Project_Path, Result => PP)
       then
-         for P of PP.Values loop
-            Search_Path.Append
-              (Path_Name.Create_Directory
-                 (Filename_Type (P.Text),
-                  Filename_Type (Starting_From.Dir_Name.Value)));
-         end loop;
+         declare
+            Prepend : Boolean := False;
+            Path    : Path_Name.Object;
+         begin
+            for P of PP.Values loop
+               if P.Text = "-" then
+                  Prepend := True;
+               else
+                  Path := Path_Name.Create_Directory
+                    (Filename_Type (P.Text),
+                     Filename_Type (Starting_From.Dir_Name.Value));
+
+                  if Prepend then
+                     Search_Path.Prepend (Path);
+                  else
+                     Search_Path.Append (Path);
+                  end if;
+               end if;
+            end loop;
+         end;
       end if;
 
-      if Context = Aggregate then
-         --  Aggregate project only: aggregate libraries are handled
-         --  differently as they do not use an aggregate context.
+      declare
+         Aggregate : GPR2.Project.View.Object;
+         Parent    : GPR2.Project.View.Object;
+         Status    : Relation_Status;
+         Result    : View.Object;
 
-         return Internal
-           (Filename  => Filename,
-            Aggregate => Starting_From,
-            Status    => Root,
-            Parent    => GPR2.Project.View.Undefined);
+      begin
+         if Context = GPR2.Context.Aggregate then
+            --  In the closure of an aggregate project.
 
-      else
-         return Internal
-           (Filename  => Filename,
-            Aggregate => Starting_From,
-            Status    => (if Starting_From.Is_Defined
-                          then Aggregate_Lib
-                          else Root),
-            Parent    => Starting_From);
-      end if;
+            --  Take care of nested aggregates: only the root aggregate project
+            --  defines the context.
+
+            if Starting_From.Context = Root then
+               --  Starting_From is the root aggregate project, and the view
+               --  being loaded will thus define a new namespace for its
+               --  subtree.
+
+               Aggregate := Starting_From;
+               Parent    := GPR2.Project.View.Undefined;
+               Status    := Aggregated;
+
+            else
+               --  Nested aggregate, or inclusion from an aggregate context:
+               --  we retrieve the Aggregate from the parent view, or
+               --  inclusion from an aggregate context
+
+               Parent    := Starting_From;
+
+               if Parent.Kind in Aggregate_Kind then
+                  Aggregate := Parent;
+                  Status    := Aggregated;
+               else
+                  Aggregate := GPR2.Project.View.Undefined;
+                  Status    := Simple;
+               end if;
+            end if;
+
+         else
+            --  Root context: no aggregate project
+
+            Aggregate := GPR2.Project.View.Undefined;
+            Parent    := Starting_From;
+
+            --  Parent may be an aggregate library project, we need to set
+            --  the status to Aggregate in this case
+            if not Parent.Is_Defined then
+               Status := Root;
+
+            elsif Parent.Kind in Aggregate_Kind then
+               Status := Aggregated;
+
+            else
+               Status := Simple;
+            end if;
+         end if;
+
+         Result := Internal
+           (Filename    => Filename,
+            Aggregate   => Aggregate,
+            Status      => Status,
+            Parent      => Parent,
+            Extends_Ctx => View.Vector.Empty_Vector);
+
+         --  Update the DAG with the newly loaded tree.
+         --
+         --  ??? This is certainly not optimal, in particlar when there's
+         --  a lot of aggregates, potentially nested, in the final tree, as
+         --  Recursive_Load will be called for each aggregated project. However
+         --  that's convenient to do it there as we have a single entry point
+         --  to handle circularity issues. If performance becomes an issue, we
+         --  would need to move this DAG update to the upper level to have a
+         --  smarter handling of aggregated projects, so in Set_Context and
+         --  Load (and of course we need to propagate the list to this upper
+         --  level handling)
+
+         declare
+            Cycle       : GPR2.View_Ids.Vector.Object;
+            Prev        : View.Object;
+            Current     : View.Object;
+            Circularity : Boolean;
+         begin
+            Self.View_DAG.Update (Circularity);
+
+            if Circularity then
+               Cycle := Self.View_DAG.Shortest_Circle;
+               Self.Messages.Append
+                 (Message.Create
+                    (Message.Error, "circular dependency detected",
+                     Source_Reference.Create
+                       (Filename.Value, 0, 0)));
+
+               Prev := View.Undefined;
+
+               for Id of reverse Cycle loop
+                  Current := Self.Instance_Of (Id);
+
+                  if Prev.Is_Defined then
+                     Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "depends on " &
+                             String (Current.Path_Name.Value),
+                           Source_Reference.Create
+                             (Prev.Path_Name.Value, 0, 0)));
+                  end if;
+
+                  Prev := Current;
+               end loop;
+            end if;
+         end;
+
+         return Result;
+      end;
    end Recursive_Load;
 
    ----------------------------------
@@ -2324,28 +2813,44 @@ package body GPR2.Project.Tree is
       end Add_View;
 
    begin
-      if Def.Tree.Views_Set.Is_Empty then
-         Def.Id := 1;
-      else
-         Def.Id := Definition.Get_RO (Def.Tree.Views_Set.Last_Element).Id + 1;
-      end if;
+      --  Is the Id actually needed here?
+      Def.Id := Natural (Def.Tree.Views_Set.Length) + 1;
 
+      --  Populate the view with its definitions
       Definition.Set (View, Def);
 
+      --  Ensure Views_Set and View_Ids know about it
       Def.Tree.Views_Set.Insert (View);
 
       pragma Assert (Definition.Refcount (View) = 2);
 
-      Add_View (Path_Name.To_OS_Case (View.Path_Name.Value));
+      Def.Tree.View_Ids.Include (Def.Unique_Id, View);
 
       pragma Assert (Definition.Refcount (View) = 3);
 
-      Add_View (To_Lower (View.Name));
+      Add_View (Path_Name.To_OS_Case (View.Path_Name.Value));
 
       pragma Assert (Definition.Refcount (View) = 4);
 
+      Add_View (To_Lower (View.Name));
+
+      pragma Assert (Definition.Refcount (View) = 5);
+
       return View;
    end Register_View;
+
+   ------------------
+   -- Reindex_Unit --
+   ------------------
+
+   procedure Reindex_Unit (Self : in out Object; From, To : Name_Type) is
+      C : constant Name_View.Cursor := Self.Units.Find (From);
+   begin
+      if Name_View.Has_Element (C) then
+         Self.Units.Include (To, Name_View.Element (C));
+         Self.Units.Delete (From);
+      end if;
+   end Reindex_Unit;
 
    -------------------
    -- Remove_Source --
@@ -2413,7 +2918,7 @@ package body GPR2.Project.Tree is
            Check_Extended => True,
            Result         => TA)
       then
-         return Name_Type (TA.Value.Text);
+         return Optional_Name_Type (TA.Value.Text);
 
       else
          return No_Name;
@@ -2494,8 +2999,7 @@ package body GPR2.Project.Tree is
       -- Set_View --
       --------------
 
-      procedure Set_View (View : Project.View.Object)
-      is
+      procedure Set_View (View : Project.View.Object) is
          use type GPR2.Context.Binary_Signature;
 
          P_Data        : constant Definition.Ref := Definition.Get (View);
@@ -2688,7 +3192,7 @@ package body GPR2.Project.Tree is
             end if;
 
             if View.Is_Extending
-              and then not Is_Implicitly_Abstract (View.Extended)
+              and then not Is_Implicitly_Abstract (View.Extended_Root)
             then
                --  Project extending non abstract one is not abstract
 
@@ -2712,23 +3216,19 @@ package body GPR2.Project.Tree is
             P_Data.Attrs,
             P_Data.Vars,
             P_Data.Packs,
-            P_Data.Types);
+            P_Data.Types,
+            Self.Pre_Conf_Mode);
 
          if View.Qualifier not in Aggregate_Kind then
-            if P_Data.Attrs.Contains (PRA.Project_Files) then
-               Self.Error
-                  ("""project_files"" is only valid in aggregate projects",
-                   P_Data.Attrs.Element (PRA.Project_Files));
-            else
-               New_Signature := View.Context.Signature (P_Data.Externals);
-            end if;
+            New_Signature := View.Context.Signature (P_Data.Externals);
 
          elsif not P_Data.Attrs.Contains (PRA.Project_Files) then
             --  Aggregate project must have Project_Files attribute
+
             Self.Error
-               ("Attribute ""project_files"" must be specified in"
-                & " aggregate project",
-                Source_Reference.Create (View.Path_Name.Value, 0, 0));
+              ("Attribute ""project_files"" must be specified in"
+               & " aggregate project",
+               Source_Reference.Create (View.Path_Name.Value, 0, 0));
 
          else
             --  If an aggregate project and an attribute external is defined
@@ -2793,72 +3293,66 @@ package body GPR2.Project.Tree is
             Paths.Append (View.Path_Name);
 
             for Project of P_Data.Attrs.Element (PRA.Project_Files).Values loop
-               for Pathname of Get_Matching_Files (Project) loop
-                  if Pathname = View.Path_Name then
-                     --  We are loading recursively the aggregate project
-                     --  As in GPR1 ignore it.
-                     null;
+               declare
+                  Found : Boolean := False;
+               begin
+                  for Pathname of Get_Matching_Files (Project) loop
+                     if Pathname = View.Path_Name then
+                        --  We are loading recursively the aggregate project
+                        --  As in GPR1 ignore it.
 
-                  elsif P_Data.Aggregated.Contains
-                    (Name_Type (Pathname.Value))
-                  then
-                     --  Duplicate in the project_files attribute
+                        Found := True;
 
-                     Self.Messages.Append
-                       (Message.Create
-                          (Message.Warning,
-                           "duplicate aggregated project "
-                           & String (Pathname.Base_Name),
-                           Project));
+                     elsif P_Data.Aggregated.Contains
+                       (Name_Type (Pathname.Value))
+                     then
+                        --  Duplicate in the project_files attribute
 
-                  elsif Pathname.Exists then
-                     declare
-                        Messages      : Log.Object;
-                        Context       : constant Context_Kind :=
-                                          (if View.Kind = K_Aggregate_Library
-                                           then Root
-                                           else Aggregate);
-                        View_Context  : GPR2.Context.Object :=
-                                          (if Context = Aggregate
-                                           then Self.Context (Aggregate)
-                                           else View.Context);
-                        A_View        : constant GPR2.Project.View.Object :=
-                                          Recursive_Load
-                                            (Self          => Self,
-                                             Filename      => Pathname,
-                                             Context       => Context,
-                                             Root_Context  => View_Context,
-                                             Messages      => Messages,
-                                             Starting_From => View);
-                     begin
-                        --  If there was error messages during the parsing of
-                        --  the aggregated project, just return now.
+                        Self.Messages.Append
+                          (Message.Create
+                             (Message.Warning,
+                              "duplicate aggregated project "
+                              & String (Pathname.Base_Name),
+                              Project));
+                        Found := True;
 
-                        if Messages.Has_Error then
-                           Self.Error ("aggregate " & Project.Text, Project);
+                     elsif Pathname.Exists then
+                        declare
+                           Context : constant Context_Kind :=
+                                       (if View.Kind = K_Aggregate_Library
+                                        then Definition.Get_RO
+                                          (View).Context
+                                        else Aggregate);
+                           A_View  : constant GPR2.Project.View.Object :=
+                                       Recursive_Load
+                                         (Self          => Self,
+                                          Filename      => Pathname,
+                                          Context       => Context,
+                                          Starting_From => View);
+                        begin
+                           --  If there was error messages during the parsing
+                           --  of the aggregated project, just exit now.
 
-                           --  And copy back all messages from the recursive
-                           --  load routine above.
+                           if Self.Messages.Has_Error then
+                              raise Project_Error
+                                with Pathname.Value;
+                           end if;
 
-                           for M of Messages loop
-                              Self.Messages.Append (M);
-                           end loop;
+                           --  Record aggregated view into the aggregate's view
 
-                           return;
-                        end if;
+                           P_Data.Aggregated.Insert
+                             (Name_Type (Pathname.Value), A_View);
+                        end;
 
-                        --  Record aggregated view into the aggregate's view
+                        Found := True;
+                     end if;
+                  end loop;
 
-                        P_Data.Aggregated.Insert
-                          (Name_Type (Pathname.Value), A_View);
-                     end;
-
-                  else
+                  if not Found then
                      Self.Error
-                        ("file """ & Project.Text & """ not found", Project);
-                     exit;
+                       ("file """ & Project.Text & """ not found", Project);
                   end if;
-               end loop;
+               end;
             end loop;
 
             New_Signature := View.Context.Signature (P_Data.Externals);
@@ -2921,7 +3415,7 @@ package body GPR2.Project.Tree is
                      P_Data.Kind := K_Library;
                   end if;
 
-               elsif View.Is_Extending and then View.Extended.Is_Library
+               elsif View.Is_Extending and then View.Extended_Root.Is_Library
                  and then P_Data.Trees.Project.Explicit_Qualifier
                then
                   Self.Messages.Append
@@ -2936,8 +3430,12 @@ package body GPR2.Project.Tree is
             --  That is if there is at least some external used otherwise the
             --  project is stable and won't change.
 
-            if Changed /= null and then Old_Signature /= New_Signature then
-               Changed (View);
+            if Old_Signature /= New_Signature then
+               if Changed /= null then
+                  Changed (View);
+               end if;
+
+               Self.Invalidate_Sources (View);
             end if;
          end if;
       end Set_View;
@@ -2972,12 +3470,10 @@ package body GPR2.Project.Tree is
             end if;
 
             if Def.Value = PRA.Single and then A.Kind = PRA.List then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "attribute """ & String (A.Name.Text)
-                     & """ cannot be a list",
-                     A));
+               Self.Error
+                 ("attribute """ & String (A.Name.Text)
+                  & """ cannot be a list",
+                  A);
 
                if A.Name.Text = PRA.Object_Dir then
                   Check_Object_Dir_Exists := False;
@@ -2987,12 +3483,10 @@ package body GPR2.Project.Tree is
             end if;
 
             if Def.Value = PRA.List and then A.Kind = PRA.Single then
-               Self.Messages.Append
-                 (Message.Create
-                    (Message.Error,
-                     "attribute """ & String (A.Name.Text)
-                     & """ must be a list",
-                     A.Value));
+               Self.Error
+                 ("attribute """ & String (A.Name.Text)
+                  & """ must be a list",
+                  A.Value);
             end if;
          end Check_Def;
 
@@ -3007,12 +3501,10 @@ package body GPR2.Project.Tree is
                --  Check the package itself
 
                if not Registry.Pack.Is_Allowed_In (P.Name, P_Kind) then
-                  Self.Messages.Append
-                    (Message.Create
-                       (Message.Error,
-                        "package """ & String (P.Name)
-                        & """ cannot be used in " & Image (P_Kind) & 's',
-                        P));
+                  Self.Warning
+                    ("package """ & String (P.Name)
+                     & """ cannot be used in " & Image (P_Kind) & 's',
+                     P);
                end if;
 
                --  Check package's attributes
@@ -3027,25 +3519,20 @@ package body GPR2.Project.Tree is
                         Def := PRA.Get (Q_Name);
 
                         if not Def.Is_Allowed_In (P_Kind) then
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "attribute """ & String (A.Name.Text)
-                                 & """ cannot be used in package "
-                                 & String (P.Name),
-                                 A));
+                           Self.Warning
+                             ("attribute """ & PRA.Image (Q_Name)
+                              & """ cannot be used in " & Image (P_Kind),
+                              A);
                         end if;
 
                         Check_Def (Def, A);
 
                      elsif PRP.Attributes_Are_Checked (P.Name) then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              "attribute """ & String (A.Name.Text)
-                              & """ not supported in package "
-                              & String (P.Name),
-                              A));
+                        Self.Warning
+                          ("attribute """ & String (A.Name.Text)
+                           & """ not supported in package "
+                           & String (P.Name),
+                           A);
                      end if;
                   end;
                end loop;
@@ -3089,24 +3576,20 @@ package body GPR2.Project.Tree is
                            --  If one or Aggregate_Kind allowed use including
                            --  error message.
 
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 '"' & String (A.Name.Text)
-                                 & """ is only valid in "
-                                 & Image (Allow) & 's',
-                                 A));
+                           Self.Warning
+                             ('"' & String (A.Name.Text)
+                              & """ is only valid in "
+                              & Image (Allow) & 's',
+                              A);
                         else
                            --  If more than one is allowed use excluding
                            --  error message.
 
-                           Self.Messages.Append
-                             (Message.Create
-                                (Message.Error,
-                                 "attribute """ & String (A.Name.Text)
-                                 & """ cannot be used in "
-                                 & Image (P_Kind) & 's',
-                                 A));
+                           Self.Warning
+                             ("attribute """ & String (A.Name.Text)
+                              & """ cannot be used in "
+                              & Image (P_Kind) & 's',
+                              A);
                         end if;
                      end if;
                   end;
@@ -3124,10 +3607,15 @@ package body GPR2.Project.Tree is
                Human_Name    : String;
                Get_Directory : not null access function
                  (Self : Project.View.Object) return Path_Name.Object;
-               Mandatory     : Boolean := False);
+               Mandatory     : Boolean := False;
+               Must_Exist    : Boolean := True);
             --  Check is directory exists and warn if there is try to relocate
             --  absolute path with --relocate-build-tree gpr tool command line
             --  parameter. Similar check for attributes with directory names.
+            --
+            --  Mandatory: when set, check that the attribute is defined.
+            --  Must_Exist: when set, check that the directory exists on the
+            --    filesystem.
 
             Attr : Attribute.Object;
 
@@ -3140,19 +3628,22 @@ package body GPR2.Project.Tree is
                Human_Name    : String;
                Get_Directory : not null access function
                  (Self : Project.View.Object) return Path_Name.Object;
-               Mandatory     : Boolean := False) is
+               Mandatory     : Boolean := False;
+               Must_Exist    : Boolean := True) is
             begin
                if View.Check_Attribute (Attr_Name, Result => Attr) then
                   declare
                      AV : constant Source_Reference.Value.Object := Attr.Value;
                      PN : constant Path_Name.Object := Get_Directory (View);
                   begin
-                     if not PN.Exists then
+                     if Must_Exist
+                       and then not PN.Exists
+                     then
                         Self.Messages.Append
                           (Message.Create
                              ((if Self.Absent_Dir_Error
-                               then Message.Error
-                               else Message.Warning),
+                              then Message.Error
+                              else Message.Warning),
                               (if Human_Name = ""
                                then "D"
                                else Human_Name & " d") & "irectory """
@@ -3165,12 +3656,12 @@ package body GPR2.Project.Tree is
                         Self.Messages.Append
                           (Message.Create
                              (Message.Warning,
-                              '"'
+                                  '"'
                               & PN.Relative_Path (Self.Root.Path_Name).Value
                               & """ cannot relocate absolute "
                               & (if Human_Name = ""
-                                 then ""
-                                 else Human_Name & ' ')
+                                then ""
+                                else Human_Name & ' ')
                               & "directory",
                               Sloc => AV));
                      end if;
@@ -3191,49 +3682,24 @@ package body GPR2.Project.Tree is
             then
                Check_Directory
                  (PRA.Object_Dir, "object",
-                  Project.View.Object_Directory'Access);
+                  Project.View.Object_Directory'Access,
+                  Must_Exist => not View.Is_Aggregated_In_Library
+                                  and then not View.Is_Extended);
             end if;
 
             if View.Is_Library then
-               --  Library_Version attribute has no effect on Windows
-
-               if not View.Tree.Is_Windows_Target
-                 and then View.Is_Shared_Library
-                 and then View.Check_Attribute
-                            (PRA.Library_Version,
-                             Check_Extended => True, Result => Attr)
-               then
-                  declare
-                     AV      : constant Source_Reference.Value.Object :=
-                                 Attr.Value;
-                     Lib_Ver : constant Value_Type := AV.Text;
-                     Lib_Fn  : constant Value_Type :=
-                                 Value_Type (View.Library_Filename.Name);
-                  begin
-                     if not GNATCOLL.Utils.Starts_With (Lib_Ver, Lib_Fn)
-                       or else not Regexp.Match
-                         (Lib_Ver
-                            (Lib_Ver'First + Lib_Fn'Length .. Lib_Ver'Last),
-                          Version_Regexp)
-                     then
-                        Self.Messages.Append
-                          (Message.Create
-                             (Message.Error,
-                              '"' & Lib_Ver
-                              & """ not correct format for Library_Version",
-                              Sloc => AV));
-                     end if;
-                  end;
-               end if;
-
                Check_Directory
                  (PRA.Library_Dir, "library",
                   Project.View.Library_Directory'Access,
-                  Mandatory => True);
+                  Mandatory  => True,
+                  Must_Exist => not View.Is_Aggregated_In_Library
+                                  and then not View.Is_Extended);
 
                Check_Directory
                  (PRA.Library_Ali_Dir, "library ALI",
-                  Project.View.Library_Ali_Directory'Access);
+                  Project.View.Library_Ali_Directory'Access,
+                  Must_Exist => not View.Is_Aggregated_In_Library
+                                  and then not View.Is_Extended);
 
                if View.Has_Library_Interface
                  or else View.Has_Attributes (PRA.Interfaces)
@@ -3271,7 +3737,8 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "cannot aggregate externally built project """
                               & String (Agg.Name) & '"',
-                              Sloc => View.Attribute (PRA.Project_Files)));
+                              Sloc => View.Attribute_Location
+                                        (PRA.Project_Files)));
                      end if;
                   end loop;
 
@@ -3286,7 +3753,8 @@ package body GPR2.Project.Tree is
                                 (Message.Error,
                                  "can only import abstract projects, not """
                                  & String (Imported.Name) & '"',
-                                 Sloc => View.Attribute (PRA.Project_Files)));
+                                 Sloc => View.Attribute_Location
+                                           (PRA.Project_Files)));
                         end if;
                      end loop;
                   end if;
@@ -3337,50 +3805,43 @@ package body GPR2.Project.Tree is
          Self.Runtime := Create_Runtime_View (Self);
       end if;
 
+      declare
+         Closure_Found : Boolean := True;
+         Closure       : GPR2.View_Ids.Set.Object;
+         Position      : GPR2.View_Ids.Set.Set.Cursor;
+         Inserted      : Boolean;
       begin
-         declare
-            Closure_Found : Boolean := True;
-            Closure       : GPR2.View_Ids.Set.Object;
-         begin
-            --  First do a pass on the subtree that starts from root of
-            --  projects not part of any aggregates. In case there is an
-            --  aggregate, the root project will be an aggregate and after
-            --  processing that subtree we are sure that aggregate context is
-            --  set correctly.
+         --  First do a pass on the subtree that starts from root of
+         --  projects not part of any aggregates. In case there is an
+         --  aggregate, the root project will be an aggregate and after
+         --  processing that subtree we are sure that aggregate context is
+         --  set correctly.
 
+         for View of Self.Ordered_Views loop
+            if not View.Has_Aggregate_Context then
+               Set_View (View);
+               Closure.Insert (View.Id);
+            end if;
+         end loop;
+
+         --  Now evaluate the remaining views
+
+         loop
             for View of Self.Ordered_Views loop
-               if not View.Has_Aggregate_Context then
+               Closure.Insert (View.Id, Position, Inserted);
+
+               if Inserted then
+                  Closure_Found := False;
                   Set_View (View);
-                  Closure.Insert (View.Id);
                end if;
             end loop;
 
-            --  Now evaluate the remaining views
-
-            loop
-               for View of Self.Ordered_Views loop
-                  if not Closure.Contains (View.Id) then
-                     Closure_Found := False;
-                     Closure.Insert (View.Id);
-                     Set_View (View);
-                  end if;
-               end loop;
-
-               exit when Closure_Found;
-               Closure_Found := True;
-            end loop;
-         end;
-
-      exception
-         when GPR2.View_Ids.DAGs.DAG_Error =>
-            Self.Messages.Append
-               (Message.Create
-                  (Message.Error, "circular dependency detected",
-                   Source_Reference.Create
-                      (Self.Root_Project.Path_Name.Value, 0, 0)));
+            exit when Closure_Found;
+            Closure_Found := True;
+         end loop;
       end;
 
-      if not Has_Error then
+      if not Has_Error and then not Self.Pre_Conf_Mode then
          --  We now have an up-to-date tree, do some validity checks if there
          --  is no issue detected yet.
 
@@ -3389,7 +3850,7 @@ package body GPR2.Project.Tree is
          end loop;
       end if;
 
-      if Has_Error then
+      if Has_Error and then not Self.Pre_Conf_Mode then
          raise Project_Error
            with Self.Root.Path_Name.Value & " semantic error";
       end if;
@@ -3509,10 +3970,10 @@ package body GPR2.Project.Tree is
 
       Self.Units.Clear;
       Self.Sources.Clear;
+      Self.Rooted_Sources.Clear;
       Self.Messages.Clear;
       Self.Views.Clear;
       Self.View_Ids.Clear;
-      Self.View_Instances.Clear;
       Self.View_DAG.Clear;
       Self.Views_Set.Clear;
    end Unload;
@@ -3526,23 +3987,231 @@ package body GPR2.Project.Tree is
       Externals : Containers.Name_List) is
    begin
       for External of Externals loop
-         if not Context.Contains (External) then
-            --  The external is not present in the current context. Try to
-            --  fetch its value from the environment and insert it in the
-            --  context.
+         declare
+            External_Value : constant String :=
+                               Environment_Variables.Value
+                                 (String (External), "");
+            Position : GPR2.Context.Key_Value.Cursor;
+            Inserted : Boolean;
+         begin
+            if External_Value /= "" then
+               --  The external is not present in the current context. Try to
+               --  fetch its value from the environment and insert it in the
+               --  context.
 
-            declare
-               External_Value : constant String :=
-                                  Environment_Variables.Value
-                                    (String (External), "");
-            begin
-               if External_Value /= "" then
-                  Context.Insert (External, External_Value);
-               end if;
-            end;
-         end if;
+               Context.Insert
+                 (External, External_Value, Position, Inserted);
+            end if;
+         end;
       end loop;
    end Update_Context;
+
+   --------------------------------------------
+   -- Update_Project_Search_Path_From_Config --
+   --------------------------------------------
+
+   procedure Update_Project_Search_Path_From_Config
+     (Self : in out Object;
+      Conf : Project.Configuration.Object)
+   is
+      use OS_Lib;
+      Compiler     : Project.Pack.Object;
+      Drivers      : Attribute.Set.Object;
+
+      PATH         : constant String := Environment_Variables.Value ("PATH");
+      PATH_Subs    : String_Split.Slice_Set;
+
+      Given_Target : Project.Attribute.Object;
+      Canon_Target : Project.Attribute.Object;
+      Canon_Set    : Boolean := False;
+      Given_Set    : Boolean := False;
+
+      function Is_Bin_Path (T_Path : String) return Boolean;
+
+      procedure Append (Dir : String);
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append (Dir : String) is
+      begin
+         Self.Search_Paths.Append
+           (Path_Name.Create_Directory (Filename_Type (Dir)));
+      end Append;
+
+      -----------------
+      -- Is_Bin_Path --
+      -----------------
+
+      function Is_Bin_Path (T_Path : String) return Boolean
+      is
+      begin
+         return Directories.Simple_Name (T_Path) = "bin";
+      exception
+         when Ada.IO_Exceptions.Name_Error =>
+            return False;
+      end Is_Bin_Path;
+
+   begin
+      if not Conf.Is_Defined then
+         return;
+      end if;
+
+      if Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
+         Compiler :=
+           Conf.Corresponding_View.Packages.Element (Registry.Pack.Compiler);
+      else
+         return;
+      end if;
+
+      if Conf.Corresponding_View.Check_Attribute
+        (Name           => Registry.Attribute.Canonical_Target,
+         Result         => Canon_Target)
+      then
+         Canon_Set := True;
+      end if;
+
+      if Conf.Corresponding_View.Check_Attribute
+        (Name           => Registry.Attribute.Target,
+         Result         => Given_Target)
+      then
+         Given_Set := True;
+      end if;
+
+      String_Split.Create
+        (PATH_Subs,
+         PATH,
+         (1 => Path_Separator),
+         String_Split.Multiple);
+
+      Drivers := Compiler.Attributes (Registry.Attribute.Driver);
+
+      --  We need to arrange toolchains in the order of appearance on PATH
+      for Sub of PATH_Subs loop
+
+         if Is_Bin_Path (Sub) then
+
+            for Driver of Drivers loop
+               if Driver.Value.Text = "" then
+                  goto Next_Driver;
+               end if;
+
+               declare
+                  Driver_Dir    : constant String :=
+                                    Normalize_Pathname
+                                      (Directories.Containing_Directory
+                                         (String (Driver.Value.Text)),
+                                       Case_Sensitive => False);
+                  Toolchain_Dir : constant String :=
+                                    Directories.Containing_Directory
+                                      (Driver_Dir);
+                  Index         : constant Name_Type :=
+                                    Name_Type (Driver.Index.Value);
+               begin
+
+                  if Driver_Dir =
+                    Normalize_Pathname (Sub, Case_Sensitive => False)
+                  then
+
+                     if Given_Set then
+
+                        --  We only care for runtime if it is a simple name.
+                        --  Runtime specific names go with explicitly specified
+                        --  target (if it has been specifed).
+                        if Conf.Runtime (Index) /= No_Name
+                          and then not
+                            (for some C of Conf.Runtime (Index) =>
+                                    C in '/' | '\')
+                        then
+
+                           Append
+                             (Toolchain_Dir
+                              & Directory_Separator
+                              & (String (Given_Target.Value.Text))
+                              & Directory_Separator
+                              & String (Conf.Runtime (Index))
+                              & Directory_Separator
+                              & "share"
+                              & Directory_Separator
+                              & "gpr");
+                           Append
+                             (Toolchain_Dir
+                              & Directory_Separator
+                              & (String (Given_Target.Value.Text))
+                              & Directory_Separator
+                              & String (Conf.Runtime (Index))
+                              & Directory_Separator
+                              & "lib"
+                              & Directory_Separator
+                              & "gnat");
+                        end if;
+
+                        --  Explicitly specified target may be not in canonical
+                        --  form.
+
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Given_Target.Value.Text))
+                           & Directory_Separator
+                           & "share"
+                           & Directory_Separator
+                           & "gpr");
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Given_Target.Value.Text))
+                           & Directory_Separator
+                           & "lib"
+                           & Directory_Separator
+                           & "gnat");
+                     end if;
+
+                     if Canon_Set then
+                        --  Old cgpr files can miss Canonical_Target
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Canon_Target.Value.Text))
+                           & Directory_Separator
+                           & "share"
+                           & Directory_Separator
+                           & "gpr");
+                        Append
+                          (Toolchain_Dir
+                           & Directory_Separator
+                           & (String (Canon_Target.Value.Text))
+                           & Directory_Separator
+                           & "lib"
+                           & Directory_Separator
+                           & "gnat");
+                     end if;
+
+                     Append
+                       (Toolchain_Dir
+                        & Directory_Separator
+                        & "share"
+                        & Directory_Separator
+                        & "gpr");
+                     Append
+                       (Toolchain_Dir
+                        & Directory_Separator
+                        & "lib"
+                        & Directory_Separator
+                        & "gnat");
+
+                  end if;
+               end;
+
+               <<Next_Driver>>
+            end loop;
+
+         end if;
+
+      end loop;
+
+   end Update_Project_Search_Path_From_Config;
 
    --------------------
    -- Update_Sources --
@@ -3552,17 +4221,36 @@ package body GPR2.Project.Tree is
      (Self          : Object;
       Stop_On_Error : Boolean := True;
       With_Runtime  : Boolean := False;
-      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends) is
+      Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
+   is
+      use type Source_Info.Backend_Set;
+      Internal : constant Boolean := Backends = Source_Info.No_Backends;
+      Was_RT   : Boolean := False;
    begin
-      Self.Self.Rooted_Sources.Clear;
+      if not Internal then
+         Self.Self.Rooted_Sources.Clear;
+         Self.Self.Sources_Loaded := True;
+      end if;
 
-      for V of Self.Views_Set loop
+      for V of reverse Self.Ordered_Views loop
+         if V.Is_Runtime then
+            Was_RT := True;
+         end if;
+
          if With_Runtime or else not V.Is_Runtime then
             Definition.Get (V).Update_Sources (V, Stop_On_Error, Backends);
          end if;
       end loop;
 
-      if Self.Check_Shared_Lib then
+      if With_Runtime and then not Was_RT and then Self.Runtime.Is_Defined then
+         --  Runtime update sources is required, but runtime project is not in
+         --  the Self.Ordered_Views.
+
+         Definition.Get (Self.Runtime).Update_Sources
+           (Self.Runtime, Stop_On_Error, Backends);
+      end if;
+
+      if not Internal and then Self.Check_Shared_Lib then
          for View of Self.Views_Set loop
             declare
                procedure Check_Shared_Lib (PV : Project.View.Object);
@@ -3581,6 +4269,16 @@ package body GPR2.Project.Tree is
                     (V : Project.View.Object) return Boolean;
                   --  Returns True if V has Ada sources or non ada bodies
 
+                  function Source_Loc
+                    (Imp : Project.View.Object)
+                     return Source_Reference.Object'Class;
+                  --  Returns a source location for the import.
+                  --
+                  --  Can't rely on P_Data.Trees.Project.Imports as
+                  --  in case of extended projects the import may be
+                  --  implicit, so retrieval of the source location is not
+                  --  easy.
+
                   ---------------------------
                   -- Has_Essential_Sources --
                   ---------------------------
@@ -3588,7 +4286,7 @@ package body GPR2.Project.Tree is
                   function Has_Essential_Sources
                     (V : Project.View.Object) return Boolean is
                   begin
-                     for S of V.Sources (Need_Update => False) loop
+                     for S of V.Sources loop
                         if S.Source.Language = "Ada"
                           or else S.Source.Kind not in GPR2.Unit.Spec_Kind
                         then
@@ -3598,6 +4296,23 @@ package body GPR2.Project.Tree is
 
                      return False;
                   end Has_Essential_Sources;
+
+                  function Source_Loc
+                    (Imp : Project.View.Object)
+                     return Source_Reference.Object'Class
+                  is
+                     Imports  : constant Project.Import.Set.Object :=
+                                  P_Data.Trees.Project.Imports;
+                     Position : constant Project.Import.Set.Cursor :=
+                                  Imports.Find (Imp.Path_Name);
+                  begin
+                     if Project.Import.Set.Has_Element (Position) then
+                        return Project.Import.Set.Element (Position);
+                     else
+                        return Source_Reference.Create
+                          (P_Data.Trees.Project.Path_Name.Value, 0, 0);
+                     end if;
+                  end Source_Loc;
 
                begin
                   for Imp of P_Data.Imports loop
@@ -3616,8 +4331,7 @@ package body GPR2.Project.Tree is
                               & """ cannot import project """
                               & String (Imp.Name)
                               & """ that is not a shared library project",
-                              P_Data.Trees.Project.Imports.Element
-                                (Imp.Path_Name)));
+                              Source_Loc (Imp)));
 
                      elsif Imp.Is_Static_Library
                        and then View.Library_Standalone /= Encapsulated
@@ -3625,11 +4339,11 @@ package body GPR2.Project.Tree is
                         Self.Self.Messages.Append
                           (Message.Create
                              (Message.Error,
-                              "shared library project """ & String (View.Name)
+                              "shared library project """ &
+                                String (View.Name)
                               & """ cannot import static library project """
                               & String (Imp.Name) & '"',
-                              P_Data.Trees.Project.Imports.Element
-                                (Imp.Path_Name)));
+                              Source_Loc (Imp)));
 
                      elsif Imp.Is_Shared_Library
                        and then View.Library_Standalone = Encapsulated
@@ -3641,8 +4355,7 @@ package body GPR2.Project.Tree is
                               & String (View.Name)
                               & """ cannot import shared library project """
                               & String (Imp.Name) & '"',
-                              P_Data.Trees.Project.Imports.Element
-                                (Imp.Path_Name)));
+                              Source_Loc (Imp)));
                      end if;
                   end loop;
 
@@ -3657,15 +4370,13 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "wrong value for Library_Standalone when"
                               & " Library_Interface defined",
-                              PV.Attribute
+                              PV.Attribute_Location
                                 (Registry.Attribute.Library_Standalone)));
                      end if;
 
                      --  And if a standalone library has interfaces
 
                      if not PV.Has_Any_Interfaces
-                       and then PV.Has_Attributes
-                         (Project.Registry.Attribute.Library_Standalone)
                        and then PV.Library_Standalone /= No
                      then
                         Self.Self.Messages.Append
@@ -3673,15 +4384,28 @@ package body GPR2.Project.Tree is
                              (Message.Error,
                               "Library_Standalone valid only if library"
                               & " has Ada interfaces",
-                              PV.Attribute
+                              PV.Attribute_Location
                                 (Registry.Attribute.Library_Standalone)));
                      end if;
                   end if;
                end Check_Shared_Lib;
 
             begin
-               if View.Is_Library and then View.Is_Shared_Library then
-                  Check_Shared_Lib (View);
+               if View.Is_Library then
+                  if View.Is_Shared_Library then
+                     Check_Shared_Lib (View);
+
+                  elsif View.Library_Standalone = Encapsulated then
+                     --  Static standalone library is not possible
+                     Self.Self.Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "encapsulated library project """ &
+                             String (View.Name) &
+                             """ must be a shared library project",
+                           View.Attribute_Location
+                             (Registry.Attribute.Library_Standalone)));
+                  end if;
                end if;
             end;
          end loop;
@@ -3728,14 +4452,29 @@ package body GPR2.Project.Tree is
       return View;
    end View_For;
 
+   -------------
+   -- Warning --
+   -------------
+
+   procedure Warning
+     (Self : in out Object;
+      Msg  : String;
+      Sloc : Source_Reference.Object'Class) is
+   begin
+      Self.Messages.Append (Message.Create (Message.Warning, Msg, Sloc));
+   end Warning;
+
 begin
    --  Export routines to Definitions to avoid cyclic dependencies
 
-   Definition.Register          := Register_View'Access;
-   Definition.Check_Source      := Check_Source'Access;
-   Definition.Check_Source_Unit := Check_Source'Access;
-   Definition.Has_Source        := Has_Source'Access;
-   Definition.Set_Source        := Set_Source'Access;
-   Definition.Remove_Source     := Remove_Source'Access;
-   Definition.Get_Context       := Get_Context'Access;
+   Definition.Register           := Register_View'Access;
+   Definition.Check_Source       := Check_Source'Access;
+   Definition.Check_Source_Unit  := Check_Source'Access;
+   Definition.Has_Source         := Has_Source'Access;
+   Definition.Set_Source         := Set_Source'Access;
+   Definition.Remove_Source      := Remove_Source'Access;
+   Definition.Get_Context        := Get_Context'Access;
+   Definition.Enable_Ali_Parser  := Enable_Ali_Parser'Access;
+   Definition.Ali_Parser_Is_On   := Ali_Parser_Is_Enabled'Access;
+   Definition.Are_Sources_Loaded := Are_Sources_Loaded'Access;
 end GPR2.Project.Tree;

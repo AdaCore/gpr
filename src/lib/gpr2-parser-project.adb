@@ -38,10 +38,10 @@ with Langkit_Support.Text;
 with GPR2.Builtin;
 with GPR2.Message;
 with GPR2.Parser.Registry;
-with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
 with GPR2.Source_Reference.Identifier;
@@ -57,7 +57,9 @@ package body GPR2.Parser.Project is
 
    package PA renames GPR2.Project.Attribute;
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
    package PAI renames GPR2.Project.Attribute_Index;
+   package ASU renames Ada.Strings.Unbounded;
 
    function Is_Builtin_Project_Name (Name : Name_Type) return Boolean is
      (To_Lower (Name) in "project" | "config" | "runtime");
@@ -69,11 +71,23 @@ package body GPR2.Parser.Project is
    --  Returns the Value_Type for the given node
 
    function Get_Name_Type
-     (Node : Single_Tok_Node'Class) return Name_Type;
+     (Node : Single_Tok_Node'Class) return Name_Type
+   is
+     (Name_Type (Get_Value_Type (Node)));
    --  Returns the Name for the given node
 
+   function Get_Name_Type
+     (Node  : GPR_Node'Class;
+      First : Positive := 1;
+      Last  : Positive;
+      Sep   : String := ".") return Name_Type
+       with Pre => Last >= First and then Children_Count (Node) >= Last;
+   --  Returns the Name for the given children of given node
+
    function Get_Filename
-     (Node : Single_Tok_Node'Class) return Filename_Type;
+     (Node : Single_Tok_Node'Class) return Filename_Type
+   is
+     (Filename_Type (Get_Value_Type (Node)));
    --  Returns the Name for the given node
 
    function Present (Node : GPR_Node'Class) return Boolean is
@@ -83,28 +97,48 @@ package body GPR2.Parser.Project is
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range)
-      return Source_Reference.Object;
+      return Source_Reference.Object
+   is
+     (Source_Reference.Object
+        (Source_Reference.Create
+             (Path_Name.Value,
+              Positive (Slr.Start_Line),
+              Positive (Slr.Start_Column))));
 
    function Get_Source_Reference
      (Path_Name : GPR2.Path_Name.Object;
-      Node      : GPR_Node'Class) return Source_Reference.Object;
+      Node      : GPR_Node'Class) return Source_Reference.Object
+   is
+     (Get_Source_Reference (Path_Name, Sloc_Range (Node)));
 
    function Get_Value_Reference
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range;
       Value     : Value_Type;
-      At_Pos    : Natural := 0) return Source_Reference.Value.Object;
+      At_Pos    : Natural := 0) return Source_Reference.Value.Object
+   is
+     (Source_Reference.Value.Object
+        (Source_Reference.Value.Create
+             (Get_Source_Reference (Path_Name, Slr), Value, At_Pos)));
 
    function Get_Value_Reference
-     (Value  : Value_Type;
-      Sloc   : Source_Reference.Object;
-      At_Pos : Natural := 0) return Source_Reference.Value.Object;
+     (Value        : Value_Type;
+      Sloc         : Source_Reference.Object;
+      At_Pos       : Natural := 0;
+      From_Default : Boolean := False) return Source_Reference.Value.Object
+   is
+     (Source_Reference.Value.Object
+        (Source_Reference.Value.Create (Sloc, Value, At_Pos, From_Default)));
 
    function Get_Identifier_Reference
      (Path_Name  : GPR2.Path_Name.Object;
       Slr        : Langkit_Support.Slocs.Source_Location_Range;
       Identifier : Name_Type)
-      return Source_Reference.Identifier.Object;
+      return Source_Reference.Identifier.Object
+   is
+     (Source_Reference.Identifier.Object
+        (Source_Reference.Identifier.Create
+             (Get_Source_Reference (Path_Name, Slr), Identifier)));
 
    function Get_Raw_Path
      (Node : Single_Tok_Node'Class) return GPR2.Path_Name.Object
@@ -124,7 +158,7 @@ package body GPR2.Parser.Project is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
+      Implicit_With : GPR2.Path_Name.Set.Object;
       Messages      : out Log.Object) return Object;
    --  Analyzes the project, recording all external references and imports
 
@@ -146,68 +180,29 @@ package body GPR2.Parser.Project is
       return Self.Externals;
    end Externals;
 
-   ------------------
-   -- Get_Filename --
-   ------------------
-
-   function Get_Filename
-     (Node : Single_Tok_Node'Class) return Filename_Type
-   is
-   begin
-      return Filename_Type (Get_Value_Type (Node));
-   end Get_Filename;
-
-   ------------------------------
-   -- Get_Identifier_Reference --
-   ------------------------------
-
-   function Get_Identifier_Reference
-     (Path_Name  : GPR2.Path_Name.Object;
-      Slr        : Langkit_Support.Slocs.Source_Location_Range;
-      Identifier : Name_Type)
-      return Source_Reference.Identifier.Object
-   is
-   begin
-      return Source_Reference.Identifier.Object
-        (Source_Reference.Identifier.Create
-           (Get_Source_Reference (Path_Name, Slr), Identifier));
-   end Get_Identifier_Reference;
-
    -------------------
    -- Get_Name_Type --
    -------------------
 
    function Get_Name_Type
-     (Node : Single_Tok_Node'Class) return Name_Type
+     (Node  : GPR_Node'Class;
+      First : Positive := 1;
+      Last  : Positive;
+      Sep   : String := ".") return Name_Type
    is
+      Name : ASU.Unbounded_String :=
+               ASU.To_Unbounded_String
+                 (Ada.Characters.Conversions.To_String
+                    (Text (Child (Node, First))));
    begin
-      return Name_Type (Get_Value_Type (Node));
+      for C in First + 1 .. Last loop
+         ASU.Append (Name, Sep);
+         ASU.Append
+           (Name,
+            Ada.Characters.Conversions.To_String (Text (Child (Node, C))));
+      end loop;
+      return Name_Type (ASU.To_String (Name));
    end Get_Name_Type;
-
-   --------------------------
-   -- Get_Source_Reference --
-   --------------------------
-
-   function Get_Source_Reference
-     (Path_Name : GPR2.Path_Name.Object;
-      Node      : GPR_Node'Class) return Source_Reference.Object
-   is
-   begin
-      return Get_Source_Reference (Path_Name, Sloc_Range (Node));
-   end Get_Source_Reference;
-
-   function Get_Source_Reference
-     (Path_Name : GPR2.Path_Name.Object;
-      Slr       : Langkit_Support.Slocs.Source_Location_Range)
-      return Source_Reference.Object
-   is
-   begin
-      return Source_Reference.Object
-        (Source_Reference.Create
-           (Path_Name.Value,
-            Positive (Slr.Start_Line),
-            Positive (Slr.Start_Column)));
-   end Get_Source_Reference;
 
    ------------------------
    -- Get_String_Literal --
@@ -267,32 +262,6 @@ package body GPR2.Parser.Project is
 
       return Value_Type (To_String (Result));
    end Get_String_Literal;
-
-   -------------------------
-   -- Get_Value_Reference --
-   -------------------------
-
-   function Get_Value_Reference
-     (Value  : Value_Type;
-      Sloc   : Source_Reference.Object;
-      At_Pos : Natural := 0) return Source_Reference.Value.Object
-   is
-   begin
-      return Source_Reference.Value.Object
-        (Source_Reference.Value.Create (Sloc, Value, At_Pos));
-   end Get_Value_Reference;
-
-   function Get_Value_Reference
-     (Path_Name : GPR2.Path_Name.Object;
-      Slr       : Langkit_Support.Slocs.Source_Location_Range;
-      Value     : Value_Type;
-      At_Pos    : Natural := 0) return Source_Reference.Value.Object
-   is
-   begin
-      return Source_Reference.Value.Object
-        (Source_Reference.Value.Create
-           (Get_Source_Reference (Path_Name, Slr), Value, At_Pos));
-   end Get_Value_Reference;
 
    --------------------
    -- Get_Value_Type --
@@ -429,7 +398,7 @@ package body GPR2.Parser.Project is
       --  create the project tree and setup the project context.
 
       Project := Parse_Stage_1
-        (Unit, Filename, GPR2.Containers.Empty_Filename_Set, Messages);
+        (Unit, Filename, GPR2.Path_Name.Set.Empty_Set, Messages);
 
       --  Then record langkit tree data with project. Those data will be
       --  used for later parsing when creating view of projects with a
@@ -458,8 +427,8 @@ package body GPR2.Parser.Project is
 
    function Parse
      (Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
-      Messages      : out Log.Object) return Object
+      Implicit_With : GPR2.Path_Name.Set.Object;
+      Messages      : in out Log.Object) return Object
    is
       use Ada.Characters.Conversions;
       use Ada.Strings.Wide_Wide_Unbounded;
@@ -540,9 +509,11 @@ package body GPR2.Parser.Project is
             Project.Name := To_Unbounded_String ("Config");
          end if;
 
-         --  Finaly register this project into the registry
+         --  Finally register this project into the registry
 
-         Registry.Register (Filename, Project);
+         if not Messages.Has_Error then
+            Registry.Register (Filename, Project);
+         end if;
 
          return Project;
       end if;
@@ -555,9 +526,10 @@ package body GPR2.Parser.Project is
    function Parse_Stage_1
      (Unit          : Analysis_Unit;
       Filename      : GPR2.Path_Name.Object;
-      Implicit_With : Containers.Filename_Set;
+      Implicit_With : GPR2.Path_Name.Set.Object;
       Messages      : out Log.Object) return Object
    is
+      use type GPR2.Path_Name.Object;
 
       Project : Object;
       --  The project being constructed
@@ -776,83 +748,16 @@ package body GPR2.Parser.Project is
                     (GPR2.Message.Create
                        (Level   => Message.Error,
                         Sloc    => Get_Source_Reference (Filename, N),
-                        Message =>
-                          "missing parameters for split built-in"));
+                        Message => "missing parameters for split built-in"));
 
-               else
-                  --  We have Split ("STR", "SEP"), check that STR and
-                  --  SEP are actually simple strings.
+               --  Check that the second parameter exists
 
-                  declare
-                     Str_Node : constant Term_List :=
-                                  Child (Exprs, 1).As_Term_List;
-                     Error    : Boolean;
-                     Str      : constant Value_Type :=
-                                  Get_String_Literal (Str_Node, Error);
-                  begin
-                     if Error then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference (Filename, Str_Node),
-                              Message =>
-                                "split first parameter must be "
-                              & "a simple string"));
-
-                     elsif Str = "" then
-                        Messages.Append
-                          (GPR2.Message.Create
-                             (Level   => Message.Error,
-                              Sloc    =>
-                                Get_Source_Reference (Filename, Str_Node),
-                              Message =>
-                                "split first parameter must not "
-                              & "be empty"));
-                     end if;
-                  end;
-
-                  --  Check that the second parameter exists and is a string
-
-                  if Child (Exprs, 2).Is_Null then
-                     Messages.Append
-                       (GPR2.Message.Create
-                          (Level   => Message.Error,
-                           Sloc    =>
-                             Get_Source_Reference (Filename, Exprs),
-                           Message => "split requires a second parameter"));
-                  else
-                     declare
-                        Sep_Node : constant Term_List :=
-                                     Child (Exprs, 2).As_Term_List;
-                        Error    : Boolean;
-                        Sep      : constant Value_Type :=
-                                     Get_String_Literal (Sep_Node, Error);
-                     begin
-                        if Error then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "split separator parameter must "
-                                 & "be a simple string"));
-
-                        elsif Sep = "" then
-                           Messages.Append
-                             (GPR2.Message.Create
-                                (Level   => Message.Error,
-                                 Sloc    =>
-                                   Get_Source_Reference
-                                     (Filename, Sep_Node),
-                                 Message =>
-                                   "split separator parameter must not "
-                                 & "be empty"));
-                        end if;
-                     end;
-                  end if;
+               elsif Child (Exprs, 2).Is_Null then
+                  Messages.Append
+                    (GPR2.Message.Create
+                       (Level   => Message.Error,
+                        Sloc    => Get_Source_Reference (Filename, Exprs),
+                        Message => "split requires a second parameter"));
                end if;
             end Parse_Split_Reference;
 
@@ -1015,15 +920,15 @@ package body GPR2.Parser.Project is
 
                if not Cur_Child.Is_Null then
                   declare
-                     use type GPR2.Path_Name.Object;
-
                      Path : constant GPR2.Path_Name.Object :=
                               Get_Raw_Path (Cur_Child.As_String_Literal);
+                     CI : constant GPR2.Project.Import.Set.Cursor :=
+                            Project.Imports.Find (Path);
                   begin
-                     if Project.Imports.Contains (Path) then
+                     if GPR2.Project.Import.Set.Has_Element (CI) then
                         declare
                            Prev : constant GPR2.Project.Import.Object :=
-                                    Project.Imports.Element (Path);
+                                    GPR2.Project.Import.Set.Element (CI);
                         begin
                            if Prev.Path_Name = Path then
                               Messages.Append
@@ -1094,23 +999,17 @@ package body GPR2.Parser.Project is
 
       --  Import --implicit-with options
 
-      for W of Implicit_With loop
-         declare
-            use GPR2.Path_Name;
-            PN : constant GPR2.Path_Name.Object :=
-                   Create_File (W, No_Resolution);
-         begin
-            if PN /= Filename
-              and then not Project.Imports.Contains (PN)
-            then
-               Project.Imports.Insert
-                 (GPR2.Project.Import.Create
-                    (PN,
-                     Source_Reference.Object
-                       (Source_Reference.Create (Filename.Value, 0, 0)),
-                     Is_Limited => True));
-            end if;
-         end;
+      for PN of Implicit_With loop
+         if PN /= Filename
+           and then not Project.Imports.Contains (PN)
+         then
+            Project.Imports.Insert
+              (GPR2.Project.Import.Create
+                 (PN,
+                  Source_Reference.Object
+                    (Source_Reference.Create (Filename.Value, 0, 0)),
+                  Is_Limited => True));
+         end if;
       end loop;
 
       return Project;
@@ -1130,14 +1029,15 @@ package body GPR2.Parser.Project is
    -------------
 
    procedure Process
-     (Self    : in out Object;
-      Tree    : GPR2.Project.Tree.Object;
-      Context : GPR2.Context.Object;
-      View    : GPR2.Project.View.Object;
-      Attrs   : in out GPR2.Project.Attribute.Set.Object;
-      Vars    : in out GPR2.Project.Variable.Set.Object;
-      Packs   : in out GPR2.Project.Pack.Set.Object;
-      Types   : in out GPR2.Project.Typ.Set.Object)
+     (Self          : in out Object;
+      Tree          : GPR2.Project.Tree.Object;
+      Context       : GPR2.Context.Object;
+      View          : GPR2.Project.View.Object;
+      Attrs         : in out GPR2.Project.Attribute.Set.Object;
+      Vars          : in out GPR2.Project.Variable.Set.Object;
+      Packs         : in out GPR2.Project.Pack.Set.Object;
+      Types         : in out GPR2.Project.Typ.Set.Object;
+      Pre_Conf_Mode : Boolean := False)
    is
 
       type Indexed_Values is record
@@ -1185,6 +1085,16 @@ package body GPR2.Parser.Project is
                             (Single         => False,
                              Values         => <>,
                              Indexed_Values => Unfilled_Indexed_Values);
+
+      function Missing_Project_Error_Level return Message.Level_Value is
+        (if Pre_Conf_Mode then Message.Warning else Message.Error);
+      --  Returns expected level for missing import messages
+
+      function Ensure_Source_Loc
+        (Values : Containers.Source_Value_List;
+         Sloc   : Source_Reference.Object)
+            return Containers.Source_Value_List;
+      --  Ensure the values have the proper Source_Loc
 
       function Parser (Node : GPR_Node'Class) return Visit_Status;
       --  Actual parser callabck for the project
@@ -1254,7 +1164,7 @@ package body GPR2.Parser.Project is
 
       function Is_Switches_Index_Case_Sensitive
         (Value : Value_Type) return Boolean;
-      --  Check wether the switches index is case senstive or not. This is
+      --  Check whether the switches index is case sensitive or not. This is
       --  needed as the Switches index can have language (non case-sensitive)
       --  and filename which can be case sensitive depending on the OS.
 
@@ -1296,6 +1206,30 @@ package body GPR2.Parser.Project is
 
       Undefined_Attribute_Count          : Natural := 0;
       Previous_Undefined_Attribute_Count : Natural := 0;
+
+      -----------------------
+      -- Ensure_Source_Loc --
+      -----------------------
+
+      function Ensure_Source_Loc
+        (Values : Containers.Source_Value_List;
+         Sloc   : Source_Reference.Object)
+            return Containers.Source_Value_List
+      is
+         New_List : Containers.Source_Value_List;
+      begin
+         for V of Values loop
+            New_List.Append
+              (Source_Reference.Value.Object
+                 (Source_Reference.Value.Create
+                      (Sloc         => Sloc,
+                       Text         => V.Text,
+                       At_Pos       => (if V.Has_At_Pos then V.At_Pos else 0),
+                       From_Default => V.Is_From_Default)));
+         end loop;
+
+         return New_List;
+      end Ensure_Source_Loc;
 
       -------------------------
       -- Get_Attribute_Index --
@@ -1365,9 +1299,8 @@ package body GPR2.Parser.Project is
          Indexed_Values : Indexed_Item_Values := Unfilled_Indexed_Values;
 
          function Default_Value
-           (Attribute_Name  : Name_Type := Name;
-            Attrs           : PA.Set.Object := PA.Set.Empty_Set)
-            return PA.Object;
+           (Attribute_Name : Name_Type;
+            Attrs          : PA.Set.Object) return PA.Object;
          --  Returns default value using Attrs for referenced default.
 
          procedure Fill_Indexed_Values (Attrs : PA.Set.Object);
@@ -1378,9 +1311,8 @@ package body GPR2.Parser.Project is
          -------------------
 
          function Default_Value
-           (Attribute_Name  : Name_Type := Name;
-            Attrs           : PA.Set.Object := PA.Set.Empty_Set)
-            return PA.Object
+           (Attribute_Name : Name_Type;
+            Attrs          : PA.Set.Object) return PA.Object
          is
 
             Result : PA.Object;
@@ -1553,12 +1485,16 @@ package body GPR2.Parser.Project is
          --  For a project/attribute reference we need to check the attribute
          --  definition to know wether the result is multi-valued or not.
 
-         if not PRA.Exists (PRA.Create (Name, Pack)) then
-            Tree.Log_Messages.Append
-              (Message.Create
-                 (Message.Error,
-                  "attribute """ & String (Name) & """ is not defined",
-                  Get_Source_Reference (Self.File, Node)));
+         if not PRA.Exists (Q_Name) then
+            if not In_Pack
+              or else PRP.Exists (Name_Type (To_String (Pack_Name)))
+            then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     "attribute """ & PRA.Image (Q_Name) & """ is not defined",
+                     Get_Source_Reference (Self.File, Node)));
+            end if;
 
             return Empty_Item_Values;
          end if;
@@ -1694,7 +1630,8 @@ package body GPR2.Parser.Project is
                        (Get_Identifier_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
-                          (Value_Not_Empty (Tree.Target), Sloc),
+                          (Value_Not_Empty (Tree.Target), Sloc,
+                           From_Default => True),
                         Default => True,
                         Frozen  => True);
 
@@ -1773,7 +1710,7 @@ package body GPR2.Parser.Project is
 
             Tree.Log_Messages.Append
               (Message.Create
-                 (Message.Error,
+                 (Missing_Project_Error_Level,
                   "Project """ & String (Project) & """ not found",
                   Get_Source_Reference (Self.File, Node)));
          end if;
@@ -1781,7 +1718,7 @@ package body GPR2.Parser.Project is
          return Result : Item_Values do
             Result.Indexed_Values := Indexed_Values;
             if Attr.Is_Defined then
-               Result.Values := Attr.Values;
+               Result.Values := Ensure_Source_Loc (Attr.Values, Sloc);
                Result.Single := Attr.Kind = PRA.Single;
             else
                if PRA.Exists (Q_Name) then
@@ -1811,6 +1748,9 @@ package body GPR2.Parser.Project is
          --  The list of values returned by Get_Term_List
 
          New_Item : Boolean := True;
+
+         Force_Append : Boolean := False;
+         --  When True new value are always added to list
 
          function Parser (Node : GPR_Node'Class) return Visit_Status;
 
@@ -1878,10 +1818,9 @@ package body GPR2.Parser.Project is
                                  Name_Type
                                    (Get_String_Literal
                                       (Child (Parameters, 1), Error));
-                  Sep        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 2), Error));
+                  Sep        : constant Value_Type :=
+                                 Get_String_Literal
+                                   (Child (Parameters, 2), Error);
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      New_Item := True;
@@ -1974,22 +1913,58 @@ package body GPR2.Parser.Project is
                procedure Handle_Split (Node : Builtin_Function_Call) is
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
-                  Error      : Boolean with Unreferenced;
-                  Str        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 1), Error));
-                  Sep        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 2), Error));
+
+                  Str : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 1).As_Term_List);
+                  Sep : constant Item_Values :=
+                          Get_Term_List (Child (Parameters, 2).As_Term_List);
                begin
-                  for V of Builtin.Split (Str, Sep) loop
-                     New_Item := True;
-                     Record_Value
-                       (Get_Value_Reference
-                          (V, Get_Source_Reference (Self.File, Parameters)));
-                  end loop;
+                  if not Str.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 1)),
+                           Message => "Split first parameter must be a"
+                                    & " string"));
+
+                  elsif not Sep.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Level => Message.Error,
+                           Sloc  => Get_Source_Reference
+                                      (Self.File, Child (Parameters, 2)),
+                           Message => "Split separator parameter must be a"
+                                    & " string"));
+
+                  else
+                     declare
+                        Item  : constant Value_Type :=
+                                  Str.Values.First_Element.Text;
+                        Delim : constant Value_Type :=
+                                  Sep.Values.First_Element.Text;
+                     begin
+                        if Delim = "" then
+                           Tree.Log_Messages.Append
+                             (Message.Create
+                                (Level => Message.Error,
+                                 Sloc  => Source_Reference.Object
+                                            (Sep.Values.First_Element),
+                                 Message => "Split separator parameter must"
+                                          & " not be empty"));
+
+                        elsif Item /= "" then
+                           for V of Builtin.Split (Item, Delim) loop
+                              New_Item := True;
+                              Record_Value
+                                (Get_Value_Reference
+                                   (V,
+                                    Source_Reference.Object
+                                      (Str.Values.First_Element)));
+                           end loop;
+                        end if;
+                     end;
+                  end if;
 
                   --  Skip all child nodes, we do not want to parse a second
                   --  time the string_literal.
@@ -2053,15 +2028,58 @@ package body GPR2.Parser.Project is
                Status := Over;
             end Handle_Variable;
 
+            function Terms_Parser
+              (Node : GPR_Node'Class) return Visit_Status;
+            --  Parser for the terms tree
+
+            ------------------
+            -- Terms_Parser --
+            ------------------
+
+            function Terms_Parser
+              (Node : GPR_Node'Class) return Visit_Status
+            is
+            begin
+               case Kind (Node) is
+                  when GPR_Terms =>
+                     null;
+
+                  when others =>
+                     return Parser (Node);
+               end case;
+
+               return Into;
+            end Terms_Parser;
+
          begin
             case Kind (Node) is
                when GPR_Terms =>
+                  if Result.Values.Length /= 0 and then Result.Single then
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Message.Error,
+                           "literal string list cannot appear in a string",
+                           Get_Source_Reference (Self.File, Node)));
+                  end if;
+
                   --  We are opening not a single element but an expression
                   --  list.
                   Result.Single := False;
 
+                  --  Handle '&' found in ("A" & "B", "C") as value extension
+                  Force_Append := False;
+
+                  --  Parse Terms tree
+                  Traverse (GPR_Node (Node), Terms_Parser'Access);
+
+                  --  Handle '&' found in () & "A as values list append
+
+                  Force_Append := True;
+
+                  Status := Over;
+
                when GPR_Term_List =>
-                  --  A new value is found
+                  --  A new value parsing is starting
                   New_Item := True;
 
                when GPR_String_Literal =>
@@ -2089,7 +2107,7 @@ package body GPR2.Parser.Project is
 
          procedure Record_Value (Value : Source_Reference.Value.Object) is
          begin
-            if New_Item then
+            if New_Item or else Force_Append then
                Result.Values.Append (Value);
                New_Item := False;
 
@@ -2125,8 +2143,13 @@ package body GPR2.Parser.Project is
 
             --  If we add a list, then the final value must be a list
 
-            if not Values.Single then
+            if not Values.Single and then Result.Single then
                Result.Single := False;
+
+               --  When parsing a list '&' should be used as append to list
+               --  ("a") & "b" => ("a", "b")
+
+               Force_Append := True;
             end if;
          end Record_Values;
 
@@ -2178,14 +2201,13 @@ package body GPR2.Parser.Project is
                Tree.Log_Messages.Append
                   (Message.Create
                      (Message.Error,
-                      "variable " & String (Variable) & " undefined",
+                      "variable '" & String (Variable) & "' is undefined",
                       Source_Ref));
             else
                Tree.Log_Messages.Append
                   (Message.Create
                      (Message.Error,
-                      "variable " & String (Variable) & " undefined (" &
-                      Msg & ")",
+                      Msg,
                       Source_Ref));
             end if;
          end Error;
@@ -2203,7 +2225,8 @@ package body GPR2.Parser.Project is
                   V : constant GPR2.Project.Variable.Object :=
                         Pack.Variable (Name);
                begin
-                  return (Values         => V.Values,
+                  return (Values         => Ensure_Source_Loc (V.Values,
+                                                               Source_Ref),
                           Single         => V.Kind = PRA.Single,
                           Indexed_Values => Unfilled_Indexed_Values);
                end;
@@ -2224,12 +2247,15 @@ package body GPR2.Parser.Project is
                --  project itself otherwise iterate on the extended project
                --  chain.
                if Vars.Contains (Variable) then
-                  return (Values => Vars (Variable).Values,
-                          Single => Vars (Variable).Kind = PRA.Single,
+                  --  ??? Source ref is plain ignored here
+                  return (Values         =>
+                            Ensure_Source_Loc (Vars (Variable).Values,
+                                               Source_Ref),
+                          Single         => Vars (Variable).Kind = PRA.Single,
                           Indexed_Values => Unfilled_Indexed_Values);
                elsif View.Is_Extending then
                   return Get_Variable_Ref (Variable   => Variable,
-                                           From_View  => View.Extended,
+                                           From_View  => View.Extended_Root,
                                            Source_Ref => Source_Ref);
                else
                   Error;
@@ -2241,7 +2267,9 @@ package body GPR2.Parser.Project is
                   --  If in the package currently processed use Pack_Vars to
                   --  find the value.
                   if Pack_Vars.Contains (Variable) then
-                     return (Values => Pack_Vars (Variable).Values,
+                     return (Values =>
+                               Ensure_Source_Loc (Pack_Vars (Variable).Values,
+                                                  Source_Ref),
                              Single => Pack_Vars (Variable).Kind = PRA.Single,
                              Indexed_Values => Unfilled_Indexed_Values);
                   else
@@ -2252,7 +2280,8 @@ package body GPR2.Parser.Project is
                   if Packs.Contains (Pack) then
                      return Get_Pack_Var (Packs.Element (Pack), Variable);
                   else
-                     Error ("package " & String (Pack) & " undefined");
+                     Error ("project or package " &
+                              String (Pack) & " is undefined");
                   end if;
                end if;
             end if;
@@ -2273,7 +2302,11 @@ package body GPR2.Parser.Project is
                                               From_View  => From_View,
                                               Source_Ref => Source_Ref);
                   else
-                     Error ("project " & String (Project) & " undefined");
+                     Tree.Log_Messages.Append
+                       (Message.Create
+                          (Missing_Project_Error_Level,
+                           "project " & String (Project) & " is undefined",
+                           Source_Ref));
                   end if;
                else
                   return Get_Variable_Ref (Variable   => Variable,
@@ -2290,14 +2323,16 @@ package body GPR2.Parser.Project is
                      V : constant GPR2.Project.Variable.Object :=
                         From_View.Variable (Variable);
                   begin
-                     return (Values         => V.Values,
+                     return (Values         => Ensure_Source_Loc (V.Values,
+                                                                  Source_Ref),
                              Single         => V.Kind = PRA.Single,
                              Indexed_Values => Unfilled_Indexed_Values);
                   end;
                elsif From_View.Is_Extending then
-                  return Get_Variable_Ref (Variable   => Variable,
-                                           From_View  => From_View.Extended,
-                                           Source_Ref => Source_Ref);
+                  return Get_Variable_Ref
+                    (Variable   => Variable,
+                     From_View  => From_View.Extended_Root,
+                     Source_Ref => Source_Ref);
                else
                   Error;
                end if;
@@ -2307,7 +2342,7 @@ package body GPR2.Parser.Project is
                   return Get_Pack_Var (From_View.Packages.Element (Pack),
                                        Variable);
                else
-                  Error ("package " & String (Pack) & " not undefined");
+                  Error ("package " & String (Pack) & " is undefined");
                end if;
             end if;
          end if;
@@ -2323,94 +2358,94 @@ package body GPR2.Parser.Project is
         (Node : Variable_Reference) return Item_Values
       is
          --  A reference a to variable values has the following format:
-         --  name_1[.name_2[.name_3]]['Attribute]
-         Name_1  : constant Identifier := F_Variable_Name1 (Node);
-         Name_2  : constant Identifier := F_Variable_Name2 (Node);
-         Name_3  : constant Identifier := F_Variable_Name3 (Node);
-         Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Node);
-         Name    : constant Name_Type := Name_Type (To_UTF8 (Name_1.Text));
+         --  prj_name[.pack_name[.var_name]]['Attribute]
+         Var_Name   : constant Identifier_List := F_Variable_Name (Node);
+         Att_Ref    : constant Attribute_Reference := F_Attribute_Ref (Node);
          Source_Ref : constant Source_Reference.Object :=
-            Get_Source_Reference (Self.File, Node);
+                        Get_Source_Reference (Self.File, Node);
+
+         function Project_Name_Length
+           (List : Identifier_List) return Natural;
+         --  Returns the last Index in list of the project name part. can be
+         --  0 if List not starting with a project name
+
+         -------------------------
+         -- Project_Name_Length --
+         -------------------------
+
+         function Project_Name_Length
+           (List : Identifier_List) return Natural
+         is
+            Last : constant Natural :=
+                     (if Present (Att_Ref)
+                      then Children_Count (List)
+                      else Children_Count (List) - 1);
+            --  if not attribute reference last segment is variable name.
+
+            function Is_Valid_Project_Name (Name : Name_Type) return Boolean is
+              (Process.View.View_For (Name).Is_Defined
+               or else Self.Imports.Contains (Name)
+               or else (Self.Extended.Is_Defined
+                        and then Self.Extended.Path_Name.Base_Name = Name)
+               or else Is_Builtin_Project_Name (Name)
+               or else Name_Type (To_String (Self.Name)) = Name);
+
+         begin
+            if Last >= 1
+              and then Is_Valid_Project_Name (Get_Name_Type (List, 1, Last))
+            then
+               return Last;
+            elsif Last >= 2
+              and then Is_Valid_Project_Name
+                (Get_Name_Type (List, 1, Last - 1))
+            then
+               return Last - 1;
+            end if;
+            return 0;
+         end Project_Name_Length;
+
+         Var_Name_Length : constant Positive :=  Children_Count (Var_Name);
+         --  number of segment of variable name. cannot be 0 as var_name list
+         --  empty are not allowed in gpr_parser language.
+
+         Prj_Name_Length : constant Natural := Project_Name_Length (Var_Name);
+         --  number of segment of project name part
+
       begin
          if Present (Att_Ref) then
-            if Present (Name_2) then
-               --  This is a project/package reference:
-               --    <project>.<package>'<attribute>
-               return Get_Attribute_Ref
-                 (Project => Name,
-                  Pack    => Optional_Name_Type (To_UTF8 (Name_2.Text)),
-                  Node    => Att_Ref);
-
-            else
-               --  If a single name it can be either a project or a package
-
-               if Self.Imports.Contains (Name)
-                 or else (Self.Extended.Is_Defined
-                          and then Self.Extended.Path_Name.Base_Name = Name)
-                 or else Is_Builtin_Project_Name (Name)
-               then
-                  --  This is a project reference: <project>'<attribute>
-                  return Get_Attribute_Ref
-                    (Project => Name,
-                     Pack    => No_Name,
-                     Node    => Att_Ref);
-               else
-                  --  This is a package or self-name reference:
-                  --     <package>'<attribute> or <Self.Name>'<attribute>
-                  declare
-                     Self_Name : constant Name_Type :=
-                                   Name_Type (To_String (Self.Name));
-                  begin
-                     return Get_Attribute_Ref
-                       (Project  => Self_Name,
-                        Pack     => (if Self_Name = Name
-                                     then No_Name
-                                     else Name),
-                        Node     => Att_Ref);
-                  end;
-               end if;
-            end if;
+            --  This is a reference to an attribute
+            --  supported formats are prj'attr, pack'attr or prj.pack'attr
+            --  prj can be a child project (root.child)
+            return Get_Attribute_Ref
+              (Project => (if Prj_Name_Length = 0
+                           then (if Var_Name_Length = 1
+                             then Name_Type (To_String (Self.Name))
+                             else Get_Name_Type (Var_Name, 1,
+                               Var_Name_Length - 1))
+                           else Get_Name_Type (Var_Name, 1, Prj_Name_Length)),
+               Pack    =>
+                 (if Prj_Name_Length = Var_Name_Length
+                  then No_Name
+                  else Get_Name_Type
+                    (Var_Name, Var_Name_Length, Var_Name_Length)),
+               Node    => Att_Ref);
          else
             --  This is a reference to a variable
-            if Present (Name_3) then
-               --  A 3 words variable reference can only be of the form:
-               --  <project_name>.<package_name>.<variable_name>
-               return Get_Variable_Ref (
-                  Project    => Name_Type (To_UTF8 (Name_1.Text)),
-                  Pack       => Name_Type (To_UTF8 (Name_2.Text)),
-                  Variable   => Name_Type (To_UTF8 (Name_3.Text)),
-                  Source_Ref => Source_Ref);
-            elsif Present (Name_2) then
-               --  A 2 words variable reference can only be of the form:
-               --  1- <project_name>.<variable_name>
-               --  2- <package_name>.<variable_name>
-               if Process.View.View_For
-                  (Name_Type (To_UTF8 (Name_1.Text))).Is_Defined
-               then
-                  return Get_Variable_Ref (
-                     Project    => Name_Type (To_UTF8 (Name_1.Text)),
-                     Variable   => Name_Type (To_UTF8 (Name_2.Text)),
-                     Source_Ref => Source_Ref);
-               else
-                  return Get_Variable_Ref (
-                     Pack       => Name_Type (To_UTF8 (Name_1.Text)),
-                     Variable   => Name_Type (To_UTF8 (Name_2.Text)),
-                     Source_Ref => Source_Ref);
-               end if;
-            else
-               --  A 1 word variable can only refer to a variable declared
-               --  implicitely (in case of extends) or explicitely in the
-               --  current project itself.
-               declare
-                  Variable : constant Name_Type :=
-                     Name_Type (To_UTF8 (Name_1.Text));
-               begin
+            declare
+               Variable : constant Name_Type :=
+                            Get_Name_Type
+                               (Var_Name, Var_Name_Length, Var_Name_Length);
+            begin
+               if Var_Name_Length < 2 then
+                  --  A 1 word variable can only refer to a variable declared
+                  --  implicitely (in case of extends) or explicitely in the
+                  --  current project itself.
                   if In_Pack and then Pack_Vars.Contains (Variable) then
                      --  If we are in the context of a package we don't need
                      --  the package prefix to refer to variables explicitely
                      --  declared in the package.
-                     return Get_Variable_Ref (
-                        Pack       => Name_Type (To_String (Pack_Name)),
+                     return Get_Variable_Ref
+                       (Pack       => Name_Type (To_String (Pack_Name)),
                         Variable   => Variable,
                         Source_Ref => Source_Ref);
                   else
@@ -2419,8 +2454,34 @@ package body GPR2.Parser.Project is
                      return Get_Variable_Ref (Variable   => Variable,
                                               Source_Ref => Source_Ref);
                   end if;
-               end;
-            end if;
+               elsif Prj_Name_Length > 0
+                 and then Prj_Name_Length + 1 = Var_Name_Length
+               then
+                  --  it is a <project_name>.<variable_name>
+                  return Get_Variable_Ref
+                    (Project    =>
+                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 1),
+                     Variable   => Variable,
+                     Source_Ref => Source_Ref);
+               elsif Prj_Name_Length = 0 and then Var_Name_Length = 2 then
+                  --  it is a <package_name>.<variable_name>
+                  return Get_Variable_Ref
+                    (Pack       =>
+                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 1),
+                     Variable   => Variable,
+                     Source_Ref => Source_Ref);
+               else
+                  --  it is a <project_name>.<package_name>.<variable_name>
+                  return Get_Variable_Ref
+                    (Project    =>
+                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 2),
+                     Pack       =>
+                       Get_Name_Type
+                         (Var_Name, Var_Name_Length - 1, Var_Name_Length - 1),
+                     Variable   => Variable,
+                     Source_Ref => Source_Ref);
+               end if;
+            end;
          end if;
       end Get_Variable_Values;
 
@@ -2429,10 +2490,13 @@ package body GPR2.Parser.Project is
       -----------------------
 
       function Is_Limited_Import
-        (Self : Object; Project : Name_Type) return Boolean is
+        (Self : Object; Project : Name_Type) return Boolean
+      is
+         package PIS renames GPR2.Project.Import.Set;
+         Position : constant PIS.Cursor := Self.Imports.Find (Project);
       begin
-         return Self.Imports.Contains (Project)
-           and then Self.Imports.Element (Project).Is_Limited;
+         return PIS.Has_Element (Position)
+           and then PIS.Element (Position).Is_Limited;
       end Is_Limited_Import;
 
       --------------------------------------
@@ -2795,11 +2859,21 @@ package body GPR2.Parser.Project is
          -----------------------------
 
          procedure Parse_Case_Construction (Node : Case_Construction) is
-            Var   : constant Variable_Reference := F_Var_Ref (Node);
-            Value : constant Containers.Source_Value_List :=
-                      Get_Variable_Values (Var).Values;
+            Var     : constant Variable_Reference := F_Var_Ref (Node);
+            Value   : constant Containers.Source_Value_List :=
+                        Get_Variable_Values (Var).Values;
+            Att_Ref : constant Attribute_Reference := F_Attribute_Ref (Var);
+
          begin
-            if Value.Length = 1 then
+            if Present (Att_Ref) then
+               --  Can't have attribute references as value in case statements
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Get_Source_Reference (Self.File, Att_Ref),
+                     Message => "attribute reference not allowed here"));
+
+            elsif Value.Length = 1 then
                Case_Values.Append ('-' & Value.First_Element.Text);
 
                --  Set status to close for now, this will be open when a
@@ -2825,11 +2899,14 @@ package body GPR2.Parser.Project is
             elsif not Has_Error then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Missing_Project_Error_Level,
                      Sloc    => Get_Source_Reference (Self.File, Node),
                      Message => "variable '"
-                       & Get_Value_Type (F_Variable_Name1 (Var))
-                       & "' must be a simple value"));
+                     & String (Get_Name_Type (F_Variable_Name (Var), 1, 1))
+                     & "' must be a simple value"));
+               if Pre_Conf_Mode then
+                  Status := Over;
+               end if;
             end if;
          end Parse_Case_Construction;
 
@@ -2936,15 +3013,20 @@ package body GPR2.Parser.Project is
          procedure Parse_Package_Extension (Node : Package_Extension) is
             Sloc    : constant Source_Reference.Object :=
                         Get_Source_Reference (Self.File, Node);
-            Prj     : constant Identifier := F_Prj_Name (Node);
-            Project : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Prj));
-            Name    : constant Identifier := F_Pkg_Name (Node);
-            P_Name  : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Name));
+            Values     : constant Identifier_List := F_Extended_Name (Node);
+            Num_Childs : constant Positive := Children_Count (Values);
+            Project    : constant Name_Type :=
+                           (if Num_Childs > 1
+                            then Get_Name_Type
+                              (Values, Last => Num_Childs - 1)
+                            else "?");
+            P_Name     : constant Name_Type :=
+                           Get_Name_Type (Values, Num_Childs, Num_Childs);
 
-            View    : constant GPR2.Project.View.Object :=
-                        Process.View.View_For (Project);
+            View       : constant GPR2.Project.View.Object :=
+                           (if Num_Childs > 1
+                            then Process.View.View_For (Project)
+                            else GPR2.Project.View.Undefined);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -2954,7 +3036,14 @@ package body GPR2.Parser.Project is
 
             --  Check if the Project.Package reference exists
 
-            if Is_Limited_Import (Self, Project) then
+            if Num_Childs = 1 then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "project_name.package_name reference is required"));
+            elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -2965,7 +3054,7 @@ package body GPR2.Parser.Project is
             elsif not View.Is_Defined then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Missing_Project_Error_Level,
                      Sloc    => Sloc,
                      Message =>
                        "project '" & String (Project) & "' is undefined"));
@@ -2994,17 +3083,22 @@ package body GPR2.Parser.Project is
          ----------------------------
 
          procedure Parse_Package_Renaming (Node : Package_Renaming) is
-            Sloc    : constant Source_Reference.Object :=
-                        Get_Source_Reference (Self.File, Node);
-            Prj     : constant Identifier := F_Prj_Name (Node);
-            Project : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Prj));
-            Name    : constant Identifier := F_Pkg_Name (Node);
-            P_Name  : constant Name_Type :=
-                        Get_Name_Type (Single_Tok_Node (Name));
+            Sloc       : constant Source_Reference.Object :=
+                           Get_Source_Reference (Self.File, Node);
+            Values     : constant Identifier_List := F_Renamed_Name (Node);
+            Num_Childs : constant Positive := Children_Count (Values);
+            Project    : constant Name_Type :=
+                           (if Num_Childs > 1
+                            then Get_Name_Type
+                              (Values, Last => Num_Childs - 1)
+                            else "?");
+            P_Name     : constant Name_Type :=
+                           Get_Name_Type (Values, Num_Childs, Num_Childs);
 
-            View    : constant GPR2.Project.View.Object :=
-                        Process.View.View_For (Project);
+            View       : constant GPR2.Project.View.Object :=
+                           (if Num_Childs > 1
+                            then Process.View.View_For (Project)
+                            else GPR2.Project.View.Undefined);
          begin
             --  Clear any previous value. This node is parsed as a child
             --  process of Parse_Package_Decl routine above.
@@ -3014,7 +3108,14 @@ package body GPR2.Parser.Project is
 
             --  Check if the Project.Package reference exists
 
-            if Is_Limited_Import (Self, Project) then
+            if Num_Childs = 1 then
+               Tree.Log_Messages.Append
+                 (Message.Create
+                    (Level   => Message.Error,
+                     Sloc    => Sloc,
+                     Message =>
+                       "project_name.package_name reference is required"));
+            elsif Is_Limited_Import (Self, Project) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -3025,7 +3126,7 @@ package body GPR2.Parser.Project is
             elsif not View.Is_Defined then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Missing_Project_Error_Level,
                      Sloc    => Sloc,
                      Message =>
                        "project '" & String (Project) & "' is undefined"));
@@ -3033,7 +3134,7 @@ package body GPR2.Parser.Project is
             elsif not View.Has_Packages (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
-                    (Level   => Message.Error,
+                    (Level   => Message.Warning,
                      Sloc    => Sloc,
                      Message =>
                        "package '" & String (Project) & '.' & String (P_Name)
@@ -3059,59 +3160,70 @@ package body GPR2.Parser.Project is
               (GPR2.Project.Search_Paths
                  (Self.File, Tree.Project_Search_Paths));
 
-            function Sloc return Source_Reference.Object;
+            function Sloc return Source_Reference.Object is
+               (Get_Source_Reference (Self.File, Node));
             --  Use function instead of constant because Sloc need only in case
             --  of error logging and no more than once.
 
-            ----------
-            -- Sloc --
-            ----------
-
-            function Sloc return Source_Reference.Object is
-            begin
-               return Get_Source_Reference (Self.File, Node);
-            end Sloc;
-
-            Name     : constant Identifier := F_Var_Name (Node);
-            Expr     : constant Term_List := F_Expr (Node);
-            Values   : constant Item_Values := Get_Term_List (Expr);
-            V_Type   : constant Type_Reference := F_Var_Type (Node);
-            V        : GPR2.Project.Variable.Object;
-            Type_Def : GPR2.Project.Typ.Object;
+            Name       : constant Identifier := F_Var_Name (Node);
+            Expr       : constant Term_List := F_Expr (Node);
+            Values     : constant Item_Values := Get_Term_List (Expr);
+            V_Type     : constant Type_Reference := F_Var_Type (Node);
+            V          : GPR2.Project.Variable.Object;
+            Type_Def   : GPR2.Project.Typ.Object;
          begin
             if not V_Type.Is_Null then
                declare
-                  Type_N1  : constant Identifier :=
-                               F_Var_Type_Name1 (V_Type);
-                  Type_N2  : constant Identifier :=
-                               F_Var_Type_Name2 (V_Type);
-                  T_Name   : constant Name_Type :=
-                               Get_Name_Type
-                                 (if Type_N2.Is_Null
-                                  then Single_Tok_Node (Type_N1)
-                                  else Single_Tok_Node (Type_N2));
+                  package PTS renames GPR2.Project.Typ.Set.Set;
+                  CT : PTS.Cursor;
+
+                  Type_N     : constant Identifier_List :=
+                                 F_Var_Type_Name (V_Type);
+                  Num_Childs : constant Positive := Children_Count (Type_N);
+                  T_Name     : constant Name_Type :=
+                                 Get_Name_Type
+                                   (Type_N, Num_Childs, Num_Childs);
+
+                  procedure Get_Type_Def_From
+                    (Imp : GPR2.Project.Import.Object);
+                  --  Try to find type definition from Imp by name T_Name and
+                  --  store it to Type_Def if found.
+
+                  -----------------------
+                  -- Get_Type_Def_From --
+                  -----------------------
+
+                  procedure Get_Type_Def_From
+                    (Imp : GPR2.Project.Import.Object)
+                  is
+                     Path : constant GPR2.Path_Name.Object :=
+                              GPR2.Project.Create
+                                (Imp.Path_Name.Name, Search_Paths);
+                     Types : GPR2.Project.Typ.Set.Object;
+                  begin
+                     if Path.Exists then
+                        Types := Registry.Get (Path).Types;
+                        CT := Types.Find (T_Name);
+
+                        if PTS.Has_Element (CT) then
+                           Type_Def := PTS.Element (CT);
+                        end if;
+                     end if;
+                  end Get_Type_Def_From;
+
                begin
-                  if not Type_N2.Is_Null then
+                  if Num_Childs > 1 then
                      --  We have a project prefix for the type name
+
                      declare
-                        Project : constant Name_Type :=
-                                    Get_Name_Type (Single_Tok_Node (Type_N1));
+                        package PIS renames GPR2.Project.Import.Set;
+                        Position : constant PIS.Cursor :=
+                                     Self.Imports.Find
+                                       (Get_Name_Type
+                                          (Type_N, 1, Num_Childs - 1, "-"));
                      begin
-                        if Self.Imports.Contains (Project) then
-                           declare
-                              Import : constant GPR2.Project.Import.Object :=
-                                         Self.Imports.Element (Project);
-                              Path   : constant GPR2.Path_Name.Object :=
-                                         GPR2.Project.Create
-                                           (Import.Path_Name.Name,
-                                            Search_Paths);
-                              Prj    : constant GPR2.Parser.Project.Object :=
-                                         Registry.Get (Path);
-                           begin
-                              if Prj.Types.Contains (T_Name) then
-                                 Type_Def := Prj.Types (T_Name);
-                              end if;
-                           end;
+                        if PIS.Has_Element (Position) then
+                           Get_Type_Def_From (PIS.Element (Position));
                         end if;
                      end;
                   end if;
@@ -3119,22 +3231,13 @@ package body GPR2.Parser.Project is
                   if not Type_Def.Is_Defined
                     or else Type_Def.Count_Values = 0
                   then
-                     if Self.Types.Contains (T_Name) then
-                        Type_Def := Self.Types (T_Name);
+                     CT := Self.Types.Find (T_Name);
+
+                     if PTS.Has_Element (CT) then
+                        Type_Def := PTS.Element (CT);
 
                      elsif Self.Has_Extended then
-                        declare
-                           Path     : constant GPR2.Path_Name.Object :=
-                                        GPR2.Project.Create
-                                          (Self.Extended.Path_Name.Name,
-                                           Search_Paths);
-                           Extended : constant GPR2.Parser.Project.Object :=
-                                        Registry.Get (Path);
-                        begin
-                           if Extended.Types.Contains (T_Name) then
-                              Type_Def := Extended.Types (T_Name);
-                           end if;
-                        end;
+                        Get_Type_Def_From (Self.Extended);
                      end if;
                   end if;
 
@@ -3363,19 +3466,10 @@ package body GPR2.Parser.Project is
                     (Source_Reference.Create (Self.File.Value, 0, 0));
 
          function Create_Name
-           (Name : Name_Type) return Source_Reference.Identifier.Object;
-
-         -----------------
-         -- Create_Name --
-         -----------------
-
-         function Create_Name
            (Name : Name_Type) return Source_Reference.Identifier.Object
          is
-         begin
-            return Source_Reference.Identifier.Object
-              (Source_Reference.Identifier.Create (Sloc, Name));
-         end Create_Name;
+           (Source_Reference.Identifier.Object
+              (Source_Reference.Identifier.Create (Sloc, Name)));
 
       begin
          Attrs.Insert

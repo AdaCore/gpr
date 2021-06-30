@@ -1,0 +1,11 @@
+with GNAT.IO;
+procedure Main1 is
+begin
+   GNAT.IO.Put_Line ("Main");
+end Main1;
+
+with GNAT.IO;
+procedure General1 is
+begin
+   GNAT.IO.Put_Line ("General");
+end General1;

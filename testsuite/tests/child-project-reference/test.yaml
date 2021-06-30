@@ -1,0 +1,5 @@
+description:
+    child project reference support
+driver: build_and_run
+project_file: test
+main: main

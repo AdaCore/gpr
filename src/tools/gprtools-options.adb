@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -162,6 +162,8 @@ package body GPRtools.Options is
          Self.Project_File := GPR2.Project.Create
            (Self.Project_File.Name, Self.Tree.Project_Search_Paths);
       end if;
+
+      Self.Project_Is_Defined := Self.Project_File.Is_Defined;
 
       if Tool /= Install then
          if not Self.Project_File.Is_Defined then
@@ -426,7 +428,10 @@ package body GPRtools.Options is
          Self.Verbosity := Verbose;
 
       elsif Switch = "--implicit-with" then
-         Self.Implicit_With.Include (GPR2.Filename_Type (Normalize_Value));
+         Self.Implicit_With.Append
+           (GPR2.Path_Name.Create_File
+              (GPR2.Project.Ensure_Extension
+                   (GPR2.Filename_Type (Normalize_Value))));
 
       elsif Switch = "--target" then
          Self.Target := To_Unbounded_String (Normalize_Value);
@@ -454,7 +459,7 @@ package body GPRtools.Options is
                  "Can't split '" & Value & "' to name and value";
             end if;
 
-            Self.Context.Insert
+            Self.Context.Include
               (GPR2.Name_Type (Value (Value'First .. Idx - 1)),
                Value (Idx + 1 .. Value'Last));
          end;

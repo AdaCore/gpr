@@ -1,0 +1,4 @@
+with "gpr.gpr";
+
+project Prj is
+end Prj;

@@ -1,0 +1,2 @@
+description: test gpr2clean source file & recursive switch
+driver: python_script

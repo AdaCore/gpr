@@ -345,8 +345,7 @@ procedure GPRconfig is
                if Slice = Pref then
                   Report_Error_And_Exit
                     ("Parameter value for " & Prefix & " not specified in """
-                     & Config & """"
-                     & ASCII.LF
+                     & Config & """" & ASCII.LF
                      & "Invalid configuration specified with --config");
                end if;
 
@@ -417,7 +416,8 @@ procedure GPRconfig is
            (Language => Get_Description_Param (Slices, "language"),
             Version  => Get_Description_Param (Slices, "version"),
             Runtime  => Get_Description_Param (Slices, "runtime"),
-            Path     => Get_Description_Param (Slices, "path"),
+            Path     => Filename_Optional
+                          (Get_Description_Param (Slices, "path")),
             Name     => Get_Description_Param (Slices, "name"));
       else
          if Get_Description_Param (Slices, 1) = No_Name then
@@ -431,7 +431,7 @@ procedure GPRconfig is
            (Language => Get_Description_Param (Slices, 1),
             Version  => Get_Description_Param (Slices, 2),
             Runtime  => Get_Description_Param (Slices, 3),
-            Path     => Get_Description_Param (Slices, 4),
+            Path     => Filename_Optional (Get_Description_Param (Slices, 4)),
             Name     => Get_Description_Param (Slices, 5));
       end if;
 
@@ -766,8 +766,14 @@ begin
    end if;
 
    if Opt_Batch and then Opt_Target.all = "all" then
-      Report_Error_And_Exit
-        ("-- target=all not allowed in --batch mode");
+      if Opt_Verbosity > Quiet then
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "--target=all ignored in --batch mode");
+      end if;
+
+      GNAT.OS_Lib.Free (Opt_Target);
+      Opt_Target := new String'("");
    end if;
 
    KB_Flags (Validation) := Opt_Validate;
@@ -923,8 +929,11 @@ begin
 
    if Config_Log.Has_Error then
 
-      for Msg of Config_Log loop
-         Ada.Text_IO.Put_Line (Msg.Format);
+      for Msg_Cur in Config_Log.Iterate
+        (Information => Opt_Verbosity > Quiet,
+         Warning     => Opt_Verbosity > Quiet)
+      loop
+         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
       end loop;
 
       Ada.Text_IO.Put_Line ("Generation of configuration files failed");
@@ -932,8 +941,10 @@ begin
       return;
    else
 
-      for Msg of Config_Log loop
-         Ada.Text_IO.Put_Line (Msg.Format);
+      for Msg_Cur in Config_Log.Iterate
+        (Information => Opt_Verbosity > Quiet)
+      loop
+         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
       end loop;
    end if;
 

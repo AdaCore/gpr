@@ -22,8 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Fixed;
+
 with GPR2.Message;
 with GPR2.Project.Definition;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -32,6 +35,8 @@ with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
 
 package body GPR2.Project.Source is
+
+   package PRA renames GPR2.Project.Registry.Attribute;
 
    procedure Context_Clause_Dependencies
      (Self     : Object;
@@ -49,14 +54,25 @@ package body GPR2.Project.Source is
    --  Returns Object with changed actual view for the case when source was
    --  derived from extended project.
 
-   ----------------------
-   -- Aggregating_View --
-   ----------------------
+   ----------------
+   -- Aggregated --
+   ----------------
 
-   function Aggregating_View (Self : Object) return Project.View.Object is
+   function Aggregated (Self : Object) return Project.View.Object is
    begin
-      return Definition.Strong (Self.View).Aggregate;
-   end Aggregating_View;
+      return (if Self.Is_Aggregated
+              then Definition.Strong (Self.Aggregated)
+              else Project.View.Undefined);
+   end Aggregated;
+
+   -----------------------
+   -- Aggregating_Views --
+   -----------------------
+
+   function Aggregating_Views (Self : Object) return Project.View.Set.Object is
+   begin
+      return Definition.Strong (Self.View).Aggregate_Libraries;
+   end Aggregating_Views;
 
    ---------------
    -- Artifacts --
@@ -215,7 +231,7 @@ package body GPR2.Project.Source is
 
                      Output (SU);
 
-                     --  Finaly, for the Closure mode add the dependencies
+                     --  Finally, for the Closure mode add the dependencies
                      --  of withed unit from the direct withed spec and
                      --  bodies.
 
@@ -256,12 +272,22 @@ package body GPR2.Project.Source is
       Is_Interface     : Boolean;
       Naming_Exception : Naming_Exception_Kind;
       Is_Compilable    : Boolean;
-      Aggregated       : Boolean := False) return Object is
+      Aggregated       : Project.View.Object := Project.View.Undefined)
+      return Object is
    begin
-      return Object'
-        (Source,
-         Definition.Weak (View),
-         Is_Interface, Naming_Exception, Is_Compilable, Aggregated, False);
+      return Result : Object :=
+        Object'
+          (Source,
+           Definition.Weak (View),
+           Is_Interface     => Is_Interface,
+           Naming_Exception => Naming_Exception,
+           Is_Compilable    => Is_Compilable,
+           others           => <>)
+      do
+         if Aggregated.Is_Defined then
+            Result.Aggregated := Definition.Weak (Aggregated);
+         end if;
+      end return;
    end Create;
 
    ------------------
@@ -270,7 +296,8 @@ package body GPR2.Project.Source is
 
    function Dependencies
      (Self    : Object;
-      Closure : Boolean := False) return GPR2.Project.Source.Set.Object
+      Closure : Boolean := False;
+      Index   : Source_Info.Unit_Index := 1) return Project.Source.Set.Object
    is
       Deps : GPR2.Project.Source.Set.Object;
 
@@ -286,7 +313,7 @@ package body GPR2.Project.Source is
       end Insert;
 
    begin
-      Self.Dependencies (Insert'Access, Closure);
+      Self.Dependencies (Insert'Access, Closure, Index);
       return Deps;
    end Dependencies;
 
@@ -294,7 +321,8 @@ package body GPR2.Project.Source is
      (Self     : Object;
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object);
-      Closure  : Boolean := False)
+      Closure  : Boolean := False;
+      Index    : Source_Info.Unit_Index := 1)
    is
       Done : Containers.Filename_Set;
 
@@ -309,7 +337,7 @@ package body GPR2.Project.Source is
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
       begin
-         for File of Source.Dependencies loop
+         for File of Source.Dependencies (Index) loop
             Done.Insert (File, Position, Inserted);
 
             if Inserted
@@ -332,6 +360,58 @@ package body GPR2.Project.Source is
          --  dependencies from Ada parser.
          Self.Context_Clause_Dependencies (For_Each, Closure);
       end if;
+   end Dependencies;
+
+   procedure Dependencies
+     (Self     : Object;
+      For_Each : not null access procedure
+                   (Source : GPR2.Project.Source.Object;
+                    Unit   : GPR2.Unit.Object);
+      Closure  : Boolean := False;
+      Index    : Source_Info.Unit_Index := 1)
+   is
+      Done     : Containers.Name_Set;
+      Position : Containers.Name_Type_Set.Cursor;
+      Inserted : Boolean;
+
+      procedure On_Dependency
+        (Sfile : Simple_Name;
+         Unit  : Name_Type;
+         Kind  : GPR2.Unit.Library_Unit_Type);
+
+      -------------------
+      -- On_Dependency --
+      -------------------
+
+      procedure On_Dependency
+        (Sfile : Simple_Name;
+         Unit  : Name_Type;
+         Kind  : GPR2.Unit.Library_Unit_Type)
+      is
+         Src : Project.Source.Object;
+         CU  : GPR2.Unit.Object;
+
+         function "&"
+           (Left, Right : Optional_Name_Type) return Optional_Name_Type
+         is
+           (GPR2."&" (Left, Right));
+
+      begin
+         Done.Insert
+           (Unit & (if Kind in GPR2.Unit.Spec_Kind then "" else "%"),
+            Position, Inserted);
+
+         if Inserted
+           and then View (Self).Check_Source (Sfile, Src)
+           and then Src.Source.Check_Unit
+             (Unit, Kind in GPR2.Unit.Spec_Kind, CU)
+         then
+            For_Each (Src, CU);
+         end if;
+      end On_Dependency;
+
+   begin
+      Self.Source.Dependencies (On_Dependency'Access, Index);
    end Dependencies;
 
    --------------------------
@@ -422,26 +502,30 @@ package body GPR2.Project.Source is
 
    function Is_Overriden (Self : Object) return Boolean is
       use type Project.View.Object;
-      Try : Object;
+      Try       : Object;
+      Self_View : constant Project.View.Object := View (Self);
    begin
-      if not View (Self).Check_Source (Self.Path_Name.Simple_Name, Try)
-        or else View (Try) /= View (Self)
+      if Self_View.Check_Source (Self.Path_Name.Simple_Name, Try)
+        and then View (Try) /= Self_View
+        and then View (Try).Is_Extending (Parent => Self_View)
       then
          return True;
+      end if;
 
-      elsif not Self.Source.Has_Units then
+      if not Self.Source.Is_Ada then
          return False;
       end if;
 
-      for U of Self.Source.Units loop
-         if Definition.Check_Source_Unit (View (Self), U, Try)
-           and then View (Try) = View (Self)
+      for CU of Self.Source.Units loop
+         if Definition.Check_Source_Unit (Self_View, CU, Try)
+           and then View (Try) /= Self_View
+           and then View (Try).Is_Extending (Parent => Self_View)
          then
-            return False;
+            return True;
          end if;
       end loop;
 
-      return True;
+      return False;
    end Is_Overriden;
 
    ----------------
@@ -463,7 +547,7 @@ package body GPR2.Project.Source is
                           (if Kind = S_Separate
                            then CU.Separate_From
                            else CU.Name);
-      Unit      : constant Unit_Info.Object := View.Unit (Unit_Name);
+      Unit : constant Unit_Info.Object := View.Unit (Unit_Name);
    begin
       case Kind is
          when GPR2.Unit.Body_Kind =>
@@ -571,10 +655,35 @@ package body GPR2.Project.Source is
                      return;
                   end if;
 
-                  pragma Assert
-                    (U.Kind not in S_Spec | S_Body,
-                     "can't find """ & String (U.Name) & """ for "
-                     & U.Kind'Img & " in """ & Self.Path_Name.Value & '"');
+                  if Is_Runtime_Unit_Name (U.Name) then
+                     --  Try to find possible runtime unit name and fix unit
+                     --  name.
+
+                     declare
+                        DR : constant String :=
+                               View (Self).Naming_Package.Attribute
+                                 (PRA.Dot_Replacement).Value.Text;
+                        SN : constant String :=
+                               String (Self.Path_Name.Simple_Name);
+                        CU : Project.Unit_Info.Set.Cursor;
+                     begin
+                        if SN (SN'First + 1 .. SN'First + DR'Length) = DR then
+                           CU := Def.Units.Find
+                             (Name_Type
+                                (Ada.Strings.Fixed.Replace_Slice
+                                   (SN, SN'First + 1, SN'First + DR'Length,
+                                    ".")));
+
+                           if US.Has_Element (CU) then
+                              Def.Units (CU).Update_Name (U.Name);
+                              Def.Units.Insert (U.Name, US.Element (CU));
+                              Def.Units.Delete (CU);
+                           end if;
+                        end if;
+                     end;
+                  end if;
+
+                  return;
                end if;
 
                if U.Kind = S_Spec and then not US.Element (CU).Has_Body then

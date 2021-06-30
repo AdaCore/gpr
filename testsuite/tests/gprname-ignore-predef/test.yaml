@@ -1,0 +1,2 @@
+description: test gpr2name is ignoring predefined units
+driver: python_script

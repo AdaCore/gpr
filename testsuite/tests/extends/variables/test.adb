@@ -28,5 +28,15 @@ begin
        Variable => "B_Variable2",
        Value    => "original value2");
 
+   Tree.Unload;
+
+   --  Now test with extension replacing project included by the extended
+   TGPR.Load_With_No_Errors (Tree, "./data2/root.gpr");
+   TGPR.Assert_Variable
+      (Tree     => Tree,
+       View     => "Root",
+       Variable => "Var2",
+       Value    => "inc_ext");
+
    return A.Report;
 end Test;

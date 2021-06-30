@@ -34,6 +34,13 @@ package GPR2.Project.Registry.Attribute is
 
    type Index_Kind is (No, Yes, Optional);
 
+   type Index_Value_Type is
+      (Name_Index,
+       File_Index,
+       FileGlob_Index,
+       Language_Index,
+       FileGlob_Or_Language_Index);
+
    subtype Index_Allowed is Index_Kind range Yes .. Optional;
 
    type Value_Kind is (Single, List);
@@ -83,6 +90,14 @@ package GPR2.Project.Registry.Attribute is
       --  such attributes need to be global to the project tree, and so
       --  should not be modified after being referenced. So for example
       --  using "for Target use project'Target & "suffix"" is not allowed.
+      Config_Concatenable  : Boolean            := False;
+      --  When True the final value for the attribute is concatenated with the
+      --  value found in the Config project (if it exists) rather than
+      --  overriding it.
+
+      Index_Type : Index_Value_Type             := Name_Index;
+      --  Set the type for the index value
+
    end record
      with Dynamic_Predicate =>
        --  Either Index is allowed or the other parts are default
@@ -128,7 +143,9 @@ package GPR2.Project.Registry.Attribute is
       Default              : VSR.Map            := VSR.Empty_Map;
       Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := Nowhere;
-      Is_Toolchain_Config  : Boolean            := False);
+      Is_Toolchain_Config  : Boolean            := False;
+      Config_Concatenable  : Boolean            := False;
+      Index_Type           : Index_Value_Type   := Name_Index);
    --  add package/attribute definition in database for attribute checks
 
    --  Some common attribute names

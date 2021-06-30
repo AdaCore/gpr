@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,7 +16,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Exceptions;
+
 with GPRname;
+with GPRname.Common;
 with GPRname.Options;
 with GPRname.Process;
 
@@ -43,4 +46,13 @@ begin
    --  Run the gprname main procedure
 
    GPRname.Process (Opt);
+
+exception
+
+   when E : GPRname.Common.GPRname_Exception =>
+      GPRtools.Util.Fail_Program (Ada.Exceptions.Exception_Message (E));
+
+   when E : others =>
+      GPRtools.Util.Fail_Program
+        ("error: " & Ada.Exceptions.Exception_Information (E));
 end GPRname.Main;

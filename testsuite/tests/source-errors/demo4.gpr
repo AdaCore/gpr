@@ -1,0 +1,6 @@
+project Demo4 is
+   --  check main.adb files found in src4/** not reported as error
+   for Source_Dirs use ("src3", "src3/**");
+   for Object_Dir use "obj";
+   for Main use ("main.adb");
+end Demo4;

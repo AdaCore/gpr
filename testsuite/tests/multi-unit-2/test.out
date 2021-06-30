@@ -1,12 +1,14 @@
-demo output
 main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
     unit name    = Main
     kind         = S_BODY_ONLY
-    withed units = { ada ada.directories ada.exceptions ada.text_io gpr2 gpr2.context gpr2.path_name gpr2.project gpr2.project.source gpr2.project.source.artifact gpr2.project.source.set gpr2.project.tree gpr2.source gpr2.source_info gpr2.source_info.parser gpr2.source_info.parser.ada_language pkg1 pkg2 }
+    withed units = { pkg1 pkg2 }
     object file  = main.ali
+    dependency unit Main S_BODY_ONLY in main.adb
+    dependency unit Pkg1 S_SPEC in pkg1.ads
+    dependency unit Pkg2 S_SPEC in pkg2.ads
 sub.adb
   single-unit          = FALSE
   has naming exception = TRUE
@@ -22,7 +24,12 @@ pkg1.adb
   - compilation unit at 1
     unit name    = Pkg1
     kind         = S_BODY
+    withed units = { u4 }
     object file  = pkg1.ali
+    dependency unit Pkg1 S_SPEC in pkg1.ads
+    dependency unit Pkg1 S_BODY in pkg1.adb
+    dependency unit Pkg1.Sep S_SEPARATE in sub.adb at 1
+    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
 pkg1.ads
   single-unit          = TRUE
   has naming exception = FALSE
@@ -30,14 +37,23 @@ pkg1.ads
     unit name    = Pkg1
     kind         = S_SPEC
     object file  = pkg1.ali
+    dependency unit Pkg1 S_SPEC in pkg1.ads
+    dependency unit Pkg1 S_BODY in pkg1.adb
+    dependency unit Pkg1.Sep S_SEPARATE in sub.adb at 1
+    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
 pkg2.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 1
     unit name    = Pkg2
     kind         = S_BODY
-    withed units = { u1 }
+    withed units = { pkg u1 }
     object file  = pkg2.ali
+    dependency unit Pkg S_SPEC_ONLY in pkg.ads
+    dependency unit Pkg2 S_SPEC in pkg2.ads
+    dependency unit Pkg2 S_BODY in pkg2.adb
+    dependency unit Pkg2.Sep S_SEPARATE in sub.adb at 2
+    dependency unit U1 S_SPEC in few_units.ada at 1
 pkg2.ads
   single-unit          = TRUE
   has naming exception = FALSE
@@ -45,6 +61,26 @@ pkg2.ads
     unit name    = Pkg2
     kind         = S_SPEC
     object file  = pkg2.ali
+    dependency unit Pkg S_SPEC_ONLY in pkg.ads
+    dependency unit Pkg2 S_SPEC in pkg2.ads
+    dependency unit Pkg2 S_BODY in pkg2.adb
+    dependency unit Pkg2.Sep S_SEPARATE in sub.adb at 2
+    dependency unit U1 S_SPEC in few_units.ada at 1
+pkg.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_BODY
+    object file  = pkg.ali
+pkg.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_SPEC_ONLY
+    object file  = pkg.ali
+    dependency unit Pkg S_SPEC_ONLY in pkg.ads
 few_units.ada
   single-unit          = FALSE
   has naming exception = TRUE
@@ -56,6 +92,9 @@ few_units.ada
     kind         = S_BODY
     withed units = { u2 }
     object file  = few_units~2.ali
+    dependency unit U1 S_SPEC in few_units.ada at 1
+    dependency unit U1 S_BODY in few_units.ada at 2
+    dependency unit U2 S_SPEC in few_units.ada at 3
   - compilation unit at 3
     unit name    = U2
     kind         = S_SPEC
@@ -64,6 +103,9 @@ few_units.ada
     kind         = S_BODY
     withed units = { u3 }
     object file  = few_units~4.ali
+    dependency unit U2 S_SPEC in few_units.ada at 3
+    dependency unit U2 S_BODY in few_units.ada at 4
+    dependency unit U3 S_SPEC in few_units.ada at 5
   - compilation unit at 5
     unit name    = U3
     kind         = S_SPEC
@@ -72,10 +114,14 @@ few_units.ada
     kind         = S_BODY
     withed units = { gnat gnat.io }
     object file  = few_units~6.ali
+    dependency unit U3 S_SPEC in few_units.ada at 5
+    dependency unit U3 S_BODY in few_units.ada at 6
+    dependency unit U3.P S_SEPARATE in few_units.ada at 8
   - compilation unit at 7
     unit name    = U4
     kind         = S_SPEC_ONLY
     object file  = few_units~7.ali
+    dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
   - compilation unit at 8
     unit name    = U3.P
     kind         = S_SEPARATE
@@ -85,7 +131,7 @@ main.adb
   - compilation unit at 1
     unit name    = Main
     kind         = S_BODY_ONLY
-    withed units = { Ada Ada.Directories Ada.Exceptions Ada.Text_IO GPR2 GPR2.Context GPR2.Path_Name GPR2.Project GPR2.Project.Tree GPR2.Project.Source GPR2.Project.Source.Artifact GPR2.Project.Source.Set GPR2.Source Pkg1 Pkg2 GPR2.Source_Info GPR2.Source_Info.Parser GPR2.Source_Info.Parser.Ada_Language }
+    withed units = { Pkg1 Pkg2 }
     object file  = main.ali
 sub.adb
   single-unit          = FALSE
@@ -93,6 +139,7 @@ sub.adb
   - compilation unit at 1
     unit name    = Pkg1.Sep
     kind         = S_SEPARATE
+    withed units = { U4 }
   - compilation unit at 2
     unit name    = Pkg2.Sep
     kind         = S_BODY_ONLY
@@ -125,6 +172,20 @@ pkg2.ads
     unit name    = Pkg2
     kind         = S_SPEC
     object file  = pkg2.ali
+pkg.adb
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_BODY
+    object file  = pkg.ali
+pkg.ads
+  single-unit          = TRUE
+  has naming exception = FALSE
+  - compilation unit at 1
+    unit name    = Pkg
+    kind         = S_SPEC
+    object file  = pkg.ali
 few_units.ada
   single-unit          = FALSE
   has naming exception = TRUE
@@ -157,3 +218,21 @@ few_units.ada
     unit name    = U3.P
     kind         = S_BODY_ONLY
     object file  = few_units~8.ali
+/files/few_units~2.o
+   U1
+      OK /files/few_units.ada
+/files/few_units~4.o
+   U2
+      OK /files/few_units.ada
+/files/few_units~6.o
+   U3
+      OK /files/few_units.ada
+/files/few_units~7.o
+   U4
+      OK /files/few_units.ada
+/files/pkg.o
+   Pkg
+     DIF /files/pkg.adb
+/files/pkg.o
+   Pkg
+      OK /files/pkg.ads

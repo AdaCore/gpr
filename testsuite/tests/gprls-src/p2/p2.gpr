@@ -1,0 +1,12 @@
+with "../p3/p3";
+library project p2 is
+for Library_Name use "p2";
+for Library_Kind use "static";
+for Library_Dir use "lib";
+for Object_Dir use "obj";
+for Library_Interface use (
+   "p2_0",
+   "p2_1",
+   "p2_2",
+   "p2_3");
+end p2;

@@ -1,0 +1,6 @@
+aggregate library project Aggr6 is
+   for External ("A") use "value";
+   for Project_Files use ("prj1/prj1.gpr");
+   for Library_Dir use ".";
+   for Library_Name use "aggr";
+end Aggr6;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -68,6 +68,11 @@ package GPR2.Project.Unit_Info is
      with Pre => Self.Is_Defined;
    --  Returns all separates
 
+   procedure Update_Name
+     (Self : in out Object; Name : Name_Type)
+     with Pre => Self.Is_Defined;
+   --  Sets unit spec
+
    procedure Update_Spec
      (Self : in out Object; Source : Path_Name.Object)
      with Pre => Self.Is_Defined and then Source.Is_Defined;
@@ -76,6 +81,10 @@ package GPR2.Project.Unit_Info is
    procedure Update_Body
      (Self : in out Object; Source : Path_Name.Object)
      with Pre => Self.Is_Defined and then Source.Is_Defined;
+   --  Sets unit body
+
+   procedure Remove_Body (Self : in out Object)
+     with Pre => Self.Is_Defined;
    --  Sets unit body
 
    procedure Update_Separates

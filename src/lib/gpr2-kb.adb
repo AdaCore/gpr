@@ -22,6 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Text_IO;
@@ -48,12 +49,12 @@ package body GPR2.KB is
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE",
-                     GNATCOLL.Traces.From_Config);
+                     GNATCOLL.Traces.Off);
 
    Match_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                    GNATCOLL.Traces.Create
                      ("KNOWLEDGE_BASE.MATHCING",
-                      GNATCOLL.Traces.From_Config);
+                      GNATCOLL.Traces.Off);
 
    No_Compatible_Compilers : exception;
    --  Raised when any combination of compilers found can form a supported
@@ -237,6 +238,19 @@ package body GPR2.KB is
      (Self  : Object;
       Descr : Project.Configuration.Description) return Compiler;
    --  Transform Description into Compiler object
+
+   function Configuration_Node_Image
+     (Config : Configuration_Type) return Unbounded_String;
+   --  Returns partial image of <configuration> node that is used in verbose
+   --  output to explain unsupported configuration.
+
+   function GPR_Executable_Prefix_Path return String;
+   --  Tries to find the installation location of gprtools.
+   --  If current executable may be one of gprtools and is spawned with path
+   --  prefix, returns corresponding prefix directory.
+   --  Returns empty string if all approaches do not work.
+   --  When a directory is returned, it is guaranteed to end with a directory
+   --  separator.
 
    ---------
    -- Add --
@@ -981,6 +995,39 @@ package body GPR2.KB is
 
    end Configuration;
 
+   ------------------------------
+   -- Configuration_Node_Image --
+   ------------------------------
+
+   function Configuration_Node_Image
+     (Config : Configuration_Type) return Unbounded_String
+   is
+      Result : Unbounded_String;
+   begin
+      for Comp_Filter of Config.Compilers_Filters loop
+         Append
+           (Result,
+            "<compilers negate='" & Comp_Filter.Negate'Img & "'>" & ASCII.LF);
+
+         for Filter of Comp_Filter.Compiler loop
+            Append
+              (Result,
+               "  <compiler name='"
+               & To_String (Filter.Name) & "' version='"
+               & To_String (Filter.Version) & "' runtime='"
+               & To_String (Filter.Runtime) & "' language='"
+               & To_String (Filter.Language_LC) & "' />"
+               & ASCII.LF);
+         end loop;
+
+         Append (Result, "</compilers>" & ASCII.LF);
+      end loop;
+
+      Append (Result, "<config supported='" & Config.Supported'Img & "' />");
+
+      return Result;
+   end Configuration_Node_Image;
+
    ------------
    -- Create --
    ------------
@@ -1137,21 +1184,8 @@ package body GPR2.KB is
       end if;
 
       if Path (Descr) /= No_Filename then
-         declare
-            Compiler_Path : constant Filename_Type := Path (Descr);
-         begin
-
-            if Compiler_Path (Compiler_Path'Last) =
-              OS_Lib.Directory_Separator
-            then
-               Result.Path := GPR2.Path_Name.Create_Directory
-                 (Compiler_Path);
-            else
-               Result.Path := GPR2.Path_Name.Create_Directory
-                 (Compiler_Path & OS_Lib.Directory_Separator);
-            end if;
-
-         end;
+         Result.Path := Path_Name.Create_Directory
+                          (Path (Descr), Resolve_Links => True);
       end if;
 
       if Name (Descr) /= No_Name then
@@ -1938,7 +1972,7 @@ package body GPR2.KB is
            (Comp.Path.Value, Case_Sensitive => False)
            & GNAT.OS_Lib.Directory_Separator;
       elsif Name = "GPRCONFIG_PREFIX" then
-         return Get_Tools_Directory & GNAT.OS_Lib.Directory_Separator;
+         return GPR_Executable_Prefix_Path;
       end if;
 
       raise Invalid_KB
@@ -2004,6 +2038,46 @@ package body GPR2.KB is
       end loop;
    end Get_Words;
 
+   --------------------------------
+   -- GPR_Executable_Prefix_Path --
+   --------------------------------
+
+   function GPR_Executable_Prefix_Path return String
+   is
+      use Ada.Directories;
+      use Ada.Strings.Fixed;
+      use GNAT.OS_Lib;
+
+      Tools_Dir : constant String := Get_Tools_Directory;
+      Exec_Name : constant String :=
+                    Normalize_Pathname (Ada.Command_Line.Command_Name,
+                                        Resolve_Links => True);
+   begin
+
+      if Has_Directory_Separator (Exec_Name)
+        and then Head (Base_Name (Exec_Name), 3) = "gpr"
+        and then Base_Name (Containing_Directory (Exec_Name)) = "bin"
+      then
+         --  A gprtool has been called with path prefix, we need
+         --  to return the prefix of corresponding gprtools installation,
+         --  in case it is not the first one on the path.
+
+         return
+           Containing_Directory (Containing_Directory (Exec_Name))
+           & GNAT.OS_Lib.Directory_Separator;
+      end if;
+
+      --  It's either a gprtool called by base name or another kind of tool,
+      --  in both cases we need to find gprtools on PATH.
+
+      if Tools_Dir = "" then
+         return "";
+      else
+         return Tools_Dir & GNAT.OS_Lib.Directory_Separator;
+      end if;
+
+   end GPR_Executable_Prefix_Path;
+
    ----------------------------------
    -- Is_Language_With_No_Compiler --
    ----------------------------------
@@ -2046,6 +2120,11 @@ package body GPR2.KB is
                GNATCOLL.Traces.Trace
                  (Match_Trace,
                   "Selected compilers are not compatible, because of:");
+               GNATCOLL.Traces.Trace
+                 (Match_Trace,
+                  To_String
+                    (Configuration_Node_Image
+                         (Configuration_Lists.Element (Config))));
                return False;
             end if;
          end if;
@@ -2816,6 +2895,12 @@ package body GPR2.KB is
                            if Group_Count < Group
                              and then Group_Count + Count >= Group
                            then
+                              if Matched (Group - Group_Count) = No_Match then
+                                 Trace
+                                   (Main_Trace,
+                                    "<dir>: Matched group is empty, skipping");
+                                 return;
+                              end if;
                               Trace
                                 (Main_Trace,
                                  "<dir>: Found matched group: "
@@ -2933,7 +3018,7 @@ package body GPR2.KB is
             if Comp.Alt_Runtime /= Null_Unbounded_String then
                return Optional_Name_Type
                  (To_String (Comp.Runtime)
-                  & "["
+                  & " ["
                   & To_String (Comp.Alt_Runtime)
                   & "]");
             else
@@ -3149,7 +3234,7 @@ package body GPR2.KB is
          Idx  : constant String := Ada.Characters.Handling.To_Lower (Index);
       begin
          if Var_Name = "GPRCONFIG_PREFIX" then
-            return Get_Tools_Directory & GNAT.OS_Lib.Directory_Separator;
+            return GPR_Executable_Prefix_Path;
 
          elsif Index = "" then
 

@@ -1,0 +1,181 @@
+p3.gpr:5:20: warning: object directory "obj" not found
+p3.gpr:4:21: warning: library directory "lib" not found
+p7.gpr:5:20: warning: object directory "obj" not found
+p7.gpr:4:21: warning: library directory "lib" not found
+p8.gpr:3:20: warning: object directory "obj" not found
+p2.gpr:6:20: warning: object directory "obj" not found
+p2.gpr:5:21: warning: library directory "lib" not found
+p6.gpr:6:20: warning: object directory "obj" not found
+p6.gpr:5:21: warning: library directory "lib" not found
+p1.gpr:6:20: warning: object directory "obj" not found
+p1.gpr:5:21: warning: library directory "lib" not found
+p5.gpr:6:20: warning: object directory "obj" not found
+p5.gpr:5:21: warning: library directory "lib" not found
+p0.gpr:4:20: warning: object directory "obj" not found
+p4.gpr:4:20: warning: object directory "obj" not found
+Can't find ALI file for /p0/p0.adb
+p3.gpr:5:20: warning: object directory "obj" not found
+p3.gpr:4:21: warning: library directory "lib" not found
+p7.gpr:5:20: warning: object directory "obj" not found
+p7.gpr:4:21: warning: library directory "lib" not found
+p8.gpr:3:20: warning: object directory "obj" not found
+p2.gpr:6:20: warning: object directory "obj" not found
+p2.gpr:5:21: warning: library directory "lib" not found
+p6.gpr:6:20: warning: object directory "obj" not found
+p6.gpr:5:21: warning: library directory "lib" not found
+p1.gpr:6:20: warning: object directory "obj" not found
+p1.gpr:5:21: warning: library directory "lib" not found
+p5.gpr:6:20: warning: object directory "obj" not found
+p5.gpr:5:21: warning: library directory "lib" not found
+p0.gpr:4:20: warning: object directory "obj" not found
+p4.gpr:4:20: warning: object directory "obj" not found
+   /p0/p0_0.ads
+   /p0/p0_0.adb
+/p0/obj/p0.o
+   P0
+         OK /p0/p0.adb
+         OK /p0/p0_0.ads
+Can't find ALI file for /p5/p5_1.adb
+   /p5/p5_2.ads
+   /p5/p5_2.adb
+   /p6/p6_1.ads
+   /p6/p6_1.adb
+
+Closure:
+
+  /p6/p6_0.adb
+  /p6/p6_0.ads
+  /p6/p6_1.adb
+  /p6/p6_1.ads
+  /p6/p6_2.adb
+  /p6/p6_2.ads
+  /p6/p6_3.adb
+  /p6/p6_3.ads
+  /p7/p7_0.adb
+  /p7/p7_0.ads
+  /p7/p7_1.adb
+  /p7/p7_1.ads
+  /p7/p7_2.adb
+  /p7/p7_2.ads
+  /p7/p7_3.adb
+  /p7/p7_3.ads
+
+   /p7/p7_0.ads
+   /p7/p7_0.adb
+<no_obj>
+   p0
+     DIF /p0/p0.adb
+<no_obj>
+   p0_0
+     DIF /p0/p0_0.adb
+<no_obj>
+   p0_1
+     DIF /p0/p0_1.adb
+<no_obj>
+   p0_2
+     DIF /p0/p0_2.adb
+<no_obj>
+   p0_3
+     DIF /p0/p0_3.adb
+<no_obj>
+   p1_0
+     DIF /p1/p1_0.adb
+<no_obj>
+   p1_1
+     DIF /p1/p1_1.adb
+<no_obj>
+   p1_2
+     DIF /p1/p1_2.adb
+<no_obj>
+   p1_3
+     DIF /p1/p1_3.adb
+<no_obj>
+   p2_0
+     DIF /p2/p2_0.adb
+<no_obj>
+   p2_1
+     DIF /p2/p2_1.adb
+<no_obj>
+   p2_2
+     DIF /p2/p2_2.adb
+<no_obj>
+   p2_3
+     DIF /p2/p2_3.adb
+<no_obj>
+   p3_0
+     DIF /p3/p3_0.adb
+<no_obj>
+   p3_1
+     DIF /p3/p3_1.adb
+<no_obj>
+   p3_2
+     DIF /p3/p3_2.adb
+<no_obj>
+   p3_3
+     DIF /p3/p3_3.adb
+<no_obj>
+   p4
+     DIF /p4/p4.adb
+<no_obj>
+   p4_0
+     DIF /p4/p4_0.adb
+<no_obj>
+   p4_1
+     DIF /p4/p4_1.adb
+<no_obj>
+   p4_2
+     DIF /p4/p4_2.adb
+<no_obj>
+   p4_3
+     DIF /p4/p4_3.adb
+<no_obj>
+   p5_0
+     DIF /p5/p5_0.adb
+<no_obj>
+   p5_1
+     DIF /p5/p5_1.adb
+<no_obj>
+   p5_2
+     DIF /p5/p5_2.adb
+<no_obj>
+   p5_3
+     DIF /p5/p5_3.adb
+<no_obj>
+   p6_0
+     DIF /p6/p6_0.adb
+<no_obj>
+   p6_1
+     DIF /p6/p6_1.adb
+<no_obj>
+   p6_2
+     DIF /p6/p6_2.adb
+<no_obj>
+   p6_3
+     DIF /p6/p6_3.adb
+<no_obj>
+   p7_0
+     DIF /p7/p7_0.adb
+<no_obj>
+   p7_1
+     DIF /p7/p7_1.adb
+<no_obj>
+   p7_2
+     DIF /p7/p7_2.adb
+<no_obj>
+   p7_3
+     DIF /p7/p7_3.adb
+<no_obj>
+   p8
+     DIF /p8/p8.adb
+<no_obj>
+   p8_0
+     DIF /p8/p8_0.adb
+<no_obj>
+   p8_1
+     DIF /p8/p8_1.adb
+<no_obj>
+   p8_2
+     DIF /p8/p8_2.adb
+<no_obj>
+   p8_3
+     DIF /p8/p8_3.adb

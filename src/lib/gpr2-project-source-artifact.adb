@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -99,60 +99,115 @@ package body GPR2.Project.Source.Artifact is
       Deps_Obj     : Index_Path_Name_Map.Map;
 
       function From_Hierarchy
-        (Filename : Filename_Type;
-         Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+        (View         : Project.View.Object;
+         Filename     : Filename_Type;
+         Dir_Attr     : Name_Type;
+         Full_Closure : Boolean := False) return GPR2.Path_Name.Object;
       --  Find Filename in directory defined in attribute Dir_Attr in this
       --  source view and in the extended views if the Source is inherited.
+      --  If Full_Closure is set, then the full closure of the extended
+      --  projects (in case of extends all) will be searched.
+
+      procedure Insert_If_Defined
+        (Map : in out Index_Path_Name_Map.Map;
+         Index : Natural;
+         Path  : GPR2.Path_Name.Object);
+      --  If Path is defined, include it in Map with index Index, else do
+      --  nothing.
 
       Preprocessed : constant GPR2.Path_Name.Object :=
                        GPR2.Path_Name.Create_File
                          (Src.Path_Name.Simple_Name & P_Suffix,
                           Filename_Optional (View.Object_Directory.Value));
 
-      Callgraph    : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (BN & C_Suffix,
-                          Filename_Type (View.Object_Directory.Value));
-
-      Coverage     : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (BN & Cov_Suffix,
-                          Filename_Type (View.Object_Directory.Value));
-
-      Switches     : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (BN & S_Suffix,
-                          Filename_Type (View.Object_Directory.Value));
+      Callgraph : GPR2.Path_Name.Object;
+      Coverage  : GPR2.Path_Name.Object;
+      Switches  : GPR2.Path_Name.Object;
 
       -------------------
       -- From_Hierarhy --
       -------------------
 
       function From_Hierarchy
-        (Filename : Filename_Type;
-         Dir_Attr : Name_Type) return GPR2.Path_Name.Object
+        (View         : Project.View.Object;
+         Filename     : Filename_Type;
+         Dir_Attr     : Name_Type;
+         Full_Closure : Boolean := False) return GPR2.Path_Name.Object
       is
-         View      : Project.View.Object   := Create.View;
-         Source    : Project.Source.Object := Create.Source;
-         Candidate : GPR2.Path_Name.Object;
+         function Get_Candidate
+           (View : Project.View.Object) return GPR2.Path_Name.Object;
+         --  If View has Dir_Attr defined, then returns the candidate file
+         --  within this directory. Returns Undefined otherwise.
+
+         -------------------
+         -- Get_Candidate --
+         -------------------
+
+         function Get_Candidate
+           (View : Project.View.Object) return GPR2.Path_Name.Object is
+         begin
+            if View.Has_Attributes (Dir_Attr) then
+               return GPR2.Path_Name.Create_File
+                 (Filename,
+                  Filename_Type
+                    (Definition.Apply_Root_And_Subdirs
+                         (View, Dir_Attr).Value));
+            else
+               return GPR2.Path_Name.Undefined;
+            end if;
+         end Get_Candidate;
+
+         Source        : constant Project.Source.Object :=
+                           View.Source (Create.Source.Path_Name);
+         Candidate     : GPR2.Path_Name.Object;
+         New_Candidate : GPR2.Path_Name.Object;
+
       begin
-         loop
-            Candidate :=
-              GPR2.Path_Name.Create_File
-                (Filename,
-                 Filename_Type
-                   (Definition.Apply_Root_And_Subdirs
-                      (View, Dir_Attr).Value));
+         Candidate := Get_Candidate (View);
 
-            exit when not Source.Inherited or else Candidate.Exists;
-            View := View.Extended;
+         if not Source.Inherited
+           or else (Candidate.Is_Defined and then Candidate.Exists)
+         then
+            return Candidate;
+         end if;
 
-            exit when not View.Has_Attributes (Dir_Attr);
-            Source := View.Source (Source.Path_Name, Need_Update => False);
-         end loop;
+         if View.Is_Extending then
+            if Full_Closure then
+               for Ext of View.Extended loop
+                  New_Candidate := From_Hierarchy
+                    (Ext, Filename, Dir_Attr, True);
 
-         return Candidate;
+                  exit when New_Candidate.Is_Defined
+                    and then New_Candidate.Exists;
+               end loop;
+            else
+               New_Candidate := From_Hierarchy
+                 (View.Extended_Root, Filename, Dir_Attr);
+            end if;
+         end if;
+
+         if New_Candidate.Is_Defined and then New_Candidate.Exists then
+            --  Found from hierarchy
+            return New_Candidate;
+         else
+            --  Project's own candidate
+            return Candidate;
+         end if;
       end From_Hierarchy;
+
+      -----------------------
+      -- Insert_If_Defined --
+      -----------------------
+
+      procedure Insert_If_Defined
+        (Map : in out Index_Path_Name_Map.Map;
+         Index : Natural;
+         Path  : GPR2.Path_Name.Object) is
+      begin
+         if Path.Is_Defined then
+            Map.Insert (Index, Path);
+         end if;
+      end Insert_If_Defined;
 
    begin
       if Src.Has_Units and then Src.Has_Index then
@@ -161,56 +216,58 @@ package body GPR2.Project.Source.Artifact is
                declare
                   Base : constant Filename_Type := BN & At_Suffix (CU.Index);
                begin
-                  if Source.Aggregated then
-                     Deps_Lib.Insert
-                       (CU.Index,
-                        GPR2.Path_Name.Create_File
-                          (Base & D_Suffix,
-                           Filename_Type
-                             (Source.Aggregating_View.Library_Ali_Directory
-                              .Value)));
+                  Insert_If_Defined
+                    (Deps_Lib,
+                     CU.Index,
+                     From_Hierarchy
+                       (View,
+                        Base & D_Suffix,
+                        PRA.Library_Ali_Dir, True));
 
-                  else
-                     Object_Files.Insert
-                       (CU.Index,
-                        From_Hierarchy (Base & O_Suffix, PRA.Object_Dir));
-
-                     if View.Is_Library and then Lang = "Ada" then
-                        Deps_Lib.Insert
-                          (CU.Index,
-                           From_Hierarchy
-                             (Base & D_Suffix, PRA.Library_Ali_Dir));
-                     end if;
-
-                     Deps_Obj.Insert
-                       (CU.Index,
-                        From_Hierarchy (Base & D_Suffix, PRA.Object_Dir));
+                  if View.Kind /= K_Aggregate_Library then
+                     Insert_If_Defined
+                       (Object_Files,
+                        CU.Index,
+                        From_Hierarchy
+                          (View, Base & O_Suffix, PRA.Object_Dir, True));
+                     Insert_If_Defined
+                       (Deps_Obj,
+                        CU.Index,
+                        From_Hierarchy
+                          (View, Base & D_Suffix, PRA.Object_Dir, True));
                   end if;
                end;
             end if;
          end loop;
 
-      elsif Source.Aggregated then
-         --  For aggregated library the .ali is also copied into the
-         --  aggregate library directory.
-
-         Deps_Lib.Insert
-           (1,
-            GPR2.Path_Name.Create_File
-              (BN & D_Suffix,
-               Filename_Type
-                 (Source.Aggregating_View.Library_Ali_Directory.Value)));
-
       else
-         Object_Files.Insert
-           (1, From_Hierarchy (BN & O_Suffix, PRA.Object_Dir));
+         Insert_If_Defined
+           (Deps_Lib,
+            1,
+            From_Hierarchy (View, BN & D_Suffix, PRA.Library_Ali_Dir, True));
 
-         if View.Is_Library and then Lang = "Ada" then
-            Deps_Lib.Insert
-              (1, From_Hierarchy (BN & D_Suffix, PRA.Library_Ali_Dir));
+         if View.Kind /= K_Aggregate_Library then
+            Insert_If_Defined
+              (Object_Files,
+               1,
+               From_Hierarchy (View, BN & O_Suffix, PRA.Object_Dir, True));
+            Insert_If_Defined
+              (Deps_Obj,
+               1,
+               From_Hierarchy (View, BN & D_Suffix, PRA.Object_Dir, True));
          end if;
+      end if;
 
-         Deps_Obj.Insert (1, From_Hierarchy (BN & D_Suffix, PRA.Object_Dir));
+      if View.Kind /= K_Aggregate_Library then
+         Callgraph := GPR2.Path_Name.Create_File
+           (BN & C_Suffix,
+            Filename_Type (View.Object_Directory.Value));
+         Coverage := GPR2.Path_Name.Create_File
+           (BN & Cov_Suffix,
+            Filename_Type (View.Object_Directory.Value));
+         Switches := GPR2.Path_Name.Create_File
+           (BN & S_Suffix,
+            Filename_Type (View.Object_Directory.Value));
       end if;
 
       return Artifact.Object'
@@ -310,6 +367,20 @@ package body GPR2.Project.Source.Artifact is
    ----------
 
    function List (Self : Object) return GPR2.Path_Name.Set.Object is
+      Result : GPR2.Path_Name.Set.Object := Self.List_To_Clean;
+   begin
+      if Self.Has_Coverage then
+         Result.Append (Self.Coverage);
+      end if;
+
+      return Result;
+   end List;
+
+   -------------------
+   -- List_To_Clean --
+   -------------------
+
+   function List_To_Clean (Self : Object) return GPR2.Path_Name.Set.Object is
       P_Source : constant GPR2.Project.Source.Object := Self.Source;
       Source   : constant GPR2.Source.Object := P_Source.Source;
       Lang     : constant Name_Type := Source.Language;
@@ -380,12 +451,8 @@ package body GPR2.Project.Source.Artifact is
          Result.Append (Self.Callgraph);
       end if;
 
-      if Self.Has_Coverage then
-         Result.Append (Self.Coverage);
-      end if;
-
       return Result;
-   end List;
+   end List_To_Clean;
 
    -----------------
    -- Object_Code --

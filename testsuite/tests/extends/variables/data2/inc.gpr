@@ -1,0 +1,3 @@
+project Inc is
+   Var := "inc";
+end Inc;

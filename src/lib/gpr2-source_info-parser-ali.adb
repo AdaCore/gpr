@@ -32,6 +32,7 @@ with GNATCOLL.Utils;
 with GPR2.Path_Name;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.Source.Artifact;
+with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Source_Info.Parser.Registry;
 
@@ -49,7 +50,8 @@ package body GPR2.Source_Info.Parser.ALI is
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Path_Name.Object;
       LI     : Path_Name.Object'Class;
-      U_Ref  : in out GPR2.Unit.Object);
+      U_Ref  : in out GPR2.Unit.Object;
+      View   : Project.View.Object);
    --  Parse single ALI file
 
    procedure Union
@@ -83,7 +85,9 @@ package body GPR2.Source_Info.Parser.ALI is
         with Post => not Stream_IO.Is_Open (File.FD);
 
       function Get_Token
-        (File : in out Handle; Stop_At_LF : Boolean := False) return String
+        (File          : in out Handle;
+         Stop_At_LF    : Boolean := False;
+         May_Be_Quoted : Boolean := False) return String
         with Pre => Stream_IO.Is_Open (File.FD);
       --  Get next token on the file.
       --  If Stop_At_LF is True, then no token will be read after the current
@@ -142,7 +146,9 @@ package body GPR2.Source_Info.Parser.ALI is
       ---------------
 
       function Get_Token
-        (File : in out Handle; Stop_At_LF : Boolean := False) return String
+        (File          : in out Handle;
+         Stop_At_LF    : Boolean := False;
+         May_Be_Quoted : Boolean := False) return String
       is
          function Next_Char return Character with Inline;
          --  Get next char in buffer
@@ -154,33 +160,72 @@ package body GPR2.Source_Info.Parser.ALI is
          Cur : Content_Index := 0;
          C   : Character     := ASCII.NUL;
 
+         Quoted : Boolean := False;
+         QN     : Natural := 0;
+
          procedure Get_Word with Inline;
          --  Read a word, result will be in Tok (Tok'First .. Cur)
 
-         function Is_Sep (C : Character) return Boolean is
+         function Is_Separator return Boolean;
+         --  The C character is separator
+
+         function Is_Space return Boolean is
            (C in ' ' | ASCII.HT | ASCII.CR | ASCII.LF | ASCII.EOT);
-         --  The character is separator
+         --  The C character is space
 
          --------------
          -- Get_Word --
          --------------
 
          procedure Get_Word is
-            C : Character;
          begin
             loop
                C := Next_Char;
 
-               if not Is_Sep (C) then
-                  Cur := Cur + 1;
-                  Tok (Cur) := C;
-
-               else
+               if Is_Separator then
                   File.Current := File.Current - 1;
                   exit;
+
+               else
+                  Cur := Cur + 1;
+                  Tok (Cur) := C;
                end if;
             end loop;
          end Get_Word;
+
+         ------------------
+         -- Is_Separator --
+         ------------------
+
+         function Is_Separator return Boolean is
+         begin
+            if Quoted then
+               if C = '"' then
+                  QN := QN + 1;
+                  if QN = 2 then
+                     Cur := Cur - 1;
+                     QN := 0;
+                  end if;
+
+               elsif QN = 1 then
+                  if Is_Space then
+                     return True;
+                  else
+                     Cur := Cur + 1;
+                     Tok (Cur) := C;
+
+                     raise Scan_ALI_Error with
+                       "Wrong quoted format of '" & Tok (Tok'First .. Cur)
+                       & ''';
+                  end if;
+               end if;
+
+               return False;
+
+            else
+               return Is_Space;
+            end if;
+         end Is_Separator;
 
          ---------------
          -- Next_Char --
@@ -214,17 +259,21 @@ package body GPR2.Source_Info.Parser.ALI is
             Cur := 1;
             Tok (Cur) := C;
 
-            if C = ASCII.EOT then
+            if May_Be_Quoted and then C = '"' then
+               Quoted := True;
+            end if;
+
+            if not Is_Space then
+               Get_Word;
+               exit Read_Token;
+
+            elsif C = ASCII.EOT then
                Cur := 0;
                exit Read_Token;
 
             elsif C = ASCII.LF then
                File.At_LF := True;
                File.Line := File.Line + 1;
-
-            elsif not Is_Sep (C) then
-               Get_Word;
-               exit Read_Token;
             end if;
          end loop Read_Token;
 
@@ -297,7 +346,8 @@ package body GPR2.Source_Info.Parser.ALI is
       Data   : in out Source_Info.Object'Class;
       Source : GPR2.Path_Name.Object;
       LI     : Path_Name.Object'Class;
-      U_Ref  : in out GPR2.Unit.Object)
+      U_Ref  : in out GPR2.Unit.Object;
+      View   : Project.View.Object)
    is
       use all type GPR2.Unit.Library_Unit_Type;
 
@@ -307,6 +357,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
       subtype CU_Index is Natural range 0 .. 2;
 
+      LI_Idx  : constant Unit_Index  := Unit_Index (U_Ref.Index);
       B_Name  : constant Simple_Name := Source.Simple_Name;
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
@@ -331,8 +382,7 @@ package body GPR2.Source_Info.Parser.ALI is
       procedure Fill_Unit;
       --  Add all units defined in ALI (spec, body or both)
 
-      procedure Fill_With
-        with Post => Withs.Length > Withs'Old.Length;
+      procedure Fill_With;
       --  Add all withed units into Withs below
 
       procedure Set_Source_Info_Data (Cache : Cache_Holder);
@@ -357,9 +407,15 @@ package body GPR2.Source_Info.Parser.ALI is
 
          function Checksum (S : String) return Word;
 
-         function Get_Token return String;
+         function Get_Token (May_Be_Quoted : Boolean := False) return String;
 
          function Time_Stamp (S : String) return Ada.Calendar.Time;
+
+         function To_Unit_Name return String;
+         --  This routine is needed only on GNAT version 7.2.2 and older,
+         --  because unit name and kind is not defined in D lines.
+         --  Get unit name from project tree if available.
+         --  Put unresolved dependency into queue to resolve it later.
 
          --------------
          -- Checksum --
@@ -397,9 +453,11 @@ package body GPR2.Source_Info.Parser.ALI is
          -- Get_Token --
          ---------------
 
-         function Get_Token return String is
+         function Get_Token (May_Be_Quoted : Boolean := False) return String is
             Tok : constant String :=
-                    IO.Get_Token (A_Handle, Stop_At_LF => True);
+                    IO.Get_Token
+                      (A_Handle, Stop_At_LF => True,
+                       May_Be_Quoted => May_Be_Quoted);
          begin
             if Tok = "" then
                raise Scan_ALI_Error with "Missed dependency field";
@@ -417,7 +475,7 @@ package body GPR2.Source_Info.Parser.ALI is
          begin
             if S'Length /= 14 then
                raise Scan_ALI_Error with
-                 "Wrong timestamp length" & S'Length'Img;
+                 "Wrong timestamp """ & S & """ length" & S'Length'Img;
             end if;
 
             T := S;
@@ -427,29 +485,77 @@ package body GPR2.Source_Info.Parser.ALI is
                & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
          end Time_Stamp;
 
-         Sfile  : constant String            := Get_Token;
+         Sfile  : constant String            := Get_Token (True);
          Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
+         Forth  : constant String            :=
+                    IO.Get_Token (A_Handle, Stop_At_LF => True);
+         --  Could be empty on *.adc file dependency, preprocessor files or on
+         --  GNAT version 7.2.2 and older.
 
          use GPR2.Unit;
 
-         Kind : Library_Unit_Type; -- Unit_Kind
-         Name : constant String := IO.Get_Token (A_Handle, Stop_At_LF => True);
+         Kind : Library_Unit_Type;
+         Taken_From_Tree : Boolean := False;
+
+         ------------------
+         -- To_Unit_Name --
+         ------------------
+
+         function To_Unit_Name return String is
+            Path : constant Path_Name.Object :=
+                     Path_Name.Create_File
+                       (Simple_Name (Sfile), Path_Name.No_Resolution);
+            Tree : constant access Project.Tree.Object := View.Tree;
+            View : Project.View.Object := Tree.Get_View (Path);
+            Source : Project.Source.Object;
+         begin
+            if not View.Is_Defined then
+               Tree.Update_Sources
+                 (Stop_On_Error => False,
+                  With_Runtime  => True,
+                  Backends      => No_Backends);
+
+               View := Tree.Get_View (Path);
+
+               if not View.Is_Defined then
+                  return "";
+               end if;
+            end if;
+
+            Source := View.Source (Path);
+
+            pragma Assert (Source.Is_Defined);
+
+            Taken_From_Tree := True;
+            Kind := Source.Source.Kind;
+
+            return To_Lower (Source.Source.Unit_Name);
+         end To_Unit_Name;
+
+         Name : constant String :=
+                  (if Forth = "" and then Chksum /= 0 -- GNAT 7.2.2 and older
+                   then To_Unit_Name else Forth);
          --  Unit_Name
-         --  Could be empty on *.adc file dependency
 
          function Kind_Len return Natural is
-            (if Kind in S_Spec | S_Body then 2 else 0);
+           (if Kind in S_Spec | S_Body and then not Taken_From_Tree
+            then 2 else 0);
          --  Length of suffix denoting dependency kind
 
+         function Image (Dep : Dependency) return String is
+           ('"' & To_String (Dep.Sfile) & ' ' & Formatting.Image (Dep.Stamp)
+            & ' ' & To_Hex_String (Dep.Checksum) & '"');
+
          Suffix : constant String :=
-                     (if Name'Length > 2
-                      then Name (Name'Last - 1 .. Name'Last)
+                     (if Forth'Length > 2
+                      then Forth (Forth'Last - 1 .. Forth'Last)
                       else "");
          Position : Dependency_Maps.Cursor;
          C_Cache  : Cache_Map.Cursor;
          Inserted : Boolean;
          H_Cache  : Cache_Holder;
+         C_Index  : Unit_Dependencies.Cursor;
 
       begin
          if Suffix = "%s" then
@@ -459,10 +565,11 @@ package body GPR2.Source_Info.Parser.ALI is
             Kind := S_Body;
 
          elsif Name = "" then
-            --  *.adc file dependency
+            --  *.adc and preprocessor file dependencies
+
             return;
 
-         else
+         elsif not Taken_From_Tree then
             Kind := S_Separate;
 
             if GNATCOLL.Utils.Starts_With
@@ -502,6 +609,9 @@ package body GPR2.Source_Info.Parser.ALI is
          end loop;
 
          Data.Dependencies.Insert
+           (LI_Idx, Dependency_Maps.Empty_Map, C_Index, Inserted);
+
+         Data.Dependencies (C_Index).Insert
            ((+Name (Name'First .. Name'Last - Kind_Len), Kind),
             (+Sfile, Stamp, Chksum), Position, Inserted);
 
@@ -509,9 +619,13 @@ package body GPR2.Source_Info.Parser.ALI is
            and then Dependency_Maps.Element (Position)
                     /= (+Sfile, Stamp, Chksum)
          then
+            Ada.Text_IO.Put_Line
+              ("# " & Image ((+Sfile, Stamp, Chksum)));
+
             raise Scan_ALI_Error with
-              Name & " already in dependencies of " & LI.Value
-              & " with different data";
+              '"' & Name & """ already in dependencies of " & LI.Value
+              & " with different data "
+              & Image (Dependency_Maps.Element (Position));
          end if;
       end Fill_Dep;
 
@@ -671,10 +785,15 @@ package body GPR2.Source_Info.Parser.ALI is
             Sloc : constant GPR2.Source_Reference.Object :=
                      GPR2.Source_Reference.Object
                        (Source_Reference.Create (Source.Value, 1, 1));
+            Position : Source_Reference.Identifier.Set.Cursor;
+            Inserted : Boolean;
          begin
+            --  With lines could be duplicated, ignore the next duplicated one
+
             Withs.Insert
               (Source_Reference.Identifier.Create
-                 (Sloc => Sloc, Text => Name_Type (N (1 .. U_Last))));
+                 (Sloc => Sloc, Text => Name_Type (N (1 .. U_Last))),
+              Position, Inserted);
          end;
       end Fill_With;
 
@@ -683,6 +802,8 @@ package body GPR2.Source_Info.Parser.ALI is
       --------------------------
 
       procedure Set_Source_Info_Data (Cache : Cache_Holder) is
+         Inserted : Boolean;
+         Position : Unit_Dependencies.Cursor;
       begin
          pragma Assert (U_Ref.Index = Cache.Unit.Index);
          pragma Assert
@@ -702,7 +823,9 @@ package body GPR2.Source_Info.Parser.ALI is
          Data.LI_Timestamp := Cache.Timestamp;
          Data.Checksum     := Cache.Checksum;
 
-         Union (Data.Dependencies, Cache.Depends);
+         Data.Dependencies.Insert
+           (LI_Idx, Dependency_Maps.Empty_Map, Position, Inserted);
+         Union (Data.Dependencies (Position), Cache.Depends);
       end Set_Source_Info_Data;
 
       use GPR2.Unit;
@@ -802,9 +925,8 @@ package body GPR2.Source_Info.Parser.ALI is
 
          --  Skip to Units (U lines)
 
-         loop
+         while Header /= 'U' loop
             Next_Line;
-            exit when Header = 'U';
          end loop;
 
          --  Read Units + {Withs}
@@ -834,11 +956,19 @@ package body GPR2.Source_Info.Parser.ALI is
 
             CU_Idx := CU_Idx + 1;
 
+            if U_Ref.Name = Name_Type (-U_Name) then
+               --  Keep original casing
+
+               U_Name := +String (U_Ref.Name);
+
+            else
+               View.Reindex_Unit
+                 (From => U_Ref.Name, To => Name_Type (-U_Name));
+            end if;
+
             CUs (CU_Idx) :=
               Unit.Create
-                (Name          => (if U_Ref.Name = Name_Type (-U_Name)
-                                   then U_Ref.Name -- Try to keep char case
-                                   else Name_Type (-U_Name)),
+                (Name          => Name_Type (-U_Name),
                  Index         => U_Ref.Index,
                  Lib_Unit_Kind => U_Kind,
                  Lib_Item_Kind => L_Type,
@@ -870,6 +1000,19 @@ package body GPR2.Source_Info.Parser.ALI is
          end loop;
 
          if Current = 0 then
+            if (CU_Idx = 1
+                and then U_Ref.Kind = Unit.S_Body
+                and then CUs (1).Kind = Unit.S_Spec_Only)
+              or else
+                (CU_Idx = 2
+                 and then CU_BN (1) = CU_BN (2))
+            then
+               --  Body file with pragma No_Body
+
+               View.Hide_Unit_Body (U_Ref.Name);
+               View.Hide_Unit_Body (CUs (1).Name);
+            end if;
+
             Data.Parsed := Source_Info.None;
             IO.Close (A_Handle);
             return;
@@ -910,7 +1053,7 @@ package body GPR2.Source_Info.Parser.ALI is
          for K in 1 .. CU_Idx loop
             Self.Cache.Insert
               (Key (LI, Simple_Name (-CU_BN (K)), CUs (K).Kind),
-               (CUs (K), Data.Dependencies, CU_CS (K), CU_TS (K)),
+               (CUs (K), Data.Dependencies (LI_Idx), CU_CS (K), CU_TS (K)),
                In_Cache, Inserted);
 
             pragma Assert
@@ -926,7 +1069,9 @@ package body GPR2.Source_Info.Parser.ALI is
       exception
          when E : others =>
             Ada.Text_IO.Put_Line
-              ("#ALI parser " & Ada.Exceptions.Exception_Information (E));
+              ("ALI parser error: " & LI.Value
+               & ' ' & Ada.Exceptions.Exception_Information (E));
+
             IO.Close (A_Handle);
             Data.Parsed := Source_Info.None;
       end;
@@ -970,6 +1115,8 @@ package body GPR2.Source_Info.Parser.ALI is
          procedure Set_Data is
             Ref : constant Cache_Map.Constant_Reference_Type :=
                     Self.Cache.Constant_Reference (CS);
+            Inserted : Boolean;
+            Position : Unit_Dependencies.Cursor;
          begin
             pragma Assert (SU.Name = Ref.Unit.Name);
 
@@ -983,7 +1130,10 @@ package body GPR2.Source_Info.Parser.ALI is
             Data.Checksum     := Ref.Checksum;
             Data.LI_Timestamp := Ref.Timestamp;
 
-            Union (Data.Dependencies, Ref.Depends);
+            Data.Dependencies.Insert
+              (Unit_Index (SU.Index), Dependency_Maps.Empty_Map, Position,
+               Inserted);
+            Union (Data.Dependencies (Position), Ref.Depends);
          end Set_Data;
 
       begin
@@ -994,8 +1144,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
          for J in reverse Name'Range loop
             if Name (J) = '.' then
-               FU := View.Unit
-                       (Name (Name'First .. J - 1), Need_Update => False);
+               FU := View.Unit (Name (Name'First .. J - 1));
                exit when FU.Is_Defined;
             end if;
          end loop;
@@ -1004,7 +1153,7 @@ package body GPR2.Source_Info.Parser.ALI is
             return;
          end if;
 
-         Src := View.Source (FU.Main_Body, Need_Update => False);
+         Src := View.Source (FU.Main_Body);
 
          declare
             Info : Source_Info.Object'Class := Src.Source;
@@ -1020,7 +1169,8 @@ package body GPR2.Source_Info.Parser.ALI is
                      Dep := Src.Artifacts.Dependency (CU.Index);
 
                      if Dep.Exists then
-                        Compute (Self.all, Info, FU.Main_Body, Dep, CU);
+                        Compute
+                          (Self.all, Info, FU.Main_Body, Dep, CU, View);
                      end if;
                   end if;
 
@@ -1046,7 +1196,7 @@ package body GPR2.Source_Info.Parser.ALI is
             LI := Arts.Dependency (CU.Index);
 
             if LI.Exists then
-               Compute (Self.all, Data, File, LI, CU);
+               Compute (Self.all, Data, File, LI, CU, View);
             elsif CU.Kind in Unit.Body_Kind then
                Check_Separated (CU);
             end if;

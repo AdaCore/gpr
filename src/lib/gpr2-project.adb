@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -41,7 +41,6 @@ package body GPR2.Project is
    procedure Append_Default_Search_Paths
      (Paths : in out Path_Name.Set.Object)
    is
-      Prefix : constant String := Get_Tools_Directory;
 
       procedure Append (Value : String)
         with Post => (if Value'Length = 0
@@ -52,7 +51,7 @@ package body GPR2.Project is
 
       procedure Add_List (Values : String)
         with Post => Paths'Old.Length <= Paths.Length;
-      --  Add list Values (which has OS dependant path separator) into
+      --  Add list Values (which has OS-dependent path separator) into
       --  Paths.
 
       --------------
@@ -120,19 +119,6 @@ package body GPR2.Project is
          Add_List (Environment_Variables.Value ("ADA_PROJECT_PATH"));
       end if;
 
-      if Prefix /= "" then
-         --  <prefix>/share/gpr
-
-         Append
-           (Directories.Compose
-              (Directories.Compose (Prefix, "share"), "gpr"));
-
-         --  <prefix>/lib/gnat
-
-         Append
-           (Directories.Compose
-              (Directories.Compose (Prefix, "lib"), "gnat"));
-      end if;
    end Append_Default_Search_Paths;
 
    ------------

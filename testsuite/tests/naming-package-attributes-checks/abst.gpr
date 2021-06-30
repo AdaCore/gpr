@@ -1,0 +1,11 @@
+with "import6";
+with "import8";
+abstract project Abst is
+    package Naming is
+       for Casing use "LOWERcase";
+       for Dot_Replacement use "";
+       for Spec_Suffix ("aDa") use "";
+       for Body_Suffix ("aDA") use "";
+       for Separate_Suffix use "";
+    end Naming;
+end Abst;

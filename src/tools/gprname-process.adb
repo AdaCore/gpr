@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -20,18 +20,23 @@ with Ada.Characters.Conversions;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
+with Ada.Strings.Wide_Wide_Unbounded;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
+with Ada.Wide_Wide_Text_IO;
 
 with GNAT.Case_Util;
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 with GNAT.Regpat;
 
+with GNATCOLL.OS.Constants;
+
 with GPR_Parser.Analysis;
 with GPR_Parser.Common;
 with GPR_Parser.Rewriting;
 
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
@@ -87,6 +92,12 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
       Str_Hash_Case_Insensitive,
       "=",
       Source.Set."=");
+
+   use type GNATCOLL.OS.OS_Type;
+
+   Is_Windows_Host : constant Boolean :=
+                       GNATCOLL.OS.Constants.OS = GNATCOLL.OS.Windows
+                         with Warnings => Off;
 
    procedure Search_Directory
      (Dir_Path       : Path_Name.Object;
@@ -248,8 +259,22 @@ begin
 
    --  Load the raw project, as it may define config-relevant attributes
 
+   declare
+      use GPR2.Containers;
+      RTS_Map : Name_Value_Map := Name_Value_Map_Package.Empty_Map;
    begin
-      Tree.Load_Autoconf (Project_Path, Context, Check_Shared_Lib => False);
+      if Opt.RTS /= No_String then
+         RTS_Map.Insert ("Ada", Value_Type (Opt.RTS));
+      end if;
+      Tree.Load_Autoconf
+        (Project_Path, Context,
+         Check_Shared_Lib  => False,
+         Target            =>
+           (if Opt.Target = No_String then
+               No_Name
+            else
+               Name_Type (Opt.Target)),
+         Language_Runtimes => RTS_Map);
    exception
       when Project_Error  | Processing_Error =>
          Show_Tree_Load_Errors (Tree);
@@ -316,6 +341,13 @@ begin
 
       Compiler_Path :=
         Path_Name.Create_File (Filename_Type (Driver_Attr.Value.Text));
+
+      if Is_Windows_Host and then not Compiler_Path.Exists then
+         pragma Warnings
+           (Off, "this code can never be executed and has been deleted");
+         Compiler_Path := Compiler_Path.Change_Extension (".exe");
+         pragma Warnings (On);
+      end if;
 
       if not Compiler_Path.Exists then
          Put_Line ("warning: invalid compiler path from configuration ("
@@ -525,6 +557,7 @@ begin
                               if Attr_Name = PRA.Languages
                                 or else Attr_Name = PRA.Source_Dirs
                                 or else Attr_Name = PRA.Source_List_File
+                                or else Attr_Name = PRA.Source_Files
                               then
                                  Remove_Child (Children_Handle, I);
                               end if;
@@ -544,9 +577,9 @@ begin
                      end if;
                   end loop;
 
-                  Insert_Child (Children_Handle, 1, Lang_H);
+                  Insert_Child (Children_Handle, 1, Src_List_File_H);
                   Insert_Child (Children_Handle, 2, Src_Dirs_H);
-                  Insert_Child (Children_Handle, 3, Src_List_File_H);
+                  Insert_Child (Children_Handle, 3, Lang_H);
                   Insert_Child (Children_Handle, 4, Pkg_H);
                end;
                return Stop;
@@ -772,6 +805,18 @@ begin
                      Rule     => Compilation_Unit_Rule);
 
       begin
+         if Has_Diagnostics (Unit) then
+            for D of Diagnostics (Unit) loop
+               Ada.Wide_Wide_Text_IO.Put_Line
+                 (Ada.Strings.Wide_Wide_Unbounded.To_Wide_Wide_String
+                    (D.Message));
+            end loop;
+
+            raise GPRname_Exception with
+              "could not create naming project file "
+              & Naming_Project_Path.Value;
+         end if;
+
          PP.Pretty_Print (Analysis_Unit => Unit);
 
          Stream_IO.Create

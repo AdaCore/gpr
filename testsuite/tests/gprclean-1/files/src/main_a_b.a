@@ -1,0 +1,11 @@
+with GNAT.IO;  use GNAT.IO;
+with Lib1;
+with Lib2;
+with Lib3;
+procedure main_a is
+begin
+   Put_Line ("Hello World!");
+   Lib1.P;
+   Lib2.P;
+   Lib3.P;
+end main_a;

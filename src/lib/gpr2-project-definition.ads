@@ -34,10 +34,12 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
+with GPR2.Project.View.Set;
 with GPR2.Project.Unit_Info.Set;
 with GPR2.Source_Info;
 with GPR2.Unit;
 with GPR2.View_Ids;
+with GPR2.View_Ids.Set;
 
 limited with GPR2.Project.Tree;
 
@@ -80,35 +82,36 @@ private package GPR2.Project.Definition is
    --  which own a context.
 
    type Data is new Definition_Base with record
-      Trees       : Tree;
+      Trees           : Tree;
 
       --  Actual values for the view
 
-      Extending       : Weak_Reference;
-      Extended        : View.Object;
-      Aggregate       : Weak_Reference;
-      Imports         : Project_View_Store.Map;
-      Limited_Imports : Project_View_Store.Map;
-      Aggregated      : Project_View_Store.Map;
-      Attrs           : Project.Attribute.Set.Object;
-      Vars            : Project.Variable.Set.Object;
-      Packs           : Project.Pack.Set.Object;
-      Types           : Project.Typ.Set.Object;
-      Sources         : Project.Source.Set.Object;
-      Sources_Map     : Simple_Name_Source.Map;
-      Units           : Unit_Info.Set.Object;
-      Unique_Id       : GPR2.View_Ids.View_Id;
-      Instance_Of     : GPR2.View_Ids.View_Id;
-      Root_View       : Weak_Reference;
+      Extending        : Weak_Reference;
+      Extended_Root    : View.Object;
+      Extended         : View.Set.Object;
+      Agg_Libraries    : GPR2.View_Ids.Set.Object;
+      Imports          : Project_View_Store.Map;
+      Limited_Imports  : Project_View_Store.Map;
+      Is_Imported      : Boolean := False;
+      Aggregated       : Project_View_Store.Map;
+      Attrs            : Project.Attribute.Set.Object;
+      Vars             : Project.Variable.Set.Object;
+      Packs            : Project.Pack.Set.Object;
+      Types            : Project.Typ.Set.Object;
+      Sources          : Project.Source.Set.Object;
+      Sources_Map      : Simple_Name_Source.Map;
+      Units            : Unit_Info.Set.Object;
+      Unique_Id        : GPR2.View_Ids.View_Id;
+      Root_View        : Weak_Reference;
       --  Either root aggregated project view, or just root view of the tree
 
       --  Some general information
 
-      Context : GPR2.Context.Context_Kind := GPR2.Context.Root;
+      Context         : GPR2.Context.Context_Kind := GPR2.Context.Root;
       --  Use the aggregate context including External attributes or only the
       --  root context.
 
-      Tree : access Project.Tree.Object;
+      Tree            : access Project.Tree.Object;
       --  The project tree for this view
 
    end record;
@@ -160,6 +163,10 @@ private package GPR2.Project.Definition is
      (View : Project.View.Object) return Context.Object;
    --  Returns context of the project view
 
+   Are_Sources_Loaded : access function
+     (Tree : Project.Tree.Object) return Boolean;
+   --  Returns True if the sources are loaded into project tree
+
    --------------------------------------------------------------
    -- Private routines exported from GPR2.Project.View package --
    --------------------------------------------------------------
@@ -202,6 +209,12 @@ private package GPR2.Project.Definition is
 
    Apply_Root_And_Subdirs : access function
      (Self : View.Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+
+   Enable_Ali_Parser : access procedure
+     (Tree : in out Project.Tree.Object; Enable : Boolean);
+
+   Ali_Parser_Is_On : access function
+     (Tree : Project.Tree.Object) return Boolean;
 
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
@@ -260,7 +273,7 @@ private package GPR2.Project.Definition is
       View          : Project.View.Object;
       Stop_On_Error : Boolean;
       Backends      : Source_Info.Backend_Set)
-     with Pre => View.Is_Defined and then Backends /= Source_Info.No_Backends;
+     with Pre => View.Is_Defined;
    --  Ensure that the view definition sources are up-to-date. This is needed
    --  before computing the dependencies of a source in the project tree. This
    --  routine is called where needed and is there for internal use only.
@@ -273,12 +286,6 @@ private package GPR2.Project.Definition is
 
    procedure Set_Default_Attributes (Def : in out Data);
    --  Set default and inherited attributes for the project view
-
-   function Check_Circular_References
-     (View : Project.View.Object) return Boolean;
-   --  Check that references between View.Object does not create cycles.
-   --  Either returns True or raises exception about found reference circle.
-   --  Return value need to use this function in pragma Assert.
 
    procedure Sources_Map_Insert
      (Def : in out Data;
@@ -295,5 +302,9 @@ private package GPR2.Project.Definition is
    procedure Check_Aggregate_Library_Dirs (View : Project.View.Object);
    --  Report aggregate library (ALI)? directory cannot be shared with
    --  (object|library) directory of aggregated project errors
+
+   procedure Check_Package_Naming (View : Project.View.Object);
+   --  For all tree's views check Casing, Dot_Replacement, Spec_Suffix,
+   --  Body_Suffix and Separate_Suffix naming package attributes value.
 
 end GPR2.Project.Definition;

@@ -1,0 +1,120 @@
+testing files/imported2
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/imported1
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/extending6
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/extending5
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/extending4
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/extending3
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/extending2
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/extending1
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/aggregate2
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/aggregate1
+imported2.gpr:2:25: error: undefined external reference "EXTERNAL_WITHOUT_DEFAULT"
+testing files/imported2
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1
+Value2=default_value
+testing files/imported1
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1a
+Value2=default_value.i1b
+testing files/extending6
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6a
+Value2=default_value.i1d.e6b
+testing files/extending5
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5a
+Value2=default_value.i1d.e6d.e5b
+testing files/extending4
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4a
+Value2=default_value.i1d.e6d.e5d.e4b
+testing files/extending3
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4c.e3a
+Value2=default_value.i1d.e6d.e5d.e4d.e3b
+testing files/extending2
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4c.e3c.e2a
+Value2=default_value.i1d.e6d.e5d.e4d.e3d.e2b
+testing files/extending1
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4c.e3c.e2c.e1a
+Value2=default_value.i1d.e6d.e5d.e4d.e3d.e2d.e1b
+testing files/aggregate2
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1 not found
+Value2 not found
+testing files/aggregate1
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1 not found
+Value2 not found
+testing files/imported2
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1
+Value2=environment_value_2
+testing files/imported1
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1a
+Value2=environment_value_2.i1b
+testing files/extending6
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6a
+Value2=environment_value_2.i1d.e6b
+testing files/extending5
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5a
+Value2=environment_value_2.i1d.e6d.e5b
+testing files/extending4
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4a
+Value2=environment_value_2.i1d.e6d.e5d.e4b
+testing files/extending3
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4c.e3a
+Value2=environment_value_2.i1d.e6d.e5d.e4d.e3b
+testing files/extending2
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4c.e3c.e2a
+Value2=environment_value_2.i1d.e6d.e5d.e4d.e3d.e2b
+testing files/extending1
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1=environment_value_1.i1c.e6c.e5c.e4c.e3c.e2c.e1a
+Value2=environment_value_2.i1d.e6d.e5d.e4d.e3d.e2d.e1b
+testing files/aggregate2
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1 not found
+Value2 not found
+testing files/aggregate1
+EXTERNAL_WITHOUT_DEFAULT in externals
+EXTERNAL_WITH_DEFAULT in externals
+Value1 not found
+Value2 not found

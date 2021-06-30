@@ -31,6 +31,14 @@ Library Version Filename : libabc.so.1.4
 Library Major Version Filename : libabc.so.1
                                : /lib/release/libabc.so.1
 Library_Standalone : NO
-demo.gpr:28:24: warning: library directory "lib" not found
-demo.gpr:22:23: warning: object directory "obj" not found
-demo.gpr:24:36: error: "libabc.so.A.B" not correct format for Library_Version
+Demo     K_LIBRARY
+Library_Name : abc
+Library_Directory : release
+                  : /lib/release
+Library Filename : libabc.so
+                 : /lib/release/libabc.so
+Library Version Filename : libabc.so.A.B
+                         : /lib/release/libabc.so.A.B
+Library Major Version Filename : libabc.so.A
+                               : /lib/release/libabc.so.A
+Library_Standalone : NO

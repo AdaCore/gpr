@@ -1,0 +1,4 @@
+aggregate project Prepend is
+   for Project_Path use ("-", "dep.prepended");
+   for Project_Files use ("prj.gpr");
+end Prepend;

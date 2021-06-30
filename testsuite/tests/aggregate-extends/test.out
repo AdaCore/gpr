@@ -1,23 +1,21 @@
-[Conf]   K_STANDARD
-V:   K -> one
+[Agg] K_AGGREGATE
+   with       [B] K_ABSTRACT
+         extends   [Conf] K_STANDARD
+               K = one
 
-[B]      K_ABSTRACT
-V:   Var -> var is one
+         Var = var is one
 
-[Agg]    K_AGGREGATE_LIBRARY
-A:   External -> two
-A:   Library_Dir -> .
-A:   Library_Name -> Agg
-A:   Project_Files -> a.gpr
-V:   Var -> var is one
+   External (KVAL) -> two
+   Project_Files -> a.gpr
+   Var = var is one
+   aggregates [A] K_STANDARD
+         with       [B] K_ABSTRACT
+               extends   [Conf] K_STANDARD
+                     K = two
 
-[Conf]   K_STANDARD
-V:   K -> two
+               Var = var is two
 
-[B]      K_ABSTRACT
-V:   Var -> var is two
+         Object_Dir -> a
+         Var = var is two
 
-[A]      K_STANDARD
-A:   Object_Dir -> a
-V:   Var -> var is two
 

@@ -1,0 +1,9 @@
+with "extending";
+with "import7";
+with "import9";
+project Aggregated is
+    package Naming is
+       for Casing use "invalidcasing";
+       for Dot_Replacement use "-";
+    end Naming;
+end Aggregated;

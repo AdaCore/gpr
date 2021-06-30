@@ -1,0 +1,10 @@
+project Prj1 is
+    for Source_Dirs use ("src1");
+    for Source_Dirs use project'Source_Dirs & "src2";
+
+    A := "A" & "B";
+    B := () & "A" & "B";
+    C := ("A" & "B") & "C" & "D";
+    D := A & "C";
+    E := B & "C" & ("D" & "E") & "F";
+end Prj1;

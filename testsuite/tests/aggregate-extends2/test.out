@@ -1,31 +1,45 @@
-[Conf]   K_ABSTRACT
-   K = one
-   Pck:   Compiler
-      Default_Switches (Ada) -> -g
+[Agg] K_AGGREGATE
+   with       [B] K_ABSTRACT
+         extends   [Conf] K_ABSTRACT
+               K = one
+               Pck:   Compiler
+                  Default_Switches (Ada) -> -g
 
-[B]      K_ABSTRACT
-   Var = var is one
+         Var = var is one
+         Pck:   Compiler
+            Default_Switches (Ada) -> -g
 
-[Agg]    K_AGGREGATE_LIBRARY
+   extends   [Conf] K_ABSTRACT
+         K = one
+         Pck:   Compiler
+            Default_Switches (Ada) -> -g
+
    External (KVAL) -> two
-   Library_Dir -> .
-   Library_Name -> Agg
    Project_Files -> a.gpr
    Var1 = var is one
    Var2 = one
-
-[Conf]   K_ABSTRACT
-   K = two
    Pck:   Compiler
       Default_Switches (Ada) -> -g
+   aggregates [A] K_STANDARD
+         with       [B] K_ABSTRACT
+               extends   [Conf] K_ABSTRACT
+                     K = two
+                     Pck:   Compiler
+                        Default_Switches (Ada) -> -g
 
-[B]      K_ABSTRACT
-   Var = var is two
+               Var = var is two
+               Pck:   Compiler
+                  Default_Switches (Ada) -> -g
 
-[A]      K_STANDARD
-   Object_Dir -> a
-   Var = var is two
-   Pck:   Compiler
-      Default_Switches (Ada) -> -g
-      Var = var is two
+         extends   [Conf] K_ABSTRACT
+               K = two
+               Pck:   Compiler
+                  Default_Switches (Ada) -> -g
+
+         Object_Dir -> a
+         Var = var is two
+         Pck:   Compiler
+            Default_Switches (Ada) -> -g
+            VC = 12
+
 

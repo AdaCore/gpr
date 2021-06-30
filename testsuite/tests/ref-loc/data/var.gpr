@@ -1,0 +1,4 @@
+with "inc";
+project Var is
+   for Object_Dir use Inc.Var;
+end Var;

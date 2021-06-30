@@ -112,7 +112,12 @@ package body GPR2.KB.Parsing is
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create
                     ("KNOWLEDGE_BASE.PARSING_TRACE",
-                     GNATCOLL.Traces.From_Config);
+                     GNATCOLL.Traces.Off);
+
+   Entity_Trace : constant GNATCOLL.Traces.Trace_Handle :=
+                    GNATCOLL.Traces.Create
+                      ("KNOWLEDGE_BASE.ENTITY_TRACE",
+                       GNATCOLL.Traces.Off);
 
    Invalid_KB : exception;
    --  Raised when an error occurred while parsing the knowledge base
@@ -460,8 +465,8 @@ package body GPR2.KB.Parsing is
                     (if Pub_Id /= "" or else Sys_Id /= "" then new String_Input
                      else null);
       begin
-         Trace (Main_Trace, "Public_Id=""" & Public_Id & """");
-         Trace (Main_Trace, "System_Id=""" & System_Id & """");
+         Trace (Entity_Trace, "Public_Id=""" & Public_Id & """");
+         Trace (Entity_Trace, "System_Id=""" & System_Id & """");
 
          if Pub_Id /= "" and then KB_Content.Contains (Pub_Id) then
             Open
@@ -805,6 +810,8 @@ package body GPR2.KB.Parsing is
                   exit;
                end if;
             end loop;
+
+            Value.Sloc := Error_Sloc;
 
             --  Constant value is not within a nested node
 

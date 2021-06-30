@@ -1,0 +1,10 @@
+project Import9 is
+   for Languages use ("Ada", "C");
+
+    package Naming is
+        for Dot_Replacement use "- -";
+        for Spec_Suffix ("c") use ".ada";
+        for Body_Suffix ("ada") use ".ada";
+        for Separate_Suffix use ".ada";
+    end Naming;
+end Import9;

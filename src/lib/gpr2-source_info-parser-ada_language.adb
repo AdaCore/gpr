@@ -66,14 +66,19 @@ package body GPR2.Source_Info.Parser.Ada_Language is
          use all type GPR2.Unit.Flag;
 
          function Process_Defining_Name
-           (N : GPR_Node'Class) return Unbounded_String;
+           (N     : GPR_Node'Class;
+            Index : Natural := 0;
+            Count : Positive := 1) return Unbounded_String;
 
          ---------------------------
          -- Process_Defining_Name --
          ---------------------------
 
          function Process_Defining_Name
-           (N : GPR_Node'Class) return Unbounded_String is
+           (N     : GPR_Node'Class;
+            Index : Natural := 0;
+            Count : Positive := 1) return Unbounded_String
+         is
          begin
             case N.Kind is
                when GPR_Prefix =>
@@ -88,10 +93,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   return +To_UTF8 (N.Text);
 
                when GPR_Expr_List =>
-                  pragma Assert (N.As_Expr_List.Children_Count = 1);
+                  pragma Assert (N.As_Expr_List.Children_Count = Count);
+                  pragma Assert (N.As_Expr_List.Children_Count > Index);
 
                   return Process_Defining_Name
-                    (N.As_Expr_List.Child (N.As_Expr_List.First_Child_Index));
+                    (N.As_Expr_List.Child
+                       (N.As_Expr_List.First_Child_Index + Index));
 
                when others =>
                   raise Constraint_Error
@@ -133,10 +140,13 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      Item   : constant O :=
                                 O (Source_Reference.Identifier.Create
                                    (Sloc, Name_Type (Name)));
+                     Position : Containers.Name_Type_Set.Cursor;
+                     Inserted : Boolean;
                   begin
-                     if not W_Found.Contains (N) then
+                     W_Found.Insert (N, Position, Inserted);
+
+                     if Inserted then
                         U_Withed.Insert (Item);
-                        W_Found.Include (N);
                      end if;
 
                      if B_Name /= Name then
@@ -145,7 +155,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   end Register;
 
                begin
-                  Register (-(Process_Defining_Name (N.F_Packages)));
+                  for I in 0 .. N.F_Packages.As_Expr_List.Children_Count - 1
+                  loop
+                     Register (-(Process_Defining_Name (N.F_Packages, I,
+                               N.F_Packages.As_Expr_List.Children_Count)));
+
+                  end loop;
                end;
 
                return Over;

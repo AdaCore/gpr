@@ -1,0 +1,11 @@
+with "import5";
+with "import10";
+project Extended is
+    package Naming is
+       for Casing use "MiXeDcAsE";
+       for Dot_Replacement use "--0";
+       for Specification_Suffix ("aDa") use "a.";
+       for Implementation_Suffix ("aDA") use "b.";
+       for Separate_Suffix use "c.";
+    end Naming;
+end Extended;

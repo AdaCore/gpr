@@ -1,0 +1,12 @@
+with "prj_naming.gpr";
+with "gpr.gpr";
+
+project Prj is
+
+   for Source_List_File use "prj_source_list.txt";
+   for Source_Dirs use (".");
+   for Languages use ("Ada");
+
+   package Naming renames Prj_Naming.Naming;
+
+end Prj;

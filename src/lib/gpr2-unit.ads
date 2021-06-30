@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -135,6 +135,9 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns the library type, i.e is the unit package or subroutine
 
+   function Main_Kind (Self : Object) return Main_Type
+     with Pre => Self.Is_Defined;
+
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object
      with Pre => Self.Is_Defined;
@@ -172,6 +175,13 @@ package GPR2.Unit is
 
    function Image (Item : Flag) return String;
    --  Returns a string representation of Flag
+
+   function Valid_Unit_Name
+     (Unit_Name : Name_Type;
+      On_Error  : access procedure (Message : String) := null) return Boolean;
+   --  Return True if Unit_Name is valid unit name.
+   --  Returns False otherwise and calls On_Error if it is not null with
+   --  appropriate error message.
 
 private
 
@@ -233,7 +243,10 @@ private
      (Self.Kind);
 
    function Library_Item_Kind (Self : Object) return Library_Item_Type is
-      (Self.Item_Kind);
+     (Self.Item_Kind);
+
+   function Main_Kind (Self : Object) return Main_Type is
+     (Self.Main);
 
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object

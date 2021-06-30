@@ -47,9 +47,9 @@ pragma Warnings (On);
 
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
-private with Ada.Containers.Vectors;
 private with Ada.Strings.Hash;
 private with Ada.Strings.Unbounded;
+
 private with GPR2.Project.Registry.Attribute;
 private with GPR2.Unit;
 
@@ -59,7 +59,6 @@ package GPR2.Project.Tree is
 
    use type GPR2.Context.Object;
    use type GPR2.Project.View.Object;
-   use type Source_Info.Backend_Set;
 
    type Object is tagged limited private
      with Constant_Indexing => Constant_Reference,
@@ -84,25 +83,25 @@ package GPR2.Project.Tree is
      (Self             : in out Object;
       Filename         : Path_Name.Object;
       Context          : GPR2.Context.Object;
-      Config           : Configuration.Object    := Configuration.Undefined;
-      Project_Dir      : Path_Name.Object        := Path_Name.Undefined;
-      Build_Path       : Path_Name.Object        := Path_Name.Undefined;
-      Subdirs          : Optional_Name_Type      := No_Name;
-      Src_Subdirs      : Optional_Name_Type      := No_Name;
-      Check_Shared_Lib : Boolean                 := True;
-      Absent_Dir_Error : Boolean                 := False;
-      Implicit_With    : Containers.Filename_Set :=
-                           Containers.Empty_Filename_Set)
+      Config           : Configuration.Object      := Configuration.Undefined;
+      Project_Dir      : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path       : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs          : Optional_Name_Type        := No_Name;
+      Src_Subdirs      : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib : Boolean                   := True;
+      Absent_Dir_Error : Boolean                   := False;
+      Implicit_With    : GPR2.Path_Name.Set.Object :=
+                           GPR2.Path_Name.Set.Empty_Set;
+      Pre_Conf_Mode    : Boolean                   := False)
      with Pre => Filename.Is_Defined
                  and then (not Filename.Is_Implicit_Project
                            or else Project_Dir.Is_Defined);
    --  Loads a root project
-   --  If Implicit_Project is True, the main project file being parsed is
-   --  deemed to be in the current working directory, even if it is not the
-   --  case. Implicit_Project is set to True when a gpr tool is invoked without
-   --  a project file and is using an implicit project file that is virtually
-   --  in the current working directory, but is physically in another
-   --  directory.
+   --  If Project_Dir is defined, the main project file being parsed is deemed
+   --  to be in this directory, even if it is not the case. Project_Dir is
+   --  defined when a gpr tool is invoked without a project file and is using
+   --  an implicit project file that is virtually in the Project_Dir, but is
+   --  physically in another directory.
 
    procedure Load_Configuration
      (Self     : in out Object;
@@ -114,18 +113,18 @@ package GPR2.Project.Tree is
      (Self              : in out Object;
       Filename          : Path_Name.Object;
       Context           : GPR2.Context.Object;
-      Project_Dir       : Path_Name.Object     := Path_Name.Undefined;
-      Build_Path        : Path_Name.Object     := Path_Name.Undefined;
-      Subdirs           : Optional_Name_Type   := No_Name;
-      Src_Subdirs       : Optional_Name_Type   := No_Name;
-      Check_Shared_Lib  : Boolean              := True;
-      Absent_Dir_Error  : Boolean              := False;
-      Implicit_With     : Containers.Filename_Set :=
-                            Containers.Empty_Filename_Set;
-      Target            : Optional_Name_Type       := No_Name;
+      Project_Dir       : Path_Name.Object          := Path_Name.Undefined;
+      Build_Path        : Path_Name.Object          := Path_Name.Undefined;
+      Subdirs           : Optional_Name_Type        := No_Name;
+      Src_Subdirs       : Optional_Name_Type        := No_Name;
+      Check_Shared_Lib  : Boolean                   := True;
+      Absent_Dir_Error  : Boolean                   := False;
+      Implicit_With     : GPR2.Path_Name.Set.Object :=
+                            GPR2.Path_Name.Set.Empty_Set;
+      Target            : Optional_Name_Type        := No_Name;
       Language_Runtimes : Containers.Name_Value_Map :=
                             Containers.Name_Value_Map_Package.Empty_Map;
-      Base              : GPR2.KB.Object       := GPR2.KB.Undefined)
+      Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
    --  If Target is specified, then we use it directly instead of fetching
@@ -178,7 +177,8 @@ package GPR2.Project.Tree is
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
 
-   function Ordered_Views (Self : Object) return View.Vector.Object;
+   function Ordered_Views (Self : Object) return View.Vector.Object
+     with Pre => Self.Is_Defined;
 
    function Has_View_For
      (Self    : Object;
@@ -321,6 +321,8 @@ package GPR2.Project.Tree is
      with Pre => Self.Is_Defined;
    --  Gets the view in which source file is defined, returns Undefined if the
    --  source file has not been found.
+   --  If Update is True and view with this source is not found, than Update
+   --  sources in all views and try to find again.
 
    procedure Invalidate_Sources
      (Self : Object;
@@ -337,7 +339,7 @@ package GPR2.Project.Tree is
       Stop_On_Error : Boolean := True;
       With_Runtime  : Boolean := False;
       Backends      : Source_Info.Backend_Set := Source_Info.All_Backends)
-     with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
+     with Pre => Self.Is_Defined;
    --  Ensures that all views' sources are up-to-date. This is needed before
    --  computing the dependencies of a source in the project tree. This routine
    --  is called where needed and is there for internal use only.
@@ -435,10 +437,15 @@ package GPR2.Project.Tree is
 
    function Instance_Of
       (Self        : Object;
-       Instance_Id : GPR2.View_Ids.View_Id) return View.Object;
+       Instance_Id : GPR2.View_Ids.View_Id) return View.Object
+     with Pre => Self.Is_Defined
+                   and then GPR2.View_Ids.Is_Defined (Instance_Id);
    --  Given a view id return the effective view that should be used. The
    --  function is mainly used to get the effective view in case a project has
    --  been extended using extends all.
+
+   procedure Reindex_Unit (Self : in out Object; From, To : Name_Type);
+   --  Change name of unit in view index used to get view by unit name
 
 private
 
@@ -501,27 +508,31 @@ private
       Sources          : Filename_View.Map;
       Rooted_Sources   : Source_Maps.Map;
       Messages         : aliased Log.Object;
-      Search_Paths     : Path_Name.Set.Object := Default_Search_Paths (True);
-      Implicit_With    : Containers.Filename_Set;
+      Search_Paths     : Path_Name.Set.Object :=
+                           Default_Search_Paths (True);
+      Implicit_With    : Path_Name.Set.Object;
       Project_Dir      : Path_Name.Object;
       Build_Path       : Path_Name.Object;
       Subdirs          : Unbounded_String;
       Src_Subdirs      : Unbounded_String;
       Check_Shared_Lib : Boolean := True;
       Absent_Dir_Error : Boolean := False;
+      Pre_Conf_Mode    : Boolean := True;
       Views            : aliased View_Maps.Map;
-      Views_Set        : View.Set.Object; -- All projects in registration order
-      Context          : Two_Contexts;    -- Root and aggregate contexts
+      Views_Set        : View.Set.Object;
+      --  All projects in registration order
+      Context          : Two_Contexts;
+      --  Root and aggregate contexts
       View_Ids         : aliased Id_Maps.Map;
-      View_Instances   : aliased Id_Maps.Map;
       View_DAG         : GPR2.View_Ids.DAGs.DAG;
+      Ali_Parser_Is_On : Boolean := True;
+      Sources_Loaded   : Boolean := False;
    end record;
 
    function "=" (Left, Right : Object) return Boolean
    is (Left.Self = Right.Self);
 
-   package Project_View_Store is
-     new Ada.Containers.Vectors (Positive, View.Object);
+   package Project_View_Store renames GPR2.Project.View.Vector.Vector;
 
    type Cursor is record
       Views   : Project_View_Store.Vector;

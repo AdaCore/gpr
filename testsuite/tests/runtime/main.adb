@@ -25,6 +25,7 @@ with GPR2.Unit;
 with GPR2.Context;
 with GPR2.KB;
 with GPR2.Log;
+with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute.Set;
@@ -110,15 +111,24 @@ procedure Main is
                Text_IO.Put (" -> ");
 
                declare
-                  Val : constant String := Element (V).Value.Text;
-               begin
-                  K := Strings.Fixed.Index (Val, "adainclude");
+                  Vals : constant Containers.Source_Value_List :=
+                           Element (V).Values;
 
-                  if K = 0 then
-                     Text_IO.Put (Val);
-                  else
-                     Text_IO.Put ("..." & Val (K - 1 .. Val'Last));
-                  end if;
+                  procedure Output (Val : String) is
+                  begin
+                     K := Strings.Fixed.Index (Val, "adainclude");
+
+                     if K = 0 then
+                        Text_IO.Put (Val);
+                     else
+                        Text_IO.Put ("..." & Val (K - 1 .. Val'Last));
+                     end if;
+                  end Output;
+
+               begin
+                  for V of Vals loop
+                     Output (V.Text);
+                  end loop;
                end;
 
                Text_IO.New_Line;

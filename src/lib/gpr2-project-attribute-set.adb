@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -183,19 +183,14 @@ package body GPR2.Project.Attribute.Set is
                CI := Item.Find (Create (Index, At_Pos));
 
                if Set_Attribute.Has_Element (CI) then
-                  declare
-                     E : constant Set_Attribute.Constant_Reference_Type :=
-                           Item (CI);
-                  begin
-                     Result.Insert (E);
-                     return Result;
-                  end;
+                  Result.Insert (Set_Attribute.Element (CI));
+                  return Result;
                end if;
 
                CI := Item.Find (Create (Attribute_Index.Any, At_Pos));
 
                if Set_Attribute.Has_Element (CI) then
-                  Result.Insert (Item (CI));
+                  Result.Insert (Set_Attribute.Element (CI));
                   return Result;
                end if;
             end;
@@ -278,46 +273,21 @@ package body GPR2.Project.Attribute.Set is
    procedure Include
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      ---------------------
-      -- To_Value_At_Pos --
-      ---------------------
-
-      function To_Value_At_Pos
-        (Item : Attribute_Index.Object) return Value_At_Pos
-      is
-        (if Item.Is_Defined
-         then Create (Item,
-                      Default_At_Pos => At_Pos_Or (Item, 0))
-         else (0, "", 0));
-      --  Returns value as string together with 'at' part or empty if not
-      --  defined.
-
-      Position : constant Set.Cursor :=
-                   Self.Attributes.Find (Attribute.Name.Text);
-      Present  : Boolean := False;
+      Position : Set.Cursor;
+      CSA      : Set_Attribute.Cursor;
+      Inserted : Boolean;
 
    begin
-      if Set.Has_Element (Position) then
-         declare
-            A : Set_Attribute.Map := Set.Element (Position);
-         begin
-            Present := A.Contains (To_Value_At_Pos (Attribute.Index));
-            A.Include  (Attribute.Case_Aware_Index, Attribute);
-            Self.Attributes.Replace_Element (Position, A);
-         end;
+      Self.Attributes.Insert
+        (Attribute.Name.Text, Set_Attribute.Empty_Map, Position, Inserted);
 
-      else
-         declare
-            A : Set_Attribute.Map;
-         begin
-            Present := A.Contains (To_Value_At_Pos (Attribute.Index));
-            A.Include (Attribute.Case_Aware_Index, Attribute);
-            Self.Attributes.Insert (Attribute.Name.Text, A);
-         end;
-      end if;
+      Self.Attributes (Position).Insert
+        (Attribute.Case_Aware_Index, Attribute, CSA, Inserted);
 
-      if not Present then
+      if Inserted then
          Self.Length := Self.Length + 1;
+      else
+         Self.Attributes (Position) (CSA) := Attribute;
       end if;
    end Include;
 
@@ -328,21 +298,14 @@ package body GPR2.Project.Attribute.Set is
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
    is
-      Position : constant Set.Cursor :=
-                   Self.Attributes.Find (Attribute.Name.Text);
+      Position : Set.Cursor;
+      Inserted : Boolean;
    begin
-      if Set.Has_Element (Position) then
-         Self.Attributes (Position).Insert
-           (Attribute.Case_Aware_Index, Attribute);
+      Self.Attributes.Insert
+        (Attribute.Name.Text, Set_Attribute.Empty_Map, Position, Inserted);
 
-      else
-         declare
-            A : Set_Attribute.Map;
-         begin
-            A.Insert (Attribute.Case_Aware_Index, Attribute);
-            Self.Attributes.Insert (Attribute.Name.Text, A);
-         end;
-      end if;
+      Self.Attributes (Position).Insert
+        (Attribute.Case_Aware_Index, Attribute);
 
       Self.Length := Self.Length + 1;
    end Insert;
@@ -479,27 +442,6 @@ package body GPR2.Project.Attribute.Set is
                                 (SR.Create
                                    (VDD.Trees.Project.Path_Name.Value, 0, 0));
 
-      Standalone          : constant Source_Reference.Identifier.Object :=
-                              Source_Reference.Identifier.Object
-                                (Source_Reference.Identifier.Create
-                                   (Project_SRef, RA.Library_Standalone));
-
-      Standalone_Standard : constant Project.Attribute.Object :=
-                              Project.Attribute.Create
-                                (Standalone,
-                                 Source_Reference.Value.Object
-                                   (Source_Reference.Value.Create
-                                      (Project_SRef, "Standard")),
-                                 Default => True);
-
-      Standalone_No       : constant Project.Attribute.Object :=
-                              Project.Attribute.Create
-                                (Standalone,
-                                 Source_Reference.Value.Object
-                                   (Source_Reference.Value.Create
-                                      (Project_SRef, "No")),
-                                 Default => True);
-
       Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
 
       procedure Each_Default (Attr : Name_Type; Def : RA.Def);
@@ -564,6 +506,8 @@ package body GPR2.Project.Attribute.Set is
 
          procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map) is
             package VSR renames Containers.Name_Value_Map_Package;
+            Position : Set_Attribute.Cursor;
+            Inserted : Boolean;
          begin
             if Def.Index = RA.No and then not Attrs.Is_Empty then
                --  Attribute already exists
@@ -581,10 +525,13 @@ package body GPR2.Project.Attribute.Set is
                begin
                   if Set.Has_Element (CS) then
                      for CA in Set.Element (CS).Iterate loop
-                        if not Attrs.Contains (Set_Attribute.Key (CA)) then
-                           Attrs.Insert
-                             (Set_Attribute.Key (CA),
-                              Set_Attribute.Element (CA).Rename (Attr_Id));
+                        Attrs.Insert
+                          (Set_Attribute.Key (CA), Attribute.Undefined,
+                           Position, Inserted);
+
+                        if Inserted then
+                           Attrs (Position) :=
+                             Set_Attribute.Element (CA).Rename (Attr_Id);
                         end if;
                      end loop;
                   end if;
@@ -594,16 +541,17 @@ package body GPR2.Project.Attribute.Set is
 
             elsif not Def.Default.Is_Empty then
                for D in Def.Default.Iterate loop
-                  if not Attrs.Contains
-                    (Create (Value_Type (VSR.Key (D)), 0))
-                  then
-                     Attrs.Insert
-                       (Create (Value_Type (VSR.Key (D)), 0),
-                        Create_Attribute
-                          (Value_Type (VSR.Key (D)),
-                           SR.Value.Object
-                             (SR.Value.Create (Project_SRef,
-                              VSR.Element (D)))));
+                  Attrs.Insert
+                    (Create (Value_Type (VSR.Key (D)), 0), Attribute.Undefined,
+                     Position, Inserted);
+
+                  if Inserted then
+                     Attrs (Position) :=
+                       Create_Attribute
+                         (Value_Type (VSR.Key (D)),
+                          SR.Value.Object
+                            (SR.Value.Create (Project_SRef,
+                             VSR.Element (D))));
                   end if;
                end loop;
             end if;
@@ -631,25 +579,6 @@ package body GPR2.Project.Attribute.Set is
 
    begin
       RA.For_Each_Default (Rules, Each_Default'Access);
-
-      --  Check for Library_Standalone special case has it has different
-      --  default value in library project:
-      --
-      --  "standard" when Interface or Library_Interface is defined
-      --  "no"       all other cases.
-
-      if Pack = No_Name
-        and then VDD.Kind in K_Library | K_Aggregate_Library
-        and then not VDD.Attrs.Contains (RA.Library_Standalone)
-      then
-         if VDD.Attrs.Has_Interfaces
-           or else VDD.Attrs.Has_Library_Interface
-         then
-            Self.Insert (Standalone_Standard);
-         else
-            Self.Insert (Standalone_No);
-         end if;
-      end if;
    end Set_Defaults;
 
 begin

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -123,6 +123,10 @@ package GPR2.Project.Source.Artifact is
    function List (Self : Object) return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined;
    --  Returns all artifacts
+
+   function List_To_Clean (Self : Object) return GPR2.Path_Name.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Returns artifacts for gprclean
 
 private
 

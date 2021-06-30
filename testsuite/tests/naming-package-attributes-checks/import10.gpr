@@ -1,0 +1,8 @@
+project Import10 is
+    package Naming is
+       for Dot_Replacement use "..";
+       for Spec_Suffix ("aDa") use ".1.ada";
+       for Body_Suffix ("aDA") use ".2.ada";
+       for Separate_Suffix use ".3.ada";
+    end Naming;
+end Import10;

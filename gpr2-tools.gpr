@@ -45,9 +45,7 @@ project GPR2.Tools is
    -- Compiler --
    --------------
 
-   Common_Options :=
-     ("-gnat2020", "-gnatwcfijkmqrtuvwz", "-gnaty3abBcdefhiIklmnoOprstx",
-      "-Wall");
+   Common_Options := GPR2.Common_Options;
    --  Common options used for the Debug and Release modes
 
    Checks_Options :=
@@ -114,5 +112,18 @@ project GPR2.Tools is
             null;
       end case;
    end Install;
+
+   ------------
+   -- Linker --
+   ------------
+
+   package Linker is
+      case GPR2.Profiler is
+         when "yes" =>
+            for Switches ("Ada") use ("-pg");
+         when "no" =>
+            null;
+      end case;
+   end Linker;
 
 end GPR2.Tools;
