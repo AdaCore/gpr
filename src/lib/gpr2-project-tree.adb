@@ -4023,8 +4023,9 @@ package body GPR2.Project.Tree is
 
       Given_Target : Project.Attribute.Object;
       Canon_Target : Project.Attribute.Object;
-      Canon_Set    : Boolean := False;
-      Given_Set    : Boolean := False;
+      Canon_Set    : Boolean;
+      Given_Set    : Boolean;
+      Unique       : Containers.Filename_Set;
 
       function Is_Bin_Path (T_Path : String) return Boolean;
 
@@ -4035,17 +4036,22 @@ package body GPR2.Project.Tree is
       ------------
 
       procedure Append (Dir : String) is
+         Position : Containers.Filename_Type_Set.Cursor;
+         Inserted : Boolean;
       begin
-         Self.Search_Paths.Append
-           (Path_Name.Create_Directory (Filename_Type (Dir)));
+         Unique.Insert (Filename_Type (Dir), Position, Inserted);
+
+         if Inserted then
+            Self.Search_Paths.Append
+              (Path_Name.Create_Directory (Filename_Type (Dir)));
+         end if;
       end Append;
 
       -----------------
       -- Is_Bin_Path --
       -----------------
 
-      function Is_Bin_Path (T_Path : String) return Boolean
-      is
+      function Is_Bin_Path (T_Path : String) return Boolean is
       begin
          return Directories.Simple_Name (T_Path) = "bin";
       exception
@@ -4065,19 +4071,11 @@ package body GPR2.Project.Tree is
          return;
       end if;
 
-      if Conf.Corresponding_View.Check_Attribute
-        (Name           => Registry.Attribute.Canonical_Target,
-         Result         => Canon_Target)
-      then
-         Canon_Set := True;
-      end if;
+      Canon_Set := Conf.Corresponding_View.Check_Attribute
+                     (PRA.Canonical_Target, Result => Canon_Target);
 
-      if Conf.Corresponding_View.Check_Attribute
-        (Name           => Registry.Attribute.Target,
-         Result         => Given_Target)
-      then
-         Given_Set := True;
-      end if;
+      Given_Set := Conf.Corresponding_View.Check_Attribute
+                     (PRA.Target, Result => Given_Target);
 
       String_Split.Create
         (PATH_Subs,
@@ -4088,10 +4086,9 @@ package body GPR2.Project.Tree is
       Drivers := Compiler.Attributes (Registry.Attribute.Driver);
 
       --  We need to arrange toolchains in the order of appearance on PATH
+
       for Sub of PATH_Subs loop
-
          if Is_Bin_Path (Sub) then
-
             for Driver of Drivers loop
                if Driver.Value.Text = "" then
                   goto Next_Driver;
@@ -4109,22 +4106,19 @@ package body GPR2.Project.Tree is
                   Index         : constant Name_Type :=
                                     Name_Type (Driver.Index.Value);
                begin
-
                   if Driver_Dir =
                     Normalize_Pathname (Sub, Case_Sensitive => False)
                   then
-
                      if Given_Set then
-
                         --  We only care for runtime if it is a simple name.
                         --  Runtime specific names go with explicitly specified
                         --  target (if it has been specifed).
+
                         if Conf.Runtime (Index) /= No_Name
                           and then not
                             (for some C of Conf.Runtime (Index) =>
                                     C in '/' | '\')
                         then
-
                            Append
                              (Toolchain_Dir
                               & Directory_Separator
@@ -4170,6 +4164,7 @@ package body GPR2.Project.Tree is
 
                      if Canon_Set then
                         --  Old cgpr files can miss Canonical_Target
+
                         Append
                           (Toolchain_Dir
                            & Directory_Separator
@@ -4200,17 +4195,13 @@ package body GPR2.Project.Tree is
                         & "lib"
                         & Directory_Separator
                         & "gnat");
-
                   end if;
                end;
 
                <<Next_Driver>>
             end loop;
-
          end if;
-
       end loop;
-
    end Update_Project_Search_Path_From_Config;
 
    --------------------
