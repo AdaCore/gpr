@@ -1419,7 +1419,7 @@ package body GPRinstall.Install is
                Content.Append ("      case BUILD is");
                --  Attribute Linker_Options only if set
 
-               Content.Append (Linker_Case_Alternative (Project));
+               Content.Append_Vector (Linker_Case_Alternative (Project));
 
                Content.Append ("      end case;");
                Content.Append ("   end Linker;");
@@ -1448,7 +1448,7 @@ package body GPRinstall.Install is
 
                Content.Append ("      case BUILD is");
 
-               Content.Append (Naming_Case_Alternative (Project));
+               Content.Append_Vector (Naming_Case_Alternative (Project));
 
                Content.Append ("      end case;");
                Content.Append ("   end Naming;");
@@ -2163,18 +2163,18 @@ package body GPRinstall.Install is
                      case Current_Section is
                         when Naming =>
                            String_Vector.Next (Pos);
-                           Content.Insert
+                           Content.Insert_Vector
                              (Pos, Naming_Case_Alternative (Project));
 
                         when Linker =>
                            String_Vector.Next (Pos);
-                           Content.Insert
+                           Content.Insert_Vector
                              (Pos, Linker_Case_Alternative (Project));
 
                         when Top =>
                            --  For the Sources/Lib attributes
                            String_Vector.Next (Pos);
-                           Content.Insert (Pos, Data_Attributes);
+                           Content.Insert_Vector (Pos, Data_Attributes);
                      end case;
 
                   elsif Fixed.Index (Line, "when """ & BN & """ =>") /= 0 then
@@ -2329,7 +2329,7 @@ package body GPRinstall.Install is
                Add_Empty_Line;
 
                Content.Append ("   case BUILD is");
-               Content.Append (Data_Attributes);
+               Content.Append_Vector (Data_Attributes);
                Content.Append ("   end case;");
 
                Add_Empty_Line;

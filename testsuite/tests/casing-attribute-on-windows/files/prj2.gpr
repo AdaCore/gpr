@@ -1,0 +1,4 @@
+project Prj2 is
+   package Naming is
+   end Naming;
+end Prj2;

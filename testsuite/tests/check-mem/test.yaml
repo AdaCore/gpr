@@ -1,4 +1,5 @@
 description: Check memory leaks
 driver: python_script
+timeout: 600
 control:
 - [XFAIL, "env.valgrind", "too long when run from valgrind"]

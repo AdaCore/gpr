@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -132,7 +132,8 @@ package body GPRname.Section is
       --  First, add the directories listed in the source dir files
 
       for File of Self.Directories_Files loop
-         Self.Directories.Append (Get_Source_Dirs_From_File (File.Value));
+         Self.Directories.Append_Vector
+           (Get_Source_Dirs_From_File (File.Value));
       end loop;
 
       --  Second, add the default source dir (".") if there is none
