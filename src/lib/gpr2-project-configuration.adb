@@ -46,9 +46,14 @@ package body GPR2.Project.Configuration is
    --------------------
 
    function Archive_Suffix (Self : Object) return Filename_Type is
+      Cache : constant Cache_Refcount.Reference_Type := Self.Cache.Get;
    begin
-      return Filename_Type
-               (Self.Conf.Attribute (PRA.Archive_Suffix).Value.Text);
+      if Cache.Archive_Suffix = "" then
+         Cache.Archive_Suffix :=
+           Self.Conf.Attribute (PRA.Archive_Suffix).Value.Unchecked_Text;
+      end if;
+
+      return Filename_Type (-Cache.Archive_Suffix);
    end Archive_Suffix;
 
    ------------------
@@ -195,6 +200,8 @@ package body GPR2.Project.Configuration is
                Sloc => Source_Reference.Create (Project.Value, 0, 0)));
       end if;
 
+      Result.Cache.Set (Config_Cache_Object'(others => <>));
+
       return Result;
    end Create;
 
@@ -268,6 +275,8 @@ package body GPR2.Project.Configuration is
             else To_Unbounded_String (String (Target)));
       end if;
 
+      Result.Cache.Set (Config_Cache_Object'(others => <>));
+
       return Result;
    end Load;
 
@@ -288,18 +297,23 @@ package body GPR2.Project.Configuration is
      (Self     : Object;
       Language : Language_Id) return Filename_Type
    is
-      A : Project.Attribute.Object;
+      Cache : constant Cache_Refcount.Reference_Type := Self.Cache.Get;
+      A     : Project.Attribute.Object;
    begin
-      if Self.Conf.Has_Packages (PRP.Compiler)
-        and then Self.Conf.Pack (PRP.Compiler).Check_Attribute
-                   (PRA.Object_File_Suffix,
-                    Attribute_Index.Create (Language),
-                    Result => A)
-      then
-         return Filename_Type (A.Value.Text);
-      else
-         return ".o";
+      if not Cache.Object_File_Suffix.Contains (Language) then
+         if Self.Conf.Has_Packages (PRP.Compiler)
+           and then Self.Conf.Pack (PRP.Compiler).Check_Attribute
+                      (PRA.Object_File_Suffix,
+                       Attribute_Index.Create (Language),
+                       Result => A)
+         then
+            Cache.Object_File_Suffix.Include (Language, A.Value.Text);
+         else
+            Cache.Object_File_Suffix.Include (Language, ".o");
+         end if;
       end if;
+
+      return Filename_Type (Cache.Object_File_Suffix.Element (Language));
    end Object_File_Suffix;
 
    -------------

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,6 +24,8 @@
 
 --  This package represents an entity source reference with an associated
 --  message. This is mostly to report warnings/errors while parsing sources.
+
+with Ada.Strings.Unbounded;
 
 generic
    type Text_Type is new String;
@@ -53,6 +55,11 @@ package GPR2.Source_Reference.Text_Value is
           Post => Create'Result.Is_Defined;
 
    function Text (Self : Object) return Text_Type
+     with Pre => Self.Is_Defined;
+   --  Returns the message associated with the reference
+
+   function Unchecked_Text
+     (Self : Object) return Ada.Strings.Unbounded.Unbounded_String
      with Pre => Self.Is_Defined;
    --  Returns the message associated with the reference
 

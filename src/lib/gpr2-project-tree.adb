@@ -1248,7 +1248,6 @@ package body GPR2.Project.Tree is
 
       if Config.Is_Defined then
          --  Set Tree for this config project
-
          Self.Conf := Config;
 
          for M of Config.Log_Messages loop
