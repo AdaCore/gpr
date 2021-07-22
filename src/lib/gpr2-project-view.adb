@@ -86,7 +86,7 @@ package body GPR2.Project.View is
    --  exists.
 
    function Binder_Prefix
-     (Self : Object; Language : Name_Type) return Filename_Optional
+     (Self : Object; Language : Language_Id) return Filename_Optional
      with Pre => Self.Is_Defined;
    --  Prefix to be used for the binder exchange file name for the language.
    --  Used to have different binder exchange file names when binding different
@@ -188,7 +188,7 @@ package body GPR2.Project.View is
             return;
          end if;
 
-         for Name of Self.Clean_Attribute_List (Attr, No_Name) loop
+         for Name of Self.Clean_Attribute_List (Attr, No_Language) loop
             Start_Search
               (Search    => Find,
                Directory => Dir.Value,
@@ -266,7 +266,7 @@ package body GPR2.Project.View is
    function Binder_Artifacts
      (Self     : Object;
       Name     : Simple_Name;
-      Language : Optional_Name_Type := No_Name)
+      Language : Language_Id := No_Language)
       return GPR2.Path_Name.Set.Object
    is
       use Ada.Text_IO;
@@ -275,7 +275,7 @@ package body GPR2.Project.View is
       Result  : GPR2.Path_Name.Set.Object;
       Obj_Dir : constant GPR2.Path_Name.Object := Self.Object_Directory;
       BP      : constant Filename_Optional :=
-                  (if Language = No_Name then No_Filename
+                  (if Language = No_Language then No_Filename
                    else Self.Binder_Prefix (Language));
       BF      : constant GPR2.Path_Name.Object :=
                   Obj_Dir.Compose
@@ -284,7 +284,7 @@ package body GPR2.Project.View is
 
       File    : File_Type;
       Obj_Ext : constant Filename_Optional :=
-                  (if Language = No_Name then No_Filename
+                  (if Language = No_Language then No_Filename
                    else Self.Tree.Object_Suffix (Language));
 
       Generated : Boolean := False;
@@ -312,7 +312,7 @@ package body GPR2.Project.View is
                      loop
                         if Ends_With (Line, A.Value.Text) then
                            for E of Self.Source_Artifact_Extensions
-                                      (Language => Name_Type (A.Index.Text))
+                                      (Language => +Name_Type (A.Index.Text))
                            loop
                               Result.Append
                                 (Obj_Dir.Compose (Filename_Type (Line & E)));
@@ -347,13 +347,13 @@ package body GPR2.Project.View is
    -------------------
 
    function Binder_Prefix
-     (Self : Object; Language : Name_Type) return Filename_Optional
+     (Self : Object; Language : Language_Id) return Filename_Optional
    is
       package P renames GPR2.Project.Registry.Pack;
       package A renames GPR2.Project.Registry.Attribute;
 
       Index  : constant Attribute_Index.Object :=
-                 Attribute_Index.Create (Value_Type (Language));
+                 Attribute_Index.Create (Value_Type (Name (Language)));
       Binder : Project.Pack.Object;
    begin
       if Self.Has_Packages (P.Binder) then
@@ -420,12 +420,13 @@ package body GPR2.Project.View is
    function Clean_Attribute_List
      (Self     : Object;
       Name     : Name_Type;
-      Language : Optional_Name_Type) return Containers.Value_Set
+      Language : Language_Id) return Containers.Value_Set
    is
       Index  : constant Attribute_Index.Object :=
-                 (if Language = ""
+                 (if Language = No_Language
                   then Attribute_Index.Undefined
-                  else Attribute_Index.Create (Value_Type (Language)));
+                  else Attribute_Index.Create
+                        (Value_Type (GPR2.Name (Language))));
       Result : Containers.Value_Set;
 
       procedure Exts_Set_Include (View : Project.View.Object);
@@ -1430,13 +1431,13 @@ package body GPR2.Project.View is
    is
       Last   : Positive := Name'First;
       Src    : GPR2.Project.Source.Object;
-      Lang   : constant Optional_Name_Type :=
+      Lang   : constant Language_Id :=
                  (if Self.Check_Source (Name, Src)
                   then Src.Source.Language
-                  else No_Name);
+                  else No_Language);
       Naming : constant Project.Pack.Object := Self.Naming_Package;
       Suffix : constant String :=
-                 (if Lang /= No_Name
+                 (if Lang /= No_Language
                   and then Naming.Has_Body_Suffix (Lang)
                   then Naming.Body_Suffix (Lang).Value.Text
                   else "");
@@ -1569,7 +1570,7 @@ package body GPR2.Project.View is
 
          for Language of Self.Languages loop
             declare
-               L  : constant Name_Type := Name_Type (Language.Text);
+               L  : constant Language_Id := +Name_Type (Language.Text);
                BS : constant Value_Type :=
                       (if Self.Naming_Package.Has_Body_Suffix (L)
                        then Self.Naming_Package.Body_Suffix (L).Value.Text

@@ -64,7 +64,7 @@ package GPRtools.Options is
       Warnings                 : aliased Boolean := True;
       Target                   : Unbounded_String :=
                                    To_Unbounded_String ("all");
-      RTS_Map                  : GPR2.Containers.Name_Value_Map;
+      RTS_Map                  : GPR2.Containers.Lang_Value_Map;
       Context                  : GPR2.Context.Object;
       Distributed_Mode         : Boolean := False;
       Slaves                   : Unbounded_String;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -40,7 +40,7 @@ package body GPR2.Compilation.Process is
 
    function Get_Env
      (Project  : GPR2.Project.View.Object;
-      Language : Optional_Name_Type) return String;
+      Language : Language_Id) return String;
    --  Get the environment for a specific project and language
 
    function To_Argument_List
@@ -116,10 +116,11 @@ package body GPR2.Compilation.Process is
 
    function Get_Env
      (Project  : GPR2.Project.View.Object;
-      Language : Optional_Name_Type) return String
+      Language : Language_Id) return String
    is
       Key  : constant Name_Type :=
-               Name_Type (String (Project.Name) & "+" & String (Language));
+               Name_Type (String (Project.Name) & "+" &
+                            String (Name (Language)));
       Res  : Unbounded_String;
    begin
       if Environments.Contains (Key) then
@@ -268,7 +269,7 @@ package body GPR2.Compilation.Process is
       GPR_Options   : GPRtools.Options.Object;
       Obj_Name      : Name_Type;
       Source        : String := "";
-      Language      : Optional_Name_Type := "";
+      Language      : Language_Id := No_Language;
       Dep_Name      : String := "";
       Output_File   : String := "";
       Err_To_Out    : Boolean := False;
@@ -289,7 +290,7 @@ package body GPR2.Compilation.Process is
         or else not GPR_Options.Distributed_Mode
         or else Local_Process.Count < GPR_Options.Maximum_Processes
         or else Output_File /= ""
-        or else Language = ""
+        or else Language = No_Language
       then
          Run_Local : declare
             P    : Id (Local);

@@ -18,10 +18,8 @@
 
 package GPR2.Source_Info.Parser.Ada_Language is
 
-   Language : aliased constant Name_Type := "Ada";
-
    type Object is new Parser.Object
-     (Language => Language'Unrestricted_Access,
+     (Language => GPR2.Ada_Language,
       Kind     => Source) with null record;
 
    overriding procedure Compute

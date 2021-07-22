@@ -71,7 +71,7 @@ package GPR2.Project.Configuration is
    Default_Description : constant Description_Set;
 
    function Create
-     (Language : Name_Type;
+     (Language : Language_Id;
       Version  : Optional_Name_Type := No_Name;
       Runtime  : Optional_Name_Type := No_Name;
       Path     : Filename_Optional  := No_Filename;
@@ -80,7 +80,7 @@ package GPR2.Project.Configuration is
    --  used to retrieve the available and corresponding compilers. That is,
    --  the compilers for the given language, the runtime if specified, etc.
 
-   function Language (Descr : Description) return Name_Type;
+   function Language (Descr : Description) return Language_Id;
    --  Returns language specified by Descr
 
    function Version (Descr : Description) return Optional_Name_Type;
@@ -120,7 +120,7 @@ package GPR2.Project.Configuration is
    --  Returns the target used for the configuration
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     (Self : Object; Language : Language_Id) return Optional_Name_Type
      with Pre => Self.Is_Defined;
    --  Returns the runtime specified for Language or the empty string if no
    --  specific runtime has been specified for this language.
@@ -132,7 +132,7 @@ package GPR2.Project.Configuration is
 
    function Object_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Filename_Type
+      Language : Language_Id) return Filename_Type
      with Pre  => Self.Is_Defined,
           Post => Object_File_Suffix'Result
                     (Object_File_Suffix'Result'First) = '.';
@@ -140,7 +140,7 @@ package GPR2.Project.Configuration is
 
    function Dependency_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Filename_Type
+      Language : Language_Id) return Filename_Type
      with Pre  => Self.Is_Defined,
           Post => Dependency_File_Suffix'Result
                     (Dependency_File_Suffix'Result'First) = '.';
@@ -158,15 +158,15 @@ package GPR2.Project.Configuration is
 private
 
    type Description is record
-      Language : Unbounded_String;
+      Language : Language_Id;
       Version  : Unbounded_String;
       Runtime  : Unbounded_String;
       Path     : Unbounded_String;
       Name     : Unbounded_String;
    end record;
 
-   function Language (Descr : Description) return Name_Type is
-     (Name_Type (To_String (Descr.Language)));
+   function Language (Descr : Description) return Language_Id is
+     (Descr.Language);
 
    function Version (Descr : Description) return Optional_Name_Type is
      (Optional_Name_Type (To_String (Descr.Version)));
@@ -212,7 +212,7 @@ private
       (Self.Messages.Has_Error);
 
    Default_Description : constant Description_Set (1 .. 1) :=
-                           (1 => (Language => To_Unbounded_String ("ada"),
+                           (1 => (Language => Ada_Language,
                                   others   => <>));
 
 end GPR2.Project.Configuration;

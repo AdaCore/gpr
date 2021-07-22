@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Environment_Variables;
 with Ada.Exceptions;
@@ -761,7 +760,6 @@ package body GPR2.KB.Parsing is
         (Base        : in out Object;
          Description : DOM.Core.Node)
       is
-         use Ada.Characters.Handling;
          use GNAT.Regpat;
          use External_Value_Lists;
          use Pattern_Matcher_Holders;
@@ -1096,11 +1094,13 @@ package body GPR2.KB.Parsing is
             C := First (Lang);
 
             while Has_Element (C) loop
-               Base.No_Compilers.Append
-                 (Name_Type
-                    (To_Lower
-                       (To_String
-                          (External_Value_Lists.Element (C).Value))));
+               declare
+                  Lang : constant String :=
+                           To_String (External_Value_Lists.Element (C).Value);
+               begin
+                  Base.No_Compilers.Include (+Name_Type (Lang));
+               end;
+
                Next (C);
             end loop;
 
@@ -1124,15 +1124,12 @@ package body GPR2.KB.Parsing is
 
             while Has_Element (C) loop
                declare
-                  Lang_LC : Unbounded_String;
+                  Lang_LC : constant Name_Type :=
+                              Name_Type
+                                (To_String
+                                   (External_Value_Lists.Element (C).Value));
                begin
-                  Lang_LC :=
-                    To_Unbounded_String
-                      (To_Lower
-                         (To_String (External_Value_Lists.Element (C).Value)));
-                  if not Base.Languages_Known.Contains (Lang_LC) then
-                     Base.Languages_Known.Include (Lang_LC, Lang_LC);
-                  end if;
+                  Base.Languages_Known.Include (+Lang_LC);
                end;
 
                Next (C);
@@ -1150,7 +1147,6 @@ package body GPR2.KB.Parsing is
         (Append_To   : in out Configuration_Lists.List;
          Description : DOM.Core.Node)
       is
-         use Ada.Characters.Handling;
          use GNAT.Regpat;
          use Compilers_Filter_Lists;
 
@@ -1230,10 +1226,9 @@ package body GPR2.KB.Parsing is
                            Version_Re  => Compile_And_Check (Version),
                            Runtime     => To_Unbounded_String (Runtime),
                            Runtime_Re  => Compile_And_Check (Runtime),
-                           Language_LC => To_Unbounded_String
-                                            (To_Lower
-                                               (Get_Attribute
-                                                  (N2, "language", ""))));
+                           Language    =>
+                             +Optional_Name_Type
+                               (Get_Attribute (N2, "language", "")));
                      end;
 
                      Compilers.Compiler.Append (Filter);

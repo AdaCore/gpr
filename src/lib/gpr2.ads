@@ -56,9 +56,12 @@
 
 with GNAT.Regexp;
 
+with Ada.Containers;
+
 private with Ada.Calendar;
 private with Ada.Characters.Handling;
 private with Ada.Strings.Unbounded;
+with Ada.Strings.Hash_Case_Insensitive;
 private with GNATCOLL.Utils;
 
 package GPR2 is
@@ -108,6 +111,8 @@ package GPR2 is
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
+   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type
+     is (Ada.Strings.Hash_Case_Insensitive (String (N)));
 
    function To_Lower (Name : Name_Type) return Value_Not_Empty;
    --  Convert name to lowercased String. Need to be able to use "in" operator
@@ -181,15 +186,25 @@ package GPR2 is
    --  Returns Regexp object for Filename_Regexp pattern
    --  Allows '?' & '*' wildchars. Use case insensitive match when required
 
+   type Language_Id is new Natural;
+   No_Language  : constant Language_Id;
+   Ada_Language : constant Language_Id;
+   function "+" (L : Optional_Name_Type) return Language_Id;
+   function Name (L : Language_Id) return Optional_Name_Type;
+   function Image (L : Language_Id) return String;
+   function Hash (L : Language_Id) return Ada.Containers.Hash_Type;
+
 private
 
    use Ada;
    use Ada.Strings.Unbounded;
 
-   No_Name     : constant Optional_Name_Type := "";
-   No_Value    : constant Value_Type := "";
-   No_Filename : constant Filename_Optional := "";
-   No_Time     : Calendar.Time renames GNATCOLL.Utils.No_Time;
+   No_Name      : constant Optional_Name_Type := "";
+   No_Value     : constant Value_Type := "";
+   No_Filename  : constant Filename_Optional := "";
+   No_Time      : Calendar.Time renames GNATCOLL.Utils.No_Time;
+   No_Language  : constant Language_Id := 0;
+   Ada_Language : constant Language_Id := 1;
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is

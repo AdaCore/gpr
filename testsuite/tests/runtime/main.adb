@@ -162,7 +162,7 @@ procedure Main is
 
    Gpr : constant Path_Name.Object := Create ("demo.gpr");
    Des : constant Configuration.Description :=
-           Configuration.Create (Language => "Ada");
+           Configuration.Create (Language => Ada_Language);
    KB  : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
    Cnf : constant Configuration.Object :=
            Configuration.Create

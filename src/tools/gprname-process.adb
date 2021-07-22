@@ -261,10 +261,10 @@ begin
 
    declare
       use GPR2.Containers;
-      RTS_Map : Name_Value_Map := Name_Value_Map_Package.Empty_Map;
+      RTS_Map : Lang_Value_Map := Lang_Value_Maps.Empty_Map;
    begin
       if Opt.RTS /= No_String then
-         RTS_Map.Insert ("Ada", Value_Type (Opt.RTS));
+         RTS_Map.Insert (Ada_Language, Value_Type (Opt.RTS));
       end if;
       Tree.Load_Autoconf
         (Project_Path, Context,

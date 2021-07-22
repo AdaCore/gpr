@@ -39,7 +39,7 @@ procedure Main is
 
    Project_Tree : Project.Tree.Object;
    Ctx          : Context.Object := Context.Empty;
-   RTS          : Name_Value_Map := Name_Value_Map_Package.Empty_Map;
+   RTS          : Lang_Value_Map := Lang_Value_Maps.Empty_Map;
    This_Target  : constant String := System.OS_Constants.Target_Name;
 
    procedure Print_Config_Info;
@@ -101,7 +101,7 @@ begin
    --  Equivalent to command line options:
    --     --RTS=zfp target=x86-linux
 
-   RTS.Insert ("Ada", "rtp");
+   RTS.Insert (Ada_Language, "rtp");
    Ctx.Insert ("VSB_DIR", ".");
    Ctx.Insert ("target", This_Target);
 

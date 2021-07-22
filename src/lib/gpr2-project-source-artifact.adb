@@ -82,7 +82,7 @@ package body GPR2.Project.Source.Artifact is
                 then Source.Other_Part
                 else Source);
       BN   : constant Filename_Type := Main.Path_Name.Base_Filename;
-      Lang : constant Name_Type := Src.Language;
+      Lang : constant Language_Id := Src.Language;
       View : constant Project.View.Object :=
                Definition.Strong (Source.View);
 
@@ -383,7 +383,7 @@ package body GPR2.Project.Source.Artifact is
    function List_To_Clean (Self : Object) return GPR2.Path_Name.Set.Object is
       P_Source : constant GPR2.Project.Source.Object := Self.Source;
       Source   : constant GPR2.Source.Object := P_Source.Source;
-      Lang     : constant Name_Type := Source.Language;
+      Lang     : constant Language_Id := Source.Language;
       View     : constant Project.View.Object :=
                    Definition.Strong (P_Source.View);
       Result   : GPR2.Path_Name.Set.Object;

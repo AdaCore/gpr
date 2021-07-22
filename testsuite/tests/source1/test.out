@@ -1,8 +1,8 @@
 Project: Demo1
  > src1/main.adb      language: Ada    Kind: S_BODY_ONLY   unit: Main
 Project: Demo2
- > src1/file3.c       language: c      Kind: S_BODY
- > src2/file3.h       language: c      Kind: S_SPEC
+ > src1/file3.c       language: C      Kind: S_BODY
+ > src2/file3.h       language: C      Kind: S_SPEC
  > src1/demo1.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: Demo1
  > src1/demo2.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: Demo2
  > src2/file.ab       language: Ada    Kind: S_BODY   unit: File

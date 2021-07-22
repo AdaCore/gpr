@@ -241,11 +241,11 @@ begin
    pragma Assert
      (not Opt.Source_Parser
       or else GPR2.Source_Info.Parser.Registry.Exists
-        ("Ada", Source_Info.Source), "Source parser is not registered");
+        (Ada_Language, Source_Info.Source), "Source parser is not registered");
 
    pragma Assert
      (GPR2.Source_Info.Parser.Registry.Exists
-        ("Ada", Source_Info.LI), "ALI parser is not registered");
+        (Ada_Language, Source_Info.LI), "ALI parser is not registered");
 
    --  Make sure the sources are up to date
 
@@ -782,7 +782,7 @@ begin
          for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
-              and then S.Source.Language = Name_Type (Ada_Lang)
+              and then S.Source.Language = Ada_Language
             then
                Sources.Insert ((S, 0));
             end if;
@@ -794,7 +794,7 @@ begin
 
          for View of Tree loop
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
-               if Element (S_Cur).Source.Language = Name_Type (Ada_Lang)
+               if Element (S_Cur).Source.Language = Ada_Language
                  and then not Element (S_Cur).Is_Overriden
                then
                   Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
@@ -821,7 +821,7 @@ begin
 
       else
          for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
-            if Element (S_Cur).Source.Language = Name_Type (Ada_Lang) then
+            if Element (S_Cur).Source.Language = Ada_Language then
                Sources.Insert ((Element (S_Cur), 0));
             end if;
          end loop;

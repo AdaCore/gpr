@@ -132,7 +132,21 @@ package body GPR2.Containers is
       C : constant Name_Value_Map_Package.Cursor := Map.Find (Key);
    begin
       if Name_Value_Map_Package.Has_Element (C) then
-         return Map (C);
+         return Name_Value_Map_Package.Element (C);
+      else
+         return Default;
+      end if;
+   end Value_Or_Default;
+
+   function Value_Or_Default
+     (Map     : Lang_Value_Map;
+      Key     : Language_Id;
+      Default : Value_Type := No_Value) return Value_Type
+   is
+      C : constant Lang_Value_Maps.Cursor := Map.Find (Key);
+   begin
+      if Lang_Value_Maps.Has_Element (C) then
+         return Lang_Value_Maps.Element (C);
       else
          return Default;
       end if;

@@ -1417,11 +1417,11 @@ package body GPR2.Project.Tree is
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Target            : Optional_Name_Type        := No_Name;
-      Language_Runtimes : Containers.Name_Value_Map :=
-                            Containers.Name_Value_Map_Package.Empty_Map;
+      Language_Runtimes : Containers.Lang_Value_Map :=
+                            Containers.Lang_Value_Maps.Empty_Map;
       Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
    is
-      Languages   : Containers.Name_Set;
+      Languages   : Containers.Language_Set;
       Conf        : Project.Configuration.Object;
       GNAT_Prefix : constant String := Get_Tools_Directory;
       Default_Cfg : Path_Name.Object;
@@ -1450,20 +1450,21 @@ package body GPR2.Project.Tree is
       --  Returns default config filename
 
       function Runtime
-        (Language : Name_Type) return Optional_Name_Type;
+        (Language : Language_Id) return Optional_Name_Type;
       --  Returns the runtime to use during configuration for the specified
       --  language.
 
       function Toolchain_Name
-        (Language : Name_Type) return Optional_Name_Type;
+        (Language : Language_Id) return Optional_Name_Type;
       --  Returns toolchain name specified by Toolchain_Name attribute
 
       function Toolchain_Version
-        (Language : Name_Type) return Optional_Name_Type;
+        (Language : Language_Id) return Optional_Name_Type;
       --  Returns toolchain version specified by Required_Toolchain_Version
       --  attribute.
 
-      function Toolchain_Path (Language : Name_Type) return Filename_Optional;
+      function Toolchain_Path
+        (Language : Language_Id) return Filename_Optional;
       --  Returns toolchain search path specified by Toolchain_Path attribute
 
       type Reconfiguration_Status is (Unchanged, Extended, Incompatible);
@@ -1536,7 +1537,7 @@ package body GPR2.Project.Tree is
 
          if View.Has_Languages then
             for L of View.Languages loop
-               Languages.Include (Name_Type (L.Text));
+               Languages.Include (+Name_Type (L.Text));
             end loop;
 
             --  Keep languages attribute for possible error message Sloc
@@ -1633,7 +1634,7 @@ package body GPR2.Project.Tree is
                        (Message.Create
                           (Level   => Message.Error,
                            Message => "incompatible change for language "
-                           & String (Language (Descr_B))
+                           & Image (Language (Descr_B))
                            & " during reconfiguration",
                            Sloc    => Source_Reference.Create
                              (Self.Root.Path_Name.Value, 0, 0)));
@@ -1656,7 +1657,7 @@ package body GPR2.Project.Tree is
                Self.Append_Message
                  (Message.Create
                     (Level   => Message.Error,
-                     Message => "language " & String (Language (Descr_B))
+                     Message => "language " & Image (Language (Descr_B))
                      & " missing for reconfiguration",
                      Sloc    => Source_Reference.Create
                        (Self.Root.Path_Name.Value, 0, 0)));
@@ -1706,7 +1707,7 @@ package body GPR2.Project.Tree is
       function Default_Config_File return Filename_Type is
          Ada_RTS_Val : constant Value_Type :=
                          Containers.Value_Or_Default
-                           (Language_Runtimes, "Ada");
+                           (Language_Runtimes, Ada_Language);
          Ada_RTS     : constant Filename_Optional :=
                          (if Ada_RTS_Val = No_Value then No_Filename
                           else Filename_Optional
@@ -1740,7 +1741,7 @@ package body GPR2.Project.Tree is
       -------------
 
       function Runtime
-        (Language : Name_Type) return Optional_Name_Type
+        (Language : Language_Id) return Optional_Name_Type
       is
          function Attr_As_Abs_Path
            (Attr : Attribute.Object;
@@ -1790,7 +1791,8 @@ package body GPR2.Project.Tree is
          if Self.Root.Is_Defined
            and then Self.Root.Check_Attribute
                       (PRA.Runtime,
-                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Attribute_Index.Create
+                         (Value_Not_Empty (Name (Language))),
                        Check_Extended => True, Result => Tmp_Attr)
          then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
@@ -1804,14 +1806,15 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Name
-        (Language : Name_Type) return Optional_Name_Type
+        (Language : Language_Id) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Self.Root.Is_Defined
            and then Self.Root.Check_Attribute
                       (PRA.Toolchain_Name,
-                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Attribute_Index.Create
+                         (Value_Not_Empty (Name (Language))),
                        Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
@@ -1826,14 +1829,15 @@ package body GPR2.Project.Tree is
       --------------------
 
       function Toolchain_Path
-        (Language : Name_Type) return Filename_Optional
+        (Language : Language_Id) return Filename_Optional
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Self.Root.Is_Defined
            and then Self.Root.Check_Attribute
                       (PRA.Toolchain_Path,
-                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Attribute_Index.Create
+                         (Value_Not_Empty (Name (Language))),
                        Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
@@ -1850,14 +1854,15 @@ package body GPR2.Project.Tree is
       -----------------------
 
       function Toolchain_Version
-        (Language : Name_Type) return Optional_Name_Type
+        (Language : Language_Id) return Optional_Name_Type
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
          if Self.Root.Is_Defined
            and then Self.Root.Check_Attribute
                       (PRA.Required_Toolchain_Version,
-                       Attribute_Index.Create (Value_Not_Empty (Language)),
+                       Attribute_Index.Create
+                         (Value_Not_Empty (Name (Language))),
                        Check_Extended => True, Result => Tmp_Attr)
            and then Tmp_Attr.Value.Text /= ""
          then
@@ -1964,7 +1969,7 @@ package body GPR2.Project.Tree is
             --  this will reload the project in normal mode and print the
             --  relevant error messages.
 
-            Languages.Include ("ada");
+            Languages.Include (Ada_Language);
          end if;
 
          Pre_Conf_Description := To_Holder (Conf_Descriptions);
@@ -2900,7 +2905,7 @@ package body GPR2.Project.Tree is
    -------------
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     (Self : Object; Language : Language_Id) return Optional_Name_Type
    is
       TA : Attribute.Object;
 
@@ -2913,8 +2918,7 @@ package body GPR2.Project.Tree is
       elsif Self.Root.Is_Defined
         and then Self.Root.Check_Attribute
           (PRA.Runtime,
-           Index => GPR2.Project.Attribute_Index.Create
-             (Value_Type (Language), Case_Sensitive => False),
+           Index => GPR2.Project.Attribute_Index.Create (Language),
            Check_Extended => True,
            Result         => TA)
       then
@@ -4103,8 +4107,8 @@ package body GPR2.Project.Tree is
                   Toolchain_Dir : constant String :=
                                     Directories.Containing_Directory
                                       (Driver_Dir);
-                  Index         : constant Name_Type :=
-                                    Name_Type (Driver.Index.Value);
+                  Index         : constant Language_Id :=
+                                    +Name_Type (Driver.Index.Value);
                begin
                   if Driver_Dir =
                     Normalize_Pathname (Sub, Case_Sensitive => False)
@@ -4278,7 +4282,7 @@ package body GPR2.Project.Tree is
                     (V : Project.View.Object) return Boolean is
                   begin
                      for S of V.Sources loop
-                        if S.Source.Language = "Ada"
+                        if S.Source.Language = Ada_Language
                           or else S.Source.Kind not in GPR2.Unit.Spec_Kind
                         then
                            return True;

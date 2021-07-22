@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -48,10 +48,6 @@ package GPRls.Common is
      (Key : Value_Case_Insens) return Ada.Containers.Hash_Type is
      (Ada.Strings.Hash_Case_Insensitive (String (Key)));
 
-   subtype Language_Type is Value_Case_Insens;
-
    No_String : constant String := "";
-
-   Ada_Lang : constant Language_Type := "Ada";
 
 end GPRls.Common;

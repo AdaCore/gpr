@@ -585,19 +585,19 @@ package GPR2.Project.View is
    --  Returns executable suffix for this project
 
    function Object_Artifact_Extensions
-     (Self : Object; Language : Name_Type) return Containers.Value_Set
+     (Self : Object; Language : Language_Id) return Containers.Value_Set
      with Pre => Self.Is_Defined;
    --  Returns set of object artefacts extensions for the cleanup
 
    function Source_Artifact_Extensions
-     (Self : Object; Language : Name_Type) return Containers.Value_Set
+     (Self : Object; Language : Language_Id) return Containers.Value_Set
      with Pre => Self.Is_Defined;
    --  Returns set of source artefacts extensions for the cleanup
 
    function Binder_Artifacts
      (Self     : Object;
       Name     : Simple_Name;
-      Language : Optional_Name_Type := No_Name)
+      Language : Language_Id := No_Language)
       return GPR2.Path_Name.Set.Object
      with Pre => Self.Is_Defined
        and then (not Self.Is_Library
@@ -651,7 +651,7 @@ private
    function Clean_Attribute_List
      (Self     : Object;
       Name     : Name_Type;
-      Language : Optional_Name_Type) return Containers.Value_Set;
+      Language : Language_Id) return Containers.Value_Set;
    --  Returns union of the attribute lists of the Clean packages from the
    --  configuration view, extending view if it exists and Self view.
 
@@ -659,13 +659,13 @@ private
                  (Definition_References.Null_Ref with null record);
 
    function Object_Artifact_Extensions
-     (Self : Object; Language : Name_Type) return Containers.Value_Set
+     (Self : Object; Language : Language_Id) return Containers.Value_Set
    is
      (Self.Clean_Attribute_List
         (Registry.Attribute.Object_Artifact_Extensions, Language));
 
    function Source_Artifact_Extensions
-     (Self : Object; Language : Name_Type) return Containers.Value_Set
+     (Self : Object; Language : Language_Id) return Containers.Value_Set
    is
      (Self.Clean_Attribute_List
         (Registry.Attribute.Source_Artifact_Extensions, Language));

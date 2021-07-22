@@ -122,8 +122,8 @@ package GPR2.Project.Tree is
       Implicit_With     : GPR2.Path_Name.Set.Object :=
                             GPR2.Path_Name.Set.Empty_Set;
       Target            : Optional_Name_Type        := No_Name;
-      Language_Runtimes : Containers.Name_Value_Map :=
-                            Containers.Name_Value_Map_Package.Empty_Map;
+      Language_Runtimes : Containers.Lang_Value_Map :=
+                            Containers.Lang_Value_Maps.Empty_Map;
       Base              : GPR2.KB.Object            := GPR2.KB.Undefined)
        with Pre => Filename.Is_Defined;
    --  Loads a tree in autoconf mode.
@@ -172,7 +172,7 @@ package GPR2.Project.Tree is
    --  Returns the target for the project tree
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type
+     (Self : Object; Language : Language_Id) return Optional_Name_Type
      with Pre => Self.Is_Defined;
    --  Returns the runtime selected for the given language or the empty string
    --  if no specific runtime has been configured for this project tree.
@@ -363,11 +363,13 @@ package GPR2.Project.Tree is
    --  Returns archive suffix for the project tree
 
    function Object_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Filename_Type;
+     (Self     : Object;
+      Language : Language_Id := Ada_Language) return Filename_Type;
    --  Returns object suffix for language in project tree
 
    function Dependency_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Filename_Type;
+     (Self     : Object;
+      Language : Language_Id := Ada_Language) return Filename_Type;
    --  Returns dependency suffix for language in project tree
 
    function Subdirs (Tree : Object) return Filename_Optional
@@ -573,17 +575,19 @@ private
       else ".a");
 
    function Object_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Filename_Type
+     (Self     : Object;
+      Language : Language_Id := Ada_Language) return Filename_Type
    is (if Self.Has_Configuration
        then Self.Configuration.Object_File_Suffix (Language)
        else ".o");
 
    function Dependency_Suffix
-     (Self : Object; Language : Name_Type := "ada") return Filename_Type
+     (Self     : Object;
+      Language : Language_Id := Ada_Language) return Filename_Type
    is
      (if Self.Has_Configuration
       then Self.Configuration.Dependency_File_Suffix (Language)
-      elsif Language = "ada" then ".ali" else ".d");
+      elsif Language = Ada_Language then ".ali" else ".d");
 
    function Reference (Tree : Object) return access Object is
      (Tree'Unrestricted_Access);

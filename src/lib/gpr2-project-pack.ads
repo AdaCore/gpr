@@ -119,13 +119,13 @@ package GPR2.Project.Pack is
 
    function Has_Spec_Suffix
      (Self     : Object;
-      Language : Name_Type) return Boolean
+      Language : Language_Id) return Boolean
      with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
    --  Returns True is package naming Self contains a Spec_Suffix attribute
 
    function Spec_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object
+      Language : Language_Id) return Project.Attribute.Object
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
                and then Self.Has_Spec_Suffix (Language),
@@ -134,13 +134,13 @@ package GPR2.Project.Pack is
 
    function Has_Body_Suffix
      (Self     : Object;
-      Language : Name_Type) return Boolean
+      Language : Language_Id) return Boolean
      with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
    --  Returns True is package naming Self contains a Body_Suffix attribute
 
    function Body_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object
+      Language : Language_Id) return Project.Attribute.Object
      with
        Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
                and then Self.Has_Body_Suffix (Language),
@@ -207,19 +207,19 @@ private
 
    function Has_Spec_Suffix
      (Self     : Object;
-      Language : Name_Type) return Boolean
+      Language : Language_Id) return Boolean
    is
      (Self.Has_Attributes
         (Registry.Attribute.Spec_Suffix,
-         Attribute_Index.Create (Value_Type (Language))));
+         Attribute_Index.Create (Language)));
 
    function Has_Body_Suffix
      (Self     : Object;
-      Language : Name_Type) return Boolean
+      Language : Language_Id) return Boolean
    is
      (Self.Has_Attributes
         (Registry.Attribute.Body_Suffix,
-         Attribute_Index.Create (Value_Type (Language))));
+         Attribute_Index.Create (Language)));
 
    function Has_Implementation
      (Self : Object;

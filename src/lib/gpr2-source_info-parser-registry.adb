@@ -40,8 +40,8 @@ package body GPR2.Source_Info.Parser.Registry is
    Parser_Store : Parser_Set.Map;
    --  Record all parser for given language and kind
 
-   function Key (Language : Name_Type; Kind : Backend) return Name_Type is
-     (Name_Type (To_Lower (Language) & '@' & Backend'Image (Kind)));
+   function Key (Language : Language_Id; Kind : Backend) return Name_Type is
+     (GPR2."&" (Name (Language), Name_Type ("@" & Backend'Image (Kind))));
    --  The key used in the parser store
 
    -----------------
@@ -59,7 +59,7 @@ package body GPR2.Source_Info.Parser.Registry is
    -- Exists --
    ------------
 
-   function Exists (Language : Name_Type; Kind : Backend) return Boolean is
+   function Exists (Language : Language_Id; Kind : Backend) return Boolean is
    begin
       return Parser_Store.Contains (Key (Language, Kind));
    end Exists;
@@ -69,7 +69,7 @@ package body GPR2.Source_Info.Parser.Registry is
    ---------
 
    function Get
-     (Language : Name_Type; Kind : Backend)
+     (Language : Language_Id; Kind : Backend)
       return not null access Object'Class is
    begin
       return Parser_Store (Key (Language, Kind));
@@ -82,7 +82,7 @@ package body GPR2.Source_Info.Parser.Registry is
    procedure Register (Parser : Object'Class) is
    begin
       Parser_Store.Insert
-        (Key (Parser.Language.all, Parser.Kind), Parser.Self);
+        (Key (Parser.Language, Parser.Kind), Parser.Self);
    end Register;
 
    ----------------
@@ -91,7 +91,7 @@ package body GPR2.Source_Info.Parser.Registry is
 
    procedure Unregister (Parser : Object'Class) is
    begin
-      Parser_Store.Delete (Key (Parser.Language.all, Parser.Kind));
+      Parser_Store.Delete (Key (Parser.Language, Parser.Kind));
    end Unregister;
 
 end GPR2.Source_Info.Parser.Registry;
