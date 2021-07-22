@@ -116,7 +116,7 @@ package GPR2.Source_Info is
 
    function Has_Unit_At
      (Self : Object; Index : Unit_Index) return Boolean
-     with Pre => Self.Is_Defined and then Self.Has_Units;
+     with Pre => Self.Is_Defined;
    --  Returns True if Self has a compilation unit at Index
 
    function Has_Single_Unit (Self : Object) return Boolean
@@ -130,10 +130,15 @@ package GPR2.Source_Info is
 
    function Units
      (Self : Object) return Unit.List.Object
-     with Pre  => Self.Is_Defined and then Self.Has_Units,
+     with Inline,
+          Pre  => Self.Is_Defined and then Self.Has_Units,
           Post => Units'Result.Length > 1
                   or else Self.Has_Single_Unit;
    --  Returns all compilation units for self
+
+   function Unit
+     (Self : Object; Index : Unit_Index := 1) return Unit.Object
+     with Pre => Self.Is_Defined and then Self.Has_Unit_At (Index);
 
    function Unit_Name (Self : Object; Index : Unit_Index := 1) return Name_Type
      with Pre => Self.Is_Defined and then Self.Has_Units
@@ -190,12 +195,12 @@ package GPR2.Source_Info is
 
    procedure Set
      (Self : in out Object;
-      Kind : Unit.Library_Unit_Type)
+      Kind : GPR2.Unit.Library_Unit_Type)
      with Post => not Self.Is_Ada;
 
    procedure Set_Ada
      (Self          : in out Object;
-      Units         : Unit.List.Object;
+      Units         : GPR2.Unit.List.Object;
       Is_RTS_Source : Boolean;
       Is_Indexed    : Boolean)
      with Post => Self.Is_Ada;
@@ -207,11 +212,11 @@ package GPR2.Source_Info is
 
    procedure Update_Kind
      (Self  : in out Object;
-      Kind  : Unit.Library_Unit_Type;
+      Kind  : GPR2.Unit.Library_Unit_Type;
       Index : Unit_Index := 1)
      with Pre  => Self.Is_Defined
-                  and then Self.Has_Units
-                  and then Kind in Unit.S_Spec_Only | Unit.S_Body_Only,
+               and then Self.Has_Units
+               and then Kind in GPR2.Unit.S_Spec_Only | GPR2.Unit.S_Body_Only,
           Post => Self.Kind = Kind or else Index > 1;
    --  Update kind for the source, this is only to adjust the kind to
    --  S_Spec_Only and S_Body_Only after a source based parser has been used.
@@ -231,7 +236,7 @@ private
    use Ada.Calendar;
 
    type Dependency_Key (Length : Natural) is record
-      Unit_Kind : Unit.Library_Unit_Type;
+      Unit_Kind : GPR2.Unit.Library_Unit_Type;
       --  Unit kind (S_Separate for a subunit)
 
       Unit_Name : String (1 .. Length);
@@ -278,8 +283,8 @@ private
       Parsed        : Backend := None;
       Is_RTS_Source : Boolean := False;
       Is_Indexed    : Boolean := False;
-      CU_List       : Unit.List.Object;
-      Kind          : Unit.Library_Unit_Type := Unit.S_Separate;
+      CU_List       : GPR2.Unit.List.Object;
+      Kind          : GPR2.Unit.Library_Unit_Type := GPR2.Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;
       Dependencies  : Unit_Dependencies.Map;
@@ -317,5 +322,8 @@ private
      (Self.Is_RTS_Source);
 
    function Is_Parsed (Self : Object) return Boolean is (Self.Parsed /= None);
+
+   function Units
+     (Self : Object) return GPR2.Unit.List.Object is (Self.CU_List);
 
 end GPR2.Source_Info;
