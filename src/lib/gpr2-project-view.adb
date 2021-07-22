@@ -1107,9 +1107,21 @@ package body GPR2.Project.View is
    ---------------------------
 
    function Library_Ali_Directory
-     (Self : Object) return GPR2.Path_Name.Object is
+     (Self : Object) return GPR2.Path_Name.Object
+   is
+      use GPR2.Project.Definition;
    begin
-      return Self.Apply_Root_And_Subdirs (PRA.Library_Ali_Dir);
+      if not Get_RO (Self).Cache (Library_Ali_Dir).Valid then
+         declare
+            View : Object := Self;
+         begin
+            Get_RW (View).Cache (Library_Ali_Dir) :=
+              (Path  => Self.Apply_Root_And_Subdirs (PRA.Library_Ali_Dir),
+               Valid => True);
+         end;
+      end if;
+
+      return Get_RO (Self).Cache (Library_Ali_Dir).Path;
    end Library_Ali_Directory;
 
    -----------------------
@@ -1117,8 +1129,19 @@ package body GPR2.Project.View is
    -----------------------
 
    function Library_Directory (Self : Object) return GPR2.Path_Name.Object is
+      use GPR2.Project.Definition;
    begin
-      return Self.Apply_Root_And_Subdirs (PRA.Library_Dir);
+      if not Get_RO (Self).Cache (Library_Dir).Valid then
+         declare
+            View : Object := Self;
+         begin
+            Get_RW (View).Cache (Library_Dir) :=
+              (Path  => Self.Apply_Root_And_Subdirs (PRA.Library_Dir),
+               Valid => True);
+         end;
+      end if;
+
+      return Get_RO (Self).Cache (Library_Dir).Path;
    end Library_Directory;
 
    ----------------------
@@ -1337,8 +1360,19 @@ package body GPR2.Project.View is
    ----------------------
 
    function Object_Directory (Self : Object) return GPR2.Path_Name.Object is
+      use GPR2.Project.Definition;
    begin
-      return Self.Apply_Root_And_Subdirs (PRA.Object_Dir);
+      if not Get_RO (Self).Cache (Object_Dir).Valid then
+         declare
+            View : Object := Self;
+         begin
+            Get_RW (View).Cache (Object_Dir) :=
+              (Path  => Self.Apply_Root_And_Subdirs (PRA.Object_Dir),
+               Valid => True);
+         end;
+      end if;
+
+      return Get_RO (Self).Cache (Object_Dir).Path;
    end Object_Directory;
 
    ----------
@@ -1815,5 +1849,4 @@ begin
    Definition.Refcount               := Refcount'Access;
    Definition.Weak                   := Weak'Access;
    Definition.Strong                 := Strong'Access;
-   Definition.Apply_Root_And_Subdirs := Apply_Root_And_Subdirs'Access;
 end GPR2.Project.View;

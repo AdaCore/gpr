@@ -510,6 +510,16 @@ package body GPR2.Project.Definition is
       Check_View (View);
    end Check_Same_Name_Extended;
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache (Def : in out Data)
+   is
+   begin
+      Def.Cache := (others => <>);
+   end Clear_Cache;
+
    -----------------------
    -- Is_Sources_Loaded --
    -----------------------

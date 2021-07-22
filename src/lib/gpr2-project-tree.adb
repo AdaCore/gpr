@@ -1238,6 +1238,11 @@ package body GPR2.Project.Tree is
    begin
       Self.Self := Self'Unchecked_Access;
 
+      --  If re-loading, invalidate the views cache
+      for V of Self.Views_Set loop
+         Definition.Get (V).Clear_Cache;
+      end loop;
+
       --  First record and parse the configuration object, this is needed as
       --  used to check the target in Set_Project_Search_Paths above.
 
