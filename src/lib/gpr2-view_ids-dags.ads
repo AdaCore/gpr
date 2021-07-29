@@ -27,7 +27,6 @@ with Ada.Containers.Ordered_Sets;
 with Ada.Containers.Ordered_Maps;
 with Ada.Strings.Unbounded;
 
-with GPR2.Containers; use GPR2.Containers;
 with GPR2.View_Ids.Vector;
 with GPR2.View_Ids.Set;
 

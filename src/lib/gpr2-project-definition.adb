@@ -1253,6 +1253,7 @@ package body GPR2.Project.Definition is
                     (Message.Create
                        (Message.Error, "invalid name, contains dot",
                         SR.Create (File.Value, 1, 1)));
+                  Last_Dot := 0;
                   goto Invalid;
 
                else
