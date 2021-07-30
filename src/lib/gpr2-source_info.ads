@@ -29,6 +29,7 @@
 
 with Ada.Calendar;
 with Ada.Containers.Ordered_Maps;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 with GPR2.Unit.List;
 with GPR2.Containers;
@@ -229,20 +230,16 @@ private
 
    use Ada.Calendar;
 
-   type Dependency_Key is record
-      Unit_Name : Unbounded_String;
-      --  Name of the unit or subunit.
-      --  Empty if Sfile is configuration pragmas file.
-
+   type Dependency_Key (Length : Natural) is record
       Unit_Kind : Unit.Library_Unit_Type;
       --  Unit kind (S_Separate for a subunit)
+
+      Unit_Name : String (1 .. Length);
+      --  Name of the unit or subunit.
+      --  Empty if Sfile is configuration pragmas file.
    end record;
 
-   type Dependency is record
-      Sfile : Unbounded_String;
-      --  Base name of the source file.
-      --  Or full path name of the configuration pragmas files.
-
+   type Dependency (Length : Natural) is record
       Stamp : Time := No_Time;
       --  Time stamp value. Note that this will be all zero characters for the
       --  dummy entries for missing or non-dependent files.
@@ -251,14 +248,26 @@ private
       --  Checksum value. Note that this will be all zero characters for the
       --  dummy entries for missing or non-dependent files
       --  Zero if Sfile is configuration pragmas file.
+
+      Sfile : String (1 .. Length);
+      --  Base name of the source file.
+      --  Or full path name of the configuration pragmas files.
    end record;
 
-   function "<" (Left, Right : Dependency_Key) return Boolean is
-     (if Left.Unit_Name = Right.Unit_Name
-      then Left.Unit_Kind < Right.Unit_Kind
-      else Left.Unit_Name < Right.Unit_Name);
+   function Equal (Dep      : Dependency;
+                   Sfile    : String;
+                   Stamp    : Time;
+                   Checksum : Word) return Boolean is
+     (Dep.Sfile = Sfile
+      and then Dep.Stamp = Stamp
+      and then Dep.Checksum = Checksum);
 
-   package Dependency_Maps is new Ada.Containers.Ordered_Maps
+   function "<" (Left, Right : Dependency_Key) return Boolean is
+     ((Left.Unit_Name = Right.Unit_Name
+        and then Left.Unit_Kind < Right.Unit_Kind)
+      or else Left.Unit_Name < Right.Unit_Name);
+
+   package Dependency_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Dependency_Key, Dependency);
 
    package Unit_Dependencies is new Ada.Containers.Ordered_Maps

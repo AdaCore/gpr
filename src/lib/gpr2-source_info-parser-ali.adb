@@ -544,7 +544,7 @@ package body GPR2.Source_Info.Parser.ALI is
          --  Length of suffix denoting dependency kind
 
          function Image (Dep : Dependency) return String is
-           ('"' & To_String (Dep.Sfile) & ' ' & Formatting.Image (Dep.Stamp)
+           ('"' & Dep.Sfile & ' ' & Formatting.Image (Dep.Stamp)
             & ' ' & To_Hex_String (Dep.Checksum) & '"');
 
          Suffix : constant String :=
@@ -612,15 +612,23 @@ package body GPR2.Source_Info.Parser.ALI is
            (LI_Idx, Dependency_Maps.Empty_Map, C_Index, Inserted);
 
          Data.Dependencies (C_Index).Insert
-           ((+Name (Name'First .. Name'Last - Kind_Len), Kind),
-            (+Sfile, Stamp, Chksum), Position, Inserted);
+           ((Length    => Name'Length - Kind_Len,
+             Unit_Kind => Kind,
+             Unit_Name => Name (Name'First .. Name'Last - Kind_Len)),
+            (Length    => Sfile'Length,
+             Stamp     => Stamp,
+             Checksum  => Chksum,
+             Sfile     => Sfile), Position, Inserted);
 
          if not Inserted
-           and then Dependency_Maps.Element (Position)
-                    /= (+Sfile, Stamp, Chksum)
+           and then not Equal (Dependency_Maps.Element (Position),
+                               Sfile, Stamp, Chksum)
          then
             Ada.Text_IO.Put_Line
-              ("# " & Image ((+Sfile, Stamp, Chksum)));
+              ("# " & Image ((Length   => Sfile'Length,
+                              SFile    => Sfile,
+                              Stamp    => Stamp,
+                              Checksum => Chksum)));
 
             raise Scan_ALI_Error with
               '"' & Name & """ already in dependencies of " & LI.Value
