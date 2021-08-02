@@ -60,6 +60,10 @@ package GPR2.Project.Attribute_Index is
      with Post => Create'Result.Is_Defined;
    --  Creates a built-in attribute index
 
+   function Create
+     (Value : Language_Id) return Object;
+   --  Creates an attribute index for the given language
+
    function Is_Others (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if this attribute index is the special others index
@@ -137,6 +141,14 @@ private
               (Source_Reference.Value.Create
                (Source_Reference.Builtin, Value)),
               False, Case_Sensitive));
+
+   function Create
+     (Value : Language_Id) return Object
+   is
+     (Create (Source_Reference.Value.Object
+              (Source_Reference.Value.Create
+               (Source_Reference.Builtin, Value_Type (Name (Value)))),
+              False, False));
 
    function Is_Case_Sensitive (Self : Object) return Boolean is
      (Self.Case_Sensitive);

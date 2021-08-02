@@ -24,6 +24,7 @@
 
 --  Some common containers for Name, Value
 
+with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Sets;
@@ -126,5 +127,22 @@ package GPR2.Containers is
      (Source_Reference.Value.Object);
 
    subtype Source_Value_Set is Source_Value_Type_Set.Set;
+
+   package Language_Id_Set is new Ada.Containers.Hashed_Sets
+     (Language_Id, Hash, "=");
+   subtype Language_Set is Language_Id_Set.Set;
+
+   Empty_Language_Set : Language_Set renames Language_Id_Set.Empty_Set;
+
+   package Lang_Value_Maps is
+     new Ada.Containers.Indefinite_Ordered_Maps (Language_Id, Value_Type);
+   subtype Lang_Value_Map is Lang_Value_Maps.Map;
+
+   function Value_Or_Default
+     (Map     : Lang_Value_Map;
+      Key     : Language_Id;
+      Default : Value_Type := No_Value) return Value_Type
+     with Post => (if not Map.Contains (Key)
+                   then Value_Or_Default'Result = Default);
 
 end GPR2.Containers;

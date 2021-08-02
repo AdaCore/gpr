@@ -247,7 +247,7 @@ package GPR2.KB is
      with Pre => Requires_Compiler (Comp);
    --  Returns path to the compiler
 
-   function Language (Comp : Compiler) return Name_Type;
+   function Language (Comp : Compiler) return Language_Id;
    --  Returns language of the compiler
 
    function Name (Comp : Compiler) return Name_Type
@@ -326,41 +326,37 @@ private
       Element_Type => Unbounded_String);
 
    type Compiler is record
-      Name        : Unbounded_String := Null_Unbounded_String;
+      Name            : Unbounded_String := Null_Unbounded_String;
       --  The name of the compiler, as specified in the <name> node of the
       --  knowledge base. If Compiler represents a filter as defined on through
       --  --config switch, then name can also be the base name of the
       --  executable we are looking for. In such a case, it never includes the
       --  exec suffix (.exe on Windows)
 
-      Executable  : Unbounded_String := Null_Unbounded_String;
-      Target      : Unbounded_String := Null_Unbounded_String;
-      Targets_Set : Targets_Set_Id;
-      Path        : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
+      Executable      : Unbounded_String := Null_Unbounded_String;
+      Target          : Unbounded_String := Null_Unbounded_String;
+      Targets_Set     : Targets_Set_Id;
+      Path            : GPR2.Path_Name.Object := GPR2.Path_Name.Undefined;
 
-      Base_Name   : Unbounded_String := Null_Unbounded_String;
+      Base_Name       : Unbounded_String := Null_Unbounded_String;
       --  Base name of the executable. This does not include the exec suffix
 
-      Version     : Unbounded_String := Null_Unbounded_String;
-      Variables   : Variables_Maps.Map;
-      Prefix      : Unbounded_String := Null_Unbounded_String;
-      Runtime     : Unbounded_String := Null_Unbounded_String;
-      Alt_Runtime : Unbounded_String := Null_Unbounded_String;
-      Runtime_Dir : Unbounded_String := Null_Unbounded_String;
+      Version         : Unbounded_String := Null_Unbounded_String;
+      Variables       : Variables_Maps.Map;
+      Prefix          : Unbounded_String := Null_Unbounded_String;
+      Runtime         : Unbounded_String := Null_Unbounded_String;
+      Alt_Runtime     : Unbounded_String := Null_Unbounded_String;
+      Runtime_Dir     : Unbounded_String := Null_Unbounded_String;
       Default_Runtime : Boolean := False;
       Any_Runtime     : Boolean := False;
-      Path_Order  : Integer;
+      Path_Order      : Integer;
 
-      Language_Case : Unbounded_String := Null_Unbounded_String;
-      --  The supported language, with the casing read from the compiler. This
-      --  is for display purposes only
+      Language        : Language_Id := No_Language;
+      --  The supported language
 
-      Language_LC : Unbounded_String := Null_Unbounded_String;
-      --  The supported language, always lower case
-
-      Selectable   : Boolean := True;
-      Selected     : Boolean := False;
-      Complete     : Boolean := True;
+      Selectable       : Boolean := True;
+      Selected         : Boolean := False;
+      Complete         : Boolean := True;
    end record;
 
    No_Compiler : constant Compiler :=
@@ -378,8 +374,7 @@ private
                     Default_Runtime => False,
                     Any_Runtime     => False,
                     Runtime_Dir     => Null_Unbounded_String,
-                    Language_Case   => Null_Unbounded_String,
-                    Language_LC     => Null_Unbounded_String,
+                    Language        => No_Language,
                     Selectable      => False,
                     Selected        => False,
                     Complete        => True,
@@ -406,8 +401,8 @@ private
    function Path (Comp : Compiler) return Name_Type is
      (Name_Type (Comp.Path.Dir_Name));
 
-   function Language (Comp : Compiler) return Name_Type is
-     (Name_Type (To_String (Comp.Language_Case)));
+   function Language (Comp : Compiler) return Language_Id is
+     (Comp.Language);
 
    function Name (Comp : Compiler) return Name_Type is
      (Name_Type (To_String (Comp.Name)));
@@ -510,7 +505,7 @@ private
       Version_Re  : Pattern_Matcher_Holder;
       Runtime     : Unbounded_String;
       Runtime_Re  : Pattern_Matcher_Holder;
-      Language_LC : Unbounded_String;
+      Language    : Language_Id;
    end record
      with Dynamic_Predicate =>
        (Name = Null_Unbounded_String or else not Name_Re.Is_Empty)
@@ -579,16 +574,14 @@ private
      (Known_Targets_Set_Id, GPR2.Containers.Name_List,
       GPR2.Containers.Name_Type_List."=");
 
-   package Known_Languages renames Variables_Maps;
-
    type Object is tagged record
       Compilers               : Compiler_Description_Maps.Map;
-      No_Compilers            : GPR2.Containers.Name_List;
+      No_Compilers            : Containers.Language_Set;
       Check_Executable_Regexp : Boolean := False;
       Configurations          : Configuration_Lists.List;
       Targets_Sets            : Targets_Set_Vectors.Vector;
       Fallback_Targets_Sets   : Fallback_Targets_Set_Vectors.Vector;
-      Languages_Known         : Known_Languages.Map;
+      Languages_Known         : Containers.Language_Set;
 
       Parsed_Directories      : GPR2.Path_Name.Set.Object;
 

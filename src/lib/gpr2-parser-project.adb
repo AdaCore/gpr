@@ -1573,7 +1573,7 @@ package body GPR2.Parser.Project is
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Index   => Index,
                      Value   => Get_Value_Reference
-                       (Value_Type (Tree.Runtime (Name_Type (Index.Text))),
+                       (Value_Type (Tree.Runtime (+Name_Type (Index.Text))),
                         Sloc),
                      Default => True,
                      Frozen  => True);
@@ -1655,7 +1655,7 @@ package body GPR2.Parser.Project is
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Index   => Index,
                         Value   => Get_Value_Reference
-                          (Value_Type (Tree.Runtime (Name_Type (Index.Text))),
+                          (Value_Type (Tree.Runtime (+Name_Type (Index.Text))),
                            Sloc),
                         Default => True,
                         Frozen  => True);

@@ -614,7 +614,7 @@ package body GPR2.Project.Source is
      (Self     : in out Object;
       Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
-      Language : constant Name_Type := Self.Source.Language;
+      Language : constant Language_Id := Self.Source.Language;
 
       procedure Clarify_Unit_Type;
       --  Set Kind to Spec_Only for the units without body and

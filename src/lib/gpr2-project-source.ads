@@ -206,13 +206,13 @@ package GPR2.Project.Source is
 private
 
    type Object is tagged record
-      Source : GPR2.Source.Object;
-      View   : Project.Weak_Reference;
+      Source           : GPR2.Source.Object;
+      View             : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
       --  valgrind detected mess in memory deallocations at the process exit.
 
-      Aggregated : Project.Weak_Reference;
+      Aggregated       : Project.Weak_Reference;
       --  View where the source is aggregated from
 
       Is_Interface     : Boolean               := False;

@@ -69,7 +69,7 @@ procedure Main is
                   else "undefined"));
 
             Text_IO.Set_Col (4);
-            Text_IO.Put ("   language: " & String (S.Language));
+            Text_IO.Put ("   language: " & Image (S.Language));
 
             Text_IO.Set_Col (22);
             Text_IO.Put

@@ -30,13 +30,14 @@ package GPR2.Source_Info.Parser.Registry is
    procedure Unregister (Parser : Object'Class);
    --  Unregister a source info parser
 
-   function Exists (Language : Name_Type; Kind : Backend) return Boolean
+   function Exists (Language : Language_Id; Kind : Backend) return Boolean
      with Pre => Kind /= None;
    --  Returns True if the parser backend for Language is found. If Kind is
    --  Auto then True is returned if either an LI or Source parser exists.
 
    function Get
-     (Language : Name_Type; Kind : Backend) return not null access Object'Class
+     (Language : Language_Id; Kind : Backend)
+      return not null access Object'Class
      with Pre => Exists (Language, Kind);
    --  Get a parser for the given langugae and kind. If Kind if Auto then the
    --  LI based parser is returned and the Source based otherwise.

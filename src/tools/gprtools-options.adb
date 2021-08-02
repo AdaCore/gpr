@@ -442,10 +442,10 @@ package body GPRtools.Options is
             Del   : constant Natural := Ada.Strings.Fixed.Index (Value, "=");
          begin
             if Del = 0 then
-               Self.RTS_Map.Insert ("Ada", Value);
+               Self.RTS_Map.Insert (GPR2.Ada_Language, Value);
             else
                Self.RTS_Map.Insert
-                 (GPR2.Name_Type (Value (Value'First .. Del - 1)),
+                 (GPR2."+" (GPR2.Name_Type (Value (Value'First .. Del - 1))),
                   Value (Del + 1 .. Value'Last));
             end if;
          end;

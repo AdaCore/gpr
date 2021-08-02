@@ -34,7 +34,7 @@ limited with GPR2.Project.Source;
 package GPR2.Source_Info.Parser is
 
    type Object
-     (Language : not null access Name_Type;
+     (Language : Language_Id;
       Kind     : Backend) is abstract tagged limited private;
 
    type Object_Ref is not null access all Object'Class;
@@ -43,8 +43,7 @@ package GPR2.Source_Info.Parser is
      (Self   : not null access Object;
       Data   : in out Source_Info.Object'Class;
       Source : Project.Source.Object) is abstract
-   with Pre'Class  => Self.Kind /= None,
-        Post'Class => not Data.Is_Parsed
+   with Post'Class => not Data.Is_Parsed
                         or else
                       Data.Used_Backend in Source_Info.LI | Source_Info.Source;
    --  Set Data with the information for the given source. If LI is undefined
@@ -63,7 +62,7 @@ package GPR2.Source_Info.Parser is
 private
 
    type Object
-     (Language : not null access Name_Type;
+     (Language : Language_Id;
       Kind     : Backend) is abstract tagged limited
    record
       Self : not null access Object'Class := Object'Unchecked_Access;

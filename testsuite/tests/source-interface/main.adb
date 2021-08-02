@@ -66,7 +66,7 @@ procedure Main is
             begin
                Output_Filename (S.Path_Name.Value);
 
-               Text_IO.Put (",language: " & String (S.Language));
+               Text_IO.Put (",language: " & Image (S.Language));
 
                Text_IO.Put
                  (",Kind: "

@@ -62,12 +62,11 @@ package body GPR2.Project.Pack is
 
    function Body_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object
+      Language : Language_Id) return Project.Attribute.Object
    is
-      Lang : constant Value_Type := Value_Type (Language);
    begin
       return Self.Attribute
-        (Registry.Attribute.Body_Suffix, Attribute_Index.Create (Lang));
+        (Registry.Attribute.Body_Suffix, Attribute_Index.Create (Language));
    end Body_Suffix;
 
    ---------------------
@@ -181,12 +180,11 @@ package body GPR2.Project.Pack is
 
    function Spec_Suffix
      (Self     : Object;
-      Language : Name_Type) return Project.Attribute.Object
+      Language : Language_Id) return Project.Attribute.Object
    is
-      Lang : constant Value_Type := Value_Type (Language);
    begin
       return Self.Attribute
-        (Registry.Attribute.Spec_Suffix, Attribute_Index.Create (Lang));
+        (Registry.Attribute.Spec_Suffix, Attribute_Index.Create (Language));
    end Spec_Suffix;
 
    -------------------

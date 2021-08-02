@@ -67,7 +67,7 @@ procedure Main is
             Output_Filename (S.Path_Name.Value);
 
             Text_IO.Set_Col (20);
-            Text_IO.Put ("   language: " & String (S.Language));
+            Text_IO.Put ("   language: " & Image (S.Language));
 
             if S.Has_Units then
                for K in Source_Info.Unit_Index range 1 .. 5 loop

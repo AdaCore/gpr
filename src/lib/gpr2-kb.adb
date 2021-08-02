@@ -89,8 +89,8 @@ package body GPR2.KB is
    --  user has explicitly specified in his filters.
 
    function Is_Language_With_No_Compiler
-     (Self        : Object;
-      Language_LC : Name_Type) return Boolean;
+     (Self     : Object;
+      Language : Language_Id) return Boolean;
    --  Given a language name (lower case), returns True if that language is
    --  known to require no compiler.
 
@@ -423,14 +423,10 @@ package body GPR2.KB is
 
          end Compare;
       begin
-         case Compare (Comp1.Language_LC, Comp2.Language_LC) is
-         when Before =>
-            return True;
+         if Comp1.Language /= Comp2.Language then
+            return Name (Comp1.Language) < Name (Comp2.Language);
 
-         when After =>
-            return False;
-
-         when Equal =>
+         else
             if Comp1.Path_Order < Comp2.Path_Order then
                return True;
 
@@ -451,7 +447,7 @@ package body GPR2.KB is
                      return Compare (Comp1.Version, Comp2.Version) = Before;
                end case;
             end if;
-         end case;
+         end if;
       end Display_Before;
 
       Iter : All_Iterator (Settings'Length);
@@ -730,7 +726,7 @@ package body GPR2.KB is
          for F in Iterator.Found_One'Range loop
             if not Iterator.Found_One (F) then
                if Self.Languages_Known.Contains
-                 (Compiler_Lists.Element (C).Language_LC)
+                 (Compiler_Lists.Element (C).Language)
                then
                   --  Fallback should not be triggered for unknown languages
                   Found_All_Fallback := False;
@@ -783,7 +779,7 @@ package body GPR2.KB is
                      for F in Local_Iter.Found_One'Range loop
                         if not Local_Iter.Found_One (F)
                           and then Self.Languages_Known.Contains
-                            (Compiler_Lists.Element (C).Language_LC)
+                            (Compiler_Lists.Element (C).Language)
                         then
                            --  Not finding a compiler for an unknown language
                            --  should not invalidate fallback search.
@@ -818,7 +814,7 @@ package body GPR2.KB is
                                   Compiler_Lists.Element (C);
                Language_Known : constant Boolean :=
                                   Self.Languages_Known.Contains
-                                    (Comp.Language_LC);
+                                    (Comp.Language);
             begin
 
                if not Language_Known then
@@ -826,7 +822,7 @@ package body GPR2.KB is
                     (Message.Create
                        (Message.Information,
                         "unknown language '"
-                        & To_String (Comp.Language_Case) & "'",
+                        & Image (Comp.Language) & "'",
                         Source_Reference.Create ("embedded_kb/kb", 0, 0)));
 
                else
@@ -836,7 +832,7 @@ package body GPR2.KB is
                        (Message.Warning,
                         "can't find a toolchain "
                         & "for the following configuration: language '"
-                        & To_String (Comp.Language_Case) & "', target '"
+                        & Image (Comp.Language) & "', target '"
                         & String (On_Target) & "'"
                         & (if Comp.Runtime = Null_Unbounded_String then
                               ", default runtime"
@@ -1016,7 +1012,7 @@ package body GPR2.KB is
                & To_String (Filter.Name) & "' version='"
                & To_String (Filter.Version) & "' runtime='"
                & To_String (Filter.Runtime) & "' language='"
-               & To_String (Filter.Language_LC) & "' />"
+               & String (Name (Filter.Language)) & "' />"
                & ASCII.LF);
          end loop;
 
@@ -1128,13 +1124,12 @@ package body GPR2.KB is
 
       Result : Compiler;
 
-      LC            : constant String :=
-                        To_Lower (Language (Descr));
+      Lang_Id       : Language_Id renames Language (Descr);
       Exec_Suffix   : OS_Lib.String_Access :=
                         OS_Lib.Get_Executable_Suffix;
 
       function Legacy_Name_Support
-        (Name : String; Lang : String) return String;
+        (Name : String; Lang : Language_Id) return String;
       --  For Ada, gnatmake was previously used to detect a GNAT compiler.
       --  However, as gnatmake may not be present in all the GNAT
       --  distributions, gnatls is now used. For upward compatibility,
@@ -1146,13 +1141,13 @@ package body GPR2.KB is
       -------------------------
 
       function Legacy_Name_Support
-        (Name : String; Lang : String) return String
+        (Name : String; Lang : Language_Id) return String
       is
          use Ada.Strings.Fixed;
 
          Idx : constant Natural := Index (Name, "gnatmake");
       begin
-         if Lang = "ada" and then Idx >= Name'First then
+         if Lang = Ada_Language and then Idx >= Name'First then
             return Replace_Slice (Name, Idx, Idx + 7, "gnatls");
          else
             return Name;
@@ -1160,12 +1155,12 @@ package body GPR2.KB is
       end Legacy_Name_Support;
 
    begin
-      Result.Language_Case :=
-        To_Unbounded_String (String (Language (Descr)));
-      Result.Language_LC := To_Unbounded_String (LC);
+      Result.Language := Lang_Id;
 
-      if Is_Language_With_No_Compiler (Self, Name_Type (LC)) then
-         Trace (Main_Trace, "Language " & LC & " requires no compiler");
+      if Is_Language_With_No_Compiler (Self, Language (Descr)) then
+         Trace (Main_Trace,
+                "Language " & Image (Lang_Id) &
+                  " requires no compiler");
          Result.Complete := True;
          Result.Selected := True;
          Result.Targets_Set := All_Target_Sets;
@@ -1193,7 +1188,7 @@ package body GPR2.KB is
            To_Unbounded_String
              (GNAT.Directory_Operations.Base_Name
                 (Legacy_Name_Support
-                   (String (Name (Descr)), LC),
+                   (String (Name (Descr)), Lang_Id),
                  Exec_Suffix.all));
       end if;
 
@@ -1201,7 +1196,8 @@ package body GPR2.KB is
 
       Result.Complete := False;
 
-      Trace (Main_Trace, "Language " & LC & " requires a compiler");
+      Trace (Main_Trace,
+             "Language " & Image (Lang_Id) & " requires a compiler");
 
       return Result;
    end Create_Filter;
@@ -1327,7 +1323,7 @@ package body GPR2.KB is
             end if;
 
             for Other_Compiler of Compilers loop
-               if Other_Compiler.Language_LC = Compilers (Idx).Language_LC
+               if Other_Compiler.Language = Compilers (Idx).Language
                  and then Other_Compiler.Selected
                then
                   Compilers (Idx).Selectable := False;
@@ -1432,8 +1428,8 @@ package body GPR2.KB is
 
       end if;
 
-      if Filter.Language_LC /= Null_Unbounded_String
-        and then Filter.Language_LC /= Comp.Language_LC
+      if Filter.Language /= No_Language
+        and then Filter.Language /= Comp.Language
       then
          Trace
            (Match_Trace,
@@ -1962,7 +1958,7 @@ package body GPR2.KB is
       elsif Name = "VERSION" then
          return To_String (Comp.Version);
       elsif Name = "LANGUAGE" then
-         return To_String (Comp.Language_LC);
+         return String (GPR2.Name (Comp.Language));
       elsif Name = "RUNTIME" then
          return To_String (Comp.Runtime);
       elsif Name = "PREFIX" then
@@ -2083,15 +2079,10 @@ package body GPR2.KB is
    ----------------------------------
 
    function Is_Language_With_No_Compiler
-     (Self        : Object;
-      Language_LC : Name_Type) return Boolean is
+     (Self     : Object;
+      Language : Language_Id) return Boolean is
    begin
-      for No_Comp of Self.No_Compilers loop
-         if No_Comp = Language_LC then
-            return True;
-         end if;
-      end loop;
-      return False;
+      return Self.No_Compilers.Contains (Language);
    end Is_Language_With_No_Compiler;
 
    -------------------------
@@ -2232,8 +2223,8 @@ package body GPR2.KB is
 
       function Language_Matches return Boolean is
       begin
-         if Filter.Language_LC = Null_Unbounded_String
-           or else Filter.Language_LC = Comp.Language_LC
+         if Filter.Language = No_Language
+           or else Filter.Language = Comp.Language
          then
             return True;
          end if;
@@ -3231,7 +3222,6 @@ package body GPR2.KB is
       --------------
 
       function Callback (Var_Name, Index : String) return String is
-         Idx  : constant String := Ada.Characters.Handling.To_Lower (Index);
       begin
          if Var_Name = "GPRCONFIG_PREFIX" then
             return GPR_Executable_Prefix_Path;
@@ -3261,15 +3251,17 @@ package body GPR2.KB is
             end if;
 
          else
-
-            for Comp of Comps loop
-               if Comp.Selected
-                 and then To_String (Comp.Language_LC) = Idx
-               then
-                  return Get_Variable_Value (Comp, Var_Name);
-               end if;
-            end loop;
-
+            declare
+               Lang : constant Language_Id := +Name_Type (Index);
+            begin
+               for Comp of Comps loop
+                  if Comp.Selected
+                    and then Comp.Language = Lang
+                  then
+                     return Get_Variable_Value (Comp, Var_Name);
+                  end if;
+               end loop;
+            end;
          end if;
 
          return "";
@@ -3288,7 +3280,7 @@ package body GPR2.KB is
         (if S = Null_Unbounded_String then "" else To_String (S));
 
    begin
-      return Get_String_Or_Empty (Comp.Language_Case)
+      return String (Name (Comp.Language))
            & ',' & Get_String_Or_Empty (Comp.Version)
            & ',' & Get_String_Or_Empty (Comp.Runtime)
            & ',' & (if Comp.Path.Is_Defined then Comp.Path.Value else "")

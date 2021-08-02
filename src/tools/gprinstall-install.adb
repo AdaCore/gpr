@@ -947,7 +947,7 @@ package body GPRinstall.Install is
 
             function Is_Ada
               (Source : GPR2.Project.Source.Object) return Boolean
-            is (Source.Source.Language = "ada");
+            is (Source.Source.Language = Ada_Language);
             --  Returns True if Source is an Ada source
 
             procedure Install_Project_Source

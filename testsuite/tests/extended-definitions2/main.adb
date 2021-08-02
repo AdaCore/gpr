@@ -84,7 +84,7 @@ procedure Main is
             Output_Filename (S.Path_Name.Value);
 
             Text_IO.Set_Col (16);
-            Text_IO.Put ("   language: " & String (S.Language));
+            Text_IO.Put ("   language: " & Image (S.Language));
 
             Text_IO.Set_Col (33);
             Text_IO.Put ("   Kind: "

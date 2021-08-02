@@ -725,9 +725,7 @@ package body GPR2.KB.Compiler_Iterator is
             L : constant String :=
                   To_String (External_Value_Lists.Element (C).Value);
          begin
-            Comp.Language_Case := To_Unbounded_String (L);
-            Comp.Language_LC   :=
-              To_Unbounded_String (Ada.Characters.Handling.To_Lower (L));
+            Comp.Language := +Name_Type (L);
          end;
 
          --  First check if a runtime specified with option --config= will

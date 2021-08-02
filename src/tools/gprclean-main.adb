@@ -132,7 +132,7 @@ procedure GPRclean.Main is
 
       procedure Binder_Artifacts
         (Name     : GPR2.Simple_Name;
-         Language : Optional_Name_Type := No_Name);
+         Language : Language_Id := No_Language);
       --  Add binder artefacts for the name
 
       procedure Delete_File (Name : Path_Name.Full_Name);
@@ -160,7 +160,7 @@ procedure GPRclean.Main is
 
       procedure Binder_Artifacts
         (Name     : GPR2.Simple_Name;
-         Language : Optional_Name_Type := No_Name) is
+         Language : Language_Id := No_Language) is
       begin
          for F of View.Binder_Artifacts (Name, Language) loop
             Delete_File (F.Value);
@@ -420,7 +420,7 @@ procedure GPRclean.Main is
                if Is_Main and then Opts.Arg_Mains and then not In_Mains then
                   Cleanup := False;
 
-               elsif S.Source.Language = "Ada"
+               elsif S.Source.Language = Ada_Language
                  and then not S.Source.Has_Single_Unit
                then
                   for CU of S.Source.Units loop

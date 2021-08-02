@@ -215,7 +215,7 @@ package body GPR2.Project.Source.Set is
                      if (Src.Has_Single_Unit
                          and then not Source.Has_Other_Part
                          and then CU.Kind /= GPR2.Unit.S_Separate
-                         and then Src.Language = "Ada")
+                         and then Src.Language = Ada_Language)
                         --  The condition above is about Ada package specs
                         --  without a body, which have to be compilable.
                         or else CU.Kind in GPR2.Unit.Body_Kind

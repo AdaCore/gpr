@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -874,7 +874,7 @@ package body GPR2.Compilation.Registry is
 
    function Run
      (Project  : GPR2.Project.View.Object;
-      Language : Optional_Name_Type;
+      Language : Language_Id;
       Options  : Containers.Value_List;
       Obj_Name : Name_Type;
       Dep_Name : String := "";
@@ -1045,7 +1045,7 @@ package body GPR2.Compilation.Registry is
         (S.Channel,
          Project.Path_Name.Value,
          Filter_String (CWD, Sep => ""),
-         String (Language),
+         String (Name (Language)),
          String (Tree.Target),
          String (Tree.Runtime (Language)),
          Options, Obj_Name, Dep_Name, Env,

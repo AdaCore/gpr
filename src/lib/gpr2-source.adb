@@ -87,13 +87,13 @@ package body GPR2.Source is
 
    function Create
      (Filename : GPR2.Path_Name.Object;
-      Language : Name_Type;
-      Kind     : Unit.Library_Unit_Type) return Object is
+      Language : Language_Id;
+      Kind     : GPR2.Unit.Library_Unit_Type) return Object is
    begin
       return Result : Object  do
          Result.Path_Name := Filename;
          Result.Timestamp := Get_ALI_Timestamp (Filename);
-         Result.Language  := +String (Language);
+         Result.Language  := Language;
 
          Set (Result, Kind);
       end return;

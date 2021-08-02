@@ -114,7 +114,7 @@ procedure Main is
    Ctx : Context.Object;
 
    Des : Configuration.Description :=
-           Configuration.Create (Language => "Ada");
+           Configuration.Create (Language => Ada_Language);
    KB  : GPR2.KB.Object := GPR2.KB.Create (GPR2.KB.Default_Flags);
    Cnf : Configuration.Object :=
            Configuration.Create

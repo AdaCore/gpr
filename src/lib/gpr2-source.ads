@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -55,7 +55,7 @@ package GPR2.Source is
      with Pre => Self.Is_Defined;
    --  Returns the path-name for the given source
 
-   function Language (Self : Object) return Name_Type
+   function Language (Self : Object) return Language_Id
      with Pre => Self.Is_Defined;
    --  Returns the language for this source
 
@@ -70,9 +70,9 @@ package GPR2.Source is
 
    function Create
      (Filename : GPR2.Path_Name.Object;
-      Language : Name_Type;
-      Kind     : Unit.Library_Unit_Type) return Object
-     with Pre  => Filename.Is_Defined and then Language /= "Ada",
+      Language : Language_Id;
+      Kind     : GPR2.Unit.Library_Unit_Type) return Object
+     with Pre  => Filename.Is_Defined and then Language /= Ada_Language,
           Post => Create'Result.Is_Defined;
    --  Constructor for a non-Ada source object
 
@@ -94,7 +94,7 @@ private
    type Object is new Source_Info.Object with record
       Path_Name : GPR2.Path_Name.Object;
       Timestamp : Calendar.Time := No_Time;
-      Language  : Unbounded_String;
+      Language  : Language_Id   := No_Language;
       Ada_Key   : Unbounded_String;
    end record;
 
@@ -111,7 +111,7 @@ private
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path_Name);
 
-   function Language (Self : Object) return Name_Type is
-     (Name_Type (-Self.Language));
+   function Language (Self : Object) return Language_Id is
+     (Self.Language);
 
 end GPR2.Source;

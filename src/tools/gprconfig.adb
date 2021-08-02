@@ -83,7 +83,7 @@ procedure GPRconfig is
    --  Compares descriptions. Only one description per language is expected.
 
    package Description_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Description);
+     (Language_Id, Description);
 
    Description_Map : Description_Maps.Map;
 
@@ -165,7 +165,7 @@ procedure GPRconfig is
             Put_Rank (Comp, Idx);
             Put_Line (" path:" & Path (Comp));
             Put_Rank (Comp, Idx);
-            Put_Line (" lang:" & Language (Comp));
+            Put_Line (" lang:" & Image (Language (Comp)));
             Put_Rank (Comp, Idx);
             Put_Line (" name:" & Name (Comp));
             Put_Rank (Comp, Idx);
@@ -192,7 +192,7 @@ procedure GPRconfig is
             Put_Rank (Comp, Idx);
             Put_Line (" path:");
             Put_Rank (Comp, Idx);
-            Put_Line (" lang:" & Language (Comp));
+            Put_Line (" lang:" & String (Name (Language (Comp))));
             Put_Rank (Comp, Idx);
             Put_Line (" name:");
             Put_Rank (Comp, Idx);
@@ -413,7 +413,7 @@ procedure GPRconfig is
          end if;
 
          Result := Project.Configuration.Create
-           (Language => Get_Description_Param (Slices, "language"),
+           (Language => +Get_Description_Param (Slices, "language"),
             Version  => Get_Description_Param (Slices, "version"),
             Runtime  => Get_Description_Param (Slices, "runtime"),
             Path     => Filename_Optional
@@ -428,7 +428,7 @@ procedure GPRconfig is
          end if;
 
          Result := Project.Configuration.Create
-           (Language => Get_Description_Param (Slices, 1),
+           (Language => +Get_Description_Param (Slices, 1),
             Version  => Get_Description_Param (Slices, 2),
             Runtime  => Get_Description_Param (Slices, 3),
             Path     => Filename_Optional (Get_Description_Param (Slices, 4)),
@@ -593,7 +593,7 @@ procedure GPRconfig is
                   Put
                     (String (Name (Comp))
                      & " for "
-                     & String (Language (Comp))
+                     & String (Name (Language (Comp)))
                      & " in "
                      & String (Path (Comp)));
                   if For_Target = "all" then
@@ -612,7 +612,8 @@ procedure GPRconfig is
 
                else
                   Put_Line
-                    (String (Language (Comp)) & " (no compiler required)");
+                    (String (Name (Language (Comp))) &
+                       " (no compiler required)");
                end if;
 
             end if;
@@ -676,13 +677,13 @@ procedure GPRconfig is
 
             if Requires_Compiler (Comp) then
                Put
-                 (String (Language (Comp)) & ","
+                 (Image (Language (Comp)) & ","
                   & String (KB.Version (Comp)) & ","
                   & String (Runtime (Comp)) & ","
                   & String (Path (Comp)) & ","
                   & String (Name (Comp)));
             else
-               Put (String (Language (Comp)) & ",,,,");
+               Put (Image (Language (Comp)) & ",,,,");
             end if;
          end if;
       end loop;
@@ -730,7 +731,7 @@ procedure GPRconfig is
          Descr := Parse_Config_Parameter (Value);
          if Description_Map.Contains (Language (Descr)) then
             Report_Error_And_Exit
-              ("Multiple --config specified for " & String (Language (Descr)));
+              ("Multiple --config specified for " & Image (Language (Descr)));
          end if;
          Description_Map.Include (Language (Descr), Descr);
 

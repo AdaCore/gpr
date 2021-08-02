@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -54,12 +54,13 @@ package body GPRls.Options is
 
       for R in Self.RTS_Map.Iterate loop
          declare
-            Lang : constant Name_Type :=
-                     GPR2.Containers.Name_Value_Map_Package.Key (R);
+            Lang : constant Language_Id :=
+                     GPR2.Containers.Lang_Value_Maps.Key (R);
          begin
             Text_IO.Put_Line
               ("RTS"
-               & (if Lang = "Ada" then "" else '(' & String (Lang) & ')')
+               & (if Lang = Ada_Language then ""
+                 else '(' & Image (Lang) & ')')
                & ": " & Self.RTS_Map (R));
          end;
       end loop;

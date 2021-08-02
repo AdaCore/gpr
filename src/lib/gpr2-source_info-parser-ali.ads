@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -27,10 +27,8 @@ private with GPR2.Unit;
 
 package GPR2.Source_Info.Parser.ALI is
 
-   Language : aliased constant Name_Type := "Ada";
-
    type Object is new Parser.Object
-     (Language => Language'Unrestricted_Access,
+     (Language => Ada_Language,
       Kind     => LI) with private;
 
    overriding procedure Compute
@@ -60,7 +58,7 @@ private
    --  Second kind of key is lowercased separate unit name.
 
    type Object is new Parser.Object
-     (Language => Language'Unrestricted_Access,
+     (Language => Ada_Language,
       Kind     => LI)
    with record
       Cache : Cache_Map.Map;

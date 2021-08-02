@@ -24,6 +24,7 @@
 
 with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Hashed_Maps;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
@@ -182,7 +183,8 @@ package body GPR2.Project.Definition is
       procedure Check_View (View : Project.View.Object) is
 
          package Suffix_Lang_Maps is
-           new Ada.Containers.Indefinite_Ordered_Maps (Value_Type, Name_Type);
+           new Ada.Containers.Indefinite_Ordered_Maps
+             (Value_Type, Language_Id);
 
          use type Suffix_Lang_Maps.Cursor;
 
@@ -210,7 +212,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Illegal_Suffix
            (Attribute_Name : Name_Type;
-            Language       : Name_Type;
+            Language       : Language_Id;
             Attribute      : Project.Attribute.Object)
            with Pre => Attribute /= Project.Attribute.Undefined;
          --  check Spec_Suffix, Body_Suffix or Separate_Suffix is not illegal
@@ -290,7 +292,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Illegal_Suffix
            (Attribute_Name : Name_Type;
-            Language       : Name_Type;
+            Language       : Language_Id;
             Attribute      : Project.Attribute.Object)
          is
             Value    : constant Value_Type := Attribute.Value.Text;
@@ -352,9 +354,9 @@ package body GPR2.Project.Definition is
             begin
                if Associated_Lang /= Suffix_Lang_Maps.No_Element then
                   if Attribute_Name = PRA.Separate_Suffix
-                    and then Naming_Package.Has_Body_Suffix ("Ada")
+                    and then Naming_Package.Has_Body_Suffix (Ada_Language)
                     and then Naming_Package.Body_Suffix
-                      ("Ada").Value.Text = Value
+                      (Ada_Language).Value.Text = Value
                   then
                      return;
                   end if;
@@ -362,9 +364,9 @@ package body GPR2.Project.Definition is
                   Log_Error
                     (Message.Error,
                      String (Attribute_Name) & "(""" & String (Value)
-                     & """) for language " & String (Language)
+                     & """) for language " & Image (Language)
                      & " is also defined for language "
-                     & String (Suffix_Lang_Maps.Element (Associated_Lang)),
+                     & Image (Suffix_Lang_Maps.Element (Associated_Lang)),
                      Attribute);
                else
                   Suffix_Lang_Map.Include (Value, Language);
@@ -398,7 +400,7 @@ package body GPR2.Project.Definition is
             if View.Kind /= K_Aggregate and then View.Has_Languages then
                for L of View.Languages loop
                   declare
-                     Language : constant Name_Type := Name_Type (L.Text);
+                     Language : constant Language_Id := +Name_Type (L.Text);
                   begin
                      if Naming_Package.Has_Spec_Suffix (Language) then
                         Check_Illegal_Suffix
@@ -420,7 +422,7 @@ package body GPR2.Project.Definition is
             if Naming_Package.Has_Separate_Suffix then
                Check_Illegal_Suffix
                  (PRA.Separate_Suffix,
-                  "Ada",
+                  Ada_Language,
                   Naming_Package.Separate_Suffix);
             end if;
          end if;
@@ -674,8 +676,8 @@ package body GPR2.Project.Definition is
 
       Root : constant GPR2.Path_Name.Object := Def.Path;
 
-      package Name_Boolean_Map is new Ada.Containers.Indefinite_Ordered_Maps
-        (Name_Type, Boolean);
+      package Lang_Boolean_Map is new Ada.Containers.Hashed_Maps
+        (Language_Id, Boolean, Hash, "=");
 
       package Unit_Name_To_Sloc is new
         Ada.Containers.Indefinite_Ordered_Maps (Name_Type, SR.Object);
@@ -706,7 +708,7 @@ package body GPR2.Project.Definition is
       procedure Register_Units
         (Source : Project.Source.Object;
          Units  : Unit.List.Object)
-        with Pre => Source.Source.Language = "Ada";
+        with Pre => Source.Source.Language = Ada_Language;
       --  Registers units for the given project source. Note that we need to
       --  pass the Units and not to use the one registered with the
       --  source as the later could have been updated by a real parser based on
@@ -763,7 +765,7 @@ package body GPR2.Project.Definition is
              A.Name.Text = PRA.Specification_Exceptions
              or else A.Name.Text = PRA.Implementation_Exceptions);
 
-      function Is_Compilable (Language : Name_Type) return Boolean;
+      function Is_Compilable (Language : Language_Id) return Boolean;
       --  Check whether the language is compilable on the current View. This
       --  includes information provided by the Tree (Driver attribute). Note
       --  that this routine caches the result into a map.
@@ -777,10 +779,10 @@ package body GPR2.Project.Definition is
 
       Is_Standard_GNAT_Naming : constant  Boolean :=
                                   (Naming.Spec_Suffix
-                                       ("ada").Value.Text = ".ads")
+                                       (Ada_Language).Value.Text = ".ads")
                                      and then
                                   (Naming.Body_Suffix
-                                       ("ada").Value.Text = ".adb")
+                                       (Ada_Language).Value.Text = ".adb")
                                      and then
                                   (Dot_Repl = "-");
       --  True if the current naming scheme is GNAT's default naming scheme.
@@ -801,12 +803,12 @@ package body GPR2.Project.Definition is
       Interface_Found       : Boolean := False;
       Interface_Sources     : Source_Path_To_Sloc.Map;
       Position_In_Sources   : Source_Path_To_Sloc.Cursor;
-      Language_Compilable   : Name_Boolean_Map.Map;
+      Language_Compilable   : Lang_Boolean_Map.Map;
       Src_Dir_Set           : Source.Set.Object;
       --  Sources from one directory defined in one item of the Source_Dirs
       --  attribute. Need to avoid source duplications in Source_Dirs items
       --  containing '*' character.
-      Has_Src_In_Lang       : Name_Set;
+      Has_Src_In_Lang       : Language_Set;
       --  Insert record there if the language has a source
 
       Tree                  : constant not null access Project.Tree.Object :=
@@ -822,7 +824,7 @@ package body GPR2.Project.Definition is
       --  List of already visited directories to avoid looking twice at the
       --  same one.
 
-      procedure Mark_Language (Lang : Name_Type);
+      procedure Mark_Language (Lang : Language_Id);
       --  Mark that language exists in sources
 
       function Ada_Use_Index (Attr : Attribute.Object) return Value_Type is
@@ -944,7 +946,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Naming_Exceptions
            (Basename : Filename_Type;
-            Language : Name_Type;
+            Language : Language_Id;
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type);
          --  Try to match a file using its Basename and the project's
@@ -956,7 +958,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Naming_Scheme
            (Basename : Value_Type;
-            Language : Name_Type;
+            Language : Language_Id;
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type);
          --  Try to match a file using its extension and the project's
@@ -985,7 +987,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Naming_Exceptions
            (Basename : Filename_Type;
-            Language : Name_Type;
+            Language : Language_Id;
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type)
          is
@@ -994,13 +996,13 @@ package body GPR2.Project.Definition is
             Match := False;
             Kind  := Unit.S_Spec;  --  Dummy value
 
-            if Language = "Ada" then
+            if Language = Ada_Language then
                Match := Ada_Naming_Exceptions.Contains (Basename);
 
             else
                if Naming.Check_Attribute
                     (PRA.Specification_Exceptions,
-                     Attribute_Index.Create (Value_Type (Language)),
+                     Attribute_Index.Create (Value_Type (Name (Language))),
                      Result => Attr)
                  and then Attr.Has_Value (Value_Type (Basename))
                then
@@ -1009,7 +1011,7 @@ package body GPR2.Project.Definition is
 
                elsif Naming.Check_Attribute
                     (PRA.Implementation_Exceptions,
-                     Attribute_Index.Create (Value_Type (Language)),
+                     Attribute_Index.Create (Value_Type (Name (Language))),
                      Result => Attr)
                  and then Attr.Has_Value (Value_Type (Basename))
                then
@@ -1029,7 +1031,7 @@ package body GPR2.Project.Definition is
 
          procedure Check_Naming_Scheme
            (Basename : Value_Type;
-            Language : Name_Type;
+            Language : Language_Id;
             Match    : out Boolean;
             Kind     : out Unit.Library_Unit_Type)
          is
@@ -1118,7 +1120,8 @@ package body GPR2.Project.Definition is
 
             begin
                return GNATCOLL.Utils.Ends_With (Basename, Ending)
-                 and then (Language /= "Ada" or else Test_Charset);
+                 and then (Language /= Ada_Language
+                           or else Test_Charset);
             end Check_Suffix_And_Dot_Replacement;
 
             Matches_Spec     : Boolean;
@@ -1134,7 +1137,7 @@ package body GPR2.Project.Definition is
               and then Check_Suffix_And_Dot_Replacement
                 (Naming.Body_Suffix (Language));
 
-            Matches_Separate := Language = "Ada"
+            Matches_Separate := Language = Ada_Language
               and then Naming.Has_Separate_Suffix
               and then Check_Suffix_And_Dot_Replacement
                 (Naming.Separate_Suffix);
@@ -1230,9 +1233,9 @@ package body GPR2.Project.Definition is
                Suffix : constant Value_Type :=
                           (case Kind is
                               when Unit.Spec_Kind =>
-                                Naming.Spec_Suffix ("ada").Value.Text,
+                                Naming.Spec_Suffix (Ada_Language).Value.Text,
                               when Unit.Body_Kind =>
-                                Naming.Body_Suffix ("ada").Value.Text,
+                                Naming.Body_Suffix (Ada_Language).Value.Text,
                               when S_Separate     =>
                                 Naming.Separate_Suffix.Value.Text);
             begin
@@ -1374,8 +1377,7 @@ package body GPR2.Project.Definition is
 
          for L of Languages.Values loop
             declare
-               Language        : constant Name_Type := Name_Type (L.Text);
-               Language_Is_Ada : constant Boolean := Language = "Ada";
+               Language        : constant Language_Id := +Name_Type (L.Text);
                Is_Indexed      : Boolean := False;
             begin
                --  First, try naming exceptions
@@ -1391,7 +1393,7 @@ package body GPR2.Project.Definition is
 
                   Naming_Exception := Yes;
 
-                  if Language_Is_Ada then
+                  if Language = Ada_Language then
                      --  For Ada, fill the compilation units
 
                      for Exc of Ada_Naming_Exceptions (Basename) loop
@@ -1458,7 +1460,7 @@ package body GPR2.Project.Definition is
                      Match    => Match,
                      Kind     => Kind);
 
-                  if Match and then Language_Is_Ada then
+                  if Match and then Language = Ada_Language then
                      --  For Ada, create a single compilation unit
 
                      declare
@@ -1564,7 +1566,7 @@ package body GPR2.Project.Definition is
                   --  Different Source constructors for Ada and other
                   --  languages. Also some additional checks for Ada.
 
-                  if Language_Is_Ada then
+                  if Language = Ada_Language then
                      for CU of Units loop
                         if Interface_Units.Contains (CU.Name) then
                            Interface_Units_Found.Include (CU.Name);
@@ -1656,7 +1658,7 @@ package body GPR2.Project.Definition is
 
                      --  For Ada, register the Unit object into the view
 
-                     if Language_Is_Ada then
+                     if Language = Ada_Language then
                         Register_Units (Project_Source, Units);
                      end if;
                   end;
@@ -1722,8 +1724,8 @@ package body GPR2.Project.Definition is
                                        Src.Source.Path_Name;
             Basename               : constant Filename_Type :=
                                        File.Simple_Name;
-            Language               : constant Name_Type := Src.Source.Language;
-            Language_Is_Ada        : constant Boolean := Language = "Ada";
+            Language               : constant Language_Id :=
+                                       Src.Source.Language;
             Units                  : Unit.List.Object;
             Source_Is_In_Interface : Boolean :=
                                        Interface_Sources.Contains (Basename);
@@ -1734,7 +1736,7 @@ package body GPR2.Project.Definition is
             --  Different Source constructors for Ada and other
             --  languages. Also some additional checks for Ada.
 
-            if Language_Is_Ada then
+            if Language = Ada_Language then
                Units := Src.Source.Units;
 
                for CU of Units loop
@@ -1756,7 +1758,7 @@ package body GPR2.Project.Definition is
 
             --  For Ada, register the Unit object into the view
 
-            if Language_Is_Ada then
+            if Language = Ada_Language then
                Register_Units (Src, Units);
             end if;
          end Add_Source;
@@ -1838,7 +1840,7 @@ package body GPR2.Project.Definition is
       -- Is_Compilable --
       -------------------
 
-      function Is_Compilable (Language : Name_Type) return Boolean is
+      function Is_Compilable (Language : Language_Id) return Boolean is
 
          function Check_View (View : Project.View.Object) return Boolean
            with Pre => View.Is_Defined;
@@ -1857,7 +1859,7 @@ package body GPR2.Project.Definition is
 
                if Pck.Check_Attribute
                  (PRA.Driver,
-                  Attribute_Index.Create (Value_Type (Language)),
+                  Attribute_Index.Create (Language),
                   Result => Att)
                then
                   return Att.Value.Text /= "";
@@ -1890,8 +1892,8 @@ package body GPR2.Project.Definition is
       -- Mark_Language --
       -------------------
 
-      procedure Mark_Language (Lang : Name_Type) is
-         CL : Name_Type_Set.Cursor;
+      procedure Mark_Language (Lang : Language_Id) is
+         CL : Language_Id_Set.Cursor;
          OK : Boolean;
       begin
          Has_Src_In_Lang.Insert (Lang, CL, OK);
@@ -2473,7 +2475,7 @@ package body GPR2.Project.Definition is
          begin
             if not SF.Is_Defined or else not SF.Values.Is_Empty then
                for L of Def.Languages loop
-                  if not Has_Src_In_Lang.Contains (Name_Type (L.Text)) then
+                  if not Has_Src_In_Lang.Contains (+Name_Type (L.Text)) then
                      Tree.Append_Message
                        (Message.Create
                           (Message.Warning,
@@ -2557,7 +2559,7 @@ package body GPR2.Project.Definition is
          Def_Src_Map.Insert (SW.Path_Name.Simple_Name, SW, Position, Inserted);
 
          pragma Assert
-           (Inserted or else SW.Source.Language /= "Ada",
+           (Inserted or else SW.Source.Language /= Ada_Language,
             String (SW.Path_Name.Simple_Name) & " duplicated");
 
          Set_Source (SW);

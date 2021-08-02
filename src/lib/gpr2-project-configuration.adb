@@ -85,7 +85,7 @@ package body GPR2.Project.Configuration is
    ------------
 
    function Create
-     (Language : Name_Type;
+     (Language : Language_Id;
       Version  : Optional_Name_Type := No_Name;
       Runtime  : Optional_Name_Type := No_Name;
       Path     : Filename_Optional  := No_Filename;
@@ -95,7 +95,7 @@ package body GPR2.Project.Configuration is
         is (To_Unbounded_String (String (Str)));
    begin
       return Description'
-        (Language => +Language,
+        (Language => Language,
          Version  => +Version,
          Runtime  => +Runtime,
          Path     => +String (Path),
@@ -204,13 +204,13 @@ package body GPR2.Project.Configuration is
 
    function Dependency_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Filename_Type
+      Language : Language_Id) return Filename_Type
    is
       pragma Unreferenced (Self);
    begin
       --  ??? there is no attribute in the configuration file for this, so we
       --  end up having hard coded value for Ada and all other languages.
-      if Language = "Ada" then
+      if Language = Ada_Language then
          return ".ali";
       else
          return ".d";
@@ -286,14 +286,14 @@ package body GPR2.Project.Configuration is
 
    function Object_File_Suffix
      (Self     : Object;
-      Language : Name_Type) return Filename_Type
+      Language : Language_Id) return Filename_Type
    is
       A : Project.Attribute.Object;
    begin
       if Self.Conf.Has_Packages (PRP.Compiler)
         and then Self.Conf.Pack (PRP.Compiler).Check_Attribute
                    (PRA.Object_File_Suffix,
-                    Attribute_Index.Create (Value_Type (Language)),
+                    Attribute_Index.Create (Language),
                     Result => A)
       then
          return Filename_Type (A.Value.Text);
@@ -307,12 +307,10 @@ package body GPR2.Project.Configuration is
    -------------
 
    function Runtime
-     (Self : Object; Language : Name_Type) return Optional_Name_Type is
+     (Self : Object; Language : Language_Id) return Optional_Name_Type is
    begin
       for Description of Self.Descriptions loop
-         if Optional_Name_Type (To_String (Description.Language))
-           = Language
-         then
+         if Description.Language = Language then
             return Optional_Name_Type (To_String (Description.Runtime));
          end if;
       end loop;
