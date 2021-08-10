@@ -69,6 +69,14 @@ private package GPR2.Project.Definition is
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
 
+   type Path_Cache is record
+      Path  : GPR2.Path_Name.Object;
+      Valid : Boolean := False;
+   end record;
+
+   type Cached_Attribute is (Library_Ali_Dir, Library_Dir, Object_Dir);
+   type Cache_List is array (Cached_Attribute) of Path_Cache;
+
    --  Data contains a project view data. We have all the attributes, variables
    --  and packages with the final values as parsed with the project's context
    --  in the given tree. Imports here are the project views corresponding to
@@ -114,6 +122,8 @@ private package GPR2.Project.Definition is
       Tree            : access Project.Tree.Object;
       --  The project tree for this view
 
+      --  Cached values for faster retrieval of very common attributes
+      Cache          : Cache_List;
    end record;
 
    type Ref is access all Data;
@@ -206,9 +216,6 @@ private package GPR2.Project.Definition is
 
    Change_Actual_View : access function
      (Self : Source.Object; View : Project.View.Object) return Source.Object;
-
-   Apply_Root_And_Subdirs : access function
-     (Self : View.Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
 
    Enable_Ali_Parser : access procedure
      (Tree : in out Project.Tree.Object; Enable : Boolean);
@@ -306,5 +313,8 @@ private package GPR2.Project.Definition is
    procedure Check_Package_Naming (View : Project.View.Object);
    --  For all tree's views check Casing, Dot_Replacement, Spec_Suffix,
    --  Body_Suffix and Separate_Suffix naming package attributes value.
+
+   procedure Clear_Cache (Def : in out Data);
+   --  Used during the reload of a tree to clear values cached in the view
 
 end GPR2.Project.Definition;

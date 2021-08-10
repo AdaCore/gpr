@@ -22,14 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
 with GPR2.Source;
 
 package body GPR2.Project.Source.Artifact is
-
-   package PRA renames GPR2.Project.Registry.Attribute;
 
    function At_Suffix (At_Pos : Positive) return Filename_Type;
    --  Returns 'at' index from attribute value or index prefixed with '~'
@@ -98,10 +95,12 @@ package body GPR2.Project.Source.Artifact is
       Deps_Lib     : Index_Path_Name_Map.Map;
       Deps_Obj     : Index_Path_Name_Map.Map;
 
+      type Artifact_Dir is (Object_Dir, Library_ALI_Dir);
+
       function From_Hierarchy
         (View         : Project.View.Object;
          Filename     : Filename_Type;
-         Dir_Attr     : Name_Type;
+         Dir_Attr     : Artifact_Dir;
          Full_Closure : Boolean := False) return GPR2.Path_Name.Object;
       --  Find Filename in directory defined in attribute Dir_Attr in this
       --  source view and in the extended views if the Source is inherited.
@@ -131,7 +130,7 @@ package body GPR2.Project.Source.Artifact is
       function From_Hierarchy
         (View         : Project.View.Object;
          Filename     : Filename_Type;
-         Dir_Attr     : Name_Type;
+         Dir_Attr     : Artifact_Dir;
          Full_Closure : Boolean := False) return GPR2.Path_Name.Object
       is
          function Get_Candidate
@@ -146,15 +145,21 @@ package body GPR2.Project.Source.Artifact is
          function Get_Candidate
            (View : Project.View.Object) return GPR2.Path_Name.Object is
          begin
-            if View.Has_Attributes (Dir_Attr) then
-               return GPR2.Path_Name.Create_File
-                 (Filename,
-                  Filename_Type
-                    (Definition.Apply_Root_And_Subdirs
-                         (View, Dir_Attr).Value));
-            else
-               return GPR2.Path_Name.Undefined;
-            end if;
+            case Dir_Attr is
+               when Object_Dir =>
+                  if View.Kind not in K_Configuration | K_Abstract then
+                     return View.Object_Directory.Compose (Filename);
+                  else
+                     return GPR2.Path_Name.Undefined;
+                  end if;
+
+               when Library_ALI_Dir =>
+                  if View.Is_Library then
+                     return View.Library_Ali_Directory.Compose (Filename);
+                  else
+                     return GPR2.Path_Name.Undefined;
+                  end if;
+            end case;
          end Get_Candidate;
 
          Source        : constant Project.Source.Object :=
@@ -222,19 +227,19 @@ package body GPR2.Project.Source.Artifact is
                      From_Hierarchy
                        (View,
                         Base & D_Suffix,
-                        PRA.Library_Ali_Dir, True));
+                        Library_ALI_Dir, True));
 
                   if View.Kind /= K_Aggregate_Library then
                      Insert_If_Defined
                        (Object_Files,
                         CU.Index,
                         From_Hierarchy
-                          (View, Base & O_Suffix, PRA.Object_Dir, True));
+                          (View, Base & O_Suffix, Object_Dir, True));
                      Insert_If_Defined
                        (Deps_Obj,
                         CU.Index,
                         From_Hierarchy
-                          (View, Base & D_Suffix, PRA.Object_Dir, True));
+                          (View, Base & D_Suffix, Object_Dir, True));
                   end if;
                end;
             end if;
@@ -244,17 +249,17 @@ package body GPR2.Project.Source.Artifact is
          Insert_If_Defined
            (Deps_Lib,
             1,
-            From_Hierarchy (View, BN & D_Suffix, PRA.Library_Ali_Dir, True));
+            From_Hierarchy (View, BN & D_Suffix, Library_ALI_Dir, True));
 
          if View.Kind /= K_Aggregate_Library then
             Insert_If_Defined
               (Object_Files,
                1,
-               From_Hierarchy (View, BN & O_Suffix, PRA.Object_Dir, True));
+               From_Hierarchy (View, BN & O_Suffix, Object_Dir, True));
             Insert_If_Defined
               (Deps_Obj,
                1,
-               From_Hierarchy (View, BN & D_Suffix, PRA.Object_Dir, True));
+               From_Hierarchy (View, BN & D_Suffix, Object_Dir, True));
          end if;
       end if;
 

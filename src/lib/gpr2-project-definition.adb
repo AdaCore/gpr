@@ -510,6 +510,16 @@ package body GPR2.Project.Definition is
       Check_View (View);
    end Check_Same_Name_Extended;
 
+   -----------------
+   -- Clear_Cache --
+   -----------------
+
+   procedure Clear_Cache (Def : in out Data)
+   is
+   begin
+      Def.Cache := (others => <>);
+   end Clear_Cache;
+
    -----------------------
    -- Is_Sources_Loaded --
    -----------------------
@@ -706,8 +716,7 @@ package body GPR2.Project.Definition is
       package Naming_Exceptions_Usage renames Value_Source_Reference_Package;
 
       procedure Register_Units
-        (Source : Project.Source.Object;
-         Units  : Unit.List.Object)
+        (Source : Project.Source.Object)
         with Pre => Source.Source.Language = Ada_Language;
       --  Registers units for the given project source. Note that we need to
       --  pass the Units and not to use the one registered with the
@@ -1659,7 +1668,7 @@ package body GPR2.Project.Definition is
                      --  For Ada, register the Unit object into the view
 
                      if Language = Ada_Language then
-                        Register_Units (Project_Source, Units);
+                        Register_Units (Project_Source);
                      end if;
                   end;
 
@@ -1726,7 +1735,6 @@ package body GPR2.Project.Definition is
                                        File.Simple_Name;
             Language               : constant Language_Id :=
                                        Src.Source.Language;
-            Units                  : Unit.List.Object;
             Source_Is_In_Interface : Boolean :=
                                        Interface_Sources.Contains (Basename);
 
@@ -1737,9 +1745,7 @@ package body GPR2.Project.Definition is
             --  languages. Also some additional checks for Ada.
 
             if Language = Ada_Language then
-               Units := Src.Source.Units;
-
-               for CU of Units loop
+               for CU of Src.Source.Units loop
                   if Interface_Units.Contains (CU.Name) then
                      Interface_Units_Found.Include (CU.Name);
                      Source_Is_In_Interface := True;
@@ -1759,7 +1765,7 @@ package body GPR2.Project.Definition is
             --  For Ada, register the Unit object into the view
 
             if Language = Ada_Language then
-               Register_Units (Src, Units);
+               Register_Units (Src);
             end if;
          end Add_Source;
 
@@ -1942,8 +1948,7 @@ package body GPR2.Project.Definition is
       --------------------
 
       procedure Register_Units
-        (Source : Project.Source.Object;
-         Units  : Unit.List.Object)
+        (Source : Project.Source.Object)
       is
 
          File : constant Path_Name.Object := Source.Source.Path_Name;
@@ -1974,7 +1979,7 @@ package body GPR2.Project.Definition is
          end Register_Src;
 
       begin
-         for CU of Units loop
+         for CU of Source.Source.Units loop
             declare
                Unit_Name : constant Name_Type := CU.Name;
                Position  : Unit_Info.Set.Cursor;
