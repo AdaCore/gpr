@@ -267,7 +267,7 @@ package body GPR2 is
             Result (J) := To_Lower (A (J));
          end if;
 
-         Ucase := A (J) in '_' | '.';
+         Ucase := A (J) in '_' | '.' | ' ';
       end loop;
 
       return Result;
