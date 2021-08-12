@@ -41,7 +41,7 @@ procedure Main is
 
    procedure Display (Att : Project.Attribute.Object) is
    begin
-      Text_IO.Put ("   " & String (Att.Name.Text));
+      Text_IO.Put ("   " & Image (Att.Name.Id));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -80,7 +80,7 @@ procedure Main is
 
       if Prj.Has_Packages then
          for Pck of Prj.Packages loop
-            Text_IO.Put_Line (" " & String (Pck.Name));
+            Text_IO.Put_Line (" " & Image (Pck.Name));
 
             for A of Pck.Attributes loop
                Display (A);

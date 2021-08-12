@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -44,7 +44,7 @@ package GPR2.Project.Attribute.Set is
 
    function Contains
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural    := 0) return Boolean;
    --  Checks whether the set contains the attribute with the given Name and
@@ -60,7 +60,7 @@ package GPR2.Project.Attribute.Set is
 
    function Element
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural    := 0) return Attribute.Object
      with Post =>
@@ -93,7 +93,7 @@ package GPR2.Project.Attribute.Set is
 
    function Find
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural    := 0) return Cursor;
 
@@ -120,7 +120,7 @@ package GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self          : Object;
-      Name          : Optional_Name_Type     := No_Name;
+      Name          : Optional_Attribute_Id  := No_Attribute;
       Index         : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos        : Natural                := 0;
       With_Defaults : Boolean                := False)
@@ -128,10 +128,10 @@ package GPR2.Project.Attribute.Set is
 
    function Filter
      (Self   : Object;
-      Name   : Optional_Name_Type     := No_Name;
+      Name   : Optional_Attribute_Id  := No_Attribute;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural                := 0) return Object
-     with Post => (if Name = No_Name and then not Index.Is_Defined
+     with Post => (if Name = No_Attribute and then not Index.Is_Defined
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
    --  the given filter.
@@ -176,7 +176,7 @@ private
    --  The key in this set is the attribute index and 'at' part
 
    package Set is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Set_Attribute.Map, "<", Set_Attribute."=");
+     (Attribute_Id, Set_Attribute.Map, "<", Set_Attribute."=");
    --  The key in this Set is the attribute name (not case sensitive)
 
    type Cursor is record

@@ -468,7 +468,7 @@ package body GPRinstall.Install is
                        Project.Packages.Element (P.Install);
             begin
                for V of Pck.Attributes loop
-                  if V.Name.Text = A.Prefix then
+                  if V.Name.Id = A.Prefix then
                      --  If Install.Prefix is a relative path, it is made
                      --  relative to the global prefix.
 
@@ -485,48 +485,48 @@ package body GPRinstall.Install is
                            Normalize => True);
                      end if;
 
-                  elsif  V.Name.Text = A.Exec_Subdir
+                  elsif  V.Name.Id = A.Exec_Subdir
                     and then Options.Global_Exec_Subdir.Default
                   then
                      Replace (Exec_Subdir, V.Value.Text);
 
-                  elsif V.Name.Text = A.Lib_Subdir
+                  elsif V.Name.Id = A.Lib_Subdir
                     and then Options.Global_Lib_Subdir.Default
                   then
                      Replace (Lib_Subdir, V.Value.Text);
 
-                  elsif V.Name.Text = A.ALI_Subdir
+                  elsif V.Name.Id = A.ALI_Subdir
                     and then Options.Global_ALI_Subdir.Default
                   then
                      Replace (ALI_Subdir, V.Value.Text);
 
-                  elsif V.Name.Text = A.Link_Lib_Subdir
+                  elsif V.Name.Id = A.Link_Lib_Subdir
                     and then Options.Global_Link_Lib_Subdir.Default
                   then
                      Replace (Link_Lib_Subdir, V.Value.Text);
 
-                  elsif V.Name.Text = A.Sources_Subdir
+                  elsif V.Name.Id = A.Sources_Subdir
                     and then Options.Global_Sources_Subdir.Default
                   then
                      Replace (Sources_Subdir, V.Value.Text);
 
-                  elsif V.Name.Text = A.Project_Subdir
+                  elsif V.Name.Id = A.Project_Subdir
                     and then Options.Global_Project_Subdir.Default
                   then
                      Replace (Project_Subdir, V.Value.Text);
 
-                  elsif V.Name.Text = A.Mode
+                  elsif V.Name.Id = A.Mode
                     and then Options.Global_Install_Mode.Default
                   then
                      Replace (Install_Mode, V.Value.Text);
 
-                  elsif V.Name.Text = A.Install_Name
+                  elsif V.Name.Id = A.Install_Name
                     and then Options.Global_Install_Name.Default
                   then
                      Replace
                        (Install_Name, V.Value.Text, Is_Dir => False);
 
-                  elsif V.Name.Text = A.Active then
+                  elsif V.Name.Id = A.Active then
                      declare
                         Val : constant String := To_Lower (V.Value.Text);
                      begin
@@ -537,7 +537,7 @@ package body GPRinstall.Install is
                         end if;
                      end;
 
-                  elsif V.Name.Text = A.Side_Debug then
+                  elsif V.Name.Id = A.Side_Debug then
                      declare
                         Val : constant String := To_Lower (V.Value.Text);
                      begin
@@ -548,7 +548,7 @@ package body GPRinstall.Install is
                         end if;
                      end;
 
-                  elsif V.Name.Text = A.Install_Project then
+                  elsif V.Name.Id = A.Install_Project then
                      declare
                         Val : constant String := To_Lower (V.Value.Text);
                      begin
@@ -559,8 +559,7 @@ package body GPRinstall.Install is
                         end if;
                      end;
 
-                  elsif V.Name.Text = A.Artifacts
-                    or else V.Name.Text = A.Required_Artifacts
+                  elsif V.Name.Id in A.Artifacts | A.Required_Artifacts
                   then
                      for S of V.Values loop
                         Artifacts.Append
@@ -568,7 +567,7 @@ package body GPRinstall.Install is
                              (To_Unbounded_String (V.Index.Text),
                               To_Unbounded_String (S.Text),
                               Required =>
-                                (if V.Name.Text = A.Artifacts
+                                (if V.Name.Id = A.Artifacts
                                  then False else True)));
                      end loop;
                   end if;
@@ -1912,14 +1911,14 @@ package body GPRinstall.Install is
 
                   for Att of Pck.Attributes loop
                      if Att.Has_Index then
-                        if (Att.Name.Text /= A.Body_N
+                        if (Att.Name.Id /= A.Body_N
                             or else not
                               Excluded_Naming.Contains
                                 (Name_Type (Att.Index.Text)))
                           and then
-                            ((Att.Name.Text /= A.Spec_Suffix
-                              and then Att.Name.Text /= A.Body_Suffix
-                              and then Att.Name.Text /= A.Separate_Suffix)
+                            ((Att.Name.Id not in
+                                      A.Spec_Suffix | A.Body_Suffix |
+                                      A.Separate_Suffix)
                              or else Is_Language_Active (Att.Index.Text))
                         then
                            declare
@@ -2464,7 +2463,7 @@ package body GPRinstall.Install is
       begin
          if Project.Has_Packages (P.Install) then
             for V of Project.Pack (P.Install).Attributes loop
-               if V.Name.Text = A.Active then
+               if V.Name.Id = A.Active then
                   return Characters.Handling.To_Lower
                            (V.Value.Text) /= "false";
                end if;

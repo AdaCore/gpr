@@ -34,6 +34,7 @@ procedure Main is
    Tree         : GPR2.Project.Tree.Object;
    Context      : GPR2.Context.Object;
    use GPR2;
+   use GPR2.Project.Registry.Attribute;
 
    procedure Print_Messages is
    begin
@@ -45,15 +46,15 @@ procedure Main is
       end if;
    end Print_Messages;
 
-   procedure Print_Attributes (Pack : GPR2.Optional_Name_Type;
-                               Name : GPR2.Optional_Name_Type) is
+   procedure Print_Attributes (Pack : GPR2.Optional_Package_Id;
+                               Name : GPR2.Optional_Attribute_Id) is
       Attributes : GPR2.Project.Attribute.Set.Object;
       use GPR2;
-      Header     : String := (if Pack = ""
-                              then String (Name)
-                              else String (Pack) & "." & String (Name));
+      Header     : String := (if Pack = No_Package
+                              then Image (Name)
+                              else Image (Pack) & "." & Image (Name));
    begin
-      if Pack = "" then
+      if Pack = No_Package then
          Attributes := Tree.Root_Project.Attributes (Name);
       elsif Tree.Root_Project.Has_Packages (Pack) then
          Attributes := Tree.Root_Project.Pack (Pack).Attributes (Name);
@@ -131,7 +132,7 @@ procedure Main is
 
    procedure Test is
    begin
-      Print_Attributes (Pack => "", Name => "source_dirs");
+      Print_Attributes (Pack => No_Package, Name => Source_Dirs);
       Print_Variable ("A");
       Print_Variable ("B");
       Print_Variable ("C");

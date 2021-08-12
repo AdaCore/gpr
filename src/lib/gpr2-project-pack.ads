@@ -29,7 +29,7 @@ with GPR2.Project.Attribute.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Variable.Set;
-with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Pack;
 
 package GPR2.Project.Pack is
 
@@ -43,20 +43,20 @@ package GPR2.Project.Pack is
    --  Returns true if Self is defined
 
    function Create
-     (Name       : Source_Reference.Identifier.Object;
+     (Name       : Source_Reference.Pack.Object;
       Attributes : Attribute.Set.Object;
       Variables  : Project.Variable.Set.Object) return Object;
    --  Creates a package object with the given Name and the list of attributes.
    --  Note that the list of attribute can be empty as a package can contain no
    --  declaration.
 
-   function Name (Self : Object) return Name_Type
+   function Name (Self : Object) return Package_Id
      with Pre => Self.Is_Defined;
    --  Returns the name of the project
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
+      Name  : Optional_Attribute_Id := No_Attribute;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Boolean
      with Pre => Self.Is_Defined;
@@ -66,17 +66,17 @@ package GPR2.Project.Pack is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
+      Name  : Optional_Attribute_Id := No_Attribute;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Attribute.Set.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
    --  Returns all attributes defined for the package. Possibly an empty list
    --  if it does not contain attributes or if Name and Index does not match
    --  any attribute.
 
    function Check_Attribute
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural    := 0;
       Result : out Attribute.Object) return Boolean
@@ -86,7 +86,7 @@ package GPR2.Project.Pack is
 
    function Attribute
      (Self  : Object;
-      Name  : Name_Type;
+      Name  : Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Project.Attribute.Object
      with Pre =>
@@ -120,14 +120,14 @@ package GPR2.Project.Pack is
    function Has_Spec_Suffix
      (Self     : Object;
       Language : Language_Id) return Boolean
-     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+     with Pre  => Self.Name = Registry.Pack.Naming;
    --  Returns True is package naming Self contains a Spec_Suffix attribute
 
    function Spec_Suffix
      (Self     : Object;
       Language : Language_Id) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+       Pre  => Self.Name = Registry.Pack.Naming
                and then Self.Has_Spec_Suffix (Language),
        Post => Spec_Suffix'Result.Is_Defined;
    --  Handles Spec_Suffix and Specification_Suffix
@@ -135,27 +135,27 @@ package GPR2.Project.Pack is
    function Has_Body_Suffix
      (Self     : Object;
       Language : Language_Id) return Boolean
-     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+     with Pre  => Self.Name = Registry.Pack.Naming;
    --  Returns True is package naming Self contains a Body_Suffix attribute
 
    function Body_Suffix
      (Self     : Object;
       Language : Language_Id) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+       Pre  => Self.Name = Registry.Pack.Naming
                and then Self.Has_Body_Suffix (Language),
        Post => Body_Suffix'Result.Is_Defined;
    --  Handles Body_Suffix and Implementation_Suffix
 
    function Has_Separate_Suffix
      (Self : Object) return Boolean
-     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+     with Pre  => Self.Name = Registry.Pack.Naming;
    --  Returns True is package naming Self contains a Separate_Suffix attribute
 
    function Separate_Suffix
      (Self : Object) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+       Pre  => Self.Name = Registry.Pack.Naming
                and then Self.Has_Separate_Suffix,
        Post => Separate_Suffix'Result.Is_Defined;
    --  Handles Separate_Suffix
@@ -163,7 +163,7 @@ package GPR2.Project.Pack is
    function Has_Specification
      (Self : Object;
       Unit : Value_Type) return Boolean
-     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+     with Pre  => Self.Name = Registry.Pack.Naming;
    --  Return True if package Naming Self has an attribute Specification or
    --  Spec defined for the given unit.
 
@@ -171,7 +171,7 @@ package GPR2.Project.Pack is
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+       Pre  => Self.Name = Registry.Pack.Naming
                and then Self.Has_Specification (Unit),
        Post => Specification'Result.Is_Defined;
    --  Handles Spec, Specification, this is only defined for the Ada language
@@ -179,7 +179,7 @@ package GPR2.Project.Pack is
    function Has_Implementation
      (Self : Object;
       Unit : Value_Type) return Boolean
-     with Pre  => Self.Name = Name_Type (Registry.Pack.Naming);
+     with Pre  => Self.Name = Registry.Pack.Naming;
    --  Return True if package Naming Self has an attribute Implementation or
    --  Body defined for the given unit.
 
@@ -187,7 +187,7 @@ package GPR2.Project.Pack is
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
      with
-       Pre  => Self.Name = Name_Type (Registry.Pack.Naming)
+       Pre  => Self.Name = Registry.Pack.Naming
                and then Self.Has_Implementation (Unit),
        Post => Implementation'Result.Is_Defined;
    --  Handles Body, Implementation, this is only defined for the Ada language
@@ -195,7 +195,7 @@ package GPR2.Project.Pack is
 private
 
    type Object is new Source_Reference.Object with record
-      Name  : Unbounded_String;
+      Name  : Package_Id;
       Attrs : Project.Attribute.Set.Object;
       Vars  : Project.Variable.Set.Object;
    end record;

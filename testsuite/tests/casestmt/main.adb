@@ -48,7 +48,7 @@ procedure Main is
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate loop
                Text_IO.Put
-                 ("   " & String (Attribute.Set.Element (A).Name.Text));
+                 ("   " & Image (Attribute.Set.Element (A).Name.Id));
                Text_IO.Put (" ->");
 
                for V of Attribute.Set.Element (A).Values loop

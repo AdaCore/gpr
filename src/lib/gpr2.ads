@@ -60,6 +60,10 @@ with Ada.Containers;
 
 private with Ada.Calendar;
 private with Ada.Characters.Handling;
+private with Ada.Containers.Indefinite_Hashed_Maps;
+private with Ada.Containers.Indefinite_Vectors;
+private with Ada.Strings.Equal_Case_Insensitive;
+private with Ada.Strings.Hash;
 private with Ada.Strings.Unbounded;
 with Ada.Strings.Hash_Case_Insensitive;
 private with GNATCOLL.Utils;
@@ -186,6 +190,8 @@ package GPR2 is
    --  Returns Regexp object for Filename_Regexp pattern
    --  Allows '?' & '*' wildchars. Use case insensitive match when required
 
+   --  Name tables definition
+
    type Language_Id is new Natural;
    No_Language  : constant Language_Id;
    Ada_Language : constant Language_Id;
@@ -193,6 +199,24 @@ package GPR2 is
    function Name (L : Language_Id) return Optional_Name_Type;
    function Image (L : Language_Id) return String;
    function Hash (L : Language_Id) return Ada.Containers.Hash_Type;
+
+   type Optional_Attribute_Id is new Natural;
+   subtype Attribute_Id is Optional_Attribute_Id range
+     1 .. Optional_Attribute_Id'Last;
+   No_Attribute : constant Optional_Attribute_Id;
+   function "+" (Name : Optional_Name_Type) return Optional_Attribute_Id;
+   function Name (Id : Optional_Attribute_Id) return Optional_Name_Type;
+   function Image (Id : Optional_Attribute_Id) return String;
+   function Hash (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type;
+
+   type Optional_Package_Id is new Natural;
+   subtype Package_Id is Optional_Package_Id range
+     1 .. Optional_Package_Id'Last;
+   No_Package : constant Optional_Package_Id;
+   function "+" (Name : Optional_Name_Type) return Optional_Package_Id;
+   function Name (Id : Optional_Package_Id) return Optional_Name_Type;
+   function Image (Id : Optional_Package_Id) return String;
+   function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type;
 
 private
 
@@ -205,6 +229,8 @@ private
    No_Time      : Calendar.Time renames GNATCOLL.Utils.No_Time;
    No_Language  : constant Language_Id := 0;
    Ada_Language : constant Language_Id := 1;
+   No_Attribute : constant Optional_Attribute_Id := 0;
+   No_Package   : constant Optional_Package_Id := 0;
 
    function Image (Kind : Project_Kind) return String is
      ((case Kind is
@@ -247,5 +273,62 @@ private
         (Pattern        => String (Filename_Regexp),
          Glob           => True,
          Case_Sensitive => File_Names_Case_Sensitive));
+
+   -------------------
+   -- String tables --
+   -------------------
+
+   package Name_Maps is new Ada.Containers.Indefinite_Hashed_Maps
+     (Key_Type        => String,
+      Element_Type    => Natural,
+      Hash            => Ada.Strings.Hash,
+      Equivalent_Keys => "=");
+   package Name_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Index_Type   => Positive,
+      Element_Type => String,
+      "="          => Ada.Strings.Equal_Case_Insensitive);
+
+   type Name_List is record
+      Name_To_Id : Name_Maps.Map;
+      Id_To_Name : Name_Vectors.Vector;
+   end record;
+
+   function Id (List : in out Name_List;
+                Name : Optional_Name_Type) return Natural;
+   function Name (List : Name_List;
+                  Id   : Natural) return Optional_Name_Type;
+   function Image (List : Name_List;
+                   Id   : Natural) return String;
+
+   Language_List : Name_List;
+
+   function "+" (L : Optional_Name_Type) return Language_Id
+     is (Language_Id (Id (Language_List, L)));
+   function Name (L : Language_Id) return Optional_Name_Type
+     is (Name (Language_List, Natural (L)));
+   function Image (L : Language_Id) return String
+     is (Image (Language_List, Natural (L)));
+   function Hash (L : Language_Id) return Ada.Containers.Hash_Type
+     is (Ada.Containers.Hash_Type (L));
+
+   Id_List : Name_List;
+
+   function "+" (Name : Optional_Name_Type) return Optional_Attribute_Id
+     is (Optional_Attribute_Id (Id (Id_List, Name)));
+   function Name (Id : Optional_Attribute_Id) return Optional_Name_Type
+     is (Name (Id_List, Natural (Id)));
+   function Image (Id : Optional_Attribute_Id) return String
+     is (Image (Id_List, Natural (Id)));
+   function Hash (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type
+     is (Ada.Containers.Hash_Type (Id));
+
+   function "+" (Name : Optional_Name_Type) return Optional_Package_Id
+     is (Optional_Package_Id (Id (Id_List, Name)));
+   function Name (Id : Optional_Package_Id) return Optional_Name_Type
+     is (Name (Id_List, Natural (Id)));
+   function Image (Id : Optional_Package_Id) return String
+     is (Image (Id_List, Natural (Id)));
+   function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type
+     is (Ada.Containers.Hash_Type (Id));
 
 end GPR2;

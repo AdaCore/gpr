@@ -1,4 +1,4 @@
-source_dirs=("src1","src2")
+Source_Dirs=("src1","src2")
 A="AB"
 B=("A","B")
 C=("AB","C","D")

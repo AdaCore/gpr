@@ -6,9 +6,9 @@ V:   RTL -> .../adainclude
 
 Config   K_CONFIGURATION
 runtime  K_STANDARD
-A:   languages -> ada
-A:   object_dir -> .../adalib
-A:   source_dirs -> .../adainclude
+A:   Languages -> ada
+A:   Object_Dir -> .../adalib
+A:   Source_Dirs -> .../adainclude
 
  > adainclude/a-calend.adb   Kind: S_BODY   unit: ada.calendar
  > adainclude/a-calend.ads   Kind: S_SPEC   unit: ada.calendar

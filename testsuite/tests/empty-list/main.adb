@@ -52,7 +52,7 @@ procedure Main is
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate loop
                Text_IO.Put
-                 ("A:   " & String (Attribute.Set.Element (A).Name.Text));
+                 ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
                Text_IO.Put (" ->");
 
                if not Element (A).Values.Is_Empty then

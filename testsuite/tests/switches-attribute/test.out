@@ -1,15 +1,15 @@
 Demo     K_STANDARD
-A:   archive_suffix ~> .a
-A:   exec_dir ~> .
+A:   Archive_Suffix ~> .a
+A:   Exec_Dir ~> .
 A:   Languages -> Ada .LANG
-A:   name ~> demo
-A:   object_dir ~> .
-A:   project_dir ~> {Current_Directory}
-A:   shared_library_prefix ~> lib
-A:   shared_library_suffix ~> .so
-A:   source_dirs ~> .
+A:   Name ~> demo
+A:   Object_Dir ~> .
+A:   Project_Dir ~> {Current_Directory}
+A:   Shared_Library_Prefix ~> lib
+A:   Shared_Library_Suffix ~> .so
+A:   Source_Dirs ~> .
 Compiler
-A:   object_file_suffix () ~> .o
+A:   Object_File_Suffix () ~> .o
 A:   Switches [.lang] -> -g1 -g2
 A:   Switches [Capital.adb] -> -g -gnata
 A:   Switches [capital.adb] -> -g -gnata -g0

@@ -91,7 +91,7 @@ package body GPR2.Project.Pretty_Printer is
       procedure Write_Indentation (Indent : Natural);
       --  Output the indentation at the beginning of the line
 
-      procedure Write_Attribute_Name (Name : Name_Type; Indent : Natural);
+      procedure Write_Attribute_Name (Name : Attribute_Id; Indent : Natural);
       --  Write an attribute name, taking into account the value of
       --  Backward_Compatibility.
 
@@ -293,7 +293,7 @@ package body GPR2.Project.Pretty_Printer is
 
                Write_Token ("for ", Indent);
                Write_Attribute_Name
-                 (Name_Type (String'(To_UTF8 (F_Attr_Name
+                 (+Name_Type (String'(To_UTF8 (F_Attr_Name
                   (Node.As_Attribute_Decl).Text))),
                   Indent);
 
@@ -414,7 +414,7 @@ package body GPR2.Project.Pretty_Printer is
                --  Specification).
 
                Write_Attribute_Name
-                 (Name_Type (To_UTF8 (F_Attribute_Name
+                 (+Name_Type (To_UTF8 (F_Attribute_Name
                   (Node.As_Attribute_Reference).Text)),
                   Indent);
 
@@ -625,24 +625,24 @@ package body GPR2.Project.Pretty_Printer is
       -- Write_Attribute_Name --
       --------------------------
 
-      procedure Write_Attribute_Name (Name : Name_Type; Indent : Natural) is
+      procedure Write_Attribute_Name (Name : Attribute_Id; Indent : Natural) is
          use GPR2.Project.Registry.Attribute;
       begin
          if Self.Backward_Compatibility then
             if Name = Spec then
-               Write_Name (Specification, Indent);
+               Write_Name (GPR2.Name (Specification), Indent);
             elsif Name = Spec_Suffix then
-               Write_Name (Specification_Suffix, Indent);
+               Write_Name (GPR2.Name (Specification_Suffix), Indent);
             elsif Name = Body_N then
-               Write_Name (Implementation, Indent);
+               Write_Name (GPR2.Name (Implementation), Indent);
             elsif Name = Body_Suffix then
-               Write_Name (Implementation_Suffix, Indent);
+               Write_Name (GPR2.Name (Implementation_Suffix), Indent);
             else
-               Write_Name (Name, Indent);
+               Write_Name (GPR2.Name (Name), Indent);
             end if;
 
          else
-            Write_Name (Name, Indent);
+            Write_Name (GPR2.Name (Name), Indent);
          end if;
       end Write_Attribute_Name;
 

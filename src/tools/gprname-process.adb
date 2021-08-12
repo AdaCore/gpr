@@ -550,9 +550,10 @@ begin
                      if not Child.Is_Null then
                         if Kind (Child) = GPR_Attribute_Decl then
                            declare
-                              Attr_Name : constant Name_Type := Get_Name_Type
-                                (F_Attr_Name (Child.As_Attribute_Decl).
-                                   As_Single_Tok_Node);
+                              Attr_Name : constant Attribute_Id :=
+                                +Get_Name_Type
+                                  (F_Attr_Name (Child.As_Attribute_Decl).
+                                     As_Single_Tok_Node);
                            begin
                               if Attr_Name = PRA.Languages
                                 or else Attr_Name = PRA.Source_Dirs
@@ -565,7 +566,7 @@ begin
 
                         elsif Kind (Child) = GPR_Package_Decl then
                            declare
-                              Pack_Name : constant Name_Type := Get_Name_Type
+                              Pack_Name : constant Package_Id := +Get_Name_Type
                                 (F_Pkg_Name (Child.As_Package_Decl).
                                    As_Single_Tok_Node);
                            begin

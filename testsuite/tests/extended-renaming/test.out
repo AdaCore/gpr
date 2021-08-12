@@ -1,9 +1,9 @@
 Project: c         K_STANDARD
- compiler
-   driver (Ada) -> toto
+ Compiler
+   Driver (Ada) -> toto
 Project: b         K_STANDARD
- compiler
-   driver (Ada) -> toto
+ Compiler
+   Driver (Ada) -> toto
 Project: a         K_STANDARD
- compiler
-   driver (Ada) -> toto
+ Compiler
+   Driver (Ada) -> toto

@@ -192,7 +192,7 @@ package GPR2.Project.View is
 
    function Has_Attributes
      (Self           : Object;
-      Name           : Optional_Name_Type     := No_Name;
+      Name           : Optional_Attribute_Id  := No_Attribute;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
       Check_Extended : Boolean                := False)
       return Boolean
@@ -205,7 +205,7 @@ package GPR2.Project.View is
 
    function Check_Attribute
      (Self           : Object;
-      Name           : Name_Type;
+      Name           : Attribute_Id;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos         : Natural                := 0;
       Check_Extended : Boolean                := False;
@@ -219,17 +219,18 @@ package GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type     := No_Name;
+      Name  : Optional_Attribute_Id  := No_Attribute;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Attribute.Set.Object
      with Post =>
-       (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty);
+       (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty),
+          Inline;
    --  Get the list of attributes, possibly an empty list if it does not
    --  contain attributes or if Name and Index does not match any attribute.
 
    function Attribute
      (Self  : Object;
-      Name  : Name_Type;
+      Name  : Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Attribute.Object
      with
@@ -243,7 +244,7 @@ package GPR2.Project.View is
 
    function Attribute_Location
      (Self  : Object;
-      Name  : Name_Type;
+      Name  : Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Source_Reference.Object'Class
      with
@@ -299,7 +300,7 @@ package GPR2.Project.View is
 
    function Has_Packages
      (Self           : Object;
-      Name           : Optional_Name_Type := No_Name;
+      Name           : Optional_Package_Id := No_Package;
       Check_Extended : Boolean := True) return Boolean
      with Pre => Self.Is_Defined;
    --  If Name is set to No_Name then return True if the view defined some
@@ -311,13 +312,14 @@ package GPR2.Project.View is
 
    function Packages (Self : Object) return Pack.Set.Object
      with Pre  => Self.Is_Defined,
-          Post => (if Self.Has_Packages then not Packages'Result.Is_Empty);
+          Post => (if Self.Has_Packages then not Packages'Result.Is_Empty),
+          Inline;
    --  Get the list of packages defined in the project or inherited from the
    --  extended view.
 
    function Pack
       (Self           : Object;
-       Name           : Name_Type;
+       Name           : Package_Id;
        Check_Extended : Boolean := True) return Pack.Object
      with Pre  => Self.Is_Defined
                   and then Self.Has_Packages
@@ -650,7 +652,7 @@ private
 
    function Clean_Attribute_List
      (Self     : Object;
-      Name     : Name_Type;
+      Name     : Attribute_Id;
       Language : Language_Id) return Containers.Value_Set;
    --  Returns union of the attribute lists of the Clean packages from the
    --  configuration view, extending view if it exists and Self view.

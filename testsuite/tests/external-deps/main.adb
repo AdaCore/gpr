@@ -39,13 +39,13 @@ begin
    Project.Tree.Load (Prj, Create ("demo.gpr"), Ctx);
 
    Text_IO.Put_Line
-     (Prj.Root_Project.Attribute ("object_dir").Value.Text);
+     (Prj.Root_Project.Attribute (+"object_dir").Value.Text);
 
    Ctx.Include ("OS", "Windows");
    Prj.Set_Context (Ctx);
 
    Text_IO.Put_Line
-     (Prj.Root_Project.Attribute ("object_dir").Value.Text);
+     (Prj.Root_Project.Attribute (+"object_dir").Value.Text);
 
 exception
    when GPR2.Project_Error =>

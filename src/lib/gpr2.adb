@@ -22,59 +22,12 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Containers.Indefinite_Vectors;
 with Ada.Directories;
-with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Less_Case_Insensitive;
 
 with GNAT.OS_Lib;
 
 package body GPR2 is
-
-   package Languages_Maps is new Ada.Containers.Indefinite_Hashed_Maps
-     (Key_Type        => String,
-      Element_Type    => Natural,
-      Hash            => Ada.Strings.Hash_Case_Insensitive,
-      Equivalent_Keys => Ada.Strings.Equal_Case_Insensitive);
-   package Languages_Vectors is new Ada.Containers.Indefinite_Vectors
-     (Index_Type   => Positive,
-      Element_Type => String,
-      "="          => Ada.Strings.Equal_Case_Insensitive);
-
-   Languages_To_Id : Languages_Maps.Map;
-   Id_To_Languages : Languages_Vectors.Vector;
-
-   ---------
-   -- "+" --
-   ---------
-
-   function "+" (L : Optional_Name_Type) return Language_Id is
-      C      : Languages_Maps.Cursor;
-      Result : Natural;
-   begin
-      if L'Length = 0 then
-         return No_Language;
-      end if;
-
-      --  ??? Not thread-safe
-      C := Languages_To_Id.Find (String (L));
-
-      if Languages_Maps.Has_Element (C) then
-         return Language_Id (Languages_Maps.Element (C));
-      else
-         declare
-            Value : constant String :=
-                      Ada.Characters.Handling.To_Lower (String (L));
-         begin
-            Id_To_Languages.Append (Value);
-            Result := Natural (Id_To_Languages.Last_Index);
-            Languages_To_Id.Insert (Value, Result);
-         end;
-
-         return Language_Id (Result);
-      end if;
-   end "+";
 
    ---------
    -- "<" --
@@ -137,23 +90,44 @@ package body GPR2 is
       end if;
    end Get_Tools_Directory;
 
-   ----------
-   -- Hash --
-   ----------
+   --------
+   -- Id --
+   --------
 
-   function Hash (L : Language_Id) return Ada.Containers.Hash_Type
+   function Id (List : in out Name_List;
+                Name : Optional_Name_Type) return Natural
    is
+      C      : Name_Maps.Cursor;
+      Result : Natural;
+      Value  : constant String :=
+                 Ada.Characters.Handling.To_Lower (String (Name));
    begin
-      return Ada.Containers.Hash_Type (L);
-   end Hash;
+      if Name'Length = 0 then
+         return 0;
+      end if;
+
+      --  ??? Not thread-safe
+      C := List.Name_To_Id.Find (Value);
+
+      if Name_Maps.Has_Element (C) then
+         return Natural (Name_Maps.Element (C));
+      else
+         List.Id_To_Name.Append (Value);
+         Result := Natural (List.Id_To_Name.Last_Index);
+         List.Name_To_Id.Insert (Value, Result);
+
+         return Result;
+      end if;
+   end Id;
 
    -----------
    -- Image --
    -----------
 
-   function Image (L : Language_Id) return String is
+   function Image (List : Name_List;
+                   Id   : Natural) return String is
    begin
-      return To_Mixed (String (Name (L)));
+      return To_Mixed (String (Name (List, Id)));
    end Image;
 
    --------------------------
@@ -189,13 +163,14 @@ package body GPR2 is
    -- Name --
    ----------
 
-   function Name (L : Language_Id) return Optional_Name_Type is
+   function Name (List : Name_List;
+                  Id   : Natural) return Optional_Name_Type is
    begin
-      if L = No_Language then
+      if Id = 0 then
          return "";
       end if;
 
-      return Optional_Name_Type (Id_To_Languages.Element (Natural (L)));
+      return Optional_Name_Type (List.Id_To_Name.Element (Id));
    end Name;
 
    -----------------
@@ -292,7 +267,7 @@ package body GPR2 is
 
 begin
 
-   Id_To_Languages.Append ("Ada");
-   Languages_To_Id.Insert ("Ada", 1);
+   Language_List.Id_To_Name.Append ("ada");
+   Language_List.Name_To_Id.Insert ("ada", 1);
 
 end GPR2;

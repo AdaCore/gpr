@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -51,7 +51,7 @@ package body GPR2.Project.Attribute is
    end Create;
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Index   : Attribute_Index.Object;
       Value   : Source_Reference.Value.Object;
       Default : Boolean := False;
@@ -65,7 +65,7 @@ package body GPR2.Project.Attribute is
    end Create;
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Index   : Attribute_Index.Object;
       Values  : Containers.Source_Value_List;
       Default : Boolean := False) return Object is
@@ -77,47 +77,47 @@ package body GPR2.Project.Attribute is
    end Create;
 
    overriding function Create
-     (Name  : Source_Reference.Identifier.Object;
+     (Name  : Source_Reference.Attribute.Object;
       Value : Source_Reference.Value.Object) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Value)
+        (Attr_Values.Create (Name, Value)
          with Index   => Attribute_Index.Undefined,
               Default => False,
               Frozen  => False);
    end Create;
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Value   : Source_Reference.Value.Object;
       Default : Boolean;
       Frozen  : Boolean := False) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Value)
+        (Attr_Values.Create (Name, Value)
          with Index   => Attribute_Index.Undefined,
               Default => Default,
               Frozen  => Frozen);
    end Create;
 
    overriding function Create
-     (Name   : Source_Reference.Identifier.Object;
+     (Name   : Source_Reference.Attribute.Object;
       Values : Containers.Source_Value_List) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Values)
+        (Attr_Values.Create (Name, Values)
          with Index   => Attribute_Index.Undefined,
               Default => False,
               Frozen  => False);
    end Create;
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Values  : Containers.Source_Value_List;
       Default : Boolean) return Object is
    begin
       return Object'
-        (Name_Values.Create (Name, Values)
+        (Attr_Values.Create (Name, Values)
          with Index   => Attribute_Index.Undefined,
               Default => Default,
               Frozen  => False);
@@ -150,9 +150,9 @@ package body GPR2.Project.Attribute is
       Name_Len : Natural := 0) return String
    is
       use GPR2.Project.Registry.Attribute;
-      use all type GPR2.Project.Name_Values.Object;
+      use all type GPR2.Project.Attr_Values.Object;
 
-      Name   : constant String := String (Self.Name.Text);
+      Name   : constant String := Image (Self.Name.Id);
       Result : Unbounded_String := To_Unbounded_String ("for ");
    begin
       Append (Result, Name);
@@ -203,9 +203,9 @@ package body GPR2.Project.Attribute is
 
    overriding function Rename
      (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object is
+      Name : Source_Reference.Attribute.Object) return Object is
    begin
-      return (Name_Values.Object (Self).Rename (Name) with
+      return (Attr_Values.Object (Self).Rename (Name) with
                 Default => True,
                 Index   => Self.Index,
                 Frozen  => Self.Frozen);

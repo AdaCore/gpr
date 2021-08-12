@@ -22,19 +22,16 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Strings.Fixed;
 with GPR2.Project.Registry.Pack;
 
 package body GPR2.Project.Registry.Attribute is
 
-   package Pack_Defaults is new Ada.Containers.Indefinite_Ordered_Maps
-     (Optional_Name_Type, Default_References.Map,
+   package Pack_Defaults is new Ada.Containers.Ordered_Maps
+     (Optional_Package_Id, Default_References.Map,
       "=" => Default_References."=");
 
    Any_Index : constant Value_Type := (1 => ASCII.NUL);
    --  Internal index declaring that it is fit for any index request
-
-   Attribute_Delimiter : constant String := "'";
 
    Store    : Attribute_Definitions.Map;
    Defaults : Pack_Defaults.Map;
@@ -63,9 +60,10 @@ package body GPR2.Project.Registry.Attribute is
    --  Constants for some common attribute definitions
 
    function Create (Index, Value : Value_Type) return VSR.Map;
-   --  Create container for attribute default value
-
+   function Create (Index : Value_Type; Value : Attribute_Id) return VSR.Map;
    function Create (Value : Value_Type) return VSR.Map is
+     (Create (Any_Index, Value));
+   function Create (Value : Attribute_Id) return VSR.Map is
      (Create (Any_Index, Value));
    --  Create container for attribute default value
 
@@ -101,7 +99,6 @@ package body GPR2.Project.Registry.Attribute is
       Is_Allowed_In        : Allowed_In;
       Empty_Value          : Empty_Value_Status := Allow;
       Default              : VSR.Map            := VSR.Empty_Map;
-      Default_Is_Reference : Boolean            := False;
       Has_Default_In       : Allowed_In         := Nowhere;
       Is_Toolchain_Config  : Boolean            := False;
       Config_Concatenable  : Boolean            := False;
@@ -115,23 +112,11 @@ package body GPR2.Project.Registry.Attribute is
       -------------------
 
       procedure Index_Default is
-         Del_At : constant Natural :=
-                    Ada.Strings.Fixed.Index
-                      (String (Name), Attribute_Delimiter);
-         Pack   : constant Optional_Name_Type :=
-                    (if Del_At = 0
-                     then No_Name
-                     else Name_Type (Name (Name'First .. Del_At - 1)));
-         Attr   : constant Name_Type :=
-                    Name_Type
-                      (if Del_At = 0
-                       then Name
-                       else Name (Del_At + 1 .. Name'Last));
          CP     : Pack_Defaults.Cursor;
          OK     : Boolean;
       begin
-         Defaults.Insert (Pack, Default_References.Empty_Map, CP, OK);
-         Defaults (CP).Insert (Attr, Store (Name).Element);
+         Defaults.Insert (Name.Pack, Default_References.Empty_Map, CP, OK);
+         Defaults (CP).Insert (Name.Attr, Store (Name).Element);
       end Index_Default;
 
    begin
@@ -146,7 +131,6 @@ package body GPR2.Project.Registry.Attribute is
               Read_Only            => Read_Only,
               Is_Allowed_In        => Is_Allowed_In,
               Default              => Default,
-              Default_Is_Reference => Default_Is_Reference,
               Has_Default_In       => (if Has_Default_In = Nowhere
                                        then Is_Allowed_In
                                        else Has_Default_In),
@@ -164,19 +148,24 @@ package body GPR2.Project.Registry.Attribute is
    ------------
 
    function Create
-     (Name : Name_Type;
-      Pack : Optional_Name_Type := No_Name) return Qualified_Name is
+     (Name : Attribute_Id;
+      Pack : Optional_Package_Id := No_Package) return Qualified_Name is
    begin
-      return Qualified_Name
-        (if Pack = No_Name
-         then Name
-         else Pack & Attribute_Delimiter (1) & Name);
+      return (Pack => Pack, Attr => Name);
    end Create;
 
    function Create (Index, Value : Value_Type) return VSR.Map is
       Result : VSR.Map;
    begin
-      Result.Insert (Name_Type (Index), Value);
+      Result.Insert (Name_Type (Index), (False, +Value));
+
+      return Result;
+   end Create;
+
+   function Create (Index : Value_Type; Value : Attribute_Id) return VSR.Map is
+      Result : VSR.Map;
+   begin
+      Result.Insert (Name_Type (Index), (True, Value));
 
       return Result;
    end Create;
@@ -197,7 +186,7 @@ package body GPR2.Project.Registry.Attribute is
    procedure For_Each_Default
      (Rules  : Default_Rules;
       Action : not null access procedure
-                 (Attribute : Name_Type; Definition : Def))
+        (Attribute : Attribute_Id; Definition : Def))
    is
       procedure Each_Element (C : Default_References.Cursor);
 
@@ -230,7 +219,7 @@ package body GPR2.Project.Registry.Attribute is
    -----------------------
 
    function Get_Default_Rules
-     (Pack : Optional_Name_Type) return Default_Rules
+     (Pack : Optional_Package_Id) return Default_Rules
    is
       CR : constant Pack_Defaults.Cursor := Defaults.Find (Pack);
    begin
@@ -332,8 +321,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create (Value_Type (Object_Dir)),
-      Default_Is_Reference => True);
+      Default              => Create (Object_Dir));
 
    --  source_dirs
    Add
@@ -414,8 +402,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create (Value_Type (Locally_Removed_Files)),
-      Default_Is_Reference => True);
+      Default              => Create (Locally_Removed_Files));
 
    --  source_list_file
    Add
@@ -632,8 +619,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => In_Library,
-      Default              => Create (Value_Type (Library_Dir)),
-      Default_Is_Reference => True);
+      Default              => Create (Library_Dir));
 
    --  library_ali_dir
    Add
@@ -645,8 +631,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => In_Library,
-      Default              => Create (Value_Type (Library_Dir)),
-      Default_Is_Reference => True);
+      Default              => Create (Library_Dir));
 
    --  library_gcc
    Add
@@ -1098,8 +1083,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (Value_Type (Specification_Suffix)),
-      Default_Is_Reference => True,
+      Default              => Create (Specification_Suffix),
       Index_Type           => Language_Index);
 
    --  naming.body_suffix
@@ -1112,8 +1096,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (Value_Type (Implementation_Suffix)),
-      Default_Is_Reference => True,
+      Default              => Create (Implementation_Suffix),
       Index_Type           => Language_Index);
 
    --  naming.specification_suffix
@@ -1152,8 +1135,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create ("ada", Value_Type (Body_Suffix)),
-      Default_Is_Reference => True);
+      Default              => Create ("ada", Body_Suffix));
 
    --  naming.casing
    Add
@@ -1189,8 +1171,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (Value_Type (Specification)),
-      Default_Is_Reference => True,
+      Default              => Create (Specification),
       Index_Type           => Name_Index);
 
    --  naming.specification
@@ -1215,8 +1196,7 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create (Value_Type (Implementation)),
-      Default_Is_Reference => True,
+      Default              => Create (Implementation),
       Index_Type           => Name_Index);
 
    --  naming.implementation

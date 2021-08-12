@@ -29,7 +29,7 @@ package body GPR2.Project.Attribute.Set is
    package RA renames Registry.Attribute;
 
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
-      Name          : Unbounded_String;
+      Name          : Optional_Attribute_Id;
       Index         : Attribute_Index.Object;
       At_Pos        : Natural := 0;
       Set           : Object;
@@ -50,7 +50,7 @@ package body GPR2.Project.Attribute.Set is
    procedure Set_Defaults
      (Self : in out Object;
       VDD  : Definition.Data;
-      Pack : Optional_Name_Type);
+      Pack : Optional_Package_Id);
    --  Set defaults for the attribute set
 
    -----------
@@ -85,7 +85,7 @@ package body GPR2.Project.Attribute.Set is
 
    function Contains
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural    := 0) return Boolean
    is
@@ -99,7 +99,7 @@ package body GPR2.Project.Attribute.Set is
       Attribute : Project.Attribute.Object) return Boolean is
    begin
       return Self.Contains
-        (Attribute.Name.Text,
+        (Attribute.Name.Id,
          Attribute.Index,
          At_Pos_Or (Source_Reference.Value.Object (Attribute.Index), 0));
    end Contains;
@@ -115,7 +115,7 @@ package body GPR2.Project.Attribute.Set is
 
    function Element
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural                := 0) return Attribute.Object
    is
@@ -135,18 +135,18 @@ package body GPR2.Project.Attribute.Set is
 
    function Filter
      (Self   : Object;
-      Name   : Optional_Name_Type     := No_Name;
+      Name   : Optional_Attribute_Id  := No_Attribute;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural                := 0) return Object is
    begin
-      if Name = No_Name and then not Index.Is_Defined then
+      if Name = No_Attribute and then not Index.Is_Defined then
          return Self;
       end if;
 
       declare
          Result : Object;
       begin
-         if Name = No_Name then
+         if Name = No_Attribute then
             for C in Self.Iterate (Name, Index, At_Pos) loop
                Result.Insert (Element (C));
             end loop;
@@ -206,7 +206,7 @@ package body GPR2.Project.Attribute.Set is
 
    function Find
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural                := 0) return Cursor
    is
@@ -279,7 +279,7 @@ package body GPR2.Project.Attribute.Set is
 
    begin
       Self.Attributes.Insert
-        (Attribute.Name.Text, Set_Attribute.Empty_Map, Position, Inserted);
+        (Attribute.Name.Id, Set_Attribute.Empty_Map, Position, Inserted);
 
       Self.Attributes (Position).Insert
         (Attribute.Case_Aware_Index, Attribute, CSA, Inserted);
@@ -302,7 +302,7 @@ package body GPR2.Project.Attribute.Set is
       Inserted : Boolean;
    begin
       Self.Attributes.Insert
-        (Attribute.Name.Text, Set_Attribute.Empty_Map, Position, Inserted);
+        (Attribute.Name.Id, Set_Attribute.Empty_Map, Position, Inserted);
 
       Self.Attributes (Position).Insert
         (Attribute.Case_Aware_Index, Attribute);
@@ -327,11 +327,9 @@ package body GPR2.Project.Attribute.Set is
      (Iter : Iterator'Class; Position : Cursor) return Boolean
    is
       A    : constant Attribute.Object := Position.Set.all (Position.CA);
-      Name : constant Optional_Name_Type :=
-               Optional_Name_Type (To_String (Iter.Name));
    begin
       return
-        (Name = No_Name or else A.Name.Text = Name_Type (Name))
+        (Iter.Name = No_Attribute or else A.Name.Id = Iter.Name)
         and then (not Iter.Index.Is_Defined
                   or else A.Index = Iter.Index)
         and then (Iter.With_Defaults or else not A.Is_Default);
@@ -343,7 +341,7 @@ package body GPR2.Project.Attribute.Set is
 
    function Iterate
      (Self            : Object;
-      Name            : Optional_Name_Type     := No_Name;
+      Name            : Optional_Attribute_Id  := No_Attribute;
       Index           : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos          : Natural                := 0;
       With_Defaults   : Boolean                := False)
@@ -351,7 +349,7 @@ package body GPR2.Project.Attribute.Set is
    begin
       return It : Iterator do
          It.Set           := Self;
-         It.Name          := To_Unbounded_String (String (Name));
+         It.Name          := Name;
          It.Index         := Index;
          It.At_Pos        := At_Pos;
          It.With_Defaults := With_Defaults;
@@ -433,7 +431,7 @@ package body GPR2.Project.Attribute.Set is
    procedure Set_Defaults
      (Self : in out Object;
       VDD  : Definition.Data;
-      Pack : Optional_Name_Type)
+      Pack : Optional_Package_Id)
    is
       package SR renames Source_Reference;
 
@@ -444,19 +442,19 @@ package body GPR2.Project.Attribute.Set is
 
       Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
 
-      procedure Each_Default (Attr : Name_Type; Def : RA.Def);
+      procedure Each_Default (Attr : Attribute_Id; Def : RA.Def);
 
       ------------------
       -- Each_Default --
       ------------------
 
-      procedure Each_Default (Attr : Name_Type; Def : RA.Def) is
+      procedure Each_Default (Attr : Attribute_Id; Def : RA.Def) is
          use type RA.Index_Kind;
 
          procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map);
 
-         function Attr_Id return SR.Identifier.Object is
-           (SR.Identifier.Object (SR.Identifier.Create (Project_SRef, Attr)));
+         function Attr_Id return SR.Attribute.Object is
+           (SR.Attribute.Object (SR.Attribute.Create (Project_SRef, Attr)));
 
          function Create_Attribute
            (Index : Value_Type;
@@ -505,7 +503,7 @@ package body GPR2.Project.Attribute.Set is
          ------------
 
          procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map) is
-            package VSR renames Containers.Name_Value_Map_Package;
+            package VSR renames GPR2.Project.Registry.Attribute.VSR;
             Position : Set_Attribute.Cursor;
             Inserted : Boolean;
          begin
@@ -517,43 +515,48 @@ package body GPR2.Project.Attribute.Set is
 
                return;
 
-            elsif Def.Default_Is_Reference then
-               declare
-                  Ref_Name : constant Name_Type :=
-                               Name_Type (Def.Default.First_Element);
-                  CS : constant Set.Cursor := Self.Attributes.Find (Ref_Name);
-               begin
-                  if Set.Has_Element (CS) then
-                     for CA in Set.Element (CS).Iterate loop
-                        Attrs.Insert
-                          (Set_Attribute.Key (CA), Attribute.Undefined,
-                           Position, Inserted);
-
-                        if Inserted then
-                           Attrs (Position) :=
-                             Set_Attribute.Element (CA).Rename (Attr_Id);
-                        end if;
-                     end loop;
-                  end if;
-
-                  Gather (RA.Get (RA.Create (Ref_Name, Pack)), Attrs);
-               end;
-
             elsif not Def.Default.Is_Empty then
-               for D in Def.Default.Iterate loop
-                  Attrs.Insert
-                    (Create (Value_Type (VSR.Key (D)), 0), Attribute.Undefined,
-                     Position, Inserted);
+               if Def.Default.First_Element.Is_Reference then
+                  declare
+                     Ref_Name : constant Attribute_Id :=
+                                  Def.Default.First_Element.Attr;
+                     CS       : constant Set.Cursor :=
+                                  Self.Attributes.Find (Ref_Name);
+                  begin
+                     if Set.Has_Element (CS) then
+                        for CA in Set.Element (CS).Iterate loop
+                           Attrs.Insert
+                             (Set_Attribute.Key (CA), Attribute.Undefined,
+                              Position, Inserted);
 
-                  if Inserted then
-                     Attrs (Position) :=
-                       Create_Attribute
-                         (Value_Type (VSR.Key (D)),
-                          SR.Value.Object
-                            (SR.Value.Create (Project_SRef,
-                             VSR.Element (D))));
-                  end if;
-               end loop;
+                           if Inserted then
+                              Attrs (Position) :=
+                                Set_Attribute.Element (CA).Rename (Attr_Id);
+                           end if;
+                        end loop;
+                     end if;
+
+                     Gather (RA.Get (RA.Create (Ref_Name, Pack)), Attrs);
+                  end;
+
+               else
+                  for D in Def.Default.Iterate loop
+                     Attrs.Insert
+                       (Create (Value_Type (VSR.Key (D)), 0),
+                        Attribute.Undefined,
+                        Position, Inserted);
+
+                     if Inserted then
+                        Attrs (Position) :=
+                          Create_Attribute
+                            (Value_Type (VSR.Key (D)),
+                             SR.Value.Object
+                               (SR.Value.Create
+                                  (Project_SRef,
+                                   To_String (VSR.Element (D).Value))));
+                     end if;
+                  end loop;
+               end if;
             end if;
          end Gather;
 

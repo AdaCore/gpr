@@ -69,7 +69,7 @@ package body GPR2.Project.View is
    --  Convert definition to view
 
    function Apply_Root_And_Subdirs
-     (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object;
+     (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object;
    --  Apply project path and subdir option for library, object and executable
    --  directories defined in attribute Dir_Attr.
 
@@ -128,7 +128,7 @@ package body GPR2.Project.View is
    ----------------------------
 
    function Apply_Root_And_Subdirs
-     (Self : Object; Dir_Attr : Name_Type) return GPR2.Path_Name.Object
+     (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object
    is
       Dir      : constant Value_Type := Self.Attribute (Dir_Attr).Value.Text;
       Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
@@ -169,7 +169,7 @@ package body GPR2.Project.View is
       Result : GPR2.Path_Name.Set.Object;
 
       procedure Result_Append
-        (Dir : GPR2.Path_Name.Object; Attr : Name_Type);
+        (Dir : GPR2.Path_Name.Object; Attr : Attribute_Id);
       --  Append files created from directory name and filenames from list of
       --  attributes.
 
@@ -178,7 +178,7 @@ package body GPR2.Project.View is
       -------------------
 
       procedure Result_Append
-        (Dir : GPR2.Path_Name.Object; Attr : Name_Type)
+        (Dir : GPR2.Path_Name.Object; Attr : Attribute_Id)
       is
          use Ada.Directories;
          Item : Directory_Entry_Type;
@@ -220,7 +220,7 @@ package body GPR2.Project.View is
 
    function Attribute
      (Self  : Object;
-      Name  : Name_Type;
+      Name  : Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Project.Attribute.Object is
    begin
@@ -233,7 +233,7 @@ package body GPR2.Project.View is
 
    function Attribute_Location
      (Self  : Object;
-      Name  : Name_Type;
+      Name  : Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Source_Reference.Object'Class
    is
@@ -252,7 +252,7 @@ package body GPR2.Project.View is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type     := No_Name;
+      Name  : Optional_Attribute_Id  := No_Attribute;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Project.Attribute.Set.Object is
    begin
@@ -381,7 +381,7 @@ package body GPR2.Project.View is
 
    function Check_Attribute
      (Self           : Object;
-      Name           : Name_Type;
+      Name           : Attribute_Id;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos         : Natural                := 0;
       Check_Extended : Boolean                := False;
@@ -419,7 +419,7 @@ package body GPR2.Project.View is
 
    function Clean_Attribute_List
      (Self     : Object;
-      Name     : Name_Type;
+      Name     : Attribute_Id;
       Language : Language_Id) return Containers.Value_Set
    is
       Index  : constant Attribute_Index.Object :=
@@ -727,7 +727,7 @@ package body GPR2.Project.View is
 
    function Has_Attributes
      (Self           : Object;
-      Name           : Optional_Name_Type     := No_Name;
+      Name           : Optional_Attribute_Id  := No_Attribute;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
       Check_Extended : Boolean                := False)
       return Boolean
@@ -737,12 +737,12 @@ package body GPR2.Project.View is
 
       Def : constant Definition.Const_Ref := Definition.Get_RO (Self);
    begin
-      if Name = No_Name and then not Index.Is_Defined then
+      if Name = No_Attribute and then not Index.Is_Defined then
          if not Def.Attrs.Is_Empty then
             return True;
          end if;
 
-      elsif Name /= No_Name then
+      elsif Name /= No_Attribute then
          if Def.Attrs.Contains (Name, Index) then
             return True;
          end if;
@@ -808,7 +808,7 @@ package body GPR2.Project.View is
 
    function Has_Packages
      (Self           : Object;
-      Name           : Optional_Name_Type := No_Name;
+      Name           : Optional_Package_Id := No_Package;
       Check_Extended : Boolean := True) return Boolean is
    begin
       if Definition.Get_RO (Self).Has_Packages (Name) then
@@ -1381,7 +1381,7 @@ package body GPR2.Project.View is
 
    function Pack
      (Self           : Object;
-      Name           : Name_Type;
+      Name           : Package_Id;
       Check_Extended : Boolean := True) return Project.Pack.Object
    is
       Result    : Project.Pack.Object;

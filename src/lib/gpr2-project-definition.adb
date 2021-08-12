@@ -46,6 +46,7 @@ with GPR2.Project.Tree;
 with GPR2.Source;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Source_Reference.Identifier.Set;
+with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
 
 with GNATCOLL.Utils;
@@ -60,6 +61,7 @@ package body GPR2.Project.Definition is
    package PRP renames Project.Registry.Pack;
    package SR  renames GPR2.Source_Reference;
    package SRI renames SR.Identifier;
+   package SRP renames SR.Pack;
 
    Builtin_Naming_Package : Project.Pack.Object;
    --  The default naming package to use if no Naming package specified in the
@@ -211,7 +213,7 @@ package body GPR2.Project.Definition is
          use type Project.Attribute.Object;
 
          procedure Check_Illegal_Suffix
-           (Attribute_Name : Name_Type;
+           (Attribute_Name : Attribute_Id;
             Language       : Language_Id;
             Attribute      : Project.Attribute.Object)
            with Pre => Attribute /= Project.Attribute.Undefined;
@@ -291,7 +293,7 @@ package body GPR2.Project.Definition is
          --------------------------
 
          procedure Check_Illegal_Suffix
-           (Attribute_Name : Name_Type;
+           (Attribute_Name : Attribute_Id;
             Language       : Language_Id;
             Attribute      : Project.Attribute.Object)
          is
@@ -311,7 +313,7 @@ package body GPR2.Project.Definition is
                Log_Error
                  (Message.Error,
                   """" & Value & """ is illegal for "
-                  & String (Attribute_Name) & ": must have a dot",
+                  & Image (Attribute_Name) & ": must have a dot",
                   Attribute);
 
                return;
@@ -335,7 +337,7 @@ package body GPR2.Project.Definition is
                         Log_Error
                           (Message.Error,
                            """" & Value & """ is illegal for "
-                           & String (Attribute_Name)
+                           & Image (Attribute_Name)
                            & ": ambiguous prefix when "
                            & "Dot_Replacement is a dot",
                            Attribute);
@@ -363,7 +365,7 @@ package body GPR2.Project.Definition is
 
                   Log_Error
                     (Message.Error,
-                     String (Attribute_Name) & "(""" & String (Value)
+                     Image (Attribute_Name) & "(""" & String (Value)
                      & """) for language " & Image (Language)
                      & " is also defined for language "
                      & Image (Suffix_Lang_Maps.Element (Associated_Lang)),
@@ -561,18 +563,18 @@ package body GPR2.Project.Definition is
 
    procedure Set_Default_Attributes (Def : in out Data) is
 
-      procedure Inherite_Attribute (Name : Name_Type);
+      procedure Inherite_Attribute (Name : Attribute_Id);
       --  Take attribute from extended project and put it into current one
       --  if it exists in extended and is not defined in the current one.
 
-      procedure Union_Attribute (Name : Name_Type);
+      procedure Union_Attribute (Name : Attribute_Id);
       --  Union attribute values to the current project from the extended one
 
       ------------------------
       -- Inherite_Attribute --
       ------------------------
 
-      procedure Inherite_Attribute (Name : Name_Type) is
+      procedure Inherite_Attribute (Name : Attribute_Id) is
          Attr : Attribute.Object;
       begin
          if not Def.Attrs.Contains (Name)
@@ -586,7 +588,7 @@ package body GPR2.Project.Definition is
       -- Union_Attribute --
       ---------------------
 
-      procedure Union_Attribute (Name : Name_Type) is
+      procedure Union_Attribute (Name : Attribute_Id) is
          Parent : Attribute.Object;
          CT     : constant Attribute.Set.Cursor := Def.Attrs.Find (Name);
       begin
@@ -618,7 +620,7 @@ package body GPR2.Project.Definition is
          end case;
       end if;
 
-      Set_Defaults (Def.Attrs, Def, No_Name);
+      Set_Defaults (Def.Attrs, Def, No_Package);
 
       for Pack of Def.Packs loop
          Definition.Set_Pack_Default_Attributes (Pack, Def);
@@ -742,7 +744,7 @@ package body GPR2.Project.Definition is
       --  need to be recomputed.
 
       procedure Read_Source_List
-        (Attr_Name : Name_Type;
+        (Attr_Name : Attribute_Id;
          Set       : in out Source_Set.Set);
       --  Read from file defined in project attribute Attr_Name and insert each
       --  line into Set
@@ -763,7 +765,7 @@ package body GPR2.Project.Definition is
       --  Includes Value into Set. If Value contains directory separator put
       --  error message into log.
 
-      procedure Fill_Ada_Naming_Exceptions (Attr : Name_Type)
+      procedure Fill_Ada_Naming_Exceptions (Attr : Attribute_Id)
         with Pre => Attr in  PRA.Spec | PRA.Body_N;
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
 
@@ -771,8 +773,8 @@ package body GPR2.Project.Definition is
         (Set : Project.Attribute.Set.Object)
         with Pre =>
           (for all A of Set =>
-             A.Name.Text = PRA.Specification_Exceptions
-             or else A.Name.Text = PRA.Implementation_Exceptions);
+             A.Name.Id = PRA.Specification_Exceptions
+             or else A.Name.Id = PRA.Implementation_Exceptions);
 
       function Is_Compilable (Language : Language_Id) return Boolean;
       --  Check whether the language is compilable on the current View. This
@@ -837,7 +839,7 @@ package body GPR2.Project.Definition is
       --  Mark that language exists in sources
 
       function Ada_Use_Index (Attr : Attribute.Object) return Value_Type is
-        (Attr.Index.Text & Characters.Handling.To_Upper (Attr.Name.Text (1)));
+        (Attr.Index.Text & Image (Attr.Name.Id) (1));
       --  Index created from Body or Spec attribute index i.e. Ada unit name
       --  and first character of the attribute name i.e. B or S. It is used to
       --  distinct body naming exception from spec naming exception.
@@ -846,7 +848,7 @@ package body GPR2.Project.Definition is
       -- Fill_Ada_Naming_Exceptions --
       --------------------------------
 
-      procedure Fill_Ada_Naming_Exceptions (Attr : Name_Type) is
+      procedure Fill_Ada_Naming_Exceptions (Attr : Attribute_Id) is
       begin
          for CA in Naming.Attributes.Iterate (Attr, With_Defaults => True) loop
             declare
@@ -1424,7 +1426,7 @@ package body GPR2.Project.Definition is
                                  Index := 1;
                               end if;
 
-                              Kind := (if Exc.Name.Text = PRA.Spec
+                              Kind := (if Exc.Name.Id = PRA.Spec
                                        then Unit.S_Spec
                                        else Unit.S_Body);
                               --  May actually be a Separate, we cannot know
@@ -1485,7 +1487,7 @@ package body GPR2.Project.Definition is
                                         (Value_Type (Unit_Name));
 
                         function Has_Conflict_NE
-                          (Attr_Name : Name_Type) return Boolean;
+                          (Attr_Name : Attribute_Id) return Boolean;
                         --  Search the Naming package for attributes with name
                         --  Attr_Name and index Unit_Name, and return True if
                         --  at least one of the matching attributes references
@@ -1519,7 +1521,7 @@ package body GPR2.Project.Definition is
                         ---------------------
 
                         function Has_Conflict_NE
-                          (Attr_Name : Name_Type) return Boolean
+                          (Attr_Name : Attribute_Id) return Boolean
                         is
                            Attr : Project.Attribute.Object;
                         begin
@@ -1912,7 +1914,7 @@ package body GPR2.Project.Definition is
       ---------------
 
       procedure Read_Source_List
-        (Attr_Name : Name_Type;
+        (Attr_Name : Attribute_Id;
          Set       : in out Source_Set.Set)
       is
          Attr_Value : constant SR.Value.Object :=
@@ -2026,7 +2028,7 @@ package body GPR2.Project.Definition is
             procedure Add (A : Project.Attribute.Object);
             --  Add attribute name and values into the MD5 context
 
-            procedure Add (Attribute_Name : Name_Type);
+            procedure Add (Attribute_Name : Attribute_Id);
             --  Add attribute by into the MD5 context
 
             ---------
@@ -2035,13 +2037,13 @@ package body GPR2.Project.Definition is
 
             procedure Add (A : Project.Attribute.Object) is
             begin
-               MD5.Update (C, String (A.Name.Text) & "/");
+               MD5.Update (C, String (Name (A.Name.Id)) & "/");
                for Value of A.Values loop
                   MD5.Update (C, Value.Text);
                end loop;
             end Add;
 
-            procedure Add (Attribute_Name : Name_Type) is
+            procedure Add (Attribute_Name : Attribute_Id) is
                Attr : constant Project.Attribute.Object :=
                         Data.Attrs.Element (Attribute_Name);
             begin
@@ -2581,7 +2583,7 @@ begin
 
    Builtin_Naming_Package :=
      Project.Pack.Create
-       (SRI.Object (SRI.Create (SR.Builtin, PRP.Naming)),
+       (SRP.Object (SRP.Create (SR.Builtin, PRP.Naming)),
         Project.Attribute.Set.Empty_Set,
         Project.Variable.Set.Set.Empty_Map);
 end GPR2.Project.Definition;
