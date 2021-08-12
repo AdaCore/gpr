@@ -183,7 +183,7 @@ package body GPR2.Source_Info is
      (Self : Object; Index : Unit_Index := 1) return Boolean is
    begin
       return Self.CU_List
-        (Positive (Index)).Is_Flag_Set (Unit.Body_Needed_For_SAL);
+        (Positive (Index)).Is_Flag_Set (GPR2.Unit.Body_Needed_For_SAL);
    end Is_Implementation_Required;
 
    ----------
@@ -192,7 +192,7 @@ package body GPR2.Source_Info is
 
    function Kind
      (Self  : Object;
-      Index : Unit_Index := 1) return Unit.Library_Unit_Type is
+      Index : Unit_Index := 1) return GPR2.Unit.Library_Unit_Type is
    begin
       if Self.Is_Ada then
          return Self.CU_List (Positive (Index)).Kind;
@@ -216,7 +216,7 @@ package body GPR2.Source_Info is
 
    procedure Set
      (Self : in out Object;
-      Kind : Unit.Library_Unit_Type) is
+      Kind : GPR2.Unit.Library_Unit_Type) is
    begin
       Self.Is_Ada := False;
       Self.Kind   := Kind;
@@ -228,7 +228,7 @@ package body GPR2.Source_Info is
 
    procedure Set_Ada
      (Self          : in out Object;
-      Units         : Unit.List.Object;
+      Units         : GPR2.Unit.List.Object;
       Is_RTS_Source : Boolean;
       Is_Indexed    : Boolean) is
    begin
@@ -242,6 +242,16 @@ package body GPR2.Source_Info is
       end if;
    end Set_Ada;
 
+   ----------
+   -- Unit --
+   ----------
+
+   function Unit
+     (Self : Object; Index : Unit_Index := 1) return GPR2.Unit.Object is
+   begin
+      return Self.CU_List (Positive (Index));
+   end Unit;
+
    ---------------
    -- Unit_Name --
    ---------------
@@ -251,16 +261,6 @@ package body GPR2.Source_Info is
    begin
       return Self.CU_List (Positive (Index)).Name;
    end Unit_Name;
-
-   -----------------------
-   -- Units --
-   -----------------------
-
-   function Units
-     (Self : Object) return Unit.List.Object is
-   begin
-      return Self.CU_List;
-   end Units;
 
    ------------
    -- Update --
@@ -277,7 +277,7 @@ package body GPR2.Source_Info is
 
    procedure Update_Kind
      (Self  : in out Object;
-      Kind  : Unit.Library_Unit_Type;
+      Kind  : GPR2.Unit.Library_Unit_Type;
       Index : Unit_Index := 1) is
    begin
       if Index = 1 then

@@ -105,15 +105,16 @@ package body GPR2.Source is
 
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
-      Units         : Unit.List.Object;
+      Units         : GPR2.Unit.List.Object;
       Is_RTS_Source : Boolean;
       Is_Indexed    : Boolean) return Object
    is
-      use all type Unit.Library_Unit_Type;
+      use all type GPR2.Unit.Library_Unit_Type;
 
       Key          : Unbounded_String;
-      Sorted_Units : Unit.List.Object :=
-                       Unit.List.List.To_Vector (Unit.Undefined, Units.Length);
+      Sorted_Units : GPR2.Unit.List.Object :=
+                       GPR2.Unit.List.List.To_Vector
+                         (GPR2.Unit.Undefined, Units.Length);
    begin
       for CU of Units loop
          if CU.Index > Positive (Units.Length) then
@@ -131,7 +132,7 @@ package body GPR2.Source is
          Append
            (Key,
             To_Lower (CU.Name)
-            & (if CU.Kind in Unit.Spec_Kind then 'S' else 'B'));
+            & (if CU.Kind in GPR2.Unit.Spec_Kind then 'S' else 'B'));
       end loop;
 
       return Result : Object do

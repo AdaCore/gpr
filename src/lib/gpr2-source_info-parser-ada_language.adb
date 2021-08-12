@@ -179,12 +179,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                declare
                   N          : constant Ada_Library_Item :=
                                  Node.As_Ada_Library_Item;
-                  U_Main     : constant Unit.Main_Type := Unit.None;
+                  U_Main     : constant GPR2.Unit.Main_Type := GPR2.Unit.None;
                   U_Name     : Unbounded_String;
                   U_Sep_From : Unbounded_String;
-                  U_Flags    : Unit.Flags_Set := Unit.Default_Flags;
-                  U_Kind     : Unit.Library_Unit_Type;
-                  L_Type     : Unit.Library_Item_Type;
+                  U_Flags    : GPR2.Unit.Flags_Set := GPR2.Unit.Default_Flags;
+                  U_Kind     : GPR2.Unit.Library_Unit_Type;
+                  L_Type     : GPR2.Unit.Library_Item_Type;
                begin
                   --  Check generic
 
@@ -194,16 +194,16 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
                   case N.F_Main.Kind is
                      when GPR_Ada_Pkg =>
-                        L_Type := Unit.Is_Package;
+                        L_Type := GPR2.Unit.Is_Package;
                         U_Name := Process_Defining_Name
                           (N.F_Main.As_Ada_Pkg.F_Name);
-                        U_Kind := Unit.S_Spec;
+                        U_Kind := GPR2.Unit.S_Spec;
 
                      when GPR_Ada_Pkg_Body =>
-                        L_Type := Unit.Is_Package;
+                        L_Type := GPR2.Unit.Is_Package;
                         U_Name := Process_Defining_Name
                           (N.F_Main.As_Ada_Pkg_Body.F_Name);
-                        U_Kind := Unit.S_Body;
+                        U_Kind := GPR2.Unit.S_Body;
 
                      when GPR_Ada_Subp =>
                         --  Keep the unit kind information. Indeed,
@@ -217,7 +217,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                            U_Kind := Data.CU_List.First_Element.Kind;
                         end if;
 
-                        L_Type := Unit.Is_Subprogram;
+                        L_Type := GPR2.Unit.Is_Subprogram;
                         U_Name := Process_Defining_Name
                           (N.F_Main.As_Ada_Subp.F_Name);
 
@@ -228,7 +228,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   --  Check separate
 
                   if not N.F_Separate.Is_Null then
-                     U_Kind := Unit.S_Separate;
+                     U_Kind := GPR2.Unit.S_Separate;
 
                      U_Sep_From :=
                        Process_Defining_Name (N.F_Separate.F_Parent_Name);
@@ -242,8 +242,8 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   --  Construct the unit
 
                   declare
-                     CU : constant Unit.Object :=
-                            Unit.Create
+                     CU : constant GPR2.Unit.Object :=
+                            GPR2.Unit.Create
                               (Name          => Name_Type (-U_Name),
                                Index         => Index,
                                Main          => U_Main,

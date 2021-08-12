@@ -361,13 +361,13 @@ package body GPR2.Source_Info.Parser.ALI is
       B_Name  : constant Simple_Name := Source.Simple_Name;
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
-      U_Kind  : Unit.Library_Unit_Type;
-      U_Flags : Unit.Flags_Set         := Unit.Default_Flags;
-      Main    : Unit.Main_Type         := Unit.None;
-      L_Type  : Unit.Library_Item_Type := Unit.Is_Package;
+      U_Kind  : GPR2.Unit.Library_Unit_Type;
+      U_Flags : GPR2.Unit.Flags_Set         := GPR2.Unit.Default_Flags;
+      Main    : GPR2.Unit.Main_Type         := GPR2.Unit.None;
+      L_Type  : GPR2.Unit.Library_Item_Type := GPR2.Unit.Is_Package;
       Withs   : Source_Reference.Identifier.Set.Object;
 
-      CUs     : array (CU_Index range 1 .. 2) of Unit.Object;
+      CUs     : array (CU_Index range 1 .. 2) of GPR2.Unit.Object;
       CU_TS   : array (CU_Index range 1 .. 2) of Ada.Calendar.Time;
       CU_CS   : array (CU_Index range 1 .. 2) of Word;
       CU_BN   : array (CU_Index range 1 .. 2) of Unbounded_String;
@@ -391,13 +391,13 @@ package body GPR2.Source_Info.Parser.ALI is
       function Key
         (LI       : Path_Name.Object'Class;
          Basename : Simple_Name;
-         Kind     : Unit.Library_Unit_Type) return String
+         Kind     : GPR2.Unit.Library_Unit_Type) return String
       is (Path_Name.To_OS_Case
             (LI.Value & '@' & String (Basename) & '|'
              & (case Kind is
-                   when Unit.Body_Kind => 'b',
-                   when Unit.Spec_Kind => 's',
-                   when Unit.S_Separate => raise Program_Error)));
+                   when GPR2.Unit.Body_Kind => 'b',
+                   when GPR2.Unit.Spec_Kind => 's',
+                   when GPR2.Unit.S_Separate => raise Program_Error)));
 
       --------------
       -- Fill_Dep --
@@ -665,8 +665,8 @@ package body GPR2.Source_Info.Parser.ALI is
             --  U lines, in case we have both spec and body.
 
             case Tok1 (Tok1'Last) is
-               when 's'    => U_Kind := Unit.S_Spec_Only;
-               when 'b'    => U_Kind := Unit.S_Body_Only;
+               when 's'    => U_Kind := GPR2.Unit.S_Spec_Only;
+               when 'b'    => U_Kind := GPR2.Unit.S_Body_Only;
                when others =>
                   raise Scan_ALI_Error with "Wrong unit name " & Tok1;
             end case;
@@ -679,7 +679,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
          loop
             declare
-               use Unit;
+               use GPR2.Unit;
 
                Tok    : constant String :=
                           IO.Get_Token (A_Handle, Stop_At_LF => True);
@@ -735,7 +735,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      elsif C2 = 'U' then
                         U_Flags (Pure) := True;
                      elsif C2 = 'K' then
-                        L_Type := Unit.Is_Package;
+                        L_Type := GPR2.Unit.Is_Package;
                      end if;
 
                   elsif C1 = 'R' then
@@ -755,7 +755,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      if C2 = 'P' then
                         U_Flags (Shared_Passive) := True;
                      elsif C2 = 'U' then
-                        L_Type := Unit.Is_Subprogram;
+                        L_Type := GPR2.Unit.Is_Subprogram;
                      end if;
                   end if;
                end if;
@@ -775,7 +775,7 @@ package body GPR2.Source_Info.Parser.ALI is
                with Unreferenced;
 
          U_Last : constant Integer := N'Last - 2; -- Unit last character in N
-         U_Kind : Unit.Library_Unit_Type with Unreferenced;
+         U_Kind : GPR2.Unit.Library_Unit_Type with Unreferenced;
       begin
          if U_Last <= 0
            or else N (N'Last - 1) /= '%'
@@ -815,8 +815,8 @@ package body GPR2.Source_Info.Parser.ALI is
       begin
          pragma Assert (U_Ref.Index = Cache.Unit.Index);
          pragma Assert
-           ((U_Ref.Kind in Unit.Spec_Kind)
-            = (Cache.Unit.Kind in Unit.Spec_Kind),
+           ((U_Ref.Kind in GPR2.Unit.Spec_Kind)
+            = (Cache.Unit.Kind in GPR2.Unit.Spec_Kind),
             String (U_Ref.Name) & Cache.Unit.Index'Img & ' ' & U_Ref.Kind'Img
             & ' ' & Cache.Unit.Kind'Img);
 
@@ -904,9 +904,9 @@ package body GPR2.Source_Info.Parser.ALI is
                              IO.Get_Token (A_Handle, Stop_At_LF => True);
                   begin
                      if Tok = "F" then
-                        Main := Unit.Is_Function;
+                        Main := GPR2.Unit.Is_Function;
                      elsif Tok = "P" then
-                        Main := Unit.Is_Procedure;
+                        Main := GPR2.Unit.Is_Procedure;
                      else
                         raise Scan_ALI_Error;
                      end if;
@@ -975,7 +975,7 @@ package body GPR2.Source_Info.Parser.ALI is
             end if;
 
             CUs (CU_Idx) :=
-              Unit.Create
+              GPR2.Unit.Create
                 (Name          => Name_Type (-U_Name),
                  Index         => U_Ref.Index,
                  Lib_Unit_Kind => U_Kind,
@@ -990,8 +990,8 @@ package body GPR2.Source_Info.Parser.ALI is
             Withs.Clear;
 
             if Simple_Name (-S_Name) = B_Name
-              and then (U_Kind in Unit.Spec_Kind)
-                       = (U_Ref.Kind in Unit.Spec_Kind)
+              and then (U_Kind in GPR2.Unit.Spec_Kind)
+                       = (U_Ref.Kind in GPR2.Unit.Spec_Kind)
             then
                Current := CU_Idx;
             end if;
@@ -1009,8 +1009,8 @@ package body GPR2.Source_Info.Parser.ALI is
 
          if Current = 0 then
             if (CU_Idx = 1
-                and then U_Ref.Kind = Unit.S_Body
-                and then CUs (1).Kind = Unit.S_Spec_Only)
+                and then U_Ref.Kind = GPR2.Unit.S_Body
+                and then CUs (1).Kind = GPR2.Unit.S_Spec_Only)
               or else
                 (CU_Idx = 2
                  and then CU_BN (1) = CU_BN (2))
@@ -1041,19 +1041,19 @@ package body GPR2.Source_Info.Parser.ALI is
          if CU_Idx = 2 then
             pragma Assert (CUs (1).Name = CUs (2).Name);
 
-            if CUs (1).Kind /= Unit.S_Body_Only then
+            if CUs (1).Kind /= GPR2.Unit.S_Body_Only then
                raise Scan_ALI_Error
                  with "Unit body is on the wrong position";
             end if;
 
-            Unit.Update_Kind (CUs (1), Unit.S_Body);
+            GPR2.Unit.Update_Kind (CUs (1), GPR2.Unit.S_Body);
 
-            if CUs (2).Kind /= Unit.S_Spec_Only then
+            if CUs (2).Kind /= GPR2.Unit.S_Spec_Only then
                raise Scan_ALI_Error
                  with "Unit spec is on the wrong position";
             end if;
 
-            Unit.Update_Kind (CUs (2), Unit.S_Spec);
+            GPR2.Unit.Update_Kind (CUs (2), GPR2.Unit.S_Spec);
          end if;
 
          --  Record into the cache
@@ -1099,13 +1099,13 @@ package body GPR2.Source_Info.Parser.ALI is
       LI   : Path_Name.Object;
       File : constant Path_Name.Object := Source.Path_Name;
 
-      procedure Check_Separated (SU : in out Unit.Object);
+      procedure Check_Separated (SU : in out GPR2.Unit.Object);
 
       ---------------------
       -- Check_Separated --
       ---------------------
 
-      procedure Check_Separated (SU : in out Unit.Object) is
+      procedure Check_Separated (SU : in out GPR2.Unit.Object) is
 
          Name : constant Name_Type := SU.Name;
          Lown : constant String := To_Lower (Name);
@@ -1132,7 +1132,7 @@ package body GPR2.Source_Info.Parser.ALI is
             SU.Set_Separate_From (Ref.Unit.Separate_From);
 
             if SU.Index = 1 then
-               Data.Kind := Unit.S_Separate;
+               Data.Kind := GPR2.Unit.S_Separate;
             end if;
 
             Data.Checksum     := Ref.Checksum;
@@ -1205,7 +1205,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
             if LI.Exists then
                Compute (Self.all, Data, File, LI, CU, View);
-            elsif CU.Kind in Unit.Body_Kind then
+            elsif CU.Kind in GPR2.Unit.Body_Kind then
                Check_Separated (CU);
             end if;
          end if;
