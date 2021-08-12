@@ -1480,6 +1480,9 @@ package body GPR2.Project.Definition is
                                          Kind     => Kind,
                                          Last_Dot => Last_Dot,
                                          Success  => Match);
+                        Unit_Idx  : constant Attribute_Index.Object :=
+                                      Attribute_Index.Create
+                                        (Value_Type (Unit_Name));
 
                         function Has_Conflict_NE
                           (Attr_Name : Name_Type) return Boolean;
@@ -1516,20 +1519,19 @@ package body GPR2.Project.Definition is
                         ---------------------
 
                         function Has_Conflict_NE
-                          (Attr_Name : Name_Type) return Boolean is
+                          (Attr_Name : Name_Type) return Boolean
+                        is
+                           Attr : Project.Attribute.Object;
                         begin
-                           for CA in Naming.Attributes.Iterate
-                             (Attr_Name,
-                              Attribute_Index.Create (Value_Type (Unit_Name)),
-                              With_Defaults => True)
-                           loop
+                           if Naming.Check_Attribute
+                             (Attr_Name, Unit_Idx, Result => Attr)
+                           then
                               if not Naming_Exception_Equal
-                                       (Attribute.Set.Element (CA),
-                                        Value_Type (Basename), 1)
+                                (Attr, Value_Type (Basename), 1)
                               then
                                  return True;
                               end if;
-                           end loop;
+                           end if;
 
                            return False;
                         end Has_Conflict_NE;
