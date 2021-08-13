@@ -46,7 +46,6 @@ with GPR2.Project;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Configuration;
-with GPR2.Project.Pack;
 with GPR2.Project.Pretty_Printer;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -332,19 +331,15 @@ begin
                            OS_Lib.Locate_Exec_On_Path ("gcc");
 
    begin
-      if Proj.Has_Packages (PRP.Compiler)
-        and then Proj.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, Ada_I)
-      then
+      if Proj.Has_Attribute (PRA.Driver, PRP.Compiler, Ada_I) then
          --  Use the main project's driver if it is defined
 
-         Driver_Attr := Proj.Pack (PRP.Compiler).Attribute (PRA.Driver, Ada_I);
+         Driver_Attr := Proj.Attribute (PRA.Driver, PRP.Compiler, Ada_I);
 
-      elsif Conf.Has_Packages (PRP.Compiler)
-        and then Conf.Pack (PRP.Compiler).Has_Attributes (PRA.Driver, Ada_I)
-      then
+      elsif Conf.Has_Attribute (PRA.Driver, PRP.Compiler, Ada_I) then
          --  Otherwise, we expect to have a configuration-defined driver
 
-         Driver_Attr := Conf.Pack (PRP.Compiler).Attribute (PRA.Driver, Ada_I);
+         Driver_Attr := Conf.Attribute (PRA.Driver, PRP.Compiler, Ada_I);
 
       else
          raise GPRname_Exception with

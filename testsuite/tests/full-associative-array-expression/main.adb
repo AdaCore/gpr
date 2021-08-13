@@ -31,8 +31,10 @@ procedure Main is
       begin
          if Pack = No_Package then
             Attributes := Tree.Root_Project.Attributes (Name);
-         elsif Tree.Root_Project.Has_Packages (Pack) then
-            Attributes := Tree.Root_Project.Pack (Pack).Attributes (Name);
+         elsif Tree.Root_Project.Has_Packages
+           (Pack, With_Defaults => False)
+         then
+            Attributes := Tree.Root_Project.Attributes (Name, Pack => Pack);
          end if;
          for A of Attributes loop
             declare

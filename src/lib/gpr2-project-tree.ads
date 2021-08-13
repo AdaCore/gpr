@@ -523,7 +523,6 @@ private
       --  Root and aggregate contexts
       View_Ids         : aliased Id_Maps.Map;
       View_DAG         : GPR2.View_Ids.DAGs.DAG;
-      Ali_Parser_Is_On : Boolean := True;
       Sources_Loaded   : Boolean := False;
    end record;
 
@@ -560,7 +559,7 @@ private
    function Is_Windows_Target (Tree : Object) return Boolean is
      (Tree.Has_Configuration
         and then
-      Tree.Configuration.Corresponding_View.Has_Attributes
+      Tree.Configuration.Corresponding_View.Has_Attribute
         (GPR2.Project.Registry.Attribute.Shared_Library_Suffix)
         and then
       Tree.Configuration.Corresponding_View.Attribute

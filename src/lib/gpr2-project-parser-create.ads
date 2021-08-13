@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-function GPR2.Parser.Project.Create
+function GPR2.Project.Parser.Create
   (Name      : Name_Type;
    File      : GPR2.Path_Name.Object;
    Qualifier : Project_Kind) return Object;

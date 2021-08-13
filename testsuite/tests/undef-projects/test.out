@@ -1,2 +1,2 @@
 Messages found:
-demo.gpr:3:12: error: project or package Myproj is undefined
+demo.gpr:3:12: error: undefined project or package "Myproj"

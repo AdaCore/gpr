@@ -56,7 +56,7 @@ procedure Main is
       procedure Put_Attributes (Attrs : Attribute.Set.Object) is
          Attr : Attribute.Object;
       begin
-         for A in Attrs.Iterate (With_Defaults => True) loop
+         for A in Attrs.Iterate loop
             Attr := Attribute.Set.Element (A);
             Text_IO.Put ("A:   " & String (Image (Attr.Name.Id)));
 
@@ -94,25 +94,22 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         if Prj.Has_Attributes then
-            Put_Attributes (Prj.Attributes);
+         Put_Attributes (Prj.Attributes);
 
-            for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
-               Text_IO.Put
-                 ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
-               Text_IO.Put (" ->");
+         for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
+            Text_IO.Put
+              ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
+            Text_IO.Put (" ->");
 
-               for V of Attribute.Set.Element (A).Values loop
-                  Text_IO.Put (" " & V.Text);
-               end loop;
-               Text_IO.New_Line;
+            for V of Attribute.Set.Element (A).Values loop
+               Text_IO.Put (" " & V.Text);
             end loop;
+            Text_IO.New_Line;
+         end loop;
 
-            for A of Prj.Attributes.Filter (Object_Dir) loop
-               Text_IO.Put_Line ("A3:  " & Image (A.Name.Id));
-            end loop;
-
-         end if;
+         for A of Prj.Attributes.Filter (Object_Dir) loop
+            Text_IO.Put_Line ("A3:  " & Image (A.Name.Id));
+         end loop;
 
          if Prj.Has_Variables then
             for V in Prj.Variables.Iterate loop
@@ -131,14 +128,10 @@ procedure Main is
             end loop;
          end if;
 
-         if Prj.Has_Packages then
-            for P of Prj.Packages loop
-               Text_IO.Put_Line (Image (P.Name));
-               if P.Has_Attributes then
-                  Put_Attributes (P.Attributes);
-               end if;
-            end loop;
-         end if;
+         for P of Prj.Packages (With_Defaults => False) loop
+            Text_IO.Put_Line (Image (P));
+            Put_Attributes (Prj.Attributes (Pack => P, With_Defaults => False));
+         end loop;
       end if;
 
    end Display;

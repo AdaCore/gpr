@@ -22,11 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with GPR2.Project.Definition;
-
 package body GPR2.Project.Attribute.Set is
-
-   package RA renames Registry.Attribute;
 
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
       Name          : Optional_Attribute_Id;
@@ -46,12 +42,6 @@ package body GPR2.Project.Attribute.Set is
      (Iter : Iterator'Class; Position : Cursor) return Boolean
      with Pre => Has_Element (Position);
    --  Returns True if the current Position is matching the Iterator
-
-   procedure Set_Defaults
-     (Self : in out Object;
-      VDD  : Definition.Data;
-      Pack : Optional_Package_Id);
-   --  Set defaults for the attribute set
 
    -----------
    -- Clear --
@@ -231,6 +221,17 @@ package body GPR2.Project.Attribute.Set is
       return Result;
    end Find;
 
+   function Find
+     (Self      : Object;
+      Attribute : Project.Attribute.Object) return Cursor
+   is
+   begin
+      return Self.Find
+        (Attribute.Name.Id,
+         Attribute.Index,
+         At_Pos_Or (Source_Reference.Value.Object (Attribute.Index), 0));
+   end Find;
+
    -----------
    -- First --
    -----------
@@ -321,15 +322,22 @@ package body GPR2.Project.Attribute.Set is
    function Is_Matching
      (Iter : Iterator'Class; Position : Cursor) return Boolean
    is
-      A    : Set_Attribute.Constant_Reference_Type renames
-               Iter.Set.Constant_Reference
-                 (Position.CM).Element.Constant_Reference (Position.CA);
    begin
-      return
-        (Iter.Name = No_Attribute or else A.Name.Id = Iter.Name)
-        and then (not Iter.Index.Is_Defined
-                  or else A.Index = Iter.Index)
-        and then (Iter.With_Defaults or else not A.Is_Default);
+      if Iter.Name = No_Attribute and then Iter.With_Defaults then
+         return True;
+      else
+         declare
+            A : Set_Attribute.Constant_Reference_Type renames
+                  Iter.Set.Constant_Reference
+                    (Position.CM).Element.Constant_Reference (Position.CA);
+         begin
+            return
+              (Iter.Name = No_Attribute or else A.Name.Id = Iter.Name)
+              and then (not Iter.Index.Is_Defined
+                        or else A.Index = Iter.Index)
+              and then (Iter.With_Defaults or else not A.Is_Default);
+         end;
+      end if;
    end Is_Matching;
 
    -------------
@@ -341,7 +349,7 @@ package body GPR2.Project.Attribute.Set is
       Name            : Optional_Attribute_Id  := No_Attribute;
       Index           : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos          : Unit_Index             := No_Index;
-      With_Defaults   : Boolean                := False)
+      With_Defaults   : Boolean                := True)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin
       return It : Iterator do
@@ -420,166 +428,4 @@ package body GPR2.Project.Attribute.Set is
          Ref       => Ref);
    end Reference;
 
-   ------------------
-   -- Set_Defaults --
-   ------------------
-
-   procedure Set_Defaults
-     (Self : in out Object;
-      VDD  : Definition.Data;
-      Pack : Optional_Package_Id)
-   is
-      package SR renames Source_Reference;
-
-      Project_SRef        : constant SR.Object :=
-                              SR.Object
-                                (SR.Create
-                                   (VDD.Trees.Project.Path_Name.Value, 0, 0));
-
-      Rules : constant RA.Default_Rules := RA.Get_Default_Rules (Pack);
-
-      procedure Each_Default (Attr : Attribute_Id; Def : RA.Def);
-
-      ------------------
-      -- Each_Default --
-      ------------------
-
-      procedure Each_Default (Attr : Attribute_Id; Def : RA.Def) is
-         use type RA.Index_Kind;
-
-         procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map);
-
-         function Attr_Id return SR.Attribute.Object is
-           (SR.Attribute.Object (SR.Attribute.Create (Project_SRef, Attr)));
-
-         function Create_Attribute
-           (Index : Value_Type;
-            Value : SR.Value.Object) return Attribute.Object;
-
-         ----------------------
-         -- Create_Attribute --
-         ----------------------
-
-         function Create_Attribute
-           (Index : Value_Type;
-            Value : SR.Value.Object) return Attribute.Object
-         is
-            Result : Attribute.Object;
-
-            function Create_Index return Attribute_Index.Object is
-              (if Def.Index = RA.No
-               then Attribute_Index.Undefined
-               else Attribute_Index.Create
-                 (SR.Value.Object (SR.Value.Create (Project_SRef, Index)),
-                  False, False));
-
-         begin
-            if Def.Value = List then
-               Result := Project.Attribute.Create
-                 (Name            => Attr_Id,
-                  Index           => Create_Index,
-                  Values          =>
-                    Containers.Source_Value_Type_List.To_Vector (Value, 1),
-                  Default         => True);
-
-            else
-               Result := Project.Attribute.Create
-                 (Attr_Id, Create_Index, Value, Default => True);
-            end if;
-
-            Result.Set_Case
-              (Index_Is_Case_Sensitive => Def.Index_Case_Sensitive,
-               Value_Is_Case_Sensitive => Def.Value_Case_Sensitive);
-
-            return Result;
-         end Create_Attribute;
-
-         ------------
-         -- Gather --
-         ------------
-
-         procedure Gather (Def : RA.Def; Attrs : in out Set_Attribute.Map) is
-            package VSR renames GPR2.Project.Registry.Attribute.VSR;
-            Position : Set_Attribute.Cursor;
-            Inserted : Boolean;
-         begin
-            if Def.Index = RA.No and then not Attrs.Is_Empty then
-               --  Attribute already exists
-
-               pragma Assert
-                 (Attrs.Length = 1, "Attribute map length" & Attrs.Length'Img);
-
-               return;
-
-            elsif not Def.Default.Is_Empty then
-               if Def.Default.First_Element.Is_Reference then
-                  declare
-                     Ref_Name : constant Attribute_Id :=
-                                  Def.Default.First_Element.Attr;
-                     CS       : constant Set.Cursor :=
-                                  Self.Attributes.Find (Ref_Name);
-                  begin
-                     if Set.Has_Element (CS) then
-                        for CA in Set.Element (CS).Iterate loop
-                           Attrs.Insert
-                             (Set_Attribute.Key (CA), Attribute.Undefined,
-                              Position, Inserted);
-
-                           if Inserted then
-                              Attrs (Position) :=
-                                Set_Attribute.Element (CA).Rename (Attr_Id);
-                           end if;
-                        end loop;
-                     end if;
-
-                     Gather (RA.Get (RA.Create (Ref_Name, Pack)), Attrs);
-                  end;
-
-               else
-                  for D in Def.Default.Iterate loop
-                     Attrs.Insert
-                       (Create (Value_Type (VSR.Key (D)), 0),
-                        Attribute.Undefined,
-                        Position, Inserted);
-
-                     if Inserted then
-                        Attrs (Position) :=
-                          Create_Attribute
-                            (Value_Type (VSR.Key (D)),
-                             SR.Value.Object
-                               (SR.Value.Create
-                                  (Project_SRef,
-                                   To_String (VSR.Element (D).Value))));
-                     end if;
-                  end loop;
-               end if;
-            end if;
-         end Gather;
-
-      begin
-         if Def.Has_Default_In (VDD.Kind) then
-            declare
-               CM : constant Set.Cursor := Self.Attributes.Find (Attr);
-               AM : Set_Attribute.Map;
-            begin
-               if Set.Has_Element (CM) then
-                  Gather (Def, Self.Attributes (CM));
-
-               else
-                  Gather (Def, AM);
-
-                  if not AM.Is_Empty then
-                     Self.Attributes.Insert (Attr, AM);
-                  end if;
-               end if;
-            end;
-         end if;
-      end Each_Default;
-
-   begin
-      RA.For_Each_Default (Rules, Each_Default'Access);
-   end Set_Defaults;
-
-begin
-   Definition.Set_Defaults := Set_Defaults'Access;
 end GPR2.Project.Attribute.Set;

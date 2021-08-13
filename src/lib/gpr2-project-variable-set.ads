@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -32,5 +32,7 @@ package GPR2.Project.Variable.Set is
      (Name_Type, Object, "<");
 
    subtype Object is Set.Map;
+
+   Empty_Set : constant Object := Set.Empty_Map;
 
 end GPR2.Project.Variable.Set;

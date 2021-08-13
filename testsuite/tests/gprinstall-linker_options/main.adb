@@ -23,7 +23,6 @@ with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Pack;
 with GPR2.Project.Registry;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -38,7 +37,6 @@ procedure Main is
    use GPR2;
 
    Library_Options : GPR2.Containers.Source_Value_List;
-   Linker   : GPR2.Project.Pack.Object;
    Linker_Options  : GPR2.Containers.Source_Value_List;
 
    procedure Print_Attributes
@@ -51,11 +49,8 @@ procedure Main is
                               then Image (Name)
                               else Image (Pack) & "." & Image (Name));
    begin
-      if Pack = No_Package then
-         Attributes := Tree.Root_Project.Attributes (Name);
-      elsif Tree.Root_Project.Has_Packages (Pack) then
-         Attributes := Tree.Root_Project.Pack (Pack).Attributes (Name);
-      end if;
+      Attributes := Tree.Root_Project.Attributes (Name, Pack => Pack);
+
       for A of Attributes loop
          declare
             Attribute : GPR2.Project.Attribute.Object := A;
@@ -108,11 +103,9 @@ begin
         (GPR2.Project.Ensure_Extension ("inst/share/gpr/lib2"),
          GPR2.Path_Name.No_Resolution),
       Context  => Context);
-   Linker := Tree2.Root_Project.Pack
-     (Name           => GPR2.Project.Registry.Pack.Linker,
-      Check_Extended => True);
-   Linker_Options := Linker.Attribute
-     (Name  => GPR2.Project.Registry.Attribute.Linker_Options).Values;
+   Linker_Options := Tree2.Root_Project.Attribute
+     (Name  => GPR2.Project.Registry.Attribute.Linker_Options,
+      Pack  => GPR2.Project.Registry.Pack.Linker).Values;
    for Library_Option of Library_Options loop
       declare
          Found : Boolean := False;

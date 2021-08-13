@@ -28,6 +28,7 @@ with Ada.Containers.Hashed_Sets;
 with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Sets;
+with Ada.Containers.Ordered_Sets;
 
 with GPR2.Source_Reference.Value;
 
@@ -131,6 +132,11 @@ package GPR2.Containers is
      (Source_Reference.Value.Object);
 
    subtype Source_Value_Set is Source_Value_Type_Set.Set;
+
+   package Package_Id_Type_List is new Ada.Containers.Ordered_Sets
+     (Optional_Package_Id);
+
+   subtype Package_Id_List is Package_Id_Type_List.Set;
 
    package Language_Id_Set is new Ada.Containers.Hashed_Sets
      (Language_Id, Hash, "=");

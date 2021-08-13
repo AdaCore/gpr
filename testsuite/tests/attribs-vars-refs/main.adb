@@ -50,35 +50,32 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         if Prj.Has_Attributes then
-            for A in Prj.Attributes.Iterate loop
-               Text_IO.Put
-                 ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
-               Text_IO.Put (" ->");
+         for A in Prj.Attributes (With_Defaults => False).Iterate loop
+            Text_IO.Put
+              ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
+            Text_IO.Put (" ->");
 
-               for V of Attribute.Set.Element (A).Values loop
-                  Text_IO.Put (" " & V.Text);
-               end loop;
-               Text_IO.New_Line;
+            for V of Attribute.Set.Element (A).Values loop
+               Text_IO.Put (" " & V.Text);
             end loop;
+            Text_IO.New_Line;
+         end loop;
 
-            for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
-               Text_IO.Put
-                 ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
-               Text_IO.Put (" ->");
+         for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
+            Text_IO.Put
+              ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
+            Text_IO.Put (" ->");
 
-               for V of Attribute.Set.Element (A).Values loop
-                  Text_IO.Put (" " & V.Text);
-               end loop;
-               Text_IO.New_Line;
+            for V of Attribute.Set.Element (A).Values loop
+               Text_IO.Put (" " & V.Text);
             end loop;
+            Text_IO.New_Line;
+         end loop;
 
-            for A of Prj.Attributes.Filter (Object_Dir) loop
-               Text_IO.Put_Line
-                 ("A3:  " & Image (A.Name.Id) & " -> " & A.Value.Text);
-            end loop;
-
-         end if;
+         for A of Prj.Attributes.Filter (Object_Dir) loop
+            Text_IO.Put_Line
+              ("A3:  " & Image (A.Name.Id) & " -> " & A.Value.Text);
+         end loop;
 
          if Prj.Has_Variables then
             for V in Prj.Variables.Iterate loop

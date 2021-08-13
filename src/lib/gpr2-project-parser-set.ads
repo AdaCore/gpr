@@ -22,15 +22,17 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  A list of packages
-
 with Ada.Containers.Ordered_Maps;
 
-package GPR2.Project.Pack.Set is
+with GPR2.Path_Name;
 
-   package Set is
-     new Ada.Containers.Ordered_Maps (Optional_Package_Id, Object, "<");
+package GPR2.Project.Parser.Set is
+
+   use type GPR2.Path_Name.Object;
+
+   package Set is new Ada.Containers.Ordered_Maps
+     (GPR2.Path_Name.Object, Object);
 
    subtype Object is Set.Map;
 
-end GPR2.Project.Pack.Set;
+end GPR2.Project.Parser.Set;

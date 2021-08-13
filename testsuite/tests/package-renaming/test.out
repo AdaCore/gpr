@@ -6,4 +6,3 @@ Build    K_STANDARD
  Compiler
    Switches (Ada) -> -O2
 Messages found:
-prj.gpr:3:21: warning: package 'Abst.Compiler' is undefined

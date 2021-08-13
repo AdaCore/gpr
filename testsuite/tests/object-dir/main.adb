@@ -63,11 +63,9 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      if Prj.Has_Attributes then
-         for A of Prj.Attributes loop
-            Display (A);
-         end loop;
-      end if;
+      for A of Prj.Attributes (With_Defaults => False) loop
+         Display (A);
+      end loop;
 
       if Prj.Has_Variables then
          for V in Prj.Variables.Iterate loop
@@ -78,15 +76,13 @@ procedure Main is
          end loop;
       end if;
 
-      if Prj.Has_Packages then
-         for Pck of Prj.Packages loop
-            Text_IO.Put_Line (" " & Image (Pck.Name));
+      for Pck of Prj.Packages (With_Defaults => False) loop
+         Text_IO.Put_Line (" " & Image (Pck));
 
-            for A of Pck.Attributes loop
-               Display (A);
-            end loop;
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
+            Display (A);
          end loop;
-      end if;
+      end loop;
 
       Text_IO.New_Line;
    end Display;

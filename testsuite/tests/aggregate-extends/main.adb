@@ -115,7 +115,7 @@ procedure Main is
          Indent := Indent - 3;
       end if;
 
-      for A of Prj.Attributes loop
+      for A of Prj.Attributes (With_Defaults => False) loop
          Display (A);
       end loop;
 
@@ -123,15 +123,15 @@ procedure Main is
          Display (V);
       end loop;
 
-      for Pck of Prj.Packages loop
+      for Pck of Prj.Packages (With_Defaults => False) loop
          Put_Indent;
-         Text_IO.Put_Line ("Pck:   " & Image (Pck.Name));
+         Text_IO.Put_Line ("Pck:   " & Image (Pck));
          Indent := Indent + 3;
-         for A of Pck.Attributes loop
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
             Display (A);
          end loop;
 
-         for Var of Pck.Variables loop
+         for Var of Prj.Variables (Pck) loop
             Display (Var);
          end loop;
          Indent := Indent - 3;

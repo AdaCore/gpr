@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,17 +22,13 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Ordered_Maps;
-
-with GPR2.Path_Name;
-
-package GPR2.Parser.Project.Set is
-
-   use type GPR2.Path_Name.Object;
-
-   package Set is new Ada.Containers.Ordered_Maps
-     (GPR2.Path_Name.Object, Object);
-
-   subtype Object is Set.Map;
-
-end GPR2.Parser.Project.Set;
+function GPR2.Project.Parser.Create
+  (Name      : Name_Type;
+   File      : GPR2.Path_Name.Object;
+   Qualifier : Project_Kind) return Object is
+begin
+   return Object'(Name      => To_Unbounded_String (String (Name)),
+                  File      => File,
+                  Qualifier => Qualifier,
+                  others    => <>);
+end GPR2.Project.Parser.Create;

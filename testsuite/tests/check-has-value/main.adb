@@ -47,24 +47,22 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      if Prj.Has_Attributes then
-         Att := Prj.Attributes.Element (A.Languages);
-         Text_IO.Put_Line (Att.Image);
+      Att := Prj.Attributes.Element (A.Languages);
+      Text_IO.Put_Line (Att.Image);
 
-         Text_IO.Put_Line ("ada " & Att.Has_Value ("ada")'Img);
-         Text_IO.Put_Line ("Ada " & Att.Has_Value ("Ada")'Img);
-         Text_IO.Put_Line ("FORTRAN " & Att.Has_Value ("FORTRAN")'Img);
-         Text_IO.Put_Line ("fortran " & Att.Has_Value ("fortran")'Img);
+      Text_IO.Put_Line ("ada " & Att.Has_Value ("ada")'Img);
+      Text_IO.Put_Line ("Ada " & Att.Has_Value ("Ada")'Img);
+      Text_IO.Put_Line ("FORTRAN " & Att.Has_Value ("FORTRAN")'Img);
+      Text_IO.Put_Line ("fortran " & Att.Has_Value ("fortran")'Img);
 
-         Att := Prj.Attributes.Element (A.Source_Dirs);
-         Text_IO.Put_Line (Att.Image);
+      Att := Prj.Attributes.Element (A.Source_Dirs);
+      Text_IO.Put_Line (Att.Image);
 
-         Text_IO.Put_Line (". " & Att.Has_Value (".")'Img);
-         Text_IO.Put_Line ("src1 " & Att.Has_Value ("src1")'Img);
-         Text_IO.Put_Line ("sRc1 " & Att.Has_Value ("sRc1")'Img);
-         Text_IO.Put_Line ("SRC2 " & Att.Has_Value ("SRC2")'Img);
-         Text_IO.Put_Line ("Src2 " & Att.Has_Value ("Src2")'Img);
-      end if;
+      Text_IO.Put_Line (". " & Att.Has_Value (".")'Img);
+      Text_IO.Put_Line ("src1 " & Att.Has_Value ("src1")'Img);
+      Text_IO.Put_Line ("sRc1 " & Att.Has_Value ("sRc1")'Img);
+      Text_IO.Put_Line ("SRC2 " & Att.Has_Value ("SRC2")'Img);
+      Text_IO.Put_Line ("Src2 " & Att.Has_Value ("Src2")'Img);
    end Display;
 
    Prj : Project.Tree.Object;

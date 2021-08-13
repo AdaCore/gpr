@@ -1,0 +1,10 @@
+library project Extended is
+   for Library_Name use "mylib";
+   for Library_Dir use "mylibdir";
+   for Languages use ("C");
+   for Archive_Suffix use ".aaaa";
+
+   package Install is
+      for Mode use "my_wrong_mode";
+   end Install;
+end Extended;

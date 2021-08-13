@@ -29,6 +29,7 @@ with GPR2.Message;
 with GPR2.Project.Source.Part_Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Registry.Attribute;
+with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info.Set;
@@ -38,6 +39,7 @@ with GPR2.Source_Reference.Identifier.Set;
 package body GPR2.Project.Source is
 
    package PRA renames GPR2.Project.Registry.Attribute;
+   package PRP renames GPR2.Project.Registry.Pack;
 
    procedure Context_Clause_Dependencies
      (Self     : Object;
@@ -701,8 +703,8 @@ package body GPR2.Project.Source is
 
                      declare
                         DR : constant String :=
-                               View (Self).Naming_Package.Attribute
-                                 (PRA.Dot_Replacement).Value.Text;
+                               View (Self).Attribute
+                                 (PRA.Dot_Replacement, PRP.Naming).Value.Text;
                         SN : constant String :=
                                String (Self.Path_Name.Simple_Name);
                         CU : Project.Unit_Info.Set.Cursor;

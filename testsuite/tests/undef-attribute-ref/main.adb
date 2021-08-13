@@ -55,8 +55,9 @@ procedure Main is
       end if;
    end Print_Variable;
 
-   procedure Check_Load_Failure (Project : GPR2.Filename_Type) is
+   procedure Test (Project : GPR2.Filename_Type) is
    begin
+      Ada.Text_IO.Put_Line (String (Project) & ".gpr:");
       Tree.Unload;
       Tree.Load_Autoconf
         (Filename => GPR2.Path_Name.Create_File
@@ -64,29 +65,24 @@ procedure Main is
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
       Print_Message;
+
+      for V of Tree.Root_Project.Variables loop
+         Print_Variable (V);
+      end loop;
+
    exception
       when Project_Error =>
          Print_Message;
-   end Check_Load_Failure;
+   end Test;
 
 begin
-   Tree.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension (Project_Name),
-         GPR2.Path_Name.No_Resolution),
-      Context  => Context);
-   Print_Message;
-   Print_Variable (Tree.Root_Project.Variable (Name => "A"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "B"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "C"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "D"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "E"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "F"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "G"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "H"));
-   Context.Insert (Key => "DEFINE_NAMING_PACKAGE", New_Item => "False");
-   Check_Load_Failure (Project_Name & "1");
-   Check_Load_Failure (Project_Name & "2");
+   Test ("prj");
+   Test ("prj1");
+   Test ("prj2");
+   Test ("prj3");
+   Test ("prj4");
+   Test ("prj5");
+   Test ("prj6");
 exception
    when Project_Error =>
       Print_Message;

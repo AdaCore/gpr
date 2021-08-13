@@ -1,10 +1,17 @@
-A:LIST=A;
-B:SINGLE=B
+prj.gpr:
+B:SINGLE=false B
 C:SINGLE=lowercase C
-D:LIST=D;
 E:SINGLE=lowercase E
-F:LIST=F;
 G:SINGLE=lowercase G
-H:LIST=H;
-prj1.gpr:5:24: error: package "Naming" not declared in project "Prj1"
-prj2.gpr:4:23: error: package "Naming" not declared in project "Child1"
+prj1.gpr:
+G:SINGLE=lowercaseG
+prj2.gpr:
+G:SINGLE=lowercaseG
+prj3.gpr:
+prj3.gpr:3:17: error: undefined attribute "Main"
+prj4.gpr:
+prj4.gpr:4:24: error: undefined attribute "Naming'Specification_Exceptions ("Test")"
+prj5.gpr:
+prj5.gpr:4:19: error: undefined attribute "Naming'Specification_Exceptions ("Test")"
+prj6.gpr:
+prj6.gpr:4:22: error: undefined attribute "Naming'Specification_Exceptions ("Test")"

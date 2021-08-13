@@ -29,18 +29,15 @@ with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
-with GPR2.Project.Attribute.Set;
 with GPR2.Project.Import.Set;
-with GPR2.Project.Pack.Set;
 with GPR2.Project.Typ.Set;
-with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
 
 limited with GPR2.Project.Tree;
 
 with GPR_Parser.Analysis;
 
-package GPR2.Parser.Project is
+package GPR2.Project.Parser is
 
    use GPR_Parser.Analysis;
 
@@ -76,10 +73,6 @@ package GPR2.Parser.Project is
       Tree          : GPR2.Project.Tree.Object;
       Context       : GPR2.Context.Object;
       View          : GPR2.Project.View.Object;
-      Attrs         : in out GPR2.Project.Attribute.Set.Object;
-      Vars          : in out GPR2.Project.Variable.Set.Object;
-      Packs         : in out GPR2.Project.Pack.Set.Object;
-      Types         : in out GPR2.Project.Typ.Set.Object;
       Pre_Conf_Mode : Boolean := False)
      with Pre => Self.Is_Defined;
    --  Phase-2: semantic analysis, parse tree using a specific context. This
@@ -178,4 +171,4 @@ private
    function Explicit_Qualifier (Self : Object) return Boolean is
      (Self.Expl_Qual);
 
-end GPR2.Parser.Project;
+end GPR2.Project.Parser;
