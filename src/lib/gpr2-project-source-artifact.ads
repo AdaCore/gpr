@@ -83,6 +83,12 @@ package GPR2.Project.Source.Artifact is
    --  If Index = 0 returns True if dependency exists at any index.
 
    function Dependency
+     (Source   : Project.Source.Object'Class;
+      Index    : Natural := 0;
+      Location : Dependency_Location := In_Both)
+      return GPR2.Path_Name.Object;
+
+   function Dependency
      (Self     : Object;
       Index    : Natural;
       Location : Dependency_Location := In_Both) return GPR2.Path_Name.Object
