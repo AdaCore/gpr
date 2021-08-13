@@ -89,20 +89,21 @@ package body GPR2.Project.Registry.Attribute is
    ---------
 
    procedure Add
-     (Name                 : Qualified_Name;
-      Index                : Index_Kind;
-      Others_Allowed       : Boolean;
-      Index_Case_Sensitive : Boolean;
-      Value                : Value_Kind;
-      Value_Case_Sensitive : Boolean;
-      Read_Only            : Boolean;
-      Is_Allowed_In        : Allowed_In;
-      Empty_Value          : Empty_Value_Status := Allow;
-      Default              : VSR.Map            := VSR.Empty_Map;
-      Has_Default_In       : Allowed_In         := Nowhere;
-      Is_Toolchain_Config  : Boolean            := False;
-      Config_Concatenable  : Boolean            := False;
-      Index_Type           : Index_Value_Type   := Name_Index)
+     (Name                  : Qualified_Name;
+      Index                 : Index_Kind;
+      Others_Allowed        : Boolean;
+      Index_Case_Sensitive  : Boolean;
+      Value                 : Value_Kind;
+      Value_Case_Sensitive  : Boolean;
+      Read_Only             : Boolean;
+      Is_Allowed_In         : Allowed_In;
+      Empty_Value           : Empty_Value_Status := Allow;
+      Default               : VSR.Map            := VSR.Empty_Map;
+      Has_Default_In        : Allowed_In         := Nowhere;
+      Is_Toolchain_Config   : Boolean            := False;
+      Config_Concatenable   : Boolean            := False;
+      Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
+      Index_Type            : Index_Value_Type           := Name_Index)
    is
       procedure Index_Default;
       --  Save definition with default value to Defaults index
@@ -122,21 +123,22 @@ package body GPR2.Project.Registry.Attribute is
    begin
       Store.Insert
         (Name,
-         Def'(Index                => Index,
-              Others_Allowed       => Others_Allowed,
-              Index_Case_Sensitive => Index_Case_Sensitive,
-              Value                => Value,
-              Value_Case_Sensitive => Value_Case_Sensitive,
-              Empty_Value          => Empty_Value,
-              Read_Only            => Read_Only,
-              Is_Allowed_In        => Is_Allowed_In,
-              Default              => Default,
-              Has_Default_In       => (if Has_Default_In = Nowhere
+         Def'(Index                 => Index,
+              Others_Allowed        => Others_Allowed,
+              Index_Case_Sensitive  => Index_Case_Sensitive,
+              Value                 => Value,
+              Value_Case_Sensitive  => Value_Case_Sensitive,
+              Empty_Value           => Empty_Value,
+              Read_Only             => Read_Only,
+              Is_Allowed_In         => Is_Allowed_In,
+              Default               => Default,
+              Has_Default_In        => (if Has_Default_In = Nowhere
                                        then Is_Allowed_In
                                        else Has_Default_In),
-              Is_Toolchain_Config  => Is_Toolchain_Config,
-              Config_Concatenable  => Config_Concatenable,
-              Index_Type           => Index_Type));
+              Is_Toolchain_Config   => Is_Toolchain_Config,
+              Config_Concatenable   => Config_Concatenable,
+              Inherit_From_Extended => Inherit_From_Extended,
+              Index_Type            => Index_Type));
 
       if not Default.Is_Empty then
          Index_Default;
@@ -234,24 +236,26 @@ begin
    --  name
    Add
      (Create (Name),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => True,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => True,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  project_dir
    Add
      (Create (Project_Dir),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => True,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => True,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  main
    Add
@@ -267,14 +271,15 @@ begin
    --  languages
    Add
      (Create (Languages),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => False,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates,
-      Default              => Create ("Ada"));
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => False,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Default               => Create ("Ada"),
+      Inherit_From_Extended => Concatenated);
 
    --  roots
    Add
@@ -291,25 +296,27 @@ begin
    --  externally_built
    Add
      (Create (Externally_Built),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => False,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => False,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  object_dir
    Add
      (Create (Object_Dir),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create ("."));
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Default               => Create ("."),
+      Inherit_From_Extended => Not_Inherited);
 
    --  exec_dir
    Add
@@ -321,20 +328,22 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create (Object_Dir));
+      Default              => Create (Object_Dir),
+      Inherit_From_Extended => Not_Inherited);
 
    --  source_dirs
    Add
      (Create (Source_Dirs),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates,
-      Default              => Create ("."),
-      Has_Default_In       => No_Aggregates_Abstract);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Default               => Create ("."),
+      Has_Default_In        => No_Aggregates_Abstract,
+      Inherit_From_Extended => Not_Inherited);
 
    --  inherit_source_path
    Add
@@ -351,46 +360,50 @@ begin
    --  excluded_source_dirs
    Add
      (Create (Excluded_Source_Dirs),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  ignore_source_sub_dirs
    Add
      (Create (Ignore_Source_Sub_Dirs),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  source_files
    Add
      (Create (Source_Files),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  locally_removed_files
    Add
      (Create (Locally_Removed_Files),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  excluded_source_files
    Add
@@ -402,62 +415,68 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create (Locally_Removed_Files));
+      Default              => Create (Locally_Removed_Files),
+      Inherit_From_Extended => Not_Inherited);
 
    --  source_list_file
    Add
      (Create (Source_List_File),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  excluded_source_list_file
    Add
      (Create (Excluded_Source_List_File),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => No_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => No_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  interfaces
    Add
      (Create (Interfaces),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  project_files
    Add
      (Create (Project_Files),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  project_path
    Add
      (Create (Project_Path),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Aggregates);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Aggregates,
+      Inherit_From_Extended => Not_Inherited);
 
    --  external
    Add
@@ -496,105 +515,114 @@ begin
    --  library_kind
    Add
      (Create (Library_Kind),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => False,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => False,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_version
    Add
      (Create (Library_Version),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_interface
    Add
      (Create (Library_Interface),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_standalone
    Add
      (Create (Library_Standalone),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => False,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => False,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_encapsulated_options
    Add
      (Create (Library_Encapsulated_Options),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Config_Concatenable   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_encapsulated_supported
    Add
      (Create (Library_Encapsulated_Supported),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Configuration,
-      Config_Concatenable  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Configuration,
+      Config_Concatenable   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_auto_init
    Add
      (Create (Library_Auto_Init),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  leading_library_options
    Add
      (Create (Leading_Library_Options),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Config_Concatenable   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_options
    Add
      (Create (Library_Options),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library,
-      Config_Concatenable  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Config_Concatenable   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_rpath_options
    Add
@@ -619,7 +647,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => In_Library,
-      Default              => Create (Library_Dir));
+      Default              => Create (Library_Dir),
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_ali_dir
    Add
@@ -631,95 +660,104 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => In_Library,
-      Default              => Create (Library_Dir));
+      Default              => Create (Library_Dir),
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_gcc
    Add
      (Create (Library_Gcc),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_symbol_file
    Add
      (Create (Library_Symbol_File),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_symbol_policy
    Add
      (Create (Library_Symbol_Policy),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => In_Library);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => In_Library,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_reference_symbol_file
    Add
      (Create (Library_Reference_Symbol_File),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  default_language
    Add
      (Create (Default_Language),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  run_path_option
    Add
      (Create (Run_Path_Option),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  run_path_origin
    Add
      (Create (Run_Path_Origin),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  separate_run_path_options
    Add
      (Create (Separate_Run_Path_Options),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  toolchain_version
    Add
@@ -812,14 +850,15 @@ begin
    --  target
    Add
      (Create (Target),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Is_Toolchain_Config  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Is_Toolchain_Config   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  runtime
    Add
@@ -837,80 +876,87 @@ begin
    --  library_builder
    Add
      (Create (Library_Builder),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_support
    Add
      (Create (Library_Support),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  archive_builder
    Add
      (Create (Archive_Builder),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  archive_builder_append_option
    Add
      (Create (Archive_Builder_Append_Option),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  archive_indexer
    Add
      (Create (Archive_Indexer),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  archive_suffix
    Add
      (Create (Archive_Suffix),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create (".a"));
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Default               => Create (".a"),
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_partial_linker
    Add
      (Create (Library_Partial_Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  object_lister
    Add
@@ -937,93 +983,101 @@ begin
    --  shared_library_prefix
    Add
      (Create (Shared_Library_Prefix),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create ("lib"));
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Default               => Create ("lib"),
+      Inherit_From_Extended => Not_Inherited);
 
    --  shared_library_suffix
    Add
      (Create (Shared_Library_Suffix),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create (".so"));
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Default               => Create (".so"),
+      Inherit_From_Extended => Not_Inherited);
 
    --  symbolic_link_supported
    Add
      (Create (Symbolic_Link_Supported),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_major_minor_id_supported
    Add
      (Create (Library_Major_Minor_Id_Supported),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_auto_init_supported
    Add
      (Create (Library_Auto_Init_Supported),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  shared_library_minimum_switches
    Add
      (Create (Shared_Library_Minimum_Switches),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_version_switches
    Add
      (Create (Library_Version_Switches),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Config_Concatenable   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  library_install_name_option
    Add
      (Create (Library_Install_Name_Option),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Inherit_From_Extended => Not_Inherited);
 
    --  runtime_dir
    Add
@@ -1040,14 +1094,15 @@ begin
    --  runtime_library_dir
    Add
      (Create (Runtime_Library_Dir),
-      Index                => Yes,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => Single,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Index_Type           => Language_Index);
+      Index                 => Yes,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => Single,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Index_Type            => Language_Index,
+      Inherit_From_Extended => Not_Inherited);
 
    --  runtime_source_dir
    Add
@@ -1940,14 +1995,15 @@ begin
    --  linker.linker_options
    Add
      (Create (Linker_Options, Pack.Linker),
-      Index                => No,
-      Others_Allowed       => False,
-      Index_Case_Sensitive => False,
-      Value                => List,
-      Value_Case_Sensitive => True,
-      Read_Only            => False,
-      Is_Allowed_In        => Everywhere,
-      Config_Concatenable  => True);
+      Index                 => No,
+      Others_Allowed        => False,
+      Index_Case_Sensitive  => False,
+      Value                 => List,
+      Value_Case_Sensitive  => True,
+      Read_Only             => False,
+      Is_Allowed_In         => Everywhere,
+      Config_Concatenable   => True,
+      Inherit_From_Extended => Not_Inherited);
 
    --  linker.map_file_option
    Add
