@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -59,5 +59,14 @@ package body GPR2.Source_Reference.Text_Value is
    begin
       return Text_Type (To_String (Self.Text));
    end Text;
+
+   --------------------
+   -- Unchecked_Text --
+   --------------------
+
+   function Unchecked_Text (Self : Object) return Unbounded_String is
+   begin
+      return Self.Text;
+   end Unchecked_Text;
 
 end GPR2.Source_Reference.Text_Value;

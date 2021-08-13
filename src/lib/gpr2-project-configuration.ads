@@ -28,7 +28,9 @@ limited with GPR2.KB;
 with GPR2.Log;
 with GPR2.Parser.Project;
 with GPR2.Project.View;
+with GNATCOLL.Refcount;
 
+private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Vectors;
 
 limited with GPR2.Project.Tree;
@@ -189,13 +191,29 @@ private
       and then Name (Left) = Name (Right));
 
    package Descriptions is new Ada.Containers.Vectors (Positive, Description);
+   package Language_Dict is new Ada.Containers.Indefinite_Hashed_Maps
+     (Language_Id, String, GPR2.Hash, GPR2."=");
+
+   type Config_Cache_Object;
+   type Config_Cache_Access is access all Config_Cache_Object;
+
+   type Config_Cache_Object is record
+      Archive_Suffix     : Unbounded_String;
+      Object_File_Suffix : Language_Dict.Map;
+   end record;
+
+   package Cache_Refcount is new GNATCOLL.Refcount.Shared_Pointers
+     (Element_Type => Config_Cache_Object);
 
    type Object is tagged record
-      Messages     : Log.Object;
-      Target       : Unbounded_String;
-      Project      : Parser.Project.Object;
-      Conf         : GPR2.Project.View.Object;
-      Descriptions : Configuration.Descriptions.Vector;
+      Messages           : Log.Object;
+      Target             : Unbounded_String;
+      Project            : Parser.Project.Object;
+      Conf               : GPR2.Project.View.Object;
+      Descriptions       : Configuration.Descriptions.Vector;
+
+      --  Cache
+      Cache              : Cache_Refcount.Ref;
    end record;
 
    procedure Bind_To_Tree

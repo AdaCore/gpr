@@ -94,23 +94,23 @@ private package GPR2.Project.Definition is
 
       --  Actual values for the view
 
-      Extending        : Weak_Reference;
-      Extended_Root    : View.Object;
-      Extended         : View.Set.Object;
-      Agg_Libraries    : GPR2.View_Ids.Set.Object;
-      Imports          : Project_View_Store.Map;
-      Limited_Imports  : Project_View_Store.Map;
-      Is_Imported      : Boolean := False;
-      Aggregated       : Project_View_Store.Map;
-      Attrs            : Project.Attribute.Set.Object;
-      Vars             : Project.Variable.Set.Object;
-      Packs            : Project.Pack.Set.Object;
-      Types            : Project.Typ.Set.Object;
-      Sources          : Project.Source.Set.Object;
-      Sources_Map      : Simple_Name_Source.Map;
-      Units            : Unit_Info.Set.Object;
-      Unique_Id        : GPR2.View_Ids.View_Id;
-      Root_View        : Weak_Reference;
+      Extending       : Weak_Reference;
+      Extended_Root   : View.Object;
+      Extended        : View.Set.Object;
+      Agg_Libraries   : GPR2.View_Ids.Set.Object;
+      Imports         : Project_View_Store.Map;
+      Limited_Imports : Project_View_Store.Map;
+      Is_Imported     : Boolean := False;
+      Aggregated      : Project_View_Store.Map;
+      Attrs           : Project.Attribute.Set.Object;
+      Vars            : Project.Variable.Set.Object;
+      Packs           : Project.Pack.Set.Object;
+      Types           : Project.Typ.Set.Object;
+      Sources         : Project.Source.Set.Object;
+      Sources_Map     : Simple_Name_Source.Map;
+      Units           : Unit_Info.Set.Object;
+      Unique_Id       : GPR2.View_Ids.View_Id;
+      Root_View       : Weak_Reference;
       --  Either root aggregated project view, or just root view of the tree
 
       --  Some general information
@@ -123,7 +123,7 @@ private package GPR2.Project.Definition is
       --  The project tree for this view
 
       --  Cached values for faster retrieval of very common attributes
-      Cache          : Cache_List;
+      Cache           : Cache_List;
    end record;
 
    type Ref is access all Data;
