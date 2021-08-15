@@ -593,7 +593,7 @@ procedure GPRconfig is
                   Put
                     (String (Name (Comp))
                      & " for "
-                     & String (Name (Language (Comp)))
+                     & Image (Language (Comp))
                      & " in "
                      & String (Path (Comp)));
                   if For_Target = "all" then
@@ -612,7 +612,7 @@ procedure GPRconfig is
 
                else
                   Put_Line
-                    (String (Name (Language (Comp))) &
+                    (Image (Language (Comp)) &
                        " (no compiler required)");
                end if;
 

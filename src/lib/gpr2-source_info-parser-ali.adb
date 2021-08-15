@@ -1095,7 +1095,6 @@ package body GPR2.Source_Info.Parser.ALI is
       Source : Project.Source.Object)
    is
       View : constant Project.View.Object := Source.View;
-      Arts : constant Project.Source.Artifact.Object := Source.Artifacts;
       LI   : Path_Name.Object;
       File : constant Path_Name.Object := Source.Path_Name;
 
@@ -1173,13 +1172,12 @@ package body GPR2.Source_Info.Parser.ALI is
                if CU.Kind in GPR2.Unit.Body_Kind
                  and then CU.Name = FU.Name
                then
-                  if Src.Artifacts.Has_Dependency (CU.Index) then
-                     Dep := Src.Artifacts.Dependency (CU.Index);
+                  Dep := GPR2.Project.Source.Artifact.Dependency
+                    (Src, CU.Index);
 
-                     if Dep.Exists then
-                        Compute
-                          (Self.all, Info, FU.Main_Body, Dep, CU, View);
-                     end if;
+                  if Dep.Is_Defined and then Dep.Exists then
+                     Compute
+                       (Self.all, Info, FU.Main_Body, Dep, CU, View);
                   end if;
 
                   exit;
@@ -1200,14 +1198,12 @@ package body GPR2.Source_Info.Parser.ALI is
       Data.Dependencies.Clear;
 
       for CU of Data.CU_List loop
-         if Arts.Has_Dependency (Index => CU.Index) then
-            LI := Arts.Dependency (CU.Index);
+         LI := GPR2.Project.Source.Artifact.Dependency (Source, CU.Index);
 
-            if LI.Exists then
-               Compute (Self.all, Data, File, LI, CU, View);
-            elsif CU.Kind in GPR2.Unit.Body_Kind then
-               Check_Separated (CU);
-            end if;
+         if LI.Is_Defined and then LI.Exists then
+            Compute (Self.all, Data, File, LI, CU, View);
+         elsif CU.Kind in GPR2.Unit.Body_Kind then
+            Check_Separated (CU);
          end if;
       end loop;
    end Compute;
