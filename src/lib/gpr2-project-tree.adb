@@ -35,10 +35,9 @@ with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
-with GPR2.Project.Name_Values;
 with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
-with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids.Set;
 with GPR2.View_Ids.Vector;
@@ -446,19 +445,19 @@ package body GPR2.Project.Tree is
       RTD  : Attribute.Object;
       RTF  : Path_Name.Object;
 
-      procedure Add_Attribute (Name : Name_Type; Value : Value_Type);
+      procedure Add_Attribute (Name : Attribute_Id; Value : Value_Type);
       --  Add builtin attribute into Data.Attrs
 
       -------------------
       -- Add_Attribute --
       -------------------
 
-      procedure Add_Attribute (Name : Name_Type; Value : Value_Type) is
+      procedure Add_Attribute (Name : Attribute_Id; Value : Value_Type) is
       begin
          Data.Attrs.Insert
            (Project.Attribute.Create
-              (Name  => Source_Reference.Identifier.Object
-                          (Source_Reference.Identifier.Create
+              (Name  => Source_Reference.Attribute.Object
+                          (Source_Reference.Attribute.Create
                              (Source_Reference.Builtin, Name)),
                Value => Source_Reference.Value.Object
                           (Source_Reference.Value.Create
@@ -538,8 +537,8 @@ package body GPR2.Project.Tree is
 
             Data.Attrs.Insert
               (Project.Attribute.Create
-                 (Name => Source_Reference.Identifier.Object
-                            (Source_Reference.Identifier.Create
+                 (Name => Source_Reference.Attribute.Object
+                            (Source_Reference.Attribute.Create
                                (Source_Reference.Builtin, PRA.Source_Dirs)),
                   Values => Dirs));
          end;
@@ -558,7 +557,7 @@ package body GPR2.Project.Tree is
          Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
 
          Data.Trees.Project := Parser.Project.Create
-           (Name      => PRA.Runtime,
+           (Name      => Name (PRA.Runtime),
             File      => RTF,
             Qualifier => K_Standard);
 
@@ -3181,14 +3180,14 @@ package body GPR2.Project.Tree is
            (View : Project.View.Object) return Boolean
          is
 
-            function Is_Defined_Empty (Attr : Name_Type) return Boolean;
+            function Is_Defined_Empty (Attr : Attribute_Id) return Boolean;
             --  Returns True if attribute defined as empty list in view
 
             ----------------------
             -- Is_Defined_Empty --
             ----------------------
 
-            function Is_Defined_Empty (Attr : Name_Type) return Boolean is
+            function Is_Defined_Empty (Attr : Attribute_Id) return Boolean is
             begin
                return View.Check_Attribute (Attr, Result => Tmp_Attr)
                  and then Tmp_Attr.Values.Is_Empty;
@@ -3388,9 +3387,9 @@ package body GPR2.Project.Tree is
                        (Message.Create
                           (Message.Error,
                            "a standard project must have "
-                           & (if Tmp_Attr.Name.Text = PRA.Source_Dirs
+                           & (if Tmp_Attr.Name.Id = PRA.Source_Dirs
                               then "source directories"
-                              elsif Tmp_Attr.Name.Text = PRA.Languages
+                              elsif Tmp_Attr.Name.Id = PRA.Languages
                               then "languages"
                               else "sources"),
                            Tmp_Attr));
@@ -3473,26 +3472,26 @@ package body GPR2.Project.Tree is
          begin
             if Def.Index = PRA.No and then A.Has_Index then
                Self.Error
-                  ("attribute """ & String (A.Name.Text)
+                  ("attribute """ & Image (A.Name.Id)
                    & """ cannot have index", A);
             end if;
 
             if Def.Value = PRA.Single and then A.Kind = PRA.List then
                Self.Error
-                 ("attribute """ & String (A.Name.Text)
+                 ("attribute """ & Image (A.Name.Id)
                   & """ cannot be a list",
                   A);
 
-               if A.Name.Text = PRA.Object_Dir then
+               if A.Name.Id = PRA.Object_Dir then
                   Check_Object_Dir_Exists := False;
-               elsif A.Name.Text = PRA.Exec_Dir then
+               elsif A.Name.Id = PRA.Exec_Dir then
                   Check_Exec_Dir_Exists := False;
                end if;
             end if;
 
             if Def.Value = PRA.List and then A.Kind = PRA.Single then
                Self.Error
-                 ("attribute """ & String (A.Name.Text)
+                 ("attribute """ & Image (A.Name.Id)
                   & """ must be a list",
                   A.Value);
             end if;
@@ -3510,7 +3509,7 @@ package body GPR2.Project.Tree is
 
                if not Registry.Pack.Is_Allowed_In (P.Name, P_Kind) then
                   Self.Warning
-                    ("package """ & String (P.Name)
+                    ("package """ & Image (P.Name)
                      & """ cannot be used in " & Image (P_Kind) & 's',
                      P);
                end if;
@@ -3520,7 +3519,7 @@ package body GPR2.Project.Tree is
                for A of P.Attributes loop
                   declare
                      Q_Name : constant PRA.Qualified_Name :=
-                                PRA.Create (A.Name.Text, P.Name);
+                                PRA.Create (A.Name.Id, P.Name);
                      Def    : PRA.Def;
                   begin
                      if PRA.Exists (Q_Name) then
@@ -3537,9 +3536,9 @@ package body GPR2.Project.Tree is
 
                      elsif PRP.Attributes_Are_Checked (P.Name) then
                         Self.Warning
-                          ("attribute """ & String (A.Name.Text)
+                          ("attribute """ & Image (A.Name.Id)
                            & """ not supported in package "
-                           & String (P.Name),
+                           & Image (P.Name),
                            A);
                      end if;
                   end;
@@ -3552,13 +3551,13 @@ package body GPR2.Project.Tree is
          for A of P_Data.Attrs loop
             declare
                Q_Name : constant PRA.Qualified_Name :=
-                          PRA.Create (A.Name.Text);
+                          PRA.Create (A.Name.Id);
             begin
                if not PRA.Exists (Q_Name) then
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "unrecognized attribute """ & String (A.Name.Text)
+                        "unrecognized attribute """ & Image (A.Name.Id)
                         & '"',
                         A));
 
@@ -3585,7 +3584,7 @@ package body GPR2.Project.Tree is
                            --  error message.
 
                            Self.Warning
-                             ('"' & String (A.Name.Text)
+                             ('"' & Image (A.Name.Id)
                               & """ is only valid in "
                               & Image (Allow) & 's',
                               A);
@@ -3594,7 +3593,7 @@ package body GPR2.Project.Tree is
                            --  error message.
 
                            Self.Warning
-                             ("attribute """ & String (A.Name.Text)
+                             ("attribute """ & Image (A.Name.Id)
                               & """ cannot be used in "
                               & Image (P_Kind) & 's',
                               A);
@@ -3611,7 +3610,7 @@ package body GPR2.Project.Tree is
 
          declare
             procedure Check_Directory
-              (Attr_Name     : Name_Type;
+              (Attr_Name     : Attribute_Id;
                Human_Name    : String;
                Get_Directory : not null access function
                  (Self : Project.View.Object) return Path_Name.Object;
@@ -3632,7 +3631,7 @@ package body GPR2.Project.Tree is
             ---------------------
 
             procedure Check_Directory
-              (Attr_Name     : Name_Type;
+              (Attr_Name     : Attribute_Id;
                Human_Name    : String;
                Get_Directory : not null access function
                  (Self : Project.View.Object) return Path_Name.Object;
@@ -3679,7 +3678,7 @@ package body GPR2.Project.Tree is
                   Self.Messages.Append
                     (Message.Create
                        (Message.Error,
-                        "attribute " & String (Attr_Name) & " not declared",
+                        "attribute " & Image (Attr_Name) & " not declared",
                         Source_Reference.Create (View.Path_Name.Value, 0, 0)));
                end if;
             end Check_Directory;

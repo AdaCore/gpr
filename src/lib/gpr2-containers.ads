@@ -84,6 +84,10 @@ package GPR2.Containers is
 
    subtype Value_Set is Value_Type_Set.Set;
 
+   package Attr_Value_Map_Package is
+     new Ada.Containers.Indefinite_Ordered_Maps (Attribute_Id, Value_Type);
+   subtype Attr_Value_Map is Attr_Value_Map_Package.Map;
+
    package Name_Value_Map_Package is
      new Ada.Containers.Indefinite_Ordered_Maps (Name_Type, Value_Type);
 

@@ -15,19 +15,21 @@ with GPR2.Source_Reference.Value;
 
 procedure Main is
 
+   use GPR2;
+
    procedure Test (Filename : GPR2.Filename_Type) is
       Tree    : GPR2.Project.Tree.Object;
       Context : GPR2.Context.Object;
 
-      procedure Print_Attributes (Pack : GPR2.Optional_Name_Type;
-                                  Name : GPR2.Optional_Name_Type) is
+      procedure Print_Attributes (Pack : GPR2.Optional_Package_Id;
+                                  Name : GPR2.Optional_Attribute_Id) is
          Attributes : GPR2.Project.Attribute.Set.Object;
          use GPR2;
-         Header     : String := (if Pack = ""
-                                 then String (Name)
-                                 else String (Pack) & "." & String (Name));
+         Header     : String := (if Pack = No_Package
+                                 then Image (Name)
+                                 else Image (Pack) & "." & Image (Name));
       begin
-         if Pack = "" then
+         if Pack = No_Package then
             Attributes := Tree.Root_Project.Attributes (Name);
          elsif Tree.Root_Project.Has_Packages (Pack) then
             Attributes := Tree.Root_Project.Pack (Pack).Attributes (Name);
@@ -81,8 +83,8 @@ procedure Main is
          when E : others =>
             Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Message (E));
       end;
-      Print_Attributes ("", "Runtime");
-      Print_Attributes ("Compiler", "Switches");
+      Print_Attributes (+"", +"Runtime");
+      Print_Attributes (+"Compiler", +"Switches");
       if Tree.Has_Messages  then
          for C in Tree.Log_Messages.Iterate
            (False, True, True, True, True)

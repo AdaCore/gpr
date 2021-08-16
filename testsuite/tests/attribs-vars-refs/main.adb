@@ -22,6 +22,7 @@ with GPR2.Project.View;
 with GPR2.Project.Tree;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Name_Values;
+with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Variable.Set;
 with GPR2.Context;
 
@@ -30,6 +31,7 @@ procedure Main is
    use Ada;
    use GPR2;
    use GPR2.Project;
+   use GPR2.Project.Registry.Attribute;
 
    use all type GPR2.Project.Name_Values.Value_Kind;
 
@@ -51,7 +53,7 @@ procedure Main is
          if Prj.Has_Attributes then
             for A in Prj.Attributes.Iterate loop
                Text_IO.Put
-                 ("A:   " & String (Attribute.Set.Element (A).Name.Text));
+                 ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
                Text_IO.Put (" ->");
 
                for V of Attribute.Set.Element (A).Values loop
@@ -60,9 +62,9 @@ procedure Main is
                Text_IO.New_Line;
             end loop;
 
-            for A in Prj.Attributes.Filter ("Object_Dir").Iterate loop
+            for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
                Text_IO.Put
-                 ("A2:  " & String (Attribute.Set.Element (A).Name.Text));
+                 ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
                Text_IO.Put (" ->");
 
                for V of Attribute.Set.Element (A).Values loop
@@ -71,9 +73,9 @@ procedure Main is
                Text_IO.New_Line;
             end loop;
 
-            for A of Prj.Attributes.Filter ("Object_Dir") loop
+            for A of Prj.Attributes.Filter (Object_Dir) loop
                Text_IO.Put_Line
-                 ("A3:  " & String (A.Name.Text) & " -> " & A.Value.Text);
+                 ("A3:  " & Image (A.Name.Id) & " -> " & A.Value.Text);
             end loop;
 
          end if;

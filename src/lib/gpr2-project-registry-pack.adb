@@ -22,7 +22,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Ordered_Maps;
 
 package body GPR2.Project.Registry.Pack is
 
@@ -31,8 +31,8 @@ package body GPR2.Project.Registry.Pack is
       Check_Attributes : Boolean;
    end record;
 
-   package Pack_Definition is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Package_Options, "<");
+   package Pack_Definition is new Ada.Containers.Ordered_Maps
+     (Package_Id, Package_Options, "<");
 
    Store : Pack_Definition.Map;
 
@@ -40,7 +40,7 @@ package body GPR2.Project.Registry.Pack is
    -- Add --
    ---------
 
-   procedure Add (Name : Name_Type; Projects : Projects_Kind) is
+   procedure Add (Name : Package_Id; Projects : Projects_Kind) is
    begin
       Store.Insert (Name, (Projects, False));
    end Add;
@@ -49,7 +49,7 @@ package body GPR2.Project.Registry.Pack is
    -- Attributes_Are_Checked --
    ----------------------------
 
-   function Attributes_Are_Checked (Name : Name_Type) return Boolean is
+   function Attributes_Are_Checked (Name : Package_Id) return Boolean is
       CS : constant Pack_Definition.Cursor := Store.Find (Name);
    begin
       return Pack_Definition.Has_Element (CS)
@@ -60,7 +60,7 @@ package body GPR2.Project.Registry.Pack is
    -- Check_Attributes --
    ----------------------
 
-   procedure Check_Attributes (Name : Name_Type; Flag : Boolean := True) is
+   procedure Check_Attributes (Name : Package_Id; Flag : Boolean := True) is
    begin
       Store (Name).Check_Attributes := Flag;
    end Check_Attributes;
@@ -69,7 +69,7 @@ package body GPR2.Project.Registry.Pack is
    -- Exists --
    ------------
 
-   function Exists (Name : Name_Type) return Boolean is
+   function Exists (Name : Package_Id) return Boolean is
    begin
       return Store.Contains (Name);
    end Exists;
@@ -79,7 +79,7 @@ package body GPR2.Project.Registry.Pack is
    -------------------
 
    function Is_Allowed_In
-     (Name    : Name_Type;
+     (Name    : Package_Id;
       Project : Project_Kind) return Boolean is
    begin
       if Store.Contains (Name) then

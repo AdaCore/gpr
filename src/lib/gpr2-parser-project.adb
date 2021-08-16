@@ -29,7 +29,6 @@ with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Strings.Fixed;
-with Ada.Strings.Unbounded.Equal_Case_Insensitive;
 with Ada.Strings.Wide_Wide_Unbounded;
 
 with Langkit_Support.Slocs;
@@ -44,7 +43,9 @@ with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable;
+with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Pack;
 with GPR2.Source_Reference.Value;
 
 with GPR_Parser.Common;
@@ -138,6 +139,16 @@ package body GPR2.Parser.Project is
    is
      (Source_Reference.Identifier.Object
         (Source_Reference.Identifier.Create
+             (Get_Source_Reference (Path_Name, Slr), Identifier)));
+
+   function Get_Attribute_Reference
+     (Path_Name  : GPR2.Path_Name.Object;
+      Slr        : Langkit_Support.Slocs.Source_Location_Range;
+      Identifier : Attribute_Id)
+      return Source_Reference.Attribute.Object
+   is
+     (Source_Reference.Attribute.Object
+        (Source_Reference.Attribute.Create
              (Get_Source_Reference (Path_Name, Slr), Identifier)));
 
    function Get_Raw_Path
@@ -1055,8 +1066,8 @@ package body GPR2.Parser.Project is
 
       type Indexed_Item_Values is record
          Filled         : Boolean := False;
-         Attribute_Pack : Unbounded_String;
-         Attribute_Name : Unbounded_String;
+         Attribute_Pack : Optional_Package_Id;
+         Attribute_Name : Optional_Attribute_Id;
          Values         : Indexed_Item_Values_Vectors.Vector;
       end record;
 
@@ -1076,8 +1087,8 @@ package body GPR2.Parser.Project is
 
       Unfilled_Indexed_Values : constant Indexed_Item_Values :=
                                   (Filled         => False,
-                                   Attribute_Pack => +"",
-                                   Attribute_Name => +"",
+                                   Attribute_Pack => No_Package,
+                                   Attribute_Name => No_Attribute,
                                    Values         =>
                                      Indexed_Item_Values_Vectors.Empty_Vector);
 
@@ -1105,13 +1116,13 @@ package body GPR2.Parser.Project is
 
       function Get_Attribute_Index
         (Node : Attribute_Reference;
-         Pack : Optional_Name_Type := No_Name) return PAI.Object;
+         Pack : Optional_Package_Id := No_Package) return PAI.Object;
       --  Get the attribute index, if any, or PAI.Undefined
 
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : Attribute_Reference;
-         Pack    : Optional_Name_Type := No_Name) return Item_Values;
+         Pack    : Optional_Package_Id := No_Package) return Item_Values;
       --  Return the value for an attribute reference in the given project and
       --  possibly the given package.
 
@@ -1119,7 +1130,7 @@ package body GPR2.Parser.Project is
         (Variable   : Name_Type;
          Source_Ref : Source_Reference.Object;
          Project    : Optional_Name_Type := No_Name;
-         Pack       : Optional_Name_Type := No_Name;
+         Pack       : Optional_Package_Id := No_Package;
          From_View  : GPR2.Project.View.Object := GPR2.Project.View.Undefined)
         return Item_Values;
       --  Return the value for a variable reference in the given project
@@ -1196,7 +1207,7 @@ package body GPR2.Parser.Project is
       --  to remove it from Object.Skip_Src at the end of parsing.
 
       In_Pack    : Boolean := False;
-      Pack_Name  : Unbounded_String;
+      Pack_Name  : Optional_Package_Id := No_Package;
       Pack_Attrs : PA.Set.Object;
       Pack_Vars  : GPR2.Project.Variable.Set.Object;
       --  Package orientated state, when parsing is in a package In_Pack is
@@ -1237,10 +1248,10 @@ package body GPR2.Parser.Project is
 
       function Get_Attribute_Index
         (Node : Attribute_Reference;
-         Pack : Optional_Name_Type := No_Name) return PAI.Object
+         Pack : Optional_Package_Id := No_Package) return PAI.Object
       is
-         Name           : constant Name_Type :=
-                            Get_Name_Type
+         Name           : constant Attribute_Id :=
+                            +Get_Name_Type
                               (Single_Tok_Node (F_Attribute_Name (Node)));
          I_Node         : constant GPR_Node := F_Attribute_Index (Node);
          Q_Name         : constant PRA.Qualified_Name :=
@@ -1277,15 +1288,15 @@ package body GPR2.Parser.Project is
       function Get_Attribute_Ref
         (Project : Name_Type;
          Node    : Attribute_Reference;
-         Pack    : Optional_Name_Type := No_Name) return Item_Values
+         Pack    : Optional_Package_Id := No_Package) return Item_Values
       is
          use type PRA.Value_Kind;
          use PAI;
 
          Sloc   : constant Source_Reference.Object :=
                     Get_Source_Reference (Self.File, Node);
-         Name   : constant Name_Type :=
-                    Get_Name_Type
+         Name   : constant Attribute_Id :=
+                    +Get_Name_Type
                       (Single_Tok_Node (F_Attribute_Name (Node)));
          Q_Name : constant PRA.Qualified_Name :=
                     PRA.Create (Name, Pack);
@@ -1299,7 +1310,7 @@ package body GPR2.Parser.Project is
          Indexed_Values : Indexed_Item_Values := Unfilled_Indexed_Values;
 
          function Default_Value
-           (Attribute_Name : Name_Type;
+           (Attribute_Name : Attribute_Id;
             Attrs          : PA.Set.Object) return PA.Object;
          --  Returns default value using Attrs for referenced default.
 
@@ -1311,7 +1322,7 @@ package body GPR2.Parser.Project is
          -------------------
 
          function Default_Value
-           (Attribute_Name : Name_Type;
+           (Attribute_Name : Attribute_Id;
             Attrs          : PA.Set.Object) return PA.Object
          is
 
@@ -1332,9 +1343,9 @@ package body GPR2.Parser.Project is
                                (SR.Create (Self.Path_Name.Value, 0, 0));
             --  Source reference used when creating attribute's index/object.
 
-            function Attr_Id return SR.Identifier.Object is
-              (SR.Identifier.Object
-                 (SR.Identifier.Create (Project_SRef, Attribute_Name)));
+            function Attr_Id return SR.Attribute.Object is
+              (SR.Attribute.Object
+                 (SR.Attribute.Create (Project_SRef, Attribute_Name)));
             --  Name used when creating attribute object.
 
             -----------------
@@ -1343,7 +1354,7 @@ package body GPR2.Parser.Project is
 
             procedure Fill_Result (Def : PRA.Def) is
                use type PRA.Index_Kind;
-               package VSR renames Containers.Name_Value_Map_Package;
+               package VSR renames GPR2.Project.Registry.Attribute.VSR;
 
                function Create_Index
                  (Name : Value_Type) return PAI.Object is
@@ -1387,11 +1398,13 @@ package body GPR2.Parser.Project is
                end Create_Attribute;
 
             begin
-               if Def.Has_Default_In (Self.Qualifier) then
-                  if Def.Default_Is_Reference then
+               if Def.Has_Default_In (Self.Qualifier)
+                 and then not Def.Default.Is_Empty
+               then
+                  if Def.Default.First_Element.Is_Reference then
                      declare
-                        Ref_Name : constant Name_Type :=
-                                     Name_Type (Def.Default.First_Element);
+                        Ref_Name : constant Attribute_Id :=
+                                     Def.Default.First_Element.Attr;
                         --  reference attribute's name
 
                         package PAS renames PA.Set;
@@ -1420,7 +1433,8 @@ package body GPR2.Parser.Project is
                            Result := Create_Attribute
                              (SR.Value.Object
                                 (SR.Value.Create
-                                     (Project_SRef, VSR.Element (D))));
+                                     (Project_SRef,
+                                      To_String (VSR.Element (D).Value))));
                         end if;
                      end loop;
                   end if;
@@ -1451,8 +1465,8 @@ package body GPR2.Parser.Project is
               and then PRA.Get (Q_Name).Index /= PRA.No
             then
                Indexed_Values.Filled := True;
-               Indexed_Values.Attribute_Pack := +String (Pack);
-               Indexed_Values.Attribute_Name := +String (Name);
+               Indexed_Values.Attribute_Pack := Pack;
+               Indexed_Values.Attribute_Name := Name;
 
                for Attribute of Attrs.Filter (Name => Name) loop
                   Indexed_Values.Values.Append
@@ -1487,7 +1501,7 @@ package body GPR2.Parser.Project is
 
          if not PRA.Exists (Q_Name) then
             if not In_Pack
-              or else PRP.Exists (Name_Type (To_String (Pack_Name)))
+              or else PRP.Exists (Pack_Name)
             then
                Tree.Log_Messages.Append
                  (Message.Create
@@ -1513,7 +1527,7 @@ package body GPR2.Parser.Project is
             --  and stop parsing when the number of undefined attribute is
             --  stable.
 
-            if Pack = No_Name then
+            if Pack = No_Package then
                Fill_Indexed_Values (Attrs);
                Attr := Attrs.Element (Name, Index);
 
@@ -1546,7 +1560,7 @@ package body GPR2.Parser.Project is
                elsif Name = PRA.Target then
                   --  Project'Target case
                   Attr := PA.Create
-                    (Get_Identifier_Reference
+                    (Get_Attribute_Reference
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Value   => Get_Value_Reference
                        (Value_Not_Empty (Tree.Target), Sloc),
@@ -1557,7 +1571,7 @@ package body GPR2.Parser.Project is
                elsif Name = PRA.Canonical_Target then
                   --  Project'Target case
                   Attr := PA.Create
-                    (Get_Identifier_Reference
+                    (Get_Attribute_Reference
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Value   => Get_Value_Reference
                        (Value_Not_Empty (Tree.Target (Canonical => True)),
@@ -1569,7 +1583,7 @@ package body GPR2.Parser.Project is
                elsif Name = PRA.Runtime and then Index /= PAI.Undefined then
                   --  Project'Runtime (<lang>)
                   Attr := PA.Create
-                    (Get_Identifier_Reference
+                    (Get_Attribute_Reference
                        (Self.Path_Name, Sloc_Range (Node), Name),
                      Index   => Index,
                      Value   => Get_Value_Reference
@@ -1582,8 +1596,8 @@ package body GPR2.Parser.Project is
                   Attr := Default_Value (Name, Attrs);
                end if;
 
-            elsif Pack_Name /= Null_Unbounded_String
-              and then Name_Type (To_String (Pack_Name)) = Name_Type (Pack)
+            elsif Pack_Name /= No_Package
+              and then Pack_Name = Pack
             then
                --  This is the current parsed package, look into Pack_Attrs
 
@@ -1594,17 +1608,15 @@ package body GPR2.Parser.Project is
                   Attr := Default_Value (Name, Pack_Attrs);
                end if;
 
-            elsif Packs.Contains (Name_Type (Pack)) then
+            elsif Packs.Contains (Pack) then
                --  Or in another package in the same project
 
-               Fill_Indexed_Values
-                 (Packs.Element (Name_Type (Pack)).Attributes);
-               Attr := Packs.Element
-                 (Name_Type (Pack)).Attributes.Element (Name, Index);
+               Fill_Indexed_Values (Packs.Element (Pack).Attributes);
+               Attr := Packs.Element (Pack).Attributes.Element (Name, Index);
 
                if not Attr.Is_Defined then
                   Attr := Default_Value
-                    (Name, Packs.Element (Name_Type (Pack)).Attributes);
+                    (Name, Packs.Element (Pack).Attributes);
                end if;
 
             else
@@ -1612,14 +1624,14 @@ package body GPR2.Parser.Project is
                Tree.Log_Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "package """ & String (Pack)
+                     "package """ & Image (Pack)
                      & """ not declared in project """
                      & String (Project) & '"',
                      Get_Source_Reference (Self.File, Node)));
             end if;
 
          elsif View.Is_Defined then
-            if Pack = No_Name then
+            if Pack = No_Package then
                Fill_Indexed_Values (View.Attributes);
                if not View.Check_Attribute (Name, Index, Result => Attr) then
                   --  Special case for Target & Runtime, that always default
@@ -1627,7 +1639,7 @@ package body GPR2.Parser.Project is
                   if Name = PRA.Target then
                      --  Project'Target case
                      Attr := PA.Create
-                       (Get_Identifier_Reference
+                       (Get_Attribute_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
                           (Value_Not_Empty (Tree.Target), Sloc,
@@ -1638,7 +1650,7 @@ package body GPR2.Parser.Project is
                   elsif Name = PRA.Canonical_Target then
                      --  Project'Target case
                      Attr := PA.Create
-                       (Get_Identifier_Reference
+                       (Get_Attribute_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Value   => Get_Value_Reference
                           (Value_Not_Empty (Tree.Target (Canonical => True)),
@@ -1651,7 +1663,7 @@ package body GPR2.Parser.Project is
                   then
                      --  Project'Runtime (<lang>)
                      Attr := PA.Create
-                       (Get_Identifier_Reference
+                       (Get_Attribute_Reference
                           (Self.Path_Name, Sloc_Range (Node), Name),
                         Index   => Index,
                         Value   => Get_Value_Reference
@@ -1699,7 +1711,7 @@ package body GPR2.Parser.Project is
                Tree.Log_Messages.Append
                  (Message.Create
                     (Message.Error,
-                     "package """ & String (Pack)
+                     "package """ & Image (Pack)
                      & """ not declared in project """
                      & String (Project) & '"',
                      Get_Source_Reference (Self.File, Node)));
@@ -2175,7 +2187,7 @@ package body GPR2.Parser.Project is
         (Variable   : Name_Type;
          Source_Ref : Source_Reference.Object;
          Project    : Optional_Name_Type := No_Name;
-         Pack       : Optional_Name_Type := No_Name;
+         Pack       : Optional_Package_Id := No_Package;
          From_View  : GPR2.Project.View.Object := GPR2.Project.View.Undefined)
         return Item_Values
       is
@@ -2242,7 +2254,7 @@ package body GPR2.Parser.Project is
             --  use Packs and Vars variables as the view has not been updated
             --  yet.
 
-            if Pack = No_Name then
+            if Pack = No_Package then
                --  Look first if the variable is declared explicitely in the
                --  project itself otherwise iterate on the extended project
                --  chain.
@@ -2262,7 +2274,7 @@ package body GPR2.Parser.Project is
                end if;
             else
 
-               if In_Pack and then Pack = Name_Type (To_String (Pack_Name))
+               if In_Pack and then Pack = Pack_Name
                then
                   --  If in the package currently processed use Pack_Vars to
                   --  find the value.
@@ -2281,7 +2293,7 @@ package body GPR2.Parser.Project is
                      return Get_Pack_Var (Packs.Element (Pack), Variable);
                   else
                      Error ("project or package " &
-                              String (Pack) & " is undefined");
+                              Image (Pack) & " is undefined");
                   end if;
                end if;
             end if;
@@ -2317,7 +2329,7 @@ package body GPR2.Parser.Project is
             end;
          else
             --  From_View contains the variable we are looking at
-            if Pack = No_Name then
+            if Pack = No_Package then
                if From_View.Has_Variables (Variable) then
                   declare
                      V : constant GPR2.Project.Variable.Object :=
@@ -2342,7 +2354,7 @@ package body GPR2.Parser.Project is
                   return Get_Pack_Var (From_View.Packages.Element (Pack),
                                        Variable);
                else
-                  Error ("package " & String (Pack) & " is undefined");
+                  Error ("package " & Image (Pack) & " is undefined");
                end if;
             end if;
          end if;
@@ -2425,8 +2437,8 @@ package body GPR2.Parser.Project is
                            else Get_Name_Type (Var_Name, 1, Prj_Name_Length)),
                Pack    =>
                  (if Prj_Name_Length = Var_Name_Length
-                  then No_Name
-                  else Get_Name_Type
+                  then No_Package
+                  else +Get_Name_Type
                     (Var_Name, Var_Name_Length, Var_Name_Length)),
                Node    => Att_Ref);
          else
@@ -2445,7 +2457,7 @@ package body GPR2.Parser.Project is
                      --  the package prefix to refer to variables explicitely
                      --  declared in the package.
                      return Get_Variable_Ref
-                       (Pack       => Name_Type (To_String (Pack_Name)),
+                       (Pack       => Pack_Name,
                         Variable   => Variable,
                         Source_Ref => Source_Ref);
                   else
@@ -2467,7 +2479,7 @@ package body GPR2.Parser.Project is
                   --  it is a <package_name>.<variable_name>
                   return Get_Variable_Ref
                     (Pack       =>
-                       Get_Name_Type (Var_Name, 1, Var_Name_Length - 1),
+                       +Get_Name_Type (Var_Name, 1, Var_Name_Length - 1),
                      Variable   => Variable,
                      Source_Ref => Source_Ref);
                else
@@ -2476,7 +2488,7 @@ package body GPR2.Parser.Project is
                     (Project    =>
                        Get_Name_Type (Var_Name, 1, Var_Name_Length - 2),
                      Pack       =>
-                       Get_Name_Type
+                       +Get_Name_Type
                          (Var_Name, Var_Name_Length - 1, Var_Name_Length - 1),
                      Variable   => Variable,
                      Source_Ref => Source_Ref);
@@ -2540,7 +2552,7 @@ package body GPR2.Parser.Project is
          end Is_Language;
 
          Q_Name               : constant PRA.Qualified_Name :=
-                                  PRA.Create ("switches", "compiler");
+                                  PRA.Create (PRA.Switches, PRP.Compiler);
          Def                  : constant PRA.Def := PRA.Get (Q_Name);
          Index_Case_Sensitive : Boolean := Def.Index_Case_Sensitive;
 
@@ -2612,6 +2624,7 @@ package body GPR2.Parser.Project is
             Expr  : constant Term_List := F_Expr (Node);
             N_Str : constant Name_Type :=
                       Get_Name_Type (Name.As_Single_Tok_Node);
+            N_Id  : constant Attribute_Id := +N_Str;
 
             function Create_Index return PAI.Object;
             --  Create index with "at" part if exists
@@ -2624,16 +2637,16 @@ package body GPR2.Parser.Project is
 
             Q_Name : constant PRA.Qualified_Name :=
                        PRA.Create
-                         (N_Str, Optional_Name_Type (To_String (Pack_Name)));
+                         (N_Id, Pack_Name);
 
             Values   : constant Item_Values := Get_Term_List (Expr);
             A        : PA.Object;
             Is_Valid : Boolean := True;
             --  Set to False if the attribute definition is invalid
 
-            Id : constant Source_Reference.Identifier.Object :=
-                   Get_Identifier_Reference
-                     (Self.Path_Name, Sloc_Range (Name), N_Str);
+            Id : constant Source_Reference.Attribute.Object :=
+                   Get_Attribute_Reference
+                     (Self.Path_Name, Sloc_Range (Name), N_Id);
             --  The attribute name & sloc
 
             Sloc : constant Source_Reference.Object :=
@@ -2643,7 +2656,7 @@ package body GPR2.Parser.Project is
             use PRA;
 
             Is_Name_Exception : constant Boolean :=
-                                  Name_Type (To_Lower (N_Str)) in
+                                  N_Id in
                                     Spec | Specification | Body_N
                                     | Implementation;
 
@@ -2728,7 +2741,7 @@ package body GPR2.Parser.Project is
 
                         if Index.Is_Defined
                           and then not Index.Is_Others
-                          and then A.Name.Text = PRA.Switches
+                          and then A.Name.Id = PRA.Switches
                         then
                            --  No extension found, this is a language which
                            --  is inconditionally non case-sensitive.
@@ -2815,27 +2828,22 @@ package body GPR2.Parser.Project is
                         Message => "full associative array expression " &
                           "requires simple attribute reference"));
 
-               elsif not Ada.Strings.Unbounded.Equal_Case_Insensitive
-                 (Values.Indexed_Values.Attribute_Pack, Pack_Name)
-               then
+               elsif Values.Indexed_Values.Attribute_Pack /= Pack_Name then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
                         Message => "not the same package as " &
-                          To_String (Pack_Name)));
+                          Image (Pack_Name)));
 
-               elsif not Ada.Strings.Equal_Case_Insensitive
-                 (To_String (Values.Indexed_Values.Attribute_Name),
-                  String (N_Str))
-               then
+               elsif Values.Indexed_Values.Attribute_Name /= N_Id then
                   Tree.Log_Messages.Append
                     (Message.Create
                        (Level   => Message.Error,
                         Sloc    => Sloc,
                         Message => "full associative array expression " &
                           "must reference the same attribute """ &
-                          String (N_Str) & '"'));
+                          Image (N_Id) & '"'));
 
                else
                   for V of Values.Indexed_Values.Values loop
@@ -2966,8 +2974,8 @@ package body GPR2.Parser.Project is
 
          procedure Parse_Package_Decl (Node : Package_Decl) is
             Name   : constant Identifier := F_Pkg_Name (Node);
-            P_Name : constant Name_Type :=
-                       Get_Name_Type (Name.As_Single_Tok_Node);
+            P_Name : constant Package_Id :=
+                       +Get_Name_Type (Name.As_Single_Tok_Node);
          begin
             --  First clear the package attributes container or restore the
             --  previous values (stage 2) if it exists.
@@ -2984,20 +2992,20 @@ package body GPR2.Parser.Project is
             --  children.
 
             In_Pack := True;
-            Pack_Name := To_Unbounded_String (String (P_Name));
+            Pack_Name := P_Name;
 
             Visit_Child (F_Pkg_Spec (Node));
 
             In_Pack := False;
-            Pack_Name := Null_Unbounded_String;
+            Pack_Name := No_Package;
 
             --  Insert the package definition into the final result
 
             Packs.Include
-              (Name_Type (P_Name),
+              (P_Name,
                GPR2.Project.Pack.Create
-                 (Source_Reference.Identifier.Object
-                    (Source_Reference.Identifier.Create
+                 (Source_Reference.Pack.Object
+                    (Source_Reference.Pack.Create
                        (Get_Source_Reference (Self.File, Node), P_Name)),
                   Pack_Attrs, Pack_Vars));
 
@@ -3020,8 +3028,8 @@ package body GPR2.Parser.Project is
                             then Get_Name_Type
                               (Values, Last => Num_Childs - 1)
                             else "?");
-            P_Name     : constant Name_Type :=
-                           Get_Name_Type (Values, Num_Childs, Num_Childs);
+            P_Name     : constant Package_Id :=
+                           +Get_Name_Type (Values, Num_Childs, Num_Childs);
 
             View       : constant GPR2.Project.View.Object :=
                            (if Num_Childs > 1
@@ -3065,7 +3073,7 @@ package body GPR2.Parser.Project is
                     (Level   => Message.Error,
                      Sloc    => Sloc,
                      Message =>
-                       "package '" & String (Project) & '.' & String (P_Name)
+                       "package '" & String (Project) & '.' & Image (P_Name)
                        & "' is undefined"));
 
             else
@@ -3092,8 +3100,8 @@ package body GPR2.Parser.Project is
                             then Get_Name_Type
                               (Values, Last => Num_Childs - 1)
                             else "?");
-            P_Name     : constant Name_Type :=
-                           Get_Name_Type (Values, Num_Childs, Num_Childs);
+            P_Name     : constant Package_Id :=
+                           +Get_Name_Type (Values, Num_Childs, Num_Childs);
 
             View       : constant GPR2.Project.View.Object :=
                            (if Num_Childs > 1
@@ -3137,7 +3145,7 @@ package body GPR2.Parser.Project is
                     (Level   => Message.Warning,
                      Sloc    => Sloc,
                      Message =>
-                       "package '" & String (Project) & '.' & String (P_Name)
+                       "package '" & String (Project) & '.' & Image (P_Name)
                        & "' is undefined"));
 
             else
@@ -3402,7 +3410,7 @@ package body GPR2.Parser.Project is
          if Include and then Set.Contains (A) then
             declare
                Old : constant PA.Object := Set.Element
-                 (A.Name.Text,
+                 (A.Name.Id,
                   (if A.Has_Index then A.Index
                    else GPR2.Project.Attribute_Index.Undefined));
             begin
@@ -3412,7 +3420,7 @@ package body GPR2.Parser.Project is
                        (Level => Message.Error,
                         Sloc  => Sloc,
                         Message => "Cannot set attribute """ &
-                          String (A.Name.Text) &
+                          Image (A.Name.Id) &
                           """ after it is referenced."));
                   Include := False;
                end if;
@@ -3465,23 +3473,23 @@ package body GPR2.Parser.Project is
                   Source_Reference.Object
                     (Source_Reference.Create (Self.File.Value, 0, 0));
 
-         function Create_Name
-           (Name : Name_Type) return Source_Reference.Identifier.Object
+         function Create_Attr
+           (Name : Attribute_Id) return Source_Reference.Attribute.Object
          is
-           (Source_Reference.Identifier.Object
-              (Source_Reference.Identifier.Create (Sloc, Name)));
+           (Source_Reference.Attribute.Object
+              (Source_Reference.Attribute.Create (Sloc, Name)));
 
       begin
          Attrs.Insert
            (PA.Create
-              (Name    => Create_Name (PRA.Name),
+              (Name    => Create_Attr (PRA.Name),
                Value   => Get_Value_Reference
                             (To_Lower (To_String (Self.Name)), Sloc),
                Default => True));
 
          Attrs.Insert
            (PA.Create
-              (Name    => Create_Name (PRA.Project_Dir),
+              (Name    => Create_Attr (PRA.Project_Dir),
                Value   => Get_Value_Reference (Self.File.Dir_Name, Sloc),
                Default => True));
       end;

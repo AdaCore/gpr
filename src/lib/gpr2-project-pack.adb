@@ -36,7 +36,7 @@ package body GPR2.Project.Pack is
 
    function Attribute
      (Self  : Object;
-      Name  : Name_Type;
+      Name  : Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Project.Attribute.Object is
    begin
@@ -49,7 +49,7 @@ package body GPR2.Project.Pack is
 
    function Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
+      Name  : Optional_Attribute_Id := No_Attribute;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Project.Attribute.Set.Object is
    begin
@@ -75,7 +75,7 @@ package body GPR2.Project.Pack is
 
    function Check_Attribute
      (Self   : Object;
-      Name   : Name_Type;
+      Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Natural    := 0;
       Result : out Project.Attribute.Object) return Boolean is
@@ -89,13 +89,13 @@ package body GPR2.Project.Pack is
    ------------
 
    function Create
-     (Name       : Source_Reference.Identifier.Object;
+     (Name       : Source_Reference.Pack.Object;
       Attributes : Project.Attribute.Set.Object;
       Variables  : Project.Variable.Set.Object) return Object is
    begin
       return Object'
         (Source_Reference.Object (Name)
-         with To_Unbounded_String (String (Name.Text)), Attributes, Variables);
+         with Name.Id, Attributes, Variables);
    end Create;
 
    --------------------
@@ -104,11 +104,11 @@ package body GPR2.Project.Pack is
 
    function Has_Attributes
      (Self  : Object;
-      Name  : Optional_Name_Type := No_Name;
+      Name  : Optional_Attribute_Id := No_Attribute;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Boolean is
    begin
-      if Name = No_Name and then not Index.Is_Defined then
+      if Name = No_Attribute and then not Index.Is_Defined then
          return not Self.Attrs.Is_Empty;
       else
          return Self.Attrs.Contains (Name, Index);
@@ -146,9 +146,9 @@ package body GPR2.Project.Pack is
    -- Name --
    ----------
 
-   function Name (Self : Object) return Name_Type is
+   function Name (Self : Object) return Package_Id is
    begin
-      return Name_Type (To_String (Self.Name));
+      return Self.Name;
    end Name;
 
    ---------------------
@@ -171,7 +171,7 @@ package body GPR2.Project.Pack is
      (Self : in out Object; VDD : Definition.Data) is
    begin
       Definition.Set_Defaults
-        (Self.Attrs, VDD, Name_Type (To_String (Self.Name)));
+        (Self.Attrs, VDD, Self.Name);
    end Set_Default_Attributes;
 
    -----------------

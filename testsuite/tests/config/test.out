@@ -62,7 +62,7 @@ V:   Target_Name -> x86_64-linux
    Mapping_Spec_Suffix (Ada) -> %s
    Multi_Unit_Object_Separator (Ada) -> ~
    Multi_Unit_Switches (Ada) -> -gnateI
-   PIC_Option (Ada) -> -fPIC
+   Pic_Option (Ada) -> -fPIC
  Linker
    Driver -> /home/obry/dev/builds/install/bin/gcc
    Export_File_Format -> GNU

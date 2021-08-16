@@ -33,6 +33,7 @@ procedure Main is
    use Ada;
    use GPR2;
    use GPR2.Project;
+   use GPR2.Project.Registry.Attribute;
 
    use all type GPR2.Project.Name_Values.Value_Kind;
 
@@ -57,7 +58,7 @@ procedure Main is
       begin
          for A in Attrs.Iterate (With_Defaults => True) loop
             Attr := Attribute.Set.Element (A);
-            Text_IO.Put ("A:   " & String (Attr.Name.Text));
+            Text_IO.Put ("A:   " & Image (Attr.Name.Id));
 
             if Attr.Has_Index then
                if Attr.Index.Is_Any_Index then
@@ -96,9 +97,9 @@ procedure Main is
          if Prj.Has_Attributes then
             Put_Attributes (Prj.Attributes);
 
-            for A in Prj.Attributes.Filter ("Object_Dir").Iterate loop
+            for A in Prj.Attributes.Filter (Object_Dir).Iterate loop
                Text_IO.Put
-                 ("A2:  " & String (Attribute.Set.Element (A).Name.Text));
+                 ("A2:  " & Image (Attribute.Set.Element (A).Name.Id));
                Text_IO.Put (" ->");
 
                for V of Attribute.Set.Element (A).Values loop
@@ -107,8 +108,8 @@ procedure Main is
                Text_IO.New_Line;
             end loop;
 
-            for A of Prj.Attributes.Filter ("Object_Dir") loop
-               Text_IO.Put_Line ("A3:  " & String (A.Name.Text));
+            for A of Prj.Attributes.Filter (Object_Dir) loop
+               Text_IO.Put_Line ("A3:  " & Image (A.Name.Id));
             end loop;
 
          end if;
@@ -132,7 +133,7 @@ procedure Main is
 
          if Prj.Has_Packages then
             for P of Prj.Packages loop
-               Text_IO.Put_Line (String (P.Name));
+               Text_IO.Put_Line (Image (P.Name));
                if P.Has_Attributes then
                   Put_Attributes (P.Attributes);
                end if;

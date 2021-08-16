@@ -212,7 +212,7 @@ private package GPR2.Project.Definition is
    Set_Defaults : access procedure
      (Self : in out Attribute.Set.Object;
       VDD  : Data;
-      Pack : Optional_Name_Type);
+      Pack : Optional_Package_Id);
 
    Change_Actual_View : access function
      (Self : Source.Object; View : Project.View.Object) return Source.Object;
@@ -237,11 +237,11 @@ private package GPR2.Project.Definition is
 
    function Has_Packages
      (Def  : Data;
-      Name : Optional_Name_Type) return Boolean
+      Name : Optional_Package_Id) return Boolean
    is
-     (if Name = No_Name
+     (if Name = No_Package
       then not Def.Packs.Is_Empty
-      else Def.Packs.Contains (Name_Type (Name)));
+      else Def.Packs.Contains (Name));
    --  Returns true if the project view definition has some packages defined
 
    function Has_Types
@@ -254,11 +254,11 @@ private package GPR2.Project.Definition is
 
    function Has_Attributes
      (Def   : Data;
-      Name  : Optional_Name_Type;
+      Name  : Optional_Attribute_Id;
       Index : Attribute_Index.Object := Attribute_Index.Undefined)
       return Boolean
    is
-     (if Name = No_Name and then Index = Attribute_Index.Undefined
+     (if Name = No_Attribute and then Index = Attribute_Index.Undefined
       then not Def.Attrs.Is_Empty
       elsif Index = Attribute_Index.Undefined
       then Def.Attrs.Contains (Name)

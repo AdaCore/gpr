@@ -22,15 +22,10 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
---  A list of packages
+--  This package represents an entity source reference with an associated
+--  message. This is mostly to report warnings/errors while parsing sources.
 
-with Ada.Containers.Ordered_Maps;
+with GPR2.Source_Reference.Scalar_Value;
 
-package GPR2.Project.Pack.Set is
-
-   package Set is
-     new Ada.Containers.Ordered_Maps (Package_Id, Object, "<");
-
-   subtype Object is Set.Map;
-
-end GPR2.Project.Pack.Set;
+package GPR2.Source_Reference.Attribute is
+  new GPR2.Source_Reference.Scalar_Value (Optional_Attribute_Id, No_Attribute);

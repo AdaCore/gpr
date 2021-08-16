@@ -68,7 +68,7 @@ procedure Main is
    procedure Display (Att : Project.Attribute.Object) is
    begin
       Put_Indent;
-      Text_IO.Put (String (Att.Name.Text));
+      Text_IO.Put (Image (Att.Name.Id));
 
       if Att.Has_Index then
          Text_IO.Put (" (" & Att.Index.Text & ")");
@@ -125,7 +125,7 @@ procedure Main is
 
       for Pck of Prj.Packages loop
          Put_Indent;
-         Text_IO.Put_Line ("Pck:   " & String (Pck.Name));
+         Text_IO.Put_Line ("Pck:   " & Image (Pck.Name));
          Indent := Indent + 3;
          for A of Pck.Attributes loop
             Display (A);

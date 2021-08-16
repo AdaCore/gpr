@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -24,16 +24,16 @@
 
 with GPR2.Containers;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Name_Values;
+with GPR2.Project.Attr_Values;
 with GPR2.Project.Registry.Attribute;
-with GPR2.Source_Reference.Identifier;
+with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
 
 package GPR2.Project.Attribute is
 
    use all type Registry.Attribute.Value_Kind;
 
-   type Object is new Name_Values.Object with private;
+   type Object is new Attr_Values.Object with private;
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
@@ -43,13 +43,13 @@ package GPR2.Project.Attribute is
    --  Returns true if Self is defined
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Index   : Attribute_Index.Object;
       Value   : Source_Reference.Value.Object;
       Default : Boolean := False;
       Frozen  : Boolean := False) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name.Text = Name.Text
+                  and then Create'Result.Name.Id = Name.Id
                   and then Create'Result.Count_Values = 1
                   and then Create'Result.Is_Default = Default
                   and then Create'Result.Is_Frozen = Frozen;
@@ -60,50 +60,50 @@ package GPR2.Project.Attribute is
    --           an error.
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Index   : Attribute_Index.Object;
       Values  : Containers.Source_Value_List;
       Default : Boolean := False) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name.Text = Name.Text
+                  and then Create'Result.Name.Id = Name.Id
                   and then Create'Result.Count_Values = Values.Length
                   and then Create'Result.Is_Default = Default;
    --  Creates a multi-valued object
 
    overriding function Create
-     (Name  : Source_Reference.Identifier.Object;
+     (Name  : Source_Reference.Attribute.Object;
       Value : Source_Reference.Value.Object) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name.Text = Name.Text
+                  and then Create'Result.Name.Id = Name.Id
                   and then Create'Result.Count_Values = 1;
    --  Creates a single-valued object
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Value   : Source_Reference.Value.Object;
       Default : Boolean;
       Frozen  : Boolean := False) return Object
      with Post => Create'Result.Kind = Single
-                  and then Create'Result.Name.Text = Name.Text
+                  and then Create'Result.Name.Id = Name.Id
                   and then Create'Result.Count_Values = 1
                   and then Create'Result.Is_Default = Default
                   and then Create'Result.Is_Frozen = Frozen;
    --  Creates a single-valued object with default flag
 
    overriding function Create
-     (Name   : Source_Reference.Identifier.Object;
+     (Name   : Source_Reference.Attribute.Object;
       Values : Containers.Source_Value_List) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name.Text = Name.Text
+                  and then Create'Result.Name.Id = Name.Id
                   and then Create'Result.Count_Values = Values.Length;
    --  Creates a multi-valued object
 
    function Create
-     (Name    : Source_Reference.Identifier.Object;
+     (Name    : Source_Reference.Attribute.Object;
       Values  : Containers.Source_Value_List;
       Default : Boolean) return Object
      with Post => Create'Result.Kind = List
-                  and then Create'Result.Name.Text = Name.Text
+                  and then Create'Result.Name.Id = Name.Id
                   and then Create'Result.Count_Values = Values.Length
                   and then Create'Result.Is_Default = Default;
    --  Creates a multi-valued object with Default flag
@@ -148,7 +148,7 @@ package GPR2.Project.Attribute is
 
    overriding function Rename
      (Self : Object;
-      Name : Source_Reference.Identifier.Object) return Object
+      Name : Source_Reference.Attribute.Object) return Object
      with Pre => Self.Is_Defined;
    --  Returns object with another name and default attribute
 
@@ -173,7 +173,7 @@ private
       At_Pos : Natural) return Value_At_Pos
      is (Value'Length, Value, At_Pos);
 
-   type Object is new Name_Values.Object with record
+   type Object is new Attr_Values.Object with record
       Index   : Attribute_Index.Object;
       Default : Boolean := False;
       Frozen  : Boolean := False;
@@ -186,7 +186,7 @@ private
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 
-   Undefined : constant Object := (Name_Values.Undefined with others => <>);
+   Undefined : constant Object := (Attr_Values.Undefined with others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
