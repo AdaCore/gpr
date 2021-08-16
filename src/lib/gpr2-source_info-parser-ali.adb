@@ -817,7 +817,8 @@ package body GPR2.Source_Info.Parser.ALI is
          pragma Assert
            ((U_Ref.Kind in GPR2.Unit.Spec_Kind)
             = (Cache.Unit.Kind in GPR2.Unit.Spec_Kind),
-            String (U_Ref.Name) & Cache.Unit.Index'Img & ' ' & U_Ref.Kind'Img
+            "cache inconsistent: " & String (U_Ref.Name)
+            & Cache.Unit.Index'Img & ' ' & U_Ref.Kind'Img
             & ' ' & Cache.Unit.Kind'Img);
 
          U_Ref := Cache.Unit;
@@ -1066,7 +1067,8 @@ package body GPR2.Source_Info.Parser.ALI is
 
             pragma Assert
               (Inserted,
-               LI.Value & ' ' & String (Cache_Map.Key (In_Cache))
+               "couldn't record into cache: " & LI.Value
+               & ' ' & String (Cache_Map.Key (In_Cache))
                & Current'Img);
 
             if Current = K then

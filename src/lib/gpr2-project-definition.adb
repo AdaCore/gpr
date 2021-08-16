@@ -2435,7 +2435,8 @@ package body GPR2.Project.Definition is
                   Item : constant NEU.Constant_Reference_Type :=
                            Ada_Except_Usage (C);
                begin
-                  pragma Assert (Key (Key'Last) in 'B' | 'S', Key);
+                  pragma Assert
+                    (Key (Key'Last) in 'B' | 'S', "unexpected key: " & Key);
 
                   Tree.Append_Message
                     (Message.Create
