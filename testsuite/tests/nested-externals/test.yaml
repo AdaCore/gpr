@@ -1,0 +1,2 @@
+description: Check project with nexted External builtin
+driver: python_script

@@ -1,0 +1,9 @@
+with "xmlada.gpr";
+
+project Wrapper is
+   for Library_Name use "Wrapper";
+   for Library_Kind use "relocatable";
+   for Library_ALI_Dir use "ali";
+   for Library_Dir use "lib";
+   for Source_Dirs use (".");
+end Wrapper;

@@ -737,8 +737,20 @@ package body GPR2.Parser.Project is
                               & "empty"));
 
                      else
-                        Project.Externals.Append
-                          (Optional_Name_Type (Var));
+                        Project.Externals.Append (Optional_Name_Type (Var));
+
+                        declare
+                           Node : GPR_Node := Exprs.Child (2);
+                        begin
+                           if not Node.Is_Null then
+                              Node := Node.Child (1);
+                              if not Node.Is_Null
+                                and then Node.Kind = GPR_Builtin_Function_Call
+                              then
+                                 Parse_Builtin (Node.As_Builtin_Function_Call);
+                              end if;
+                           end if;
+                        end;
                      end if;
                   end;
                end if;
