@@ -41,6 +41,17 @@ package GPR2.Project.Registry.Attribute is
        Language_Index,
        FileGlob_Or_Language_Index);
 
+   type Inherit_From_Extended_Type is
+      (Inherited,
+       Concatenated,
+       Not_Inherited);
+   --  Inherited means that if the attribute can be inherited from the extended
+   --  project.
+   --  Concatenated is like inherited, but the final value is the concatenation
+   --  of the definition in the extended and the extending project.
+   --  Not_Inherited means that the value from the extended project is never
+   --  inherited.
+
    subtype Index_Allowed is Index_Kind range Yes .. Optional;
 
    type Value_Kind is (Single, List);
@@ -81,30 +92,32 @@ package GPR2.Project.Registry.Attribute is
      (Name_Type, Default_Value);
 
    type Def is record
-      Index                : Index_Kind         := Optional;
-      Others_Allowed       : Boolean            := False;
-      Index_Case_Sensitive : Boolean            := False;
-      Value                : Value_Kind         := Single;
-      Value_Case_Sensitive : Boolean            := False;
-      Empty_Value          : Empty_Value_Status := Allow;
-      Read_Only            : Boolean            := False;
-      Is_Allowed_In        : Allowed_In         := (K_Abstract => True,
+      Index                 : Index_Kind         := Optional;
+      Others_Allowed        : Boolean            := False;
+      Index_Case_Sensitive  : Boolean            := False;
+      Value                 : Value_Kind         := Single;
+      Value_Case_Sensitive  : Boolean            := False;
+      Empty_Value           : Empty_Value_Status := Allow;
+      Read_Only             : Boolean            := False;
+      Is_Allowed_In         : Allowed_In         := (K_Abstract => True,
                                                     others     => False);
-      Default              : VSR.Map;
-      Has_Default_In       : Allowed_In         := (others => False);
-      Is_Toolchain_Config  : Boolean            := False;
+      Default               : VSR.Map;
+      Has_Default_In        : Allowed_In         := (others => False);
+      Is_Toolchain_Config   : Boolean            := False;
       --  When set, the attribute is used to during the gprconfig stage to
       --  configure toolchains (for example the attributes Target or Runtime
       --  are toolchain config attributes). Due to elaboration constraints,
       --  such attributes need to be global to the project tree, and so
       --  should not be modified after being referenced. So for example
       --  using "for Target use project'Target & "suffix"" is not allowed.
-      Config_Concatenable  : Boolean            := False;
+      Config_Concatenable   : Boolean := False;
       --  When True the final value for the attribute is concatenated with the
       --  value found in the Config project (if it exists) rather than
       --  overriding it.
-
-      Index_Type : Index_Value_Type             := Name_Index;
+      Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
+      --  Whether an attribute is inherited from an extended project or not
+      --  See Inherited_From_Extended_Type definition for available behaviours.
+      Index_Type            : Index_Value_Type := Name_Index;
       --  Set the type for the index value
 
    end record
@@ -141,20 +154,21 @@ package GPR2.Project.Registry.Attribute is
    --  If Pack is empty, call Action for each root attribute with defaults.
 
    procedure Add
-     (Name                 : Qualified_Name;
-      Index                : Index_Kind;
-      Others_Allowed       : Boolean;
-      Index_Case_Sensitive : Boolean;
-      Value                : Value_Kind;
-      Value_Case_Sensitive : Boolean;
-      Read_Only            : Boolean;
-      Is_Allowed_In        : Allowed_In;
-      Empty_Value          : Empty_Value_Status := Allow;
-      Default              : VSR.Map            := VSR.Empty_Map;
-      Has_Default_In       : Allowed_In         := Nowhere;
-      Is_Toolchain_Config  : Boolean            := False;
-      Config_Concatenable  : Boolean            := False;
-      Index_Type           : Index_Value_Type   := Name_Index);
+     (Name                  : Qualified_Name;
+      Index                 : Index_Kind;
+      Others_Allowed        : Boolean;
+      Index_Case_Sensitive  : Boolean;
+      Value                 : Value_Kind;
+      Value_Case_Sensitive  : Boolean;
+      Read_Only             : Boolean;
+      Is_Allowed_In         : Allowed_In;
+      Empty_Value           : Empty_Value_Status := Allow;
+      Default               : VSR.Map            := VSR.Empty_Map;
+      Has_Default_In        : Allowed_In         := Nowhere;
+      Is_Toolchain_Config   : Boolean            := False;
+      Config_Concatenable   : Boolean            := False;
+      Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
+      Index_Type            : Index_Value_Type           := Name_Index);
    --  add package/attribute definition in database for attribute checks
 
    --  Some common attribute names

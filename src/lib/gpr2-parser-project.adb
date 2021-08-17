@@ -1198,7 +1198,8 @@ package body GPR2.Parser.Project is
       --  closed. Other characters contain case value.
 
       function Is_Open return Boolean is
-        (Case_Values.Is_Empty or else Case_Values.Last_Element (1) = '+');
+        (Case_Values.Is_Empty
+         or else (for all CV of Case_Values => CV (1) = '+'));
       --  Is_Open is a parsing barrier, it is True when whole parsing can be
       --  conducted and False otherwise. When it is False the naming exceptions
       --  source filenames collected into Object.Skip_Src container to ignore
@@ -2602,8 +2603,7 @@ package body GPR2.Parser.Project is
          --  Parse a package extension
 
          procedure Parse_Case_Construction (Node : Case_Construction)
-           with Pre  => Is_Open,
-                Post => Case_Values.Length'Old = Case_Values.Length;
+           with Post => Case_Values.Length'Old = Case_Values.Length;
          --  Parse a case construction, during a case construction parsing the
          --  Is_Open flag may be set to False and True. Set Is_Open comments.
 
@@ -3373,6 +3373,9 @@ package body GPR2.Parser.Project is
             --  and Spec and Body attributes
 
             case Kind (Node) is
+               when GPR_Case_Construction =>
+                  Parse_Case_Construction (Node.As_Case_Construction);
+
                when GPR_Case_Item =>
                   Parse_Case_Item (Node.As_Case_Item);
 
