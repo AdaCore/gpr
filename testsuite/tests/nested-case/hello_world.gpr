@@ -1,0 +1,46 @@
+project Hello_World is
+
+   type B_Type is ("Yes", "No");
+   Include_More := external ("MORE", "Yes");
+
+   for Main use ("hello_world.adb");
+   for Object_Dir use "obj";
+   for Exec_Dir use ".";
+
+   Main_Source_Dirs := (".");
+   Source_Files_To_Exclude := ();
+
+   case Include_More is
+      when "No" =>
+
+         case Include_More is
+            when "No"  =>
+            when others =>
+               Source_Files_To_Exclude := Source_Files_To_Exclude & ("hi.printer.ads", "hi.printer.adb");
+         end case;
+
+      when others =>
+         Main_Source_Dirs := Main_Source_Dirs & ("more");
+   end case;
+
+   for Source_Dirs use Main_Source_Dirs;
+
+   package Compiler is
+
+      for Default_Switches ("ada") use Compiler'Default_Switches ("ada") & ("-gnateDMORE=" & Include_More);
+
+   end Compiler;
+
+   for Excluded_Source_Files use Source_Files_To_Exclude;
+
+   package Naming is
+      case Include_More is
+         when "No" =>
+         when others =>
+            for Spec ("Hi.Printer") use "hi.printer.ads";
+            for Body ("Hi.Printer") use "hi.printer.adb";
+      end case;
+
+   end Naming;
+
+end Hello_World;
