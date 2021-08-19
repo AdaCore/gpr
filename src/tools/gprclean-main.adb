@@ -642,7 +642,7 @@ procedure GPRclean.Main is
                              (Dir_Name'Last - Length (Opts.Subdirs)
                               - Boolean'Pos (Dir_Name (Dir_Name'Last) = DS))
                            = DS,
-                           Dir_Name);
+                           "invalid parent directory " & Dir_Name);
 
                         Delete_If_Not_Project (Dir.Containing_Directory);
                      end if;

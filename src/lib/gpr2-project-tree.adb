@@ -1288,7 +1288,9 @@ package body GPR2.Project.Tree is
 
             Update_Project_Search_Path_From_Config (Self, Self.Conf);
 
-            pragma Assert (P_Data.Kind = K_Configuration, P_Data.Kind'Img);
+            pragma Assert
+              (P_Data.Kind = K_Configuration,
+               "expected K_Configuration, found : " & P_Data.Kind'Img);
          end;
       end if;
 

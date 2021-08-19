@@ -379,7 +379,7 @@ package body GPRls.Gnatdist is
 
    procedure Output_With (Tree : Project.Tree.Object; W : Name_Type) is
       View  : constant Project.View.Object := Tree.Get_View (Unit => W);
-      pragma Assert (View.Is_Defined, "Unit " & String (W));
+      pragma Assert (View.Is_Defined, "unit undefined: " & String (W));
       UI    : constant Project.Unit_Info.Object := View.Unit (W);
       Src   : constant Project.Source.Object :=
                 View.Source ((if UI.Has_Body then UI.Main_Body else UI.Spec));
@@ -389,7 +389,7 @@ package body GPRls.Gnatdist is
    begin
       pragma Assert
         (Src.Is_Defined,
-         "View " & String (View.Name) & " Unit " & String (W)
+         "source undefined: View " & String (View.Name) & " Unit " & String (W)
          & ' ' & (if UI.Has_Body then UI.Main_Body.Value else UI.Spec.Value));
 
       if not Src.Source.Check_Unit
