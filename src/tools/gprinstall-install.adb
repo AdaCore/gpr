@@ -66,8 +66,6 @@ package body GPRinstall.Install is
 
    package String_Vector renames GPR2.Containers.Value_Type_List;
 
-   package Seen_Set renames GPR2.Containers.Name_Type_Set;
-
    subtype Message_Digest is GNAT.MD5.Message_Digest;
 
    Is_Windows_Host : constant Boolean :=
@@ -218,7 +216,7 @@ package body GPRinstall.Install is
 
       Artifacts : Artifacts_Set.Vector;
 
-      Excluded_Naming : Seen_Set.Set;
+      Excluded_Naming : GPR2.Containers.Name_Set;
       --  This set contains names of Ada unit to exclude from the generated
       --  package Naming. This is needed to avoid renaming for bodies which
       --  are not installed when the minimum installation (-m) is used. In
@@ -1774,7 +1772,10 @@ package body GPRinstall.Install is
             procedure Append (Attribute : GPR2.Project.Attribute.Object);
             --  Add values if any
 
-            Seen : Seen_Set.Set;
+            procedure Opts_Append (Opt : String);
+            --  Add Opt into Opts only if not added before
+
+            Seen : GPR2.Containers.Value_Set;
             --  Records the attribute generated to avoid duplicate when
             --  handling aggregated projects.
 
@@ -1789,8 +1790,7 @@ package body GPRinstall.Install is
             begin
                for V of Attribute.Values loop
                   if V.Text /= "" then
-                     Opts.Append (V.Text);
-                     Seen.Include (Name_Type (V.Text));
+                     Opts_Append (V.Text);
                   end if;
                end loop;
             end Append;
@@ -1805,6 +1805,21 @@ package body GPRinstall.Install is
                   Append (Pck.Attributes.Element (A.Linker_Options));
                end if;
             end Linker_For;
+
+            -----------------
+            -- Opts_Append --
+            -----------------
+
+            procedure Opts_Append (Opt : String) is
+               Position : GPR2.Containers.Value_Type_Set.Cursor;
+               Inserted : Boolean;
+            begin
+               Seen.Insert (Opt, Position, Inserted);
+
+               if Inserted then
+                  Opts.Append (Opt);
+               end if;
+            end Opts_Append;
 
          begin
             R.Append ("         when """ & Options.Build_Name.all & """ =>");
@@ -1830,7 +1845,7 @@ package body GPRinstall.Install is
                     and then L.Is_Externally_Built
                     and then not L.Has_Sources
                   then
-                     Opts.Append ("-l" & String (L.Library_Name));
+                     Opts_Append ("-l" & String (L.Library_Name));
                   end if;
                end loop;
             end if;
@@ -1847,7 +1862,7 @@ package body GPRinstall.Install is
                      Result         => Library_Options)
                   then
                      for Value of Library_Options.Values loop
-                        Opts.Append (Value.Text);
+                        Opts_Append (Value.Text);
                      end loop;
                   end if;
                end;
@@ -1888,7 +1903,7 @@ package body GPRinstall.Install is
             procedure Naming_For (Pck : GPR2.Project.Pack.Object);
             --  Handle the naming scheme for this package
 
-            Seen : Seen_Set.Set;
+            Seen : GPR2.Containers.Name_Set;
             --  Records the attribute generated to avoid duplicate when
             --  handling aggregated projects.
 
@@ -1923,10 +1938,13 @@ package body GPRinstall.Install is
                         then
                            declare
                               Decl : constant String := Att.Image;
+                              Pos  : GPR2.Containers.Name_Type_Set.Cursor;
+                              OK   : Boolean;
                            begin
-                              if not Seen.Contains (Name_Type (Decl)) then
+                              Seen.Insert (Name_Type (Decl), Pos, OK);
+
+                              if OK then
                                  V.Append ("            " & Decl);
-                                 Seen.Include (Name_Type (Decl));
                                  Found := True;
                               end if;
                            end;
