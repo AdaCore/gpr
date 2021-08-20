@@ -1078,8 +1078,8 @@ package body GPR2.Parser.Project is
 
       type Indexed_Item_Values is record
          Filled         : Boolean := False;
-         Attribute_Pack : Optional_Package_Id;
-         Attribute_Name : Optional_Attribute_Id;
+         Attribute_Pack : Optional_Package_Id := No_Package;
+         Attribute_Name : Optional_Attribute_Id := No_Attribute;
          Values         : Indexed_Item_Values_Vectors.Vector;
       end record;
 
