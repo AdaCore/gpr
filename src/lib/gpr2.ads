@@ -311,23 +311,25 @@ private
    function Hash (L : Language_Id) return Ada.Containers.Hash_Type
      is (Ada.Containers.Hash_Type (L));
 
-   Id_List : Name_List;
+   Attr_Id_List : Name_List;
 
    function "+" (Name : Optional_Name_Type) return Optional_Attribute_Id
-     is (Optional_Attribute_Id (Id (Id_List, Name)));
+     is (Optional_Attribute_Id (Id (Attr_Id_List, Name)));
    function Name (Id : Optional_Attribute_Id) return Optional_Name_Type
-     is (Name (Id_List, Natural (Id)));
+     is (Name (Attr_Id_List, Natural (Id)));
    function Image (Id : Optional_Attribute_Id) return String
-     is (Image (Id_List, Natural (Id)));
+     is (Image (Attr_Id_List, Natural (Id)));
    function Hash (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type
      is (Ada.Containers.Hash_Type (Id));
 
+   Pck_Id_List : Name_List;
+
    function "+" (Name : Optional_Name_Type) return Optional_Package_Id
-     is (Optional_Package_Id (Id (Id_List, Name)));
+     is (Optional_Package_Id (Id (Pck_Id_List, Name)));
    function Name (Id : Optional_Package_Id) return Optional_Name_Type
-     is (Name (Id_List, Natural (Id)));
+     is (Name (Pck_Id_List, Natural (Id)));
    function Image (Id : Optional_Package_Id) return String
-     is (Image (Id_List, Natural (Id)));
+     is (Image (Pck_Id_List, Natural (Id)));
    function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type
      is (Ada.Containers.Hash_Type (Id));
 
