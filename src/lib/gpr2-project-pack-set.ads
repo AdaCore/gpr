@@ -29,7 +29,7 @@ with Ada.Containers.Ordered_Maps;
 package GPR2.Project.Pack.Set is
 
    package Set is
-     new Ada.Containers.Ordered_Maps (Package_Id, Object, "<");
+     new Ada.Containers.Ordered_Maps (Optional_Package_Id, Object, "<");
 
    subtype Object is Set.Map;
 

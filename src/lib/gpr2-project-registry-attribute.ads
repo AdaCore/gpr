@@ -82,7 +82,7 @@ package GPR2.Project.Registry.Attribute is
    type Default_Value (Is_Reference : Boolean := False) is record
       case Is_Reference is
          when True =>
-            Attr : Attribute_Id;
+            Attr : Optional_Attribute_Id;
          when False =>
             Value : Ada.Strings.Unbounded.Unbounded_String;
       end case;
@@ -434,7 +434,7 @@ private
 
    type Qualified_Name is record
       Pack : Optional_Package_Id;
-      Attr : Attribute_Id;
+      Attr : Optional_Attribute_Id;
    end record;
 
    function Image (Name : Qualified_Name) return String is
@@ -452,7 +452,7 @@ private
    type Def_Access is access constant Def;
 
    package Default_References is new Ada.Containers.Ordered_Maps
-     (Attribute_Id, Def_Access);
+     (Optional_Attribute_Id, Def_Access);
    --  To keep references only to attribute definitions with default rules
 
    type Default_Rules is access constant Default_References.Map;

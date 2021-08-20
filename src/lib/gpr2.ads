@@ -192,7 +192,7 @@ package GPR2 is
 
    --  Name tables definition
 
-   type Language_Id is new Natural;
+   type Language_Id is new Natural with Default_Value => 0;
    No_Language  : constant Language_Id;
    Ada_Language : constant Language_Id;
    function "+" (L : Optional_Name_Type) return Language_Id;
@@ -200,7 +200,7 @@ package GPR2 is
    function Image (L : Language_Id) return String;
    function Hash (L : Language_Id) return Ada.Containers.Hash_Type;
 
-   type Optional_Attribute_Id is new Natural;
+   type Optional_Attribute_Id is new Natural with Default_Value => 0;
    subtype Attribute_Id is Optional_Attribute_Id range
      1 .. Optional_Attribute_Id'Last;
    No_Attribute : constant Optional_Attribute_Id;
@@ -209,7 +209,7 @@ package GPR2 is
    function Image (Id : Optional_Attribute_Id) return String;
    function Hash (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type;
 
-   type Optional_Package_Id is new Natural;
+   type Optional_Package_Id is new Natural with Default_Value => 0;
    subtype Package_Id is Optional_Package_Id range
      1 .. Optional_Package_Id'Last;
    No_Package : constant Optional_Package_Id;
