@@ -416,27 +416,20 @@ begin
 
       begin
          for S of Sources loop
-            if not Has_Dependency (S) then
-               Gnatdist.Output_No_ALI (S.Source, S.Index);
-            end if;
-         end loop;
-
-         for S of Sources loop
             if Has_Dependency (S) then
                if S.Index = 0 then
-                  declare
-                     C : Source_And_Index := S;
-                  begin
-                     for CU of S.Source.Source.Units loop
-                        C.Index := CU.Index;
-                        if Has_Dependency (C) then
-                           Gnatdist.Output_ALI (S.Source, C.Index);
-                        end if;
-                     end loop;
-                  end;
+                  for CU of S.Source.Source.Units loop
+                     if Has_Dependency ((S.Source, Index => CU.Index)) then
+                        Gnatdist.Output_ALI (S.Source, CU.Index);
+                     end if;
+                  end loop;
+
                else
                   Gnatdist.Output_ALI (S.Source, S.Index);
                end if;
+
+            else
+               Gnatdist.Output_No_ALI (S.Source, S.Index);
             end if;
          end loop;
       end Display_Gnatdist;

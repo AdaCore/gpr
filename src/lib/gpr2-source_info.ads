@@ -188,7 +188,7 @@ package GPR2.Source_Info is
       Action : access procedure
                  (Sfile : Simple_Name;
                   Unit  : Name_Type;
-                  Kink  : GPR2.Unit.Library_Unit_Type);
+                  Kind  : GPR2.Unit.Library_Unit_Type);
       Index  : Unit_Index := 1)
      with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Call Action for each of unit dependencies

@@ -326,38 +326,49 @@ package body GPR2.Project.Source is
    is
       Done : Containers.Filename_Set;
 
-      procedure Collect_Source (Source : Source_Info.Object'Class);
+      procedure Action
+        (Sfile : Simple_Name;
+         Unit  : Name_Type;
+         Kind  : GPR2.Unit.Library_Unit_Type);
 
-      --------------------
-      -- Collect_Source --
-      --------------------
+      ------------
+      -- Action --
+      ------------
 
-      procedure Collect_Source (Source : Source_Info.Object'Class) is
+      procedure Action
+        (Sfile : Simple_Name;
+         Unit  : Name_Type;
+         Kind  : GPR2.Unit.Library_Unit_Type)
+      is
+         pragma Unreferenced (Unit, Kind);
+
          S        : Project.Source.Object;
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
       begin
-         for File of Source.Dependencies (Index) loop
-            Done.Insert (File, Position, Inserted);
+         Done.Insert (Sfile, Position, Inserted);
 
-            if Inserted
-              and then View (Self).Check_Source (File, S)
-            then
-               For_Each (S);
+         if Inserted
+           and then View (Self).Check_Source (Sfile, S)
+         then
+            For_Each (S);
 
-               if Closure then
-                  Collect_Source (S.Source);
-               end if;
+            if Closure then
+               for CU of S.Source.Units loop
+                  S.Source.Dependencies
+                    (Action'Access, Source_Info.Unit_Index (CU.Index));
+               end loop;
             end if;
-         end loop;
-      end Collect_Source;
+         end if;
+      end Action;
 
    begin
-      Collect_Source (Self.Source);
+      Self.Source.Dependencies (Action'Access, Index);
 
       if Done.Is_Empty then
          --  It mean that we do not have ALI file parsed, try to get "with"
          --  dependencies from Ada parser.
+
          Self.Context_Clause_Dependencies (For_Each, Closure);
       end if;
    end Dependencies;
