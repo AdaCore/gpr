@@ -118,7 +118,7 @@ package body GPR2.Source_Info is
       Action : access procedure
                  (Sfile : Simple_Name;
                   Unit  : Name_Type;
-                  Kink  : GPR2.Unit.Library_Unit_Type);
+                  Kind  : GPR2.Unit.Library_Unit_Type);
       Index  : Unit_Index := 1)
    is
       C_Idx  : constant Unit_Dependencies.Cursor :=
