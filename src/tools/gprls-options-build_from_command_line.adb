@@ -47,6 +47,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Set_Print_Units (Switch, Value : String);
    procedure Set_Print_Object_Files (Switch, Value : String);
    procedure Set_Print_Sources (Switch, Value : String);
+   procedure Set_Predefined (Switch, Value : String);
 
    procedure Set_Selective_Output;
 
@@ -90,6 +91,20 @@ procedure Build_From_Command_Line (Self : in out Object) is
    begin
       Self.List_File := Path_Name.Create_File (Filename_Type (Value));
    end Handle_List_File;
+
+   --------------------
+   -- Set_Predefined --
+   --------------------
+
+   procedure Set_Predefined (Switch, Value : String) is
+      pragma Unreferenced (Switch);
+   begin
+      Self.With_Predefined_Units := True;
+
+      if Value = "0" then
+         Self.Hide_Predefined_Path := True;
+      end if;
+   end Set_Predefined;
 
    ----------------------------
    -- Set_Print_Object_Files --
@@ -157,9 +172,10 @@ begin
       Argument => "<level>");
 
    Define_Switch
-     (Config, Self.With_Predefined_Units'Unrestricted_Access,
-      "-a",
-      Help => "Include predefined units");
+     (Config, Set_Predefined'Unrestricted_Access,
+      "-a?",
+      Help => "Include predefined units, use -a0 to hide predefined sources"
+      & " directory");
 
    Define_Switch
      (Config, Set_Print_Units'Unrestricted_Access,

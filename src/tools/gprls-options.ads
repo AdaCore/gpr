@@ -50,6 +50,8 @@ package GPRls.Options is
 
    function With_Predefined_Units (Self : Object) return Boolean;
 
+   function Hide_Runtime_Directory (Self : Object) return Boolean;
+
    function Print_Units (Self : Object) return Boolean;
 
    function Print_Sources (Self : Object) return Boolean;
@@ -79,6 +81,7 @@ private
    type Object is new GPRtools.Options.Object with record
       List_File             : Path_Name.Object;
       With_Predefined_Units : Boolean := False;
+      Hide_Predefined_Path  : Boolean := False;
       Print_Units           : Boolean := True;
       Print_Sources         : Boolean := True;
       Print_Object_Files    : Boolean := True;
@@ -109,6 +112,9 @@ private
 
    function With_Predefined_Units (Self : Object) return Boolean is
      (Self.With_Predefined_Units);
+
+   function Hide_Runtime_Directory (Self : Object) return Boolean is
+     (Self.Hide_Predefined_Path);
 
    function Print_Units (Self : Object) return Boolean is
      (Self.Print_Units);

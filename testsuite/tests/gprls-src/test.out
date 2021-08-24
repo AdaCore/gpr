@@ -35,6 +35,19 @@ p4.gpr:4:20: warning: object directory "obj" not found
    P0
          OK /p0/p0.adb
          OK /p0/p0_0.ads
+/p0/obj/p0.o
+   P0
+         OK ada.ads
+         OK a-unccon.ads
+         OK gnat.ads
+         OK g-io.ads
+         OK /p0/p0.adb
+         OK /p0/p0_0.ads
+         OK system.ads
+         OK s-exctab.ads
+         OK s-imagei.ads
+         OK s-imgint.ads
+         OK s-stalib.ads
 Can't find ALI file for /p5/p5_1.adb
    /p5/p5_2.ads
    /p5/p5_2.adb

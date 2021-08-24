@@ -252,7 +252,7 @@ begin
    Tree.Update_Sources
      (Backends => (Source_Info.Source => Opt.Source_Parser,
                    Source_Info.LI     => True),
-      With_Runtime => Opt.Gnatdist);
+      With_Runtime => (Opt.Gnatdist or else Opt.With_Predefined_Units));
 
    --
    --  Main processing
@@ -492,7 +492,10 @@ begin
                   end case;
                end if;
 
-               Text_IO.Put (S.Source.Path_Name.Value);
+               Text_IO.Put
+                 (if S.Source.Is_Runtime and then Opt.Hide_Runtime_Directory
+                  then String (S.Source.Path_Name.Simple_Name)
+                  else S.Source.Path_Name.Value);
             end if;
 
             Text_IO.New_Line;
