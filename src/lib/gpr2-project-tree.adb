@@ -348,8 +348,14 @@ package body GPR2.Project.Tree is
       if Source_Maps.Has_Element (Position) then
          Result := Source_Maps.Element (Position);
          return True;
+
       else
-         return False;
+         --  Search for runtime sources separately because runtime view does
+         --  not belong any naming roots.
+
+         return not View.Is_Runtime
+           and then View.Tree.Runtime.Is_Defined
+           and then View.Tree.Runtime.Check_Source (Name, Result);
       end if;
    end Check_Source;
 
@@ -3200,8 +3206,9 @@ package body GPR2.Project.Tree is
                return True;
             end if;
 
-            if View.Is_Extending
-              and then not Is_Implicitly_Abstract (View.Extended_Root)
+            if (View.Is_Extending
+                and then not Is_Implicitly_Abstract (View.Extended_Root))
+              or else View.Is_Externally_Built
             then
                --  Project extending non abstract one is not abstract
 

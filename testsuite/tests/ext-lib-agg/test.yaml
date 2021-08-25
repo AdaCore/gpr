@@ -1,0 +1,2 @@
+description: Check aggregated external library link
+driver: python_script

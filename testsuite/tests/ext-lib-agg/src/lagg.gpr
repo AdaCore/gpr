@@ -1,0 +1,8 @@
+aggregate library project Lagg is
+
+   for Project_Files use ("lib.gpr");
+
+   for Library_Name use "lagg";
+   for Library_Dir use "lagg";
+
+end Lagg;

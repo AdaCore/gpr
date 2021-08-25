@@ -1,0 +1,10 @@
+library project Lext_0 is
+
+   for Languages use ("C");
+
+   for Library_Dir use "lext";
+   for Object_Dir use "obj";
+   for Library_Name use "lext";
+
+end Lext_0;
+

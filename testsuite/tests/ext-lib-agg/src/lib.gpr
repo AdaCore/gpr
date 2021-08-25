@@ -1,0 +1,8 @@
+with "lext.gpr";
+
+library project Lib is
+
+   for Library_Dir use "lib";
+   for Library_Name use "lib";
+
+end Lib;

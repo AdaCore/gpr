@@ -1775,6 +1775,11 @@ package body GPRinstall.Install is
             procedure Opts_Append (Opt : String);
             --  Add Opt into Opts only if not added before
 
+            procedure Append_Imported_External_Libraries
+              (Project : GPR2.Project.View.Object);
+            --  Add the externally built libraries without sources (referencing
+            --  system libraries for example).
+
             Seen : GPR2.Containers.Value_Set;
             --  Records the attribute generated to avoid duplicate when
             --  handling aggregated projects.
@@ -1794,6 +1799,25 @@ package body GPRinstall.Install is
                   end if;
                end loop;
             end Append;
+
+            ----------------------------------------
+            -- Append_Imported_External_Libraries --
+            ----------------------------------------
+
+            procedure Append_Imported_External_Libraries
+              (Project : GPR2.Project.View.Object) is
+            begin
+               if Project.Has_Imports then
+                  for L of Project.Imports (Recursive => True) loop
+                     if L.Kind = K_Library
+                       and then L.Is_Externally_Built
+                       and then not L.Has_Sources
+                     then
+                        Opts_Append ("-l" & String (L.Library_Name));
+                     end if;
+                  end loop;
+               end if;
+            end Append_Imported_External_Libraries;
 
             ----------------
             -- Linker_For --
@@ -1833,22 +1857,12 @@ package body GPRinstall.Install is
                   if Aggregated.Has_Packages (P.Linker) then
                      Linker_For (Aggregated.Packages.Element (P.Linker));
                   end if;
+
+                  Append_Imported_External_Libraries (Aggregated);
                end loop;
             end if;
 
-            --  We also want to add the externally built libraries without
-            --  sources (referencing system libraries for example).
-
-            if Project.Has_Imports then
-               for L of Project.Imports (Recursive => True) loop
-                  if L.Kind = K_Library
-                    and then L.Is_Externally_Built
-                    and then not L.Has_Sources
-                  then
-                     Opts_Append ("-l" & String (L.Library_Name));
-                  end if;
-               end loop;
-            end if;
+            Append_Imported_External_Libraries (Project);
 
             --  Append Library_Options to Opts list
 
