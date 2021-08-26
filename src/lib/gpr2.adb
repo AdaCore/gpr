@@ -25,9 +25,16 @@
 with Ada.Directories;
 with Ada.Strings.Less_Case_Insensitive;
 
+pragma Warnings (Off, "* is an internal GNAT unit");
+with System.Soft_Links;               use System.Soft_Links;
+pragma Warnings (On, "* is an internal GNAT unit");
+
 with GNAT.OS_Lib;
 
 package body GPR2 is
+
+   Is_Multitasking : constant Boolean :=
+      System.Soft_Links.Lock_Task /= System.Soft_Links.Task_Lock_NT'Access;
 
    ---------
    -- "<" --
@@ -97,27 +104,58 @@ package body GPR2 is
    function Id (List : in out Name_List;
                 Name : Optional_Name_Type) return Natural
    is
-      C      : Name_Maps.Cursor;
-      Result : Natural;
-      Value  : constant String :=
-                 Ada.Characters.Handling.To_Lower (String (Name));
+      C          : Name_Maps.Cursor;
+      Result     : Natural;
+      Value      : constant String :=
+                     Ada.Characters.Handling.To_Lower (String (Name));
    begin
       if Name'Length = 0 then
          return 0;
       end if;
 
-      --  ??? Not thread-safe
+      --  Note: if we just read the value, the operation is multithread-safe.
+      --  So let's not add a penalty for the read operation, that should be
+      --  the most common operation.
       C := List.Name_To_Id.Find (Value);
 
       if Name_Maps.Has_Element (C) then
-         return Natural (Name_Maps.Element (C));
-      else
+         return Name_Maps.Element (C);
+      end if;
+
+      --  We need to add the value: as this operation is not atomic
+      --  and the tables are global, we need to ensure the operation
+      --  cannot be interrupted.
+      begin
+         System.Soft_Links.Lock_Task.all;
+
+         if Is_Multitasking then
+            --  In a multitasking environment, the value could have been
+            --  inserted by someone else since we've checked it above.
+            --  So let's retry:
+            C := List.Name_To_Id.Find (Value);
+
+            if Name_Maps.Has_Element (C) then
+               --  return with the value
+               System.Soft_Links.Unlock_Task.all;
+               return Name_Maps.Element (C);
+            end if;
+         end if;
+
+         --  Still not in there, so let's add the value to the list
          List.Id_To_Name.Append (Value);
          Result := Natural (List.Id_To_Name.Last_Index);
          List.Name_To_Id.Insert (Value, Result);
 
-         return Result;
-      end if;
+      exception
+         when others =>
+            System.Soft_Links.Unlock_Task.all;
+            raise;
+      end;
+
+      --  Don't need the lock anymore
+      System.Soft_Links.Unlock_Task.all;
+
+      return Result;
    end Id;
 
    -----------

@@ -83,15 +83,24 @@ package GPR2.Project.Source.Artifact is
    --  If Index = 0 returns True if dependency exists at any index.
 
    function Dependency
-     (Source   : Project.Source.Object'Class;
-      Index    : Natural := 0;
-      Location : Dependency_Location := In_Both)
+     (Source      : Project.Source.Object;
+      Index       : Natural := 0;
+      Location    : Dependency_Location := In_Both;
+      Actual_File : Boolean := False)
       return GPR2.Path_Name.Object;
+   --  Retrieve just the dependency file (LI file) corresponding to the unit
+   --- in Source at Index (if any).
+   --  This file can be searched in Library_ALI_Dir or Object_Dir or in both,
+   --  this is specified by the location parameter.
+   --  If Actual_File is set, then only files that actually exist on the hard
+   --  drive are returned. else file that could exist if a compilation occurred
+   --  will also be returned, even if they're not available.
 
    function Dependency
-     (Self     : Object;
-      Index    : Natural;
-      Location : Dependency_Location := In_Both) return GPR2.Path_Name.Object
+     (Self        : Object;
+      Index       : Natural;
+      Location    : Dependency_Location := In_Both)
+      return GPR2.Path_Name.Object
      with Pre  => Self.Is_Defined
                   and then Self.Has_Dependency (Index, Location),
           Post => Dependency'Result.Is_Defined;

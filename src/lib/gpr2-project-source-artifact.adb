@@ -205,22 +205,23 @@ package body GPR2.Project.Source.Artifact is
    ----------------
 
    function Dependency
-     (Source   : Project.Source.Object'Class;
-      Index    : Natural := 0;
-      Location : Dependency_Location := In_Both)
+     (Source      : Project.Source.Object;
+      Index       : Natural := 0;
+      Location    : Dependency_Location := In_Both;
+      Actual_File : Boolean := False)
       return GPR2.Path_Name.Object
    is
       function Get_Dep (F : Filename_Type) return GPR2.Path_Name.Object;
 
       Src        : constant GPR2.Source.Object := Source.Source;
       Main       : constant GPR2.Project.Source.Object :=
-                     (if Project.Source.Object (Source).Has_Other_Part
+                     (if Source.Has_Other_Part
                       and then
                         Source.Naming_Exception in Naming_Exception_Value
                       and then Src.Has_Single_Unit
                       and then Src.Kind = Unit.S_Spec
-                      then GPR2.Project.Source.Object (Source).Other_Part
-                      else GPR2.Project.Source.Object (Source));
+                      then Source.Other_Part
+                      else Source);
       BN         : constant Filename_Type := Main.Path_Name.Base_Filename;
       Lang       : constant Language_Id := Src.Language;
       View       : constant Project.View.Object :=
@@ -238,29 +239,63 @@ package body GPR2.Project.Source.Artifact is
       begin
          if Location in In_Both | In_Library then
             Candidate := From_Hierarchy
-              (Definition.Strong (Source.View),
-               Project.Source.Object (Source),
+              (View,
+               Source,
                F & D_Suffix,
                Library_ALI_Dir, True);
-         else
-            Candidate := GPR2.Path_Name.Undefined;
          end if;
 
-         if Location = In_Library
-           or else (Candidate.Is_Defined and then Candidate.Exists)
-         then
-            return Candidate;
+         if Location = In_Library then
+            if not Actual_File then
+               return Candidate;
+            elsif Candidate.Is_Defined
+              and then Candidate.Exists
+            then
+               return Candidate;
+            else
+               return GPR2.Path_Name.Undefined;
+            end if;
          end if;
 
          Candidate2 := From_Hierarchy
            (View,
-            GPR2.Project.Source.Object (Source),
+            Source,
             F & D_Suffix,
             Object_Dir, True);
 
-         if Location = In_Objects
-           or else (Candidate2.Is_Defined and then Candidate2.Exists)
-         then
+         --  Priorities:
+         --  1- return the location, if set to a unique one
+         --  1b- if Location is Both, always favor the Library_ALI_Dir one
+         --  2- if Actual_File is set, return immediately if one is found, else
+         --     return Undefined.
+         --  3- if one of the location is undefined, return the other
+         --  4- if both are defined, return the one that exists
+         --  5- return the Library_Ali_Dir path
+         if Location = In_Objects then
+            if not Actual_File then
+               return Candidate2;
+            elsif Candidate2.Is_Defined and then Candidate2.Exists then
+               return Candidate2;
+            else
+               return GPR2.Path_Name.Undefined;
+            end if;
+         --  At this point, Location is In_Both, and no if Actual_File is set
+         --  then no LI file exists.
+         elsif Actual_File then
+            if Candidate.Is_Defined and then Candidate.Exists then
+               return Candidate;
+            elsif Candidate2.Is_Defined and then Candidate2.Exists then
+               return Candidate2;
+            else
+               return GPR2.Path_Name.Undefined;
+            end if;
+         elsif not Candidate2.Is_Defined then
+            return Candidate;
+         elsif not Candidate.Is_Defined then
+            return Candidate2;
+         elsif Candidate.Exists then
+            return Candidate;
+         elsif Candidate2.Exists then
             return Candidate2;
          else
             return Candidate;
@@ -397,12 +432,18 @@ package body GPR2.Project.Source.Artifact is
       if View.Is_Extending then
          if Full_Closure then
             for Ext of View.Extended loop
-               New_Candidate := From_Hierarchy
-                 (Ext, Ext.Source (Source.Path_Name),
-                  Filename, Dir_Attr, True);
+               declare
+                  Ext_Source : Project.Source.Object renames
+                                 Ext.Source (Source.Path_Name);
+               begin
+                  if Ext_Source.Is_Defined then
+                     New_Candidate := From_Hierarchy
+                       (Ext, Ext_Source, Filename, Dir_Attr, True);
 
-               exit when New_Candidate.Is_Defined
-                 and then New_Candidate.Exists;
+                     exit when New_Candidate.Is_Defined
+                       and then New_Candidate.Exists;
+                  end if;
+               end;
             end loop;
          else
             New_Candidate := From_Hierarchy

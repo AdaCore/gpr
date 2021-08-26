@@ -32,7 +32,7 @@ package body GPR2.Project.Registry.Pack is
    end record;
 
    package Pack_Definition is new Ada.Containers.Ordered_Maps
-     (Package_Id, Package_Options, "<");
+     (Optional_Package_Id, Package_Options, "<");
 
    Store : Pack_Definition.Map;
 

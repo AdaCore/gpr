@@ -1047,162 +1047,153 @@ package body GPR2.Project.Definition is
             Kind     : out Unit.Library_Unit_Type)
          is
 
-            function Check_Suffix_And_Dot_Replacement
-              (Suffix : Project.Attribute.Object) return Boolean;
-            --  If right suffix for any languages and dot replacement for Ada
-            --  then returns True. Set Check_Naming_Scheme.Kind to Kind.
+            function Test_Charset (Suffix : String) return Boolean;
+            --  Check that the filename complies with the naming defined
+            --  charset and the dot replacement is ada compliant.
 
-            --------------------------------------
-            -- Check_Suffix_And_Dot_Replacement --
-            --------------------------------------
+            ------------------
+            -- Test_Charset --
+            ------------------
 
-            function Check_Suffix_And_Dot_Replacement
-              (Suffix : Project.Attribute.Object) return Boolean
-            is
-               Ending : constant String := Suffix.Value.Text;
+            function Test_Charset (Suffix : String) return Boolean is
+               use Ada.Strings.Maps;
+               Casing  : constant String :=
+                           ACH.To_Lower
+                             (Naming.Attribute (PRA.Casing).Value.Text);
+               Charset : constant Character_Set :=
+                           (if not File_Names_Case_Sensitive
+                            or else Casing = "mixedcase"
+                            then Constants.Letter_Set
+                            elsif Casing = "lowercase"
+                            then Constants.Lower_Set
+                            elsif Casing = "uppercase"
+                            then Constants.Upper_Set
+                            else Null_Set);
+               --  On Windows, file names are case insensitive, so Casing
+               --  attribute is irrelevant and Letter_Set is used
 
-               function Test_Charset return Boolean;
-
-               ------------------
-               -- Test_Charset --
-               ------------------
-
-               function Test_Charset return Boolean is
-                  use Ada.Strings.Maps;
-                  Casing : constant String :=
-                             ACH.To_Lower
-                               (Naming.Attribute (PRA.Casing).Value.Text);
-                  Charset : constant Character_Set :=
-                              (if not File_Names_Case_Sensitive
-                                 or else Casing = "mixedcase"
-                               then Constants.Letter_Set
-                               elsif Casing = "lowercase"
-                               then Constants.Lower_Set
-                               elsif Casing = "uppercase"
-                               then Constants.Upper_Set
-                               else Null_Set);
-                  --  On Windows, file names are case insensitive, so Casing
-                  --  attribute is irrelevant and Letter_Set is used
-
-                  J  : Positive := Basename'First; -- Iterates over Basename
-                  DP : Positive := Basename'First;
-                  --  Next char after last dot replacement
-                  DD : Positive := Basename'First;
-                  --  Next char after last dot replacement or underscore.
-                  --  To avoid dot replacements and underscores to be one after
-                  --  another.
-
-               begin
-                  while J <= Basename'Last - Ending'Length loop
-                     if Is_In (Basename (J), Charset) then
-                        J := J + 1;
-
-                     elsif J + Dot_Repl'Length <= Basename'Last - Ending'Length
-                       and then DD < J -- Don't after underscore or dot replace
-                       and then Basename (J .. J + Dot_Repl'Length - 1)
-                       = Dot_Repl
-                     then
-                        J := J + Dot_Repl'Length;
-                        DD := J;
-                        DP := J;
-
-                     elsif Basename (J) in '0' .. '9' and then DP < J then
-                        --  Decimal can't be next char after dot replacement
-
-                        J := J + 1;
-
-                     elsif Basename (J) = '_' then
-                        if DD < J then
-                           J := J + 1;
-                           DD := J;
-                        else
-                           --  Double underscores and not dot replacement
-
-                           return False;
-                        end if;
-
-                     else
-                        return False;
-                     end if;
-                  end loop;
-
-                  return True;
-               end Test_Charset;
+               J       : Positive := Basename'First; -- Iterates over Basename
+               DP      : Positive := Basename'First;
+               --  Next char after last dot replacement
+               DD      : Positive := Basename'First;
+               --  Next char after last dot replacement or underscore.
+               --  To avoid dot replacements and underscores to be one after
+               --  another.
 
             begin
-               return GNATCOLL.Utils.Ends_With (Basename, Ending)
-                 and then (Language /= Ada_Language
-                           or else Test_Charset);
-            end Check_Suffix_And_Dot_Replacement;
+               while J <= Basename'Last - Suffix'Length loop
+                  if Is_In (Basename (J), Charset) then
+                     J := J + 1;
+
+                  elsif J + Dot_Repl'Length <= Basename'Last - Suffix'Length
+                    and then DD < J -- Don't after underscore or dot replace
+                    and then Basename (J .. J + Dot_Repl'Length - 1)
+                    = Dot_Repl
+                  then
+                     J := J + Dot_Repl'Length;
+                     DD := J;
+                     DP := J;
+
+                  elsif Basename (J) in '0' .. '9' and then DP < J then
+                     --  Decimal can't be next char after dot replacement
+
+                     J := J + 1;
+
+                  elsif Basename (J) = '_' then
+                     if DD < J then
+                        J := J + 1;
+                        DD := J;
+                     else
+                        --  Double underscores and not dot replacement
+
+                        return False;
+                     end if;
+
+                  else
+                     return False;
+                  end if;
+               end loop;
+
+               return True;
+            end Test_Charset;
 
             Matches_Spec     : Boolean;
             Matches_Body     : Boolean;
             Matches_Separate : Boolean;
+            Has_Spec_Suffix  : constant Boolean :=
+                                 Naming.Has_Spec_Suffix (Language);
+            Spec_Suffix      : constant String :=
+                                 (if Has_Spec_Suffix
+                                  then Naming.Spec_Suffix (Language).Value.Text
+                                  else "");
+            Has_Body_Suffix  : constant Boolean :=
+                                 Naming.Has_Body_Suffix (Language);
+            Body_Suffix      : constant String :=
+                                 (if Has_Body_Suffix
+                                  then Naming.Body_Suffix (Language).Value.Text
+                                  else "");
+            Has_Sep_Suffix   : constant Boolean := Language = Ada_Language
+                                 and then Naming.Has_Separate_Suffix;
+            Sep_Suffix       : constant String :=
+                                 (if Has_Sep_Suffix
+                                  then Naming.Separate_Suffix.Value.Text
+                                  else "");
+            use GNATCOLL.Utils;
 
          begin
-            Matches_Spec := Naming.Has_Spec_Suffix (Language)
-              and then Check_Suffix_And_Dot_Replacement
-                (Naming.Spec_Suffix (Language));
+            Matches_Spec := Has_Spec_Suffix
+              and then Ends_With (Basename, Spec_Suffix);
 
-            Matches_Body := Naming.Has_Body_Suffix (Language)
-              and then Check_Suffix_And_Dot_Replacement
-                (Naming.Body_Suffix (Language));
+            Matches_Body := Has_Body_Suffix
+              and then Ends_With (Basename, Body_Suffix);
 
-            Matches_Separate := Language = Ada_Language
-              and then Naming.Has_Separate_Suffix
-              and then Check_Suffix_And_Dot_Replacement
-                (Naming.Separate_Suffix);
+            Matches_Separate := Has_Sep_Suffix
+              and then Ends_With (Basename, Sep_Suffix);
 
             --  See GA05-012: if there's ambiguity with suffixes (e.g. one of
             --  the suffixes if a suffix of another) we use with the most
             --  explicit one (e.g. the longest one) that matches.
 
-            declare
-               Spec_Suffix : constant String :=
-                               (if Matches_Spec
-                                then Naming.Spec_Suffix (Language).Value.Text
-                                else "");
-               Body_Suffix : constant String :=
-                               (if Matches_Body
-                                then Naming.Body_Suffix (Language).Value.Text
-                                else "");
-               Sep_Suffix  : constant String :=
-                               (if Matches_Separate
-                                then Naming.Separate_Suffix.Value.Text
-                                else "");
-               use GNATCOLL.Utils;
-
-            begin
-               if Matches_Spec and then Matches_Body then
-                  if Spec_Suffix'Length >= Body_Suffix'Length then
-                     pragma Assert (Ends_With (Spec_Suffix, Body_Suffix));
-                     Matches_Body := False;
-                  else
-                     pragma Assert (Ends_With (Body_Suffix, Spec_Suffix));
-                     Matches_Spec := False;
-                  end if;
+            if Matches_Spec and then Matches_Body then
+               if Spec_Suffix'Length >= Body_Suffix'Length then
+                  pragma Assert (Ends_With (Spec_Suffix, Body_Suffix));
+                  Matches_Body := False;
+               else
+                  pragma Assert (Ends_With (Body_Suffix, Spec_Suffix));
+                  Matches_Spec := False;
                end if;
+            end if;
 
-               if Matches_Spec and then Matches_Separate then
-                  if Spec_Suffix'Length >= Sep_Suffix'Length then
-                     pragma Assert (Ends_With (Spec_Suffix, Sep_Suffix));
-                     Matches_Separate := False;
-                  else
-                     pragma Assert (Ends_With (Sep_Suffix, Spec_Suffix));
-                     Matches_Spec := False;
-                  end if;
+            if Matches_Spec and then Matches_Separate then
+               if Spec_Suffix'Length >= Sep_Suffix'Length then
+                  pragma Assert (Ends_With (Spec_Suffix, Sep_Suffix));
+                  Matches_Separate := False;
+               else
+                  pragma Assert (Ends_With (Sep_Suffix, Spec_Suffix));
+                  Matches_Spec := False;
                end if;
+            end if;
 
-               if Matches_Body and then Matches_Separate then
-                  if Body_Suffix'Length >= Sep_Suffix'Length then
-                     pragma Assert (Ends_With (Body_Suffix, Sep_Suffix));
-                     Matches_Separate := False;
-                  else
-                     pragma Assert (Ends_With (Sep_Suffix, Body_Suffix));
-                     Matches_Body := False;
-                  end if;
+            if Matches_Body and then Matches_Separate then
+               if Body_Suffix'Length >= Sep_Suffix'Length then
+                  pragma Assert (Ends_With (Body_Suffix, Sep_Suffix));
+                  Matches_Separate := False;
+               else
+                  pragma Assert (Ends_With (Sep_Suffix, Body_Suffix));
+                  Matches_Body := False;
                end if;
-            end;
+            end if;
+
+            --  Additional check: dot replacement and charset
+            if Language = Ada_Language then
+               if Matches_Spec then
+                  Matches_Spec := Test_Charset (Spec_Suffix);
+               elsif Matches_Body then
+                  Matches_Body := Test_Charset (Body_Suffix);
+               elsif Matches_Separate then
+                  Matches_Separate := Test_Charset (Sep_Suffix);
+               end if;
+            end if;
 
             if Matches_Spec then
                Match := True;

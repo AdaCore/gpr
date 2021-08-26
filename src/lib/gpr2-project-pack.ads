@@ -195,7 +195,7 @@ package GPR2.Project.Pack is
 private
 
    type Object is new Source_Reference.Object with record
-      Name  : Package_Id;
+      Name  : Optional_Package_Id;
       Attrs : Project.Attribute.Set.Object;
       Vars  : Project.Variable.Set.Object;
    end record;

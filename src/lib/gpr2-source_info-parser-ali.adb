@@ -1175,9 +1175,9 @@ package body GPR2.Source_Info.Parser.ALI is
                  and then CU.Name = FU.Name
                then
                   Dep := GPR2.Project.Source.Artifact.Dependency
-                    (Src, CU.Index);
+                    (Src, CU.Index, Actual_File => True);
 
-                  if Dep.Is_Defined and then Dep.Exists then
+                  if Dep.Is_Defined then
                      Compute
                        (Self.all, Info, FU.Main_Body, Dep, CU, View);
                   end if;
@@ -1200,9 +1200,10 @@ package body GPR2.Source_Info.Parser.ALI is
       Data.Dependencies.Clear;
 
       for CU of Data.CU_List loop
-         LI := GPR2.Project.Source.Artifact.Dependency (Source, CU.Index);
+         LI := GPR2.Project.Source.Artifact.Dependency
+           (Source, CU.Index, Actual_File => True);
 
-         if LI.Is_Defined and then LI.Exists then
+         if LI.Is_Defined then
             Compute (Self.all, Data, File, LI, CU, View);
          elsif CU.Kind in GPR2.Unit.Body_Kind then
             Check_Separated (CU);
