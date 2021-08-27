@@ -407,28 +407,29 @@ begin
          --------------------
 
          function Has_Dependency (S : Source_And_Index) return Boolean is
-            Atf : constant Project.Source.Artifact.Object :=
-                    S.Source.Artifacts;
          begin
-            return Atf.Has_Dependency (S.Index)
-              and then Atf.Dependency (S.Index).Exists;
+            return GPR2.Project.Source.Artifact.Dependency
+              (S.Source, S.Index).Is_Defined;
          end Has_Dependency;
+
+         No_ALI : Boolean := True;
 
       begin
          for S of Sources loop
-            if Has_Dependency (S) then
-               if S.Index = 0 then
-                  for CU of S.Source.Source.Units loop
-                     if Has_Dependency ((S.Source, Index => CU.Index)) then
-                        Gnatdist.Output_ALI (S.Source, CU.Index);
-                     end if;
-                  end loop;
+            if S.Index = 0 then
+               for CU of S.Source.Source.Units loop
+                  if Has_Dependency ((S.Source, Index => CU.Index)) then
+                     No_ALI := False;
+                     Gnatdist.Output_ALI (S.Source, CU.Index);
+                  end if;
+               end loop;
 
-               else
-                  Gnatdist.Output_ALI (S.Source, S.Index);
-               end if;
+            elsif Has_Dependency (S) then
+               No_ALI := False;
+               Gnatdist.Output_ALI (S.Source, S.Index);
+            end if;
 
-            else
+            if No_ALI then
                Gnatdist.Output_No_ALI (S.Source, S.Index);
             end if;
          end loop;
@@ -504,9 +505,14 @@ begin
       begin
          for S of Sources loop
             declare
+               use Project.Source.Artifact;
                View      : constant Project.View.Object := S.Source.View;
                Artifacts : constant Project.Source.Artifact.Object :=
-                             S.Source.Artifacts;
+                             Project.Source.Artifact.Create
+                               (S.Source,
+                                Filter => (Dependency_File_Artifact => True,
+                                           Object_File_Artifact     => True,
+                                           others => False));
                Obj_File  : Path_Name.Object;
                Unit_Info : Project.Unit_Info.Object;
                Main_Unit : Unit.Object;
@@ -687,6 +693,7 @@ begin
          loop
             for S of Project.Tree.Element (CV).Sources loop
                declare
+                  use Project.Source.Artifact;
                   Artifacts : Project.Source.Artifact.Object;
 
                   function Insert_Prefer_Body
@@ -733,7 +740,10 @@ begin
                     (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
                     and then S.Source.Has_Units
                   then
-                     Artifacts := S.Artifacts;
+                     Artifacts := GPR2.Project.Source.Artifact.Create
+                       (S, Filter => (Dependency_File_Artifact => True,
+                                      Object_File_Artifact     => True,
+                                      others                   => False));
 
                      for CU of S.Source.Units loop
                         exit when Artifacts.Has_Dependency (CU.Index)
@@ -834,31 +844,39 @@ begin
       if not Opt.Source_Parser and then not Opt.Gnatdist then
          for S of Sources loop
             For_Units : for CU of S.Source.Source.Units loop
-               if CU.Kind /= Unit.S_Separate
-                 and then S.Source.Artifacts.Has_Dependency (CU.Index)
-                 and then not S.Source.Artifacts.Dependency (CU.Index).Exists
-               then
-                  Full_Closure := False;
-
-                  if S.Source.Has_Naming_Exception
-                    and then S.Source.Naming_Exception
-                             = Project.Source.Multi_Unit
+               declare
+                  Dep_File : constant GPR2.Path_Name.Object :=
+                               GPR2.Project.Source.Artifact.Dependency
+                                 (S.Source, CU.Index);
+               begin
+                  if CU.Kind /= Unit.S_Separate
+                    and then Dep_File.Is_Defined
+                    and then not Dep_File.Exists
                   then
-                     --  In case of multi-unit we have no information until the
-                     --  unit is compiled. There is no need to report that
-                     --  there is missing ALI in this case. But we report that
-                     --  the status for this file is unknown.
+                     Full_Closure := False;
 
-                     Text_IO.Put_Line
-                       ("UNKNOWN status for file " & S.Source.Path_Name.Value);
+                     if S.Source.Has_Naming_Exception
+                       and then S.Source.Naming_Exception
+                         = Project.Source.Multi_Unit
+                     then
+                        --  In case of multi-unit we have no information until
+                        --  the unit is compiled. There is no need to report
+                        --  that there is missing ALI in this case. But we
+                        --  report that the status for this file is unknown.
 
-                     exit For_Units;
+                        Text_IO.Put_Line
+                          ("UNKNOWN status for file " &
+                             S.Source.Path_Name.Value);
 
-                  else
-                     Text_IO.Put_Line
-                       ("Can't find ALI file for " & S.Source.Path_Name.Value);
+                        exit For_Units;
+
+                     else
+                        Text_IO.Put_Line
+                          ("Can't find ALI file for " &
+                             S.Source.Path_Name.Value);
+                     end if;
                   end if;
-               end if;
+               end;
             end loop For_Units;
          end loop;
       end if;

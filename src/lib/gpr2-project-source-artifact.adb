@@ -87,7 +87,8 @@ package body GPR2.Project.Source.Artifact is
 
    function Create
      (Source     : Project.Source.Object;
-      Force_Spec : Boolean := False) return Artifact.Object
+      Force_Spec : Boolean := False;
+      Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
    is
       Src  : constant GPR2.Source.Object := Source.Source;
       Main : constant GPR2.Project.Source.Object :=
@@ -115,14 +116,10 @@ package body GPR2.Project.Source.Artifact is
       Deps_Lib     : Index_Path_Name_Map.Map;
       Deps_Obj     : Index_Path_Name_Map.Map;
 
-      Preprocessed : constant GPR2.Path_Name.Object :=
-                       GPR2.Path_Name.Create_File
-                         (Src.Path_Name.Simple_Name & P_Suffix,
-                          Filename_Optional (View.Object_Directory.Value));
-
-      Callgraph : GPR2.Path_Name.Object;
-      Coverage  : GPR2.Path_Name.Object;
-      Switches  : GPR2.Path_Name.Object;
+      Preprocessed : GPR2.Path_Name.Object;
+      Callgraph    : GPR2.Path_Name.Object;
+      Coverage     : GPR2.Path_Name.Object;
+      Switches     : GPR2.Path_Name.Object;
 
    begin
       if Src.Has_Units and then Src.Has_Index then
@@ -131,62 +128,90 @@ package body GPR2.Project.Source.Artifact is
                declare
                   Base : constant Filename_Type := BN & At_Suffix (CU.Index);
                begin
-                  Insert_If_Defined
-                    (Deps_Lib,
-                     CU.Index,
-                     From_Hierarchy
-                       (View,
-                        Source,
-                        Base & D_Suffix,
-                        Library_ALI_Dir, True));
+                  if Filter (Dependency_File_Artifact) then
+                     Insert_If_Defined
+                       (Deps_Lib,
+                        CU.Index,
+                        From_Hierarchy
+                          (View,
+                           Source,
+                           Base & D_Suffix,
+                           Library_ALI_Dir, True));
+                  end if;
 
                   if View.Kind /= K_Aggregate_Library then
-                     Insert_If_Defined
-                       (Object_Files,
-                        CU.Index,
-                        From_Hierarchy
-                          (View, Source, Base & O_Suffix, Object_Dir, True));
-                     Insert_If_Defined
-                       (Deps_Obj,
-                        CU.Index,
-                        From_Hierarchy
-                          (View, Source, Base & D_Suffix, Object_Dir, True));
+                     if Filter (Object_File_Artifact) then
+                        Insert_If_Defined
+                          (Object_Files,
+                           CU.Index,
+                           From_Hierarchy
+                             (View, Source, Base & O_Suffix, Object_Dir,
+                              True));
+                     end if;
+
+                     if Filter (Dependency_File_Artifact) then
+                        Insert_If_Defined
+                          (Deps_Obj,
+                           CU.Index,
+                           From_Hierarchy
+                             (View, Source, Base & D_Suffix, Object_Dir,
+                              True));
+                     end if;
                   end if;
                end;
             end if;
          end loop;
 
       else
-         Insert_If_Defined
-           (Deps_Lib,
-            1,
-            From_Hierarchy
-              (View, Source, BN & D_Suffix, Library_ALI_Dir, True));
+         if Filter (Dependency_File_Artifact) then
+            Insert_If_Defined
+              (Deps_Lib,
+               1,
+               From_Hierarchy
+                 (View, Source, BN & D_Suffix, Library_ALI_Dir, True));
+         end if;
 
          if View.Kind /= K_Aggregate_Library then
-            Insert_If_Defined
-              (Object_Files,
-               1,
-               From_Hierarchy
-                 (View, Source, BN & O_Suffix, Object_Dir, True));
-            Insert_If_Defined
-              (Deps_Obj,
-               1,
-               From_Hierarchy
-                 (View, Source, BN & D_Suffix, Object_Dir, True));
+            if Filter (Object_File_Artifact) then
+               Insert_If_Defined
+                 (Object_Files,
+                  1,
+                  From_Hierarchy
+                    (View, Source, BN & O_Suffix, Object_Dir, True));
+            end if;
+
+            if Filter (Dependency_File_Artifact) then
+               Insert_If_Defined
+                 (Deps_Obj,
+                  1,
+                  From_Hierarchy
+                    (View, Source, BN & D_Suffix, Object_Dir, True));
+            end if;
          end if;
       end if;
 
       if View.Kind /= K_Aggregate_Library then
-         Callgraph := GPR2.Path_Name.Create_File
-           (BN & C_Suffix,
-            Filename_Type (View.Object_Directory.Value));
-         Coverage := GPR2.Path_Name.Create_File
-           (BN & Cov_Suffix,
-            Filename_Type (View.Object_Directory.Value));
-         Switches := GPR2.Path_Name.Create_File
-           (BN & S_Suffix,
-            Filename_Type (View.Object_Directory.Value));
+         if Filter (Callgraph_Artifact) then
+            Callgraph := GPR2.Path_Name.Create_File
+              (BN & C_Suffix,
+               Filename_Type (View.Object_Directory.Value));
+         end if;
+         if Filter (Coverage_Artifact) then
+            Coverage := GPR2.Path_Name.Create_File
+              (BN & Cov_Suffix,
+               Filename_Type (View.Object_Directory.Value));
+         end if;
+         if Filter (Switches_Artifact) then
+            Switches := GPR2.Path_Name.Create_File
+              (BN & S_Suffix,
+               Filename_Type (View.Object_Directory.Value));
+         end if;
+      end if;
+
+      if Filter (Preprocessed_Source_Artifact) then
+         Preprocessed := GPR2.Path_Name.Create_File
+           (Src.Path_Name.Simple_Name & P_Suffix,
+            Filename_Optional (View.Object_Directory.Value));
       end if;
 
       return Artifact.Object'

@@ -32,6 +32,17 @@ with GPR2.Project.Source;
 
 package GPR2.Project.Source.Artifact is
 
+   type Artifact_Category is
+     (Object_File_Artifact,
+      Dependency_File_Artifact,
+      Callgraph_Artifact,
+      Switches_Artifact,
+      Preprocessed_Source_Artifact,
+      Coverage_Artifact);
+
+   type Artifact_Filter is array (Artifact_Category) of Boolean;
+   All_Artifacts : constant Artifact_Filter := (others => True);
+
    type Object is tagged private;
 
    Undefined : constant Object;
@@ -48,7 +59,8 @@ package GPR2.Project.Source.Artifact is
 
    function Create
      (Source     : Project.Source.Object;
-      Force_Spec : Boolean := False) return Artifact.Object
+      Force_Spec : Boolean := False;
+      Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
      with Pre => Source.Is_Defined;
    --  Constructor for Object defining the artifacts for the given Source.
    --  Force_Spec is for the case when specification has implementation part
