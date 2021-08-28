@@ -1813,6 +1813,7 @@ package body GPRinstall.Install is
                        and then L.Is_Externally_Built
                        and then not L.Has_Sources
                      then
+                        Opts_Append ("-L" & L.Library_Directory.Value);
                         Opts_Append ("-l" & String (L.Library_Name));
                      end if;
                   end loop;
