@@ -100,7 +100,7 @@ package body GPR2.Project.Tree is
      (View   : Project.View.Object;
       Unit   : GPR2.Unit.Object;
       Result : in out Source.Object) return Boolean;
-   --  Get source by unit name and kind from the same subtree with the View.
+   --  Get source by unit name and kind from the same subtree with the View
 
    procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean);
 
@@ -188,7 +188,8 @@ package body GPR2.Project.Tree is
 
    procedure Update_Project_Search_Path_From_Config
      (Self : in out Object;
-      Conf : Project.Configuration.Object);
+      Conf : Project.Configuration.Object)
+     with Pre => Conf.Is_Defined;
    --  Update project search path with directories relevant to
 
    procedure Get_File
@@ -1292,7 +1293,9 @@ package body GPR2.Project.Tree is
                P_Data.Packs,
                P_Data.Types);
 
-            Update_Project_Search_Path_From_Config (Self, Self.Conf);
+            if Self.Conf.Is_Defined then
+               Update_Project_Search_Path_From_Config (Self, Self.Conf);
+            end if;
 
             pragma Assert
               (P_Data.Kind = K_Configuration,
@@ -2054,7 +2057,7 @@ package body GPR2.Project.Tree is
          end if;
       end if;
 
-      --  We need to reconfigure in order to account for new languages.
+      --  We need to reconfigure in order to account for new languages
 
       Conf := Project.Configuration.Create
         (Post_Conf_Description.Element,
@@ -2217,7 +2220,7 @@ package body GPR2.Project.Tree is
       function Is_Limited
          (View         : GPR2.Project.View.Object;
           Import_Path  : Path_Name.Object) return Boolean;
-      --  Returns True if the Import_Path is a limited with in View.
+      --  Returns True if the Import_Path is a limited with in View
 
       procedure Propagate_Aggregate_Library
         (View        : in out GPR2.Project.View.Object;
@@ -2684,7 +2687,7 @@ package body GPR2.Project.Tree is
 
       begin
          if Context = GPR2.Context.Aggregate then
-            --  In the closure of an aggregate project.
+            --  In the closure of an aggregate project
 
             --  Take care of nested aggregates: only the root aggregate project
             --  defines the context.
@@ -4076,10 +4079,6 @@ package body GPR2.Project.Tree is
       end Is_Bin_Path;
 
    begin
-      if not Conf.Is_Defined then
-         return;
-      end if;
-
       if Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
          Compiler :=
            Conf.Corresponding_View.Packages.Element (Registry.Pack.Compiler);
@@ -4106,41 +4105,61 @@ package body GPR2.Project.Tree is
       for Sub of PATH_Subs loop
          if Is_Bin_Path (Sub) then
             for Driver of Drivers loop
-               if Driver.Value.Text = "" then
-                  goto Next_Driver;
-               end if;
+               if Driver.Value.Text /= "" then
+                  declare
+                     Driver_Dir    : constant String :=
+                                       Normalize_Pathname
+                                         (Directories.Containing_Directory
+                                            (String (Driver.Value.Text)),
+                                          Case_Sensitive => False);
+                     Toolchain_Dir : constant String :=
+                                       Directories.Containing_Directory
+                                         (Driver_Dir);
+                     Index         : constant Language_Id :=
+                                       +Name_Type (Driver.Index.Value);
+                  begin
+                     if Driver_Dir =
+                       Normalize_Pathname (Sub, Case_Sensitive => False)
+                     then
+                        if Given_Set then
+                           --  We only care for runtime if it is a simple
+                           --  name. Runtime specific names go with explicitly
+                           --  specified target (if it has been specifed).
 
-               declare
-                  Driver_Dir    : constant String :=
-                                    Normalize_Pathname
-                                      (Directories.Containing_Directory
-                                         (String (Driver.Value.Text)),
-                                       Case_Sensitive => False);
-                  Toolchain_Dir : constant String :=
-                                    Directories.Containing_Directory
-                                      (Driver_Dir);
-                  Index         : constant Language_Id :=
-                                    +Name_Type (Driver.Index.Value);
-               begin
-                  if Driver_Dir =
-                    Normalize_Pathname (Sub, Case_Sensitive => False)
-                  then
-                     if Given_Set then
-                        --  We only care for runtime if it is a simple name.
-                        --  Runtime specific names go with explicitly specified
-                        --  target (if it has been specifed).
+                           if Conf.Runtime (Index) /= No_Name
+                             and then not
+                               (for some C of Conf.Runtime (Index) =>
+                                      C in '/' | '\')
+                           then
+                              Append
+                                (Toolchain_Dir
+                                 & Directory_Separator
+                                 & (String (Given_Target.Value.Text))
+                                 & Directory_Separator
+                                 & String (Conf.Runtime (Index))
+                                 & Directory_Separator
+                                 & "share"
+                                 & Directory_Separator
+                                 & "gpr");
+                              Append
+                                (Toolchain_Dir
+                                 & Directory_Separator
+                                 & (String (Given_Target.Value.Text))
+                                 & Directory_Separator
+                                 & String (Conf.Runtime (Index))
+                                 & Directory_Separator
+                                 & "lib"
+                                 & Directory_Separator
+                                 & "gnat");
+                           end if;
 
-                        if Conf.Runtime (Index) /= No_Name
-                          and then not
-                            (for some C of Conf.Runtime (Index) =>
-                                    C in '/' | '\')
-                        then
+                           --  Explicitly specified target may be not in
+                           --  canonical form.
+
                            Append
                              (Toolchain_Dir
                               & Directory_Separator
                               & (String (Given_Target.Value.Text))
-                              & Directory_Separator
-                              & String (Conf.Runtime (Index))
                               & Directory_Separator
                               & "share"
                               & Directory_Separator
@@ -4150,20 +4169,34 @@ package body GPR2.Project.Tree is
                               & Directory_Separator
                               & (String (Given_Target.Value.Text))
                               & Directory_Separator
-                              & String (Conf.Runtime (Index))
+                              & "lib"
+                              & Directory_Separator
+                              & "gnat");
+                        end if;
+
+                        if Canon_Set then
+                           --  Old cgpr files can miss Canonical_Target
+
+                           Append
+                             (Toolchain_Dir
+                              & Directory_Separator
+                              & (String (Canon_Target.Value.Text))
+                              & Directory_Separator
+                              & "share"
+                              & Directory_Separator
+                              & "gpr");
+                           Append
+                             (Toolchain_Dir
+                              & Directory_Separator
+                              & (String (Canon_Target.Value.Text))
                               & Directory_Separator
                               & "lib"
                               & Directory_Separator
                               & "gnat");
                         end if;
 
-                        --  Explicitly specified target may be not in canonical
-                        --  form.
-
                         Append
                           (Toolchain_Dir
-                           & Directory_Separator
-                           & (String (Given_Target.Value.Text))
                            & Directory_Separator
                            & "share"
                            & Directory_Separator
@@ -4171,50 +4204,12 @@ package body GPR2.Project.Tree is
                         Append
                           (Toolchain_Dir
                            & Directory_Separator
-                           & (String (Given_Target.Value.Text))
-                           & Directory_Separator
                            & "lib"
                            & Directory_Separator
                            & "gnat");
                      end if;
-
-                     if Canon_Set then
-                        --  Old cgpr files can miss Canonical_Target
-
-                        Append
-                          (Toolchain_Dir
-                           & Directory_Separator
-                           & (String (Canon_Target.Value.Text))
-                           & Directory_Separator
-                           & "share"
-                           & Directory_Separator
-                           & "gpr");
-                        Append
-                          (Toolchain_Dir
-                           & Directory_Separator
-                           & (String (Canon_Target.Value.Text))
-                           & Directory_Separator
-                           & "lib"
-                           & Directory_Separator
-                           & "gnat");
-                     end if;
-
-                     Append
-                       (Toolchain_Dir
-                        & Directory_Separator
-                        & "share"
-                        & Directory_Separator
-                        & "gpr");
-                     Append
-                       (Toolchain_Dir
-                        & Directory_Separator
-                        & "lib"
-                        & Directory_Separator
-                        & "gnat");
-                  end if;
-               end;
-
-               <<Next_Driver>>
+                  end;
+               end if;
             end loop;
          end if;
       end loop;
@@ -4232,7 +4227,7 @@ package body GPR2.Project.Tree is
    is
       use type Source_Info.Backend_Set;
       Internal : constant Boolean := Backends = Source_Info.No_Backends;
-      Was_RT   : Boolean := False;
+      Has_RT   : Boolean := False; -- True if Tree has a runtime view
    begin
       if not Internal then
          Self.Self.Rooted_Sources.Clear;
@@ -4241,7 +4236,7 @@ package body GPR2.Project.Tree is
 
       for V of reverse Self.Ordered_Views loop
          if V.Is_Runtime then
-            Was_RT := True;
+            Has_RT := True;
          end if;
 
          if With_Runtime or else not V.Is_Runtime then
@@ -4249,7 +4244,7 @@ package body GPR2.Project.Tree is
          end if;
       end loop;
 
-      if With_Runtime and then not Was_RT and then Self.Runtime.Is_Defined then
+      if With_Runtime and then not Has_RT and then Self.Runtime.Is_Defined then
          --  Runtime update sources is required, but runtime project is not in
          --  the Self.Ordered_Views.
 
