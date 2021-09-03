@@ -43,7 +43,7 @@ package body GPR2.Project.Source is
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
-     with Pre => Self.Is_Defined and then Self.Source.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Source.Get.Has_Units;
    --  Returns the source files on which the current source file depends
    --  (potentially transitively). The dependence built on top of Ada "with"
    --  statements.
@@ -164,8 +164,7 @@ package body GPR2.Project.Source is
          end loop;
       end Output;
 
-      Buf  : Source_Reference.Identifier.Set.Object :=
-               Self.Source.Context_Clause_Dependencies;
+      Buf  : Source_Reference.Identifier.Set.Object;
       --  Buf contains units to be checked, this list is extended when looking
       --  for the full-closure. Using this list we avoid a recursive call.
 
@@ -178,7 +177,7 @@ package body GPR2.Project.Source is
          Position : Source_Reference.Identifier.Set.Cursor;
          Inserted : Boolean;
       begin
-         for CU of Src.Source.Units loop
+         for CU of Src.Source.Get.Units loop
             for W of CU.Dependencies loop
                U_Done.Insert (W.Text, Done_Pos, Inserted);
 
@@ -277,13 +276,14 @@ package body GPR2.Project.Source is
    begin
       return Result : Object :=
         Object'
-          (Source,
+          (Src_Ref.Null_Ref,
            Definition.Weak (View),
            Is_Interface     => Is_Interface,
            Naming_Exception => Naming_Exception,
            Is_Compilable    => Is_Compilable,
            others           => <>)
       do
+         Result.Source.Set (Source);
          if Aggregated.Is_Defined then
             Result.Aggregated := Definition.Weak (Aggregated);
          end if;
@@ -341,7 +341,6 @@ package body GPR2.Project.Source is
          Kind  : GPR2.Unit.Library_Unit_Type)
       is
          pragma Unreferenced (Unit, Kind);
-
          S        : Project.Source.Object;
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
@@ -354,8 +353,8 @@ package body GPR2.Project.Source is
             For_Each (S);
 
             if Closure then
-               for CU of S.Source.Units loop
-                  S.Source.Dependencies
+               for CU of S.Source.Get.Units loop
+                  S.Source.Get.Dependencies
                     (Action'Access, Source_Info.Unit_Index (CU.Index));
                end loop;
             end if;
@@ -363,7 +362,7 @@ package body GPR2.Project.Source is
       end Action;
 
    begin
-      Self.Source.Dependencies (Action'Access, Index);
+      Self.Source.Get.Dependencies (Action'Access, Index);
 
       if Done.Is_Empty then
          --  It mean that we do not have ALI file parsed, try to get "with"
@@ -414,7 +413,7 @@ package body GPR2.Project.Source is
 
          if Inserted
            and then View (Self).Check_Source (Sfile, Src)
-           and then Src.Source.Check_Unit
+           and then Src.Source.Get.Check_Unit
              (Unit, Kind in GPR2.Unit.Spec_Kind, CU)
          then
             For_Each (Src, CU);
@@ -422,7 +421,7 @@ package body GPR2.Project.Source is
       end On_Dependency;
 
    begin
-      Self.Source.Dependencies (On_Dependency'Access, Index);
+      Self.Source.Get.Dependencies (On_Dependency'Access, Index);
    end Dependencies;
 
    --------------------------
@@ -447,7 +446,7 @@ package body GPR2.Project.Source is
       View   : constant Project.View.Object  :=
                  Definition.Strong (Self.View);
       Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
-      Source : constant GPR2.Source.Object   := Self.Source;
+      Source : constant GPR2.Source.Object   := Project.Source.Source (Self);
    begin
       if Source.Is_Defined
         and then Source.Has_Units
@@ -523,11 +522,11 @@ package body GPR2.Project.Source is
          return True;
       end if;
 
-      if not Self.Source.Is_Ada then
+      if not Self.Source.Get.Is_Ada then
          return False;
       end if;
 
-      for CU of Self.Source.Units loop
+      for CU of Self.Source.Get.Units loop
          if Definition.Check_Source_Unit (Self_View, CU, Try)
            and then View (Try) /= Self_View
            and then View (Try).Is_Extending (Parent => Self_View)
@@ -612,9 +611,14 @@ package body GPR2.Project.Source is
    -- Source --
    ------------
 
-   function Source (Self : Object) return GPR2.Source.Object is
+   function Source (Self : Object) return GPR2.Source.Object
+   is
    begin
-      return Self.Source;
+      if Self.Is_Defined then
+         return Self.Source.Get.Element.all;
+      else
+         return GPR2.Source.Undefined;
+      end if;
    end Source;
 
    ------------
@@ -622,10 +626,11 @@ package body GPR2.Project.Source is
    ------------
 
    procedure Update
-     (Self     : in out Object;
-      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
+     (Self         : in out Object;
+      Backends     : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
-      Language : constant Language_Id := Self.Source.Language;
+      Source   : constant Src_Ref.Element_Access := Self.Source.Get.Element;
+      Language : constant Language_Id := Source.Language;
 
       procedure Clarify_Unit_Type;
       --  Set Kind to Spec_Only for the units without body and
@@ -639,7 +644,7 @@ package body GPR2.Project.Source is
          use Definition;
          Def : constant Ref := Get (Strong (Self.View));
       begin
-         for U of Self.Source.Units loop
+         for U of Source.Units loop
             declare
                use GPR2.Unit;
                package US renames Unit_Info.Set.Set;
@@ -656,13 +661,13 @@ package body GPR2.Project.Source is
 
                procedure Update_Kind (Kind : Library_Unit_Type) is
                begin
-                  Self.Source.Update_Kind
+                  Self.Source.Get.Update_Kind
                     (Kind, Source_Info.Unit_Index (U.Index));
                end Update_Kind;
 
             begin
                if not US.Has_Element (CU) then
-                  if Self.Source.Is_Runtime then
+                  if Source.Is_Runtime then
                      return;
                   end if;
 
@@ -708,7 +713,7 @@ package body GPR2.Project.Source is
       end Clarify_Unit_Type;
 
    begin
-      if not Self.Source.Has_Units or else Self.Source.Is_Parsed then
+      if not Source.Has_Units or else Source.Is_Parsed then
          return;
       end if;
 
@@ -732,10 +737,10 @@ package body GPR2.Project.Source is
 
                Source_Info.Parser.Compute
                  (Self   => Backend,
-                  Data   => Self.Source,
+                  Data   => Source.all,
                   Source => Self);
 
-               exit when Self.Source.Is_Parsed;
+               exit when Source.Is_Parsed;
             end;
          end if;
       end loop;

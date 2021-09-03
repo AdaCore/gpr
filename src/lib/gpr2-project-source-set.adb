@@ -197,7 +197,7 @@ package body GPR2.Project.Source.Set is
      (Iter   : Iterator'Class;
       Source : Project.Source.Object) return Boolean
    is
-      Src : constant GPR2.Source.Object := Source.Source;
+      Src : constant GPR2.Source.Object := Project.Source.Source (Source);
    begin
       --  We check the S_All filter here as getting the Kind for a source may
       --  require a parsing to know whether we have a body or a separate unit.

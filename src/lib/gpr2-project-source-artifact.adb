@@ -90,7 +90,7 @@ package body GPR2.Project.Source.Artifact is
       Force_Spec : Boolean := False;
       Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
    is
-      Src  : constant GPR2.Source.Object := Source.Source;
+      Src  : constant GPR2.Source.Object := Project.Source.Source (Source);
       Main : constant GPR2.Project.Source.Object :=
                (if Source.Has_Other_Part
                   and then Source.Naming_Exception in Naming_Exception_Value
@@ -238,7 +238,8 @@ package body GPR2.Project.Source.Artifact is
    is
       function Get_Dep (F : Filename_Type) return GPR2.Path_Name.Object;
 
-      Src        : constant GPR2.Source.Object := Source.Source;
+      Src        : constant GPR2.Source.Object :=
+                     Project.Source.Source (Source);
       Main       : constant GPR2.Project.Source.Object :=
                      (if Source.Has_Other_Part
                       and then
@@ -548,7 +549,8 @@ package body GPR2.Project.Source.Artifact is
 
    function List_To_Clean (Self : Object) return GPR2.Path_Name.Set.Object is
       P_Source : constant GPR2.Project.Source.Object := Self.Source;
-      Source   : constant GPR2.Source.Object := P_Source.Source;
+      Source   : constant GPR2.Source.Object :=
+                   GPR2.Project.Source.Source (P_Source);
       Lang     : constant Language_Id := Source.Language;
       View     : constant Project.View.Object :=
                    Definition.Strong (P_Source.View);
