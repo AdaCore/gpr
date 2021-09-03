@@ -191,6 +191,12 @@ package GPR2.Project.Source is
    --  Returns the project's source containing the other part for this project
    --  source's unit at the given index.
 
+   function Other_Part_Unchecked
+     (Self : Object;
+      Index : Source_Info.Unit_Index := 1) return Object;
+   --  Same as Other_Part, but returns Undefined if no other part exists for
+   --  Self.
+
    function Separate_From
      (Self  : Object;
       Index : Source_Info.Unit_Index := 1) return Object
