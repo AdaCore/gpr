@@ -31,6 +31,8 @@ with GPR2.Source_Info;
 limited with GPR2.Project.Source.Artifact;
 limited with GPR2.Project.Source.Set;
 
+private with GNATCOLL.Refcount;
+
 package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
@@ -198,15 +200,18 @@ package GPR2.Project.Source is
    --  the given index.
 
    procedure Update
-     (Self     : in out Object;
-      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
+     (Self         : in out Object;
+      Backends     : Source_Info.Backend_Set := Source_Info.All_Backends)
      with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
    --  Ensure that the project source is parsed/updated if needed
 
 private
 
+   package Src_Ref is new GNATCOLL.Refcount.Shared_Pointers
+     (GPR2.Source.Object);
+
    type Object is tagged record
-      Source           : GPR2.Source.Object;
+      Source           : Src_Ref.Ref;
       View             : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
@@ -232,10 +237,20 @@ private
         (Self.Aggregated, Definition_References.Null_Weak_Ref));
 
    function "<" (Left, Right : Object) return Boolean is
-     (Left.Source < Right.Source);
+     (if not Left.Is_Defined then
+         Left /= Right
+      elsif not Right.Is_Defined then
+         False
+      else
+         Left.Source.Get.Element.all < Right.Source.Get.Element.all);
 
    overriding function "=" (Left, Right : Object) return Boolean is
-     (Left.Source = Right.Source);
+     (if Left.Source.Is_Null then
+        Right.Source.Is_Null
+      elsif Right.Source.Is_Null then
+         False
+      else
+        Left.Source.Get.Element.all = Right.Source.Get.Element.all);
 
    function Is_Interface (Self : Object) return Boolean is
      (Self.Is_Interface);
@@ -247,6 +262,6 @@ private
      (Self.Naming_Exception);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
-     (Self.Source.Path_Name);
+     (Self.Source.Get.Path_Name);
 
 end GPR2.Project.Source;

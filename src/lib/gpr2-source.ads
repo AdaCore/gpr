@@ -34,7 +34,7 @@ with GPR2.Source_Info;
 
 package GPR2.Source is
 
-   use type GPR2.Unit.Library_Unit_Type;
+   --  use type GPR2.Unit.Library_Unit_Type;
 
    type Object is new Source_Info.Object with private;
 
