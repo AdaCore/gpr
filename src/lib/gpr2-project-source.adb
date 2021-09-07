@@ -585,6 +585,72 @@ package body GPR2.Project.Source is
       end case;
    end Other_Part;
 
+   --------------------------
+   -- Other_Part_Unchecked --
+   --------------------------
+
+   function Other_Part_Unchecked
+     (Self : Object;
+      Index : Source_Info.Unit_Index := 1) return Object
+   is
+      use all type GPR2.Unit.Library_Unit_Type;
+
+      View   : constant Project.View.Object  :=
+                 Definition.Strong (Self.View);
+      Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
+      Source : constant GPR2.Source.Object   := Project.Source.Source (Self);
+   begin
+      if Source.Is_Defined
+        and then Source.Has_Units
+        and then Source.Units.Length >= Containers.Count_Type (Index)
+      then
+         declare
+            CU     : constant GPR2.Unit.Object :=
+                       Source.Units.Element (Positive (Index));
+            Kind   : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
+            C_Unit : constant Unit_Info.Set.Cursor :=
+                       Data.Units.Find
+                         (if Kind = S_Separate
+                          then CU.Separate_From
+                          else CU.Name);
+         begin
+            if Unit_Info.Set.Set.Has_Element (C_Unit) then
+               declare
+                  Unit : constant Unit_Info.Set.Set.Constant_Reference_Type :=
+                           Data.Units (C_Unit);
+               begin
+                  case Kind is
+                     when GPR2.Unit.Body_Kind =>
+                        if Unit.Spec.Is_Defined then
+                           return View.Source (Unit.Spec);
+                        elsif Unit.Separates.Length > 0 then
+                           --  ??? returning first separate
+                           return View.Source (Unit.Separates.First_Element);
+                        end if;
+
+                     when GPR2.Unit.Spec_Kind =>
+                        if Unit.Main_Body.Is_Defined then
+                           return View.Source (Unit.Main_Body);
+                        elsif Unit.Separates.Length > 0 then
+                           --  ??? returning first separate
+                           return View.Source (Unit.Separates.First_Element);
+                        end if;
+
+                     when S_Separate =>
+                        if Unit.Spec.Is_Defined then
+                           return View.Source (Unit.Spec);
+                        elsif Unit.Main_Body.Is_Defined then
+                           return View.Source (Unit.Main_Body);
+                        end if;
+                  end case;
+               end;
+            end if;
+         end;
+      end if;
+
+      return Undefined;
+   end Other_Part_Unchecked;
+
    -------------------
    -- Separate_From --
    -------------------

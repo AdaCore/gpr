@@ -181,13 +181,18 @@ package body GPRls.Gnatdist is
       --  Output Units
 
       Output_Unit (Unit, Source);
-      if Source.Has_Other_Part (Source_Info.Unit_Index (Index))
-        and then Source.Other_Part
-          (Source_Info.Unit_Index (Index)).Source.Check_Unit
+      declare
+         Other : constant GPR2.Project.Source.Object :=
+                   Source.Other_Part_Unchecked
+                     (Source_Info.Unit_Index (Index));
+      begin
+         if Other.Is_Defined
+           and then Other.Source.Check_Unit
             (Unit.Name, Unit.Kind not in GPR2.Unit.Spec_Kind, Part)
-      then
-         Output_Unit (Part, Source.Other_Part);
-      end if;
+         then
+            Output_Unit (Part, Other);
+         end if;
+      end;
 
       --  Output Sdeps
 

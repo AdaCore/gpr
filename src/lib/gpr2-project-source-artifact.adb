@@ -90,19 +90,23 @@ package body GPR2.Project.Source.Artifact is
       Force_Spec : Boolean := False;
       Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
    is
-      Src  : constant GPR2.Source.Object := Project.Source.Source (Source);
-      Main : constant GPR2.Project.Source.Object :=
-               (if Source.Has_Other_Part
-                  and then Source.Naming_Exception in Naming_Exception_Value
-                  and then Src.Has_Single_Unit
-                  and then Src.Kind = Unit.S_Spec
-                  and then not Force_Spec
-                then Source.Other_Part
-                else Source);
-      BN   : constant Filename_Type := Main.Path_Name.Base_Filename;
-      Lang : constant Language_Id := Src.Language;
-      View : constant Project.View.Object :=
-               Definition.Strong (Source.View);
+      Src   : constant GPR2.Source.Object := Project.Source.Source (Source);
+      Other : constant GPR2.Project.Source.Object :=
+                (if Source.Naming_Exception in Naming_Exception_Value
+                 and then Src.Has_Units
+                 and then Src.Has_Single_Unit
+                 and then Src.Kind = Unit.S_Spec
+                 and then not Force_Spec
+                 then Source.Other_Part_Unchecked
+                 else GPR2.Project.Source.Undefined);
+      Main  : constant GPR2.Project.Source.Object :=
+                (if Other.Is_Defined
+                 then Other
+                 else Source);
+      BN    : constant Filename_Type := Main.Path_Name.Base_Filename;
+      Lang  : constant Language_Id := Src.Language;
+      View  : constant Project.View.Object :=
+                Definition.Strong (Source.View);
 
       O_Suffix   : constant Filename_Type := View.Tree.Object_Suffix (Lang);
       D_Suffix   : constant Filename_Type :=
@@ -240,13 +244,16 @@ package body GPR2.Project.Source.Artifact is
 
       Src        : constant GPR2.Source.Object :=
                      Project.Source.Source (Source);
-      Main       : constant GPR2.Project.Source.Object :=
-                     (if Source.Has_Other_Part
-                      and then
-                        Source.Naming_Exception in Naming_Exception_Value
+      Other      : constant GPR2.Project.Source.Object :=
+                     (if Source.Naming_Exception in Naming_Exception_Value
+                      and then Src.Has_Units
                       and then Src.Has_Single_Unit
                       and then Src.Kind = Unit.S_Spec
-                      then Source.Other_Part
+                      then Source.Other_Part_Unchecked
+                      else GPR2.Project.Source.Undefined);
+      Main       : constant GPR2.Project.Source.Object :=
+                     (if Other.Is_Defined
+                      then Other
                       else Source);
       BN         : constant Filename_Type := Main.Path_Name.Base_Filename;
       Lang       : constant Language_Id := Src.Language;
