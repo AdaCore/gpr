@@ -5,4 +5,4 @@ runtime dir = rts-rtp
 
 target = this-target
 compiler driver = gcc
-runtime dir = rts-zfp
+runtime dir = rts-light
