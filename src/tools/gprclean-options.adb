@@ -52,7 +52,6 @@ package body GPRclean.Options is
       Add (Self.All_Projects,             Next.All_Projects);
       Add (Self.Remain_Useful,            Next.Remain_Useful);
       Add (Self.No_Project,               Next.No_Project);
-      Add (Self.Debug_Mode,               Next.Debug_Mode);
       Add (Self.Full_Path_Name_For_Brief, Next.Full_Path_Name_For_Brief);
       Add (Self.Remove_Empty_Dirs,        Next.Remove_Empty_Dirs);
       Add (Self.Unchecked_Shared_Lib,     Next.Unchecked_Shared_Lib);
@@ -161,8 +160,6 @@ package body GPRclean.Options is
 
       Getopt
         (Config, Parser => Parser, Quiet => Additional, Concatenate => False);
-
-      GPR2.Set_Debug (Options.Debug_Mode);
 
       if Additional then
          --  Next options should be parsed only from command line

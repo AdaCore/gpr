@@ -241,9 +241,9 @@ package body GPR2 is
    -- Set_Debug --
    ---------------
 
-   procedure Set_Debug (Enable : Boolean) is
+   procedure Set_Debug (Mode : Character; Enable : Boolean := True) is
    begin
-      Debug := Enable;
+      Debug (Mode) := Enable;
    end Set_Debug;
 
    -------------------

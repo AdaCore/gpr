@@ -248,6 +248,11 @@ package body GPRtools.Options is
          Long_Switch => "--unchecked-shared-lib-imports",
          Help => "Shared lib projects may import any project");
 
+      Define_Switch
+        (Self.Config, Value_Callback'Access,
+         Long_Switch => "--debug?",
+         Help        => "Debug mode");
+
       if Tool not in Remote | Ls then
          Define_Switch
            (Self.Config, Value_Callback'Unrestricted_Access,
@@ -280,11 +285,6 @@ package body GPRtools.Options is
             Help        =>
               "Root obj/lib/exec dirs are current-directory or dir",
             Argument    => "<dir>");
-
-         Define_Switch
-           (Self.Config, Self.Debug_Mode'Access,
-            Long_Switch => "--debug",
-            Help        => "Debug mode");
       end if;
 
       if Tool in Build | Clean | Install | Ls then
@@ -521,6 +521,9 @@ package body GPRtools.Options is
 
             Self.KB_Locations.Append (KB_Path);
          end;
+
+      elsif Switch = "--debug" then
+         GPR2.Set_Debug (if Value = "" then '0' else Value (Value'First));
       end if;
    end Value_Callback;
 

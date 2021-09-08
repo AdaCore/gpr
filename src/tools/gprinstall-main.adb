@@ -285,8 +285,6 @@ procedure GPRinstall.Main is
 
       Getopt (Options.Config);
 
-      GPR2.Set_Debug (Options.Debug_Mode);
-
       --  If preceding switch was -P, a project file name need to be
       --  specified, not a switch.
 

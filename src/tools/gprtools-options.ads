@@ -72,7 +72,6 @@ package GPRtools.Options is
       Slave_Env_Auto           : Boolean := False;
       Hash_Value               : Unbounded_String;
 
-      Debug_Mode               : aliased Boolean := False;
       Verbosity                : Verbosity_Level := Regular;
       Root_Path                : GPR2.Path_Name.Object;
       Build_Path               : GPR2.Path_Name.Object;

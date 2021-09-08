@@ -115,8 +115,7 @@ package GPR2 is
 
    overriding function "=" (Left, Right : Optional_Name_Type) return Boolean;
    overriding function "<" (Left, Right : Optional_Name_Type) return Boolean;
-   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type
-     is (Ada.Strings.Hash_Case_Insensitive (String (N)));
+   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type;
 
    function To_Lower (Name : Name_Type) return Value_Not_Empty;
    --  Convert name to lowercased String. Need to be able to use "in" operator
@@ -163,8 +162,11 @@ package GPR2 is
      with Dynamic_Predicate => Case_Sensitive_Name_Type'Length > 0;
    --  A case sensitive name
 
-   procedure Set_Debug (Enable : Boolean);
+   procedure Set_Debug (Mode : Character; Enable : Boolean := True);
    --  Sets global debug flag's value
+
+   function Is_Debug (Mode : Character) return Boolean;
+   --  Gets global debug flag's value
 
    type Word is mod 2 ** 32;
 
@@ -241,7 +243,7 @@ private
          when K_Aggregate         => "aggregate",
          when K_Aggregate_Library => "aggregate library") & " project");
 
-   Debug : Boolean := False;
+   Debug : array (Character range '0' .. 'Z') of Boolean := (others => False);
 
    function Get_File_Names_Case_Sensitive return Integer
      with Import, Convention => C,
@@ -265,10 +267,11 @@ private
      (Ada.Characters.Handling.To_Lower (String (Name)));
 
    function Has_Directory_Separator (Name : String) return Boolean is
-      (for some Char of Name => GNATCOLL.Utils.Is_Directory_Separator (Char));
+     (for some Char of Name => GNATCOLL.Utils.Is_Directory_Separator (Char));
 
    function Compile_Regexp
-     (Filename_Regexp : Filename_Optional) return GNAT.Regexp.Regexp is
+     (Filename_Regexp : Filename_Optional) return GNAT.Regexp.Regexp
+   is
      (GNAT.Regexp.Compile
         (Pattern        => String (Filename_Regexp),
          Glob           => True,
@@ -293,44 +296,51 @@ private
       Id_To_Name : Name_Vectors.Vector;
    end record;
 
-   function Id (List : in out Name_List;
-                Name : Optional_Name_Type) return Natural;
-   function Name (List : Name_List;
-                  Id   : Natural) return Optional_Name_Type;
-   function Image (List : Name_List;
-                   Id   : Natural) return String;
+   function Id
+     (List : in out Name_List; Name : Optional_Name_Type) return Natural;
+   function Name
+     (List : Name_List; Id : Natural) return Optional_Name_Type;
+   function Image
+     (List : Name_List; Id : Natural) return String;
 
    Language_List : Name_List;
 
-   function "+" (L : Optional_Name_Type) return Language_Id
-     is (Language_Id (Id (Language_List, L)));
-   function Name (L : Language_Id) return Optional_Name_Type
-     is (Name (Language_List, Natural (L)));
-   function Image (L : Language_Id) return String
-     is (Image (Language_List, Natural (L)));
-   function Hash (L : Language_Id) return Ada.Containers.Hash_Type
-     is (Ada.Containers.Hash_Type (L));
+   function "+" (L : Optional_Name_Type) return Language_Id is
+     (Language_Id (Id (Language_List, L)));
+   function Name (L : Language_Id) return Optional_Name_Type is
+     (Name (Language_List, Natural (L)));
+   function Image (L : Language_Id) return String is
+     (Image (Language_List, Natural (L)));
+   function Hash (L : Language_Id) return Ada.Containers.Hash_Type is
+     (Ada.Containers.Hash_Type (L));
 
    Attr_Id_List : Name_List;
 
-   function "+" (Name : Optional_Name_Type) return Optional_Attribute_Id
-     is (Optional_Attribute_Id (Id (Attr_Id_List, Name)));
-   function Name (Id : Optional_Attribute_Id) return Optional_Name_Type
-     is (Name (Attr_Id_List, Natural (Id)));
-   function Image (Id : Optional_Attribute_Id) return String
-     is (Image (Attr_Id_List, Natural (Id)));
-   function Hash (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type
-     is (Ada.Containers.Hash_Type (Id));
+   function "+" (Name : Optional_Name_Type) return Optional_Attribute_Id is
+     (Optional_Attribute_Id (Id (Attr_Id_List, Name)));
+   function Name (Id : Optional_Attribute_Id) return Optional_Name_Type is
+     (Name (Attr_Id_List, Natural (Id)));
+   function Image (Id : Optional_Attribute_Id) return String is
+     (Image (Attr_Id_List, Natural (Id)));
+   function Hash (N : Optional_Name_Type) return Ada.Containers.Hash_Type is
+     (Ada.Strings.Hash_Case_Insensitive (String (N)));
+   function Hash
+     (Id : Optional_Attribute_Id) return Ada.Containers.Hash_Type
+   is
+     (Ada.Containers.Hash_Type (Id));
 
    Pck_Id_List : Name_List;
 
-   function "+" (Name : Optional_Name_Type) return Optional_Package_Id
-     is (Optional_Package_Id (Id (Pck_Id_List, Name)));
-   function Name (Id : Optional_Package_Id) return Optional_Name_Type
-     is (Name (Pck_Id_List, Natural (Id)));
-   function Image (Id : Optional_Package_Id) return String
-     is (Image (Pck_Id_List, Natural (Id)));
-   function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type
-     is (Ada.Containers.Hash_Type (Id));
+   function "+" (Name : Optional_Name_Type) return Optional_Package_Id is
+     (Optional_Package_Id (Id (Pck_Id_List, Name)));
+   function Name (Id : Optional_Package_Id) return Optional_Name_Type is
+     (Name (Pck_Id_List, Natural (Id)));
+   function Image (Id : Optional_Package_Id) return String is
+     (Image (Pck_Id_List, Natural (Id)));
+   function Hash (Id : Optional_Package_Id) return Ada.Containers.Hash_Type is
+     (Ada.Containers.Hash_Type (Id));
+
+   function Is_Debug (Mode : Character) return Boolean is
+     (Debug (Mode));
 
 end GPR2;
