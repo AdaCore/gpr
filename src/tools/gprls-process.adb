@@ -454,6 +454,27 @@ begin
 
             Status : File_Status;
 
+            function No_Trail_Zero (Item : String) return String;
+            --  Remove trailing zeroes with possible dot and leading space
+
+            -------------------
+            -- No_Trail_Zero --
+            -------------------
+
+            function No_Trail_Zero (Item : String) return String is
+            begin
+               for J in reverse Item'Range loop
+                  if Item (J) /= '0' then
+                     return Item
+                       (Item'First +
+                          (if Item (Item'First) = ' ' then 1 else 0) ..
+                            J - (if Item (J) = '.' then 1 else 0));
+                  end if;
+               end loop;
+
+               return Item;
+            end No_Trail_Zero;
+
          begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
@@ -490,6 +511,24 @@ begin
 
                      when Not_Same =>
                         Text_IO.Put (" DIF ");
+
+                        if GPR2.Is_Debug ('F') then
+                           Text_IO.Put
+                             (if S.Source.Is_Parsed
+                              then S.Source.Used_Backend'Img
+                              else "~");
+
+                           if S.Source.Build_Timestamp /= S.Source.Timestamp
+                           then
+                              Text_IO.Put (' ');
+                              Text_IO.Put
+                                (No_Trail_Zero
+                                   (Duration'Image
+                                      (S.Source.Timestamp -
+                                          S.Source.Build_Timestamp)));
+                              Text_IO.Put (' ');
+                           end if;
+                        end if;
                   end case;
                end if;
 

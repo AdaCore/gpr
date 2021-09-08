@@ -9,7 +9,7 @@ bnr.call([GPRLS, "-s", "-d", "-P", "pa.gpr", "p0"])
 
 bnr.call(["gprbuild", "-j0", "-q", "-P", "pa.gpr"])
 bnr.call([GPRLS, "-d", "-P", "pa.gpr", "p0"])
-bnr.call([GPRLS, "-d", "-a0", "-P", "pa.gpr", "p0"])
+bnr.call([GPRLS, "-d", "-a0", "--debugF", "-P", "pa.gpr", "p0"])
 bnr.call([GPRCLEAN, "-r", "-P", "pa.gpr"])
 
 # With empty atrifact directories

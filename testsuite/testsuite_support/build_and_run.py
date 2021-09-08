@@ -2,6 +2,7 @@ import os
 import os.path
 
 from e3.testsuite.driver.classic import TestAbortWithError
+from e3.env import Env
 
 from testsuite_support.base_driver import BaseDriver, create_fake_ada_compiler
 from testsuite_support.builder_and_runner import BuilderAndRunner
@@ -47,26 +48,50 @@ class BuildAndRunDriver(BaseDriver):
     def run(self):
         env = {}
 
-        # If we are requested to run with a fake toolchain, set it up now
-        if self.fake_ada_target:
-            fake_dir = self.working_dir("fake-ada")
-            create_fake_ada_compiler(
-                self,
-                comp_dir=fake_dir,
-                comp_target=self.fake_ada_target,
-                gnat_version="21.0w",
-                gcc_version="8.4.3",
-                runtimes=["rtp"],
-                comp_is_cross=True,
-            )
-            env["PATH"] = (os.path.join(fake_dir, "bin")
-                           + os.path.pathsep
-                           + os.environ.get("PATH"))
-
         # Build the program and run it
+        # Note: do it *before* creating fake toolchains, in case a native
+        # fake compiler is requested.
         self.builder_and_runner.build(
             project=self.project_file,
             args=["-g1", "-q", "-p", "-bargs", "-Es"],
             env=env,
         )
+
+        # If we are requested to run with a fake toolchain, set it up now
+        if self.fake_ada_target:
+            if isinstance(self.fake_ada_target, list):
+                targets = self.fake_ada_target
+            else:
+                targets = [self.fake_ada_target]
+            paths = []
+            for tgt in targets:
+                fake_dir = self.working_dir("fake-ada-%s" % tgt)
+                paths.append(os.path.join(fake_dir, "bin"))
+
+                if 'linux' in tgt or 'windows' in tgt:
+                    is_cross = False
+                elif tgt == 'native':
+                    is_cross = False
+                    tgt = Env().host.triplet
+                else:
+                    is_cross = True
+                if not is_cross:
+                    rts = ["native", "sjlj", "light"]
+                elif 'vxworks' in tgt:
+                    rts = ["rtp"]
+                else:
+                    assert False, "unexpected fake target %s" % tgt
+
+                create_fake_ada_compiler(
+                    self,
+                    comp_dir=fake_dir,
+                    comp_target=tgt,
+                    gnat_version="21.0w",
+                    gcc_version="8.4.3",
+                    runtimes=rts,
+                    comp_is_cross=is_cross,
+                )
+            paths.append(os.environ.get("PATH"))
+            env["PATH"] = os.pathsep.join(paths)
+
         self.builder_and_runner.run([os.path.join(".", self.main_program)], env=env)
