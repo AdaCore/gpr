@@ -4,4 +4,6 @@ description:
 driver: build_and_run
 project_file: autoconf
 main: main
-fake_ada_target: x86_64-wrs-vxworks7
+fake_ada_target:
+  - x86_64-wrs-vxworks7
+  - native

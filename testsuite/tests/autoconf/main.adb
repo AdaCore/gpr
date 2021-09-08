@@ -50,7 +50,7 @@ procedure Main is
 
    procedure Print_Config_Info is
       Ada_I           : constant Project.Attribute_Index.Object :=
-                          Project.Attribute_Index.Create (+"Ada");
+                          Project.Attribute_Index.Create (GPR2.Ada_Language);
       Config_View     : constant Project.View.Object :=
                           Project_Tree.Configuration.Corresponding_View;
       Compiler_Driver : constant Path_Name.Object :=
