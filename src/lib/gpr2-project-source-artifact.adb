@@ -24,7 +24,6 @@
 
 with GPR2.Project.Tree;
 with GPR2.Project.Definition;
-with GPR2.Source;
 
 package body GPR2.Project.Source.Artifact is
 
@@ -90,12 +89,11 @@ package body GPR2.Project.Source.Artifact is
       Force_Spec : Boolean := False;
       Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
    is
-      Src   : constant GPR2.Source.Object := Project.Source.Source (Source);
       Other : constant GPR2.Project.Source.Object :=
                 (if Source.Naming_Exception in Naming_Exception_Value
-                 and then Src.Has_Units
-                 and then Src.Has_Single_Unit
-                 and then Src.Kind = Unit.S_Spec
+                 and then Source.Has_Units
+                 and then Source.Has_Single_Unit
+                 and then Source.Kind = GPR2.Unit.S_Spec
                  and then not Force_Spec
                  then Source.Other_Part_Unchecked
                  else GPR2.Project.Source.Undefined);
@@ -104,7 +102,7 @@ package body GPR2.Project.Source.Artifact is
                  then Other
                  else Source);
       BN    : constant Filename_Type := Main.Path_Name.Base_Filename;
-      Lang  : constant Language_Id := Src.Language;
+      Lang  : constant Language_Id := Source.Language;
       View  : constant Project.View.Object :=
                 Definition.Strong (Source.View);
 
@@ -126,8 +124,8 @@ package body GPR2.Project.Source.Artifact is
       Switches     : GPR2.Path_Name.Object;
 
    begin
-      if Src.Has_Units and then Src.Has_Index then
-         for CU of Src.Units loop
+      if Source.Has_Units and then Source.Has_Index then
+         for CU of Source.Units loop
             if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
                declare
                   Base : constant Filename_Type := BN & At_Suffix (CU.Index);
@@ -214,7 +212,7 @@ package body GPR2.Project.Source.Artifact is
 
       if Filter (Preprocessed_Source_Artifact) then
          Preprocessed := GPR2.Path_Name.Create_File
-           (Src.Path_Name.Simple_Name & P_Suffix,
+           (Source.Path_Name.Simple_Name & P_Suffix,
             Filename_Optional (View.Object_Directory.Value));
       end if;
 
@@ -242,13 +240,11 @@ package body GPR2.Project.Source.Artifact is
    is
       function Get_Dep (F : Filename_Type) return GPR2.Path_Name.Object;
 
-      Src        : constant GPR2.Source.Object :=
-                     Project.Source.Source (Source);
       Other      : constant GPR2.Project.Source.Object :=
                      (if Source.Naming_Exception in Naming_Exception_Value
-                      and then Src.Has_Units
-                      and then Src.Has_Single_Unit
-                      and then Src.Kind = Unit.S_Spec
+                      and then Source.Has_Units
+                      and then Source.Has_Single_Unit
+                      and then Source.Kind = GPR2.Unit.S_Spec
                       then Source.Other_Part_Unchecked
                       else GPR2.Project.Source.Undefined);
       Main       : constant GPR2.Project.Source.Object :=
@@ -256,7 +252,7 @@ package body GPR2.Project.Source.Artifact is
                       then Other
                       else Source);
       BN         : constant Filename_Type := Main.Path_Name.Base_Filename;
-      Lang       : constant Language_Id := Src.Language;
+      Lang       : constant Language_Id := Source.Language;
       View       : constant Project.View.Object :=
                      Definition.Strong (Source.View);
       D_Suffix   : constant Filename_Type :=
@@ -336,10 +332,10 @@ package body GPR2.Project.Source.Artifact is
       end Get_Dep;
 
    begin
-      if Src.Has_Units and then Src.Has_Index then
+      if Source.Has_Units and then Source.Has_Index then
          declare
-            CU : constant Unit.Object :=
-                   Src.Unit (GPR2.Source_Info.Unit_Index (Index));
+            CU : constant GPR2.Unit.Object :=
+                   Source.Unit (GPR2.Source_Info.Unit_Index (Index));
          begin
             if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
                declare
@@ -555,16 +551,14 @@ package body GPR2.Project.Source.Artifact is
    -------------------
 
    function List_To_Clean (Self : Object) return GPR2.Path_Name.Set.Object is
-      P_Source : constant GPR2.Project.Source.Object := Self.Source;
-      Source   : constant GPR2.Source.Object :=
-                   GPR2.Project.Source.Source (P_Source);
-      Lang     : constant Language_Id := Source.Language;
-      View     : constant Project.View.Object :=
-                   Definition.Strong (P_Source.View);
-      Result   : GPR2.Path_Name.Set.Object;
-      Name     : constant Filename_Type := Source.Path_Name.Simple_Name;
-      O_Dir    : constant Filename_Type :=
-                   Filename_Type (View.Object_Directory.Value);
+      Source : constant GPR2.Project.Source.Object := Self.Source;
+      Lang   : constant Language_Id := Source.Language;
+      View   : constant Project.View.Object :=
+                 Definition.Strong (Source.View);
+      Result : GPR2.Path_Name.Set.Object;
+      Name   : constant Filename_Type := Source.Path_Name.Simple_Name;
+      O_Dir  : constant Filename_Type :=
+                 Filename_Type (View.Object_Directory.Value);
 
       procedure Append_File (Name : Filename_Type);
       --  Append full filename constructed from Name and Object_Dir to result

@@ -37,10 +37,10 @@ procedure Main is
    use GPR2;
    use GPR2.Project;
 
-   procedure Display_Source (Src : GPR2.Source.Object);
+   procedure Display_Source (Src : GPR2.Source.Object'Class);
    procedure Test_Prj (Fname : Filename_Type);
 
-   procedure Display_Source (Src : GPR2.Source.Object) is
+   procedure Display_Source (Src : GPR2.Source.Object'Class) is
    begin
       Text_IO.Put_Line (String (Src.Path_Name.Simple_Name) & ": " & Src.Kind'Image);
    end Display_Source;
@@ -58,7 +58,7 @@ procedure Main is
          for V of reverse Prj.Ordered_Views loop
             Text_IO.Put_Line (String (V.Name));
             for S of V.Sources loop
-               Display_Source (S.Source);
+               Display_Source (S);
             end loop;
          end loop;
       exception

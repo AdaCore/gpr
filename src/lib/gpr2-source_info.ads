@@ -177,12 +177,6 @@ package GPR2.Source_Info is
    --  Returns the dependencies in Self associated with all the compilation
    --  units for the given Unit. The result may be empty.
 
-   function Dependencies
-     (Self  : Object;
-      Index : Unit_Index := 1) return Containers.Filename_List
-     with Pre => Self.Is_Defined and then Self.Has_Units;
-   --  Returns the list of source files dependencies
-
    procedure Dependencies
      (Self   : Object;
       Action : access procedure

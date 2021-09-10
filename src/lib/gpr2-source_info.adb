@@ -94,26 +94,9 @@ package body GPR2.Source_Info is
       return Result;
    end Context_Clause_Dependencies;
 
-   -----------------------
-   -- File_Dependencies --
-   -----------------------
-
-   function Dependencies
-     (Self  : Object;
-      Index : Unit_Index := 1) return Containers.Filename_List
-   is
-      Result : Containers.Filename_List;
-      C_Idx  : constant Unit_Dependencies.Cursor :=
-                 Self.Dependencies.Find (Index);
-   begin
-      if Unit_Dependencies.Has_Element (C_Idx) then
-         for D of Self.Dependencies (C_Idx) loop
-            Result.Append (Filename_Type (D.Sfile));
-         end loop;
-      end if;
-
-      return Result;
-   end Dependencies;
+   ------------------
+   -- Dependencies --
+   ------------------
 
    procedure Dependencies
      (Self   : Object;

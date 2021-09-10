@@ -52,7 +52,7 @@ procedure Main is
 
       for S of Prj.Sources loop
          Text_IO.Put ("   ");
-         Output_Filename (S.Source.Path_Name.Value);
+         Output_Filename (S.Path_Name.Value);
 
          for A of S.Artifacts.List loop
             Text_IO.Put ("      "); Output_Filename (A.Value);

@@ -71,7 +71,7 @@ package GPR2.Source is
    function Create
      (Filename : GPR2.Path_Name.Object;
       Language : Language_Id;
-      Kind     : GPR2.Unit.Library_Unit_Type) return Object
+      Kind     : GPR2.Unit.Library_Unit_Type) return Object'Class
      with Pre  => Filename.Is_Defined and then Language /= Ada_Language,
           Post => Create'Result.Is_Defined;
    --  Constructor for a non-Ada source object
@@ -80,7 +80,7 @@ package GPR2.Source is
      (Filename      : GPR2.Path_Name.Object;
       Units         : GPR2.Unit.List.Object;
       Is_RTS_Source : Boolean;
-      Is_Indexed    : Boolean) return Object
+      Is_Indexed    : Boolean) return Object'Class
      with Pre  => Filename.Is_Defined and then not Units.Is_Empty,
           Post => Create_Ada'Result.Is_Defined;
    --  Constructor for an Ada source object.

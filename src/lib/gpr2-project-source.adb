@@ -43,7 +43,7 @@ package body GPR2.Project.Source is
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object);
       Closure  : Boolean := False)
-     with Pre => Self.Is_Defined and then Self.Source.Get.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns the source files on which the current source file depends
    --  (potentially transitively). The dependence built on top of Ada "with"
    --  statements.
@@ -177,7 +177,7 @@ package body GPR2.Project.Source is
          Position : Source_Reference.Identifier.Set.Cursor;
          Inserted : Boolean;
       begin
-         for CU of Src.Source.Get.Units loop
+         for CU of Src.Units loop
             for W of CU.Dependencies loop
                U_Done.Insert (W.Text, Done_Pos, Inserted);
 
@@ -276,14 +276,13 @@ package body GPR2.Project.Source is
    begin
       return Result : Object :=
         Object'
-          (Src_Ref.Null_Ref,
+          (Source with
            Definition.Weak (View),
            Is_Interface     => Is_Interface,
            Naming_Exception => Naming_Exception,
            Is_Compilable    => Is_Compilable,
            others           => <>)
       do
-         Result.Source.Set (Source);
          if Aggregated.Is_Defined then
             Result.Aggregated := Definition.Weak (Aggregated);
          end if;
@@ -346,7 +345,6 @@ package body GPR2.Project.Source is
          S        : Project.Source.Object;
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
-         Source   : Src_Ref.Element_Access;
 
       begin
          Done.Insert (Sfile, Position, Inserted);
@@ -354,23 +352,21 @@ package body GPR2.Project.Source is
          if Inserted
            and then View (Self).Check_Source (Sfile, S)
          then
-            Source := S.Source.Get.Element;
-
-            if not Source.Is_Ada
-              and then not Source.Is_Parsed
-              and then Source.Kind in GPR2.Unit.Spec_Kind
+            if not S.Is_Ada
+              and then not S.Is_Parsed
+              and then S.Kind in GPR2.Unit.Spec_Kind
             then
-               --  None Ada spec build timestamp can be taken only from
+               --  Non-Ada spec build timestamp can be taken only from
                --  dependencies.
 
-               Source.Update_Build_Timestamp (Stamp);
+               S.Update_Build_Timestamp (Stamp);
             end if;
 
             For_Each (S);
 
             if Closure then
-               for CU of S.Source.Get.Units loop
-                  S.Source.Get.Dependencies
+               for CU of S.Units loop
+                  S.Dependencies
                     (Action'Access, Source_Info.Unit_Index (CU.Index));
                end loop;
             end if;
@@ -378,7 +374,7 @@ package body GPR2.Project.Source is
       end Action;
 
    begin
-      Self.Source.Get.Dependencies (Action'Access, Index);
+      Self.Dependencies (Action'Access, Index);
 
       if Done.Is_Empty then
          --  It mean that we do not have ALI file parsed, try to get "with"
@@ -417,7 +413,6 @@ package body GPR2.Project.Source is
          Stamp : Ada.Calendar.Time)
       is
          pragma Unreferenced (Stamp);
-
          Src : Project.Source.Object;
          CU  : GPR2.Unit.Object;
 
@@ -433,7 +428,7 @@ package body GPR2.Project.Source is
 
          if Inserted
            and then View (Self).Check_Source (Sfile, Src)
-           and then Src.Source.Get.Check_Unit
+           and then Src.Check_Unit
              (Unit, Kind in GPR2.Unit.Spec_Kind, CU)
          then
             For_Each (Src, CU);
@@ -441,7 +436,7 @@ package body GPR2.Project.Source is
       end On_Dependency;
 
    begin
-      Self.Source.Get.Dependencies (On_Dependency'Access, Index);
+      Self.Dependencies (On_Dependency'Access, Index);
    end Dependencies;
 
    --------------------------
@@ -466,15 +461,14 @@ package body GPR2.Project.Source is
       View   : constant Project.View.Object  :=
                  Definition.Strong (Self.View);
       Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
-      Source : constant GPR2.Source.Object   := Project.Source.Source (Self);
+
    begin
-      if Source.Is_Defined
-        and then Source.Has_Units
-        and then Source.Units.Length >= Containers.Count_Type (Index)
+      if Self.Has_Units
+        and then Self.Units.Length >= Containers.Count_Type (Index)
       then
          declare
             CU     : constant GPR2.Unit.Object :=
-                       Source.Units.Element (Positive (Index));
+                       Self.Units.Element (Positive (Index));
             Kind   : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
             C_Unit : constant Unit_Info.Set.Cursor :=
                        Data.Units.Find
@@ -542,11 +536,11 @@ package body GPR2.Project.Source is
          return True;
       end if;
 
-      if not Self.Source.Get.Is_Ada then
+      if not Self.Is_Ada then
          return False;
       end if;
 
-      for CU of Self.Source.Get.Units loop
+      for CU of Self.Units loop
          if Definition.Check_Source_Unit (Self_View, CU, Try)
            and then View (Try) /= Self_View
            and then View (Try).Is_Extending (Parent => Self_View)
@@ -571,7 +565,7 @@ package body GPR2.Project.Source is
       View      : constant Project.View.Object :=
                     Definition.Strong (Self.View);
       CU        : constant GPR2.Unit.Object :=
-                    Source (Self).Units.Element (Positive (Index));
+                    Self.Units.Element (Positive (Index));
       Kind      : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
       Unit_Name : constant Name_Type :=
                           (if Kind = S_Separate
@@ -618,15 +612,13 @@ package body GPR2.Project.Source is
       View   : constant Project.View.Object  :=
                  Definition.Strong (Self.View);
       Data   : constant Definition.Const_Ref := Definition.Get_RO (View);
-      Source : constant GPR2.Source.Object   := Project.Source.Source (Self);
    begin
-      if Source.Is_Defined
-        and then Source.Has_Units
-        and then Source.Units.Length >= Containers.Count_Type (Index)
+      if Self.Has_Units
+        and then Self.Units.Length >= Containers.Count_Type (Index)
       then
          declare
             CU     : constant GPR2.Unit.Object :=
-                       Source.Units.Element (Positive (Index));
+                       Self.Units.Element (Positive (Index));
             Kind   : constant GPR2.Unit.Library_Unit_Type := CU.Kind;
             C_Unit : constant Unit_Info.Set.Cursor :=
                        Data.Units.Find
@@ -682,7 +674,7 @@ package body GPR2.Project.Source is
       View      : constant Project.View.Object  :=
                     Definition.Strong (Self.View);
       CU        : constant GPR2.Unit.Object :=
-                    Source (Self).Units.Element (Positive (Index));
+                    Self.Units.Element (Positive (Index));
       Unit_Name : constant Name_Type := CU.Separate_From;
       Unit      : constant Unit_Info.Object := View.Unit (Unit_Name);
    begin
@@ -694,20 +686,6 @@ package body GPR2.Project.Source is
    end Separate_From;
 
    ------------
-   -- Source --
-   ------------
-
-   function Source (Self : Object) return GPR2.Source.Object
-   is
-   begin
-      if Self.Is_Defined then
-         return Self.Source.Get;
-      else
-         return GPR2.Source.Undefined;
-      end if;
-   end Source;
-
-   ------------
    -- Update --
    ------------
 
@@ -715,8 +693,7 @@ package body GPR2.Project.Source is
      (Self     : in out Object;
       Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
-      Source   : constant Src_Ref.Element_Access := Self.Source.Get.Element;
-      Language : constant Language_Id := Source.Language;
+      Language : constant Language_Id := Self.Language;
 
       procedure Clarify_Unit_Type;
       --  Set Kind to Spec_Only for the units without body and
@@ -730,7 +707,7 @@ package body GPR2.Project.Source is
          use Definition;
          Def : constant Ref := Get (Strong (Self.View));
       begin
-         for U of Source.Units loop
+         for U of Self.Units loop
             declare
                use GPR2.Unit;
                package US renames Unit_Info.Set.Set;
@@ -747,13 +724,13 @@ package body GPR2.Project.Source is
 
                procedure Update_Kind (Kind : Library_Unit_Type) is
                begin
-                  Self.Source.Get.Update_Kind
+                  Self.Update_Kind
                     (Kind, Source_Info.Unit_Index (U.Index));
                end Update_Kind;
 
             begin
                if not US.Has_Element (CU) then
-                  if Source.Is_Runtime then
+                  if Self.Is_Runtime then
                      return;
                   end if;
 
@@ -799,7 +776,7 @@ package body GPR2.Project.Source is
       end Clarify_Unit_Type;
 
    begin
-      if Source.Is_Parsed then
+      if Self.Is_Parsed then
          return;
       end if;
 
@@ -814,7 +791,7 @@ package body GPR2.Project.Source is
                  Source_Info.Parser.Object'Class :=
                    Source_Info.Parser.Registry.Get (Language, BK);
             begin
-               if BK = Source_Info.LI and then Source.Has_Units then
+               if BK = Source_Info.LI and then Self.Has_Units then
                   --  Need to clarify unit type before call to ALI parser to
                   --  detect when spec only Ada source has related ALI file.
 
@@ -823,15 +800,15 @@ package body GPR2.Project.Source is
 
                Source_Info.Parser.Compute
                  (Self   => Backend,
-                  Data   => Source.all,
+                  Data   => Self,
                   Source => Self);
 
-               exit when Source.Is_Parsed;
+               exit when Self.Is_Parsed;
             end;
          end if;
       end loop;
 
-      if Source.Has_Units then
+      if Self.Has_Units then
          Clarify_Unit_Type;
       end if;
    end Update;

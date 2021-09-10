@@ -26,10 +26,9 @@ with GPR2.Unit;
 
 package body GPR2.Project.Source.Set is
 
-   type Iterator (Filter : Source_Filter) is
-     new Source_Iterator.Forward_Iterator with
-   record
-     Root : not null access constant Object;
+   type Iterator is new Source_Iterator.Forward_Iterator with record
+      Filter : Source_Filter;
+      Root   : not null access constant Object;
    end record;
 
    overriding function First
@@ -39,7 +38,8 @@ package body GPR2.Project.Source.Set is
      (Iter : Iterator; Position : Cursor) return Cursor;
 
    function Match_Filter
-     (Iter : Iterator'Class; Source : Project.Source.Object) return Boolean;
+     (Filter : Source_Filter; Source : Project.Source.Object) return Boolean
+   with Inline;
    --  Returns True if Source matches the iterator Filter (see Source_Filter)
 
    -----------
@@ -102,7 +102,7 @@ package body GPR2.Project.Source.Set is
                    Cursor'(Current => Set.First (Iter.Root.S));
    begin
       if not Has_Element (Position)
-        or else Match_Filter (Iter, Set.Element (Position.Current))
+        or else Match_Filter (Iter.Filter, Set.Element (Position.Current))
       then
          return Position;
       else
@@ -159,15 +159,6 @@ package body GPR2.Project.Source.Set is
       Self.S.Insert (Source);
    end Insert;
 
-   --------------
-   -- Is_Empty --
-   --------------
-
-   function Is_Empty (Self : Object) return Boolean is
-   begin
-      return Self.S.Is_Empty;
-   end Is_Empty;
-
    -------------
    -- Iterate --
    -------------
@@ -180,85 +171,67 @@ package body GPR2.Project.Source.Set is
       return Iterator'(Filter => Filter, Root => Self'Unrestricted_Access);
    end Iterate;
 
-   ------------
-   -- Length --
-   ------------
-
-   function Length (Self : Object) return Containers.Count_Type is
-   begin
-      return Self.S.Length;
-   end Length;
-
    ------------------
    -- Match_Filter --
    ------------------
 
    function Match_Filter
-     (Iter   : Iterator'Class;
+     (Filter : Source_Filter;
       Source : Project.Source.Object) return Boolean
    is
-      Src : constant GPR2.Source.Object := Project.Source.Source (Source);
    begin
-      --  We check the S_All filter here as getting the Kind for a source may
-      --  require a parsing to know whether we have a body or a separate unit.
-      --  So to avoid any parsing when we just want all sources we check this
-      --  specific case now.
+      case Filter is
+         when S_Compilable =>
+            if Source.Has_Units then
+               for CU of Source.Units loop
+                  if CU.Kind in GPR2.Unit.Body_Kind
+                    or else (Source.Language = Ada_Language
+                             and then CU.Kind /= GPR2.Unit.S_Separate
+                             and then not Source.Has_Other_Part)
+                    --  The condition above is about Ada package specs
+                    --  without a body, which have to be compilable.
+                  then
+                     --  At least one compilable unit
+                     return True;
+                  end if;
+               end loop;
 
-      if Iter.Filter = S_All then
-         return True;
+               return False;
 
-      else
-         case Iter.Filter is
-            when S_Compilable =>
-               if Src.Has_Units then
-                  for CU of Src.Units loop
-                     if (Src.Has_Single_Unit
-                         and then not Source.Has_Other_Part
-                         and then CU.Kind /= GPR2.Unit.S_Separate
-                         and then Src.Language = Ada_Language)
-                        --  The condition above is about Ada package specs
-                        --  without a body, which have to be compilable.
-                        or else CU.Kind in GPR2.Unit.Body_Kind
-                     then
-                        --  At least one compilable unit
-                        return True;
-                     end if;
-                  end loop;
+            elsif not Source.Is_Compilable then
+               return False;
 
-                  return False;
+            else
+               return Source.Kind = GPR2.Unit.S_Body;
+            end if;
 
-               else
-                  return Src.Kind = GPR2.Unit.S_Body;
-               end if;
+         when S_Spec     =>
+            if Source.Has_Units then
+               return (for some CU of Source.Units =>
+                         CU.Kind in GPR2.Unit.Spec_Kind);
+            else
+               return Source.Kind in GPR2.Unit.Spec_Kind;
+            end if;
 
-            when S_Spec     =>
-               if Src.Has_Units then
-                  return (for some CU of Src.Units =>
-                            CU.Kind in GPR2.Unit.Spec_Kind);
-               else
-                  return Src.Kind in GPR2.Unit.Spec_Kind;
-               end if;
+         when S_Body     =>
+            if Source.Has_Units then
+               return (for some CU of Source.Units =>
+                         CU.Kind in GPR2.Unit.Body_Kind);
+            else
+               return Source.Kind in GPR2.Unit.Body_Kind;
+            end if;
 
-            when S_Body     =>
-               if Src.Has_Units then
-                  return (for some CU of Src.Units =>
-                            CU.Kind in GPR2.Unit.Body_Kind);
-               else
-                  return Src.Kind in GPR2.Unit.Body_Kind;
-               end if;
+         when S_Separate =>
+            if Source.Has_Units then
+               return (for some CU of Source.Units =>
+                         CU.Kind in GPR2.Unit.S_Separate);
+            else
+               return Source.Kind = GPR2.Unit.S_Separate;
+            end if;
 
-            when S_Separate =>
-               if Src.Has_Units then
-                  return (for some CU of Src.Units =>
-                            CU.Kind = GPR2.Unit.S_Separate);
-               else
-                  return Src.Kind = GPR2.Unit.S_Separate;
-               end if;
-
-            when others     =>
-               return True;
-         end case;
-      end if;
+         when S_All =>
+            return True;
+      end case;
    end Match_Filter;
 
    ----------
@@ -268,15 +241,21 @@ package body GPR2.Project.Source.Set is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      Next : Cursor := Cursor'(Current => Set.Next (Position.Current));
+      Next : constant Set.Cursor := Set.Next (Position.Current);
    begin
-      while Has_Element (Next)
-        and then not Match_Filter (Iter, Set.Element (Next.Current))
-      loop
-         Next := Cursor'(Current => Set.Next (Next.Current));
-      end loop;
+      if Iter.Filter = S_All then
+         return Cursor'(Current => Next);
+      end if;
 
-      return Next;
+      if Set.Has_Element (Next) then
+         for C in Iter.Root.S.Iterate (Start => Next) loop
+            if Match_Filter (Iter.Filter, Set.Element (C)) then
+               return Cursor'(Current => C);
+            end if;
+         end loop;
+      end if;
+
+      return Cursor'(Current => Set.No_Element);
    end Next;
 
    -------------

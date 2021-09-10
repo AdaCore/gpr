@@ -24,7 +24,6 @@ with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source;
 with GPR2.Source_Reference.Identifier;
 
 with GPR2.Source_Info.Parser.Ada_Language;
@@ -59,17 +58,16 @@ procedure Main is
          declare
             subtype Id is Source_Reference.Identifier.Object;
 
-            S : constant GPR2.Source.Object := Source.Source;
-            U : constant Optional_Name_Type := S.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name;
          begin
             Text_IO.New_Line;
-            Output_Filename (S.Path_Name.Value);
+            Output_Filename (Source.Path_Name.Value);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
 
-               for W of S.Context_Clause_Dependencies loop
+               for W of Source.Context_Clause_Dependencies loop
                   Text_IO.Put_Line ("   " & String (Id (W).Text));
                end loop;
             end if;

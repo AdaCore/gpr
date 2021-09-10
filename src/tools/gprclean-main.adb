@@ -54,7 +54,6 @@ pragma Warnings (On);
 
 with GPR2.Project.Tree;
 with GPR2.Project.View;
-with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Unit;
 
@@ -400,11 +399,11 @@ procedure GPRclean.Main is
             In_Mains : Boolean := False;
             Is_Main  : constant Boolean := Has_Mains and then S.Is_Main;
             C_Main   : Containers.Filename_Type_Set.Cursor :=
-                         Mains_In_View.Find (S.Source.Path_Name.Simple_Name);
+                         Mains_In_View.Find (S.Path_Name.Simple_Name);
          begin
             if Opts.Verbose then
                Text_IO.Put_Line
-                 ("source: " & S.Source.Path_Name.Value & ' '
+                 ("source: " & S.Path_Name.Value & ' '
                   & S.Is_Aggregated'Img);
             end if;
 
@@ -420,22 +419,22 @@ procedure GPRclean.Main is
                if Is_Main and then Opts.Arg_Mains and then not In_Mains then
                   Cleanup := False;
 
-               elsif S.Source.Language = Ada_Language
-                 and then not S.Source.Has_Single_Unit
+               elsif S.Language = Ada_Language
+                 and then not S.Has_Single_Unit
                then
-                  for CU of S.Source.Units loop
+                  for CU of S.Units loop
                      if CU.Kind in Unit.Body_Kind then
                         Binder_Artifacts
-                          (S.Source.Path_Name.Base_Filename
+                          (S.Path_Name.Base_Filename
                            & Filename_Type ('~' & Image (CU.Index, 1)),
-                           Language => S.Source.Language);
+                           Language => S.Language);
                      end if;
                   end loop;
 
                elsif not View.Is_Library then
                   Binder_Artifacts
-                    (S.Source.Path_Name.Base_Filename,
-                     Language => S.Source.Language);
+                    (S.Path_Name.Base_Filename,
+                     Language => S.Language);
                end if;
             end if;
 
@@ -460,11 +459,11 @@ procedure GPRclean.Main is
                   --  filename defined in command line and we have to remove
                   --  the executable file separately.
 
-                  for U of S.Source.Units loop
+                  for U of S.Units loop
                      Delete_File
                        (View.Executable
-                          (S.Source.Path_Name.Simple_Name,
-                           (if S.Source.Has_Single_Unit
+                          (S.Path_Name.Simple_Name,
+                           (if S.Has_Single_Unit
                             then 0
                             else U.Index)).Value);
                   end loop;

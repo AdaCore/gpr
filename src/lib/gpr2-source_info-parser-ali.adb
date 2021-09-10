@@ -507,9 +507,9 @@ package body GPR2.Source_Info.Parser.ALI is
             pragma Assert (Source.Is_Defined);
 
             Taken_From_Tree := True;
-            Kind := Source.Source.Kind;
+            Kind := Source.Kind;
 
-            return To_Lower (Source.Source.Unit_Name);
+            return To_Lower (Source.Unit_Name);
          end To_Unit_Name;
 
          Name : constant String :=
@@ -1144,7 +1144,7 @@ package body GPR2.Source_Info.Parser.ALI is
          Src := View.Source (FU.Main_Body);
 
          declare
-            Info : Source_Info.Object'Class := Src.Source;
+            Info : Source_Info.Object'Class := Src;
             Dep  : Path_Name.Object;
          begin
             Info.Dependencies.Clear;

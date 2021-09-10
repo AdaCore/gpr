@@ -25,7 +25,6 @@ with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source;
 
 procedure Main is
 
@@ -57,11 +56,10 @@ procedure Main is
          declare
             A : constant GPR2.Project.Source.Artifact.Object :=
                   Source.Artifacts;
-            S : constant GPR2.Source.Object := Source.Source;
          begin
-            Output_Filename (S.Path_Name.Value);
-            if S.Has_Units then
-               for CU of S.Units loop
+            Output_Filename (Source.Path_Name.Value);
+            if Source.Has_Units then
+               for CU of Source.Units loop
                   if A.Has_Object_Code (CU.Index) then
                      Output_Filename (A.Object_Code (CU.Index).Value);
                   end if;

@@ -27,7 +27,6 @@ with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
-with GPR2.Source;
 
 with GPR2.Source_Info.Parser.Ada_Language;
 
@@ -59,18 +58,17 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            S : constant GPR2.Source.Object := Source.Source;
-            U : constant Optional_Name_Type := S.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name;
          begin
-            Output_Filename (S.Path_Name.Value);
+            Output_Filename (Source.Path_Name.Value);
 
             Text_IO.Set_Col (16);
-            Text_IO.Put ("   language: " & Image (S.Language));
+            Text_IO.Put ("   language: " & Image (Source.Language));
 
             Text_IO.Set_Col (33);
             Text_IO.Put
               ("   Kind: "
-               & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
+               & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
