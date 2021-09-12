@@ -22,6 +22,9 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Strings.Fixed;
+with GNAT.OS_Lib;
+
 package body GPR2.Source_Info is
 
    ---------------------
@@ -30,7 +33,6 @@ package body GPR2.Source_Info is
 
    function Build_Timestamp (Self : Object) return Ada.Calendar.Time is
    begin
-      pragma Assert (Self.LI_Timestamp /= No_Time);
       return Self.LI_Timestamp;
    end Build_Timestamp;
 
@@ -118,21 +120,38 @@ package body GPR2.Source_Info is
       Action : access procedure
                  (Sfile : Simple_Name;
                   Unit  : Name_Type;
-                  Kind  : GPR2.Unit.Library_Unit_Type);
+                  Kind  : GPR2.Unit.Library_Unit_Type;
+                  Stamp : Ada.Calendar.Time);
       Index  : Unit_Index := 1)
    is
-      C_Idx  : constant Unit_Dependencies.Cursor :=
+      C_Idx : constant Unit_Dependencies.Cursor :=
                  Self.Dependencies.Find (Index);
+      U_Ref : access constant Dependency_Maps.Map;
    begin
       if Unit_Dependencies.Has_Element (C_Idx) then
-         for C in Unit_Dependencies.Element (C_Idx).Iterate loop
+         U_Ref := Self.Dependencies.Constant_Reference (C_Idx).Element;
+
+         for C in U_Ref.Iterate loop
             declare
-               Key : constant Dependency_Key := Dependency_Maps.Key (C);
+               use Ada.Strings;
+
+               Key   : constant Dependency_Key := Dependency_Maps.Key (C);
+               Ref   : constant Dependency_Maps.Constant_Reference_Type :=
+                         U_Ref.Constant_Reference (C);
+               First : constant Natural :=
+                         Fixed.Index
+                           (Ref.Sfile, "" & GNAT.OS_Lib.Directory_Separator,
+                            Backward);
+               --  None Ada dependencied taken from .d files has full path name
             begin
                Action
-                 (Simple_Name (Dependency_Maps.Element (C).Sfile),
+                 (Simple_Name
+                    (Ref.Sfile
+                       ((if First = 0 then Ref.Sfile'First else First + 1)
+                        .. Ref.Sfile'Last)),
                   Name_Type (Key.Unit_Name),
-                  Key.Unit_Kind);
+                  Key.Unit_Kind,
+                  Ref.Stamp);
             end;
          end loop;
       end if;
@@ -270,6 +289,16 @@ package body GPR2.Source_Info is
    begin
       null;
    end Update;
+
+   ----------------------------
+   -- Update_Build_Timestamp --
+   ----------------------------
+
+   procedure Update_Build_Timestamp
+     (Self : in out Object; Stamp : Ada.Calendar.Time) is
+   begin
+      Self.LI_Timestamp := Stamp;
+   end Update_Build_Timestamp;
 
    -----------------
    -- Update_Kind --

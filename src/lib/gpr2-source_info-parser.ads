@@ -31,6 +31,8 @@
 
 limited with GPR2.Project.Source;
 
+private with Ada.Calendar;
+
 package GPR2.Source_Info.Parser is
 
    type Object
@@ -67,5 +69,10 @@ private
    record
       Self : not null access Object'Class := Object'Unchecked_Access;
    end record;
+
+   Time_Stamp_Length : constant := 14;
+
+   function To_Time (S : String) return Ada.Calendar.Time;
+   --  Convert timestamp in YYYYMMDDHHMISS format to Time
 
 end GPR2.Source_Info.Parser;

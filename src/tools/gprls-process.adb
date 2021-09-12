@@ -479,9 +479,12 @@ begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if S.Source.Is_Parsed
-              and then S.Source.Used_Backend = Source_Info.LI
-              and then S.Source.Build_Timestamp = S.Source.Timestamp
+            if (S.Source.Is_Parsed
+                and then S.Source.Used_Backend = Source_Info.LI
+                and then S.Source.Build_Timestamp = S.Source.Timestamp)
+              or else
+                (not S.Has_Units and then S.Source.Kind in Unit.Spec_Kind
+                 and then S.Source.Build_Timestamp = S.Source.Timestamp)
             then
                Status := OK;
 
@@ -513,20 +516,22 @@ begin
                         Text_IO.Put (" DIF ");
 
                         if GPR2.Is_Debug ('F') then
-                           Text_IO.Put
-                             (if S.Source.Is_Parsed
-                              then S.Source.Used_Backend'Img
-                              else "~");
+                           if S.Source.Is_Parsed then
+                              Text_IO.Put (S.Source.Used_Backend'Img);
+                              Text_IO.Put (' ');
 
-                           if S.Source.Build_Timestamp /= S.Source.Timestamp
-                           then
-                              Text_IO.Put (' ');
-                              Text_IO.Put
-                                (No_Trail_Zero
-                                   (Duration'Image
-                                      (S.Source.Timestamp -
-                                          S.Source.Build_Timestamp)));
-                              Text_IO.Put (' ');
+                              if S.Source.Build_Timestamp /= S.Source.Timestamp
+                              then
+                                 Text_IO.Put
+                                   (No_Trail_Zero
+                                      (Duration'Image
+                                           (S.Source.Timestamp -
+                                                S.Source.Build_Timestamp)));
+                                 Text_IO.Put (' ');
+                              end if;
+
+                           else
+                              Text_IO.Put ("not parsed ");
                            end if;
                         end if;
                   end case;
@@ -552,13 +557,13 @@ begin
                                 Filter => (Dependency_File_Artifact => True,
                                            Object_File_Artifact     => True,
                                            others => False));
-               Obj_File  : Path_Name.Object;
-               Unit_Info : Project.Unit_Info.Object;
                Main_Unit : Unit.Object;
 
                procedure Print_Unit_From (Src : Path_Name.Object);
 
                function  Print_Unit (U_Sec : Unit.Object) return Boolean;
+
+               procedure Print_Object (Index : Positive);
 
                procedure Print_Object (U_Sec : GPR2.Unit.Object);
 
@@ -590,12 +595,13 @@ begin
                -- Print_Object --
                ------------------
 
-               procedure Print_Object (U_Sec : GPR2.Unit.Object) is
+               procedure Print_Object (Index : Positive) is
+                  Obj_File : Path_Name.Object;
                begin
                   if Opt.Print_Object_Files
                     and then not S.Source.Is_Aggregated
                   then
-                     Obj_File := Artifacts.Object_Code (U_Sec.Index);
+                     Obj_File := Artifacts.Object_Code (Index);
 
                      if Obj_File.Exists then
                         Text_IO.Put_Line (Obj_File.Value);
@@ -603,6 +609,16 @@ begin
                         Text_IO.Put_Line (No_Obj);
                      end if;
                   end if;
+               end Print_Object;
+
+               ------------------
+               -- Print_Object --
+               ------------------
+
+               procedure Print_Object (U_Sec : GPR2.Unit.Object) is
+                  Unit_Info : Project.Unit_Info.Object;
+               begin
+                  Print_Object (U_Sec.Index);
 
                   if Opt.Print_Units and then Print_Unit (U_Sec) then
                      null;
@@ -695,7 +711,14 @@ begin
                end Print_Unit_From;
 
             begin
-               if S.Index = 0 then
+               if not S.Source.Has_Units then
+                  Print_Object (1);
+
+                  if Opt.Print_Sources and then not Opt.Dependency_Mode then
+                     Output_Source (S.Source);
+                  end if;
+
+               elsif S.Index = 0 then
                   for U_Sec of S.Source.Source.Units loop
                      if Has_Dependency (U_Sec.Index) then
                         Print_Object (U_Sec);
@@ -774,33 +797,44 @@ begin
                      return False;
                   end Insert_Prefer_Body;
 
+                  function Insert_Prefer_Body
+                    (Kind  : GPR2.Unit.Library_Unit_Type;
+                     Index : Natural) return Boolean
+                  is
+                    ((Artifacts.Has_Dependency (Index)
+                     and then
+                       (Insert_Prefer_Body
+                          (Artifacts.Dependency (Index).Simple_Name,
+                           Kind, Index)
+                        or else
+                        Insert_Prefer_Body
+                          (Artifacts.Dependency (Index).Base_Filename,
+                           Kind, Index)))
+                     or else
+                       (Artifacts.Has_Object_Code (Index)
+                        and then
+                        Insert_Prefer_Body
+                          (Artifacts.Object_Code (Index).Simple_Name,
+                           Kind, Index)));
+
                begin
                   if not Insert_Prefer_Body
                     (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
-                    and then S.Source.Has_Units
                   then
                      Artifacts := GPR2.Project.Source.Artifact.Create
                        (S, Filter => (Dependency_File_Artifact => True,
                                       Object_File_Artifact     => True,
                                       others                   => False));
 
-                     for CU of S.Source.Units loop
-                        exit when Artifacts.Has_Dependency (CU.Index)
-                          and then
-                            (Insert_Prefer_Body
-                               (Artifacts.Dependency (CU.Index).Simple_Name,
-                                CU.Kind, CU.Index)
-                             or else
-                             Insert_Prefer_Body
-                               (Artifacts.Dependency (CU.Index).Base_Filename,
-                                CU.Kind, CU.Index));
+                     if S.Has_Units then
+                        for CU of S.Source.Units loop
+                           exit when Insert_Prefer_Body (CU.Kind, CU.Index);
+                        end loop;
 
-                        exit when Artifacts.Has_Object_Code (CU.Index)
-                          and then
-                           Insert_Prefer_Body
-                             (Artifacts.Object_Code (CU.Index).Simple_Name,
-                              CU.Kind, CU.Index);
-                     end loop;
+                     elsif Insert_Prefer_Body (S.Source.Kind, 1) then
+                        null;
+
+                     end if;
                   end if;
                end;
             end loop;
@@ -882,41 +916,44 @@ begin
 
       if not Opt.Source_Parser and then not Opt.Gnatdist then
          for S of Sources loop
-            For_Units : for CU of S.Source.Source.Units loop
-               declare
-                  Dep_File : constant GPR2.Path_Name.Object :=
-                               GPR2.Project.Source.Artifact.Dependency
-                                 (S.Source, CU.Index);
-               begin
-                  if CU.Kind /= Unit.S_Separate
-                    and then Dep_File.Is_Defined
-                    and then not Dep_File.Exists
-                  then
-                     Full_Closure := False;
-
-                     if S.Source.Has_Naming_Exception
-                       and then S.Source.Naming_Exception
-                         = Project.Source.Multi_Unit
+            if S.Source.Has_Units then
+               For_Units : for CU of S.Source.Source.Units loop
+                  declare
+                     Dep_File : constant GPR2.Path_Name.Object :=
+                                  GPR2.Project.Source.Artifact.Dependency
+                                    (S.Source, CU.Index);
+                  begin
+                     if CU.Kind /= Unit.S_Separate
+                       and then Dep_File.Is_Defined
+                       and then not Dep_File.Exists
                      then
-                        --  In case of multi-unit we have no information until
-                        --  the unit is compiled. There is no need to report
-                        --  that there is missing ALI in this case. But we
-                        --  report that the status for this file is unknown.
+                        Full_Closure := False;
 
-                        Text_IO.Put_Line
-                          ("UNKNOWN status for file " &
-                             S.Source.Path_Name.Value);
+                        if S.Source.Has_Naming_Exception
+                          and then S.Source.Naming_Exception
+                            = Project.Source.Multi_Unit
+                        then
+                           --  In case of multi-unit we have no information
+                           --  until the unit is compiled. There is no need to
+                           --  report that there is missing ALI in this case.
+                           --  But we report that the status for this file is
+                           --  unknown.
 
-                        exit For_Units;
+                           Text_IO.Put_Line
+                             ("UNKNOWN status for file " &
+                                S.Source.Path_Name.Value);
 
-                     else
-                        Text_IO.Put_Line
-                          ("Can't find ALI file for " &
-                             S.Source.Path_Name.Value);
+                           exit For_Units;
+
+                        else
+                           Text_IO.Put_Line
+                             ("Can't find ALI file for " &
+                                S.Source.Path_Name.Value);
+                        end if;
                      end if;
-                  end if;
-               end;
-            end loop For_Units;
+                  end;
+               end loop For_Units;
+            end if;
          end loop;
       end if;
 

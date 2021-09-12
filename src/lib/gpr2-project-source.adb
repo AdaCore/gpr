@@ -329,7 +329,8 @@ package body GPR2.Project.Source is
       procedure Action
         (Sfile : Simple_Name;
          Unit  : Name_Type;
-         Kind  : GPR2.Unit.Library_Unit_Type);
+         Kind  : GPR2.Unit.Library_Unit_Type;
+         Stamp : Ada.Calendar.Time);
 
       ------------
       -- Action --
@@ -338,18 +339,33 @@ package body GPR2.Project.Source is
       procedure Action
         (Sfile : Simple_Name;
          Unit  : Name_Type;
-         Kind  : GPR2.Unit.Library_Unit_Type)
+         Kind  : GPR2.Unit.Library_Unit_Type;
+         Stamp : Ada.Calendar.Time)
       is
          pragma Unreferenced (Unit, Kind);
          S        : Project.Source.Object;
          Position : Containers.Filename_Type_Set.Cursor;
          Inserted : Boolean;
+         Source   : Src_Ref.Element_Access;
+
       begin
          Done.Insert (Sfile, Position, Inserted);
 
          if Inserted
            and then View (Self).Check_Source (Sfile, S)
          then
+            Source := S.Source.Get.Element;
+
+            if not Source.Is_Ada
+              and then not Source.Is_Parsed
+              and then Source.Kind in GPR2.Unit.Spec_Kind
+            then
+               --  None Ada spec build timestamp can be taken only from
+               --  dependencies.
+
+               Source.Update_Build_Timestamp (Stamp);
+            end if;
+
             For_Each (S);
 
             if Closure then
@@ -387,7 +403,8 @@ package body GPR2.Project.Source is
       procedure On_Dependency
         (Sfile : Simple_Name;
          Unit  : Name_Type;
-         Kind  : GPR2.Unit.Library_Unit_Type);
+         Kind  : GPR2.Unit.Library_Unit_Type;
+         Stamp : Ada.Calendar.Time);
 
       -------------------
       -- On_Dependency --
@@ -396,8 +413,11 @@ package body GPR2.Project.Source is
       procedure On_Dependency
         (Sfile : Simple_Name;
          Unit  : Name_Type;
-         Kind  : GPR2.Unit.Library_Unit_Type)
+         Kind  : GPR2.Unit.Library_Unit_Type;
+         Stamp : Ada.Calendar.Time)
       is
+         pragma Unreferenced (Stamp);
+
          Src : Project.Source.Object;
          CU  : GPR2.Unit.Object;
 
@@ -681,7 +701,7 @@ package body GPR2.Project.Source is
    is
    begin
       if Self.Is_Defined then
-         return Self.Source.Get.Element.all;
+         return Self.Source.Get;
       else
          return GPR2.Source.Undefined;
       end if;
@@ -692,8 +712,8 @@ package body GPR2.Project.Source is
    ------------
 
    procedure Update
-     (Self         : in out Object;
-      Backends     : Source_Info.Backend_Set := Source_Info.All_Backends)
+     (Self     : in out Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
    is
       Source   : constant Src_Ref.Element_Access := Self.Source.Get.Element;
       Language : constant Language_Id := Source.Language;
@@ -779,7 +799,7 @@ package body GPR2.Project.Source is
       end Clarify_Unit_Type;
 
    begin
-      if not Source.Has_Units or else Source.Is_Parsed then
+      if Source.Is_Parsed then
          return;
       end if;
 
@@ -794,7 +814,7 @@ package body GPR2.Project.Source is
                  Source_Info.Parser.Object'Class :=
                    Source_Info.Parser.Registry.Get (Language, BK);
             begin
-               if BK = Source_Info.LI then
+               if BK = Source_Info.LI and then Source.Has_Units then
                   --  Need to clarify unit type before call to ALI parser to
                   --  detect when spec only Ada source has related ALI file.
 
@@ -811,7 +831,9 @@ package body GPR2.Project.Source is
          end if;
       end loop;
 
-      Clarify_Unit_Type;
+      if Source.Has_Units then
+         Clarify_Unit_Type;
+      end if;
    end Update;
 
    ----------

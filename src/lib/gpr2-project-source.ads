@@ -176,6 +176,10 @@ package GPR2.Project.Source is
    --  non-unit-based sources. In the latter case, Index is not used.
    --
 
+   function Has_Units (Self  : Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True is source is unit based
+
    function Has_Other_Part
      (Self  : Object;
       Index : Source_Info.Unit_Index := 1) return Boolean
@@ -206,8 +210,8 @@ package GPR2.Project.Source is
    --  the given index.
 
    procedure Update
-     (Self         : in out Object;
-      Backends     : Source_Info.Backend_Set := Source_Info.All_Backends)
+     (Self     : in out Object;
+      Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
      with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
    --  Ensure that the project source is parsed/updated if needed
 
@@ -269,5 +273,8 @@ private
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Source.Get.Path_Name);
+
+   function Has_Units (Self  : Object) return Boolean is
+     (Self.Source.Get.Has_Units);
 
 end GPR2.Project.Source;

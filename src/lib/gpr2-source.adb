@@ -27,13 +27,6 @@ with Ada.Directories;
 
 with Interfaces.C;
 
-pragma Warnings
-  (Off, """System.OS_Constants"" is an internal GNAT unit");
-pragma Warnings
-  (Off, "use of this unit is non-portable and version-dependent");
-with System.OS_Constants;
-pragma Warnings (On);
-
 package body GPR2.Source is
 
    function Get_ALI_Timestamp
@@ -159,12 +152,10 @@ package body GPR2.Source is
       Timestamp : constant C.long :=
                     Conversions.To_Unix_Time
                       (Directories.Modification_Time (File.Value));
-      --  File modification time rounded to one second
-      use System.OS_Constants;
    begin
       return Conversions.To_Ada_Time
         (Timestamp
-         + (if Target_OS = Windows and then Timestamp mod 2 > 0
+         + (if On_Windows and then Timestamp mod 2 > 0
             then 1
             else 0));
    end Get_ALI_Timestamp;

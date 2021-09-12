@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -17,9 +17,6 @@
 ------------------------------------------------------------------------------
 
 with Ada.Text_IO;
-
-pragma Warnings (Off, "System.OS_Constants");
-with System.OS_Constants;
 
 package body GPR2.Version is
 

@@ -41,10 +41,6 @@ with GPR2.Source_Info;
 with GPR2.View_Ids;
 with GPR2.View_Ids.DAGs;
 
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
-
 private with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Strings.Hash;

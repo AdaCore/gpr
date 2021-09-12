@@ -80,7 +80,7 @@ package GPR2.Source_Info is
 
    function Build_Timestamp (Self : Object) return Ada.Calendar.Time
      with Inline,
-          Pre => Self.Is_Defined and then Self.Used_Backend = LI;
+          Pre => Self.Is_Defined;
    --  Returns last modification of the source file from the time point when
    --  the last successful build was done.
 
@@ -188,9 +188,10 @@ package GPR2.Source_Info is
       Action : access procedure
                  (Sfile : Simple_Name;
                   Unit  : Name_Type;
-                  Kind  : GPR2.Unit.Library_Unit_Type);
+                  Kind  : GPR2.Unit.Library_Unit_Type;
+                  Stamp : Ada.Calendar.Time);
       Index  : Unit_Index := 1)
-     with Pre => Self.Is_Defined and then Self.Has_Units;
+     with Pre => Self.Is_Defined;
    --  Call Action for each of unit dependencies
 
    procedure Set
@@ -220,6 +221,11 @@ package GPR2.Source_Info is
           Post => Self.Kind = Kind or else Index > 1;
    --  Update kind for the source, this is only to adjust the kind to
    --  S_Spec_Only and S_Body_Only after a source based parser has been used.
+
+   procedure Update_Build_Timestamp
+     (Self : in out Object; Stamp : Ada.Calendar.Time)
+     with Pre  => Self.Is_Defined;
+   --  Update source file timestamp
 
    procedure Reset (Self : in out Object)
      with Post => not Self.Is_Defined;
@@ -255,8 +261,8 @@ private
       --  Zero if Sfile is configuration pragmas file.
 
       Sfile : String (1 .. Length);
-      --  Base name of the source file.
-      --  Or full path name of the configuration pragmas files.
+      --  Base name of the source file for Ada.
+      --  Full path name for none-Ada and for configuration pragmas files.
    end record;
 
    function Equal (Dep      : Dependency;

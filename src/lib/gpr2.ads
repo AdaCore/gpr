@@ -68,6 +68,11 @@ private with Ada.Strings.Unbounded;
 with Ada.Strings.Hash_Case_Insensitive;
 private with GNATCOLL.Utils;
 
+pragma Warnings
+  (Off, """System.OS_Constants"" is an internal GNAT unit");
+private with System.OS_Constants;
+pragma Warnings (On);
+
 package GPR2 is
 
    Project_Error : exception;
@@ -195,8 +200,11 @@ package GPR2 is
    --  Name tables definition
 
    type Language_Id is new Natural with Default_Value => 0;
+
    No_Language  : constant Language_Id;
    Ada_Language : constant Language_Id;
+   C_Language   : constant Language_Id;
+
    function "+" (L : Optional_Name_Type) return Language_Id;
    function Name (L : Language_Id) return Optional_Name_Type;
    function Image (L : Language_Id) return String;
@@ -231,6 +239,7 @@ private
    No_Time      : Calendar.Time renames GNATCOLL.Utils.No_Time;
    No_Language  : constant Language_Id := 0;
    Ada_Language : constant Language_Id := 1;
+   C_Language   : constant Language_Id := 2;
    No_Attribute : constant Optional_Attribute_Id := 0;
    No_Package   : constant Optional_Package_Id := 0;
 
@@ -251,6 +260,11 @@ private
 
    File_Names_Case_Sensitive : constant Boolean :=
                                  Get_File_Names_Case_Sensitive /= 0;
+
+   On_Windows : constant Boolean :=
+                  System.OS_Constants."="
+                    (System.OS_Constants.Target_OS,
+                     System.OS_Constants.Windows);
 
    function "+"
      (Source : String) return Unbounded_String renames To_Unbounded_String;
