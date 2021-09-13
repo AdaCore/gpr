@@ -76,7 +76,7 @@ package body GPR2.Source_Info.Parser.D is
       OK : Boolean;
 
       function Is_Time_Stamp (S : String) return Boolean is
-        (S'Length = Time_Stamp_Length
+        (S'Length = Time_String'Length
          and then (for all C of S => C in '0' .. '9'));
 
       ----------------------------
