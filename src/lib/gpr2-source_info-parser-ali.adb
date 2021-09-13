@@ -409,8 +409,6 @@ package body GPR2.Source_Info.Parser.ALI is
 
          function Get_Token (May_Be_Quoted : Boolean := False) return String;
 
-         function Time_Stamp (S : String) return Ada.Calendar.Time;
-
          function To_Unit_Name return String;
          --  This routine is needed only on GNAT version 7.2.2 and older,
          --  because unit name and kind is not defined in D lines.
@@ -466,27 +464,8 @@ package body GPR2.Source_Info.Parser.ALI is
             end if;
          end Get_Token;
 
-         ----------------
-         -- Time_Stamp --
-         ----------------
-
-         function Time_Stamp (S : String) return Ada.Calendar.Time is
-            T : String (1 .. 14);
-         begin
-            if S'Length /= 14 then
-               raise Scan_ALI_Error with
-                 "Wrong timestamp """ & S & """ length" & S'Length'Img;
-            end if;
-
-            T := S;
-
-            return Ada.Calendar.Formatting.Value
-              (T (1 .. 4) & "-" & T (5 .. 6) & "-" & T (7 .. 8) & " "
-               & T (9 .. 10) & ":" & T (11 .. 12) & ":" & T (13 .. 14));
-         end Time_Stamp;
-
          Sfile  : constant String            := Get_Token (True);
-         Stamp  : constant Ada.Calendar.Time := Time_Stamp (Get_Token);
+         Stamp  : constant Ada.Calendar.Time := To_Time (Get_Token);
          Chksum : constant Word              := Checksum (Get_Token);
          Forth  : constant String            :=
                     IO.Get_Token (A_Handle, Stop_At_LF => True);

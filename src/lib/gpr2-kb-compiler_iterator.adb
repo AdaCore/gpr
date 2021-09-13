@@ -26,10 +26,6 @@ with Ada.Characters.Handling;
 with Ada.Directories;
 with Ada.Environment_Variables;
 
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
-
 with GNAT.Directory_Operations;
 with GNAT.OS_Lib;
 with GNAT.Regpat;
@@ -40,11 +36,6 @@ with GPR2.Containers;
 with GPR2.Message;
 
 package body GPR2.KB.Compiler_Iterator is
-
-   On_Windows : constant Boolean :=
-                  System.OS_Constants."="
-                    (System.OS_Constants.Target_OS,
-                     System.OS_Constants.Windows);
 
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=
                   GNATCOLL.Traces.Create

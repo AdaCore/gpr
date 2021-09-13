@@ -40,10 +40,6 @@ with GPR2.KB.Compiler_Iterator;
 with GPR2.KB.Parsing;
 with GPR2.Message;
 
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
-
 package body GPR2.KB is
 
    Main_Trace : constant GNATCOLL.Traces.Trace_Handle :=

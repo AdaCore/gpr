@@ -32,10 +32,6 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Value;
 with GPR2.View_Ids;
 
-pragma Warnings (Off);
-with System.OS_Constants;
-pragma Warnings (On);
-
 package body GPR2.Project.Configuration is
 
    package PRA renames Project.Registry.Attribute;

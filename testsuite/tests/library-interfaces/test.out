@@ -1,1 +1,10 @@
+/main/obj/helper.o
+      OK /main/helper.c
+/main/obj/main.o
+   Main
+      OK /main/main.adb
+----------
+/main/obj/helper.o
+         OK /main/helper.c
+         OK /install/include/mylib/mylib.h
 OK
