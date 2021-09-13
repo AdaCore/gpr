@@ -65,7 +65,11 @@ package body GPR2.Source_Info is
    procedure Clear (Self : in out Object) is
    begin
       Self.CU_List.Clear;
-      Self.Dependencies.Clear;
+      if Self.Dependencies.Is_Null then
+         Self.Dependencies.Set (Unit_Dependencies.Empty_Map);
+      else
+         Self.Dependencies.Get.Clear;
+      end if;
    end Clear;
 
    ---------------------------------
@@ -107,12 +111,12 @@ package body GPR2.Source_Info is
                   Stamp : Ada.Calendar.Time);
       Index  : Unit_Index := 1)
    is
-      C_Idx : constant Unit_Dependencies.Cursor :=
-                 Self.Dependencies.Find (Index);
+      Deps  : constant Dep_Ref.Reference_Type := Self.Dependencies.Get;
+      C_Idx : constant Unit_Dependencies.Cursor := Deps.Find (Index);
       U_Ref : access constant Dependency_Maps.Map;
    begin
       if Unit_Dependencies.Has_Element (C_Idx) then
-         U_Ref := Self.Dependencies.Constant_Reference (C_Idx).Element;
+         U_Ref := Deps.Constant_Reference (C_Idx).Element;
 
          for C in U_Ref.Iterate loop
             declare

@@ -535,6 +535,8 @@ package body GPR2.Source_Info.Parser.ALI is
          Inserted : Boolean;
          H_Cache  : Cache_Holder;
          C_Index  : Unit_Dependencies.Cursor;
+         Deps     : constant GPR2.Source_Info.Dep_Ref.Reference_Type :=
+                      Data.Dependencies.Get;
 
       begin
          if Suffix = "%s" then
@@ -587,10 +589,8 @@ package body GPR2.Source_Info.Parser.ALI is
             end if;
          end loop;
 
-         Data.Dependencies.Insert
-           (LI_Idx, Dependency_Maps.Empty_Map, C_Index, Inserted);
-
-         Data.Dependencies (C_Index).Insert
+         Deps.Insert (LI_Idx, Dependency_Maps.Empty_Map, C_Index, Inserted);
+         Deps (C_Index).Insert
            ((Length    => Name'Length - Kind_Len,
              Unit_Kind => Kind,
              Unit_Name => Name (Name'First .. Name'Last - Kind_Len)),
@@ -791,6 +791,8 @@ package body GPR2.Source_Info.Parser.ALI is
       procedure Set_Source_Info_Data (Cache : Cache_Holder) is
          Inserted : Boolean;
          Position : Unit_Dependencies.Cursor;
+         Deps     : constant GPR2.Source_Info.Dep_Ref.Reference_Type :=
+                     Data.Dependencies.Get;
       begin
          pragma Assert (U_Ref.Index = Cache.Unit.Index);
          pragma Assert
@@ -811,9 +813,8 @@ package body GPR2.Source_Info.Parser.ALI is
          Data.LI_Timestamp := Cache.Timestamp;
          Data.Checksum     := Cache.Checksum;
 
-         Data.Dependencies.Insert
-           (LI_Idx, Dependency_Maps.Empty_Map, Position, Inserted);
-         Union (Data.Dependencies (Position), Cache.Depends);
+         Deps.Insert (LI_Idx, Dependency_Maps.Empty_Map, Position, Inserted);
+         Union (Deps (Position), Cache.Depends);
       end Set_Source_Info_Data;
 
       use GPR2.Unit;
@@ -1041,7 +1042,8 @@ package body GPR2.Source_Info.Parser.ALI is
          for K in 1 .. CU_Idx loop
             Self.Cache.Insert
               (Key (LI, Simple_Name (-CU_BN (K)), CUs (K).Kind),
-               (CUs (K), Data.Dependencies (LI_Idx), CU_CS (K), CU_TS (K)),
+               (CUs (K), Data.Dependencies.Get.Element (LI_Idx),
+                CU_CS (K), CU_TS (K)),
                In_Cache, Inserted);
 
             pragma Assert
@@ -1101,10 +1103,13 @@ package body GPR2.Source_Info.Parser.ALI is
          --------------
 
          procedure Set_Data is
-            Ref : constant Cache_Map.Constant_Reference_Type :=
-                    Self.Cache.Constant_Reference (CS);
+            Ref      : constant Cache_Map.Constant_Reference_Type :=
+                         Self.Cache.Constant_Reference (CS);
+            Deps     : constant GPR2.Source_Info.Dep_Ref.Reference_Type :=
+                         Data.Dependencies.Get;
             Inserted : Boolean;
             Position : Unit_Dependencies.Cursor;
+
          begin
             pragma Assert (SU.Name = Ref.Unit.Name);
 
@@ -1118,10 +1123,12 @@ package body GPR2.Source_Info.Parser.ALI is
             Data.Checksum     := Ref.Checksum;
             Data.LI_Timestamp := Ref.Timestamp;
 
-            Data.Dependencies.Insert
-              (Unit_Index (SU.Index), Dependency_Maps.Empty_Map, Position,
-               Inserted);
-            Union (Data.Dependencies (Position), Ref.Depends);
+            Deps.Insert
+              (Key      => Unit_Index (SU.Index),
+               New_Item => Dependency_Maps.Empty_Map,
+               Position => Position,
+               Inserted => Inserted);
+            Union (Deps (Unit_Index (SU.Index)), Ref.Depends);
          end Set_Data;
 
       begin
@@ -1147,7 +1154,7 @@ package body GPR2.Source_Info.Parser.ALI is
             Info : Source_Info.Object'Class := Src;
             Dep  : Path_Name.Object;
          begin
-            Info.Dependencies.Clear;
+            Info.Dependencies.Set (Unit_Dependencies.Empty_Map);
 
             for CU of Info.CU_List loop
                if CU.Kind in GPR2.Unit.Body_Kind
@@ -1176,7 +1183,7 @@ package body GPR2.Source_Info.Parser.ALI is
       end Check_Separated;
 
    begin
-      Data.Dependencies.Clear;
+      Data.Dependencies.Set (Unit_Dependencies.Empty_Map);
 
       for CU of Data.CU_List loop
          LI := GPR2.Project.Source.Artifact.Dependency

@@ -88,19 +88,23 @@ package body GPR2.Source_Info.Parser.D is
          CU1      : Unit_Dependencies.Cursor;
          Inserted : Boolean;
       begin
-         if Data.Dependencies.Is_Empty then
-            Data.Dependencies.Insert
+         if Data.Dependencies.Is_Null then
+            Data.Dependencies.Set (Unit_Dependencies.Empty_Map);
+         end if;
+
+         if Data.Dependencies.Get.Is_Empty then
+            Data.Dependencies.Get.Insert
               (1, Dependency_Maps.Empty_Map, CU1, Inserted);
             pragma Assert (Inserted);
 
          else
             pragma Assert
               (Unit_Dependencies."="
-                 (CU1, Data.Dependencies.First));
+                 (CU1, Data.Dependencies.Get.First));
          end if;
 
          return Result : constant Unit_Dependencies.Reference_Type :=
-           Data.Dependencies.Reference (CU1)
+                           Data.Dependencies.Get.Reference (CU1)
          do
             if not Result.Is_Empty then
                Result.Clear;
