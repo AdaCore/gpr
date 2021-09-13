@@ -26,6 +26,20 @@ with Ada.Strings.Maps.Constants;
 
 package body GPR2.Unit is
 
+   ------------
+   -- As_Ref --
+   ------------
+
+   function As_Ref
+     (Element : Source_Reference.Identifier.Set.Object)
+      return Dependencies_Ref.Ref
+   is
+      Result : Dependencies_Ref.Ref;
+   begin
+      Result.Set (Element);
+      return Result;
+   end As_Ref;
+
    -----------------------
    -- Set_Separate_From --
    -----------------------
