@@ -277,11 +277,16 @@ private
    package Dependency_Maps is new Ada.Containers.Indefinite_Ordered_Maps
      (Dependency_Key, Dependency, "<", "=");
 
-   package Unit_Dependencies is new Ada.Containers.Ordered_Maps
-     (Unit_Index, Dependency_Maps.Map, "=" => Dependency_Maps."=");
+   package Dependency_Maps_Ref is new GNATCOLL.Refcount.Shared_Pointers
+     (Dependency_Maps.Map);
 
-   package Dep_Ref is new GNATCOLL.Refcount.Shared_Pointers
-     (Unit_Dependencies.Map);
+   function Equ (L, R : Dependency_Maps_Ref.Ref) return Boolean is
+     (if L.Is_Null and then R.Is_Null then True
+      elsif L.Is_Null or else R.Is_Null then False
+      else Dependency_Maps."=" (L.Get.Element.all, R.Get.Element.all));
+
+   package Unit_Dependencies is new Ada.Containers.Ordered_Maps
+     (Unit_Index, Dependency_Maps_Ref.Ref, "=" => Equ);
 
    type Object is tagged record
       Is_Ada        : Boolean := False;
@@ -292,7 +297,7 @@ private
       Kind          : GPR2.Unit.Library_Unit_Type := GPR2.Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;
-      Dependencies  : Dep_Ref.Ref;
+      Dependencies  : Unit_Dependencies.Map;
    end record
      with Dynamic_Predicate =>
             Object.CU_List.Length = 0

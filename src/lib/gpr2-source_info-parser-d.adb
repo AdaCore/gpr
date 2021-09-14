@@ -70,7 +70,8 @@ package body GPR2.Source_Info.Parser.D is
       function Is_Time_Stamp (S : String) return Boolean;
       --  Return True iff S has the format of a Time_Stamp_Type
 
-      function Dependencies_Reference return Unit_Dependencies.Reference_Type;
+      function Dependencies_Reference
+        return Dependency_Maps_Ref.Reference_Type;
       --  Create dependencies reference
 
       OK : Boolean;
@@ -83,28 +84,29 @@ package body GPR2.Source_Info.Parser.D is
       -- Dependencies_Reference --
       ----------------------------
 
-      function Dependencies_Reference return Unit_Dependencies.Reference_Type
+      function Dependencies_Reference return Dependency_Maps_Ref.Reference_Type
       is
          CU1      : Unit_Dependencies.Cursor;
          Inserted : Boolean;
       begin
-         if Data.Dependencies.Is_Null then
-            Data.Dependencies.Set (Unit_Dependencies.Empty_Map);
-         end if;
-
-         if Data.Dependencies.Get.Is_Empty then
-            Data.Dependencies.Get.Insert
-              (1, Dependency_Maps.Empty_Map, CU1, Inserted);
+         if Data.Dependencies.Is_Empty then
+            declare
+               Ref : Dependency_Maps_Ref.Ref;
+            begin
+               Ref.Set (Dependency_Maps.Empty_Map);
+               Data.Dependencies.Insert
+                 (1, Ref, CU1, Inserted);
+            end;
             pragma Assert (Inserted);
 
          else
             pragma Assert
               (Unit_Dependencies."="
-                 (CU1, Data.Dependencies.Get.First));
+                 (CU1, Data.Dependencies.First));
          end if;
 
-         return Result : constant Unit_Dependencies.Reference_Type :=
-                           Data.Dependencies.Get.Reference (CU1)
+         return Result : constant Dependency_Maps_Ref.Reference_Type :=
+                           Data.Dependencies (CU1).Get
          do
             if not Result.Is_Empty then
                Result.Clear;
@@ -112,7 +114,7 @@ package body GPR2.Source_Info.Parser.D is
          end return;
       end Dependencies_Reference;
 
-      Dependencies : constant Unit_Dependencies.Reference_Type :=
+      Dependencies : constant Dependency_Maps_Ref.Reference_Type :=
                        Dependencies_Reference;
 
    begin

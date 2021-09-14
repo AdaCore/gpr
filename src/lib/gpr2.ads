@@ -64,8 +64,8 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Hash;
+private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
-with Ada.Strings.Hash_Case_Insensitive;
 private with GNATCOLL.Utils;
 
 pragma Warnings
@@ -176,6 +176,8 @@ package GPR2 is
    type Word is mod 2 ** 32;
 
    File_Names_Case_Sensitive : constant Boolean;
+
+   function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type;
 
    function To_Hex_String (Num : Word) return String;
 
@@ -290,6 +292,11 @@ private
         (Pattern        => String (Filename_Regexp),
          Glob           => True,
          Case_Sensitive => File_Names_Case_Sensitive));
+
+   function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type
+   is (if File_Names_Case_Sensitive
+       then Ada.Strings.Hash (String (Fname))
+       else Ada.Strings.Hash_Case_Insensitive (String (Fname)));
 
    -------------------
    -- String tables --

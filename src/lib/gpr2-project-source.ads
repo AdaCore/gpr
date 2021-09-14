@@ -154,7 +154,6 @@ package GPR2.Project.Source is
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object;
                     Unit   : GPR2.Unit.Object);
-      Closure  : Boolean := False;
       Index    : Source_Info.Unit_Index := 1);
    --  Call For_Each routine for each dependency unit with it's source
 
