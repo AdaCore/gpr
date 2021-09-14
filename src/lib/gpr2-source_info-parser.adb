@@ -30,20 +30,16 @@ package body GPR2.Source_Info.Parser is
    -- To_Time --
    -------------
 
-   function To_Time (S : String) return Ada.Calendar.Time is
-
-      function T2 (Shift : Positive) return String is
-        (S (S'First + Shift .. S'First + Shift + 1)) with Inline;
-
+   function To_Time (S : Time_String) return Ada.Calendar.Time is
    begin
-      if S'Length /= Time_Stamp_Length then
-         raise Constraint_Error with
-           "Wrong timestamp """ & S & """ length" & S'Length'Img;
-      end if;
-
-      return Ada.Calendar.Formatting.Value
-        (S (S'First .. S'First + 3) & "-" & T2 (4) & "-" & T2 (6)
-         & " " & T2 (8) & ":" & T2 (10) & ":" & T2 (12));
+      return Ada.Calendar.Formatting.Time_Of
+        (Year    => Year_Number'Value (S (1 .. 4)),
+         Month   => Month_Number'Value (S (5 .. 6)),
+         Day     => Day_Number'Value (S (7 .. 8)),
+         Seconds => Day_Duration
+           (3600 * Natural'Value (S (9 .. 10)) +
+              60 * Natural'Value (S (11 .. 12)) +
+              Natural'Value (S (13 .. 14))));
    end To_Time;
 
 end GPR2.Source_Info.Parser;

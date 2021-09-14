@@ -39,7 +39,6 @@ with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
-with GPR2.Source;
 with GPR2.Source_Info;
 with GPR2.Project.Unit_Info;
 
@@ -1044,7 +1043,7 @@ package body GPR2.Project.View is
    function Is_Main
      (Self : Object; Source : Project.Source.Object) return Boolean
    is
-      Path  : constant GPR2.Path_Name.Object := Source.Source.Path_Name;
+      Path  : constant GPR2.Path_Name.Object := Source.Path_Name;
       Mains : Project.Attribute.Object;
    begin
       return (Self.Check_Attribute (Registry.Attribute.Main, Result => Mains)
@@ -1467,7 +1466,7 @@ package body GPR2.Project.View is
       Src    : GPR2.Project.Source.Object;
       Lang   : constant Language_Id :=
                  (if Self.Check_Source (Name, Src)
-                  then Src.Source.Language
+                  then Src.Language
                   else No_Language);
       Naming : constant Project.Pack.Object := Self.Naming_Package;
       Suffix : constant String :=
@@ -1683,10 +1682,10 @@ package body GPR2.Project.View is
             for S of Data.Sources loop
                declare
                   Is_Interface : constant Boolean :=
-                                   S.Source.Has_Units
-                                   and then S.Source.Has_Single_Unit
+                                   S.Has_Units
+                                   and then S.Has_Single_Unit
                                    and then Data.Units.Contains
-                                              (S.Source.Unit_Name)
+                                              (S.Unit_Name)
                                    and then S.Is_Interface;
                   --  All sources related to an interface unit are also
                   --  taken as interface (not only the spec)???

@@ -51,7 +51,7 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       for S of Prj.Sources loop
-         Text_IO.Put_Line ("   " & String (S.Source.Path_Name.Base_Name));
+         Text_IO.Put_Line ("   " & String (S.Path_Name.Base_Name));
 
          for A of S.Artifacts.List loop
             Text_IO.Put ("      "); Output_Filename (A.Value);

@@ -56,6 +56,8 @@
 --       (Unit_Name => Proc, Index => 2, Kind => S_Separate,
 --        Withed_Units => {Bar}, Is_Sep_From => A) }
 
+with GNATCOLL.Refcount;
+
 with GPR2.Source_Reference.Identifier.Set;
 
 package GPR2.Unit is
@@ -140,7 +142,7 @@ package GPR2.Unit is
 
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined, Inline;
    --  Returns the set of withed units for this compilation unit
 
    function Is_Separate (Self : Object) return Boolean
@@ -187,13 +189,21 @@ private
 
    Default_Flags : constant Flags_Set := (others => False);
 
+   package Dependencies_Ref is new GNATCOLL.Refcount.Shared_Pointers
+     (Source_Reference.Identifier.Set.Object);
+
+   function As_Ref
+     (Element : Source_Reference.Identifier.Set.Object)
+      return Dependencies_Ref.Ref;
+   --  non-null but empty ref
+
    type Object is tagged record
       Name         : Unbounded_String;
       Index        : Natural           := 0;
       Kind         : Library_Unit_Type := S_Spec;
       Item_Kind    : Library_Item_Type := Is_Package;
       Main         : Main_Type         := None;
-      Dependencies : Source_Reference.Identifier.Set.Object;
+      Dependencies : Dependencies_Ref.Ref;
       Sep_From     : Unbounded_String;
       Flags        : Flags_Set := Default_Flags;
    end record
@@ -203,6 +213,14 @@ private
    --  define either the spec or body/ies for a unit - those definitions are
    --  represented as Compil_Unit records, and the unit itself which
    --  is just a name (the Unit_Name).
+
+   overriding function "=" (Left, Right : Object) return Boolean is
+      (Left.Name = Right.Name
+         and then Left.Index = Right.Index
+         and then Left.Kind = Right.Kind
+         and then Left.Main = Right.Main
+         and then Left.Sep_From = Right.Sep_From
+         and then Left.Flags = Right.Flags);
 
    Undefined : constant Object := (others => <>);
 
@@ -220,7 +238,7 @@ private
               Kind         => Lib_Unit_Kind,
               Item_Kind    => Lib_Item_Kind,
               Main         => Main,
-              Dependencies => Dependencies,
+              Dependencies => As_Ref (Dependencies),
               Sep_From     => To_Unbounded_String (String (Sep_From)),
               Flags        => Flags));
 
@@ -251,7 +269,7 @@ private
    function Dependencies
      (Self : Object) return Source_Reference.Identifier.Set.Object
    is
-     (Self.Dependencies);
+     (Self.Dependencies.Get.Element.all);
 
    function Is_Generic (Self : Object) return Boolean is
       (Self.Flags (Is_Generic));

@@ -285,7 +285,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                     Reparse => True);
 
    begin
-      Data.Dependencies.Clear;
+      Data.Dependencies.Set (Unit_Dependencies.Empty_Map);
 
       Traverse (A_Unit.Root, Callback'Access);
 

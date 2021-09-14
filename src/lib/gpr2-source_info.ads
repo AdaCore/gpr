@@ -28,12 +28,14 @@
 --  the kind of parser that has been used.
 
 with Ada.Calendar;
-with Ada.Containers.Ordered_Maps;
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Ordered_Maps;
 
 with GPR2.Unit.List;
 with GPR2.Containers;
 with GPR2.Source_Reference.Identifier.Set;
+
+with GNATCOLL.Refcount;
 
 package GPR2.Source_Info is
 
@@ -177,12 +179,6 @@ package GPR2.Source_Info is
    --  Returns the dependencies in Self associated with all the compilation
    --  units for the given Unit. The result may be empty.
 
-   function Dependencies
-     (Self  : Object;
-      Index : Unit_Index := 1) return Containers.Filename_List
-     with Pre => Self.Is_Defined and then Self.Has_Units;
-   --  Returns the list of source files dependencies
-
    procedure Dependencies
      (Self   : Object;
       Action : access procedure
@@ -279,10 +275,13 @@ private
       or else Left.Unit_Name < Right.Unit_Name);
 
    package Dependency_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Dependency_Key, Dependency);
+     (Dependency_Key, Dependency, "<", "=");
 
    package Unit_Dependencies is new Ada.Containers.Ordered_Maps
      (Unit_Index, Dependency_Maps.Map, "=" => Dependency_Maps."=");
+
+   package Dep_Ref is new GNATCOLL.Refcount.Shared_Pointers
+     (Unit_Dependencies.Map);
 
    type Object is tagged record
       Is_Ada        : Boolean := False;
@@ -293,7 +292,7 @@ private
       Kind          : GPR2.Unit.Library_Unit_Type := GPR2.Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;
-      Dependencies  : Unit_Dependencies.Map;
+      Dependencies  : Dep_Ref.Ref;
    end record
      with Dynamic_Predicate =>
             Object.CU_List.Length = 0

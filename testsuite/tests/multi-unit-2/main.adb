@@ -27,7 +27,6 @@ with GPR2.Project.Tree;
 with GPR2.Project.Source;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
-with GPR2.Source;
 with GPR2.Unit;
 
 with GPR2.Source_Info.Parser.Ada_Language;
@@ -48,7 +47,6 @@ procedure Main is
    -----------
 
    procedure Print (S : Project.Source.Object) is
-      Src : Source.Object := S.Source;
       Dep : Path_Name.Object;
 
       procedure Print_Dependency
@@ -64,17 +62,17 @@ procedure Main is
          Text_IO.Put_Line
            ("    dependency unit " & String (Unit.Name) & ' ' & Unit.Kind'Img
             & " in " & String (Src.Path_Name.Simple_Name)
-            & (if Src.Source.Has_Single_Unit then ""
+            & (if Src.Has_Single_Unit then ""
                else " at" & Unit.Index'Img));
       end Print_Dependency;
 
    begin
-      Text_IO.Put_Line (String (Src.Path_Name.Simple_Name));
+      Text_IO.Put_Line (String (S.Path_Name.Simple_Name));
       Text_IO.Put_Line ("  single-unit          = "
-                        & Src.Has_Single_Unit'Image);
+                        & S.Has_Single_Unit'Image);
       Text_IO.Put_Line ("  has naming exception = "
                         & S.Has_Naming_Exception'Image);
-      for CU of Src.Units loop
+      for CU of S.Units loop
          Text_IO.Put_Line ("  - compilation unit at" & CU.Index'Image);
          Text_IO.Put_Line ("    unit name    = " & String (CU.Name));
          Text_IO.Put_Line ("    kind         = " & CU.Kind'Image);

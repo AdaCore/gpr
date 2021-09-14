@@ -26,7 +26,6 @@ with GPR2.Log;
 with GPR2.Message;
 with GPR2.Project.Source;
 with GPR2.Project.Tree;
-with GPR2.Source;
 
 procedure Main is
 
@@ -40,10 +39,10 @@ procedure Main is
    procedure Display_Source (Name : Simple_Name);
 
    procedure Display_Source (Name : Simple_Name) is
-      Src : GPR2.Source.Object;
+      Src : GPR2.Project.Source.Object;
    begin
       if Prj.Root_Project.Has_Source (Name) then
-         Src := Prj.Root_Project.Source (Name).Source;
+         Src := Prj.Root_Project.Source (Name);
          Text_IO.Put_Line (String (Name) & ": " & Src.Kind'Image);
       else
          Text_IO.Put_Line ("no such source: " & String (Name));

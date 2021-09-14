@@ -28,7 +28,6 @@ with GPR2.Project.Source.Artifact;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source;
 with GPR2.Source_Info.Parser.Ada_Language;
 
 with U3;
@@ -61,21 +60,20 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            S : constant GPR2.Source.Object := Source.Source;
             D : Path_Name.Object;
          begin
-            Output_Filename (S.Path_Name.Value);
+            Output_Filename (Source.Path_Name.Value);
 
             Text_IO.Set_Col (20);
-            Text_IO.Put ("   language: " & Image (S.Language));
+            Text_IO.Put ("   language: " & Image (Source.Language));
 
-            if S.Has_Units then
+            if Source.Has_Units then
                for K in Source_Info.Unit_Index range 1 .. 5 loop
-                  if S.Has_Unit_At (K) then
+                  if Source.Has_Unit_At (K) then
                      Text_IO.Set_Col (40);
                      Text_IO.Put ("Kind: "
-                                  & GPR2.Unit.Library_Unit_Type'Image (S.Kind (K)));
-                     Text_IO.Put_Line ("   unit: " & String (S.Unit_Name (K)));
+                                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind (K)));
+                     Text_IO.Put_Line ("   unit: " & String (Source.Unit_Name (K)));
                      if Source.Artifacts.Has_Dependency (Integer (K)) then
                         D := Source.Artifacts.Dependency (Integer (K));
                         if D.Exists then

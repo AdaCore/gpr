@@ -719,7 +719,7 @@ package body GPR2.Project.Definition is
 
       procedure Register_Units
         (Source : Project.Source.Object)
-        with Pre => Source.Source.Language = Ada_Language;
+        with Pre => Source.Language = Ada_Language;
       --  Registers units for the given project source. Note that we need to
       --  pass the Units and not to use the one registered with the
       --  source as the later could have been updated by a real parser based on
@@ -1578,14 +1578,16 @@ package body GPR2.Project.Definition is
                         end if;
                      end loop;
 
-                     Source := GPR2.Source.Create_Ada
-                                 (Filename      => File,
-                                  Units         => Units,
-                                  Is_RTS_Source => View.Is_Runtime,
-                                  Is_Indexed    => Is_Indexed);
+                     Source := GPR2.Source.Object
+                       (GPR2.Source.Create_Ada
+                          (Filename      => File,
+                           Units         => Units,
+                           Is_RTS_Source => View.Is_Runtime,
+                           Is_Indexed    => Is_Indexed));
 
                   else
-                     Source := GPR2.Source.Create (File, Language, Kind);
+                     Source := GPR2.Source.Object
+                       (GPR2.Source.Create (File, Language, Kind));
                   end if;
 
                   --  Final processing
@@ -1725,11 +1727,11 @@ package body GPR2.Project.Definition is
             --
 
             File                   : constant Path_Name.Object :=
-                                       Src.Source.Path_Name;
+                                       Src.Path_Name;
             Basename               : constant Filename_Type :=
                                        File.Simple_Name;
             Language               : constant Language_Id :=
-                                       Src.Source.Language;
+                                       Src.Language;
             Source_Is_In_Interface : Boolean :=
                                        Interface_Sources.Contains (Basename);
 
@@ -1740,7 +1742,7 @@ package body GPR2.Project.Definition is
             --  languages. Also some additional checks for Ada.
 
             if Language = Ada_Language then
-               for CU of Src.Source.Units loop
+               for CU of Src.Units loop
                   if Interface_Units.Contains (CU.Name) then
                      Interface_Units_Found.Include (CU.Name);
                      Source_Is_In_Interface := True;
@@ -1946,7 +1948,7 @@ package body GPR2.Project.Definition is
         (Source : Project.Source.Object)
       is
 
-         File : constant Path_Name.Object := Source.Source.Path_Name;
+         File : constant Path_Name.Object := Source.Path_Name;
 
          procedure Register_Src
            (U_Def : in out Unit_Info.Object;
@@ -1974,7 +1976,7 @@ package body GPR2.Project.Definition is
          end Register_Src;
 
       begin
-         for CU of Source.Source.Units loop
+         for CU of Source.Units loop
             declare
                Unit_Name : constant Name_Type := CU.Name;
                Position  : Unit_Info.Set.Cursor;
@@ -2250,10 +2252,10 @@ package body GPR2.Project.Definition is
                for P of Agg.Sources loop
                   In_Interface :=
                     Interface_Sources.Contains
-                      (P.Source.Path_Name.Simple_Name);
+                      (P.Path_Name.Simple_Name);
 
-                  if P.Source.Has_Units then
-                     for CU of P.Source.Units loop
+                  if P.Has_Units then
+                     for CU of P.Units loop
                         if Interface_Units.Contains (CU.Name) then
                            Interface_Units_Found.Include (CU.Name);
                            In_Interface := True;
@@ -2268,7 +2270,7 @@ package body GPR2.Project.Definition is
                                       In_Interface
                                           or else
                                             (not Interface_Found
-                                             and then P.Source.Kind
+                                             and then P.Kind
                                                       in Unit.Spec_Kind);
 
                   begin
@@ -2278,7 +2280,7 @@ package body GPR2.Project.Definition is
 
                      A_Set.Insert
                        (Project.Source.Create
-                          (Source           => P.Source,
+                          (Source           => GPR2.Source.Object (P),
                            View             => View,
                            Is_Interface     => Is_Interface,
                            Naming_Exception => P.Naming_Exception,
@@ -2560,7 +2562,7 @@ package body GPR2.Project.Definition is
          Def_Src_Map.Insert (SW.Path_Name.Simple_Name, SW, Position, Inserted);
 
          pragma Assert
-           (Inserted or else SW.Source.Language /= Ada_Language,
+           (Inserted or else SW.Language /= Ada_Language,
             String (SW.Path_Name.Simple_Name) & " duplicated");
 
          Set_Source (SW);

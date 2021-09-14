@@ -44,15 +44,14 @@ procedure Main is
    ------------------
 
    procedure Print_Source (S : Project.Source.Object) is
-      Src : Source.Object := S.Source;
       DN  : Path_Name.Object;
    begin
-      Text_IO.Put_Line (String (Src.Path_Name.Simple_Name));
+      Text_IO.Put_Line (String (S.Path_Name.Simple_Name));
       Text_IO.Put_Line ("  single-unit          = "
-                        & Src.Has_Single_Unit'Image);
+                        & S.Has_Single_Unit'Image);
       Text_IO.Put_Line ("  has naming exception = "
                         & S.Has_Naming_Exception'Image);
-      for CU of Src.Units loop
+      for CU of S.Units loop
          Text_IO.Put_Line ("  - compilation unit at" & CU.Index'Image);
          Text_IO.Put_Line ("    unit name    = " & String (CU.Name));
          Text_IO.Put_Line ("    kind         = " & CU.Kind'Image);

@@ -146,7 +146,7 @@ package body GPRls.Gnatdist is
    is
       use type GPR2.Unit.Main_Type;
       Unit : constant GPR2.Unit.Object :=
-               Source.Source.Units.Element (Index);
+               Source.Units.Element (Index);
       Part : GPR2.Unit.Object;
       Main : constant GPR2.Unit.Main_Type := Unit.Main_Kind;
 
@@ -187,7 +187,7 @@ package body GPRls.Gnatdist is
                      (Source_Info.Unit_Index (Index));
       begin
          if Other.Is_Defined
-           and then Other.Source.Check_Unit
+           and then Other.Check_Unit
             (Unit.Name, Unit.Kind not in GPR2.Unit.Spec_Kind, Part)
          then
             Output_Unit (Part, Other);
@@ -369,7 +369,7 @@ package body GPRls.Gnatdist is
 
       --  Output Withs
 
-      for W of S.Source.Context_Clause_Dependencies
+      for W of S.Context_Clause_Dependencies
         (Source_Info.Unit_Index (Unit.Index))
       loop
          Output_With (Tree.all, W.Text);
@@ -397,7 +397,7 @@ package body GPRls.Gnatdist is
          "source undefined: View " & String (View.Name) & " Unit " & String (W)
          & ' ' & (if UI.Has_Body then UI.Main_Body.Value else UI.Spec.Value));
 
-      if not Src.Source.Check_Unit
+      if not Src.Check_Unit
         (W, Spec => not UI.Has_Body, Unit => CU)
       then
          raise Ada.Assertions.Assertion_Error with

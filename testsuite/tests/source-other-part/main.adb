@@ -25,7 +25,6 @@ with GPR2.Path_Name;
 with GPR2.Project.Source.Set;
 with GPR2.Project.View;
 with GPR2.Project.Tree;
-with GPR2.Source;
 
 with GPR2.Source_Info.Parser.Ada_Language;
 
@@ -34,8 +33,6 @@ procedure Main is
    use Ada;
    use GPR2;
    use GPR2.Project;
-
-   use type GPR2.Source.Object;
 
    procedure Check (Project_Name : Filename_Type);
    --  Do check the given project's sources
@@ -58,30 +55,25 @@ procedure Main is
       Text_IO.Put_Line ("Project: " & String (View.Name));
 
       for Source of View.Sources loop
-         declare
-            S : constant GPR2.Source.Object := Source.Source;
-         begin
-            Text_IO.Put_Line
-              (Filter_Filename (S.Path_Name.Value)
-               & " -> "
-               & (if Source.Has_Other_Part
-                  then Filter_Filename (Source.Other_Part.Path_Name.Value)
-                  else "undefined"));
+         Text_IO.Put_Line
+           (Filter_Filename (Source.Path_Name.Value)  & " -> " &
+            (if Source.Has_Other_Part
+             then Filter_Filename (Source.Other_Part.Path_Name.Value)
+             else "undefined"));
 
-            Text_IO.Set_Col (4);
-            Text_IO.Put ("   language: " & Image (S.Language));
+         Text_IO.Set_Col (4);
+         Text_IO.Put ("   language: " & Image (Source.Language));
 
-            Text_IO.Set_Col (22);
-            Text_IO.Put
-              ("   Kind: "
-               & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
+         Text_IO.Set_Col (22);
+         Text_IO.Put
+           ("   Kind: "
+              & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
 
-            if S.Has_Units then
-               Text_IO.Put ("   unit: " & String (S.Unit_Name));
-            end if;
+         if Source.Has_Units then
+            Text_IO.Put ("   unit: " & String (Source.Unit_Name));
+         end if;
 
-            Text_IO.New_Line;
-         end;
+         Text_IO.New_Line;
       end loop;
    end Check;
 

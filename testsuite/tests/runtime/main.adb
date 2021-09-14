@@ -34,7 +34,6 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Variable.Set;
 with GPR2.Project.View;
-with GPR2.Source;
 
 procedure Main is
 
@@ -199,20 +198,19 @@ begin
 
       for Source of Prj.Runtime_Project.Sources loop
          if Strings.Fixed.Head
-           (String (Source.Source.Path_Name.Base_Name), 8) in
+           (String (Source.Path_Name.Base_Name), 8) in
            "a-calend" | "a-strunb" | "a-tags  " | "a-calend" | "a-contai"
              | "a-string" | "a-strunb" | "a-tags  " | "a-uncdea" | "ada     "
          then
             declare
-               S : constant GPR2.Source.Object := Source.Source;
                U : constant Optional_Name_Type :=
-                     (if S.Has_Units then S.Unit_Name else "");
+                     (if Source.Has_Units then Source.Unit_Name else "");
             begin
-               Output_Filename (S.Path_Name.Value);
+               Output_Filename (Source.Path_Name.Value);
 
                Text_IO.Set_Col (27);
                Text_IO.Put
-                 ("   Kind: " & GPR2.Unit.Library_Unit_Type'Image (S.Kind));
+                 ("   Kind: " & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
             end;

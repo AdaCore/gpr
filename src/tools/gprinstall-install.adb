@@ -45,7 +45,6 @@ with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Version;
-with GPR2.Source;
 with GPR2.Source_Reference;
 with GPR2.Source_Reference.Value;
 
@@ -95,7 +94,7 @@ package body GPRinstall.Install is
      (Source : GPR2.Project.Source.Object) return Boolean
    is
      (Source.Has_Other_Part
-      and then Source.Other_Part.Source.Is_Implementation_Required);
+      and then Source.Other_Part.Is_Implementation_Required);
    --  Returns True if Source has other part and this part need body
 
    procedure Double_Buffer;
@@ -944,7 +943,7 @@ package body GPRinstall.Install is
 
             function Is_Ada
               (Source : GPR2.Project.Source.Object) return Boolean
-            is (Source.Source.Language = Ada_Language);
+            is (Source.Language = Ada_Language);
             --  Returns True if Source is an Ada source
 
             procedure Install_Project_Source
@@ -955,7 +954,7 @@ package body GPRinstall.Install is
 
             procedure Copy_Interface_Closure
               (Source : GPR2.Project.Source.Object)
-            with Pre => Source.Source.Has_Units;
+            with Pre => Source.Has_Units;
             --  Copy all sources and artifacts part of the close of Source
 
             ----------------------------
@@ -970,7 +969,7 @@ package body GPRinstall.Install is
 
                for D of Source.Dependencies (Closure => True) loop
                   if not Source_Copied.Contains (D)
-                    and then (D.Source.Kind in Unit.Spec_Kind
+                    and then (D.Kind in Unit.Spec_Kind
                               or else Other_Part_Need_Body (D))
                     and then Source.View = D.View
                   then
@@ -987,7 +986,6 @@ package body GPRinstall.Install is
               (Source                : GPR2.Project.Source.Object;
                Is_Interface_Closure  : Boolean := False)
             is
-               Src     : GPR2.Source.Object;
                Atf     : GPR2.Project.Source.Artifact.Object;
                CUs     : GPR2.Unit.List.Object;
                Done    : Boolean := True;
@@ -998,7 +996,6 @@ package body GPRinstall.Install is
                --  Skip sources that are removed/excluded and sources not
                --  part of the interface for standalone libraries.
 
-               Src := Source.Source;
                Atf := Source.Artifacts;
 
                if not Project.Is_Library
@@ -1006,16 +1003,16 @@ package body GPRinstall.Install is
                  or else Source.Is_Interface
                  or else Is_Interface_Closure
                then
-                  if Src.Has_Units then
-                     CUs := Src.Units;
+                  if Source.Has_Units then
+                     CUs := Source.Units;
                   end if;
 
                   if Options.All_Sources
-                    or else Src.Kind in Unit.Spec_Kind
+                    or else Source.Kind in Unit.Spec_Kind
                     or else Other_Part_Need_Body (Source)
-                    or else Src.Is_Generic
-                    or else (Src.Kind = S_Separate
-                             and then Source.Separate_From.Source.Is_Generic)
+                    or else Source.Is_Generic
+                    or else (Source.Kind = S_Separate
+                             and then Source.Separate_From.Is_Generic)
                   then
                      Done := Copy_Source (Source);
 
@@ -1023,7 +1020,7 @@ package body GPRinstall.Install is
                      --  need to also install the full-closure for this source.
 
                      if Source.Is_Interface
-                       and then Source.Source.Has_Units
+                       and then Source.Has_Units
                        and then not Is_Interface_Closure
                      then
                         Copy_Interface_Closure (Source);
@@ -1075,7 +1072,7 @@ package body GPRinstall.Install is
                         begin
                            if not Source.Has_Other_Part
                              or else not Source.Has_Naming_Exception
-                             or else not Source.Source.Has_Single_Unit
+                             or else not Source.Has_Single_Unit
                              or else Options.All_Sources
                            then
                               Satf := Atf;
@@ -1165,9 +1162,9 @@ package body GPRinstall.Install is
                Copy_File
                  (From => (if Art.Preprocessed_Source.Exists
                            then Art.Preprocessed_Source
-                           else Source.Source.Path_Name),
+                           else Source.Path_Name),
                   To   => Sources_Dir,
-                  File => Source.Source.Path_Name.Simple_Name);
+                  File => Source.Path_Name.Simple_Name);
             end;
 
             return True;
@@ -1629,8 +1626,8 @@ package body GPRinstall.Install is
                         for Source
                           of Project.Sources (Filter => K_Interface_Only)
                         loop
-                           if Source.Source.Has_Units then
-                              for CU of Source.Source.Units loop
+                           if Source.Has_Units then
+                              for CU of Source.Units loop
                                  if CU.Kind in
                                    S_Spec | S_Spec_Only | S_Body_Only
                                  then

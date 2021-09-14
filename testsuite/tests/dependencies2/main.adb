@@ -56,11 +56,10 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            S : constant GPR2.Source.Object := Source.Source;
-            U : constant Optional_Name_Type := S.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name;
          begin
             Text_IO.New_Line;
-            Output_Filename (S.Path_Name.Value);
+            Output_Filename (Source.Path_Name.Value);
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));
@@ -72,7 +71,7 @@ procedure Main is
 
                for D of Source.Dependencies loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Source.Path_Name.Value);
+                  Output_Filename (D.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
 
@@ -86,7 +85,7 @@ procedure Main is
 
                for D of Source.Dependencies (Closure => True) loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Source.Path_Name.Value);
+                  Output_Filename (D.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
             end if;

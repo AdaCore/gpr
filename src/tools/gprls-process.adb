@@ -33,7 +33,6 @@ with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.View;
-with GPR2.Source;
 with GPR2.Source_Info.Parser.Registry;
 with GPR2.Version;
 
@@ -370,12 +369,12 @@ begin
             Output : String_Vector.Vector;
          begin
             for R of Closures loop
-               if not R.Source.Is_Runtime then
+               if not R.Is_Runtime then
                   if not R.Artifacts.Has_Dependency then
                      Full_Closure := False;
                   end if;
 
-                  Output.Append ("  " & R.Source.Path_Name.Value);
+                  Output.Append ("  " & R.Path_Name.Value);
                end if;
             end loop;
 
@@ -417,7 +416,7 @@ begin
       begin
          for S of Sources loop
             if S.Index = 0 then
-               for CU of S.Source.Source.Units loop
+               for CU of S.Source.Units loop
                   if Has_Dependency ((S.Source, Index => CU.Index)) then
                      No_ALI := False;
                      Gnatdist.Output_ALI (S.Source, CU.Index);
@@ -479,12 +478,12 @@ begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if (S.Source.Is_Parsed
-                and then S.Source.Used_Backend = Source_Info.LI
-                and then S.Source.Build_Timestamp = S.Source.Timestamp)
+            if (S.Is_Parsed
+                and then S.Used_Backend = Source_Info.LI
+                and then S.Build_Timestamp = S.Timestamp)
               or else
-                (not S.Has_Units and then S.Source.Kind in Unit.Spec_Kind
-                 and then S.Source.Build_Timestamp = S.Source.Timestamp)
+                (not S.Has_Units and then S.Kind in Unit.Spec_Kind
+                 and then S.Build_Timestamp = S.Timestamp)
             then
                Status := OK;
 
@@ -494,7 +493,7 @@ begin
 
             if Opt.Verbose then
                Text_IO.Put ("     Source => ");
-               Text_IO.Put (S.Source.Path_Name.Value);
+               Text_IO.Put (S.Path_Name.Value);
 
                case Status is
                   when OK =>
@@ -516,17 +515,17 @@ begin
                         Text_IO.Put (" DIF ");
 
                         if GPR2.Is_Debug ('F') then
-                           if S.Source.Is_Parsed then
-                              Text_IO.Put (S.Source.Used_Backend'Img);
+                           if S.Is_Parsed then
+                              Text_IO.Put (S.Used_Backend'Img);
                               Text_IO.Put (' ');
 
-                              if S.Source.Build_Timestamp /= S.Source.Timestamp
+                              if S.Build_Timestamp /= S.Timestamp
                               then
                                  Text_IO.Put
                                    (No_Trail_Zero
                                       (Duration'Image
-                                           (S.Source.Timestamp -
-                                                S.Source.Build_Timestamp)));
+                                           (S.Timestamp -
+                                                S.Build_Timestamp)));
                                  Text_IO.Put (' ');
                               end if;
 
@@ -538,9 +537,9 @@ begin
                end if;
 
                Text_IO.Put
-                 (if S.Source.Is_Runtime and then Opt.Hide_Runtime_Directory
-                  then String (S.Source.Path_Name.Simple_Name)
-                  else S.Source.Path_Name.Value);
+                 (if S.Is_Runtime and then Opt.Hide_Runtime_Directory
+                  then String (S.Path_Name.Simple_Name)
+                  else S.Path_Name.Value);
             end if;
 
             Text_IO.New_Line;
@@ -584,7 +583,7 @@ begin
                  (Dep_Source : Project.Source.Object) is
                begin
                   if Opt.With_Predefined_Units
-                    or else not Dep_Source.Source.Is_Runtime
+                    or else not Dep_Source.Is_Runtime
                   then
                      Text_IO.Put ("   ");
                      Output_Source (S => Dep_Source);
@@ -702,7 +701,7 @@ begin
                begin
                   if not Opt.Print_Units
                     or else
-                      (Print_Unit (U_Src.Source.Units.First_Element)
+                      (Print_Unit (U_Src.Units.First_Element)
                        and then not Opt.Dependency_Mode
                        and then Opt.Print_Sources)
                   then
@@ -719,7 +718,7 @@ begin
                   end if;
 
                elsif S.Index = 0 then
-                  for U_Sec of S.Source.Source.Units loop
+                  for U_Sec of S.Source.Units loop
                      if Has_Dependency (U_Sec.Index) then
                         Print_Object (U_Sec);
                         exit when not Opt.Verbose;
@@ -727,7 +726,7 @@ begin
                   end loop;
 
                elsif Has_Dependency (S.Index) then
-                  Print_Object (S.Source.Source.Units.Element (S.Index));
+                  Print_Object (S.Source.Units.Element (S.Index));
                end if;
 
                if Opt.Dependency_Mode and then Opt.Print_Sources then
@@ -819,7 +818,7 @@ begin
 
                begin
                   if not Insert_Prefer_Body
-                    (S.Source.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
+                    (S.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
                   then
                      Artifacts := GPR2.Project.Source.Artifact.Create
                        (S, Filter => (Dependency_File_Artifact => True,
@@ -827,11 +826,11 @@ begin
                                       others                   => False));
 
                      if S.Has_Units then
-                        for CU of S.Source.Units loop
+                        for CU of S.Units loop
                            exit when Insert_Prefer_Body (CU.Kind, CU.Index);
                         end loop;
 
-                     elsif Insert_Prefer_Body (S.Source.Kind, 1) then
+                     elsif Insert_Prefer_Body (S.Kind, 1) then
                         null;
 
                      end if;
@@ -861,7 +860,7 @@ begin
          for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
-              and then S.Source.Language = Ada_Language
+              and then S.Language = Ada_Language
             then
                Sources.Insert ((S, 0));
             end if;
@@ -873,7 +872,7 @@ begin
 
          for View of Tree loop
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
-               if Element (S_Cur).Source.Language = Ada_Language
+               if Element (S_Cur).Language = Ada_Language
                  and then not Element (S_Cur).Is_Overriden
                then
                   Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
@@ -900,7 +899,7 @@ begin
 
       else
          for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
-            if Element (S_Cur).Source.Language = Ada_Language then
+            if Element (S_Cur).Language = Ada_Language then
                Sources.Insert ((Element (S_Cur), 0));
             end if;
          end loop;
@@ -917,7 +916,7 @@ begin
       if not Opt.Source_Parser and then not Opt.Gnatdist then
          for S of Sources loop
             if S.Source.Has_Units then
-               For_Units : for CU of S.Source.Source.Units loop
+               For_Units : for CU of S.Source.Units loop
                   declare
                      Dep_File : constant GPR2.Path_Name.Object :=
                                   GPR2.Project.Source.Artifact.Dependency

@@ -70,9 +70,9 @@ private
       Self : not null access Object'Class := Object'Unchecked_Access;
    end record;
 
-   Time_Stamp_Length : constant := 14;
+   subtype Time_String is String (1 .. 14);
 
-   function To_Time (S : String) return Ada.Calendar.Time;
-   --  Convert timestamp in YYYYMMDDHHMISS format to Time
+   function To_Time (S : Time_String) return Ada.Calendar.Time with Inline;
+   --  Convert timestamp in YYYYMMDDHHMMSS format to Time
 
 end GPR2.Source_Info.Parser;

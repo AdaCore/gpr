@@ -2898,8 +2898,8 @@ package body GPR2.Project.Tree is
    begin
       Remove_If_Proper (Key (Source));
 
-      if Source.Source.Has_Units then
-         for U of Source.Source.Units loop
+      if Source.Has_Units then
+         for U of Source.Units loop
             Remove_If_Proper (Key (Source.View, U));
          end loop;
       end if;
@@ -3908,8 +3908,8 @@ package body GPR2.Project.Tree is
    begin
       Insert_Or_Replace (Key (Source));
 
-      if Source.Source.Has_Units then
-         for U of Source.Source.Units loop
+      if Source.Has_Units then
+         for U of Source.Units loop
             Insert_Or_Replace (Key (Source.View, U));
          end loop;
       end if;
@@ -4289,8 +4289,8 @@ package body GPR2.Project.Tree is
                     (V : Project.View.Object) return Boolean is
                   begin
                      for S of V.Sources loop
-                        if S.Source.Language = Ada_Language
-                          or else S.Source.Kind not in GPR2.Unit.Spec_Kind
+                        if S.Language = Ada_Language
+                          or else S.Kind not in GPR2.Unit.Spec_Kind
                         then
                            return True;
                         end if;

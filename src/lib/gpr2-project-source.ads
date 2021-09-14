@@ -31,8 +31,6 @@ with GPR2.Source_Info;
 limited with GPR2.Project.Source.Artifact;
 limited with GPR2.Project.Source.Set;
 
-private with GNATCOLL.Refcount;
-
 package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
@@ -44,18 +42,14 @@ package GPR2.Project.Source is
    subtype Naming_Exception_Value is
      Naming_Exception_Kind range Yes .. Multi_Unit;
 
-   type Object is tagged private;
+   type Object is new GPR2.Source.Object with private;
 
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
 
-   function Is_Defined (Self : Object) return Boolean;
+   overriding function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
-
-   function "<" (Left, Right : Object) return Boolean;
-
-   overriding function "=" (Left, Right : Object) return Boolean;
 
    function Create
      (Source           : GPR2.Source.Object;
@@ -73,10 +67,6 @@ package GPR2.Project.Source is
    --  View Source_Dirs) and Extending_View is the optional view from which the
    --  project source is extended. That is, if Extending_View is defined then
    --  this source is coming from an extended project for View.
-
-   function Path_Name (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined;
-   --  Returns the source path-name
 
    function View (Self : Object) return Project.View.Object
      with Pre  => Self.Is_Defined,
@@ -100,9 +90,6 @@ package GPR2.Project.Source is
      with Pre => Self.Is_Defined;
    --  Returns True if the source is compilable, meaning that a compiler is
    --  defined for this language.
-
-   function Source (Self : Object) return GPR2.Source.Object;
-   --  The source object
 
    function Is_Interface (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -150,7 +137,7 @@ package GPR2.Project.Source is
      (Self    : Object;
       Closure : Boolean := False;
       Index   : Source_Info.Unit_Index := 1) return Project.Source.Set.Object
-     with Pre => Self.Is_Defined and then Self.Source.Has_Units;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns the source files on which the current source file depends
    --  (potentially transitively).
 
@@ -175,10 +162,6 @@ package GPR2.Project.Source is
    --  The following routines may be used for both unit-based and
    --  non-unit-based sources. In the latter case, Index is not used.
    --
-
-   function Has_Units (Self  : Object) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Returns True is source is unit based
 
    function Has_Other_Part
      (Self  : Object;
@@ -205,7 +188,7 @@ package GPR2.Project.Source is
      (Self  : Object;
       Index : Source_Info.Unit_Index := 1) return Object
      with Pre => Self.Is_Defined
-                 and then Self.Source.Kind = GPR2.Unit.S_Separate;
+                 and then Self.Kind = GPR2.Unit.S_Separate;
    --  Returns the project's source containing the separate for Self's unit at
    --  the given index.
 
@@ -217,11 +200,7 @@ package GPR2.Project.Source is
 
 private
 
-   package Src_Ref is new GNATCOLL.Refcount.Shared_Pointers
-     (GPR2.Source.Object);
-
-   type Object is tagged record
-      Source           : Src_Ref.Ref;
+   type Object is new GPR2.Source.Object with record
       View             : Project.Weak_Reference;
       --  Use weak reference to View to avoid reference cycle between Source
       --  and its View. Otherwise we've got memory leak after release view and
@@ -237,30 +216,14 @@ private
       --  From extended project
    end record;
 
-   Undefined : constant Object := (others => <>);
+   Undefined : constant Object := (GPR2.Source.Undefined with others => <>);
 
-   function Is_Defined (Self : Object) return Boolean is
+   overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
    function Is_Aggregated (Self : Object) return Boolean is
      (not Definition_References."="
         (Self.Aggregated, Definition_References.Null_Weak_Ref));
-
-   function "<" (Left, Right : Object) return Boolean is
-     (if not Left.Is_Defined then
-         Left /= Right
-      elsif not Right.Is_Defined then
-         False
-      else
-         Left.Source.Get.Element.all < Right.Source.Get.Element.all);
-
-   overriding function "=" (Left, Right : Object) return Boolean is
-     (if Left.Source.Is_Null then
-        Right.Source.Is_Null
-      elsif Right.Source.Is_Null then
-         False
-      else
-        Left.Source.Get.Element.all = Right.Source.Get.Element.all);
 
    function Is_Interface (Self : Object) return Boolean is
      (Self.Is_Interface);
@@ -270,11 +233,5 @@ private
 
    function Naming_Exception (Self : Object) return Naming_Exception_Kind is
      (Self.Naming_Exception);
-
-   function Path_Name (Self : Object) return GPR2.Path_Name.Object is
-     (Self.Source.Get.Path_Name);
-
-   function Has_Units (Self  : Object) return Boolean is
-     (Self.Source.Get.Has_Units);
 
 end GPR2.Project.Source;

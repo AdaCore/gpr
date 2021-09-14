@@ -81,7 +81,7 @@ package body GPR2.Source is
    function Create
      (Filename : GPR2.Path_Name.Object;
       Language : Language_Id;
-      Kind     : GPR2.Unit.Library_Unit_Type) return Object is
+      Kind     : GPR2.Unit.Library_Unit_Type) return Object'Class is
    begin
       return Result : Object  do
          Result.Path_Name := Filename;
@@ -100,7 +100,7 @@ package body GPR2.Source is
      (Filename      : GPR2.Path_Name.Object;
       Units         : GPR2.Unit.List.Object;
       Is_RTS_Source : Boolean;
-      Is_Indexed    : Boolean) return Object
+      Is_Indexed    : Boolean) return Object'Class
    is
       use all type GPR2.Unit.Library_Unit_Type;
 

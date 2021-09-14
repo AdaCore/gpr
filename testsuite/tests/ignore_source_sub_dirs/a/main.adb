@@ -54,13 +54,13 @@ begin
       Context  => Context);
    for Prj of Tree loop
       for S of Prj.Sources loop
-         if S.Source.Path_Name.Simple_Name = "main.adb" then
+         if S.Path_Name.Simple_Name = "main.adb" then
             Main_Found := Main_Found + 1;
-         elsif S.Source.Path_Name.Simple_Name = "test.ads" then
+         elsif S.Path_Name.Simple_Name = "test.ads" then
             Test_Found := Test_Found + 1;
-         elsif S.Source.Path_Name.Simple_Name = "ignored.ads" then
+         elsif S.Path_Name.Simple_Name = "ignored.ads" then
             Ada.Text_IO.Put_Line
-              ("unexpected " & String (S.Source.Path_Name.Value) & " found");
+              ("unexpected " & String (S.Path_Name.Value) & " found");
          end if;
       end loop;
    end loop;

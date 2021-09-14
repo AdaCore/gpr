@@ -102,7 +102,8 @@ package GPR2.Project.Source.Set is
         then Element'Result.Is_Defined
         else not Element'Result.Is_Defined);
 
-   function Has_Element (Position : Cursor) return Boolean;
+   function Has_Element (Position : Cursor) return Boolean
+     with Inline;
 
    package Source_Iterator is
      new Ada.Iterator_Interfaces (Cursor, Has_Element);
@@ -117,13 +118,12 @@ package GPR2.Project.Source.Set is
 
    Empty_Set : constant Object;
 
-   type Source_Filter is mod 2 ** 8;
-
-   S_Compilable : constant Source_Filter;
-   S_Spec       : constant Source_Filter;
-   S_Body       : constant Source_Filter;
-   S_Separate   : constant Source_Filter;
-   S_All        : constant Source_Filter;
+   type Source_Filter is
+     (S_Compilable,  --  Compilable sources only
+      S_Spec,        --  Specs only
+      S_Body,        --  Body
+      S_Separate,    --  Separate
+      S_All);
 
    function Iterate
      (Self   : Object;
@@ -149,16 +149,14 @@ private
 
    Empty_Set : constant Object := Object'(S => Set.Empty_Set);
 
-   S_Compilable : constant Source_Filter := 1;
-   S_Spec       : constant Source_Filter := 2;
-   S_Body       : constant Source_Filter := 4;
-   S_Separate   : constant Source_Filter := 8;
-   S_All        : constant Source_Filter :=
-                    S_Compilable + S_Spec + S_Body + S_Separate;
-
    function Find
      (Self : Object; Source : Project.Source.Object) return Cursor
-   is
-     (Current => Self.S.Find (Source));
+   is (Current => Self.S.Find (Source));
+
+   function Length (Self : Object) return Containers.Count_Type is
+     (Self.S.Length);
+
+   function Is_Empty (Self : Object) return Boolean is
+     (Self.S.Is_Empty);
 
 end GPR2.Project.Source.Set;
