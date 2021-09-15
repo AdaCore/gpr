@@ -109,7 +109,7 @@ package body GPR2.Source_Info is
    is
       C_Idx : constant Unit_Dependencies.Cursor :=
                 Self.Dependencies.Find (Index);
-      U_Ref : Dependency_Maps_Ref.Ref;
+      U_Ref : Dependency_Vectors_Ref.Ref;
 
    begin
       if not Unit_Dependencies.Has_Element (C_Idx) then
@@ -126,8 +126,7 @@ package body GPR2.Source_Info is
          declare
             use Ada.Strings;
 
-            Key   : constant Dependency_Key := Dependency_Maps.Key (C);
-            Ref   : constant Dependency_Maps.Constant_Reference_Type :=
+            Ref   : constant Dependency_Vectors.Constant_Reference_Type :=
                       U_Ref.Get.Constant_Reference (C);
             First : constant Natural :=
                       Fixed.Index
@@ -140,8 +139,8 @@ package body GPR2.Source_Info is
                  (Ref.Sfile
                       ((if First = 0 then Ref.Sfile'First else First + 1)
                        .. Ref.Sfile'Last)),
-               Name_Type (Key.Unit_Name),
-               Key.Unit_Kind,
+               Name_Type (Ref.Unit_Name),
+               Ref.Unit_Kind,
                Ref.Stamp);
          end;
       end loop;

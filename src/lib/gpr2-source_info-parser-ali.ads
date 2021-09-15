@@ -49,7 +49,7 @@ private
       Unit      : GPR2.Unit.Object;
       Checksum  : Word;
       Timestamp : Ada.Calendar.Time;
-      Depends   : Dependency_Maps_Ref.Ref;
+      Depends   : Dependency_Vectors_Ref.Ref;
    end record;
    --  When parsing ALI files, we retrieve information for the whole
    --  compilation unit at once. This information will be split into

@@ -22,7 +22,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with Ada.Calendar.Formatting;
 with Ada.Exceptions;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
@@ -374,7 +373,7 @@ package body GPR2.Source_Info.Parser.ALI is
       CU_Idx  : CU_Index := 0;
       Current : CU_Index := 0;
 
-      procedure Fill_Dep (Map : Dependency_Maps_Ref.Reference_Type);
+      procedure Fill_Dep (Map : Dependency_Vectors_Ref.Reference_Type);
       --  Add dependency from D line
 
       procedure Fill_Unit;
@@ -402,7 +401,7 @@ package body GPR2.Source_Info.Parser.ALI is
       -- Fill_Dep --
       --------------
 
-      procedure Fill_Dep (Map : Dependency_Maps_Ref.Reference_Type) is
+      procedure Fill_Dep (Map : Dependency_Vectors_Ref.Reference_Type) is
 
          function Checksum (S : String) return Word;
 
@@ -521,15 +520,10 @@ package body GPR2.Source_Info.Parser.ALI is
             then 2 else 0);
          --  Length of suffix denoting dependency kind
 
-         function Image (Dep : Dependency) return String is
-           ('"' & Dep.Sfile & ' ' & Formatting.Image (Dep.Stamp)
-            & ' ' & To_Hex_String (Dep.Checksum) & '"');
-
          Suffix : constant String :=
                      (if Forth'Length > 2
                       then Forth (Forth'Last - 1 .. Forth'Last)
                       else "");
-         Position : Dependency_Maps.Cursor;
          C_Cache  : Sep_Cache_Map.Cursor;
          Inserted : Boolean;
          H_Cache  : Cache_Holder;
@@ -587,30 +581,14 @@ package body GPR2.Source_Info.Parser.ALI is
             end if;
          end loop;
 
-         Map.Insert
-           ((Length    => Name'Length - Kind_Len,
-             Unit_Kind => Kind,
-             Unit_Name => Name (Name'First .. Name'Last - Kind_Len)),
-            (Length    => Sfile'Length,
-             Stamp     => Stamp,
-             Checksum  => Chksum,
-             Sfile     => Sfile), Position, Inserted);
-
-         if not Inserted
-           and then not Equal (Dependency_Maps.Element (Position),
-                               Sfile, Stamp, Chksum)
-         then
-            Ada.Text_IO.Put_Line
-              ("# " & Image (Dependency'(Length   => Sfile'Length,
-                                         SFile    => Sfile,
-                                         Stamp    => Stamp,
-                                         Checksum => Chksum)));
-
-            raise Scan_ALI_Error with
-              '"' & Name & """ already in dependencies of " & LI.Value
-              & " with different data "
-              & Image (Dependency_Maps.Element (Position));
-         end if;
+         Map.Append
+           ((Name_Length  => Name'Length - Kind_Len,
+             Unit_Kind    => Kind,
+             Unit_Name    => Name (Name'First .. Name'Last - Kind_Len),
+             SFile_Length => Sfile'Length,
+             Stamp        => Stamp,
+             Checksum     => Chksum,
+             Sfile        => Sfile));
       end Fill_Dep;
 
       ---------------
@@ -1007,9 +985,9 @@ package body GPR2.Source_Info.Parser.ALI is
          --  Read Deps
 
          declare
-            Data_Deps : Dependency_Maps_Ref.Ref;
+            Data_Deps : Dependency_Vectors_Ref.Ref;
          begin
-            Data_Deps.Set (Dependency_Maps.Empty_Map);
+            Data_Deps.Set (Dependency_Vectors.Empty_Vector);
             Data.Dependencies.Insert (LI_Idx, Data_Deps);
 
             while Header = 'D' loop

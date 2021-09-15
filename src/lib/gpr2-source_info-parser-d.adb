@@ -66,13 +66,13 @@ package body GPR2.Source_Info.Parser.D is
       Looping     : Boolean := False;
       Buffer      : String (1 .. 1024);
       Last        : Natural;
-      C_Dep       : Dependency_Maps.Cursor;
+      C_Dep       : Dependency_Vectors.Cursor;
 
       function Is_Time_Stamp (S : String) return Boolean;
       --  Return True iff S has the format of a Time_Stamp_Type
 
       function Dependencies_Reference
-        return Dependency_Maps_Ref.Reference_Type;
+        return Dependency_Vectors_Ref.Reference_Type;
       --  Create dependencies reference
 
       OK : Boolean;
@@ -85,16 +85,17 @@ package body GPR2.Source_Info.Parser.D is
       -- Dependencies_Reference --
       ----------------------------
 
-      function Dependencies_Reference return Dependency_Maps_Ref.Reference_Type
+      function Dependencies_Reference
+        return Dependency_Vectors_Ref.Reference_Type
       is
          CU1      : Unit_Dependencies.Cursor;
          Inserted : Boolean;
       begin
          if Data.Dependencies.Is_Empty then
             declare
-               Ref : Dependency_Maps_Ref.Ref;
+               Ref : Dependency_Vectors_Ref.Ref;
             begin
-               Ref.Set (Dependency_Maps.Empty_Map);
+               Ref.Set (Dependency_Vectors.Empty_Vector);
                Data.Dependencies.Insert
                  (1, Ref, CU1, Inserted);
             end;
@@ -106,7 +107,7 @@ package body GPR2.Source_Info.Parser.D is
                  (CU1, Data.Dependencies.First));
          end if;
 
-         return Result : constant Dependency_Maps_Ref.Reference_Type :=
+         return Result : constant Dependency_Vectors_Ref.Reference_Type :=
                            Data.Dependencies (CU1).Get
          do
             if not Result.Is_Empty then
@@ -115,7 +116,7 @@ package body GPR2.Source_Info.Parser.D is
          end return;
       end Dependencies_Reference;
 
-      Dependencies : constant Dependency_Maps_Ref.Reference_Type :=
+      Dependencies : constant Dependency_Vectors_Ref.Reference_Type :=
                        Dependencies_Reference;
 
    begin
@@ -336,11 +337,11 @@ package body GPR2.Source_Info.Parser.D is
                      end if;
                   end loop;
 
-                  if Dependency_Maps.Has_Element (C_Dep)
+                  if Dependency_Vectors.Has_Element (C_Dep)
                     and then Is_Time_Stamp (Line (Start .. Finish))
                   then
                      declare
-                        Ref : constant Dependency_Maps.Reference_Type :=
+                        Ref : constant Dependency_Vectors.Reference_Type :=
                                 Dependencies.Reference (C_Dep);
                      begin
                         Ref.Stamp := To_Time (Line (Start .. Finish));
@@ -352,7 +353,7 @@ package body GPR2.Source_Info.Parser.D is
                         end if;
                      end;
 
-                     C_Dep := Dependency_Maps.No_Element;
+                     C_Dep := Dependency_Vectors.No_Element;
 
                   else
                      declare
@@ -364,31 +365,17 @@ package body GPR2.Source_Info.Parser.D is
                                         Case_Sensitive => False);
                         Src_Simple : constant String :=
                                        Ada.Directories.Simple_Name (Src_Name);
-                        Inserted : Boolean;
                      begin
                         Dependencies.Insert
-                          ((Length    => Src_Simple'Length,
-                            Unit_Kind => GPR2.Unit.S_Spec,
-                            Unit_Name => Src_Simple),
-                           (Length    => Src_Name'Length,
-                            Stamp     => No_Time,
-                            Checksum  => 0,
-                            Sfile     => Src_Name), C_Dep, Inserted);
-
-                        if not Inserted then
-                           if Debug ('D') then
-                              Put  ("      -> dependency file ");
-                              Put  (Dep_Name.Value);
-                              Put_Line (" has wrong format");
-
-                              Put  ("         ");
-                              Put  (Src_Simple);
-                              Put_Line  (" duplicated");
-                           end if;
-
-                           Close (Dep_File);
-                           return;
-                        end if;
+                          (Before   => Dependency_Vectors.No_Element,
+                           New_Item => (Name_Length  => Src_Simple'Length,
+                                        Unit_Name    => Src_Simple,
+                                        Unit_Kind    => GPR2.Unit.S_Spec,
+                                        SFile_Length => Src_Name'Length,
+                                        Stamp        => No_Time,
+                                        Checksum     => 0,
+                                        Sfile        => Src_Name),
+                           Position => C_Dep);
                      end;
                   end if;
 
