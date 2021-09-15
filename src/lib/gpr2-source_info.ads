@@ -28,7 +28,7 @@
 --  the kind of parser that has been used.
 
 with Ada.Calendar;
-with Ada.Containers.Indefinite_Ordered_Maps;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Containers.Ordered_Maps;
 
 with GPR2.Unit.List;
@@ -237,17 +237,11 @@ private
 
    use Ada.Calendar;
 
-   type Dependency_Key (Length : Natural) is record
+   type Dependency (Name_Length, SFile_Length : Natural) is record
       Unit_Kind : GPR2.Unit.Library_Unit_Type;
       --  Unit kind (S_Separate for a subunit)
 
-      Unit_Name : String (1 .. Length);
-      --  Name of the unit or subunit.
-      --  Empty if Sfile is configuration pragmas file.
-   end record;
-
-   type Dependency (Length : Natural) is record
-      Stamp : Time := No_Time;
+      Stamp     : Time := No_Time;
       --  Time stamp value. Note that this will be all zero characters for the
       --  dummy entries for missing or non-dependent files.
 
@@ -256,32 +250,28 @@ private
       --  dummy entries for missing or non-dependent files
       --  Zero if Sfile is configuration pragmas file.
 
-      Sfile : String (1 .. Length);
+      Unit_Name : String (1 .. Name_Length);
+      --  Name of the unit or subunit.
+      --  Empty if Sfile is configuration pragmas file.
+
+      Sfile : String (1 .. SFile_Length);
       --  Base name of the source file for Ada.
       --  Full path name for none-Ada and for configuration pragmas files.
    end record;
 
-   function Equal (Dep      : Dependency;
-                   Sfile    : String;
-                   Stamp    : Time;
-                   Checksum : Word) return Boolean is
-     (Dep.Sfile = Sfile
-      and then Dep.Stamp = Stamp
-      and then Dep.Checksum = Checksum);
+   package Dependency_Vectors is new Ada.Containers.Indefinite_Vectors
+     (Positive, Dependency);
 
-   function "<" (Left, Right : Dependency_Key) return Boolean is
-     ((Left.Unit_Name = Right.Unit_Name
-        and then Left.Unit_Kind < Right.Unit_Kind)
-      or else Left.Unit_Name < Right.Unit_Name);
+   package Dependency_Vectors_Ref is new GNATCOLL.Refcount.Shared_Pointers
+     (Dependency_Vectors.Vector);
 
-   package Dependency_Maps is new Ada.Containers.Indefinite_Ordered_Maps
-     (Dependency_Key, Dependency, "<", "=");
+   function Equ (L, R : Dependency_Vectors_Ref.Ref) return Boolean is
+     (if L.Is_Null and then R.Is_Null then True
+      elsif L.Is_Null or else R.Is_Null then False
+      else Dependency_Vectors."=" (L.Get.Element.all, R.Get.Element.all));
 
    package Unit_Dependencies is new Ada.Containers.Ordered_Maps
-     (Unit_Index, Dependency_Maps.Map, "=" => Dependency_Maps."=");
-
-   package Dep_Ref is new GNATCOLL.Refcount.Shared_Pointers
-     (Unit_Dependencies.Map);
+     (Unit_Index, Dependency_Vectors_Ref.Ref, "=" => Equ);
 
    type Object is tagged record
       Is_Ada        : Boolean := False;
@@ -292,7 +282,7 @@ private
       Kind          : GPR2.Unit.Library_Unit_Type := GPR2.Unit.S_Separate;
       LI_Timestamp  : Calendar.Time          := No_Time;
       Checksum      : Word                   := 0;
-      Dependencies  : Dep_Ref.Ref;
+      Dependencies  : Unit_Dependencies.Map;
    end record
      with Dynamic_Predicate =>
             Object.CU_List.Length = 0

@@ -64,8 +64,8 @@ private with Ada.Containers.Indefinite_Hashed_Maps;
 private with Ada.Containers.Indefinite_Vectors;
 private with Ada.Strings.Equal_Case_Insensitive;
 private with Ada.Strings.Hash;
+private with Ada.Strings.Hash_Case_Insensitive;
 private with Ada.Strings.Unbounded;
-with Ada.Strings.Hash_Case_Insensitive;
 private with GNATCOLL.Utils;
 
 pragma Warnings
@@ -177,6 +177,8 @@ package GPR2 is
 
    File_Names_Case_Sensitive : constant Boolean;
 
+   function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type;
+
    function To_Hex_String (Num : Word) return String;
 
    function Has_Directory_Separator (Name : String) return Boolean;
@@ -204,6 +206,7 @@ package GPR2 is
    No_Language  : constant Language_Id;
    Ada_Language : constant Language_Id;
    C_Language   : constant Language_Id;
+   CPP_Language : constant Language_Id; -- C++
 
    function "+" (L : Optional_Name_Type) return Language_Id;
    function Name (L : Language_Id) return Optional_Name_Type;
@@ -240,6 +243,7 @@ private
    No_Language  : constant Language_Id := 0;
    Ada_Language : constant Language_Id := 1;
    C_Language   : constant Language_Id := 2;
+   CPP_Language : constant Language_Id := 3;
    No_Attribute : constant Optional_Attribute_Id := 0;
    No_Package   : constant Optional_Package_Id := 0;
 
@@ -290,6 +294,11 @@ private
         (Pattern        => String (Filename_Regexp),
          Glob           => True,
          Case_Sensitive => File_Names_Case_Sensitive));
+
+   function Hash (Fname : Filename_Type) return Ada.Containers.Hash_Type
+   is (if File_Names_Case_Sensitive
+       then Ada.Strings.Hash (String (Fname))
+       else Ada.Strings.Hash_Case_Insensitive (String (Fname)));
 
    -------------------
    -- String tables --

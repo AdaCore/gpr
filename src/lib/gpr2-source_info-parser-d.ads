@@ -18,7 +18,8 @@
 
 package GPR2.Source_Info.Parser.D is
 
-   type Object is new Parser.Object (GPR2.C_Language, LI) with null record;
+   type Object (Language : Language_Id) is
+     new Parser.Object (Language, LI) with null record;
 
    overriding procedure Compute
      (Self   : not null access Object;

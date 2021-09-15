@@ -65,11 +65,7 @@ package body GPR2.Source_Info is
    procedure Clear (Self : in out Object) is
    begin
       Self.CU_List.Clear;
-      if Self.Dependencies.Is_Null then
-         Self.Dependencies.Set (Unit_Dependencies.Empty_Map);
-      else
-         Self.Dependencies.Get.Clear;
-      end if;
+      Self.Dependencies.Clear;
    end Clear;
 
    ---------------------------------
@@ -111,37 +107,43 @@ package body GPR2.Source_Info is
                   Stamp : Ada.Calendar.Time);
       Index  : Unit_Index := 1)
    is
-      Deps  : constant Dep_Ref.Reference_Type := Self.Dependencies.Get;
-      C_Idx : constant Unit_Dependencies.Cursor := Deps.Find (Index);
-      U_Ref : access constant Dependency_Maps.Map;
+      C_Idx : constant Unit_Dependencies.Cursor :=
+                Self.Dependencies.Find (Index);
+      U_Ref : Dependency_Vectors_Ref.Ref;
+
    begin
-      if Unit_Dependencies.Has_Element (C_Idx) then
-         U_Ref := Deps.Constant_Reference (C_Idx).Element;
-
-         for C in U_Ref.Iterate loop
-            declare
-               use Ada.Strings;
-
-               Key   : constant Dependency_Key := Dependency_Maps.Key (C);
-               Ref   : constant Dependency_Maps.Constant_Reference_Type :=
-                         U_Ref.Constant_Reference (C);
-               First : constant Natural :=
-                         Fixed.Index
-                           (Ref.Sfile, "" & GNAT.OS_Lib.Directory_Separator,
-                            Backward);
-               --  None Ada dependencied taken from .d files has full path name
-            begin
-               Action
-                 (Simple_Name
-                    (Ref.Sfile
-                       ((if First = 0 then Ref.Sfile'First else First + 1)
-                        .. Ref.Sfile'Last)),
-                  Name_Type (Key.Unit_Name),
-                  Key.Unit_Kind,
-                  Ref.Stamp);
-            end;
-         end loop;
+      if not Unit_Dependencies.Has_Element (C_Idx) then
+         return;
       end if;
+
+      U_Ref := Self.Dependencies (C_Idx);
+
+      if U_Ref.Is_Null then
+         return;
+      end if;
+
+      for C in U_Ref.Get.Iterate loop
+         declare
+            use Ada.Strings;
+
+            Ref   : constant Dependency_Vectors.Constant_Reference_Type :=
+                      U_Ref.Get.Constant_Reference (C);
+            First : constant Natural :=
+                      Fixed.Index
+                        (Ref.Sfile, "" & GNAT.OS_Lib.Directory_Separator,
+                         Backward);
+            --  None Ada dependencied taken from .d files has full path name
+         begin
+            Action
+              (Simple_Name
+                 (Ref.Sfile
+                      ((if First = 0 then Ref.Sfile'First else First + 1)
+                       .. Ref.Sfile'Last)),
+               Name_Type (Ref.Unit_Name),
+               Ref.Unit_Kind,
+               Ref.Stamp);
+         end;
+      end loop;
    end Dependencies;
 
    --------------

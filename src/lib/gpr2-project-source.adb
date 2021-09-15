@@ -323,7 +323,7 @@ package body GPR2.Project.Source is
       Closure  : Boolean := False;
       Index    : Source_Info.Unit_Index := 1)
    is
-      Done : Containers.Filename_Set;
+      Done      : Containers.Filename_Set;
 
       procedure Action
         (Sfile : Simple_Name;
@@ -389,7 +389,6 @@ package body GPR2.Project.Source is
       For_Each : not null access procedure
                    (Source : GPR2.Project.Source.Object;
                     Unit   : GPR2.Unit.Object);
-      Closure  : Boolean := False;
       Index    : Source_Info.Unit_Index := 1)
    is
       Done     : Containers.Name_Set;
@@ -635,17 +634,11 @@ package body GPR2.Project.Source is
                      when GPR2.Unit.Body_Kind =>
                         if Unit.Spec.Is_Defined then
                            return View.Source (Unit.Spec);
-                        elsif Unit.Separates.Length > 0 then
-                           --  ??? returning first separate
-                           return View.Source (Unit.Separates.First_Element);
                         end if;
 
                      when GPR2.Unit.Spec_Kind =>
                         if Unit.Main_Body.Is_Defined then
                            return View.Source (Unit.Main_Body);
-                        elsif Unit.Separates.Length > 0 then
-                           --  ??? returning first separate
-                           return View.Source (Unit.Separates.First_Element);
                         end if;
 
                      when S_Separate =>

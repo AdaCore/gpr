@@ -2,4 +2,4 @@ description: Test gprls uses Ada source parser
 driver: python_script
 timeout: 600
 control:
-- [XFAIL, "env.host.platform.endswith('windows')", "stable-gnat until it updated with fixed NSIS U829-001"]
+- [XFAIL, "env.host.platform.find('windows') >= 0", "stable-gnat until it updated with fixed NSIS U829-001"]
