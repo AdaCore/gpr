@@ -206,6 +206,7 @@ package GPR2 is
    No_Language  : constant Language_Id;
    Ada_Language : constant Language_Id;
    C_Language   : constant Language_Id;
+   CPP_Language : constant Language_Id; -- C++
 
    function "+" (L : Optional_Name_Type) return Language_Id;
    function Name (L : Language_Id) return Optional_Name_Type;
@@ -242,6 +243,7 @@ private
    No_Language  : constant Language_Id := 0;
    Ada_Language : constant Language_Id := 1;
    C_Language   : constant Language_Id := 2;
+   CPP_Language : constant Language_Id := 3;
    No_Attribute : constant Optional_Attribute_Id := 0;
    No_Package   : constant Optional_Package_Id := 0;
 

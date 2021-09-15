@@ -36,7 +36,8 @@ with GNAT.OS_Lib;
 
 package body GPR2.Source_Info.Parser.D is
 
-   Handle : Object;
+   C_Handle   : Object (C_Language);
+   CPP_Handle : Object (CPP_Language);
 
    function Unescape (Path : String) return String;
    --  Remove the character '\' if it is before ' ', '#', ':', or '\'.
@@ -446,5 +447,6 @@ package body GPR2.Source_Info.Parser.D is
    end Unescape;
 
 begin
-   GPR2.Source_Info.Parser.Registry.Register (Handle);
+   GPR2.Source_Info.Parser.Registry.Register (C_Handle);
+   GPR2.Source_Info.Parser.Registry.Register (CPP_Handle);
 end GPR2.Source_Info.Parser.D;

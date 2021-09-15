@@ -306,6 +306,8 @@ package body GPR2 is
 begin
    Language_List.Id_To_Name.Append ("ada");
    Language_List.Id_To_Name.Append ("c");
+   Language_List.Id_To_Name.Append ("c++");
    Language_List.Name_To_Id.Insert ("ada", 1);
-   Language_List.Name_To_Id.Insert ("c", 2);
+   Language_List.Name_To_Id.Insert ("c",   2);
+   Language_List.Name_To_Id.Insert ("c++", 3);
 end GPR2;
