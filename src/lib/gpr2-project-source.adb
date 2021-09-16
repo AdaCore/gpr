@@ -376,7 +376,7 @@ package body GPR2.Project.Source is
    begin
       Self.Dependencies (Action'Access, Index);
 
-      if Done.Is_Empty then
+      if Done.Is_Empty and then Self.Has_Units then
          --  It mean that we do not have ALI file parsed, try to get "with"
          --  dependencies from Ada parser.
 

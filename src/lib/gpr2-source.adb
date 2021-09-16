@@ -23,17 +23,10 @@
 ------------------------------------------------------------------------------
 
 with Ada.Calendar.Conversions;
-with Ada.Directories;
 
 with Interfaces.C;
 
 package body GPR2.Source is
-
-   function Get_ALI_Timestamp
-     (File : GPR2.Path_Name.Object) return Calendar.Time
-     with Pre => File.Is_Defined;
-   --  Return Timestamp used in ALI file. On windows use first greater time
-   --  with an even number of second.
 
    function Key (Self : Object) return Value_Type
      with Inline, Pre => Self.Is_Defined;
@@ -71,7 +64,7 @@ package body GPR2.Source is
    function Check_Timestamp (Self : Object) return Boolean is
       use type Ada.Calendar.Time;
    begin
-      return Self.Timestamp = Get_ALI_Timestamp (Self.Path_Name);
+      return Self.Timestamp = Self.Path_Name.Modification_Time;
    end Check_Timestamp;
 
    ------------
@@ -85,7 +78,7 @@ package body GPR2.Source is
    begin
       return Result : Object  do
          Result.Path_Name := Filename;
-         Result.Timestamp := Get_ALI_Timestamp (Filename);
+         Result.Timestamp := Filename.Modification_Time;
          Result.Language  := Language;
 
          Set (Result, Kind);
@@ -130,35 +123,13 @@ package body GPR2.Source is
 
       return Result : Object do
          Result.Path_Name := Filename;
-         Result.Timestamp := Get_ALI_Timestamp (Filename);
+         Result.Timestamp := Filename.Modification_Time;
          Result.Language  := +"Ada";
          Result.Ada_Key   := Key;
 
          Set_Ada (Result, Sorted_Units, Is_RTS_Source, Is_Indexed);
       end return;
    end Create_Ada;
-
-   -----------------------
-   -- Get_ALI_Timestamp --
-   -----------------------
-
-   function Get_ALI_Timestamp
-     (File : GPR2.Path_Name.Object) return Ada.Calendar.Time
-   is
-      use Interfaces;
-      use Ada.Calendar;
-      use type C.long;
-
-      Timestamp : constant C.long :=
-                    Conversions.To_Unix_Time
-                      (Directories.Modification_Time (File.Value));
-   begin
-      return Conversions.To_Ada_Time
-        (Timestamp
-         + (if On_Windows and then Timestamp mod 2 > 0
-            then 1
-            else 0));
-   end Get_ALI_Timestamp;
 
    ---------
    -- Key --
@@ -175,5 +146,24 @@ package body GPR2.Source is
          return Self.Path_Name.Value;
       end if;
    end Key;
+
+   ----------------------
+   -- To_ALI_Timestamp --
+   ----------------------
+
+   function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time is
+      use Interfaces;
+      use Ada.Calendar;
+      use type C.long;
+
+      Timestamp : constant C.long := Conversions.To_Unix_Time (Stamp);
+
+   begin
+      return Conversions.To_Ada_Time
+        (Timestamp
+         + (if On_Windows and then Timestamp mod 2 > 0
+            then 1
+            else 0));
+   end To_ALI_Timestamp;
 
 end GPR2.Source;

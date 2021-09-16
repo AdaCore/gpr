@@ -442,19 +442,51 @@ begin
 
          use type Source_Info.Backend;
 
-         procedure Output_Source (S : Project.Source.Object);
+         procedure Output_Source
+           (S : Project.Source.Object;
+            A : Project.Source.Artifact.Object :=
+              Project.Source.Artifact.Undefined);
 
          -------------------
          -- Output_Source --
          -------------------
 
-         procedure Output_Source (S : Project.Source.Object) is
+         procedure Output_Source
+           (S : Project.Source.Object;
+            A : Project.Source.Artifact.Object :=
+              Project.Source.Artifact.Undefined)
+         is
             use type Ada.Calendar.Time;
 
-            Status : File_Status;
+            package SI renames GPR2.Source_Info;
+
+            Status    : File_Status;
+            Artifacts : Project.Source.Artifact.Object;
+
+            function Check_Object_Code return Boolean;
+            --  Returns true if source has object code and set Artifacts
 
             function No_Trail_Zero (Item : String) return String;
             --  Remove trailing zeroes with possible dot and leading space
+
+            -----------------------
+            -- Check_Object_Code --
+            -----------------------
+
+            function Check_Object_Code return Boolean is
+               package PSA renames Project.Source.Artifact;
+            begin
+               if A.Is_Defined then
+                  Artifacts := A;
+               else
+                  Artifacts := PSA.Create
+                    (S,
+                     Filter => (PSA.Object_File_Artifact => True,
+                                others                   => False));
+               end if;
+
+               return Artifacts.Has_Object_Code;
+            end Check_Object_Code;
 
             -------------------
             -- No_Trail_Zero --
@@ -480,10 +512,15 @@ begin
 
             if (S.Is_Parsed
                 and then S.Used_Backend = Source_Info.LI
-                and then S.Build_Timestamp = S.Timestamp)
+                and then S.Build_Timestamp = S.Timestamp (ALI => True))
               or else
                 (not S.Has_Units and then S.Kind in Unit.Spec_Kind
-                 and then S.Build_Timestamp = S.Timestamp)
+                 and then S.Build_Timestamp = S.Timestamp (ALI => True))
+              or else
+                (not SI.Parser.Registry.Exists (S.Language, SI.None)
+                 and then Check_Object_Code
+                 and then S.Timestamp (ALI => False) <
+                        Artifacts.Object_Code (Index => 0).Modification_Time)
             then
                Status := OK;
 
@@ -519,12 +556,12 @@ begin
                               Text_IO.Put (S.Used_Backend'Img);
                               Text_IO.Put (' ');
 
-                              if S.Build_Timestamp /= S.Timestamp
+                              if S.Build_Timestamp /= S.Timestamp (ALI => True)
                               then
                                  Text_IO.Put
                                    (No_Trail_Zero
                                       (Duration'Image
-                                           (S.Timestamp -
+                                           (S.Timestamp (ALI => True) -
                                                 S.Build_Timestamp)));
                                  Text_IO.Put (' ');
                               end if;
@@ -624,7 +661,7 @@ begin
                   end if;
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source);
+                     Output_Source (S.Source, Artifacts);
                   end if;
 
                   if Opt.Verbose then
@@ -714,7 +751,7 @@ begin
                   Print_Object (1);
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source);
+                     Output_Source (S.Source, Artifacts);
                   end if;
 
                elsif S.Index = 0 then
@@ -860,7 +897,8 @@ begin
          for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
-              and then S.Language = Ada_Language
+              and then (not GPR2.Is_Debug ('1')
+                        or else S.Language = Ada_Language)
             then
                Sources.Insert ((S, 0));
             end if;
@@ -872,8 +910,9 @@ begin
 
          for View of Tree loop
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
-               if Element (S_Cur).Language = Ada_Language
-                 and then not Element (S_Cur).Is_Overriden
+               if not Element (S_Cur).Is_Overriden
+                 and then (not GPR2.Is_Debug ('1')
+                           or else Element (S_Cur).Language = Ada_Language)
                then
                   Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
 
@@ -899,7 +938,9 @@ begin
 
       else
          for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
-            if Element (S_Cur).Language = Ada_Language then
+            if not GPR2.Is_Debug ('1')
+              or else Element (S_Cur).Language = Ada_Language
+            then
                Sources.Insert ((Element (S_Cur), 0));
             end if;
          end loop;
