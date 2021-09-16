@@ -59,9 +59,10 @@ package GPR2.Source is
      with Pre => Self.Is_Defined;
    --  Returns the language for this source
 
-   function Timestamp (Self : Object) return Ada.Calendar.Time
+   function Timestamp (Self : Object; ALI : Boolean) return Ada.Calendar.Time
      with Pre => Self.Is_Defined;
-   --  Returns the creation time for this source
+   --  Returns last modification time for this source
+   --  If Ali is True then timestamp returned as it is rounded in ALI files.
 
    function Check_Timestamp (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -91,6 +92,10 @@ package GPR2.Source is
 
 private
 
+   function To_ALI_Timestamp (Stamp : Calendar.Time) return Calendar.Time;
+   --  Round Timestamp to the precision used in ALI file. On windows use first
+   --  greater time with an even number of second.
+
    type Object is new Source_Info.Object with record
       Path_Name : GPR2.Path_Name.Object;
       Timestamp : Calendar.Time := No_Time;
@@ -105,8 +110,8 @@ private
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);
 
-   function Timestamp (Self : Object) return Ada.Calendar.Time is
-     (Self.Timestamp);
+   function Timestamp (Self : Object; ALI : Boolean) return Ada.Calendar.Time
+   is (if ALI then To_ALI_Timestamp (Self.Timestamp) else Self.Timestamp);
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path_Name);

@@ -13,7 +13,12 @@ for line in open("run.out"):
     OK = False
     print('1:' + line)
 
-bnr.call([GPRLS, '-U', '-aPmylib', '-Pmain/main.gpr', '--debugF', 'helper.o', 'main.o'])
+bnr.call([GPRLS, '-U', '-aPmylib', '-Pmain/main.gpr', '--debugF',
+          'helper.o', 'main.o', 'asm.o'])
+print('----------')
+bnr.call([GPRLS, '-U', '-aPmylib', '-Pmain/main.gpr', '--debugF'])
+print('----------')
+bnr.call([GPRLS, '-aPmylib', '-Pmain/main.gpr', '--debugF'])
 
 bnr.run(['gprbuild', '-p', '-q', '-Pmylib/mylib.gpr'], output='run.out')
 
@@ -32,7 +37,7 @@ bnr.run(['gprbuild', '-p', '-q',
          '-aPinstall/share/gpr', '-Pmain/main.gpr'], output='run.out')
 print('----------')
 bnr.call([GPRLS, '-U', '-aPinstall/share/gpr', '-Pmain/main.gpr', '-d', '--debugF',
-          'helper.o'])
+          'helper.o', 'asm.o'])
 
 for line in open("run.out"):
     OK = False
