@@ -243,7 +243,11 @@ package body GPR2 is
 
    procedure Set_Debug (Mode : Character; Enable : Boolean := True) is
    begin
-      Debug (Mode) := Enable;
+      if Mode = '*' then
+         Debug := (others => Enable);
+      else
+         Debug (Mode) := Enable;
+      end if;
    end Set_Debug;
 
    -------------------
