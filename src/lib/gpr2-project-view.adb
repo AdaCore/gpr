@@ -401,6 +401,25 @@ package body GPR2.Project.View is
    end Check_Attribute;
 
    ------------------
+   -- Check_Parent --
+   ------------------
+
+   function Check_Parent (Self : Object; Parent : out Object) return Boolean is
+      use Ada.Strings;
+
+      Ref  : constant Definition.Const_Ref := Definition.Get_RO (Self);
+      Name : constant Name_Type := Ref.Trees.Project.Name;
+      Dot  : constant Natural := Fixed.Index (String (Name), ".", Backward);
+   begin
+      if Dot > 0 then
+         Parent := Ref.Imports (Name (Name'First .. Dot - 1));
+         return True;
+      end if;
+
+      return False;
+   end Check_Parent;
+
+   ------------------
    -- Check_Source --
    ------------------
 
