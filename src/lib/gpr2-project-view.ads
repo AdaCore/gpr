@@ -424,6 +424,11 @@ package GPR2.Project.View is
    --  This routine is faster than using Has_Source and Source above as
    --  avoiding one access to the underlying structure.
 
+   function Check_Parent (Self : Object; Parent : out Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True and set Parent if Self has parent view, otherwise returns
+   --  False.
+
    procedure Invalidate_Sources (Self : in out Object)
      with Pre => Self.Is_Defined;
    --  Invalidate the sources for the view. This means that the Sources routine

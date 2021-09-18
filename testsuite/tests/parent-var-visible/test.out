@@ -1,0 +1,7 @@
+/build/obj/hello_world.o
+   Hello_World
+      OK /hello_world.adb
+/stuff/build/obj/print.o
+   Print
+      OK /stuff/print.adb
+using project file /hello_world.gpr

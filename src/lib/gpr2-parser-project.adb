@@ -2204,6 +2204,10 @@ package body GPR2.Parser.Project is
             Name : Name_Type) return Item_Values with Inline;
          --  Returns the variable value Pack.Name. If not found an error added
 
+         function Try_Visible_In
+           (View : GPR2.Project.View.Object) return Item_Values;
+         --  Try to find variable either in extended view or in parent one
+
          -----------
          -- Error --
          -----------
@@ -2240,6 +2244,43 @@ package body GPR2.Parser.Project is
                return Empty_Item_Values;
             end if;
          end Get_Pack_Var;
+
+         --------------------
+         -- Try_Visible_In --
+         --------------------
+
+         function Try_Visible_In
+           (View : GPR2.Project.View.Object) return Item_Values
+         is
+            Result : Item_Values;
+            Parent : GPR2.Project.View.Object;
+         begin
+            if View.Is_Extending then
+               Result := Get_Variable_Ref
+                 (Variable   => Variable,
+                  From_View  => View.Extended_Root,
+                  Source_Ref => Source_Ref);
+
+               if Result /= Empty_Item_Values then
+                  return Result;
+               end if;
+            end if;
+
+            if View.Check_Parent (Parent) then
+               Result := Get_Variable_Ref
+                 (Variable   => Variable,
+                  From_View  => Parent,
+                  Source_Ref => Source_Ref);
+
+               if Result /= Empty_Item_Values then
+                  return Result;
+               end if;
+            end if;
+
+            Error;
+
+            return Empty_Item_Values;
+         end Try_Visible_In;
 
       begin
          if Project /= No_Name then
@@ -2286,22 +2327,14 @@ package body GPR2.Parser.Project is
                --  chain.
 
                if Vars.Contains (Variable) then
-                  --  ??? Source ref is plain ignored here
-
                   return (Values =>
                             Ensure_Source_Loc
                               (Vars (Variable).Values, Source_Ref),
                           Single => Vars (Variable).Kind = PRA.Single,
                           others => <>);
 
-               elsif View.Is_Extending then
-                  return Get_Variable_Ref
-                    (Variable   => Variable,
-                     From_View  => View.Extended_Root,
-                     Source_Ref => Source_Ref);
-
                else
-                  Error;
+                  return Try_Visible_In (View);
                end if;
 
             else
@@ -2347,14 +2380,8 @@ package body GPR2.Parser.Project is
                              others => <>);
                   end;
 
-               elsif From_View.Is_Extending then
-                  return Get_Variable_Ref
-                    (Variable   => Variable,
-                     From_View  => From_View.Extended_Root,
-                     Source_Ref => Source_Ref);
-
                else
-                  Error;
+                  return Try_Visible_In (From_View);
                end if;
 
             elsif From_View.Has_Packages (Pack) then
