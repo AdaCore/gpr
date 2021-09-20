@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -24,7 +24,7 @@ package GPRtools is
    type Which is (Build, Clean, Ls, Install, Name, Remote);
    --  Names of the supported tools
 
-   type Verbosity_Level is (Quiet, Regular, Verbose);
+   type Verbosity_Level is (Quiet, Regular, Verbose, Very_Verbose);
    --  Verbosilty level of logging to standard and/or error/warning output
 
 end GPRtools;

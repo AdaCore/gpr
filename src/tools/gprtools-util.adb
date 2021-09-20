@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -279,12 +279,11 @@ package body GPRtools.Util is
       Displayed : GPR2.Containers.Value_Set;
       Used_Log  : constant GPR2.Log.Object :=
                     (if not Log.Is_Defined and then Options.Tree /= null
-                       and then Options.Tree.Has_Messages
                      then Options.Tree.Log_Messages.all
                      else Log);
    begin
       for C in Used_Log.Iterate
-        (Information => Options.Verbosity = Verbose,
+        (Information => Options.Verbosity = Very_Verbose,
          Warning     => Options.Warnings,
          Error       => True,
          Read        => True,
