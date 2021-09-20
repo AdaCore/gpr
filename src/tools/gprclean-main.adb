@@ -401,12 +401,6 @@ procedure GPRclean.Main is
             C_Main   : Containers.Filename_Type_Set.Cursor :=
                          Mains_In_View.Find (S.Path_Name.Simple_Name);
          begin
-            if Opts.Verbose then
-               Text_IO.Put_Line
-                 ("source: " & S.Path_Name.Value & ' '
-                  & S.Is_Aggregated'Img);
-            end if;
-
             --  Remove source simple name from Options.Mains as all Mains found
             --  is handled at Tree level not View level.
 
@@ -713,9 +707,6 @@ procedure GPRclean.Main is
                  ("Warning: """ & Name & """ could not be deleted");
             end if;
          end if;
-
-      elsif Opts.Verbosity > Regular then
-         Text_IO.Put_Line ('"' & Name & """ absent");
       end if;
    end Delete_File;
 

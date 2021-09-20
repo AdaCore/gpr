@@ -424,7 +424,8 @@ package body GPRtools.Options is
          end if;
 
       elsif Switch = "-v" or else Switch = "--verbose" then
-         Self.Verbosity := Verbose;
+         Self.Verbosity := (if Self.Verbosity = Verbose then Very_Verbose
+                            else Verbose);
 
       elsif Switch = "--implicit-with" then
          Self.Implicit_With.Append
