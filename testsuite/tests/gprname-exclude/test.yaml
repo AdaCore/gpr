@@ -1,0 +1,2 @@
+description: test gpr2name is handling exclude pattern
+driver: python_script
