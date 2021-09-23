@@ -239,7 +239,7 @@ package body GPRtools.Options is
          Help        => "Display version and exit");
 
       Define_Switch
-        (Self.Config, Value_Callback'Unrestricted_Access,
+        (Self.Config, Value_Callback'Access,
          "-v", "--verbose",
          Help => "Verbose output");
 
@@ -255,7 +255,7 @@ package body GPRtools.Options is
 
       if Tool not in Remote | Ls then
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             "-q", "--quiet",
             Help => "Be quiet/terse");
 
@@ -274,13 +274,13 @@ package body GPRtools.Options is
             Help   => "Full project path name in brief log messages");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--root-dir:",
             Help        => "Root directory of obj/lib/exec to relocate",
             Argument    => "<dir>");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--relocate-build-tree?",
             Help        =>
               "Root obj/lib/exec dirs are current-directory or dir",
@@ -289,7 +289,7 @@ package body GPRtools.Options is
 
       if Tool in Build | Clean | Install | Ls then
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access, "-P:",
+           (Self.Config, Value_Callback'Access, "-P:",
             Help => "Project file to "
             & (case Tool is
                  when Build   => "build",
@@ -309,25 +309,25 @@ package body GPRtools.Options is
          end if;
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             "-aP:",
             Help     => "Add directory <dir> to project search path",
             Argument => "<dir>");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--target=",
             Help        => "Specify a target for cross platforms",
             Argument    => "<name>");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--RTS:",
             Help        => "Use runtime <runtime> for language Ada",
             Argument    => "<runtime>");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             "-X:",
             Help     => "Specify an external reference for Project Files",
             Argument => "<NAME>=<VALUE>");
@@ -338,14 +338,14 @@ package body GPRtools.Options is
             Help        => "Do not load the standard knowledge base");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--db:",
             Help        => "Parse dir as an additional knowledge base");
       end if;
 
       if Tool in Build | Clean then
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--implicit-with:",
             Help        =>
               "Add the given projects as a dependency on all loaded"
@@ -353,23 +353,22 @@ package body GPRtools.Options is
             Argument    => "<filename>");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--distributed?",
             Help        =>
               "Activate the distributed mode for the given slaves",
             Argument    => "<host>[,<host>]");
 
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--slave-env?",
-            Help        =>
-              "Use a specific slave's environment",
+            Help        => "Use a specific slave's environment",
             Argument    => "<name>");
       end if;
 
       if Tool in Build | Clean | Install then
          Define_Switch
-           (Self.Config, Value_Callback'Unrestricted_Access,
+           (Self.Config, Value_Callback'Access,
             Long_Switch => "--src-subdirs:",
             Help        => "Prepend <obj>/dir to the list of source"
                            & " dirs for each project",
@@ -425,7 +424,8 @@ package body GPRtools.Options is
          end if;
 
       elsif Switch = "-v" or else Switch = "--verbose" then
-         Self.Verbosity := Verbose;
+         Self.Verbosity := (if Self.Verbosity = Verbose then Very_Verbose
+                            else Verbose);
 
       elsif Switch = "--implicit-with" then
          Self.Implicit_With.Append
@@ -523,7 +523,13 @@ package body GPRtools.Options is
          end;
 
       elsif Switch = "--debug" then
-         GPR2.Set_Debug (if Value = "" then '0' else Value (Value'First));
+         if Value = "" then
+            GPR2.Set_Debug ('*');
+         else
+            for V of Value loop
+               GPR2.Set_Debug (V);
+            end loop;
+         end if;
       end if;
    end Value_Callback;
 

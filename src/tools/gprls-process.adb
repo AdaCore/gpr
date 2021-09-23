@@ -21,6 +21,10 @@ with Ada.Containers.Indefinite_Ordered_Sets;
 with Ada.Directories;
 with Ada.Text_IO;
 
+with GNAT.OS_Lib;
+
+with GNATCOLL.Utils;
+
 with GPR2.KB;
 with GPR2.Unit;
 with GPR2.Containers;
@@ -75,7 +79,6 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
    -------------------
 
    procedure Display_Paths is
-      Src_Path : Path_Name.Set.Object;
       Obj_Path : Path_Name.Set.Object;
       Curr_Dir : constant String := Ada.Directories.Current_Directory;
 
@@ -83,36 +86,108 @@ procedure GPRls.Process (Opt : GPRls.Options.Object) is
         (if Dir (Dir'First .. Dir'Last - 1) = Curr_Dir
          then "<Current_Directory>" else Dir);
 
+      procedure Output_Source_Path (Value, Directory : String);
+      --  Output source path. If Value is not absolute path, prefix it with
+      --  Directory. If Value ends with ** output all subdirectories.
+
+      ------------------------
+      -- Output_Source_Path --
+      ------------------------
+
+      procedure Output_Source_Path (Value, Directory : String) is
+         use Ada.Directories;
+         use GNATCOLL.Utils;
+         use GNAT.OS_Lib;
+
+         Recurse   : constant Boolean := Ends_With (Value, "**");
+         Base_Path : constant String :=
+                       Value (Value'First
+                              .. Value'Last - (if Recurse then 2 else 0));
+
+         function With_Last_DS (Path : String) return String is
+           (if Path /= "" and then Is_Directory_Separator (Path (Path'Last))
+            then Path else Path & Directory_Separator);
+
+         Path : constant String :=
+                  (if Is_Absolute_Path (Base_Path) then Base_Path
+                   elsif Base_Path (Base_Path'First) = '.'
+                     and then
+                     (Base_Path'Length = 1
+                      or else (Base_Path'Length = 2
+                               and then Is_Directory_Separator
+                                          (Base_Path (Base_Path'Last))))
+                   then Directory
+                   else With_Last_DS (Directory) & Base_Path);
+
+         procedure Search_In (Path : String);
+
+         procedure Process (Item : Directory_Entry_Type);
+
+         procedure Output (Path : String);
+
+         ------------
+         -- Output --
+         ------------
+
+         procedure Output (Path : String) is
+         begin
+            Text_IO.Put_Line ("   " & With_Last_DS (Path));
+         end Output;
+
+         -------------
+         -- Process --
+         -------------
+
+         procedure Process (Item : Directory_Entry_Type) is
+         begin
+            if Ada.Directories.Simple_Name (Item) not in "." | ".." then
+               Search_In (Full_Name (Item));
+            end if;
+         end Process;
+
+         ---------------
+         -- Search_In --
+         ---------------
+
+         procedure Search_In (Path : String) is
+         begin
+            Output (Path);
+            Search
+              (Path, "",
+               Filter  => (Ada.Directories.Directory => True, others => False),
+               Process => Process'Access);
+         end Search_In;
+
+      begin
+         if Recurse then
+            Search_In (Path);
+         else
+            Output (Path);
+         end if;
+      end Output_Source_Path;
+
    begin
       Text_IO.New_Line;
       Version.Display ("GPRLS", "2018", Version_String => Version.Long_Value);
 
       --  Source search path
 
+      Text_IO.New_Line;
+      Text_IO.Put_Line ("Source Search Path:");
+
       for V of Tree loop
          if V.Kind not in K_Aggregate | K_Abstract then
             for D of V.Source_Directories.Values loop
-               Src_Path.Append
-                 (Path_Name.Create_Directory
-                    (Filename_Type (D.Text),
-                     Directory => Filename_Type (V.Path_Name.Dir_Name)));
+               Output_Source_Path (D.Text, V.Path_Name.Dir_Name);
             end loop;
          end if;
       end loop;
 
       if Tree.Has_Runtime_Project then
          for D of Tree.Runtime_Project.Source_Directories.Values loop
-            Src_Path.Append
-              (Path_Name.Create_Directory (Filename_Type (D.Text)));
+            Output_Source_Path (D.Text, "");
          end loop;
       end if;
-
-      Text_IO.New_Line;
-      Text_IO.Put_Line ("Source Search Path:");
-
-      for P of Src_Path loop
-         Text_IO.Put_Line ("   " & P.Dir_Name);
-      end loop;
 
       --  Object search path
 
@@ -442,19 +517,51 @@ begin
 
          use type Source_Info.Backend;
 
-         procedure Output_Source (S : Project.Source.Object);
+         procedure Output_Source
+           (S : Project.Source.Object;
+            A : Project.Source.Artifact.Object :=
+              Project.Source.Artifact.Undefined);
 
          -------------------
          -- Output_Source --
          -------------------
 
-         procedure Output_Source (S : Project.Source.Object) is
+         procedure Output_Source
+           (S : Project.Source.Object;
+            A : Project.Source.Artifact.Object :=
+              Project.Source.Artifact.Undefined)
+         is
             use type Ada.Calendar.Time;
 
-            Status : File_Status;
+            package SI renames GPR2.Source_Info;
+
+            Status    : File_Status;
+            Artifacts : Project.Source.Artifact.Object;
+
+            function Check_Object_Code return Boolean;
+            --  Returns true if source has object code and set Artifacts
 
             function No_Trail_Zero (Item : String) return String;
             --  Remove trailing zeroes with possible dot and leading space
+
+            -----------------------
+            -- Check_Object_Code --
+            -----------------------
+
+            function Check_Object_Code return Boolean is
+               package PSA renames Project.Source.Artifact;
+            begin
+               if A.Is_Defined then
+                  Artifacts := A;
+               else
+                  Artifacts := PSA.Create
+                    (S,
+                     Filter => (PSA.Object_File_Artifact => True,
+                                others                   => False));
+               end if;
+
+               return Artifacts.Has_Object_Code;
+            end Check_Object_Code;
 
             -------------------
             -- No_Trail_Zero --
@@ -480,10 +587,15 @@ begin
 
             if (S.Is_Parsed
                 and then S.Used_Backend = Source_Info.LI
-                and then S.Build_Timestamp = S.Timestamp)
+                and then S.Build_Timestamp = S.Timestamp (ALI => True))
               or else
                 (not S.Has_Units and then S.Kind in Unit.Spec_Kind
-                 and then S.Build_Timestamp = S.Timestamp)
+                 and then S.Build_Timestamp = S.Timestamp (ALI => True))
+              or else
+                (not SI.Parser.Registry.Exists (S.Language, SI.None)
+                 and then Check_Object_Code
+                 and then S.Timestamp (ALI => False) <
+                        Artifacts.Object_Code (Index => 0).Modification_Time)
             then
                Status := OK;
 
@@ -519,12 +631,12 @@ begin
                               Text_IO.Put (S.Used_Backend'Img);
                               Text_IO.Put (' ');
 
-                              if S.Build_Timestamp /= S.Timestamp
+                              if S.Build_Timestamp /= S.Timestamp (ALI => True)
                               then
                                  Text_IO.Put
                                    (No_Trail_Zero
                                       (Duration'Image
-                                           (S.Timestamp -
+                                           (S.Timestamp (ALI => True) -
                                                 S.Build_Timestamp)));
                                  Text_IO.Put (' ');
                               end if;
@@ -624,7 +736,7 @@ begin
                   end if;
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source);
+                     Output_Source (S.Source, Artifacts);
                   end if;
 
                   if Opt.Verbose then
@@ -714,7 +826,7 @@ begin
                   Print_Object (1);
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source);
+                     Output_Source (S.Source, Artifacts);
                   end if;
 
                elsif S.Index = 0 then
@@ -860,7 +972,8 @@ begin
          for S of Tree.Root_Project.Sources loop
             if Tree.Root_Project.Has_Mains
               and then S.Is_Main
-              and then S.Language = Ada_Language
+              and then (not GPR2.Is_Debug ('1')
+                        or else S.Language = Ada_Language)
             then
                Sources.Insert ((S, 0));
             end if;
@@ -872,8 +985,9 @@ begin
 
          for View of Tree loop
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
-               if Element (S_Cur).Language = Ada_Language
-                 and then not Element (S_Cur).Is_Overriden
+               if not Element (S_Cur).Is_Overriden
+                 and then (not GPR2.Is_Debug ('1')
+                           or else Element (S_Cur).Language = Ada_Language)
                then
                   Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
 
@@ -899,7 +1013,9 @@ begin
 
       else
          for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
-            if Element (S_Cur).Language = Ada_Language then
+            if not GPR2.Is_Debug ('1')
+              or else Element (S_Cur).Language = Ada_Language
+            then
                Sources.Insert ((Element (S_Cur), 0));
             end if;
          end loop;

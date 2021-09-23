@@ -1,9 +1,31 @@
+/main/obj/asm.o
+      OK /main/asm.s
 /main/obj/helper.o
       OK /main/helper.c
 /main/obj/main.o
    Main
       OK /main/main.adb
 ----------
+/main/obj/asm.o
+      OK /main/asm.s
+/main/obj/helper.o
+      OK /main/helper.c
+/main/obj/main.o
+   Main
+      OK /main/main.adb
+/mylib/obj/mylib.o
+   Mylib
+      OK /mylib/mylib.ads
+----------
+/main/obj/asm.o
+      OK /main/asm.s
+/main/obj/helper.o
+      OK /main/helper.c
+/main/obj/main.o
+   Main
+      OK /main/main.adb
+----------
+/main/obj/asm.o
 /main/obj/helper.o
          OK /main/helper.c
          OK /install/include/mylib/mylib.h

@@ -62,7 +62,18 @@ package body GPR2.Source_Info.Parser.Registry is
 
    function Exists (Language : Language_Id; Kind : Backend) return Boolean is
    begin
-      return Parser_Store.Contains (Key (Language, Kind));
+      if Kind = None then
+         for K in Implemented_Backend loop
+            if Parser_Store.Contains (Key (Language, K)) then
+               return True;
+            end if;
+         end loop;
+
+         return False;
+
+      else
+         return Parser_Store.Contains (Key (Language, Kind));
+      end if;
    end Exists;
 
    ---------
