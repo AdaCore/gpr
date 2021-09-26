@@ -1,0 +1,7 @@
+with "common.gpr";
+
+project Common.Particular is
+
+   for Object_Dir use ROOTDIR & "/obj";
+
+end Common.Particular;
