@@ -242,7 +242,7 @@ begin
                   Put_Line ("      -> already excluded", Low);
 
                elsif Sect.Excluded_Patterns.Contains (Lang) then
-                  for Excl_Patt of Excluded_Patterns (Sect) (Lang) loop
+                  for Excl_Patt of Sect.Excluded_Patterns.Element (Lang) loop
                      Put_Line
                        ("      trying excluded pattern '"
                         & Excl_Patt.Pattern & "'", Low);

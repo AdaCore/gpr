@@ -124,7 +124,9 @@ package body GPR2.Source_Info.Parser.ALI is
 
       procedure Close (File : in out Handle) is
       begin
-         Stream_IO.Close (File.FD);
+         if Stream_IO.Is_Open (File.FD) then
+            Stream_IO.Close (File.FD);
+         end if;
       end Close;
 
       -----------------
@@ -1022,11 +1024,10 @@ package body GPR2.Source_Info.Parser.ALI is
 
          for K in 1 .. CU_Idx loop
             declare
-               Cache : Cache_Holder;
+               Cache : constant Cache_Holder :=
+                         (CUs (K), CU_CS (K), CU_TS (K),
+                          Data.Dependencies (LI_Idx));
             begin
-               Cache := (CUs (K), CU_CS (K), CU_TS (K),
-                         Data.Dependencies (LI_Idx));
-
                if Current = K then
                   Set_Source_Info_Data (Cache, Add_Deps => False);
                end if;

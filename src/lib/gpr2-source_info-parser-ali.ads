@@ -79,8 +79,16 @@ private
        when GPR2.Unit.Spec_Kind => "s",
        when GPR2.Unit.S_Separate => "sep"));
 
+   function Equivalent_Cache_Keys (Left, Right : Cache_Key) return Boolean is
+     (Left.LI = Right.LI
+      and then Left.Src = Right.Src
+      and then Left.LI_Kind = Right.LI_Kind);
+   --  This function is for map container. We can't use default "=" function
+   --  because it is binary comparision, but we should compare Filename_Type
+   --  components with its overriden "=" function.
+
    package Cache_Map is new Ada.Containers.Indefinite_Hashed_Maps
-     (Cache_Key, Cache_Holder, Hash, "=");
+     (Cache_Key, Cache_Holder, Hash, Equivalent_Keys => Equivalent_Cache_Keys);
    --  This caches the information for spec and body units. The key identifies
    --  the ALI file, the source and the kind of library unit.
 
