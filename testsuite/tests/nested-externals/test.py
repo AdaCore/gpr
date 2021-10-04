@@ -4,5 +4,5 @@ from os import environ
 
 br = BuilderAndRunner()
 environ["LIBRARY_TYPE"] = "relocatable"
-br.build("wrapper.gpr")
+br.run(['gprbuild', '-p', '-q', '-Pwrapper.gpr'])
 br.call([GPRCLEAN])

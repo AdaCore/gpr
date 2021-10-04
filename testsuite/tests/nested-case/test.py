@@ -4,5 +4,5 @@ import os
 
 br = BuilderAndRunner()
 os.environ["MORE"] = "Yes"
-br.build("hello_world.gpr")
+br.run(['gprbuild', '-p', '-q', '-Phello_world.gpr'])
 br.call([GPRCLEAN])
