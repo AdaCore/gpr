@@ -1995,7 +1995,7 @@ package body GPR2.Project.Tree is
          Conf := Project.Configuration.Create
            (Pre_Conf_Description.Element,
             Actual_Target,
-            Filename,
+            (if Self.Root.Is_Defined then Self.Root.Path_Name else Filename),
             Self.Base);
 
          --  Unload the project that was loaded without configuration.

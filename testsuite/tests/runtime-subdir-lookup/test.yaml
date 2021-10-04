@@ -1,0 +1,2 @@
+description: check runtime lookup in subdirs
+driver: python_script

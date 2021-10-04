@@ -22,6 +22,11 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with Ada.Environment_Variables;
+
+with GNAT.OS_Lib;
+with GNAT.String_Split;
+
 with GPR2.KB;
 with GPR2.Message;
 with GPR2.Project.Attribute;
@@ -111,6 +116,8 @@ package body GPR2.Project.Configuration is
       return Object
    is
 
+      Settings_Local : Description_Set := Settings;
+
       Native_Target : constant Boolean := Target = "all";
 
       Result    : Object;
@@ -120,7 +127,130 @@ package body GPR2.Project.Configuration is
       Configuration_String : Unbounded_String;
       Parsing_Messages     : Log.Object;
 
+      Project_Path : constant Path_Name.Object :=
+                       (if Project.Has_Dir_Name then Project
+                        else Create (Project.Name));
+      --  Project may be not even found at this stage, but since we ignore
+      --  all errors at first parsing we don't know it yet. We need to resolve
+      --  the Project path name for proper error reporting.
+
+      function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean;
+      --  Checks if Dir can be a runtime directory
+
+      function Locate_Runtime
+        (Dir : Filename_Optional; Path : String) return Path_Name.Object;
+      --  Returns runtime DIR directory resolved against Path or Undefined
+      --  if nothing is found.
+
+      -----------------------
+      -- Check_Runtime_Dir --
+      -----------------------
+
+      function Check_Runtime_Dir (Dir : Path_Name.Object) return Boolean is
+         Adalib_Dir     : constant Path_Name.Object :=
+                            Path_Name.Create_Directory
+                              ("adalib", Filename_Type (Dir.Value));
+         Adainclude_Dir : constant Path_Name.Object :=
+                            Path_Name.Create_Directory
+                              ("adainclude", Filename_Type (Dir.Value));
+         AOP_File       : constant Path_Name.Object :=
+                            Path_Name.Create_File
+                              ("ada_object_path", Filename_Type (Dir.Value));
+         ASP_File       : constant Path_Name.Object :=
+                            Path_Name.Create_File
+                              ("ada_source_path", Filename_Type (Dir.Value));
+      begin
+         return (Adalib_Dir.Exists or else AOP_File.Exists)
+           and then (Adainclude_Dir.Exists or else ASP_File.Exists);
+      end Check_Runtime_Dir;
+
+      --------------------
+      -- Locate_Runtime --
+      --------------------
+
+      function Locate_Runtime
+        (Dir : Filename_Optional; Path : String) return Path_Name.Object is
+         use GNAT;
+
+         Paths       : GNAT.String_Split.Slice_Set;
+         Runtime_Dir : Path_Name.Object;
+      begin
+         String_Split.Create (Paths, Path, (1 => OS_Lib.Path_Separator));
+         for J in 1 .. String_Split.Slice_Count (Paths) loop
+            Runtime_Dir := Path_Name.Create_Directory
+              (Dir,
+               Filename_Optional (String_Split.Slice (Paths, J)));
+
+            if Runtime_Dir.Exists then
+               return Runtime_Dir;
+            end if;
+         end loop;
+
+         return Path_Name.Undefined;
+      end Locate_Runtime;
+
    begin
+
+      --  Ada runtime has a special 3 step lookup:
+      --  1) check <runtime> subdir relatively to root project location
+      --  2) check <runtime> subdir relatively to GPR_RUNTIME_PATH value
+      --  3) pass it as is to configuration creation.
+      --
+      --  If step 1 or 2 results in a valid runtime dir, pass full path
+      --  to it to cofiguration creation.
+      --  If on step 2 corresponding directory is found, but it does not
+      --  have runtime features, configuration is abandoned.
+
+      for Descr in Settings_Local'Range loop
+         if Settings_Local (Descr).Language = Ada_Language
+           and then Runtime (Settings_Local (Descr)) /= No_Name
+           and then not GNAT.OS_Lib.Is_Absolute_Path
+             (To_String (Settings_Local (Descr).Runtime))
+         then
+            declare
+               Runtime_Dir   : Path_Name.Object :=
+                 Path_Name.Create_Directory
+                   (Filename_Optional (Runtime (Settings_Local (Descr))),
+                    Filename_Optional (Project_Path.Dir_Name));
+            begin
+               if Runtime_Dir.Exists and then Check_Runtime_Dir (Runtime_Dir)
+               then
+                  Settings_Local (Descr).Runtime :=
+                    To_Unbounded_String (Runtime_Dir.Value);
+                  exit;
+               end if;
+
+               if Ada.Environment_Variables.Exists ("GPR_RUNTIME_PATH") then
+
+                  Runtime_Dir := Locate_Runtime
+                    (Filename_Optional (Runtime (Settings_Local (Descr))),
+                     Ada.Environment_Variables.Value ("GPR_RUNTIME_PATH"));
+
+                  if Runtime_Dir.Is_Defined and then Runtime_Dir.Exists then
+                     if Check_Runtime_Dir (Runtime_Dir) then
+
+                        Settings_Local (Descr).Runtime :=
+                          To_Unbounded_String (Runtime_Dir.Value);
+                        exit;
+                     else
+
+                        Result.Messages.Append
+                          (Message.Create
+                             (Message.Error,
+                              "invalid runtime directory " & Runtime_Dir.Value,
+                              Sloc => Source_Reference.Create
+                                (Project_Path.Value, 0, 0)));
+
+                        return Result;
+                     end if;
+                  end if;
+
+               end if;
+            end;
+
+            exit;
+         end if;
+      end loop;
 
       if Native_Target then
          --  Normalize implicit target
@@ -130,14 +260,14 @@ package body GPR2.Project.Configuration is
             if Normalized = "unknown" then
                Configuration_String :=
                  Base.Configuration
-                   (Settings => Settings,
+                   (Settings => Settings_Local,
                     Target   => Name_Type (System.OS_Constants.Target_Name),
                     Messages => Result.Messages,
                     Fallback => True);
             else
                Configuration_String :=
                  Base.Configuration
-                   (Settings => Settings,
+                   (Settings => Settings_Local,
                     Target   => Normalized,
                     Messages => Result.Messages,
                     Fallback => True);
@@ -147,7 +277,7 @@ package body GPR2.Project.Configuration is
       else
          Configuration_String :=
            Base.Configuration
-             (Settings => Settings,
+             (Settings => Settings_Local,
               Target   => Target,
               Messages => Result.Messages,
               Fallback => False);
@@ -170,7 +300,7 @@ package body GPR2.Project.Configuration is
                  Messages        => Parsing_Messages,
                  Pseudo_Filename => Path_Name.Create_File
                    ("autoconf.cgpr",
-                    Filename_Type (Project.Dir_Name)));
+                    Filename_Type (Project_Path.Dir_Name)));
          end if;
 
          --  Continue only if there is no parsing error on the configuration
@@ -192,8 +322,8 @@ package body GPR2.Project.Configuration is
          Result.Messages.Append
            (Message.Create
               (Message.Error,
-               "cannot create configuration file, fail to execute gprconfig",
-               Sloc => Source_Reference.Create (Project.Value, 0, 0)));
+               "cannot create configuration file",
+               Sloc => Source_Reference.Create (Project_Path.Value, 0, 0)));
       end if;
 
       Result.Cache.Set (Config_Cache_Object'(others => <>));
