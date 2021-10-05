@@ -57,7 +57,7 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name (No_Index);
          begin
             Output_Filename (Source.Path_Name.Value);
 
@@ -67,7 +67,7 @@ procedure Main is
             Text_IO.Set_Col (33);
             Text_IO.Put
               ("   Kind: "
-               & GPR2.Unit.Library_Unit_Type'Image (Source.Kind));
+               & GPR2.Unit.Library_Unit_Type'Image (Source.Kind (No_Index)));
 
             if U /= "" then
                Text_IO.Put ("   unit: " & String (U));

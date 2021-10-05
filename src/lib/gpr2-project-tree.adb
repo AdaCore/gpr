@@ -390,18 +390,18 @@ package body GPR2.Project.Tree is
    begin
       --  Clear the corresponding sources
 
-      if Unit.Spec.Is_Defined then
+      if Unit.Spec.Source.Is_Defined then
          Self.Sources.Exclude
-           (Filename_Type (Unit.Spec.Value));
+           (Filename_Type (Unit.Spec.Source.Value));
       end if;
 
-      if Unit.Main_Body.Is_Defined then
+      if Unit.Main_Body.Source.Is_Defined then
          Self.Sources.Exclude
-           (Filename_Type (Unit.Main_Body.Value));
+           (Filename_Type (Unit.Main_Body.Source.Value));
       end if;
 
       for S of Unit.Separates loop
-         Self.Sources.Exclude (Filename_Type (S.Value));
+         Self.Sources.Exclude (Filename_Type (S.Source.Value));
       end loop;
    end Clear_View;
 

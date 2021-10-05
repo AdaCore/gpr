@@ -116,7 +116,7 @@ package body GPR2.Parser.Project is
      (Path_Name : GPR2.Path_Name.Object;
       Slr       : Langkit_Support.Slocs.Source_Location_Range;
       Value     : Value_Type;
-      At_Pos    : Natural := 0) return Source_Reference.Value.Object
+      At_Pos    : Unit_Index := No_Index) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
         (Source_Reference.Value.Create
@@ -125,7 +125,7 @@ package body GPR2.Parser.Project is
    function Get_Value_Reference
      (Value        : Value_Type;
       Sloc         : Source_Reference.Object;
-      At_Pos       : Natural := 0;
+      At_Pos       : Unit_Index := No_Index;
       From_Default : Boolean := False) return Source_Reference.Value.Object
    is
      (Source_Reference.Value.Object
@@ -2024,8 +2024,9 @@ package body GPR2.Parser.Project is
                  (Get_Value_Reference
                     (Unquote (Value_Type (To_UTF8 (Node.F_Str_Lit.Text))),
                      Get_Source_Reference (Self.File, Sloc_Range (Node)),
-                     At_Pos => (if At_Lit = No_GPR_Node then 0
-                                else Positive'Wide_Wide_Value (At_Lit.Text))));
+                     At_Pos =>
+                       (if At_Lit = No_GPR_Node then 0
+                        else Unit_Index'Wide_Wide_Value (At_Lit.Text))));
                Status := Over;
                --  Stop here to avoid parsing into the String_Literal child
             end Handle_String_At;
@@ -2815,7 +2816,7 @@ package body GPR2.Parser.Project is
                         At_Pos => -- Ati),
                           (if At_Lit = No_GPR_Node
                            then 0
-                           else Positive'Wide_Wide_Value (At_Lit.Text))),
+                           else Unit_Index'Wide_Wide_Value (At_Lit.Text))),
                      Is_Others      => False,
                      Case_Sensitive => False);
                end if;

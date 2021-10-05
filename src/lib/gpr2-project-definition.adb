@@ -38,7 +38,6 @@ with GNAT.Regexp;
 with GPR2.Containers;
 with GPR2.Unit.List;
 with GPR2.Message;
-with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
@@ -652,21 +651,17 @@ package body GPR2.Project.Definition is
       Stop_On_Error : Boolean;
       Backends      : Source_Info.Backend_Set)
    is
-      Tree : constant access Project.Tree.Object := View.Tree;
    begin
-      if Backends = Source_Info.No_Backends then
-         Enable_Ali_Parser (Tree.all, False);
-      end if;
-
       Update_Sources_List (Def, View, Stop_On_Error);
-
-      if Backends = Source_Info.No_Backends then
-         Enable_Ali_Parser (Tree.all, True);
-
-      elsif not View.Is_Extended and then Ali_Parser_Is_On (Tree.all) then
-         Source_Info.Parser.Registry.Clear_Cache;
-         Update_Sources_Parse (Def, Backends);
-      end if;
+      Source_Info.Parser.Registry.Clear_Cache;
+      --  If the view is extended, we will use the ALI from the extending
+      --  project. We still need to call Update_Sources_Parse to disambiguate
+      --  SPEC/SPEC_ONLY and BODY/BODY_ONLY units.
+      Update_Sources_Parse
+        (Def,
+         (if View.Is_Extended
+          then Source_Info.No_Backends
+          else Backends));
    end Update_Sources;
 
    -------------------------
@@ -1363,7 +1358,7 @@ package body GPR2.Project.Definition is
          function Naming_Exception_Equal
            (A : Attribute.Object;
             B : Value_Type;
-            I : Natural) return Boolean
+            I : Unit_Index) return Boolean
          is (A.Value.Text = B and then At_Pos_Or (A.Value, 1) = I);
 
       begin
@@ -1402,7 +1397,7 @@ package body GPR2.Project.Definition is
                         declare
                            Unit_Name : constant Name_Type :=
                                          Name_Type (Exc.Index.Text);
-                           Index     : Natural;
+                           Index     : Unit_Index;
                            Value     : constant SR.Value.Object := Exc.Value;
                            Pos       : Naming_Exceptions_Usage.Cursor :=
                                          Ada_Except_Usage.Find
@@ -1410,11 +1405,12 @@ package body GPR2.Project.Definition is
                         begin
                            if Naming_Exceptions_Usage.Has_Element (Pos) then
                               if Value.Has_At_Pos then
-                                 Index      := Value.At_Pos;
-                                 Is_Indexed := True;
                                  Naming_Exception := Multi_Unit;
+                                 Is_Indexed       := True;
+                                 Index            := Value.At_Pos;
+                                 pragma Assert (Index /= No_Index);
                               else
-                                 Index := 1;
+                                 Index := No_Index;
                               end if;
 
                               Kind := (if Exc.Name.Id = PRA.Spec
@@ -1430,7 +1426,7 @@ package body GPR2.Project.Definition is
                               --  source parsing.
 
                               if Is_Valid_Unit_Name (Unit_Name) then
-                                 Units.Append
+                                 Units.Insert
                                    (Unit.Create
                                       (Name          => Unit_Name,
                                        Index         => Index,
@@ -1495,10 +1491,10 @@ package body GPR2.Project.Definition is
                         procedure Append_Unit
                           (Name : Name_Type; Sep_From : Optional_Name_Type) is
                         begin
-                           Units.Append
+                           Units.Insert
                              (Unit.Create
                                 (Name          => Name,
-                                 Index         => 1,
+                                 Index         => No_Index,
                                  Main          => Unit.None,
                                  Flags         => Unit.Default_Flags,
                                  Lib_Unit_Kind => Kind,
@@ -1578,12 +1574,18 @@ package body GPR2.Project.Definition is
                         end if;
                      end loop;
 
-                     Source := GPR2.Source.Object
-                       (GPR2.Source.Create_Ada
-                          (Filename      => File,
-                           Units         => Units,
-                           Is_RTS_Source => View.Is_Runtime,
-                           Is_Indexed    => Is_Indexed));
+                     if Is_Indexed then
+                        Source := GPR2.Source.Object
+                          (GPR2.Source.Create_Ada
+                             (Filename      => File,
+                              Units         => Units));
+                     else
+                        Source := GPR2.Source.Object
+                          (GPR2.Source.Create_Ada
+                             (Filename      => File,
+                              Unit          => Units (No_Index),
+                              Is_RTS_Source => View.Is_Runtime));
+                     end if;
 
                   else
                      Source := GPR2.Source.Object
@@ -1597,13 +1599,16 @@ package body GPR2.Project.Definition is
                   end if;
 
                   declare
-                     Is_Interface   : constant Boolean :=
-                                        Source_Is_In_Interface
-                                            or else
-                                        (not Interface_Found
-                                         and then View.Kind in K_Library
-                                         and then Source.Kind in
-                                                     Unit.Spec_Kind);
+                     Is_Interface : constant Boolean :=
+                                      Source_Is_In_Interface
+                                          or else
+                                      (not Interface_Found
+                                       and then View.Kind in K_Library
+                                       and then
+                                         (not Source.Has_Units or else
+                                          not Source.Units.Is_Indexed_List)
+                                       and then Source.Kind in
+                                                  Unit.Spec_Kind);
                      Project_Source : constant GPR2.Project.Source.Object :=
                                         Project.Source.Create
                                           (Source           => Source,
@@ -1952,6 +1957,7 @@ package body GPR2.Project.Definition is
 
          procedure Register_Src
            (U_Def : in out Unit_Info.Object;
+            Index : Unit_Index;
             Kind  : Unit.Library_Unit_Type);
          --  Register Project_Source into U_Def, according to its kind
 
@@ -1961,17 +1967,18 @@ package body GPR2.Project.Definition is
 
          procedure Register_Src
            (U_Def : in out Unit_Info.Object;
+            Index : Unit_Index;
             Kind  : Unit.Library_Unit_Type)
          is
             use all type Unit.Library_Unit_Type;
          begin
             case Kind is
                when Unit.Spec_Kind =>
-                  U_Def.Update_Spec (Source.Path_Name);
+                  U_Def.Update_Spec ((Source.Path_Name, Index));
                when Unit.Body_Kind =>
-                  U_Def.Update_Body (Source.Path_Name);
+                  U_Def.Update_Body ((Source.Path_Name, Index));
                when S_Separate =>
-                  U_Def.Update_Separates (Source.Path_Name);
+                  U_Def.Update_Separates ((Source.Path_Name, Index));
             end case;
          end Register_Src;
 
@@ -1991,13 +1998,13 @@ package body GPR2.Project.Definition is
                  (Unit_Name,
                   Unit_Info.Create
                     (Unit_Name,
-                     Spec      => Path_Name.Undefined,
-                     Main_Body => Path_Name.Undefined,
-                     Separates => Path_Name.Set.Empty_Set),
+                     Spec      => (Path_Name.Undefined, No_Index),
+                     Main_Body => (Path_Name.Undefined, No_Index),
+                     Separates => Unit.Source_Unit_Vectors.Empty_Vector),
                   Position,
                   Inserted);
 
-               Register_Src (Def.Units (Position), CU.Kind);
+               Register_Src (Def.Units (Position), CU.Index, CU.Kind);
             end;
          end loop;
       end Register_Units;

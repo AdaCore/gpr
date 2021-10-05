@@ -44,10 +44,7 @@ package GPR2.Source_Info.Parser is
    procedure Compute
      (Self   : not null access Object;
       Data   : in out Source_Info.Object'Class;
-      Source : Project.Source.Object) is abstract
-   with Post'Class => not Data.Is_Parsed
-                        or else
-                      Data.Used_Backend in Source_Info.LI | Source_Info.Source;
+      Source : Project.Source.Object) is abstract;
    --  Set Data with the information for the given source. If LI is undefined
    --  or not present then the source is parsed (using either the LI based
    --  or source based parser). If LI is defined and present then the LI file

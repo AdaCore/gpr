@@ -46,9 +46,18 @@ package body GPR2.Unit is
 
    procedure Set_Separate_From (Self : in out Object; Name : Name_Type) is
    begin
-      Self.Sep_From := To_Unbounded_String (String (Name));
+      Self.Sep_From := +String (Name);
       Self.Kind     := S_Separate;
    end Set_Separate_From;
+
+   ------------------
+   -- Update_Index --
+   ------------------
+
+   procedure Update_Index (Self : in out Object; Index : Unit_Index) is
+   begin
+      Self.Index := Index;
+   end Update_Index;
 
    -----------------
    -- Update_Kind --
@@ -58,6 +67,15 @@ package body GPR2.Unit is
    begin
       Self.Kind := Kind;
    end Update_Kind;
+
+   ------------------------
+   -- Update_Name_Casing --
+   ------------------------
+
+   procedure Update_Name (Self : in out Object; Name : Name_Type) is
+   begin
+      Self.Name := +String (Name);
+   end Update_Name;
 
    ---------------------
    -- Valid_Unit_Name --

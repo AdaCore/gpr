@@ -356,7 +356,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
       subtype CU_Index is Natural range 0 .. 2;
 
-      LI_Idx  : constant Unit_Index  := Unit_Index (U_Ref.Index);
+      LI_Idx  : constant Unit_Index  := U_Ref.Index;
       B_Name  : constant Simple_Name := Source.Simple_Name;
       U_Name  : Unbounded_String;
       S_Name  : Unbounded_String;
@@ -507,9 +507,9 @@ package body GPR2.Source_Info.Parser.ALI is
             pragma Assert (Source.Is_Defined);
 
             Taken_From_Tree := True;
-            Kind := Source.Kind;
+            Kind := Source.Kind (No_Index);
 
-            return To_Lower (Source.Unit_Name);
+            return To_Lower (Source.Unit_Name (No_Index));
          end To_Unit_Name;
 
          Name : constant String :=
@@ -551,7 +551,7 @@ package body GPR2.Source_Info.Parser.ALI is
                H_Cache :=
                  (Create
                     (Name          => Name_Type (Name),
-                     Index         => 1, -- Unknown for now
+                     Index         => No_Index,   -- Unknown for now
                      Lib_Unit_Kind => S_Separate,
                      Lib_Item_Kind => Is_Package, -- No way to know from ALI
                      Main          => None,       -- No way to know from ALI
@@ -585,11 +585,11 @@ package body GPR2.Source_Info.Parser.ALI is
 
          Map.Append
            ((Name_Length  => Name'Length - Kind_Len,
-             Unit_Kind    => Kind,
-             Unit_Name    => Name (Name'First .. Name'Last - Kind_Len),
              SFile_Length => Sfile'Length,
+             Unit_Kind    => Kind,
              Stamp        => Stamp,
              Checksum     => Chksum,
+             Unit_Name    => Name (Name'First .. Name'Last - Kind_Len),
              Sfile        => Sfile));
       end Fill_Dep;
 
@@ -767,9 +767,10 @@ package body GPR2.Source_Info.Parser.ALI is
 
       procedure Set_Source_Info_Data
         (Cache    : Cache_Holder;
-         Add_Deps : Boolean) is
+         Add_Deps : Boolean)
+      is
+         U_Ref_Name : constant Name_Type := U_Ref.Name;
       begin
-         pragma Assert (U_Ref.Index = Cache.Unit.Index);
          pragma Assert
            ((U_Ref.Kind in GPR2.Unit.Spec_Kind)
             = (Cache.Unit.Kind in GPR2.Unit.Spec_Kind),
@@ -779,14 +780,30 @@ package body GPR2.Source_Info.Parser.ALI is
 
          U_Ref := Cache.Unit;
 
-         if U_Ref.Index = 1 then
-            Data.Kind := U_Ref.Kind;
+         --  Preserve the U_Ref index: we can't know the index from the ALI
+         --  file, only the naming attributes of the project file define
+         --  those.
+
+         U_Ref.Update_Index (LI_Idx);
+
+         --  Also preserve U_Ref name, as the casing coming from the project
+         --  file is supposed better than the lower-cased one found in the ali
+         --  file, except for runtime sources where U_Ref.Name contains the
+         --  krunched name.
+
+         if not Data.Is_RTS_Source then
+            U_Ref.Update_Name (U_Ref_Name);
          end if;
 
-         Data.Parsed       := Source_Info.LI;
-         Data.Is_Ada       := True;
-         Data.LI_Timestamp := Cache.Timestamp;
+         Data.Language     := Ada_Language;
          Data.Checksum     := Cache.Checksum;
+         if LI_Idx = No_Index then
+            Data.LI_Timestamp := Cache.Timestamp;
+            Data.Parsed       := Source_Info.LI;
+         else
+            Data.CU_Info (LI_Idx) :=
+              (Cache.Timestamp, Source_Info.LI);
+         end if;
 
          if Add_Deps then
             Data.Dependencies.Insert (LI_Idx, Cache.Depends);
@@ -979,7 +996,7 @@ package body GPR2.Source_Info.Parser.ALI is
                View.Hide_Unit_Body (CUs (1).Name);
             end if;
 
-            Data.Parsed := Source_Info.None;
+            Data.Parsed := None;
             IO.Close (A_Handle);
             return;
          end if;
@@ -1010,13 +1027,12 @@ package body GPR2.Source_Info.Parser.ALI is
                  with "Unit body is on the wrong position";
             end if;
 
-            GPR2.Unit.Update_Kind (CUs (1), GPR2.Unit.S_Body);
-
             if CUs (2).Kind /= GPR2.Unit.S_Spec_Only then
                raise Scan_ALI_Error
                  with "Unit spec is on the wrong position";
             end if;
 
+            GPR2.Unit.Update_Kind (CUs (1), GPR2.Unit.S_Body);
             GPR2.Unit.Update_Kind (CUs (2), GPR2.Unit.S_Spec);
          end if;
 
@@ -1051,7 +1067,7 @@ package body GPR2.Source_Info.Parser.ALI is
                & ' ' & Ada.Exceptions.Exception_Information (E));
 
             IO.Close (A_Handle);
-            Data.Parsed := Source_Info.None;
+            Data.Parsed := None;
       end;
    end Compute;
 
@@ -1076,11 +1092,12 @@ package body GPR2.Source_Info.Parser.ALI is
 
       procedure Check_Separated (SU : in out GPR2.Unit.Object) is
 
-         Name : constant Name_Type := SU.Name;
-         Lown : constant String := To_Lower (Name);
-         FU   : Project.Unit_Info.Object;
-         Src  : Project.Source.Object;
-         CS   : Sep_Cache_Map.Cursor := Self.Sep_Cache.Find (Lown);
+         Name     : constant Name_Type := SU.Name;
+         Lown     : constant String := To_Lower (Name);
+         FU       : Project.Unit_Info.Object;
+         Src      : Project.Source.Object;
+         Src_Idx  : Unit_Index;
+         CS       : Sep_Cache_Map.Cursor := Self.Sep_Cache.Find (Lown);
          Last_Dot : Natural := Name'Last + 1;
 
          procedure Set_Data;
@@ -1097,16 +1114,17 @@ package body GPR2.Source_Info.Parser.ALI is
          begin
             pragma Assert (SU.Name = Ref.Unit.Name);
 
-            Data.Parsed := Source_Info.LI;
             SU.Set_Separate_From (Ref.Unit.Separate_From);
 
-            if SU.Index = 1 then
-               Data.Kind := GPR2.Unit.S_Separate;
+            if SU.Index = No_Index then
+               Data.Parsed := Source_Info.LI;
+               Data.LI_Timestamp := Ref.Timestamp;
+            else
+               Data.CU_Info (SU.Index) :=
+                 (Ref.Timestamp, Source_Info.LI);
             end if;
 
-            Data.Checksum     := Ref.Checksum;
-            Data.LI_Timestamp := Ref.Timestamp;
-            Data.Dependencies.Insert (Unit_Index (SU.Index), Ref.Depends);
+            Data.Checksum := Ref.Checksum;
          end Set_Data;
 
       begin
@@ -1132,46 +1150,62 @@ package body GPR2.Source_Info.Parser.ALI is
                return;
             end if;
 
-            Src := View.Source (FU.Main_Body);
+            Src := View.Source (FU.Main_Body.Source);
+            Src_Idx := FU.Main_Body.Index;
 
             declare
-               Info    : Source_Info.Object'Class :=
-                           View.Source (FU.Main_Body);
                LI_File : Path_Name.Object;
+               CU      : constant GPR2.Unit.List.Reference_Type :=
+                           Source_Info.Object'Class (Src).CU_List.Reference
+                             (Src_Idx);
             begin
-               for CU of Info.CU_List loop
-                  if CU.Kind in GPR2.Unit.Body_Kind
-                    and then CU.Name = FU.Name
-                  then
-                     LI_File := GPR2.Project.Source.Artifact.Dependency
-                       (Src, CU.Index, Actual_File => True);
+               if CU.Kind in GPR2.Unit.Body_Kind
+                 and then CU.Name = FU.Name
+               then
+                  LI_File := GPR2.Project.Source.Artifact.Dependency
+                    (Src, CU.Index, Actual_File => True);
 
-                     if LI_File.Is_Defined then
-                        Compute
-                          (Self.all, Info, FU.Main_Body, LI_File, CU, View);
-                     end if;
-
-                     exit;
+                  if LI_File.Is_Defined then
+                     Compute
+                       (Self.all, Src, FU.Main_Body.Source, LI_File, CU, View);
                   end if;
-               end loop;
-
-               if Info.Is_Parsed then
-                  CS := Self.Sep_Cache.Find (Lown);
-
-                  if Sep_Cache_Map.Has_Element (CS) then
-                     Set_Data;
-                  end if;
-
-                  return;
                end if;
             end;
+
+            if Src.Is_Parsed (Src_Idx) then
+               CS := Self.Sep_Cache.Find (Lown);
+
+               if Sep_Cache_Map.Has_Element (CS) then
+                  Set_Data;
+               end if;
+
+               return;
+            end if;
          end loop;
       end Check_Separated;
+
+      use type GPR2.Unit.Library_Unit_Type;
 
    begin
       for CU of Data.CU_List loop
          LI := GPR2.Project.Source.Artifact.Dependency
-           (Source, CU.Index, Actual_File => True);
+           (Source, CU.Index,
+            Actual_File   => True,
+            Maybe_No_Body => True);
+
+         --  if LI is not defined, check if the body has been parsed.
+         --  Note that this happens in particular when the spec and body
+         --  don't share the same basename.
+
+         if not LI.Is_Defined and then CU.Kind = GPR2.Unit.S_Spec then
+            declare
+               Other : constant GPR2.Project.Source.Source_Part :=
+                         Source.Other_Part (CU.Index);
+            begin
+               LI := GPR2.Project.Source.Artifact.Dependency
+                 (Other.Source, Other.Index, Actual_File => True);
+            end;
+         end if;
 
          if LI.Is_Defined then
             Compute (Self.all, Data, File, LI, CU, View);

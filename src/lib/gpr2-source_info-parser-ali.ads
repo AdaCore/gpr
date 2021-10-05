@@ -59,8 +59,7 @@ private
 
    overriding function "=" (L, R : Cache_Holder) return Boolean is
      (L.Unit = R.Unit and then
-      L.Checksum = R.Checksum and then
-      L.Timestamp = R.Timestamp);
+      L.Checksum = R.Checksum);
 
    type Cache_Key (LI_Length  : Natural; Src_Length : Natural) is record
       LI      : Filename_Type (1 .. LI_Length);
@@ -68,16 +67,15 @@ private
       LI_Kind : GPR2.Unit.Library_Unit_Type;
    end record;
 
-   function Hash (Key : Cache_Key) return Ada.Containers.Hash_Type is
-     (Hash (Key.LI) + Hash (Key.Src) +
-          GPR2.Unit.Library_Unit_Type'Pos (Key.LI_Kind));
-
    function Image (Key : Cache_Key) return String is
      (String (Key.LI) & "@" & String (Key.Src) & "%" &
       (case Key.LI_Kind is
        when GPR2.Unit.Body_Kind => "b",
        when GPR2.Unit.Spec_Kind => "s",
        when GPR2.Unit.S_Separate => "sep"));
+
+   function Hash (Key : Cache_Key) return Ada.Containers.Hash_Type is
+     (Ada.Strings.Hash (Image (Key)));
 
    function Equivalent_Cache_Keys (Left, Right : Cache_Key) return Boolean is
      (Left.LI = Right.LI

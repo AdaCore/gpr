@@ -156,7 +156,7 @@ private
 
    type Value_At_Pos (Length : Natural) is record
       Value  : Value_Type (1 .. Length);
-      At_Pos : Natural := 0;
+      At_Pos : Unit_Index := No_Index;
    end record;
 
    function "<" (Left, Right : Value_At_Pos) return Boolean is
@@ -165,12 +165,12 @@ private
 
    function Create
      (Index          : Attribute_Index.Object;
-      Default_At_Pos : Natural := 0) return Value_At_Pos;
+      Default_At_Pos : Unit_Index := No_Index) return Value_At_Pos;
    --  Create the key Value_At_Pos for the given index
 
    function Create
      (Value  : Value_Type;
-      At_Pos : Natural) return Value_At_Pos
+      At_Pos : Unit_Index) return Value_At_Pos
      is (Value'Length, Value, At_Pos);
 
    type Object is new Attr_Values.Object with record
@@ -182,7 +182,7 @@ private
    function Case_Aware_Index (Self : Object) return Value_At_Pos is
      (Create
         (Index          => Self.Index,
-         Default_At_Pos => At_Pos_Or (Self.Index, 0)));
+         Default_At_Pos => At_Pos_Or (Self.Index, No_Index)));
    --  Returns Index in lower case if index is case insensitive, returns as is
    --  otherwise.
 

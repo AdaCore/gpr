@@ -56,8 +56,11 @@
 --       (Unit_Name => Proc, Index => 2, Kind => S_Separate,
 --        Withed_Units => {Bar}, Is_Sep_From => A) }
 
+with Ada.Containers.Vectors;
+
 with GNATCOLL.Refcount;
 
+with GPR2.Path_Name;
 with GPR2.Source_Reference.Identifier.Set;
 
 package GPR2.Unit is
@@ -67,6 +70,19 @@ package GPR2.Unit is
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
+
+   type Source_Unit_Identifier is record
+      Source : Path_Name.Object;
+      Index  : Unit_Index := No_Index;
+   end record;
+
+   function "<" (L, R : Source_Unit_Identifier) return Boolean;
+
+   Undefined_Id      : constant Source_Unit_Identifier :=
+                         (Path_Name.Undefined, No_Index);
+
+   package Source_Unit_Vectors is new Ada.Containers.Vectors
+     (Positive, Source_Unit_Identifier);
 
    type Library_Unit_Type is
      (S_Spec, S_Spec_Only, S_Body, S_Body_Only, S_Separate);
@@ -108,7 +124,7 @@ package GPR2.Unit is
 
    function Create
      (Name          : Name_Type;
-      Index         : Positive;
+      Index         : Unit_Index;
       Lib_Unit_Kind : Library_Unit_Type;
       Lib_Item_Kind : Library_Item_Type;
       Main          : Main_Type;
@@ -125,7 +141,7 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns the unit name for this compilation unit
 
-   function Index (Self : Object) return Positive
+   function Index (Self : Object) return Unit_Index
      with Pre => Self.Is_Defined;
    --  Returns the source index for this compilation unit
 
@@ -165,6 +181,13 @@ package GPR2.Unit is
      with Pre => Self.Is_Defined;
    --  Returns True if Self is a generic unit
 
+   procedure Update_Name (Self : in out Object; Name : Name_Type)
+     with Pre => Self.Is_Defined;
+
+   procedure Update_Index (Self : in out Object; Index : Unit_Index)
+     with Pre  => Self.Is_Defined,
+          Post => Self.Index = Index;
+
    procedure Update_Kind (Self : in out Object; Kind : Library_Unit_Type)
      with Pre  => Self.Is_Defined,
           Post => Self.Kind = Kind;
@@ -187,7 +210,14 @@ package GPR2.Unit is
 
 private
 
+   use type GPR2.Path_Name.Object;
+
    Default_Flags : constant Flags_Set := (others => False);
+
+   function "<" (L, R : Source_Unit_Identifier) return Boolean
+   is (if L.Source = R.Source
+       then L.Index < R.Index
+       else L.Source < R.Source);
 
    package Dependencies_Ref is new GNATCOLL.Refcount.Shared_Pointers
      (Source_Reference.Identifier.Set.Object);
@@ -199,7 +229,7 @@ private
 
    type Object is tagged record
       Name         : Unbounded_String;
-      Index        : Natural           := 0;
+      Index        : Unit_Index        := 0;
       Kind         : Library_Unit_Type := S_Spec;
       Item_Kind    : Library_Item_Type := Is_Package;
       Main         : Main_Type         := None;
@@ -226,7 +256,7 @@ private
 
    function Create
      (Name          : Name_Type;
-      Index         : Positive;
+      Index         : Unit_Index;
       Lib_Unit_Kind : Library_Unit_Type;
       Lib_Item_Kind : Library_Item_Type;
       Main          : Main_Type;
@@ -245,7 +275,7 @@ private
    function Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.Name)));
 
-   function Index (Self : Object) return Positive is
+   function Index (Self : Object) return Unit_Index is
      (Self.Index);
 
    function Is_Defined (Self : Object) return Boolean is

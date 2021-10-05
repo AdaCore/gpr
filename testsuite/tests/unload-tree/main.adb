@@ -82,7 +82,7 @@ procedure Main is
 
       for Source of Prj.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name (No_Index);
          begin
             Output_Filename (Source.Path_Name.Value);
 

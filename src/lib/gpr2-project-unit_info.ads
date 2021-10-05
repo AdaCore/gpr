@@ -26,7 +26,7 @@
 --  composing it. From a unit name we can retrieve the source where the spec,
 --  the body or separates are to be found.
 
-with GPR2.Path_Name.Set;
+with GPR2.Unit;
 
 package GPR2.Project.Unit_Info is
 
@@ -39,9 +39,9 @@ package GPR2.Project.Unit_Info is
 
    function Create
      (Name      : Name_Type;
-      Spec      : Path_Name.Object;
-      Main_Body : Path_Name.Object;
-      Separates : Path_Name.Set.Object) return Object;
+      Spec      : Unit.Source_Unit_Identifier;
+      Main_Body : Unit.Source_Unit_Identifier;
+      Separates : Unit.Source_Unit_Vectors.Vector) return Object;
    --  Constructor for a Unit object
 
    function Name (Self : Object) return Name_Type
@@ -52,7 +52,7 @@ package GPR2.Project.Unit_Info is
      with Pre => Self.Is_Defined;
    --  Returns True if a spec is defined for this unit
 
-   function Spec (Self : Object) return Path_Name.Object
+   function Spec (Self : Object) return Unit.Source_Unit_Identifier
      with Pre => Self.Is_Defined;
    --  Returns the Spec
 
@@ -60,11 +60,11 @@ package GPR2.Project.Unit_Info is
      with Pre => Self.Is_Defined;
    --  Returns True if a body is defined for this unit
 
-   function Main_Body (Self : Object) return Path_Name.Object
+   function Main_Body (Self : Object) return Unit.Source_Unit_Identifier
      with Pre => Self.Is_Defined;
    --  Returns the Body
 
-   function Separates (Self : Object) return Path_Name.Set.Object
+   function Separates (Self : Object) return Unit.Source_Unit_Vectors.Vector
      with Pre => Self.Is_Defined;
    --  Returns all separates
 
@@ -74,13 +74,13 @@ package GPR2.Project.Unit_Info is
    --  Sets unit spec
 
    procedure Update_Spec
-     (Self : in out Object; Source : Path_Name.Object)
-     with Pre => Self.Is_Defined and then Source.Is_Defined;
+     (Self : in out Object; Source : Unit.Source_Unit_Identifier)
+     with Pre => Self.Is_Defined and then Source.Source.Is_Defined;
    --  Sets unit spec
 
    procedure Update_Body
-     (Self : in out Object; Source : Path_Name.Object)
-     with Pre => Self.Is_Defined and then Source.Is_Defined;
+     (Self : in out Object; Source : Unit.Source_Unit_Identifier)
+     with Pre => Self.Is_Defined and then Source.Source.Is_Defined;
    --  Sets unit body
 
    procedure Remove_Body (Self : in out Object)
@@ -88,17 +88,19 @@ package GPR2.Project.Unit_Info is
    --  Sets unit body
 
    procedure Update_Separates
-     (Self : in out Object; Source : Path_Name.Object)
-     with Pre => Self.Is_Defined and then Source.Is_Defined;
+     (Self : in out Object; Source : Unit.Source_Unit_Identifier)
+     with Pre => Self.Is_Defined and then Source.Source.Is_Defined;
    --  Appends separate
 
 private
 
+   use GPR2.Unit;
+
    type Object is tagged record
       Name      : Unbounded_String;
-      Spec      : Path_Name.Object;
-      Main_Body : Path_Name.Object;
-      Separates : Path_Name.Set.Object;
+      Spec      : Source_Unit_Identifier;
+      Main_Body : Source_Unit_Identifier;
+      Separates : Source_Unit_Vectors.Vector;
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -107,18 +109,18 @@ private
      (Self /= Undefined);
 
    function Has_Spec (Self : Object) return Boolean is
-     (Self.Spec.Is_Defined);
+     (Self.Spec.Source.Is_Defined);
 
    function Has_Body (Self : Object) return Boolean is
-     (Self.Main_Body.Is_Defined);
+     (Self.Main_Body.Source.Is_Defined);
 
-   function Spec (Self : Object) return Path_Name.Object is (Self.Spec);
+   function Spec (Self : Object) return Source_Unit_Identifier is (Self.Spec);
 
-   function Main_Body (Self : Object) return Path_Name.Object is
+   function Main_Body (Self : Object) return Source_Unit_Identifier is
      (Self.Main_Body);
 
    function Separates
-     (Self : Object) return Path_Name.Set.Object is (Self.Separates);
+     (Self : Object) return Source_Unit_Vectors.Vector is (Self.Separates);
 
    function Name (Self : Object) return Name_Type is
      (Name_Type (To_String (Self.Name)));

@@ -77,8 +77,8 @@ package body GPR2.Project.Pack is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0;
-      Result : out Project.Attribute.Object) return Boolean is
+      At_Pos : Unit_Index := No_Index;
+      Result : out GPR2.Project.Attribute.Object) return Boolean is
    begin
       Result := Self.Attrs.Element (Name, Index, At_Pos);
       return Result.Is_Defined;

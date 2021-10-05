@@ -30,7 +30,7 @@ package body GPR2.Project.Attribute is
 
    function Create
      (Index          : Attribute_Index.Object;
-      Default_At_Pos : Natural := 0) return Value_At_Pos
+      Default_At_Pos : Unit_Index := No_Index) return Value_At_Pos
    is
       Is_Others : constant Boolean    :=
                     Index.Is_Defined and then Index.Is_Others;
@@ -176,7 +176,7 @@ package body GPR2.Project.Attribute is
             Append (Result, '"' & Self.Value.Text & '"');
 
             if Self.Value.Has_At_Pos then
-               Append (Result, " at" & Integer'Image (Self.Value.At_Pos));
+               Append (Result, " at" & Self.Value.At_Pos'Image);
             end if;
 
          when List =>

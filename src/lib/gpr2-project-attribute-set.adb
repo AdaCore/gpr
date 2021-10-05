@@ -31,7 +31,7 @@ package body GPR2.Project.Attribute.Set is
    type Iterator is new Attribute_Iterator.Forward_Iterator with record
       Name          : Optional_Attribute_Id;
       Index         : Attribute_Index.Object;
-      At_Pos        : Natural := 0;
+      At_Pos        : Unit_Index := No_Index;
       Set           : Object;
       With_Defaults : Boolean := False;
    end record;
@@ -87,7 +87,7 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Boolean
+      At_Pos : Unit_Index             := No_Index) return Boolean
    is
       Position : constant Cursor := Self.Find (Name, Index, At_Pos);
    begin
@@ -117,7 +117,7 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural                := 0) return Attribute.Object
+      At_Pos : Unit_Index := No_Index) return Attribute.Object
    is
       Position : constant Cursor :=
                    Self.Find (Name, Index, At_Pos);
@@ -137,7 +137,7 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Optional_Attribute_Id  := No_Attribute;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural                := 0) return Object is
+      At_Pos : Unit_Index             := No_Index) return Object is
    begin
       if Name = No_Attribute and then not Index.Is_Defined then
          return Self;
@@ -208,7 +208,7 @@ package body GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural                := 0) return Cursor
+      At_Pos : Unit_Index             := No_Index) return Cursor
    is
       Result : Cursor :=
                  (CM  => Self.Attributes.Find (Name),
@@ -343,7 +343,7 @@ package body GPR2.Project.Attribute.Set is
      (Self            : Object;
       Name            : Optional_Attribute_Id  := No_Attribute;
       Index           : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos          : Natural                := 0;
+      At_Pos          : Unit_Index             := No_Index;
       With_Defaults   : Boolean                := False)
       return Attribute_Iterator.Forward_Iterator'Class is
    begin

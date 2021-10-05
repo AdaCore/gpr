@@ -33,6 +33,7 @@ with GPR2.Message;
 with GPR2.Path_Name;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Source.Artifact;
+with GPR2.Project.Source.Part_Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.Unit_Info;
@@ -340,12 +341,8 @@ begin
       use type Project.View.Object;
       use all type Project.Source.Naming_Exception_Kind;
 
-      type Source_And_Index is record
-         Source : Project.Source.Object;
-         Index  : Natural;
-      end record;
-
-      function Path_Equal (Left, Right : Source_And_Index) return Boolean
+      function Path_Equal
+        (Left, Right : Project.Source.Source_Part) return Boolean
       is (Left.Source = Right.Source
           and then Left.Source.View.Namespace_Root =
                    Right.Source.View.Namespace_Root
@@ -362,10 +359,11 @@ begin
       function Compare (Left, Right : Project.Source.Object) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
-      function Compare (Left, Right : Natural) return One_Type
+      function Compare (Left, Right : Unit_Index) return One_Type
       is (if Left < Right then -1 elsif Left = Right then 0 else 1);
 
-      function Path_Less (Left, Right : Source_And_Index) return Boolean
+      function Path_Less
+        (Left, Right : Project.Source.Source_Part) return Boolean
       is (case Compare
             (Left.Source.View.Namespace_Root, Right.Source.View.Namespace_Root)
           is
@@ -378,7 +376,7 @@ begin
                 when  0 => Compare (Left.Index, Right.Index) = -1));
 
       package Sources_By_Path is new Ada.Containers.Indefinite_Ordered_Sets
-        (Source_And_Index, "<" => Path_Less, "=" => Path_Equal);
+        (Project.Source.Source_Part, "<" => Path_Less, "=" => Path_Equal);
 
       type File_Status is
         (OK,        -- matching timestamp
@@ -414,7 +412,7 @@ begin
       procedure Display_Closures is
          use type Ada.Containers.Count_Type;
 
-         Closures : Project.Source.Set.Object;
+         Closures : Project.Source.Part_Set.Object;
       begin
          if Sources.Is_Empty then
             Finish_Program (E_Errors, "no main specified for closure");
@@ -422,14 +420,14 @@ begin
 
          for S of Sources loop
             declare
-               Deps : constant Project.Source.Set.Object :=
+               Deps : constant Project.Source.Part_Set.Object :=
                         S.Source.Dependencies (Closure => True);
             begin
                if Deps.Is_Empty then
                   --  If no dependencies, use only this one because without ALI
                   --  file we don't know dependency even on itself.
 
-                  Closures.Include (S.Source);
+                  Closures.Include (S);
                else
                   Closures.Union (Deps);
                end if;
@@ -444,12 +442,19 @@ begin
             Output : String_Vector.Vector;
          begin
             for R of Closures loop
-               if not R.Is_Runtime then
-                  if not R.Artifacts.Has_Dependency then
+               if not R.Source.Is_Runtime then
+                  if not GPR2.Project.Source.Artifact.Dependency
+                           (R.Source, R.Index).Is_Defined
+                  then
                      Full_Closure := False;
                   end if;
 
-                  Output.Append ("  " & R.Path_Name.Value);
+                  if R.Index not in Multi_Unit_Index then
+                     Output.Append ("  " & R.Source.Path_Name.Value);
+                  else
+                     Output.Append ("  " & R.Source.Path_Name.Value & " @" &
+                                      R.Index'Image);
+                  end if;
                end if;
             end loop;
 
@@ -474,13 +479,15 @@ begin
 
       procedure Display_Gnatdist is
 
-         function Has_Dependency (S : Source_And_Index) return Boolean;
+         function Has_Dependency
+           (S : Project.Source.Source_Part) return Boolean;
 
          --------------------
          -- Has_Dependency --
          --------------------
 
-         function Has_Dependency (S : Source_And_Index) return Boolean is
+         function Has_Dependency
+           (S : Project.Source.Source_Part) return Boolean is
          begin
             return GPR2.Project.Source.Artifact.Dependency
               (S.Source, S.Index).Is_Defined;
@@ -514,22 +521,23 @@ begin
       --------------------
 
       procedure Display_Normal is
-
          use type Source_Info.Backend;
 
          procedure Output_Source
-           (S : Project.Source.Object;
-            A : Project.Source.Artifact.Object :=
-              Project.Source.Artifact.Undefined);
+           (S   : Project.Source.Object;
+            Idx : Unit_Index;
+            A   : Project.Source.Artifact.Object :=
+                    Project.Source.Artifact.Undefined);
 
          -------------------
          -- Output_Source --
          -------------------
 
          procedure Output_Source
-           (S : Project.Source.Object;
-            A : Project.Source.Artifact.Object :=
-              Project.Source.Artifact.Undefined)
+           (S   : Project.Source.Object;
+            Idx : Unit_Index;
+            A   : Project.Source.Artifact.Object :=
+                    Project.Source.Artifact.Undefined)
          is
             use type Ada.Calendar.Time;
 
@@ -585,17 +593,17 @@ begin
             --  For now we stick to the timestamp-based logic: if time stamps
             --  are equal, assume the file didn't change.
 
-            if (S.Is_Parsed
-                and then S.Used_Backend = Source_Info.LI
-                and then S.Build_Timestamp = S.Timestamp (ALI => True))
+            if (S.Is_Parsed (Idx)
+                and then S.Used_Backend (Idx) = Source_Info.LI
+                and then S.Build_Timestamp (Idx) = S.Timestamp (ALI => True))
               or else
                 (not S.Has_Units and then S.Kind in Unit.Spec_Kind
-                 and then S.Build_Timestamp = S.Timestamp (ALI => True))
+                 and then S.Build_Timestamp (Idx) = S.Timestamp (ALI => True))
               or else
                 (not SI.Parser.Registry.Exists (S.Language, SI.None)
                  and then Check_Object_Code
                  and then S.Timestamp (ALI => False) <
-                        Artifacts.Object_Code (Index => 0).Modification_Time)
+                        Artifacts.Object_Code (Index => Idx).Modification_Time)
             then
                Status := OK;
 
@@ -606,6 +614,10 @@ begin
             if Opt.Verbose then
                Text_IO.Put ("     Source => ");
                Text_IO.Put (S.Path_Name.Value);
+               if S.Has_Index then
+                  Text_IO.Put (" @");
+                  Text_IO.Put (Idx'Image);
+               end if;
 
                case Status is
                   when OK =>
@@ -627,17 +639,18 @@ begin
                         Text_IO.Put (" DIF ");
 
                         if GPR2.Is_Debug ('F') then
-                           if S.Is_Parsed then
-                              Text_IO.Put (S.Used_Backend'Img);
+                           if S.Is_Parsed (Idx) then
+                              Text_IO.Put (S.Used_Backend (Idx)'Img);
                               Text_IO.Put (' ');
 
-                              if S.Build_Timestamp /= S.Timestamp (ALI => True)
+                              if S.Build_Timestamp (Idx) /=
+                                S.Timestamp (ALI => True)
                               then
                                  Text_IO.Put
                                    (No_Trail_Zero
                                       (Duration'Image
                                            (S.Timestamp (ALI => True) -
-                                                S.Build_Timestamp)));
+                                                S.Build_Timestamp (Idx))));
                                  Text_IO.Put (' ');
                               end if;
 
@@ -652,6 +665,10 @@ begin
                  (if S.Is_Runtime and then Opt.Hide_Runtime_Directory
                   then String (S.Path_Name.Simple_Name)
                   else S.Path_Name.Value);
+
+               if Idx /= No_Index then
+                  Text_IO.Put (" at index" & Idx'Image);
+               end if;
             end if;
 
             Text_IO.New_Line;
@@ -670,18 +687,20 @@ begin
                                            others => False));
                Main_Unit : Unit.Object;
 
-               procedure Print_Unit_From (Src : Path_Name.Object);
+               procedure Print_Unit_From
+                 (Src : GPR2.Unit.Source_Unit_Identifier);
 
                function  Print_Unit (U_Sec : Unit.Object) return Boolean;
 
-               procedure Print_Object (Index : Positive);
+               procedure Print_Object (Index : Unit_Index);
 
                procedure Print_Object (U_Sec : GPR2.Unit.Object);
 
                procedure Dependence_Output
-                 (Dep_Source : Project.Source.Object);
+                 (Dep_Source : Project.Source.Object;
+                  Index      : Unit_Index);
 
-               function Has_Dependency (Index : Positive) return Boolean is
+               function Has_Dependency (Index : Unit_Index) return Boolean is
                  (Artifacts.Has_Dependency (Index)
                   and then
                     (Artifacts.Dependency (Index).Exists
@@ -692,13 +711,14 @@ begin
                -----------------------
 
                procedure Dependence_Output
-                 (Dep_Source : Project.Source.Object) is
+                 (Dep_Source : Project.Source.Object;
+                  Index      : Unit_Index) is
                begin
                   if Opt.With_Predefined_Units
                     or else not Dep_Source.Is_Runtime
                   then
                      Text_IO.Put ("   ");
-                     Output_Source (S => Dep_Source);
+                     Output_Source (S => Dep_Source, Idx => Index);
                   end if;
                end Dependence_Output;
 
@@ -706,7 +726,7 @@ begin
                -- Print_Object --
                ------------------
 
-               procedure Print_Object (Index : Positive) is
+               procedure Print_Object (Index : Unit_Index) is
                   Obj_File : Path_Name.Object;
                begin
                   if Opt.Print_Object_Files
@@ -736,7 +756,7 @@ begin
                   end if;
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source, Artifacts);
+                     Output_Source (S.Source, S.Index, Artifacts);
                   end if;
 
                   if Opt.Verbose then
@@ -808,28 +828,31 @@ begin
                -- Print_Unit_From --
                ---------------------
 
-               procedure Print_Unit_From (Src : Path_Name.Object) is
-                  U_Src : constant Project.Source.Object := View.Source (Src);
+               procedure Print_Unit_From
+                 (Src : GPR2.Unit.Source_Unit_Identifier)
+               is
+                  U_Src : constant Project.Source.Object :=
+                            View.Source (Src.Source);
                begin
                   if not Opt.Print_Units
                     or else
-                      (Print_Unit (U_Src.Units.First_Element)
+                      (Print_Unit (U_Src.Unit (Src.Index))
                        and then not Opt.Dependency_Mode
                        and then Opt.Print_Sources)
                   then
-                     Output_Source (U_Src);
+                     Output_Source (U_Src, Src.Index);
                   end if;
                end Print_Unit_From;
 
             begin
                if not S.Source.Has_Units then
-                  Print_Object (1);
+                  Print_Object (No_Index);
 
                   if Opt.Print_Sources and then not Opt.Dependency_Mode then
-                     Output_Source (S.Source, Artifacts);
+                     Output_Source (S.Source, S.Index, Artifacts);
                   end if;
 
-               elsif S.Index = 0 then
+               elsif S.Index = No_Index then
                   for U_Sec of S.Source.Units loop
                      if Has_Dependency (U_Sec.Index) then
                         Print_Object (U_Sec);
@@ -838,7 +861,7 @@ begin
                   end loop;
 
                elsif Has_Dependency (S.Index) then
-                  Print_Object (S.Source.Units.Element (S.Index));
+                  Print_Object (S.Source.Unit (S.Index));
                end if;
 
                if Opt.Dependency_Mode and then Opt.Print_Sources then
@@ -846,7 +869,8 @@ begin
                      Text_IO.Put_Line ("   depends upon");
                   end if;
 
-                  S.Source.Dependencies (Dependence_Output'Access);
+                  S.Source.Dependencies
+                    (S.Index, Dependence_Output'Access);
                end if;
             end;
          end loop;
@@ -868,11 +892,12 @@ begin
                declare
                   use Project.Source.Artifact;
                   Artifacts : Project.Source.Artifact.Object;
+                  Dismiss   : Boolean with Unreferenced;
 
                   function Insert_Prefer_Body
                     (Key   : Filename_Type;
                      Kind  : GPR2.Unit.Library_Unit_Type;
-                     Index : Natural) return Boolean;
+                     Index : Unit_Index) return Boolean;
 
                   ------------------------
                   -- Insert_Prefer_Body --
@@ -881,7 +906,7 @@ begin
                   function Insert_Prefer_Body
                     (Key   : Filename_Type;
                      Kind  : GPR2.Unit.Library_Unit_Type;
-                     Index : Natural) return Boolean
+                     Index : Unit_Index) return Boolean
                   is
                      Position : Sources_By_Path.Cursor;
                      Inserted : Boolean;
@@ -910,7 +935,7 @@ begin
 
                   function Insert_Prefer_Body
                     (Kind  : GPR2.Unit.Library_Unit_Type;
-                     Index : Natural) return Boolean
+                     Index : Unit_Index) return Boolean
                   is
                     ((Artifacts.Has_Dependency (Index)
                      and then
@@ -930,7 +955,7 @@ begin
 
                begin
                   if not Insert_Prefer_Body
-                    (S.Path_Name.Simple_Name, GPR2.Unit.S_Body, 0)
+                    (S.Path_Name.Simple_Name, GPR2.Unit.S_Body, No_Index)
                   then
                      Artifacts := GPR2.Project.Source.Artifact.Create
                        (S, Filter => (Dependency_File_Artifact => True,
@@ -941,10 +966,8 @@ begin
                         for CU of S.Units loop
                            exit when Insert_Prefer_Body (CU.Kind, CU.Index);
                         end loop;
-
-                     elsif Insert_Prefer_Body (S.Kind, 1) then
-                        null;
-
+                     else
+                        Dismiss := Insert_Prefer_Body (S.Kind, No_Index);
                      end if;
                   end if;
                end;
@@ -975,7 +998,7 @@ begin
               and then (not GPR2.Is_Debug ('1')
                         or else S.Language = Ada_Language)
             then
-               Sources.Insert ((S, 0));
+               Sources.Insert ((S, No_Index));
             end if;
          end loop;
 
@@ -985,39 +1008,73 @@ begin
 
          for View of Tree loop
             for S_Cur in View.Sources.Iterate (Filter => S_Compilable) loop
-               if not Element (S_Cur).Is_Overriden
-                 and then (not GPR2.Is_Debug ('1')
-                           or else Element (S_Cur).Language = Ada_Language)
-               then
-                  Sources.Insert ((Element (S_Cur), 0), Position, Inserted);
-
-                  --  Source could be already in the set because we
-                  --  can have the same project in the All_Views
-                  --  twice, one time for aggregated project another
-                  --  time for the imported project. Besides that we
-                  --  can have the same source in the aggregated
-                  --  project and in the aggregating library project.
-
-                  if not Inserted
-                    and then Element (S_Cur).Is_Aggregated
-                    < Sources_By_Path.Element (Position).Source.Is_Aggregated
+               declare
+                  Src : GPR2.Project.Source.Object renames Element (S_Cur);
+               begin
+                  if not Src.Is_Overriden
+                    and then (not GPR2.Is_Debug ('1')
+                              or else Src.Language = Ada_Language)
                   then
-                     --  We prefer Is_Aggregated = False because it
-                     --  has object files.
+                     if Src.Has_Units then
+                        for CU of Src.Units loop
+                           if Src.Is_Compilable (CU.Index) then
+                              Sources.Insert ((Src, CU.Index),
+                                              Position, Inserted);
+                           end if;
+                        end loop;
+                     else
+                        Sources.Insert ((Src, No_Index), Position, Inserted);
+                     end if;
 
-                     Sources.Replace_Element (Position, (Element (S_Cur), 0));
+                     --  Source could be already in the set because we
+                     --  can have the same project in the All_Views
+                     --  twice, one time for aggregated project another
+                     --  time for the imported project. Besides that we
+                     --  can have the same source in the aggregated
+                     --  project and in the aggregating library project.
+
+                     if not Inserted
+                       and then Element (S_Cur).Is_Aggregated
+                       < Sources_By_Path.Element
+                          (Position).Source.Is_Aggregated
+                     then
+                        --  We prefer Is_Aggregated = False because it
+                        --  has object files.
+                        if Src.Has_Units then
+                           for CU of Src.Units loop
+                              if Src.Is_Compilable (CU.Index) then
+                                 Sources.Replace_Element
+                                   (Position, (Src, CU.Index));
+                              end if;
+                           end loop;
+                        else
+                           Sources.Replace_Element (Position, (Src, No_Index));
+                        end if;
+                     end if;
                   end if;
-               end if;
+               end;
             end loop;
          end loop;
 
       else
          for S_Cur in Tree.Root_Project.Sources.Iterate (S_Compilable) loop
-            if not GPR2.Is_Debug ('1')
-              or else Element (S_Cur).Language = Ada_Language
-            then
-               Sources.Insert ((Element (S_Cur), 0));
-            end if;
+            declare
+               Src : GPR2.Project.Source.Object renames Element (S_Cur);
+            begin
+               if not GPR2.Is_Debug ('1')
+                 or else Src.Language = Ada_Language
+               then
+                  if Src.Has_Units then
+                     for CU of Src.Units loop
+                        if Src.Is_Compilable (CU.Index) then
+                           Sources.Insert ((Src, CU.Index));
+                        end if;
+                     end loop;
+                  else
+                     Sources.Insert ((Src, No_Index));
+                  end if;
+               end if;
+            end;
          end loop;
       end if;
 
@@ -1032,42 +1089,41 @@ begin
       if not Opt.Source_Parser and then not Opt.Gnatdist then
          for S of Sources loop
             if S.Source.Has_Units then
-               For_Units : for CU of S.Source.Units loop
-                  declare
-                     Dep_File : constant GPR2.Path_Name.Object :=
-                                  GPR2.Project.Source.Artifact.Dependency
-                                    (S.Source, CU.Index);
-                  begin
-                     if CU.Kind /= Unit.S_Separate
-                       and then Dep_File.Is_Defined
-                       and then not Dep_File.Exists
+               declare
+                  Other : constant GPR2.Project.Source.Source_Part :=
+                            S.Source.Other_Part_Unchecked (S.Index);
+               begin
+                  if S.Source.Kind (S.Index) /= Unit.S_Separate
+                    and then not S.Source.Is_Parsed (S.Index)
+                    and then
+                      (not Other.Source.Is_Defined
+                       or else not Other.Source.Is_Parsed (Other.Index))
+                  then
+                     Full_Closure := False;
+
+                     if S.Source.Has_Naming_Exception
+                       and then S.Source.Naming_Exception
+                         = Project.Source.Multi_Unit
                      then
-                        Full_Closure := False;
+                        --  In case of multi-unit we have no information
+                        --  until the unit is compiled. There is no need to
+                        --  report that there is missing ALI in this case.
+                        --  But we report that the status for this file is
+                        --  unknown.
 
-                        if S.Source.Has_Naming_Exception
-                          and then S.Source.Naming_Exception
-                            = Project.Source.Multi_Unit
-                        then
-                           --  In case of multi-unit we have no information
-                           --  until the unit is compiled. There is no need to
-                           --  report that there is missing ALI in this case.
-                           --  But we report that the status for this file is
-                           --  unknown.
+                        Text_IO.Put_Line
+                          ("UNKNOWN status for unit " &
+                             String (S.Source.Unit_Name (S.Index)) & " in " &
+                             S.Source.Path_Name.Value & " at index" &
+                             S.Index'Image);
 
-                           Text_IO.Put_Line
-                             ("UNKNOWN status for file " &
-                                S.Source.Path_Name.Value);
-
-                           exit For_Units;
-
-                        else
-                           Text_IO.Put_Line
-                             ("Can't find ALI file for " &
-                                S.Source.Path_Name.Value);
-                        end if;
+                     else
+                        Text_IO.Put_Line
+                          ("Can't find ALI file for " &
+                             S.Source.Path_Name.Value);
                      end if;
-                  end;
-               end loop For_Units;
+                  end if;
+               end;
             end if;
          end loop;
       end if;

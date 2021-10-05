@@ -93,12 +93,15 @@ procedure Main is
               ("    object file  = " & String (Dep.Simple_Name));
 
             S.Dependencies
-              (Print_Dependency'Access,
-               Index => Source_Info.Unit_Index (CU.Index));
+              (CU.Index, Print_Dependency'Access, Closure => True);
+         end if;
+      end loop;
 
-            if Dep.Exists then
-               Directories.Delete_File (Dep.Value);
-            end if;
+      for CU of S.Units loop
+         Dep := GPR2.Project.Source.Artifact.Dependency
+           (S, CU.Index, Actual_File => True);
+         if Dep.Is_Defined then
+            Directories.Delete_File (Dep.Value);
          end if;
       end loop;
    end Print;

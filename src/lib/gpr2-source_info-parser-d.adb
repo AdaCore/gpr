@@ -97,7 +97,7 @@ package body GPR2.Source_Info.Parser.D is
             begin
                Ref.Set (Dependency_Vectors.Empty_Vector);
                Data.Dependencies.Insert
-                 (1, Ref, CU1, Inserted);
+                 (No_Index, Ref, CU1, Inserted);
             end;
             pragma Assert (Inserted);
 
@@ -120,7 +120,9 @@ package body GPR2.Source_Info.Parser.D is
                        Dependencies_Reference;
 
    begin
-      if not Dep_Name.Is_Defined then
+      if not Dep_Name.Is_Defined
+        or else not Dep_Name.Exists
+      then
          return;
       end if;
 
@@ -404,7 +406,7 @@ package body GPR2.Source_Info.Parser.D is
          Looping := True;
       end loop Big_Loop;
 
-      Data.Parsed := Source_Info.LI;
+      Data.Parsed := LI;
       Close (Dep_File);
    end Compute;
 

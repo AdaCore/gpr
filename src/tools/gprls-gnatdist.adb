@@ -30,10 +30,7 @@ with GPR2.Project.Source.Artifact;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Project.Unit_Info;
-with GPR2.Source_Info;
 with GPR2.Unit;
-
-with Ada.Assertions;
 
 package body GPRls.Gnatdist is
 
@@ -108,7 +105,7 @@ package body GPRls.Gnatdist is
 
    procedure Output_Afile (A : Simple_Name);
    procedure Output_Ofile
-     (Source : GPR2.Project.Source.Object; Index : Natural);
+     (Source : GPR2.Project.Source.Object; Index : Unit_Index);
    procedure Output_Sfile (S   : Path_Name.Object);
    --  Output various names. Check that the name is different from no name.
    --  Otherwise, skip the output.
@@ -142,21 +139,25 @@ package body GPRls.Gnatdist is
    ----------------
 
    procedure Output_ALI
-     (Source : GPR2.Project.Source.Object; Index : Positive)
+     (Source : GPR2.Project.Source.Object; Index : GPR2.Unit_Index)
    is
       use type GPR2.Unit.Main_Type;
       Unit : constant GPR2.Unit.Object :=
-               Source.Units.Element (Index);
+               Source.Unit (Index);
       Part : GPR2.Unit.Object;
       Main : constant GPR2.Unit.Main_Type := Unit.Main_Kind;
 
-      procedure Print_Dependency (Source : GPR2.Project.Source.Object);
+      procedure Print_Dependency (Source : GPR2.Project.Source.Object;
+                                  Unit   : GPR2.Unit.Object);
 
       ----------------------
       -- Print_Dependency --
       ----------------------
 
-      procedure Print_Dependency (Source : GPR2.Project.Source.Object) is
+      procedure Print_Dependency (Source : GPR2.Project.Source.Object;
+                                  Unit   : GPR2.Unit.Object)
+      is
+         pragma Unreferenced (Unit);
       begin
          Output_Sdep (Source.Path_Name.Simple_Name);
       end Print_Dependency;
@@ -183,8 +184,7 @@ package body GPRls.Gnatdist is
       Output_Unit (Unit, Source);
       declare
          Other : constant GPR2.Project.Source.Object :=
-                   Source.Other_Part_Unchecked
-                     (Source_Info.Unit_Index (Index));
+                   Source.Other_Part_Unchecked (Index).Source;
       begin
          if Other.Is_Defined
            and then Other.Check_Unit
@@ -197,7 +197,7 @@ package body GPRls.Gnatdist is
       --  Output Sdeps
 
       Source.Dependencies
-        (Print_Dependency'Access, Index => Source_Info.Unit_Index (Index));
+        (Index, Print_Dependency'Access);
 
       N_Indents := N_Indents - 1;
    end Output_ALI;
@@ -221,7 +221,7 @@ package body GPRls.Gnatdist is
    -------------------
 
    procedure Output_No_ALI
-     (Source : GPR2.Project.Source.Object; Index : Natural) is
+     (Source : GPR2.Project.Source.Object; Index : GPR2.Unit_Index) is
    begin
       Output_Token (T_No_ALI);
       N_Indents := N_Indents + 1;
@@ -234,7 +234,7 @@ package body GPRls.Gnatdist is
    ------------------
 
    procedure Output_Ofile
-     (Source : GPR2.Project.Source.Object; Index : Natural) is
+     (Source : GPR2.Project.Source.Object; Index : Unit_Index) is
    begin
       Output_Token (T_Ofile);
       Write_Str (Source.Artifacts.Object_Code (Index).Value);
@@ -369,8 +369,7 @@ package body GPRls.Gnatdist is
 
       --  Output Withs
 
-      for W of S.Context_Clause_Dependencies
-        (Source_Info.Unit_Index (Unit.Index))
+      for W of S.Context_Clause_Dependencies (Unit.Index)
       loop
          Output_With (Tree.all, W.Text);
       end loop;
@@ -387,24 +386,20 @@ package body GPRls.Gnatdist is
       pragma Assert (View.Is_Defined, "unit undefined: " & String (W));
       UI    : constant Project.Unit_Info.Object := View.Unit (W);
       Src   : constant Project.Source.Object :=
-                View.Source ((if UI.Has_Body then UI.Main_Body else UI.Spec));
-      CU    : GPR2.Unit.Object;
+                View.Source ((if UI.Has_Body
+                             then UI.Main_Body.Source
+                             else UI.Spec.Source));
+      Index : constant GPR2.Unit_Index :=
+                (if UI.Has_Body then UI.Main_Body.Index else UI.Spec.Index);
       Afile : Path_Name.Object;
 
    begin
       pragma Assert
         (Src.Is_Defined,
-         "source undefined: View " & String (View.Name) & " Unit " & String (W)
-         & ' ' & (if UI.Has_Body then UI.Main_Body.Value else UI.Spec.Value));
+         "source undefined: View " &
+           String (View.Name) & " Unit " & String (W));
 
-      if not Src.Check_Unit
-        (W, Spec => not UI.Has_Body, Unit => CU)
-      then
-         raise Ada.Assertions.Assertion_Error with
-           Src.Path_Name.Value & ' ' & String (W);
-      end if;
-
-      Afile := Src.Artifacts.Dependency (CU.Index);
+      Afile := Src.Artifacts.Dependency (Index);
 
       Output_Token (T_With);
       N_Indents := N_Indents + 1;

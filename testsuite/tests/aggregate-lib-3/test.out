@@ -23,7 +23,6 @@ A        K_STANDARD
        > a-obj/pcka.su
        > a-obj/pcka.ali
        > a-obj/pcka.ads.prep
-       > a-obj/pcka.ci
        > a-obj/pcka.sid
 B        K_LIBRARY
    pckb
@@ -40,5 +39,4 @@ B        K_LIBRARY
        > b-lib/pckb.ali
        > b-obj/pckb.ali
        > b-obj/pckb.ads.prep
-       > b-obj/pckb.ci
        > b-obj/pckb.sid

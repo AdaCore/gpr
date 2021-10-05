@@ -184,13 +184,7 @@ package body GPR2.Project.Source.Set is
          when S_Compilable =>
             if Source.Has_Units then
                for CU of Source.Units loop
-                  if CU.Kind in GPR2.Unit.Body_Kind
-                    or else (Source.Language = Ada_Language
-                             and then CU.Kind /= GPR2.Unit.S_Separate
-                             and then not Source.Has_Other_Part)
-                    --  The condition above is about Ada package specs
-                    --  without a body, which have to be compilable.
-                  then
+                  if Is_Compilable (Source, CU.Index) then
                      --  At least one compilable unit
                      return True;
                   end if;
