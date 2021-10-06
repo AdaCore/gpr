@@ -1,4 +1,4 @@
 with "gpr2";
 project Test is
-   for main use ("main.adb");
+   for main use ("test.adb");
 end Test;
