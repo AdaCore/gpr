@@ -769,6 +769,12 @@ package body GPR2.KB.Parsing is
          --  Whether the string ends with Suffix. Always True if Suffix
          --  is an empty string.
 
+         function Is_Number (Val : String) return Boolean is
+            (Val /= "" and then (for all V of Val => V in '0' .. '9'));
+         --  Checks that given value is a number. We are not expecting
+         --  a full-blown integer like a based literal here. Simply check if
+         --  Val is composed of digits or not.
+
          ---------------
          -- Ends_With --
          ---------------
@@ -852,16 +858,18 @@ package body GPR2.KB.Parsing is
                         Directory_Group => 0);
                   end;
 
+                  declare
+                     Group : constant Value_Type :=
+                               Get_Attribute (Tmp, "group", "0");
                   begin
-                     External_Node.Directory_Group :=
-                       Integer'Value
-                         (Get_Attribute (Tmp, "group", "0"));
-                  exception
-                     when Constraint_Error =>
+                     if Is_Number (Group) then
+                        External_Node.Directory_Group := Integer'Value (Group);
+                     else
                         External_Node.Directory_Group := -1;
                         External_Node.Dir_If_Match :=
                           To_Unbounded_String
                             (Get_Attribute (Tmp, "group", "0"));
+                     end if;
                   end;
 
                   Append (Value.EV, External_Node);
@@ -969,6 +977,11 @@ package body GPR2.KB.Parsing is
          Exec_Suffix : OS_Lib.String_Access :=
                          OS_Lib.Get_Executable_Suffix;
 
+         Ignore_Compiler_Dummy : Boolean;
+         --  Dummy value passed to Get_External_Value. At the stage of KB
+         --  parsing of compiler descriptions we are only getting languages,
+         --  so no filtering and thus no regexp matching is expected.
+
       begin
          while N /= null loop
             if Node_Type (N) /= Element_Node then
@@ -990,12 +1003,11 @@ package body GPR2.KB.Parsing is
                   else
                      Compiler.Executable := To_Unbounded_String (Val);
 
-                     begin
+                     if Is_Number (Prefix) then
                         Compiler.Prefix_Index := Integer'Value (Prefix);
-                     exception
-                        when Constraint_Error =>
-                           Compiler.Prefix_Index := -1;
-                     end;
+                     else
+                        Compiler.Prefix_Index := -1;
+                     end if;
 
                      if not Ends_With (Val, Exec_Suffix.all) then
                         Compiler.Executable_Re := To_Holder
@@ -1085,7 +1097,8 @@ package body GPR2.KB.Parsing is
                Split_Into_Words => True,
                Calls_Cache      => Base.External_Calls_Cache,
                Messages         => Base.Messages,
-               Processed_Value  => Lang);
+               Processed_Value  => Lang,
+               Ignore_Compiler  => Ignore_Compiler_Dummy);
 
             C := First (Lang);
 
@@ -1114,7 +1127,8 @@ package body GPR2.KB.Parsing is
                Split_Into_Words => True,
                Calls_Cache      => Base.External_Calls_Cache,
                Messages         => Base.Messages,
-               Processed_Value  => Lang);
+               Processed_Value  => Lang,
+               Ignore_Compiler  => Ignore_Compiler_Dummy);
 
             C := First (Lang);
 
