@@ -22,7 +22,7 @@ with GPR2.Log;
 with GPR2.Path_Name;
 with GPR2.Project.Tree;
 
-procedure Main is
+procedure Test is
    Tree         : GPR2.Project.Tree.Object;
    Context      : GPR2.Context.Object;
    use GPR2;
@@ -47,4 +47,4 @@ begin
 exception
    when Project_Error =>
       Print_Messages;
-end Main;
+end Test;
