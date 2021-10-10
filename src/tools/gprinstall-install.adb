@@ -41,6 +41,15 @@ with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
+pragma Warnings (Off, "* is not referenced");
+--  GPR2.Project.Source.Dependencies return a Part_Set but only has limited
+--  visibility on it. So in order to be able to manipulate the returned object
+--  we need to have full vilibility so need to add this with clause.
+--  However we never reference the package explicitly, so the compiler will
+--  complain that the using is not referenced.
+--  So let's just kill the warning.
+with GPR2.Project.Source.Part_Set;
+pragma Warnings (On, "* is not referenced");
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
 with GPR2.Project.Source.Set;
@@ -91,10 +100,13 @@ package body GPRinstall.Install is
    --  routine when an error occurs while copying the files.
 
    function Other_Part_Need_Body
-     (Source : GPR2.Project.Source.Object) return Boolean
+     (Source : GPR2.Project.Source.Object;
+      Index  : Unit_Index) return Boolean
    is
-     (Source.Has_Other_Part
-      and then Source.Other_Part.Is_Implementation_Required);
+     (Source.Has_Other_Part (Index)
+      and then Source.Other_Part
+        (Index).Source.Is_Implementation_Required
+          (Source.Other_Part (Index).Index));
    --  Returns True if Source has other part and this part need body
 
    procedure Double_Buffer;
@@ -953,7 +965,8 @@ package body GPRinstall.Install is
             --  artifacts.
 
             procedure Copy_Interface_Closure
-              (Source : GPR2.Project.Source.Object)
+              (Source : GPR2.Project.Source.Object;
+               Index  : GPR2.Unit_Index)
             with Pre => Source.Has_Units;
             --  Copy all sources and artifacts part of the close of Source
 
@@ -962,18 +975,20 @@ package body GPRinstall.Install is
             ----------------------------
 
             procedure Copy_Interface_Closure
-              (Source : GPR2.Project.Source.Object) is
+              (Source : GPR2.Project.Source.Object;
+               Index  : GPR2.Unit_Index) is
             begin
                --  Note that we only install the interface from the same view
                --  to avoid installing the runtime file for example.
 
-               for D of Source.Dependencies (Closure => True) loop
-                  if not Source_Copied.Contains (D)
-                    and then (D.Kind in Unit.Spec_Kind
-                              or else Other_Part_Need_Body (D))
-                    and then Source.View = D.View
+               for D of Source.Dependencies (Index, Closure => True) loop
+                  if not Source_Copied.Contains (D.Source)
+                    and then (D.Source.Kind (D.Index) in Unit.Spec_Kind
+                              or else Other_Part_Need_Body (D.Source, D.Index))
+                    and then Source.View = D.Source.View
                   then
-                     Install_Project_Source (D, Is_Interface_Closure => True);
+                     Install_Project_Source (D.Source,
+                                             Is_Interface_Closure => True);
                   end if;
                end loop;
             end Copy_Interface_Closure;
@@ -1009,10 +1024,12 @@ package body GPRinstall.Install is
 
                   if Options.All_Sources
                     or else Source.Kind in Unit.Spec_Kind
-                    or else Other_Part_Need_Body (Source)
-                    or else Source.Is_Generic
-                    or else (Source.Kind = S_Separate
-                             and then Source.Separate_From.Is_Generic)
+                    or else Other_Part_Need_Body (Source, No_Index)
+                    or else Source.Is_Generic (No_Index)
+                    or else
+                      (Source.Kind = S_Separate
+                       and then Source.Separate_From
+                         (No_Index).Source.Is_Generic (No_Index))
                   then
                      Done := Copy_Source (Source);
 
@@ -1023,7 +1040,13 @@ package body GPRinstall.Install is
                        and then Source.Has_Units
                        and then not Is_Interface_Closure
                      then
-                        Copy_Interface_Closure (Source);
+                        if Source.Has_Units then
+                           for CU of CUs loop
+                              Copy_Interface_Closure (Source, CU.Index);
+                           end loop;
+                        else
+                           Copy_Interface_Closure (Source, No_Index);
+                        end if;
                      end if;
 
                   elsif Source.Has_Naming_Exception then
@@ -1069,16 +1092,18 @@ package body GPRinstall.Install is
                         declare
                            Proj : GPR2.Project.View.Object;
                            Satf : GPR2.Project.Source.Artifact.Object;
+                           use GPR2.Project.Source.Artifact;
                         begin
-                           if not Source.Has_Other_Part
+                           if Options.All_Sources
                              or else not Source.Has_Naming_Exception
                              or else not Source.Has_Single_Unit
-                             or else Options.All_Sources
+                             or else not Source.Has_Other_Part
                            then
                               Satf := Atf;
                            else
-                              Satf := Source.Other_Part.Artifacts
-                                        (Force_Spec => True);
+                              Satf :=
+                                Source.Other_Part.Source.Artifacts
+                                                          (Force_Spec => True);
                            end if;
 
                            if Project.Qualifier = K_Aggregate_Library then
@@ -1088,8 +1113,9 @@ package body GPRinstall.Install is
                            end if;
 
                            if Is_Ada (Source) then
-                              for CU of CUs loop
-                                 if CU.Kind not in S_Spec | S_Separate
+                              for CU of Source.Units loop
+                                 if Source.Kind (CU.Index)
+                                      not in S_Spec | S_Separate
                                    and then Atf.Has_Dependency (CU.Index)
                                  then
                                     Copy_File
@@ -1097,8 +1123,7 @@ package body GPRinstall.Install is
                                        To   => (if Proj.Kind = K_Library
                                                 then ALI_Dir
                                                 else Lib_Dir),
-                                       File => Satf.Dependency
-                                                 (CU.Index).Simple_Name);
+                                       File => Satf.Dependency.Simple_Name);
                                  end if;
                               end loop;
                            end if;

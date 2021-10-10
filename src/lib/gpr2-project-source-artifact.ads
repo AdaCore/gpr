@@ -73,20 +73,21 @@ package GPR2.Project.Source.Artifact is
    --  The project's source used to generate the artifacts
 
    function Has_Object_Code
-     (Self : Object; Index : Natural := 0) return Boolean
+     (Self : Object; Index : Unit_Index := No_Index) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if an object-code path is defined at Index.
    --  If Index = 0 returns True on any object file defined.
 
    function Object_Code
-     (Self : Object; Index : Natural) return GPR2.Path_Name.Object
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Path_Name.Object
      with Pre => Self.Is_Defined and then Self.Has_Object_Code (Index);
    --  The target-dependent code (generally .o or .obj).
    --  If Index = 0 then returns first available object file path.
 
    function Has_Dependency
      (Self     : Object;
-      Index    : Natural             := 0;
+      Index    : Unit_Index          := No_Index;
       Location : Dependency_Location := In_Both) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a dependency path is defined.
@@ -95,10 +96,11 @@ package GPR2.Project.Source.Artifact is
    --  If Index = 0 returns True if dependency exists at any index.
 
    function Dependency
-     (Source      : Project.Source.Object;
-      Index       : Natural := 0;
-      Location    : Dependency_Location := In_Both;
-      Actual_File : Boolean := False)
+     (Source        : Project.Source.Object;
+      Index         : Unit_Index          := No_Index;
+      Location      : Dependency_Location := In_Both;
+      Actual_File   : Boolean             := False;
+      Maybe_No_Body : Boolean             := False)
       return GPR2.Path_Name.Object;
    --  Retrieve just the dependency file (LI file) corresponding to the unit
    --- in Source at Index (if any).
@@ -107,11 +109,14 @@ package GPR2.Project.Source.Artifact is
    --  If Actual_File is set, then only files that actually exist on the hard
    --  drive are returned. else file that could exist if a compilation occurred
    --  will also be returned, even if they're not available.
+   --  If Maybe_No_Body is set, then the LI file is looked for even for units
+   --  that have a S_Spec kind. Else only Body_Kind and S_Spec_Only are
+   --  considered.
 
    function Dependency
-     (Self        : Object;
-      Index       : Natural;
-      Location    : Dependency_Location := In_Both)
+     (Self     : Object;
+      Index    : Unit_Index          := No_Index;
+      Location : Dependency_Location := In_Both)
       return GPR2.Path_Name.Object
      with Pre  => Self.Is_Defined
                   and then Self.Has_Dependency (Index, Location),
@@ -131,20 +136,26 @@ package GPR2.Project.Source.Artifact is
      with Pre => Self.Is_Defined and then Self.Has_Preprocessed_Source;
    --  Returns the file containing the pre-processed source
 
-   function Has_Callgraph (Self : Object) return Boolean
+   function Has_Callgraph (Self  : Object;
+                           Index : Unit_Index := No_Index) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a callgraph is defined
 
-   function Callgraph (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Has_Callgraph;
+   function Callgraph
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined and then Self.Has_Callgraph (Index);
    --  Returns the callgraph file
 
-   function Has_Coverage (Self : Object) return Boolean
+   function Has_Coverage (Self : Object;
+                          Index : Unit_Index := No_Index) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if a coverage is defined
 
-   function Coverage (Self : Object) return GPR2.Path_Name.Object
-     with Pre => Self.Is_Defined and then Self.Has_Coverage;
+   function Coverage
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Path_Name.Object
+     with Pre => Self.Is_Defined and then Self.Has_Coverage (Index);
    --  Returns the coverage file
 
    function List (Self : Object) return GPR2.Path_Name.Set.Object
@@ -160,17 +171,17 @@ private
    use type GPR2.Path_Name.Object;
 
    package Index_Path_Name_Map is new Ada.Containers.Ordered_Maps
-     (Positive, GPR2.Path_Name.Object);
+     (Unit_Index, GPR2.Path_Name.Object);
 
    type Object is tagged record
       Source           : Project.Source.Object;
       Object_Files     : Index_Path_Name_Map.Map;
       Deps_Lib_Files   : Index_Path_Name_Map.Map;
       Deps_Obj_Files   : Index_Path_Name_Map.Map;
-      Callgraph        : GPR2.Path_Name.Object;
-      Switches         : GPR2.Path_Name.Object;
+      Callgraph        : Index_Path_Name_Map.Map;
+      Switches         : Index_Path_Name_Map.Map;
       Preprocessed_Src : GPR2.Path_Name.Object;
-      Coverage         : GPR2.Path_Name.Object;
+      Coverage         : Index_Path_Name_Map.Map;
    end record;
 
    Undefined : constant Object := (others => <>);
@@ -179,19 +190,21 @@ private
      (Self /= Undefined);
 
    function Has_Object_Code
-     (Self : Object; Index : Natural := 0) return Boolean
+     (Self : Object; Index : Unit_Index := No_Index) return Boolean
    is
-     (if Index = 0
+     (if Index = No_Index
       then not Self.Object_Files.Is_Empty
       else Self.Object_Files.Contains (Index));
 
    function Has_Preprocessed_Source (Self : Object) return Boolean is
      (Self.Preprocessed_Src.Is_Defined);
 
-   function Has_Callgraph (Self : Object) return Boolean is
-     (Self.Callgraph.Is_Defined);
+   function Has_Callgraph (Self  : Object;
+                           Index : Unit_Index := No_Index) return Boolean is
+     (Self.Callgraph.Contains (Index));
 
-   function Has_Coverage (Self : Object) return Boolean is
-     (Self.Coverage.Is_Defined);
+   function Has_Coverage (Self  : Object;
+                          Index : Unit_Index := No_Index) return Boolean is
+     (Self.Coverage.Contains (Index));
 
 end GPR2.Project.Source.Artifact;

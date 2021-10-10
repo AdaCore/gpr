@@ -45,7 +45,7 @@ package body GPR2.Source_Info.Parser.Ada_Language is
       use GPR_Parser.Common;
       use Langkit_Support.Text;
 
-      Index : Natural := 0;
+      Index : Unit_Index := No_Index;
       --  Source index, incremented every time we parse a compilation unit
 
       U_Withed : Source_Reference.Identifier.Set.Object;
@@ -166,15 +166,9 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                return Over;
 
             when GPR_Ada_Library_Item =>
-               --  Note that this parser supports only a single unit per
-               --  file. So only index 1 will be used. But this is made
-               --  so to support a full parser if one is implemented.
-
-               Index := Index + 1;
-
                --  As the parser only support a single unit per file the
                --  index should always be 1.
-               pragma Assert (Index = 1);
+               pragma Assert (Index = No_Index);
 
                declare
                   N          : constant Ada_Library_Item :=
@@ -213,8 +207,14 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                         --  based on the naming scheme while adding
                         --  the files to the view.
 
-                        if Index = 1 then
-                           U_Kind := Data.CU_List.First_Element.Kind;
+                        if Index = No_Index then
+                           if Data.Is_Defined
+                             and then Data.Has_Unit_At (No_Index)
+                           then
+                              U_Kind := Data.CU_List (No_Index).Kind;
+                           else
+                              U_Kind := Data.Kind;
+                           end if;
                         end if;
 
                         L_Type := GPR2.Unit.Is_Subprogram;
@@ -244,19 +244,19 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                   declare
                      CU : constant GPR2.Unit.Object :=
                             GPR2.Unit.Create
-                              (Name          => Name_Type (-U_Name),
-                               Index         => Index,
-                               Main          => U_Main,
-                               Flags         => U_Flags,
-                               Lib_Unit_Kind => U_Kind,
-                               Lib_Item_Kind => L_Type,
-                               Dependencies  => U_Withed,
-                               Sep_From      =>
+                              (Name            => Name_Type (-U_Name),
+                               Index           => Index,
+                               Main            => U_Main,
+                               Flags           => U_Flags,
+                               Lib_Unit_Kind   => U_Kind,
+                               Lib_Item_Kind   => L_Type,
+                               Dependencies    => U_Withed,
+                               Sep_From        =>
                                  Optional_Name_Type (-U_Sep_From));
                   begin
                      --  Kind of first unit is also recorded in Data.Kind
 
-                     if Index = 1 then
+                     if Index = No_Index then
                         Data.Kind := U_Kind;
                      end if;
 
@@ -269,6 +269,12 @@ package body GPR2.Source_Info.Parser.Ada_Language is
                      Parsed := True;
                   end;
                end;
+
+               --  Note that this parser supports only a single unit per
+               --  file. So only index 1 will be used. But this is made
+               --  so to support a full parser if one is implemented.
+
+               Index := Index + 1;
 
                return Over;
 
@@ -291,10 +297,10 @@ package body GPR2.Source_Info.Parser.Ada_Language is
 
       if Parsed then
          Data.Parsed := Source_Info.Source;
-         Data.Is_Ada := True;
+         Data.Language := GPR2.Ada_Language;
 
       else
-         Data.Parsed := Source_Info.None;
+         Data.Parsed := None;
       end if;
    end Compute;
 

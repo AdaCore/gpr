@@ -48,7 +48,6 @@ private package GPR2.Project.Definition is
    use type Attribute_Index.Object;
    use type View.Object;
    use type Path_Name.Object;
-   use type Source_Info.Backend_Set;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded trees. That is there is always a single instance of

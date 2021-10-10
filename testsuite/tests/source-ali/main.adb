@@ -68,25 +68,41 @@ procedure Main is
             Text_IO.Put ("   language: " & Image (Source.Language));
 
             if Source.Has_Units then
-               for K in Source_Info.Unit_Index range 1 .. 5 loop
-                  if Source.Has_Unit_At (K) then
-                     Text_IO.Set_Col (40);
-                     Text_IO.Put ("Kind: "
-                                  & GPR2.Unit.Library_Unit_Type'Image (Source.Kind (K)));
-                     Text_IO.Put_Line ("   unit: " & String (Source.Unit_Name (K)));
-                     if Source.Artifacts.Has_Dependency (Integer (K)) then
-                        D := Source.Artifacts.Dependency (Integer (K));
-                        if D.Exists then
-                           Text_IO.Set_Col (40);
-                           Text_IO.Put_Line
-                             ("deps: " & String (D.Simple_Name));
-                           Directories.Delete_File (D.Value);
-                        end if;
+               for Unit of Source.Units loop
+                  Text_IO.Set_Col (40);
+                  Text_IO.Put ("Kind: "
+                                 & GPR2.Unit.Library_Unit_Type'Image (Unit.Kind));
+                  Text_IO.Put_Line ("   unit: " & String (Source.Unit_Name (Unit.Index)));
+                  if Source.Artifacts.Has_Dependency (Unit.Index) then
+                     D := Source.Artifacts.Dependency (Unit.Index);
+                     if D.Exists then
+                        Text_IO.Set_Col (40);
+                        Text_IO.Put_Line
+                          ("deps: " & String (D.Simple_Name));
                      end if;
                   end if;
                end loop;
             end if;
          end;
+      end loop;
+
+      --  remove the ali files after printing all source infos (so that we don't
+      --  remove a multi-unit ali before printing all of its units)
+      for Source of View.Sources loop
+         if Source.Has_Units then
+            for Unit of Source.Units loop
+               if Source.Artifacts.Has_Dependency (Unit.Index) then
+                  declare
+                     D : Path_Name.Object;
+                  begin
+                     D := Source.Artifacts.Dependency (Unit.Index);
+                     if D.Exists then
+                        Directories.Delete_File (D.Value);
+                     end if;
+                  end;
+               end if;
+            end loop;
+         end if;
       end loop;
 
    exception

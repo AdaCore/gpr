@@ -207,7 +207,7 @@ package GPR2.Project.View is
      (Self           : Object;
       Name           : Attribute_Id;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Natural                := 0;
+      At_Pos         : Unit_Index             := No_Index;
       Check_Extended : Boolean                := False;
       Result         : out Project.Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
@@ -642,7 +642,7 @@ package GPR2.Project.View is
    function Executable
      (Self    : Object;
       Source  : Simple_Name;
-      At_Pos  : Natural) return GPR2.Path_Name.Object;
+      At_Pos  : Unit_Index) return GPR2.Path_Name.Object;
    --  Returns the full pathname of the main executable for the given main
 
    procedure Reindex_Unit (Self : Object; From, To : Name_Type);

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                       Copyright (C) 2021, AdaCore                        --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -22,71 +22,49 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-package body GPR2.Project.Unit_Info is
+package body GPR2.Project.Source.Part_Set is
 
-   ------------
-   -- Create --
-   ------------
+   -------------
+   -- Include --
+   -------------
 
-   function Create
-     (Name      : Name_Type;
-      Spec      : Unit.Source_Unit_Identifier;
-      Main_Body : Unit.Source_Unit_Identifier;
-      Separates : Unit.Source_Unit_Vectors.Vector) return Object is
+   procedure Include
+     (Self    : in out Object;
+      Element : Source_Part) is
    begin
-      return Object'(To_Unbounded_String (String (Name)),
-                     Spec,
-                     Main_Body,
-                     Separates);
-   end Create;
+      Source_Part_Sets.Include (Self.S, Element);
+   end Include;
 
-   -----------------
-   -- Remove_Body --
-   -----------------
+   -------------
+   -- Include --
+   -------------
 
-   procedure Remove_Body (Self : in out Object) is
+   procedure Insert
+     (Self    : in out Object;
+      Element : Source_Part) is
    begin
-      Self.Main_Body := Unit.Undefined_Id;
-   end Remove_Body;
+      Source_Part_Sets.Insert (Self.S, Element);
+   end Insert;
 
-   -----------------
-   -- Update_Body --
-   -----------------
-
-   procedure Update_Body
-     (Self : in out Object; Source : Unit.Source_Unit_Identifier) is
+   procedure Insert
+     (Self     : in out Object;
+      Element  : Source_Part;
+      Position : out Cursor;
+      Inserted : out Boolean) is
    begin
-      Self.Main_Body := Source;
-   end Update_Body;
+      Source_Part_Sets.Insert (Self.S, Element, Position.C, Inserted);
+   end Insert;
 
-   -----------------
-   -- Update_Name --
-   -----------------
+   -----------
+   -- Union --
+   -----------
 
-   procedure Update_Name
-     (Self : in out Object; Name : Name_Type) is
+   procedure Union
+     (Self  : in out Object;
+      Other : Object)
+   is
    begin
-      Self.Name := To_Unbounded_String (String (Name));
-   end Update_Name;
+      Self.S.Union (Other.S);
+   end Union;
 
-   ----------------------
-   -- Update_Separates --
-   ----------------------
-
-   procedure Update_Separates
-     (Self : in out Object; Source : Unit.Source_Unit_Identifier) is
-   begin
-      Self.Separates.Append (Source);
-   end Update_Separates;
-
-   -----------------
-   -- Update_Spec --
-   -----------------
-
-   procedure Update_Spec
-     (Self : in out Object; Source : Unit.Source_Unit_Identifier) is
-   begin
-      Self.Spec := Source;
-   end Update_Spec;
-
-end GPR2.Project.Unit_Info;
+end GPR2.Project.Source.Part_Set;

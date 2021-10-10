@@ -58,7 +58,7 @@ procedure Main is
          declare
             subtype Id is Source_Reference.Identifier.Object;
 
-            U : constant Optional_Name_Type := Source.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name (No_Index);
          begin
             Text_IO.New_Line;
             Output_Filename (Source.Path_Name.Value);
@@ -67,7 +67,7 @@ procedure Main is
                Text_IO.Put ("   unit: " & String (U));
                Text_IO.New_Line;
 
-               for W of Source.Context_Clause_Dependencies loop
+               for W of Source.Context_Clause_Dependencies (No_Index) loop
                   Text_IO.Put_Line ("   " & String (Id (W).Text));
                end loop;
             end if;

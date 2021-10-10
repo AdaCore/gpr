@@ -382,7 +382,7 @@ package body GPR2.Project.View is
      (Self           : Object;
       Name           : Attribute_Id;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Natural                := 0;
+      At_Pos         : Unit_Index             := No_Index;
       Check_Extended : Boolean                := False;
       Result         : out Project.Attribute.Object) return Boolean is
    begin
@@ -501,7 +501,7 @@ package body GPR2.Project.View is
    function Executable
      (Self    : Object;
       Source  : Simple_Name;
-      At_Pos  : Natural) return GPR2.Path_Name.Object
+      At_Pos  : Unit_Index) return GPR2.Path_Name.Object
    is
       package A renames GPR2.Project.Registry.Attribute;
 
@@ -1612,9 +1612,9 @@ package body GPR2.Project.View is
             begin
                if Unit.Is_Defined then
                   if Unit.Has_Body then
-                     return Unit.Main_Body;
+                     return Unit.Main_Body.Source;
                   elsif Allow_Spec_File and then Unit.Has_Spec then
-                     return Unit.Spec;
+                     return Unit.Spec.Source;
                   end if;
                end if;
             end;
@@ -1703,8 +1703,7 @@ package body GPR2.Project.View is
                   Is_Interface : constant Boolean :=
                                    S.Has_Units
                                    and then S.Has_Single_Unit
-                                   and then Data.Units.Contains
-                                              (S.Unit_Name)
+                                   and then Data.Units.Contains (S.Unit_Name)
                                    and then S.Is_Interface;
                   --  All sources related to an interface unit are also
                   --  taken as interface (not only the spec)???

@@ -57,9 +57,10 @@ procedure Main is
       for Source of View.Sources loop
          Text_IO.Put_Line
            (Filter_Filename (Source.Path_Name.Value)  & " -> " &
-            (if Source.Has_Other_Part
-             then Filter_Filename (Source.Other_Part.Path_Name.Value)
-             else "undefined"));
+             (if Source.Has_Other_Part (No_Index)
+              then Filter_Filename
+                (Source.Other_Part (No_Index).Source.Path_Name.Value)
+              else "undefined"));
 
          Text_IO.Set_Col (4);
          Text_IO.Put ("   language: " & Image (Source.Language));

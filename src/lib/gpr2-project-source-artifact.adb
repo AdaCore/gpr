@@ -29,7 +29,7 @@ package body GPR2.Project.Source.Artifact is
 
    type Artifact_Dir is (Object_Dir, Library_ALI_Dir);
 
-   function At_Suffix (At_Pos : Positive) return Filename_Type;
+   function At_Suffix (At_Pos : Unit_Index) return Filename_Type;
    --  Returns 'at' index from attribute value or index prefixed with '~'
    --  character to use in filenames.
 
@@ -46,7 +46,7 @@ package body GPR2.Project.Source.Artifact is
 
    procedure Insert_If_Defined
      (Map   : in out Index_Path_Name_Map.Map;
-      Index : Natural;
+      Index : Unit_Index;
       Path  : GPR2.Path_Name.Object);
    --  If Path is defined, include it in Map with index Index, else do
    --  nothing.
@@ -55,7 +55,7 @@ package body GPR2.Project.Source.Artifact is
    -- At_Suffix --
    ---------------
 
-   function At_Suffix (At_Pos : Positive) return Filename_Type is
+   function At_Suffix (At_Pos : Unit_Index) return Filename_Type is
       Result : String :=  At_Pos'Img;
    begin
       Result (Result'First) := '~';
@@ -66,18 +66,22 @@ package body GPR2.Project.Source.Artifact is
    -- Callgraph --
    ---------------
 
-   function Callgraph (Self : Object) return GPR2.Path_Name.Object is
+   function Callgraph
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Path_Name.Object is
    begin
-      return Self.Callgraph;
+      return Self.Callgraph (Index);
    end Callgraph;
 
    --------------
    -- Coverage --
    --------------
 
-   function Coverage (Self : Object) return GPR2.Path_Name.Object is
+   function Coverage
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Path_Name.Object is
    begin
-      return Self.Coverage;
+      return Self.Coverage (Index);
    end Coverage;
 
    ------------
@@ -89,19 +93,15 @@ package body GPR2.Project.Source.Artifact is
       Force_Spec : Boolean := False;
       Filter     : Artifact_Filter := All_Artifacts) return Artifact.Object
    is
-      Other : constant GPR2.Project.Source.Object :=
-                (if Source.Naming_Exception in Naming_Exception_Value
-                 and then Source.Has_Units
-                 and then Source.Has_Single_Unit
-                 and then Source.Kind = GPR2.Unit.S_Spec
-                 and then not Force_Spec
-                 then Source.Other_Part_Unchecked
-                 else GPR2.Project.Source.Undefined);
-      Main  : constant GPR2.Project.Source.Object :=
-                (if Other.Is_Defined
-                 then Other
-                 else Source);
-      BN    : constant Filename_Type := Main.Path_Name.Base_Filename;
+      procedure Get_Object_Artifacts
+        (BN      : Filename_Type;
+         Index   : Unit_Index);
+      --  Retrieve object and ali files for a given unit, if any
+
+      procedure Get_Source_Artifacts;
+      --  Retrieve preprocessed source, callgraph, coverage and switches
+      --  artifacts
+
       Lang  : constant Language_Id := Source.Language;
       View  : constant Project.View.Object :=
                 Definition.Strong (Source.View);
@@ -119,102 +119,128 @@ package body GPR2.Project.Source.Artifact is
       Deps_Obj     : Index_Path_Name_Map.Map;
 
       Preprocessed : GPR2.Path_Name.Object;
-      Callgraph    : GPR2.Path_Name.Object;
-      Coverage     : GPR2.Path_Name.Object;
-      Switches     : GPR2.Path_Name.Object;
+      Callgraph    : Index_Path_Name_Map.Map;
+      Coverage     : Index_Path_Name_Map.Map;
+      Switches     : Index_Path_Name_Map.Map;
+
+      --------------------------
+      -- Get_Object_Artifacts --
+      --------------------------
+
+      procedure Get_Object_Artifacts
+        (BN      : Filename_Type;
+         Index   : Unit_Index)
+      is
+      begin
+         if Filter (Dependency_File_Artifact) then
+            if Force_Spec then
+               Deps_Lib.Include
+                 (Index, GPR2.Path_Name.Create_File (BN & D_Suffix));
+            else
+               Insert_If_Defined
+                 (Deps_Lib,
+                  Index,
+                  From_Hierarchy
+                    (View, Source, BN & D_Suffix, Library_ALI_Dir, True));
+            end if;
+         end if;
+
+         if View.Kind /= K_Aggregate_Library then
+            if Filter (Object_File_Artifact) then
+               if Force_Spec then
+                  Object_Files.Include
+                    (Index, GPR2.Path_Name.Create_File (BN & O_Suffix));
+               else
+                  Insert_If_Defined
+                    (Object_Files,
+                     Index,
+                     From_Hierarchy
+                       (View, Source, BN & O_Suffix, Object_Dir, True));
+               end if;
+            end if;
+
+            if Filter (Dependency_File_Artifact) then
+               if Force_Spec then
+                  Deps_Obj.Include
+                    (Index, GPR2.Path_Name.Create_File (BN & D_Suffix));
+               else
+                  Insert_If_Defined
+                    (Deps_Obj,
+                     Index,
+                     From_Hierarchy
+                       (View, Source, BN & D_Suffix, Object_Dir, True));
+               end if;
+            end if;
+
+            if Filter (Callgraph_Artifact) then
+               Callgraph.Include
+                 (Index,
+                  GPR2.Path_Name.Create_File
+                    (BN & C_Suffix,
+                     Filename_Type (View.Object_Directory.Value)));
+            end if;
+
+            if Filter (Coverage_Artifact) then
+               Coverage.Include
+                 (Index,
+                  GPR2.Path_Name.Create_File
+                    (BN & Cov_Suffix,
+                     Filename_Type (View.Object_Directory.Value)));
+            end if;
+
+            if Filter (Switches_Artifact) then
+               Switches.Include
+                 (Index,
+                  GPR2.Path_Name.Create_File
+                    (BN & S_Suffix,
+                     Filename_Type (View.Object_Directory.Value)));
+            end if;
+         end if;
+      end Get_Object_Artifacts;
+
+      --------------------------
+      -- Get_Source_Artifacts --
+      --------------------------
+
+      procedure Get_Source_Artifacts
+      is
+      begin
+         if Filter (Preprocessed_Source_Artifact) then
+            Preprocessed := GPR2.Path_Name.Create_File
+              (Source.Path_Name.Simple_Name & P_Suffix,
+               Filename_Optional (View.Object_Directory.Value));
+         end if;
+      end Get_Source_Artifacts;
+
+      BN   : constant Filename_Type :=
+               Source.Path_Name.Base_Filename;
 
    begin
-      if Source.Has_Units and then Source.Has_Index then
+      if Source.Has_Units then
          for CU of Source.Units loop
-            if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
+            --  Only consider object artifacts for the body part or if the
+            --  spec has no body, except when Force_Spec is set (in which case
+            --  don't check anything and just return the simple name)..
+            if (CU.Kind in
+                  GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only)
+              or else (Force_Spec and then CU.Kind = GPR2.Unit.S_Spec)
+            then
                declare
-                  Base : constant Filename_Type := BN & At_Suffix (CU.Index);
+                  Base : constant Filename_Type :=
+                           (if Source.Has_Index
+                            then BN & At_Suffix (CU.Index)
+                            else BN);
                begin
-                  if Filter (Dependency_File_Artifact) then
-                     Insert_If_Defined
-                       (Deps_Lib,
-                        CU.Index,
-                        From_Hierarchy
-                          (View,
-                           Source,
-                           Base & D_Suffix,
-                           Library_ALI_Dir, True));
-                  end if;
-
-                  if View.Kind /= K_Aggregate_Library then
-                     if Filter (Object_File_Artifact) then
-                        Insert_If_Defined
-                          (Object_Files,
-                           CU.Index,
-                           From_Hierarchy
-                             (View, Source, Base & O_Suffix, Object_Dir,
-                              True));
-                     end if;
-
-                     if Filter (Dependency_File_Artifact) then
-                        Insert_If_Defined
-                          (Deps_Obj,
-                           CU.Index,
-                           From_Hierarchy
-                             (View, Source, Base & D_Suffix, Object_Dir,
-                              True));
-                     end if;
-                  end if;
+                  Get_Object_Artifacts (Base, CU.Index);
                end;
             end if;
          end loop;
 
       else
-         if Filter (Dependency_File_Artifact) then
-            Insert_If_Defined
-              (Deps_Lib,
-               1,
-               From_Hierarchy
-                 (View, Source, BN & D_Suffix, Library_ALI_Dir, True));
-         end if;
-
-         if View.Kind /= K_Aggregate_Library then
-            if Filter (Object_File_Artifact) then
-               Insert_If_Defined
-                 (Object_Files,
-                  1,
-                  From_Hierarchy
-                    (View, Source, BN & O_Suffix, Object_Dir, True));
-            end if;
-
-            if Filter (Dependency_File_Artifact) then
-               Insert_If_Defined
-                 (Deps_Obj,
-                  1,
-                  From_Hierarchy
-                    (View, Source, BN & D_Suffix, Object_Dir, True));
-            end if;
-         end if;
+         Get_Object_Artifacts (BN, No_Index);
       end if;
 
-      if View.Kind /= K_Aggregate_Library then
-         if Filter (Callgraph_Artifact) then
-            Callgraph := GPR2.Path_Name.Create_File
-              (BN & C_Suffix,
-               Filename_Type (View.Object_Directory.Value));
-         end if;
-         if Filter (Coverage_Artifact) then
-            Coverage := GPR2.Path_Name.Create_File
-              (BN & Cov_Suffix,
-               Filename_Type (View.Object_Directory.Value));
-         end if;
-         if Filter (Switches_Artifact) then
-            Switches := GPR2.Path_Name.Create_File
-              (BN & S_Suffix,
-               Filename_Type (View.Object_Directory.Value));
-         end if;
-      end if;
-
-      if Filter (Preprocessed_Source_Artifact) then
-         Preprocessed := GPR2.Path_Name.Create_File
-           (Source.Path_Name.Simple_Name & P_Suffix,
-            Filename_Optional (View.Object_Directory.Value));
-      end if;
+      Get_Source_Artifacts;
 
       return Artifact.Object'
         (Source           => Source,
@@ -232,31 +258,22 @@ package body GPR2.Project.Source.Artifact is
    ----------------
 
    function Dependency
-     (Source      : Project.Source.Object;
-      Index       : Natural := 0;
-      Location    : Dependency_Location := In_Both;
-      Actual_File : Boolean := False)
+     (Source        : Project.Source.Object;
+      Index         : Unit_Index          := No_Index;
+      Location      : Dependency_Location := In_Both;
+      Actual_File   : Boolean             := False;
+      Maybe_No_Body : Boolean             := False)
       return GPR2.Path_Name.Object
    is
       function Get_Dep (F : Filename_Type) return GPR2.Path_Name.Object;
 
-      Other      : constant GPR2.Project.Source.Object :=
-                     (if Source.Naming_Exception in Naming_Exception_Value
-                      and then Source.Has_Units
-                      and then Source.Has_Single_Unit
-                      and then Source.Kind = GPR2.Unit.S_Spec
-                      then Source.Other_Part_Unchecked
-                      else GPR2.Project.Source.Undefined);
-      Main       : constant GPR2.Project.Source.Object :=
-                     (if Other.Is_Defined
-                      then Other
-                      else Source);
-      BN         : constant Filename_Type := Main.Path_Name.Base_Filename;
-      Lang       : constant Language_Id := Source.Language;
-      View       : constant Project.View.Object :=
-                     Definition.Strong (Source.View);
-      D_Suffix   : constant Filename_Type :=
-                     View.Tree.Dependency_Suffix (Lang);
+      BN       : constant Filename_Type :=
+                   Source.Path_Name.Base_Filename;
+      Lang     : constant Language_Id := Source.Language;
+      View     : constant Project.View.Object :=
+                   Definition.Strong (Source.View);
+      D_Suffix : constant Filename_Type :=
+                   View.Tree.Dependency_Suffix (Lang);
 
       -------------
       -- Get_Dep --
@@ -334,12 +351,14 @@ package body GPR2.Project.Source.Artifact is
    begin
       if Source.Has_Units and then Source.Has_Index then
          declare
-            CU : constant GPR2.Unit.Object :=
-                   Source.Unit (GPR2.Source_Info.Unit_Index (Index));
+            CU : GPR2.Unit.Object renames Source.Unit (Index);
          begin
-            if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only then
+            if CU.Kind in GPR2.Unit.Body_Kind | GPR2.Unit.S_Spec_Only
+              or else (Maybe_No_Body and then CU.Kind = GPR2.Unit.S_Spec)
+            then
                declare
-                  Base : constant Filename_Type := BN & At_Suffix (CU.Index);
+                  Base : constant Filename_Type :=
+                           BN & At_Suffix (Index);
                begin
                   return Get_Dep (Base);
                end;
@@ -357,9 +376,9 @@ package body GPR2.Project.Source.Artifact is
    ----------------
 
    function Dependency
-     (Self     : Artifact.Object;
-      Index    : Natural;
-      Location : Dependency_Location := In_Both)
+     (Self        : Object;
+      Index       : Unit_Index          := No_Index;
+      Location    : Dependency_Location := In_Both)
       return GPR2.Path_Name.Object is
    begin
       if Index <= 1 then
@@ -497,10 +516,10 @@ package body GPR2.Project.Source.Artifact is
 
    function Has_Dependency
      (Self     : Object;
-      Index    : Natural             := 0;
+      Index    : Unit_Index          := No_Index;
       Location : Dependency_Location := In_Both) return Boolean is
    begin
-      if Index = 0 then
+      if Index = No_Index then
          return
            (case Location is
                when In_Objects => not Self.Deps_Obj_Files.Is_Empty,
@@ -524,7 +543,7 @@ package body GPR2.Project.Source.Artifact is
 
    procedure Insert_If_Defined
      (Map   : in out Index_Path_Name_Map.Map;
-      Index : Natural;
+      Index : Unit_Index;
       Path  : GPR2.Path_Name.Object) is
    begin
       if Path.Is_Defined then
@@ -540,7 +559,9 @@ package body GPR2.Project.Source.Artifact is
       Result : GPR2.Path_Name.Set.Object := Self.List_To_Clean;
    begin
       if Self.Has_Coverage then
-         Result.Append (Self.Coverage);
+         for C of Self.Coverage loop
+            Result.Append (C);
+         end loop;
       end if;
 
       return Result;
@@ -612,13 +633,17 @@ package body GPR2.Project.Source.Artifact is
          Result.Append (Self.Preprocessed_Source);
       end if;
 
-      if Self.Switches.Is_Defined and then Self.Switches.Exists then
-         Result.Append (Self.Switches);
-      end if;
+      for S of Self.Switches loop
+         if S.Exists then
+            Result.Append (S);
+         end if;
+      end loop;
 
-      if Self.Has_Callgraph then
-         Result.Append (Self.Callgraph);
-      end if;
+      for C of Self.Callgraph loop
+         if C.Exists then
+            Result.Append (C);
+         end if;
+      end loop;
 
       return Result;
    end List_To_Clean;
@@ -628,8 +653,8 @@ package body GPR2.Project.Source.Artifact is
    -----------------
 
    function Object_Code
-     (Self  : Artifact.Object;
-      Index : Natural) return GPR2.Path_Name.Object is
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return GPR2.Path_Name.Object is
    begin
       return (if Index = 0
               then Self.Object_Files.First_Element

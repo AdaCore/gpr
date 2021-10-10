@@ -420,7 +420,8 @@ procedure GPRclean.Main is
                      if CU.Kind in Unit.Body_Kind then
                         Binder_Artifacts
                           (S.Path_Name.Base_Filename
-                           & Filename_Type ('~' & Image (CU.Index, 1)),
+                           & Filename_Type
+                             ('~' & Image (Positive (CU.Index), 1)),
                            Language => S.Language);
                      end if;
                   end loop;
@@ -457,9 +458,7 @@ procedure GPRclean.Main is
                      Delete_File
                        (View.Executable
                           (S.Path_Name.Simple_Name,
-                           (if S.Has_Single_Unit
-                            then 0
-                            else U.Index)).Value);
+                           U.Index).Value);
                   end loop;
                end if;
             end if;

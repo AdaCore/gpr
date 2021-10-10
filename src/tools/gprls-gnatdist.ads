@@ -29,11 +29,11 @@ package GPRls.Gnatdist is
    --  GNATDIST sources.
 
    procedure Output_ALI
-     (Source : GPR2.Project.Source.Object; Index : Positive);
+     (Source : GPR2.Project.Source.Object; Index : GPR2.Unit_Index);
    --  Output the unit information for GNATDIST
 
    procedure Output_No_ALI
-     (Source : GPR2.Project.Source.Object; Index : Natural);
+     (Source : GPR2.Project.Source.Object; Index : GPR2.Unit_Index);
    --  Indicate that an ALI file cannot be found
 
 end GPRls.Gnatdist;

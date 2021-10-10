@@ -199,6 +199,18 @@ package GPR2 is
    --  Returns Regexp object for Filename_Regexp pattern
    --  Allows '?' & '*' wildchars. Use case insensitive match when required
 
+   --  Compilation unit index for multi-unit sources
+
+   type Unit_Index is new Integer range 0 .. Integer'Last;
+   --  Index of a compilation unit part in a source file
+
+   No_Index          : constant Unit_Index := 0;
+   --  Value of the unit index in case the source contains a single unit or
+   --  is not unit based.
+
+   subtype Multi_Unit_Index is Unit_Index range 1 .. Unit_Index'Last;
+   --  Value range of the unit index
+
    --  Name tables definition
 
    type Language_Id is new Natural with Default_Value => 0;

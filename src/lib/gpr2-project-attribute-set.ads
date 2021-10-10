@@ -46,7 +46,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Boolean;
+      At_Pos : Unit_Index             := No_Index) return Boolean;
    --  Checks whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
@@ -62,7 +62,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Attribute.Object
+      At_Pos : Unit_Index             := No_Index) return Attribute.Object
      with Post =>
        (if Self.Contains (Name, Index, At_Pos)
         then Element'Result.Is_Defined
@@ -95,7 +95,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Cursor;
+      At_Pos : Unit_Index             := No_Index) return Cursor;
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -122,7 +122,7 @@ package GPR2.Project.Attribute.Set is
      (Self          : Object;
       Name          : Optional_Attribute_Id  := No_Attribute;
       Index         : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos        : Natural                := 0;
+      At_Pos        : Unit_Index             := No_Index;
       With_Defaults : Boolean                := False)
       return Attribute_Iterator.Forward_Iterator'Class;
 
@@ -130,7 +130,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Optional_Attribute_Id  := No_Attribute;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural                := 0) return Object
+      At_Pos : Unit_Index             := No_Index) return Object
      with Post => (if Name = No_Attribute and then not Index.Is_Defined
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
