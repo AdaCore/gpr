@@ -23,6 +23,7 @@
 ------------------------------------------------------------------------------
 
 private with Ada.Containers.Indefinite_Hashed_Maps;
+private with GPR2.Path_Name;
 private with GPR2.Unit;
 
 package GPR2.Source_Info.Parser.ALI is
@@ -68,14 +69,17 @@ private
    end record;
 
    function Image (Key : Cache_Key) return String is
-     (String (Key.LI) & "@" & String (Key.Src) & "%" &
+     (String (Key.LI) & "@" &
+        GPR2.Path_Name.Simple_Name (String (Key.Src)) & "%" &
       (case Key.LI_Kind is
        when GPR2.Unit.Body_Kind => "b",
        when GPR2.Unit.Spec_Kind => "s",
        when GPR2.Unit.S_Separate => "sep"));
 
    function Hash (Key : Cache_Key) return Ada.Containers.Hash_Type is
-     (Ada.Strings.Hash (Image (Key)));
+     (Hash (Key.LI) + Hash (Key.Src) +
+          Ada.Containers.Hash_Type
+           (GPR2.Unit.Library_Unit_Type'Pos (Key.LI_Kind)));
 
    function Equivalent_Cache_Keys (Left, Right : Cache_Key) return Boolean is
      (Left.LI = Right.LI

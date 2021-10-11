@@ -1587,7 +1587,8 @@ package body GPR2.KB is
       Merge_Same_Dirs  : Boolean := False;
       Calls_Cache      : in out GPR2.Containers.Name_Value_Map;
       Messages         : in out Log.Object;
-      Processed_Value  : out External_Value_Lists.List)
+      Processed_Value  : out External_Value_Lists.List;
+      Ignore_Compiler  : out Boolean)
    is
       use External_Value_Nodes;
       use GNAT.Expect;
@@ -1655,6 +1656,7 @@ package body GPR2.KB is
       Visited        : String_To_External_Value.Map;
    begin
       Processed_Value.Clear;
+      Ignore_Compiler := False;
 
       while Has_Element (Node_Cursor) loop
          while Has_Element (Node_Cursor) loop
@@ -1801,7 +1803,8 @@ package body GPR2.KB is
                         Trace
                           (Main_Trace,
                            Attribute & ": nogrep matched=""" & Tmp_Str & """");
-                        raise Ignore_Compiler;
+                        Ignore_Compiler := True;
+                        return;
 
                      else
                         Trace (Main_Trace, Attribute & ": nogrep no match");
@@ -1820,7 +1823,8 @@ package body GPR2.KB is
                         & To_String (Node.Must_Match));
 
                      Tmp_Result := Null_Unbounded_String;
-                     raise Ignore_Compiler;
+                     Ignore_Compiler := True;
+                     return;
                   end if;
 
                   exit;

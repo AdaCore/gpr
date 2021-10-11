@@ -28,7 +28,6 @@ with Ada.Text_IO;
 
 with GNATCOLL.Utils;
 
-with GPR2.Path_Name;
 with GPR2.Project.Unit_Info;
 with GPR2.Project.Source.Artifact;
 with GPR2.Project.Tree;

@@ -273,9 +273,6 @@ package body GPR2.KB.Compiler_Iterator is
             exception
                when Ada.Directories.Name_Error | Ada.Directories.Use_Error =>
                   null;
-               when Ignore_Compiler =>
-                  --  Nothing to do, the compiler has not been inserted
-                  null;
             end;
 
             Next (C);
@@ -508,6 +505,8 @@ package body GPR2.KB.Compiler_Iterator is
       C, C2     : External_Value_Lists.Cursor;
       CS        : GPR2.Containers.Value_Type_List.Cursor;
 
+      Drop_Compiler : Boolean := False;
+
       use External_Value_Nodes;
       use External_Value_Lists;
 
@@ -559,7 +558,11 @@ package body GPR2.KB.Compiler_Iterator is
                Split_Into_Words => False,
                Calls_Cache      => Base.External_Calls_Cache,
                Messages         => Base.Messages,
-               Processed_Value  => Target);
+               Processed_Value  => Target,
+               Ignore_Compiler  => Drop_Compiler);
+            if Drop_Compiler then
+               return;
+            end if;
 
             if not Is_Empty (Target) then
                Comp.Target :=
@@ -596,7 +599,11 @@ package body GPR2.KB.Compiler_Iterator is
             Split_Into_Words => False,
             Calls_Cache      => Base.External_Calls_Cache,
             Messages         => Base.Messages,
-            Processed_Value  => Version);
+            Processed_Value  => Version,
+            Ignore_Compiler  => Drop_Compiler);
+            if Drop_Compiler then
+               return;
+            end if;
 
          if Is_Empty (Version) then
             Trace
@@ -615,7 +622,11 @@ package body GPR2.KB.Compiler_Iterator is
             Split_Into_Words => False,
             Calls_Cache      => Base.External_Calls_Cache,
             Messages         => Base.Messages,
-            Processed_Value  => Variables);
+            Processed_Value  => Variables,
+            Ignore_Compiler  => Drop_Compiler);
+            if Drop_Compiler then
+               return;
+            end if;
 
          C := First (Variables);
          while Has_Element (C) loop
@@ -658,7 +669,11 @@ package body GPR2.KB.Compiler_Iterator is
          Split_Into_Words => True,
          Calls_Cache      => Base.External_Calls_Cache,
          Messages         => Base.Messages,
-         Processed_Value  => Languages);
+         Processed_Value  => Languages,
+         Ignore_Compiler  => Drop_Compiler);
+      if Drop_Compiler then
+         return;
+      end if;
 
       if Is_Empty (Languages) then
          Trace
@@ -677,7 +692,11 @@ package body GPR2.KB.Compiler_Iterator is
             Merge_Same_Dirs  => True,
             Calls_Cache      => Base.External_Calls_Cache,
             Messages         => Base.Messages,
-            Processed_Value  => Runtimes);
+            Processed_Value  => Runtimes,
+            Ignore_Compiler  => Drop_Compiler);
+         if Drop_Compiler then
+            return;
+         end if;
 
          Comp.Default_Runtime := True;
          Comp.Any_Runtime := False;
@@ -778,11 +797,7 @@ package body GPR2.KB.Compiler_Iterator is
 
          Next (C);
       end loop;
-   exception
-      when Ignore_Compiler =>
-         --  One of the external variables did not match the expected value.
-         --  This means current compiler is definitely of no interest to us.
-         null;
+
    end Foreach_Language_Runtime;
 
    ----------------------
