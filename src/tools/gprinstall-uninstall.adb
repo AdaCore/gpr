@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -121,7 +121,7 @@ package body GPRinstall.Uninstall is
       --  Check if manifest for this project exists
 
       if not Exists (Name) then
-         raise Constraint_Error with "Manifest " & Name & " not found.";
+         raise GPRinstall_Error with "Manifest " & Name & " not found.";
       end if;
 
       if Options.Verbosity > Quiet then
@@ -221,7 +221,7 @@ package body GPRinstall.Uninstall is
                Changed.Iterate (Display'Access);
             end;
 
-            raise Constraint_Error
+            raise GPRinstall_Error
               with "use option -f to force file deletion.";
          end if;
       end if;

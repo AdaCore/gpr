@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -34,5 +34,13 @@ private
    procedure Delete_Empty_Directory (Prefix, Dir_Name : String);
    --  Delete Dir_Name if empty, if removed try with parent directory but not
    --  above the given prefix.
+
+   GPRinstall_Error : exception;
+   --  General GPRinstall exception that is supposed to have associated error
+   --  message attached.
+
+   GPRinstall_Error_No_Message : exception;
+   --  Special exception for cases that require multiple line diagnostics
+   --  that are supposed to be printed before raising the exception.
 
 end GPRinstall;

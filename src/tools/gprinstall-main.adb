@@ -550,7 +550,15 @@ exception
    when Project_Error | Processing_Error =>
       GPRtools.Util.Project_Processing_Failed (Options);
 
-   when E : Constraint_Error =>
+   when E : GPRinstall_Error_No_Message =>
+      if Options.Verbose then
+         Text_IO.Put_Line
+           ("gprinstall: " & Exception_Information (E));
+      end if;
+      Text_IO.Flush;
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+
+   when E : GPRinstall_Error =>
       Text_IO.Put_Line
         ("gprinstall: "
          & (if Options.Verbose

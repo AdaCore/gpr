@@ -627,7 +627,7 @@ package body GPRinstall.Install is
          pragma Warnings (Off, "*can never be executed*");
 
          if Sym_Link and then Is_Windows_Host then
-            raise Constraint_Error
+            raise GPRinstall_Error
               with "internal error: cannot use symbolic links on Windows";
          end if;
 
@@ -638,7 +638,7 @@ package body GPRinstall.Install is
            and then not Options.Force_Installations
            and then Src_Path.Content_MD5 /= Dest_Path.Content_MD5
          then
-            raise Constraint_Error
+            raise GPRinstall_Error
               with "file " & String (File) & " exists, use -f to overwrite";
          end if;
 
@@ -669,14 +669,14 @@ package body GPRinstall.Install is
                   OS_Lib.Delete_File (Dest_Filename, Success);
 
                   if not Success then
-                     raise Constraint_Error with "cannot overwrite "
+                     raise GPRinstall_Error with "cannot overwrite "
                        & Dest_Filename & " check permissions";
                   end if;
                end;
             end if;
 
             if not Sym_Link and then not Src_Path.Exists then
-               raise Constraint_Error with
+               raise GPRinstall_Error with
                  "file " & F & " does not exist, build may not be complete";
             end if;
 
@@ -693,14 +693,14 @@ package body GPRinstall.Install is
                   exception
                      when Text_IO.Use_Error =>
                         --  Cannot create path, permission issue
-                        raise Constraint_Error with
+                        raise GPRinstall_Error with
                           "cannot create destination directory "
                           & (if Sym_Link then Src_Path.Dir_Name else T)
                           & " check permissions";
                   end;
 
                else
-                  raise Constraint_Error with
+                  raise GPRinstall_Error with
                     "target directory "
                     & T & " does not exist, use -p to create";
                end if;
@@ -733,7 +733,7 @@ package body GPRinstall.Install is
                      Form        => "preserve=timestamps");
                exception
                   when Text_IO.Use_Error =>
-                     raise Constraint_Error with
+                     raise GPRinstall_Error with
                        "cannot overwrite file " & Dest_Filename
                         & " check permissions.";
                end;
@@ -930,14 +930,14 @@ package body GPRinstall.Install is
 
             if Required and not Something_Copied then
                Rollback_Manifests;
-               raise Constraint_Error with
+               raise GPRinstall_Error with
                  "error: file does not exist '" & Pathname.Value & ''';
             end if;
          exception
             when Text_IO.Name_Error =>
                if Required then
                   Rollback_Manifests;
-                  raise Constraint_Error with
+                  raise GPRinstall_Error with
                     "warning: file does not exist '" & Pathname.Value & ''';
                else
                   Put_Line
@@ -2129,7 +2129,7 @@ package body GPRinstall.Install is
             end loop Check_Generated_Status;
 
             if not Generated and then not Options.Force_Installations then
-               raise Constraint_Error with
+               raise GPRinstall_Error with
                  "non gprinstall project file "
                  & Filename & " exists, use -f to overwrite";
             end if;
@@ -2168,7 +2168,7 @@ package body GPRinstall.Install is
                         P := Strings.Fixed.Index (Line, ");");
 
                         if P = 0 then
-                           raise Constraint_Error with
+                           raise GPRinstall_Error with
                              "cannot parse the BUILD_KIND line";
 
                         else
@@ -2604,7 +2604,7 @@ package body GPRinstall.Install is
                      Put_Line
                        ("   - force installation under the same name, "
                         & "use --install-name=" & Install_Name.V.all);
-                     raise Constraint_Error;
+                     raise GPRinstall_Error_No_Message;
                   end if;
                end if;
 
@@ -2623,7 +2623,7 @@ package body GPRinstall.Install is
 
       exception
          when Text_IO.Use_Error =>
-            raise Constraint_Error with
+            raise GPRinstall_Error with
               "cannot open or create the manifest file "
               & Project_Subdir.V.all & Install_Name.V.all
               & ", check permissions on this location";
