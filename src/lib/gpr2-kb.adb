@@ -916,10 +916,17 @@ package body GPR2.KB is
 
    begin
       for Setting of Settings loop
-         if Is_Language_With_No_Compiler
-           (Self, Language (Setting))
-         then
+         if Is_Language_With_No_Compiler (Self, Language (Setting)) then
             Compilers.Append (Create_Filter (Self, Setting));
+
+         elsif not Self.Languages_Known.Contains (Language (Setting)) then
+            Messages.Append
+              (Message.Create
+                 (Message.Information,
+                  "unknown language '"
+                  & Image (Language (Setting)) & "'",
+                  Source_Reference.Create ("embedded_kb/kb", 0, 0)));
+
          else
             Filters.Append (Create_Filter (Self, Setting));
          end if;
