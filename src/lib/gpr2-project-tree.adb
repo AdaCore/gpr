@@ -132,10 +132,8 @@ package body GPR2.Project.Tree is
    --  project name and simple source filename.
 
    type Iterator is new Project_Iterator.Forward_Iterator with record
-      Kind   : Iterator_Control;
-      Filter : Filter_Control;
-      Status : Status_Control;
-      Root   : not null access constant Object;
+      Views : Project_View_Store.Vector;
+      Tree  : access Object;
    end record;
 
    overriding function First
@@ -422,14 +420,17 @@ package body GPR2.Project.Tree is
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type
    is
-      pragma Unreferenced (Self);
+      Views_Curs : constant View.Set.Set.Cursor :=
+                     Self.Views_Set.Find
+                       (Project_View_Store.Element (Position.Current));
+      Ref        : View.Set.Set.Constant_Reference_Type renames
+                     Self.Views_Set.Constant_Reference (Views_Curs);
    begin
       --  Constant reference is given by the constant reference of the
       --  element contained in the Views set at the current location.
       return Constant_Reference_Type'
-        (View =>
-           Project_View_Store.Constant_Reference
-             (Position.Views, Position.Current).Element);
+        (View => Ref.Element.all'Unrestricted_Access,
+         Ref  => Ref);
    end Constant_Reference;
 
    -------------
@@ -588,7 +589,7 @@ package body GPR2.Project.Tree is
 
    function Element (Position : Cursor) return View.Object is
    begin
-      return Position.Views (Position.Current);
+      return Project_View_Store.Element (Position.Current);
    end Element;
 
    -----------------------
@@ -617,160 +618,12 @@ package body GPR2.Project.Tree is
    -----------
 
    overriding function First (Iter : Iterator) return Cursor is
-
-      Seen : GPR2.Project.View.Set.Object;
-      --  Keep track of already seen projects. Better than using the P vector
-      --  which is not efficient when checking if an element exists.
-
-      P_Set    : GPR2.Project.View.Set.Object;
-      Projects : Project_View_Store.Vector;
-      --  Set of projects for the iterator which is returned in the Cursor and
-      --  fill by the recursive procedure For_Project and For_Imports. P_Set is
-      --  used to have a fast check on views already in Projects.
-
-      procedure Append (View : Project.View.Object)
-        with Post => P_Set.Contains (View);
-      --  Append into P if not already seen and View matches the filter
-
-      procedure For_Project (View : Project.View.Object);
-      --  Handle project node
-
-      procedure For_Imports (View : Project.View.Object);
-      --  Handle import nodes
-
-      procedure For_Aggregated (View : Project.View.Object);
-      --  Handle aggregated nodes
-
-      ------------
-      -- Append --
-      ------------
-
-      procedure Append (View : Project.View.Object) is
-      begin
-         if not P_Set.Contains (View) then
-            if Equal
-              (Iter.Status (S_Externally_Built),
-               View.Is_Externally_Built) in True | Indeterminate
-            then
-               declare
-                  Qualifier : constant Project_Kind := View.Kind;
-               begin
-                  --  Check if it corresponds to the current filter
-                  if (Qualifier = K_Library and then Iter.Filter (F_Library))
-                    or else
-                     (Qualifier = K_Standard and then Iter.Filter (F_Standard))
-                    or else
-                     (Qualifier = K_Abstract and then Iter.Filter (F_Abstract))
-                    or else
-                     (Qualifier = K_Aggregate
-                      and then Iter.Filter (F_Aggregate))
-                    or else
-                     (Qualifier = K_Aggregate_Library
-                      and then Iter.Filter (F_Aggregate_Library))
-                  then
-                     Projects.Append (View);
-                  end if;
-               end;
-            end if;
-
-            P_Set.Insert (View);
-         end if;
-      end Append;
-
-      --------------------
-      -- For_Aggregated --
-      --------------------
-
-      procedure For_Aggregated (View : Project.View.Object) is
-      begin
-         if View.Kind in Aggregate_Kind then
-            for A of Definition.Get_RO (View).Aggregated loop
-               if Iter.Kind (I_Recursive) then
-                  For_Project (A);
-               else
-                  Append (A);
-               end if;
-            end loop;
-         end if;
-      end For_Aggregated;
-
-      -----------------
-      -- For_Imports --
-      -----------------
-
-      procedure For_Imports (View : Project.View.Object) is
-      begin
-         for I of Definition.Get_RO (View).Imports loop
-            if Iter.Kind (I_Recursive) then
-               For_Project (I);
-            else
-               Append (I);
-            end if;
-         end loop;
-
-         for I of Definition.Get_RO (View).Limited_Imports loop
-            if Iter.Kind (I_Recursive) then
-               For_Project (I);
-            else
-               Append (I);
-            end if;
-         end loop;
-      end For_Imports;
-
-      -----------------
-      -- For_Project --
-      -----------------
-
-      procedure For_Project (View : Project.View.Object) is
-         Position : Project.View.Set.Set.Cursor;
-         Inserted : Boolean;
-      begin
-         Seen.Insert (View, Position, Inserted);
-
-         if Inserted then
-            --  Handle imports
-
-            if Iter.Kind (I_Imported) or else Iter.Kind (I_Recursive) then
-               For_Imports (View);
-            end if;
-
-            --  Handle extended if any
-
-            if Iter.Kind (I_Extended) then
-               declare
-                  Data : constant Definition.Const_Ref :=
-                           Definition.Get_RO (View);
-               begin
-                  if Data.Extended_Root.Is_Defined then
-                     if Iter.Kind (I_Recursive) then
-                        For_Project (Data.Extended_Root);
-                     else
-                        Append (Data.Extended_Root);
-                     end if;
-                  end if;
-               end;
-            end if;
-
-            --  The project itself
-
-            Append (View);
-
-            --  Now if View is an aggregate or aggregate library project we
-            --  need to run through all aggregated projects.
-
-            if Iter.Kind (I_Aggregated) then
-               For_Aggregated (View);
-            end if;
-         end if;
-      end For_Project;
-
    begin
-      For_Project (Iter.Root.Root);
-
-      if Projects.Length = 0 then
+      if Iter.Views.Is_Empty then
          return No_Element;
       else
-         return Cursor'(Projects, 1, Iter.Root.Root);
+         return (Current => Iter.Views.First,
+                 Tree    => Iter.Tree);
       end if;
    end First;
 
@@ -1095,7 +948,7 @@ package body GPR2.Project.Tree is
 
    function Has_Element (Position : Cursor) return Boolean is
    begin
-      return Position /= No_Element;
+      return Project_View_Store.Has_Element (Position.Current);
    end Has_Element;
 
    ------------------
@@ -1198,9 +1051,11 @@ package body GPR2.Project.Tree is
    -- Is_Root --
    -------------
 
-   function Is_Root (Position : Cursor) return Boolean is
+   function Is_Root (Position : Cursor) return Boolean
+   is
+      V : constant View.Object := Element (Position);
    begin
-      return Position.Views (Position.Current) = Position.Root;
+      return Position.Tree.Root = V;
    end Is_Root;
 
    -------------
@@ -1212,9 +1067,160 @@ package body GPR2.Project.Tree is
       Kind   : Iterator_Control := Default_Iterator;
       Filter : Filter_Control   := Default_Filter;
       Status : Status_Control   := Default_Status)
-      return Project_Iterator.Forward_Iterator'Class is
+      return Project_Iterator.Forward_Iterator'Class
+   is
+      Iter : Iterator;
+      --  The returned object
+
+      Seen : GPR2.Project.View.Set.Object;
+      --  Keep track of already seen projects. Better than using the P vector
+      --  which is not efficient when checking if an element exists.
+
+      P_Set    : GPR2.Project.View.Set.Object;
+      --  Set of projects for the iterator which is returned in the Cursor and
+      --  fill by the recursive procedure For_Project and For_Imports. P_Set is
+      --  used to have a fast check on views already in Projects.
+
+      procedure Append (View : Project.View.Object)
+        with Post => P_Set.Contains (View);
+      --  Append into P if not already seen and View matches the filter
+
+      procedure For_Project (View : Project.View.Object);
+      --  Handle project node
+
+      procedure For_Imports (View : Project.View.Object);
+      --  Handle import nodes
+
+      procedure For_Aggregated (View : Project.View.Object);
+      --  Handle aggregated nodes
+
+      ------------
+      -- Append --
+      ------------
+
+      procedure Append (View : Project.View.Object) is
+      begin
+         if not P_Set.Contains (View) then
+            if Equal
+              (Status (S_Externally_Built),
+               View.Is_Externally_Built) in True | Indeterminate
+            then
+               declare
+                  Qualifier : constant Project_Kind := View.Kind;
+               begin
+                  --  Check if it corresponds to the current filter
+                  if (Qualifier = K_Library and then Filter (F_Library))
+                    or else
+                     (Qualifier = K_Standard and then Filter (F_Standard))
+                    or else
+                     (Qualifier = K_Abstract and then Filter (F_Abstract))
+                    or else
+                     (Qualifier = K_Aggregate and then Filter (F_Aggregate))
+                    or else
+                     (Qualifier = K_Aggregate_Library
+                      and then Filter (F_Aggregate_Library))
+                  then
+                     Iter.Views.Append (View);
+                  end if;
+               end;
+            end if;
+
+            P_Set.Insert (View);
+         end if;
+      end Append;
+
+      --------------------
+      -- For_Aggregated --
+      --------------------
+
+      procedure For_Aggregated (View : Project.View.Object) is
+      begin
+         if View.Kind in Aggregate_Kind then
+            for A of Definition.Get_RO (View).Aggregated loop
+               if Kind (I_Recursive) then
+                  For_Project (A);
+               else
+                  Append (A);
+               end if;
+            end loop;
+         end if;
+      end For_Aggregated;
+
+      -----------------
+      -- For_Imports --
+      -----------------
+
+      procedure For_Imports (View : Project.View.Object) is
+      begin
+         for I of Definition.Get_RO (View).Imports loop
+            if Kind (I_Recursive) then
+               For_Project (I);
+            else
+               Append (I);
+            end if;
+         end loop;
+
+         for I of Definition.Get_RO (View).Limited_Imports loop
+            if Kind (I_Recursive) then
+               For_Project (I);
+            else
+               Append (I);
+            end if;
+         end loop;
+      end For_Imports;
+
+      -----------------
+      -- For_Project --
+      -----------------
+
+      procedure For_Project (View : Project.View.Object) is
+         Position : Project.View.Set.Set.Cursor;
+         Inserted : Boolean;
+      begin
+         Seen.Insert (View, Position, Inserted);
+
+         if Inserted then
+            --  Handle imports
+
+            if Kind (I_Imported) or else Kind (I_Recursive) then
+               For_Imports (View);
+            end if;
+
+            --  Handle extended if any
+
+            if Kind (I_Extended) then
+               declare
+                  Data : constant Definition.Const_Ref :=
+                           Definition.Get_RO (View);
+               begin
+                  if Data.Extended_Root.Is_Defined then
+                     if Kind (I_Recursive) then
+                        For_Project (Data.Extended_Root);
+                     else
+                        Append (Data.Extended_Root);
+                     end if;
+                  end if;
+               end;
+            end if;
+
+            --  The project itself
+
+            Append (View);
+
+            --  Now if View is an aggregate or aggregate library project we
+            --  need to run through all aggregated projects.
+
+            if Kind (I_Aggregated) then
+               For_Aggregated (View);
+            end if;
+         end if;
+      end For_Project;
+
    begin
-      return Iterator'(Kind, Filter, Status, Self.Self);
+      Iter := (Project_View_Store.Empty, Self.Self);
+      For_Project (Self.Root);
+
+      return Iter;
    end Iterate;
 
    ----------
@@ -2119,15 +2125,9 @@ package body GPR2.Project.Tree is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      pragma Unreferenced (Iter);
-      C : Cursor := Position;
    begin
-      if C.Current < Natural (C.Views.Length) then
-         C.Current := C.Current + 1;
-         return C;
-      else
-         return No_Element;
-      end if;
+      return (Current => Project_View_Store.Next (Position.Current),
+              Tree    => Position.Tree);
    end Next;
 
    -------------------

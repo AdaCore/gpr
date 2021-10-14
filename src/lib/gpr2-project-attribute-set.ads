@@ -182,24 +182,32 @@ private
    type Cursor is record
       CM  : Set.Cursor;               -- main map cursor
       CA  : Set_Attribute.Cursor;     -- inner map cursor (Set below)
-      Set : access Set_Attribute.Map; -- Set ref to current inner map
    end record;
 
    No_Element : constant Cursor :=
                   (Set.No_Element,
-                   Set_Attribute.No_Element,
-                   null);
+                   Set_Attribute.No_Element);
 
    type Constant_Reference_Type
      (Attribute : not null access constant Project.Attribute.Object)
-   is null record;
+   is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Set_Attribute.Constant_Reference_Type (Attribute);
+   end record;
 
    type Reference_Type
      (Attribute : not null access Project.Attribute.Object)
-   is null record;
+   is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Set_Attribute.Reference_Type (Attribute);
+   end record;
 
    type Object is tagged record
-      Attributes : Set.Map;
+      Attributes : aliased Set.Map;
       Length     : Containers.Count_Type := 0;
    end record;
 

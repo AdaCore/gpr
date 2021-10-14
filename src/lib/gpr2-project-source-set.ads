@@ -145,7 +145,11 @@ private
    No_Element : constant Cursor := (Current => Set.No_Element);
 
    type Constant_Reference_Type
-     (Source : not null access constant Project.Source.Object) is null record;
+     (Source : not null access constant Project.Source.Object) is record
+      Ref : Set.Constant_Reference_Type (Source);
+   end record;
+      --  We keep the ref in the object as well to keep the busy state of
+      --  the set.
 
    Empty_Set : constant Object := Object'(S => Set.Empty_Set);
 
