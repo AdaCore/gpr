@@ -1,0 +1,5 @@
+abstract project Abst is
+
+   type Boolean is ("False", "True");
+
+end Abst;

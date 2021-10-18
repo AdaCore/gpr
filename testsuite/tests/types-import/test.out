@@ -1,0 +1,3 @@
+prj.gpr:5:15: warning: use of non-prefixed types of an imported project is obsolescent.
+prj.gpr:5:15: warning: replace with "abst.Boolean" instead.
+prj.gpr:6:23: warning: object directory "False" not found

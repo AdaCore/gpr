@@ -1,0 +1,8 @@
+with "abst";
+
+project Prj is
+
+   DOC_ONLY : Boolean := external ("DOC_ONLY", "False");
+   for Object_Dir use DOC_ONLY;
+
+end Prj;

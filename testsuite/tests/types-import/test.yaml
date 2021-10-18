@@ -1,0 +1,4 @@
+description:
+    Check that type definitions from directly visible imported projects can
+    be used without prefixes.
+driver: python_script

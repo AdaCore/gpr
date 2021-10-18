@@ -3259,6 +3259,56 @@ package body GPR2.Parser.Project is
                      elsif Self.Has_Extended then
                         Get_Type_Def_From (Self.Extended);
                      end if;
+
+                     --  Type definition from direct imports can be used
+                     --  also without prefix.
+
+                     if not Type_Def.Is_Defined
+                       and then Self.Has_Imports
+                     then
+                        for Import of Self.Imports loop
+                           Get_Type_Def_From (Import);
+
+                           if Type_Def.Is_Defined then
+
+                              --  Using non-prefixed type definition is
+                              --  marked obsolescent. To be removed before
+                              --  branch 23.x
+
+                              declare
+                                 T_Sloc : constant Source_Reference.Object :=
+                                            Get_Source_Reference (Self.File,
+                                                                  V_Type);
+                                 I_Name : constant String :=
+                                            (if Registry.Exists
+                                                 (Import.Path_Name)
+                                             then To_String
+                                               (Registry.Get
+                                                  (Import.Path_Name).Name)
+                                             else String
+                                               (Import.Path_Name.Base_Name));
+                              begin
+                                 Tree.Log_Messages.Append
+                                   (Message.Create
+                                      (Level   => Message.Warning,
+                                       Sloc    => T_Sloc,
+                                       Message => "use of non-prefixed " &
+                                         "types of an imported project is " &
+                                         "obsolescent."));
+                                 Tree.Log_Messages.Append
+                                   (Message.Create
+                                      (Level   => Message.Warning,
+                                       Sloc    => T_Sloc,
+                                       Message => "replace with """ & I_Name &
+                                         "." & String (T_Name) &
+                                         """ instead."));
+                              end;
+
+                              exit;
+                           end if;
+                        end loop;
+
+                     end if;
                   end if;
 
                   --  Check that the type has been defined
