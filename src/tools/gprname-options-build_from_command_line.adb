@@ -68,9 +68,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    procedure Add_Directory (Name : String) is
    begin
-      Current_Section.Add_Directory
-        ((if Root_Prj = Null_Unbounded_String then ""
-          else To_String (Root_Prj) & GNAT.OS_Lib.Directory_Separator) & Name);
+      Current_Section.Add_Directory (Name, To_String (Root_Prj));
    end Add_Directory;
 
    -----------------------------
@@ -80,7 +78,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Prepare_And_Add_Section (S : in out Section.Object) is
    begin
       if S.Is_Valid then
-         S.Prepare;
+         S.Prepare (To_String (Root_Prj));
          Self.Sections.Append (S);
 
       else

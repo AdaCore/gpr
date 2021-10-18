@@ -42,9 +42,11 @@ package body GPRname.Section is
 
    procedure Add_Directory
      (Self      : in out Object;
-      Directory : String) is
+      Directory : String;
+      Root_Dir  : String) is
    begin
-      Self.Directories.Append (Create (Filename_Type (Directory)));
+      Self.Directories.Append
+        (Create (Filename_Type (Directory), Filename_Optional (Root_Dir)));
    end Add_Directory;
 
    -----------------------------------
@@ -96,7 +98,7 @@ package body GPRname.Section is
    -- Prepare --
    -------------
 
-   procedure Prepare (Self : in out Object) is
+   procedure Prepare (Self : in out Object;  Root : String) is
 
       use Ada.Text_IO;
 
@@ -117,7 +119,9 @@ package body GPRname.Section is
          Open (F, In_File, File);
 
          while not End_Of_File (F) loop
-            Ret.Append (Create (Filename_Type (Get_Line (F))));
+            Ret.Append
+              (Create (Filename_Type (Get_Line (F)),
+               GPR2.Filename_Optional (Root)));
          end loop;
 
          Close (F);
@@ -139,7 +143,7 @@ package body GPRname.Section is
       --  Second, add the default source dir (".") if there is none
 
       if Self.Directories.Is_Empty then
-         Self.Directories.Append (Create ("."));
+         Self.Directories.Append (Create (".", GPR2.Filename_Optional (Root)));
       end if;
 
       --  Third, add the default pattern ("*") is there is none

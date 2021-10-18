@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2020, AdaCore                     --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -17,6 +17,8 @@
 ------------------------------------------------------------------------------
 
 with Ada.Strings.Fixed;
+
+with GNAT.OS_Lib;
 
 package body GPRname.Source_Dir is
 
@@ -35,13 +37,16 @@ package body GPRname.Source_Dir is
                         and then Fixed.Tail (String (Name), 2) = "**");
       PN           : Path_Name.Object;
 
+      Dir : constant Filename_Type :=
+            ((if Directory = No_Filename then ""
+             else Directory & GNAT.OS_Lib.Directory_Separator) & Name);
+
    begin
       if Is_Recursive then
          PN := Path_Name.Create_Directory
-           (Filename_Type (Fixed.Head (String (Name), Name'Length - 2)),
-            Directory);
+           (Filename_Type (Fixed.Head (String (Dir), Dir'Length - 2)));
       else
-         PN := Path_Name.Create_Directory (Name, Directory);
+         PN := Path_Name.Create_Directory (Dir);
       end if;
 
       if not PN.Exists then
