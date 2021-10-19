@@ -28,7 +28,7 @@ package body GPR2.Project.Source.Set is
 
    type Iterator is new Source_Iterator.Forward_Iterator with record
       Filter : Source_Filter;
-      Root   : not null access constant Object;
+      Root   : not null access constant Set.Set;
    end record;
 
    overriding function First
@@ -63,7 +63,7 @@ package body GPR2.Project.Source.Set is
               Set.Constant_Reference (Self.S, Position.Current);
    begin
       return Constant_Reference_Type'
-        (Source => Ref.Element,
+        (Source => Ref.Element.all'Unrestricted_Access,
          Ref    => Ref);
    end Constant_Reference;
 
@@ -102,7 +102,7 @@ package body GPR2.Project.Source.Set is
 
    overriding function First (Iter : Iterator) return Cursor is
       Position : constant Cursor :=
-                   Cursor'(Current => Set.First (Iter.Root.S));
+                   Cursor'(Current => Iter.Root.First);
    begin
       if not Has_Element (Position)
         or else Match_Filter (Iter.Filter, Set.Element (Position.Current))
@@ -171,7 +171,7 @@ package body GPR2.Project.Source.Set is
       Filter : Source_Filter := S_All)
       return Source_Iterator.Forward_Iterator'Class is
    begin
-      return Iterator'(Filter => Filter, Root => Self'Unrestricted_Access);
+      return Iterator'(Filter => Filter, Root => Self.S'Unrestricted_Access);
    end Iterate;
 
    ------------------
@@ -238,21 +238,19 @@ package body GPR2.Project.Source.Set is
    overriding function Next
      (Iter : Iterator; Position : Cursor) return Cursor
    is
-      Next : constant Set.Cursor := Set.Next (Position.Current);
+      Next : Set.Cursor := Set.Next (Position.Current);
    begin
       if Iter.Filter = S_All then
          return Cursor'(Current => Next);
       end if;
 
-      if Set.Has_Element (Next) then
-         for C in Iter.Root.S.Iterate (Start => Next) loop
-            if Match_Filter (Iter.Filter, Set.Element (C)) then
-               return Cursor'(Current => C);
-            end if;
-         end loop;
-      end if;
+      loop
+         exit when not Set.Has_Element (Next);
+         exit when Match_Filter (Iter.Filter, Set.Element (Next));
+         Next := Set.Next (Next);
+      end loop;
 
-      return Cursor'(Current => Set.No_Element);
+      return Cursor'(Current => Next);
    end Next;
 
    -------------

@@ -4227,30 +4227,45 @@ package body GPR2.Project.Tree is
    is
       use type Source_Info.Backend_Set;
       Internal : constant Boolean := Backends = Source_Info.No_Backends;
-      Has_RT   : Boolean := False; -- True if Tree has a runtime view
+      Has_RT   : Boolean := False;
+      Views    : View.Vector.Object renames Self.Ordered_Views;
    begin
       if not Internal then
          Self.Self.Rooted_Sources.Clear;
          Self.Self.Sources_Loaded := True;
       end if;
 
-      for V of reverse Self.Ordered_Views loop
+      for V of reverse Views loop
+         Definition.Get (V).Update_Sources_List (V, Stop_On_Error);
+
          if V.Is_Runtime then
             Has_RT := True;
          end if;
-
-         if With_Runtime or else not V.Is_Runtime then
-            Definition.Get (V).Update_Sources (V, Stop_On_Error, Backends);
-         end if;
       end loop;
 
-      if With_Runtime and then not Has_RT and then Self.Runtime.Is_Defined then
-         --  Runtime update sources is required, but runtime project is not in
-         --  the Self.Ordered_Views.
+      --  Make sure the runtime is taken care of first : it is most certainly
+      --  involved in source dependencies at one point or another.
 
-         Definition.Get (Self.Runtime).Update_Sources
-           (Self.Runtime, Stop_On_Error, Backends);
+      if not Has_RT
+        and then With_Runtime
+        and then Self.Runtime.Is_Defined
+      then
+         Definition.Get (Self.Runtime).Update_Sources_List
+           (Self.Runtime, Stop_On_Error);
+         Definition.Get (Self.Runtime).Update_Sources_Parse (Backends);
       end if;
+
+      for V of reverse Views loop
+         --  We list the views in referse topological order so that we never
+         --  end up having a dependency external to the view that's not
+         --  already parsed.
+
+         if With_Runtime or else not V.Is_Runtime then
+            Definition.Get (V).Update_Sources_Parse (Backends);
+         else
+            Definition.Get (V).Update_Sources_Parse (Source_Info.No_Backends);
+         end if;
+      end loop;
 
       if not Internal and then Self.Check_Shared_Lib then
          for View of Self.Views_Set loop

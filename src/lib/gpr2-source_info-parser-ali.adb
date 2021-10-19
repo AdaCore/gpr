@@ -488,27 +488,29 @@ package body GPR2.Source_Info.Parser.ALI is
             View : Project.View.Object := Tree.Get_View (Path);
             Source : Project.Source.Object;
          begin
-            if not View.Is_Defined then
-               Tree.Update_Sources
-                 (Stop_On_Error => False,
-                  With_Runtime  => True,
-                  Backends      => No_Backends);
+            --  The runtime is not always registerd in the tree, to speed up
+            --  computation. So perform an explicit check here.
 
-               View := Tree.Get_View (Path);
-
-               if not View.Is_Defined then
-                  return "";
-               end if;
+            if not View.Is_Defined
+              and then Tree.Has_Runtime_Project
+              and then Tree.Runtime_Project.Has_Source (Simple_Name (Sfile))
+            then
+               View := Tree.Runtime_Project;
             end if;
 
-            Source := View.Source (Path);
+            if View.Is_Defined then
+               Source := View.Source (Path);
 
-            pragma Assert (Source.Is_Defined);
+               pragma Assert (Source.Is_Defined);
 
-            Taken_From_Tree := True;
-            Kind := Source.Kind (No_Index);
+               Taken_From_Tree := True;
+               Kind := Source.Kind (No_Index);
 
-            return To_Lower (Source.Unit_Name (No_Index));
+               return To_Lower (Source.Unit_Name (No_Index));
+
+            else
+               return String (Path.Base_Name);
+            end if;
          end To_Unit_Name;
 
          Name : constant String :=
