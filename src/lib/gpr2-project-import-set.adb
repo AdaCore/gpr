@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -49,11 +49,14 @@ package body GPR2.Project.Import.Set is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type is
+      Position : Cursor) return Constant_Reference_Type
+   is
+      Ref : Base_Name_Set.Constant_Reference_Type renames
+              Base_Name_Set.Constant_Reference (Self.Set, Position.Current);
    begin
       return Constant_Reference_Type'
-        (Import => Base_Name_Set.Constant_Reference
-           (Self.Set, Position.Current).Element);
+        (Import => Ref.Element.all'Unrestricted_Access,
+         Ref    => Ref);
    end Constant_Reference;
 
    --------------

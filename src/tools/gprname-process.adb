@@ -18,6 +18,7 @@
 
 with Ada.Characters.Conversions;
 with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Directories;
 with Ada.Exceptions;
 with Ada.Strings.Unbounded;
 with Ada.Strings.Wide_Wide_Unbounded;
@@ -40,6 +41,7 @@ with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Path_Name;
+with GPR2.Path_Name.Set;
 with GPR2.Project;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
@@ -460,6 +462,169 @@ begin
         (Name_Type (To_UTF8 (Node.Text)));
       --  Get the string (as a Name_Type) associated with a single-token node
 
+      function Get_Dir_List return Unbounded_String;
+      --  return Source_Dirs list handling --minimal-dirs switches
+
+      ------------------
+      -- Get_Dir_List --
+      ------------------
+
+      function Get_Dir_List return Unbounded_String is
+      begin
+         if not Opt.Minimal_Dirs then
+            return Dir_List;
+         end if;
+
+         declare
+            Current_Dir  : constant GPR2.Path_Name.Object :=
+                             GPR2.Path_Name.Create_Directory
+                               (Filename_Optional
+                                  (Ada.Directories.
+                                     Current_Directory));
+
+            Dirs         : GPR2.Path_Name.Set.Object;
+            --  directories containing sources
+
+            Added_Dirs   : GPR2.Path_Name.Set.Object;
+            --  directories already appended to New_Dir_List
+
+            New_Dir_List : Unbounded_String;
+            --  value returned if minimal-dirs requested
+
+            procedure Add_Dir
+              (Dir : GPR2.Path_Name.Object; Recursive : Boolean);
+            --  If Dir part of Dirs, add it to Added_Dirs & New_Dir_List
+
+            procedure Append_Dir
+              (Dir          : GPR2.Path_Name.Object;
+               Use_New_List : Boolean := False);
+            --  If not already done append Dir to Dirs
+            --  If Use_New_List is True, use Added_Dirs & New_Dir_List
+
+            -------------
+            -- Add_Dir --
+            -------------
+
+            procedure Add_Dir
+              (Dir : GPR2.Path_Name.Object; Recursive : Boolean)
+            is
+            begin
+               if Dirs.Contains (Dir) then
+                  Append_Dir (Dir, True);
+               end if;
+
+               --  If recursive mode add subdirs in an order equivalent to
+               --  dir/**
+
+               if Recursive then
+                  declare
+                     use all type Ada.Directories.File_Kind;
+
+                     D_Search : Ada.Directories.Search_Type;
+                     D_Entry  : Ada.Directories.Directory_Entry_Type;
+                  begin
+                     Ada.Directories.Start_Search
+                       (D_Search, String (Dir.Value), "",
+                        Filter => (Directory     => True,
+                                   Ordinary_File => False,
+                                   Special_File  => False));
+
+                     while Ada.Directories.More_Entries (D_Search)
+                     loop
+                        Ada.Directories.Get_Next_Entry
+                          (D_Search, D_Entry);
+
+                        case Ada.Directories.Kind (D_Entry) is
+
+                           when Directory =>
+                              if Ada.Directories.Simple_Name
+                                (D_Entry) not in "." | ".."
+                              then
+                                 Add_Dir
+                                   (GPR2.Path_Name.Create_Directory
+                                      (Filename_Optional
+                                           (Ada.Directories.Full_Name
+                                                (D_Entry))),
+                                    True);
+                              end if;
+
+                           when others =>
+                              raise Program_Error;
+
+                        end case;
+                     end loop;
+
+                     Ada.Directories.End_Search (D_Search);
+                  end;
+               end if;
+            end Add_Dir;
+
+            ----------------
+            -- Append_Dir --
+            ----------------
+
+            procedure Append_Dir
+              (Dir          : GPR2.Path_Name.Object;
+               Use_New_List : Boolean := False)
+            is
+               New_Dir : constant GPR2.Path_Name.Object :=
+                           GPR2.Path_Name.Relative_Path (Dir, Current_Dir);
+            begin
+               if Dirs.Contains (New_Dir) then
+                  if Use_New_List and then not Added_Dirs.Contains (New_Dir)
+                  then
+                     declare
+                        Dir_Name : constant Filename_Optional :=
+                                     New_Dir.Name;
+                     begin
+
+                        if not Added_Dirs.Is_Empty then
+                           New_Dir_List := New_Dir_List &
+                             To_Unbounded_String (", ");
+                        end if;
+
+                        --  remove trailing path separator
+
+                        if Dir_Name'Length > 1 then
+                           New_Dir_List := New_Dir_List & Quote
+                             (String (Dir_Name
+                              (Dir_Name'First .. Dir_Name'Last - 1)));
+                        end if;
+                     end;
+                     Added_Dirs.Append (New_Dir);
+                  end if;
+               elsif not Use_New_List then
+                  Dirs.Append (New_Dir);
+               end if;
+            end Append_Dir;
+
+         begin
+            for Curs in Lang_Sources_Map.Iterate loop
+               declare
+                  Sources : constant Source.Set.Object :=
+                              Language_Sources_Map.Element (Curs);
+               begin
+                  for S_Curs in Sources.Iterate loop
+                     Append_Dir (GPR2.Path_Name.Create_Directory
+                                 (Filename_Optional
+                                    (GPR2.Path_Name.Relative_Path
+                                       (Sources (S_Curs).File,
+                                          Current_Dir).Name)));
+                  end loop;
+               end;
+            end loop;
+
+            --  Let New_Dir_List minimal-dirs have an equivalent order
+
+            for Section of Opt.Sections loop
+               for D of Section.Directories loop
+                  Add_Dir (D.Value, D.Is_Recursive);
+               end loop;
+            end loop;
+            return New_Dir_List;
+         end;
+      end Get_Dir_List;
+
       Ctx  : constant Analysis_Context := Create_Context;
       Unit : constant Analysis_Unit := Get_From_File (Ctx, Project_Path.Value);
       Hand : Rewriting_Handle := Start_Rewriting (Ctx);
@@ -489,7 +654,7 @@ begin
       Src_Dirs_H : constant Node_Rewriting_Handle :=
                      Create_From_Template
                        (Hand, "for Source_Dirs use (" & To_Wide_Wide_String
-                          (To_String (Dir_List)) & ");",
+                          (To_String (Get_Dir_List)) & ");",
                         (1 .. 0 => <>), Attribute_Decl_Rule);
 
       Src_List_File_H : constant Node_Rewriting_Handle :=

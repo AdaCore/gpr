@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -142,7 +142,6 @@ procedure Build_From_Command_Line (Self : in out Object) is
                   " that contain at least one source.");
       Put_Line ("                  This will also expand any /** suffix to" &
                   " an explicit list of directories.");
-      Put_Line ("                  !!! NOT IMPLEMENTED !!!");
       New_Line;
 
       Put_Line ("  -v           Verbose output");
@@ -242,7 +241,7 @@ begin
          Usage;
          GNAT.OS_Lib.OS_Exit (0);
 
-      elsif Arg'Length >= 13 and then Arg  (1 .. 13) = "-minimal-dirs" then
+      elsif Arg.all = "--minimal-dirs" then
          Self.Minimal_Dirs := True;
 
       elsif Arg'Length >= 8 and then
