@@ -1,0 +1,131 @@
+with "bodies_naming.gpr";
+with "aux";
+with "ac";
+with "fai";
+with "nzf";
+
+project Bodies is
+
+   for Source_List_File use "bodies_source_list.txt";
+   for Source_Dirs use ("Applications/ab/abc", "Applications/ab/abf", "Applications/ab/abu", "Applications/af/afc", "Applications/af/aff", "Applications/af/afu", "Applications/ak/akc", "Applications/ak/akn", "Applications/ak/aku", 
+"Applications/al/alf", "Applications/am/amc", "Applications/am/amf", "Applications/an/anc", "Applications/an/anu", "Applications/ao/aoc", "Applications/ao/aou", "Applications/ao/aof", "Applications/ap/apc", "Applications/ap/apf", 
+"Applications/ap/apu", "Applications/aq/aqc", "Applications/aq/aqu", "Applications/as/asc", "Applications/as/asf", "Applications/as/asn", "Applications/as/asr", "Applications/as/ast", "Applications/as/asw", "Applications/at/atc", 
+"Applications/au/auc", "Applications/au/auf", "Applications/au/aun", "Applications/au/auu", "Applications/aw/awc", "Applications/aw/awf", "Applications/aw/awn", "Applications/aw/awu", "Applications/ax/axc", "Applications/ax/axf", 
+"Applications/ax/axn", "Applications/ax/axu", "Build/aya", "Interface/vc/vca", "Interface/vc/vce", "Interface/vc/vcf", "Interface/vc/vcg", "Interface/vc/vcj", "Interface/vc/vcp", "Interface/vc/vcs", "Interface/vc/vct", 
+"Interface/vf/vfa", "Interface/vf/vfe", "Interface/vf/vfg", "Interface/vf/vfj", "Interface/vf/vfs", "Interface/vf/vft", "Interface/vg/vga", "Interface/vg/vgj", "Interface/vg/vgp", "Interface/vg/vgt", "Interface/vk/vka", 
+"Interface/vk/vke", "Interface/vk/vkf", "Interface/vk/vkg", "Interface/vk/vkj", "Interface/vk/vks", "Interface/vk/vkt", "Interface/vm/vma", "Interface/vm/vme", "Interface/vm/vmg", "Interface/vm/vmj", "Interface/vm/vms", 
+"Interface/vm/vmt", "Interface/vn/vna", "Interface/vn/vne", "Interface/vn/vng", "Interface/vn/vnj", "Interface/vn/vns", "Interface/vn/vnt", "Interface/vq/vqa", "Interface/vq/vqj", "Interface/vq/vqp", "Interface/vq/vqt", 
+"Interface/vr/vra", "Interface/vr/vre", "Interface/vr/vrg", "Interface/vr/vrj", "Interface/vr/vrs", "Interface/vr/vrt", "Interface/vs/vsa", "Interface/vs/vse", "Interface/vs/vsg", "Interface/vs/vsj", "Interface/vs/vsr", 
+"Interface/vs/vss", "Interface/vs/vst", "Interface/vt/vta", "Interface/vt/vte", "Interface/vt/vtf", "Interface/vt/vtg", "Interface/vt/vtj", "Interface/vt/vts", "Interface/vt/vtt", "Interface/vu/vua", "Interface/vu/vue", 
+"Interface/vu/vug", "Interface/vu/vuj", "Interface/vu/vur", "Interface/vu/vus", "Interface/vu/vut", "Interface/vv/vva", "Interface/vv/vvj", "Interface/vv/vvk", "Interface/vv/vvt", "Interface/vw/vwa", "Interface/vw/vwe", 
+"Interface/vw/vwg", "Interface/vw/vwj", "Interface/vw/vwt", "Interface/vx/vxa", "Interface/vx/vxe", "Interface/vx/vxg", "Interface/vx/vxj", "Interface/vx/vxk", "Interface/vx/vxs", "Interface/vx/vxt", "Interface/vy/vya", 
+"Interface/vy/vyj", "Interface/wd/wda", "Interface/wd/wde", "Interface/wd/wdg", "Interface/wd/wdj", "Interface/wd/wds", "Interface/wd/wdt", "Interface/wh/wha", "Interface/wh/whe", "Interface/wh/whg", "Interface/wh/whj", 
+"Interface/wh/whp", "Interface/wh/whs", "Interface/wh/wht", "Interface/wj/wja", "Interface/wj/wje", "Interface/wj/wjg", "Interface/wj/wjj", "Interface/wj/wjt", "Interface/ws/wsa", "Interface/ws/wse", "Interface/ws/wsg", 
+"Interface/ws/wsj", "Interface/ws/wss", "Interface/ws/wst", "Interface/wv/wva", "Interface/wv/wve", "Interface/wv/wvg", "Interface/wv/wvj", "Interface/vf/SPEC", "Interface/vg/SPEC", "Interface/vk/SPEC", "Interface/vc/SPEC", 
+"Interface/ws/SPEC", "Interface/wd/SPEC", "Interface/vm/SPEC", "Interface/vn/SPEC", "Interface/vr/SPEC", "Interface/vt/SPEC", "Interface/vx/SPEC", "Interface/vu/SPEC", "Interface/vs/SPEC", "Interface/wx/SPEC", "Interface/wy/SPEC", 
+"Interface/wh/SPEC", "Interface/wv/SPEC", "Interface/vw/SPEC", "Interface/wj/SPEC", "Interface/vy/SPEC", "Interface/vq/SPEC", "Interface/vv/SPEC", "MDL/zq/SPEC", "MDL/zq/SPEC_stim", "MDL/nx/SPEC", "MDL/zy/SPEC", "MDL/zr/SPEC", 
+"MDL/zz/SPEC", "Applications/as/SPEC", "Applications/at/SPEC", "Applications/aw/SPEC", "Applications/af/SPEC", "Applications/ab/SPEC", "Applications/am/SPEC", "Applications/an/SPEC", "Applications/al/SPEC", "Applications/ay/SPEC", 
+"Applications/ao/SPEC", "Applications/ap/SPEC", "Applications/aq/SPEC", "Applications/ak/SPEC", "Applications/au/SPEC", "Applications/ax/SPEC", "Interface/wv/wvt", "Interface/wx/wxa", "Interface/wx/wxe", "Interface/wx/wxg", 
+"Interface/wx/wxj", "Interface/wx/wxs", "Interface/wx/wxt", "Interface/wy/wya", "Interface/wy/wye", "Interface/wy/wyg", "Interface/wy/wyj", "Interface/wy/wyp", "Interface/wy/wys", "Interface/wy/wyt", "MDL/nx/nxd", "MDL/zn/znj", "MDL/zn/znp", 
+"MDL/zn/zns", "MDL/zn/znx", "MDL/zp/zpf", "MDL/zp/zpk", "MDL/zp/zpm", "MDL/zp/zpn", "MDL/zp/zpr", "MDL/zp/zps", "MDL/zp/zpt", "MDL/zp/zpu", "MDL/zp/zpx", "MDL/zr/zrn", "MDL/zx/zxa", "MDL/zx/zxb", "MDL/zx/zxc", "MDL/zx/zxd", "MDL/zx/zxf", 
+"MDL/zx/zxg/all_modes", "MDL/zx/zxg/tds_modes", "MDL/zx/zxh", "MDL/zx/zxi", "MDL/zx/zxj", "MDL/zx/zxk", "MDL/zx/zxl", "MDL/zx/zxm", "MDL/zx/zxn", "MDL/zx/zxo", "MDL/zx/zxp", "MDL/zx/zxq", "MDL/zx/zxs", "MDL/zx/zxu", "MDL/zx/zxv", 
+"MDL/zx/zxw", "MDL/zx/zxy", "MDL/zz/nzk", "MDL/zz/zzm", "Applications/as/ash", "Applications/as/asg", "Applications/am/SPEC", "Applications/am/amu", "Applications/am/amc", "Applications/am/amn", "Applications/am/amf", 
+"Applications/an/SPEC", "Applications/an/anu", "Applications/an/anc", "Build/stubs/Stubs");
+
+   package Naming renames Bodies_Naming.Naming;
+   type Target_Type is
+      ("sparc", "MV5100");
+   Target : Target_Type := external ("TARGET", "sparc");
+   type Os_Type is
+      ("solaris", "vxworks");
+   Os : Os_Type := external ("OS", "solaris");
+   Products_Dir := external ("PRODUCTS_DIR");
+   Package_List := ("abc_blind_pilotage_console", "abf_blind_pilotage_functions", "abl_blind_pilotage_hci_types", "abp_blind_pilotage_isp_access", "abt_blind_pilotage_types", "abu_blind_pilotage_update", 
+"abx_blind_pilotage_highway_types", "aby_blind_pilotage_ami", "afa_feature_graphics_access", "afc_feature_graphics_console", "aff_feature_graphics_functions", "afl_feature_graphics_hci_types", 
+"afp_feature_graphics_isp_access", "aft_feature_graphics_types", "afu_feature_graphics_update", "afx_feature_graphics_highway_types", "aka_mission_recording_access", "akc_mission_recording_console", 
+"akl_mission_recording_hci_types", "akn_mission_recording_non_console", "akp_mission_recording_isp_access", "akt_mission_recording_types", "aku_mission_recording_update", "akx_mission_recording_highway_types", 
+"aky_mission_recording_ami", "alf_gui_functions", "alt_gui_types", "ama_scenario_exe_access", "amc_scenario_exe_console", "amc_test_data", "amf_scenario_exe_functions", "aml_scenario_exe_hci_types", 
+"amm_scenario_exe_message_types", "amn_scenario_exe_non_console", "ams_scenario_exe_specific", "amt_scenario_exe_types", "amu_scenario_exe_update", "amx_scenario_exe_highway_types", "amy_scenario_exe_ami", 
+"ana_scenario_gen_access", "anc_scenario_gen_console", "anl_scenario_gen_hci_types", "ant_scenario_gen_types", "anu_scenario_gen_update", "any_scenario_gen_ami", "aoc_peripheral_mgt_console", "aof_peripheral_mgt_functions", 
+"aol_peripheral_mgt_hci_types", "aos_peripheral_mgt_specific", "aot_peripheral_mgt_types", "aou_peripheral_mgt_update", "aox_peripheral_mgt_highway_types", "aoy_peripheral_mgt_ami", "apa_task_planning_access", 
+"apc_task_planning_console", "apf_task_planning_functions", "apl_task_planning_hci_types", "app_task_planning_isp_access", "aps_task_planning_specific", "apt_task_planning_types", "apu_task_planning_update", 
+"apx_task_planning_highway_types", "apy_task_planning_ami", "aqa_rpf_access", "aqc_rpf_console", "aql_rpf_hci_types", "aqs_rpf_specific", "aqt_rpf_types", "aqu_rpf_update", "aqx_rpf_highway_types", "aqy_rpf_ami", 
+"asa_buffer_allocation", "asb_status_mgt_console_specific", "asc_status_mgt_console", "asd_status_mgt_cdf", "ase_status_mgt_non_console_specific", "asf_msg_timing", "asg_msg_services", "ash_apps_msg_if", 
+"asl_status_mgt_hci_types", "asm_status_mgt_message_types", "asn_status_mgt_non_console", "asp_status_mgt_isp_access", "asr_status_mgt_read", "ass_status_mgt_specific", "ast_status_mgt_types", "asw_status_mgt_write", 
+"asx_status_mgt_highway_types", "asy_status_mgt_ami", "atc_track_mgt_console", "atf_track_mgt_functions", "atl_track_mgt_hci_types", "atn_track_mgt_non_console", "atr_track_mgt_read", "ats_track_mgt_specific", "att_track_mgt_types", 
+"atu_track_mgt_update", "atw_track_mgt_write", "atx_track_mgt_highway_types", "aty_track_mgt_ami", "aua_uw_data_mgt_access", "auc_uw_data_mgt_console", "auf_uw_data_mgt_functions", "aul_uw_data_mgt_hci_types", 
+"aun_uw_data_mgt_non_console", "aup_uw_data_mgt_isp_access", "aus_uw_data_mgt_specific", "aut_uw_data_mgt_types", "auu_uw_data_mgt_update", "aux_uw_data_mgt_highway_types", "awa_ownship_access", "awc_ownship_console", 
+"awf_ownship_functions", "awl_ownship_hci_types", "awn_ownship_non_console", "awp_ownship_isp_access", "aws_ownship_specific", "awt_ownship_types", "awu_ownship_update", "awx_ownship_highway_types", "awy_ownship_ami", 
+"axa_mission_execution_access", "axc_mission_execution_console", "axf_mission_execution_functions", "axl_mission_execution_hci_types", "axn_mission_execution_non_console", "axp_mission_execution_isp_access", 
+"axs_mission_execution_specific", "axt_mission_execution_types", "axu_mission_execution_update", "axx_mission_execution_highway_types", "aya_issue_status", "bulk_transfer_task_ami", "mcm_management_task_ami", 
+"mission_recording_task_ami", "nxd_common_routines", "nxt_msg_distribution_types", "nza_common_definitions", "nzb_status_definitions", "nzc_track_definitions", "nzk_recording_definitions", "nzl_plotter_definitions", "nzm_memory_map", 
+"nzp_task_planning_definitions", "nzt_tactical_data", "nzu_uw_data_mgt_definitions", "nzw_ownship_definitions", "nzx_mission_execution_definitions", "nzy_ami_instantiations", "ownship_mgt_task_ami", "peripheral_mgt_task_ami", 
+"print_buffer_allocation", "scenario_and_simulation_task_ami", "status_mgt_task_ami", "tactical_mgt_task_ami", "track_mgt_task_ami", "uw_data_mgt_task_ami", "vca_esm_status_mgt_update", "vcc_esm_status_mgt_access", 
+"vce_esm_status_mgt_local", "vcf_esm_track_mgt_local", "vcg_esm_status_mgt_remote", "vcj_esm_status_mgt_console", "vcl_esm_hci_types", "vcm_esm_message_types", "vcp_esm_status_mgt_isp_access", "vcs_esm_simulator", "vct_esm_types", 
+"vcv_esm_hway_status_types", "vcz_esm_hway_track_types", "vfa_sddu_status_mgt_update", "vfc_sddu_status_mgt_access", "vfe_sddu_status_mgt_local", "vfg_sddu_status_mgt_remote", "vfj_sddu_status_mgt_console", "vfl_sddu_hci_types", 
+"vfm_sddu_message_types", "vfp_sddu_status_mgt_isp_access", "vfs_sddu_simulator", "vft_sddu_types", "vfv_sddu_hway_status_types", "vga_chart_digitiser_status_mgt_update", "vgc_chart_digitiser_status_mgt_access", 
+"vgj_chart_digitiser_status_mgt_console", "vgl_chart_digitiser_hci_types", "vgm_chart_digitiser_message_types", "vgp_chart_digitiser_status_mgt_isp_access", "vgt_chart_digitiser_types", 
+"vgv_chart_digitiser_hway_status_types", "vka_nrte_status_mgt_update", "vkc_nrte_status_mgt_access", "vke_nrte_status_mgt_local", "vkf_nrte_track_mgt_local", "vkg_nrte_status_mgt_remote", "vkj_nrte_status_mgt_console", 
+"vkl_nrte_hci_types", "vkm_nrte_message_types", "vkp_nrte_status_mgt_isp_access", "vks_nrte_simulator", "vkt_nrte_types", "vkv_nrte_hway_status_types", "vkz_nrte_hway_track_types", "vma_dgps_status_mgt_update", 
+"vmc_dgps_status_mgt_access", "vme_dgps_status_mgt_local", "vmg_dgps_status_mgt_remote", "vmj_dgps_status_mgt_console", "vml_dgps_hci_types", "vmm_dgps_message_types", "vmp_dgps_status_mgt_isp_access", "vms_dgps_simulator", 
+"vmt_dgps_types", "vmv_dgps_hway_status_types", "vna_rps_status_mgt_update", "vnc_rps_status_mgt_access", "vne_rps_status_mgt_local", "vng_rps_status_mgt_remote", "vnj_rps_status_mgt_console", "vnl_rps_hci_types", 
+"vnm_rps_message_types", "vnp_rps_status_mgt_isp_access", "vns_rps_simulator", "vnt_rps_types", "vnv_rps_hway_status_types", "vqa_plotter_status_mgt_update", "vqc_plotter_status_mgt_access", 
+"vqj_plotter_status_mgt_console", "vqk_plotter_functions", "vql_plotter_hci_types", "vqm_plotter_message_types", "vqp_plotter_status_mgt_isp_access", "vqt_plotter_types", "vqv_plotter_hway_status_types", 
+"vra_vms_status_mgt_update", "vrc_vms_status_mgt_access", "vre_vms_status_mgt_local", "vrg_vms_status_mgt_remote", "vrj_vms_status_mgt_console", "vrl_vms_hci_types", "vrm_vms_message_types", 
+"vrp_vms_status_mgt_isp_access", "vrs_vms_simulator", "vrt_vms_types", "vrv_vms_hway_status_types", "vsa_mh_sonar_status_mgt_update", "vsc_mh_sonar_status_mgt_access", "vse_mh_sonar_status_mgt_local", 
+"vsg_mh_sonar_status_mgt_remote", "vsj_mh_sonar_status_mgt_console", "vsl_mh_sonar_hci_types", "vsm_mh_sonar_message_types", "vsp_mh_sonar_status_mgt_isp_access", "vsr_mh_sonar_simulator_console", "vss_mh_sonar_simulator", 
+"vst_mh_sonar_types", "vsv_mh_sonar_hway_status_types", "vta_lts_status_mgt_update", "vtc_lts_status_mgt_access", "vte_lts_status_mgt_local", "vtf_lts_track_mgt_local", "vtg_lts_status_mgt_remote", 
+"vtj_lts_status_mgt_console", "vtl_lts_hci_types", "vtm_lts_message_types", "vtp_lts_status_mgt_isp_access", "vts_lts_simulator", "vtt_lts_types", "vtv_lts_hway_status_types", "vtz_lts_hway_track_types", 
+"vua_nav_radar_status_mgt_update", "vuc_nav_radar_status_mgt_access", "vue_nav_radar_status_mgt_local", "vug_nav_radar_status_mgt_remote", "vuj_nav_radar_status_mgt_console", "vul_nav_radar_hci_types", 
+"vum_nav_radar_message_types", "vup_nav_radar_status_mgt_isp_access", "vur_nav_radar_simulator_console", "vus_nav_radar_simulator", "vut_nav_radar_types", "vuv_nav_radar_hway_status_types", "vva_prn_status_mgt_update", 
+"vvc_prn_status_mgt_access", "vvj_prn_status_mgt_console", "vvk_prn_functions", "vvm_prn_message_types", "vvt_prn_types", "vvv_prn_hway_status_types", "vwa_cps_status_mgt_update", "vwc_cps_status_mgt_access", 
+"vwe_cps_status_mgt_local", "vwg_cps_status_mgt_remote", "vwj_cps_status_mgt_console", "vwl_cps_hci_types", "vwm_cps_message_types", "vwt_cps_types", "vwv_cps_hway_status_types", "vxa_ext_comms_status_mgt_update", 
+"vxc_ext_comms_status_mgt_access", "vxe_ext_comms_status_mgt_local", "vxg_ext_comms_status_mgt_remote", "vxj_ext_comms_status_mgt_console", "vxk_ext_comms_functions", "vxl_ext_comms_hci_types", "vxm_ext_comms_message_types", 
+"vxp_ext_comms_status_mgt_isp_access", "vxs_ext_comms_simulator", "vxt_ext_comms_types", "vxv_ext_comms_hway_status_types", "vya_cctv_status_mgt_update", "vyc_cctv_status_mgt_access", "vyj_cctv_status_mgt_console", 
+"vyl_cctv_hci_types", "wda_ecm_status_mgt_update", "wdc_ecm_status_mgt_access", "wde_ecm_status_mgt_local", "wdg_ecm_status_mgt_remote", "wdj_ecm_status_mgt_console", "wdl_ecm_hci_types", "wdm_ecm_message_types", 
+"wdp_ecm_status_mgt_isp_access", "wds_ecm_simulator", "wdt_ecm_types", "wdv_ecm_hway_status_types", "wha_mds_status_mgt_update", "whc_mds_status_mgt_access", "whe_mds_status_mgt_local", "whg_mds_status_mgt_remote", 
+"whj_mds_status_mgt_console", "whl_mds_hci_types", "whm_mds_message_types", "whp_mds_status_mgt_isp_access", "whs_mds_simulator", "wht_mds_types", "whv_mds_hway_status_types", "wja_gti_status_mgt_update", 
+"wjc_gti_status_mgt_access", "wje_gti_status_mgt_local", "wjg_gti_status_mgt_remote", "wjj_gti_status_mgt_console", "wjl_gti_hci_types", "wjm_gti_message_types", "wjp_gti_status_mgt_isp_access", "wjt_gti_types", 
+"wjv_gti_hway_status_types", "wsa_eoss_status_mgt_update", "wsc_eoss_status_mgt_access", "wse_eoss_status_mgt_local", "wsg_eoss_status_mgt_remote", "wsj_eoss_status_mgt_console", "wsl_eoss_hci_types", "wsm_eoss_message_types", 
+"wsp_eoss_status_mgt_isp_access", "wss_eoss_simulator", "wst_eoss_types", "wsv_eoss_hway_status_types", "wva_mdi_status_mgt_update", "wvc_mdi_status_mgt_access", "wve_mdi_status_mgt_local", "wvg_mdi_status_mgt_remote", 
+"wvj_mdi_status_mgt_console", "wvl_mdi_hci_types", "wvm_mdi_message_types", "wvt_mdi_types", "wvv_mdi_hway_status_types", "wxa_mhap_status_mgt_update", "wxc_mhap_status_mgt_access", "wxe_mhap_status_mgt_local", 
+"wxg_mhap_status_mgt_remote", "wxj_mhap_status_mgt_console", "wxl_mhap_hci_types", "wxm_mhap_message_types", "wxp_mhap_status_mgt_isp_access", "wxs_mhap_simulator", "wxt_mhap_types", "wxv_mhap_hway_status_types", 
+"wya_trap_status_mgt_update", "wyc_trap_status_mgt_access", "wye_trap_status_mgt_local", "wyg_trap_status_mgt_remote", "wyj_trap_status_mgt_console", "wyl_trap_hci_types", "wym_trap_message_types", 
+"wyp_trap_status_mgt_isp_access", "wys_trap_simulator", "wyt_trap_types", "wyv_trap_hway_status_types", "zrn_console_scenario_mgt");
+   Clf_Lib_Dir := "-L" & Products_Dir & "Build/clf/c_" & Target & "_" & Os & "_lib";
+   Fsi_Lib_Dir := "-L" & Products_Dir & "Build/clf/c_" & Target & "_" & Os & "_lib";
+
+   case Target is
+
+      when "sparc" =>
+         for Object_Dir use "Build/bodies/ada_sparc_solaris_obj_lib";
+         for Library_Dir use "Build/bodies/ada_sparc_solaris_lib";
+
+      when "MV5100" =>
+         for Object_Dir use "Build/bodies/ada_MV5100_vxworks_obj_lib";
+         for Library_Dir use "Build/bodies/ada_MV5100_vxworks_lib";
+   end case;
+   for Library_Name use "bodies";
+   for Library_Interface use Package_List;
+
+   package Builder is
+      for Default_Switches ("ada") use ("");
+   end Builder;
+
+   package Compiler is
+      for Local_Configuration_Pragmas use "gnat.adc";
+   end Compiler;
+
+   package Linker is
+
+      case Target is
+
+         when "sparc" =>
+            for Default_Switches ("ada") use (Clf_Lib_Dir, Fsi_Lib_Dir, "-lcla", "-lfeh", "-lm");
+
+         when "MV5100" =>
+            for Default_Switches ("ada") use (Clf_Lib_Dir, Fsi_Lib_Dir, "-lcla", "-lfai");
+      end case;
+   end Linker;
+
+end Bodies;

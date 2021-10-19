@@ -1,6 +1,22 @@
 SUCCESS
 Toto
 Titi
+with "prj_naming.gpr";
+
+project Prj is
+
+   for Source_List_File use "prj_source_list.txt";
+   for Source_Dirs use ("./subdirectory_a", "./subdirectory_b",
+      "./subdirectory_c", "./subdirectory_d", "./subdirectory_e",
+      "./subdirectory_f", "./subdirectory_g", "./subdirectory_h",
+      "./subdirectory_i", "./subdirectory_j", "./subdirectory_k",
+      "./subdirectory_l", "./subdirectory_m", "./subdirectory_n",
+      "./subdirectory_o");
+   for Languages use ("Ada");
+
+   package Naming renames Prj_Naming.Naming;
+
+end Prj;
 
 
 
@@ -30,6 +46,7 @@ Install project Test
 gprname returned 4
 prj.gpr:2:04: error: Expected Identifier, got ';'
 gprname: failed to load project tree
+
 
 
 
