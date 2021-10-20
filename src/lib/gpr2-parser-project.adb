@@ -3258,6 +3258,40 @@ package body GPR2.Parser.Project is
                      elsif Self.Has_Extended then
                         Get_Type_Def_From (Self.Extended);
                      end if;
+
+                     --  Type definition from "parent" project.
+
+                     if not Type_Def.Is_Defined
+                       and then Self.Has_Imports
+                       and then Count (Self.Name, ".") > 0
+                     then
+                        declare
+                           Prj_Id       : constant String := -Self.Name;
+                           Dot_Position : Natural := Prj_Id'First;
+                           I_Cursor     : GPR2.Project.Import.Set.Cursor;
+                        begin
+                           loop
+                              for J in Dot_Position .. Prj_Id'Last loop
+                                 Dot_Position := J;
+                                 exit when Prj_Id (J) = '.';
+                              end loop;
+
+                              exit when Dot_Position = Prj_Id'Last;
+
+                              I_Cursor := Self.Imports.Find
+                                (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
+                              if GPR2.Project.Import.Set.Has_Element
+                                                          (I_Cursor)
+                              then
+                                 Get_Type_Def_From
+                                   (GPR2.Project.Import.Set.Element
+                                      (I_Cursor));
+                              end if;
+
+                              exit when Type_Def.Is_Defined;
+                           end loop;
+                        end;
+                     end if;
                   end if;
 
                   --  Check that the type has been defined
