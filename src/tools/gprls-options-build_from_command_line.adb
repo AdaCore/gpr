@@ -19,8 +19,10 @@
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
+with GNAT.OS_Lib;
 
 with GPR2;
+with GPR2.Version;
 
 with GPRtools.Util;
 
@@ -218,6 +220,15 @@ begin
       Help => "Gnatdist specific output");
 
    Getopt (Config, Concatenate => False);
+
+   --  Check version string requested
+
+   if Self.Version then
+      GPR2.Version.Display
+        ("GPRLS", "2018", Version_String => Version.Long_Value);
+      GPR2.Version.Display_Free_Software;
+      GNAT.OS_Lib.OS_Exit (0);
+   end if;
 
    --  Now read the specified files from which we will browse, if any
 

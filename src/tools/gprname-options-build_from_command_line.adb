@@ -22,6 +22,8 @@ with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
+with GPR2.Version;
+
 separate (GPRname.Options)
 procedure Build_From_Command_Line (Self : in out Object) is
 
@@ -39,6 +41,8 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    Current_Section : Section.Object := Empty_Section;
 
+   Version_Displayed : Boolean := False;
+
    procedure Add_Directory (Name : String);
    --  Add directory to the Current_Section
 
@@ -54,6 +58,9 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    procedure Usage;
    --  Print usage
+
+   procedure Show_Version;
+   --  Print version if not already done
 
    -------------------
    -- Add_Directory --
@@ -101,6 +108,19 @@ procedure Build_From_Command_Line (Self : in out Object) is
          raise GPRname_Exception with Err_Mssg;
       end if;
    end Read_Next_Arg;
+
+   ------------------
+   -- Show_Version --
+   ------------------
+
+   procedure Show_Version is
+   begin
+      if not Version_Displayed then
+         GPR2.Version.Display
+           ("GPRNAME", "2018", Version_String => GPR2.Version.Long_Value);
+         Version_Displayed := True;
+      end if;
+   end Show_Version;
 
    -----------
    -- Usage --
@@ -226,6 +246,7 @@ begin
          Self.Follow_Symlinks := True;
 
       elsif Arg.all = "-v" then
+         Show_Version;
          if Self.Verbosity = None then
             Self.Verbosity := Low;
          elsif Self.Verbosity = Low then
@@ -239,6 +260,11 @@ begin
 
       elsif Arg.all = "-h" or else Arg.all = "--help" then
          Usage;
+         GNAT.OS_Lib.OS_Exit (0);
+
+      elsif Arg.all = "--version" then
+         Show_Version;
+         GPR2.Version.Display_Free_Software;
          GNAT.OS_Lib.OS_Exit (0);
 
       elsif Arg.all = "--minimal-dirs" then
