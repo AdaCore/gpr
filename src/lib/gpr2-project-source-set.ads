@@ -135,7 +135,7 @@ private
    package Set is new Ada.Containers.Ordered_Sets (Project.Source.Object);
 
    type Object is tagged record
-      S : Set.Set;
+      S : aliased Set.Set;
    end record;
 
    type Cursor is record

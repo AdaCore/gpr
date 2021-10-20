@@ -1,0 +1,8 @@
+with "p";
+
+project P.C is
+
+   OBJ_DIR : Boolean := external("VAR", "False");
+   for Object_Dir use OBJ_DIR;
+
+end P.C;

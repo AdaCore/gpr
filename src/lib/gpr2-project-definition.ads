@@ -290,6 +290,18 @@ private package GPR2.Project.Definition is
    --  Backends parameter defines the set of parser that can be used to parse
    --  the source information.
 
+   procedure Update_Sources_List
+     (Def           : in out Data;
+      View          : Project.View.Object;
+      Stop_On_Error : Boolean)
+   with Pre => View.Is_Defined;
+   --  Populate the list of sources for the given view
+
+   procedure Update_Sources_Parse
+     (Def : in out Data; Backends : Source_Info.Backend_Set);
+   --  Parse the project's source dependency file and populate the
+   --  corresponding source_info.
+
    procedure Set_Default_Attributes (Def : in out Data);
    --  Set default and inherited attributes for the project view
 

@@ -70,14 +70,6 @@ package body GPR2.Project.Definition is
    function Languages (Def : Data) return Containers.Source_Value_List is
      (Def.Attrs.Languages.Values);
 
-   procedure Update_Sources_List
-     (Def           : in out Data;
-      View          : Project.View.Object;
-      Stop_On_Error : Boolean);
-
-   procedure Update_Sources_Parse
-     (Def : in out Data; Backends : Source_Info.Backend_Set);
-
    ----------------------------------
    -- Check_Aggregate_Library_Dirs --
    ----------------------------------
@@ -653,15 +645,8 @@ package body GPR2.Project.Definition is
    is
    begin
       Update_Sources_List (Def, View, Stop_On_Error);
-      Source_Info.Parser.Registry.Clear_Cache;
-      --  If the view is extended, we will use the ALI from the extending
-      --  project. We still need to call Update_Sources_Parse to disambiguate
-      --  SPEC/SPEC_ONLY and BODY/BODY_ONLY units.
       Update_Sources_Parse
-        (Def,
-         (if View.Is_Extended
-          then Source_Info.No_Backends
-          else Backends));
+        (Def, Backends);
    end Update_Sources;
 
    -------------------------
@@ -2561,10 +2546,21 @@ package body GPR2.Project.Definition is
       Position    : Simple_Name_Source.Cursor;
       Inserted    : Boolean;
       SW          : Project.Source.Object;
+      use type Definition_References.Weak_Ref;
+
    begin
-      for S of Def.Sources loop
-         SW := S;
-         SW.Update (Backends);
+      Source_Info.Parser.Registry.Clear_Cache;
+
+      for C in Def.Sources.Iterate loop
+         SW := Project.Source.Set.Element (C);
+
+         --  If the view is extended, we will use the ALI from the extending
+         --  project. We still need to call SW.Update to disambiguate
+         --  Spec/Spec_Only and Body/Body_Only units.
+
+         SW.Update ((if Def.Extending /= Definition_References.Null_Weak_Ref
+                    then Source_Info.No_Backends
+                    else Backends));
          Def_Sources.Insert (SW);
          Def_Src_Map.Insert (SW.Path_Name.Simple_Name, SW, Position, Inserted);
 

@@ -3260,54 +3260,38 @@ package body GPR2.Parser.Project is
                         Get_Type_Def_From (Self.Extended);
                      end if;
 
-                     --  Type definition from direct imports can be used
-                     --  also without prefix.
+                     --  Type definition from "parent" project.
 
                      if not Type_Def.Is_Defined
                        and then Self.Has_Imports
+                       and then Count (Self.Name, ".") > 0
                      then
-                        for Import of Self.Imports loop
-                           Get_Type_Def_From (Import);
+                        declare
+                           Prj_Id       : constant String := -Self.Name;
+                           Dot_Position : Natural := Prj_Id'First;
+                           I_Cursor     : GPR2.Project.Import.Set.Cursor;
+                        begin
+                           loop
+                              for J in Dot_Position .. Prj_Id'Last loop
+                                 Dot_Position := J;
+                                 exit when Prj_Id (J) = '.';
+                              end loop;
 
-                           if Type_Def.Is_Defined then
+                              exit when Dot_Position = Prj_Id'Last;
 
-                              --  Using non-prefixed type definition is
-                              --  marked obsolescent. To be removed before
-                              --  branch 23.x
+                              I_Cursor := Self.Imports.Find
+                                (Name_Type (Prj_Id (1 .. Dot_Position - 1)));
+                              if GPR2.Project.Import.Set.Has_Element
+                                                          (I_Cursor)
+                              then
+                                 Get_Type_Def_From
+                                   (GPR2.Project.Import.Set.Element
+                                      (I_Cursor));
+                              end if;
 
-                              declare
-                                 T_Sloc : constant Source_Reference.Object :=
-                                            Get_Source_Reference (Self.File,
-                                                                  V_Type);
-                                 I_Name : constant String :=
-                                            (if Registry.Exists
-                                                 (Import.Path_Name)
-                                             then To_String
-                                               (Registry.Get
-                                                  (Import.Path_Name).Name)
-                                             else String
-                                               (Import.Path_Name.Base_Name));
-                              begin
-                                 Tree.Log_Messages.Append
-                                   (Message.Create
-                                      (Level   => Message.Warning,
-                                       Sloc    => T_Sloc,
-                                       Message => "use of non-prefixed " &
-                                         "types of an imported project is " &
-                                         "obsolescent."));
-                                 Tree.Log_Messages.Append
-                                   (Message.Create
-                                      (Level   => Message.Warning,
-                                       Sloc    => T_Sloc,
-                                       Message => "replace with """ & I_Name &
-                                         "." & String (T_Name) &
-                                         """ instead."));
-                              end;
-
-                              exit;
-                           end if;
-                        end loop;
-
+                              exit when Type_Def.Is_Defined;
+                           end loop;
+                        end;
                      end if;
                   end if;
 
