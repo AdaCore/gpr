@@ -18,6 +18,10 @@ makefile.setup
 # Vim swap files
 *.swp
 
+# GnatStudio artifacts
+.clang-format
+.clangd
+
 # Python binding artifacts
 bindings/python/.coverage
 bindings/python/.coveragerc
