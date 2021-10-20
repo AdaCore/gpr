@@ -1,0 +1,13 @@
+project Switches is
+   for Source_Dirs use ();
+
+   package Compiler is
+      for Switches ("Ada") use ("-g");
+   end Compiler;
+
+   package CodePeer is
+     for Database_Directory use "<default>";
+   end CodePeer;
+
+end Switches;
+
