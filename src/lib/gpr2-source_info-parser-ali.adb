@@ -504,9 +504,18 @@ package body GPR2.Source_Info.Parser.ALI is
                pragma Assert (Source.Is_Defined);
 
                Taken_From_Tree := True;
-               Kind := Source.Kind (No_Index);
+               if Source.Units.Is_Indexed_List then
+                  --  No way to disambiguate: pick up the first unit.
+                  --  Note: this is a corner case, as support for Multi-Unit
+                  --  sources with antique compilers is not really a user case
+                  Kind := Source.Kind (Multi_Unit_Index'First);
 
-               return To_Lower (Source.Unit_Name (No_Index));
+                  return To_Lower (Source.Unit_Name (Multi_Unit_Index'First));
+               else
+                  Kind := Source.Kind (No_Index);
+
+                  return To_Lower (Source.Unit_Name (No_Index));
+               end if;
 
             else
                return String (Path.Base_Name);
