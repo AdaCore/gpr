@@ -22,6 +22,7 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
+with GNAT.OS_Lib;
 with GNAT.Strings;
 
 with GNATCOLL.Traces;
@@ -63,6 +64,7 @@ procedure GPRdump is
    --  Parse command line parameters
 
    Help                : aliased Boolean := False;
+   Version             : aliased Boolean := False;
    Display_Sources     : aliased Boolean := False;
    Display_All_Sources : aliased Boolean := False;
    Display_Artifacts   : aliased Boolean := False;
@@ -122,6 +124,11 @@ procedure GPRdump is
          Help => "display this help message and exit");
 
       Define_Switch
+        (Options.Config, Version'Access,
+         Long_Switch => "--version",
+         Help        => "Display version and exit");
+
+      Define_Switch
         (Options.Config, Display_Sources'Access,
          "-s", Long_Switch => "--sources",
          Help => "display sources");
@@ -138,8 +145,8 @@ procedure GPRdump is
 
       Define_Switch
         (Options.Config, All_Projects'Access,
-         "-r", Long_Switch => "--recoursive",
-         Help => "All none external projects recoursively");
+         "-r", Long_Switch => "--recursive",
+         Help => "All none external projects recursively");
 
       Define_Switch
         (Options.Config, Display_Artifacts'Access,
@@ -155,14 +162,13 @@ procedure GPRdump is
 
       Getopt (Options.Config);
 
-      if Options.Version or else Options.Verbose then
-         Version.Display
-           ("GPRDUMP", "2019", Version_String => Version.Long_Value);
+      if Version then
+         GPR2.Version.Display
+           ("GPRDUMP", "2019", Version_String => GPR2.Version.Long_Value);
 
-         if Options.Version then
-            Version.Display_Free_Software;
-            return;
-         end if;
+         GPR2.Version.Display_Free_Software;
+         GNAT.OS_Lib.OS_Exit (0);
+         return;
       end if;
 
       --  Now read arguments

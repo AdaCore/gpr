@@ -15,6 +15,8 @@ GPRLS = GPR + "ls"
 GPRCLEAN = GPR + "clean"
 GPRINSTALL = GPR + "install"
 GPRNAME = GPR + "name"
+GPRCONFIG = GPR + "config"
+GPRREMOTE = GPR + "remote"
 
 
 class BuilderAndRunner(object):
