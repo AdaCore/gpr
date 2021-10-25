@@ -1,0 +1,13 @@
+with "switches.gpr";
+
+project A is
+
+   package Compiler extends Switches.Compiler is
+      for Switches ("Ada") use Compiler'Switches ("Ada") & ("-O0");
+   end Compiler;
+
+   package CodePeer extends Switches.CodePeer is
+      for Database_Directory use "/build/buhrerh/ppp/codepeer/a.db";
+   end CodePeer;
+
+end A;

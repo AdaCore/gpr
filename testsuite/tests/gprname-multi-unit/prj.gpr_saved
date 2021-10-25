@@ -1,0 +1,8 @@
+project Prj is
+   for Main use ("sources.ada" at 3);
+
+   package Builder is
+      for Executable ("sources.ada" at 3) use "main";
+   end Builder;
+end Prj;
+

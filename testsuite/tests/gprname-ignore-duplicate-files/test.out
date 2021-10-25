@@ -1,0 +1,6 @@
+warning: duplicate file init.ada for units Init2 and Init1
+warning: generated Naming package needs to be reviewed manually
+
+warning: duplicate file init2.ada for unit Init_Duplicate will be ignored
+
+

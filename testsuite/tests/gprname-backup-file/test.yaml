@@ -1,0 +1,3 @@
+description: test gpr2name importing gprbuild-internal LC03-034 tests
+driver: python_script
+timeout: 600
