@@ -1,4 +1,0 @@
-native required
-gnat-5.04a1 DEAD wavefront test
-VMS DEAD
-check-gpr2ls DEAD no gprbuild call with project parameter.
