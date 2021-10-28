@@ -182,8 +182,7 @@ package body GPR2.Project.Source is
       -- To_Analyze --
       ----------------
 
-      procedure To_Analyze (Src : Source_Part)
-      is
+      procedure To_Analyze (Src : Source_Part) is
          Done_Pos : Containers.Name_Type_Set.Cursor;
          Position : Source_Reference.Identifier.Set.Cursor;
          Inserted : Boolean;
@@ -233,7 +232,7 @@ package body GPR2.Project.Source is
                   SU   : Unit_Info.Object;
                begin
                   if Unit_Info.Set.Set.Has_Element (CU) then
-                     SU := Data.Units (CU);
+                     SU := Unit_Info.Set.Set.Element (CU);
 
                      --  At least the dependencies are the spec and body of
                      --  the withed unit.
@@ -307,20 +306,17 @@ package body GPR2.Project.Source is
    function Dependencies
      (Self    : Object;
       Index   : Unit_Index := No_Index;
-      Closure : Boolean := False)
-      return Part_Set.Object
+      Closure : Boolean    := False) return Part_Set.Object
    is
       Deps : Part_Set.Object;
 
-      procedure Insert (Source : GPR2.Project.Source.Object;
-                        Unit   : GPR2.Unit.Object);
+      procedure Insert (Source : Object; Unit : GPR2.Unit.Object);
 
       ------------
       -- Insert --
       ------------
 
-      procedure Insert (Source : GPR2.Project.Source.Object;
-                        Unit   : GPR2.Unit.Object) is
+      procedure Insert (Source : Object; Unit : GPR2.Unit.Object) is
       begin
          Deps.Insert ((Source, Unit.Index));
       end Insert;
@@ -334,8 +330,7 @@ package body GPR2.Project.Source is
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : GPR2.Project.Source.Object;
-                    Unit   : GPR2.Unit.Object);
+                   (Source : Object; Unit : GPR2.Unit.Object);
       Closure  : Boolean := False)
    is
       Done      : Part_Set.Object;
@@ -413,16 +408,12 @@ package body GPR2.Project.Source is
      (Self     : Object;
       Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : GPR2.Project.Source.Object;
-                    Index  : Unit_Index);
+                   (Source : Object; Index : Unit_Index);
       Closure  : Boolean := False)
    is
-      procedure Action (Source : GPR2.Project.Source.Object;
-                        Unit   : GPR2.Unit.Object);
+      procedure Action (Source : Object; Unit : GPR2.Unit.Object);
 
-      procedure Action (Source : GPR2.Project.Source.Object;
-                        Unit   : GPR2.Unit.Object)
-      is
+      procedure Action (Source : Object; Unit : GPR2.Unit.Object) is
       begin
          if Unit.Is_Defined then
             For_Each (Source, Unit.Index);
