@@ -139,9 +139,8 @@ procedure Build_From_Command_Line (Self : in out Object) is
       Put_Line ("  -h, --help  Display usage and exit");
       New_Line;
 
-      Put_Line ("  -eL             Follow symbolic links when processing " &
-                  "project files");
-      Put_Line ("                  !!! NOT IMPLEMENTED !!!");
+      Put_Line ("  -eL             For backwards compatibility," &
+                  " has no effect");
       Put_Line ("  -P[ ]<proj>     Update or create project file <proj>");
       New_Line;
 
