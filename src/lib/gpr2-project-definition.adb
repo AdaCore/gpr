@@ -2543,10 +2543,30 @@ package body GPR2.Project.Definition is
    is
       Def_Sources : Project.Source.Set.Object;
       Def_Src_Map : Simple_Name_Source.Map;
+      Repeat_Map  : Simple_Name_Source.Map; -- Second pass for subunits
       Position    : Simple_Name_Source.Cursor;
       Inserted    : Boolean;
       SW          : Project.Source.Object;
-      use type Definition_References.Weak_Ref;
+
+      procedure Insert_SW;
+      --  Insert SW into Def_Sources and Def_Src_Map
+
+      ---------------
+      -- Insert_SW --
+      ---------------
+
+      procedure Insert_SW is
+      begin
+         Def_Sources.Insert (SW);
+         Def_Src_Map.Insert
+           (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+
+         pragma Assert
+           (Inserted or else SW.Language /= Ada_Language,
+            String (SW.Path_Name.Simple_Name) & " duplicated");
+
+         Set_Source (SW);
+      end Insert_SW;
 
    begin
       Source_Info.Parser.Registry.Clear_Cache;
@@ -2558,17 +2578,34 @@ package body GPR2.Project.Definition is
          --  project. We still need to call SW.Update to disambiguate
          --  Spec/Spec_Only and Body/Body_Only units.
 
-         SW.Update ((if Def.Extending /= Definition_References.Null_Weak_Ref
-                    then Source_Info.No_Backends
-                    else Backends));
-         Def_Sources.Insert (SW);
-         Def_Src_Map.Insert (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+         SW.Update
+           (if Def.Extending.Was_Freed
+            then Backends
+            else Source_Info.No_Backends);
 
-         pragma Assert
-           (Inserted or else SW.Language /= Ada_Language,
-            String (SW.Path_Name.Simple_Name) & " duplicated");
+         if SW.Is_Parsed (No_Index)
+           or else not Def.Extending.Was_Freed
+           or else SW.Language /= Ada_Language
+         then
+            Insert_SW;
 
-         Set_Source (SW);
+         else
+            --  It can be subunit case in runtime krunched source names, need
+            --  to repeat after all .ali files parsed.
+
+            Repeat_Map.Insert
+              (SW.Path_Name.Simple_Name, SW, Position, Inserted);
+
+            pragma Assert
+              (Inserted,
+               String (SW.Path_Name.Simple_Name) & " subunit duplicated");
+         end if;
+      end loop;
+
+      for C in Repeat_Map.Iterate loop
+         SW := Simple_Name_Source.Element (C);
+         SW.Update (Backends);
+         Insert_SW;
       end loop;
 
       Def.Sources     := Def_Sources;

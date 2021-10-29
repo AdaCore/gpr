@@ -105,9 +105,7 @@ package body GPR2.Source_Info.Parser.D is
             pragma Assert (Inserted);
 
          else
-            pragma Assert
-              (Unit_Dependencies."="
-                 (CU1, Data.Dependencies.First));
+            CU1 := Data.Dependencies.First;
          end if;
 
          return Result : constant Dependency_Vectors_Ref.Reference_Type :=
