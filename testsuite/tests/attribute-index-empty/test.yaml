@@ -1,0 +1,5 @@
+description:
+    attribute reference with empty index support
+driver: build_and_run
+project_file: test
+main: main
