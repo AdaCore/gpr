@@ -170,16 +170,26 @@ procedure GPRname.Process (Opt : GPRname.Options.Object) is
    From_Scratch : constant Boolean := not Project_Path.Exists;
    --  Indicates that we need to create the project from scratch
 
+   Project_Dir : constant GPR2.Path_Name.Object :=
+                   GPR2.Path_Name.Create_Directory
+                     (Filename_Optional (Project_Path.Dir_Name));
+
    Naming_Project_Basename : constant String :=
                                String (Project_Path.Base_Name) & "_naming.gpr";
    Naming_Project_Path     : constant Path_Name.Object :=
-                               GPR2.Project.Create
-                                 (Filename_Type (Naming_Project_Basename));
+                               Project_Dir.Compose
+                                 (Filename_Optional (Naming_Project_Basename));
+
    Naming_Project_Name     : String := String (Naming_Project_Path.Base_Name);
 
    Source_List_File_Basename : constant String :=
                                  String (Project_Path.Base_Name)
                                  & "_source_list.txt";
+
+   Source_List_File_Path     : constant Path_Name.Object :=
+                                 Project_Dir.Compose
+                                   (Filename_Optional
+                                      (Source_List_File_Basename));
 
    Compiler_Path : GPR2.Path_Name.Object;
 
@@ -884,7 +894,7 @@ begin
 
    begin
       Text_IO.Create
-        (File_Src_List, Text_IO.Out_File, Source_List_File_Basename);
+        (File_Src_List, Text_IO.Out_File, String (Source_List_File_Path.Name));
 
       Naming_Project_Buffer := To_Unbounded_String
         ("abstract project " & Naming_Project_Name & " is "
