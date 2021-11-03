@@ -1,0 +1,18 @@
+project Bug is
+
+   for Source_Dirs use (".","src/**");
+   for Languages use ( "Makefile");
+
+   package Naming is
+      for Body_Suffix ("makefile") use ".mk";
+      for Spec_Suffix ("makefile") use ".mks";
+      for Implementation_Exceptions ("makefile") use ("Makefile");
+      for Specification_Exceptions ("makefile") use ("Makefile_spec");
+   end Naming;
+
+   package Compiler is
+      for Driver ("Makefile") use "";
+   end Compiler;
+
+end Bug;
+

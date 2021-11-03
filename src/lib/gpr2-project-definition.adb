@@ -1011,7 +1011,20 @@ package body GPR2.Project.Definition is
                end if;
 
                if Match then
-                  Other_Except_Usage.Delete (Basename);
+                  declare
+                     use Filename_Source_Reference_Package;
+
+                     C : Cursor := Other_Except_Usage.Find (Basename);
+                  begin
+                     if Has_Element (C) then
+                        Other_Except_Usage.Delete (C);
+                     else
+                        --  Basename was already handled, don't handle twice.
+
+                        Match := False;
+                        Kind  := Unit.S_Spec;  --  Dummy value
+                     end if;
+                  end;
                end if;
             end if;
          end Check_Naming_Exceptions;
