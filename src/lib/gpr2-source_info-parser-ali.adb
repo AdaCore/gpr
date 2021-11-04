@@ -384,9 +384,8 @@ package body GPR2.Source_Info.Parser.ALI is
       --  Add all withed units into Withs below
 
       procedure Set_Source_Info_Data
-        (Cache    : Cache_Holder;
-         Add_Deps : Boolean);
-      --  Set returned source infor data
+        (Cache : Cache_Holder; Add_Deps : Boolean);
+      --  Set returned source info data
 
       function Key
         (LI       : Path_Name.Object'Class;
@@ -507,10 +506,12 @@ package body GPR2.Source_Info.Parser.ALI is
                if Source.Units.Is_Indexed_List then
                   --  No way to disambiguate: pick up the first unit.
                   --  Note: this is a corner case, as support for Multi-Unit
-                  --  sources with antique compilers is not really a user case
+                  --  sources with antique compilers is not really a user case.
+
                   Kind := Source.Kind (Multi_Unit_Index'First);
 
                   return To_Lower (Source.Unit_Name (Multi_Unit_Index'First));
+
                else
                   Kind := Source.Kind (No_Index);
 
@@ -572,6 +573,24 @@ package body GPR2.Source_Info.Parser.ALI is
                   Chksum, Stamp, Data.Dependencies (LI_Idx));
 
                Self.Sep_Cache.Insert (Name, H_Cache, C_Cache, Inserted);
+
+               if Inserted
+                 and then not Taken_From_Tree
+                 and then View.Is_Runtime
+               then
+                  --  We have to index separated unit in cache by the fake unit
+                  --  name calculated from runtime source filename, a.excach
+                  --  for a-excach.adb.
+
+                  declare
+                     U_Name : constant String := To_Unit_Name;
+                  begin
+                     if U_Name /= Name then
+                        Self.Sep_Cache.Insert
+                          (U_Name, H_Cache, C_Cache, Inserted);
+                     end if;
+                  end;
+               end if;
 
                if not Inserted
                  and then Self.Sep_Cache (C_Cache) /= H_Cache
@@ -780,6 +799,8 @@ package body GPR2.Source_Info.Parser.ALI is
          Add_Deps : Boolean)
       is
          U_Ref_Name : constant Name_Type := U_Ref.Name;
+         Position   : Unit_Dependencies.Cursor;
+         Inserted   : Boolean;
       begin
          pragma Assert
            ((U_Ref.Kind in GPR2.Unit.Spec_Kind)
@@ -805,18 +826,19 @@ package body GPR2.Source_Info.Parser.ALI is
             U_Ref.Update_Name (U_Ref_Name);
          end if;
 
-         Data.Language     := Ada_Language;
-         Data.Checksum     := Cache.Checksum;
+         Data.Language := Ada_Language;
+         Data.Checksum := Cache.Checksum;
+
          if LI_Idx = No_Index then
             Data.LI_Timestamp := Cache.Timestamp;
             Data.Parsed       := Source_Info.LI;
          else
-            Data.CU_Info (LI_Idx) :=
-              (Cache.Timestamp, Source_Info.LI);
+            Data.CU_Info (LI_Idx) := (Cache.Timestamp, Source_Info.LI);
          end if;
 
          if Add_Deps then
-            Data.Dependencies.Insert (LI_Idx, Cache.Depends);
+            Data.Dependencies.Insert
+              (LI_Idx, Cache.Depends, Position, Inserted);
          end if;
       end Set_Source_Info_Data;
 
@@ -1122,9 +1144,14 @@ package body GPR2.Source_Info.Parser.ALI is
                          Self.Sep_Cache.Constant_Reference (CS);
 
          begin
-            pragma Assert (SU.Name = Ref.Unit.Name);
+            if SU.Name = Ref.Unit.Name then
+               SU.Set_Separate_From (Ref.Unit.Separate_From);
 
-            SU.Set_Separate_From (Ref.Unit.Separate_From);
+            else
+               --  Runtime krunched filename case
+
+               SU := Ref.Unit;
+            end if;
 
             if SU.Index = No_Index then
                Data.Parsed := Source_Info.LI;
