@@ -1,0 +1,14 @@
+prj.gpr:2:09: warning: "/prj/obj/./obj" cannot relocate absolute object directory
+lib.gpr:1:17: warning: "/prj/obj/./obj-lib" cannot relocate absolute object directory
+--- 1
+lib.gpr:3:33: warning: "/prj/obj/obj-lib" cannot relocate absolute object directory
+lib.gpr:4:34: warning: "/prj/obj/lib" cannot relocate absolute library directory
+prj.gpr:3:37: warning: "/prj/obj/obj" cannot relocate absolute object directory
+prj.gpr:4:35: warning: "/prj/obj/exec" cannot relocate absolute exec directory
+
+--- 2
+
+--- 3
+
+--- 4
+
