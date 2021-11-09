@@ -3671,6 +3671,8 @@ package body GPR2.Project.Tree is
 
                      elsif Self.Build_Path.Is_Defined
                        and then OS_Lib.Is_Absolute_Path (AV.Text)
+                       and then Self.Root.Is_Defined
+                       and then Self.Build_Path /= Self.Root.Dir_Name
                      then
                         Self.Messages.Append
                           (Message.Create
