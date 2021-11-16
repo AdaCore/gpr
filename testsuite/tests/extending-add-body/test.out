@@ -1,0 +1,10 @@
+/pkg.o
+   Pkg
+      OK /pkg.adb
+------------
+/print.o
+   Print
+      OK /spec/print.adb
+/proc.o
+   Proc
+      OK /extended/proc.adb

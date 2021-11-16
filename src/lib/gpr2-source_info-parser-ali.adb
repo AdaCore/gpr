@@ -395,7 +395,14 @@ package body GPR2.Source_Info.Parser.ALI is
           LI         => Filename_Type (LI.Value),
           Src_Length => Basename'Length,
           Src        => Basename,
-          LI_Kind    => Kind);
+          LI_Kind    => (case Kind is
+                            when GPR2.Unit.S_Spec_Only => GPR2.Unit.S_Spec,
+                            when GPR2.Unit.S_Body_Only => GPR2.Unit.S_Body,
+                            when others => Kind));
+      --  Do not distingush between S_Spec/Body_Only and S_Spec/Body because
+      --  package without body can be inherited from extended project and body
+      --  defined in extending project. The same with S_Spec, but for procedure
+      --  or function.
 
       --------------
       -- Fill_Dep --
