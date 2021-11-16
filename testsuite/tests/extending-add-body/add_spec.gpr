@@ -1,0 +1,3 @@
+project Add_Spec extends "extended/no_spec.gpr" is
+   for Source_Dirs use ("spec");
+end Add_Spec;

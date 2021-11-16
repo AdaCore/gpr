@@ -1,0 +1,3 @@
+project No_Body is
+   for Source_Files use ("pkg.ads");
+end No_Body;
