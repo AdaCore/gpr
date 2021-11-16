@@ -1,0 +1,2 @@
+project Add_Body extends "extended/no_body.gpr" is
+end Add_Body;

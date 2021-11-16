@@ -1,0 +1,3 @@
+project No_Spec is
+   for Source_Files use ("proc.adb");
+end No_Spec;

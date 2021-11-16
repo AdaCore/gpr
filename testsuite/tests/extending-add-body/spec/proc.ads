@@ -1,0 +1,3 @@
+with Print;
+
+procedure Proc;
