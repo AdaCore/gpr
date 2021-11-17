@@ -192,11 +192,21 @@ private
 
    type Constant_Reference_Type
      (Attribute : not null access constant Project.Attribute.Object)
-   is null record;
+   is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Set_Attribute.Constant_Reference_Type (Attribute);
+   end record;
 
    type Reference_Type
      (Attribute : not null access Project.Attribute.Object)
-   is null record;
+   is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Set_Attribute.Reference_Type (Attribute);
+   end record;
 
    type Object is tagged record
       Attributes : Set.Map;

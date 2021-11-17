@@ -57,11 +57,14 @@ package body GPR2.Project.Source.Set is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type is
+      Position : Cursor) return Constant_Reference_Type
+   is
+      Ref : constant Set.Constant_Reference_Type :=
+              Set.Constant_Reference (Self.S, Position.Current);
    begin
       return Constant_Reference_Type'
-        (Source => Set.Constant_Reference
-           (Self.S, Position.Current).Element);
+           (Source => Ref.Element,
+            Ref    => Ref);
    end Constant_Reference;
 
    --------------

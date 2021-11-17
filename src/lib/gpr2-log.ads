@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -150,10 +150,20 @@ private
    end record;
 
    type Constant_Reference_Type
-     (Message : not null access constant GPR2.Message.Object) is null record;
+     (Message : not null access constant GPR2.Message.Object) is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Message_Set.Constant_Reference_Type (Message);
+   end record;
 
    type Reference_Type
-     (Message : not null access GPR2.Message.Object) is null record;
+     (Message : not null access GPR2.Message.Object) is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Message_Set.Reference_Type (Message);
+   end record;
 
    function Contains
      (Self : Object; Message : GPR2.Message.Object) return Boolean

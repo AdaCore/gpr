@@ -71,12 +71,13 @@ package body GPR2.Project.Attribute.Set is
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type
    is
-      pragma Unreferenced (Self);
+      Ref : Set_Attribute.Constant_Reference_Type renames
+              Set_Attribute.Constant_Reference
+                (Position.Set.all, Position.CA);
    begin
       return Constant_Reference_Type'
-        (Attribute =>
-           Set_Attribute.Constant_Reference
-             (Position.Set.all, Position.CA).Element);
+        (Attribute => Ref.Element.all'Unrestricted_Access,
+         Ref       => Ref);
    end Constant_Reference;
 
    --------------
@@ -417,11 +418,12 @@ package body GPR2.Project.Attribute.Set is
      (Self     : aliased in out Object;
       Position : Cursor) return Reference_Type
    is
-      pragma Unreferenced (Self);
+      Ref : Set_Attribute.Reference_Type renames
+              Set_Attribute.Reference (Position.Set.all, Position.CA);
    begin
       return Reference_Type'
-        (Attribute =>
-           Set_Attribute.Reference (Position.Set.all, Position.CA).Element);
+        (Attribute => Ref.Element.all'Unrestricted_Access,
+         Ref       => Ref);
    end Reference;
 
    ------------------

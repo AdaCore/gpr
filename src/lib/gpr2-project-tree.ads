@@ -543,7 +543,12 @@ private
                    1, View.Undefined);
 
    type Constant_Reference_Type
-     (View : not null access constant Project.View.Object) is null record;
+     (View : not null access constant Project.View.Object) is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Project.View.Vector.Vector.Constant_Reference_Type (View);
+   end record;
 
    Undefined : constant Object := (others => <>);
 

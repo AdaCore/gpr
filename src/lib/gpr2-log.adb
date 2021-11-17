@@ -94,11 +94,14 @@ package body GPR2.Log is
 
    function Constant_Reference
      (Self     : aliased Object;
-      Position : Cursor) return Constant_Reference_Type is
+      Position : Cursor) return Constant_Reference_Type
+   is
+      Ref : Message_Set.Constant_Reference_Type renames
+              Message_Set.Constant_Reference (Self.Store, Position.P);
    begin
       return Constant_Reference_Type'
-        (Message =>
-           Message_Set.Constant_Reference (Self.Store, Position.P).Element);
+        (Message => Ref.Element.all'Unrestricted_Access,
+         Ref     => Ref);
    end Constant_Reference;
 
    -----------
@@ -236,10 +239,14 @@ package body GPR2.Log is
 
    function Reference
      (Self     : aliased in out Object;
-      Position : Cursor) return Reference_Type is
+      Position : Cursor) return Reference_Type
+   is
+      Ref : Message_Set.Reference_Type renames
+              Message_Set.Reference (Self.Store, Position.P);
    begin
       return Reference_Type'
-        (Message => Message_Set.Reference (Self.Store, Position.P).Element);
+        (Message => Ref.Element.all'Unrestricted_Access,
+         Ref     => Ref);
    end Reference;
 
    --------------

@@ -111,7 +111,12 @@ private
                   Cursor'(Current => Base_Name_Set.No_Element);
 
    type Constant_Reference_Type
-     (Import : not null access constant Project.Import.Object) is null record;
+     (Import : not null access constant Project.Import.Object) is record
+      --  We need to keep the underlying reference so that it is not cleared
+      --  upon return of the getter, and so that the container has the proper
+      --  busy state
+      Ref : Base_Name_Set.Constant_Reference_Type (Import);
+   end record;
 
    function Find
      (Self : Object; Path_Name : GPR2.Path_Name.Object) return Cursor

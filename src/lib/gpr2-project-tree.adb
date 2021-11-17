@@ -422,14 +422,15 @@ package body GPR2.Project.Tree is
      (Self     : aliased Object;
       Position : Cursor) return Constant_Reference_Type
    is
-      pragma Unreferenced (Self);
+      Ref : Project_View_Store.Constant_Reference_Type renames
+              Project_View_Store.Constant_Reference
+                (Position.Views, Position.Current);
    begin
       --  Constant reference is given by the constant reference of the
       --  element contained in the Views set at the current location.
       return Constant_Reference_Type'
-        (View =>
-           Project_View_Store.Constant_Reference
-             (Position.Views, Position.Current).Element);
+        (View => Ref.Element.all'Unrestricted_Access,
+         Ref  => Ref);
    end Constant_Reference;
 
    -------------
