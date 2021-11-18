@@ -25,6 +25,7 @@
 with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Environment_Variables;
+with Ada.Exceptions;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
@@ -481,6 +482,9 @@ package body GPR2.KB is
             Compilers.Delete_First;
          end loop;
       end return;
+   exception
+      when Invalid_KB =>
+         return No_Compilers;
    end All_Compilers;
 
    -------------------------------------
@@ -942,7 +946,7 @@ package body GPR2.KB is
             Fallback         => Fallback,
             Errors           => Messages);
       exception
-         when No_Compatible_Compilers =>
+         when No_Compatible_Compilers | Invalid_KB =>
             return Null_Unbounded_String;
       end;
 
@@ -1912,6 +1916,7 @@ package body GPR2.KB is
 
          Next (Node_Cursor);
       end loop;
+
    end Get_External_Value;
 
    --------------------------
@@ -3199,7 +3204,17 @@ package body GPR2.KB is
             raise Invalid_KB;
          end if;
 
-         return Get_Variable_Value (Comp, Var_Name);
+         begin
+            return Get_Variable_Value (Comp, Var_Name);
+         exception
+            when Ex : Invalid_KB =>
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     Ada.Exceptions.Exception_Message (Ex),
+                     Sloc => Error_Sloc));
+               raise Invalid_KB;
+         end;
       end Callback;
 
       function Do_Substitute is new Substitute_Variables (Callback);
@@ -3265,7 +3280,17 @@ package body GPR2.KB is
                   if Comp.Selected
                     and then Comp.Language = Lang
                   then
-                     return Get_Variable_Value (Comp, Var_Name);
+                     begin
+                        return Get_Variable_Value (Comp, Var_Name);
+                     exception
+                        when Ex : Invalid_KB =>
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 Ada.Exceptions.Exception_Message (Ex),
+                                 Sloc => Error_Sloc));
+                           raise Invalid_KB;
+                     end;
                   end if;
                end loop;
             end;

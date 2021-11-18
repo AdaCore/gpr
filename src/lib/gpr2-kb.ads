@@ -184,7 +184,7 @@ package GPR2.KB is
       return Ada.Strings.Unbounded.Unbounded_String
      with Pre  => Self.Is_Defined,
           Post => Configuration'Result /= Null_Unbounded_String
-             or else Messages.Has_Error;
+             or else Messages.Has_Error or else Self.Has_Error;
    --  Creates configuration string
 
    procedure Release (Self : in out Object)

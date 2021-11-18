@@ -1,0 +1,11 @@
+<gprconfig>
+   <compiler_description>
+     <name>GNAT</name>
+     <executable>gnatls</executable>
+     <languages>Ada</languages>
+     <target>
+       <external>echo ${undefined}</external>
+       <grep regexp="[^\r\n]+"></grep>
+     </target>
+   </compiler_description>
+</gprconfig>
