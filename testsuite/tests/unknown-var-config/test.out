@@ -1,0 +1,7 @@
+foo.xml: error: variable 'undefined' is not defined
+Invalid setup of the gprconfig knowledge base
+foo.xml: error: variable 'undefined' is not defined
+Invalid setup of the gprconfig knowledge base
+foo.xml: error: variable 'undefined' is not defined
+prj.gpr: error: cannot create configuration file
+gprclean: "prj.gpr" processing failed

@@ -319,6 +319,9 @@ package body GPR2.Project.Configuration is
 
       else
 
+         for Msg of Base.Log_Messages loop
+            Result.Messages.Append (Msg);
+         end loop;
          Result.Messages.Append
            (Message.Create
               (Message.Error,
