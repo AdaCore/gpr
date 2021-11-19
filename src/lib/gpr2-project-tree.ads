@@ -533,21 +533,20 @@ private
    package Project_View_Store renames GPR2.Project.View.Vector.Vector;
 
    type Cursor is record
-      Views   : Project_View_Store.Vector;
-      Current : Positive;
-      Root    : View.Object;
+      Current : Project_View_Store.Cursor;
+      Tree    : access Object := null;
    end record;
 
    No_Element : constant Cursor :=
-                  (Project_View_Store.Empty_Vector,
-                   1, View.Undefined);
+                  (Current => Project_View_Store.No_Element,
+                   Tree    => null);
 
    type Constant_Reference_Type
      (View : not null access constant Project.View.Object) is record
       --  We need to keep the underlying reference so that it is not cleared
       --  upon return of the getter, and so that the container has the proper
       --  busy state
-      Ref : Project.View.Vector.Vector.Constant_Reference_Type (View);
+      Ref : Project.View.Set.Set.Constant_Reference_Type (View);
    end record;
 
    Undefined : constant Object := (others => <>);
