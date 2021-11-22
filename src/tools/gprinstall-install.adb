@@ -571,15 +571,23 @@ package body GPRinstall.Install is
 
                   elsif V.Name.Id in A.Artifacts | A.Required_Artifacts
                   then
-                     for S of V.Values loop
-                        Artifacts.Append
-                          (Artifacts_Data'
-                             (To_Unbounded_String (V.Index.Text),
-                              To_Unbounded_String (S.Text),
-                              Required =>
-                                (if V.Name.Id = A.Artifacts
-                                 then False else True)));
-                     end loop;
+                     declare
+                        Destination : constant Unbounded_String :=
+                                        (if V.Index.Text = ""
+                                         then To_Unbounded_String (".")
+                                         else To_Unbounded_String
+                                           (V.Index.Text));
+                     begin
+                        for S of V.Values loop
+                           Artifacts.Append
+                             (Artifacts_Data'
+                                (Destination,
+                                 To_Unbounded_String (S.Text),
+                                 Required =>
+                                   (if V.Name.Id = A.Artifacts
+                                    then False else True)));
+                        end loop;
+                     end;
                   end if;
                end loop;
             end;

@@ -2830,26 +2830,17 @@ package body GPR2.Parser.Project is
                   Str_Lit := Index.As_String_Literal_At;
                   At_Lit  := Str_Lit.F_At_Lit;
 
-                  declare
-                     Value : constant Value_Type :=
-                               Get_Value_Type (Str_Lit.F_Str_Lit);
-                  begin
-                     if Value'Length = 0 then
-                        return PAI.Undefined;
-                     else
-                        return PAI.Create
-                          (Get_Value_Reference
-                             (Self.Path_Name, Sloc_Range (Index),
-                              Get_Value_Type (Str_Lit.F_Str_Lit),
-                              At_Pos => -- Ati),
-                                (if At_Lit = No_GPR_Node
-                                 then 0
-                                 else Unit_Index'Wide_Wide_Value
-                                   (At_Lit.Text))),
-                           Is_Others      => False,
-                           Case_Sensitive => False);
-                     end if;
-                  end;
+                  return PAI.Create
+                    (Get_Value_Reference
+                       (Self.Path_Name, Sloc_Range (Index),
+                        Get_Value_Type (Str_Lit.F_Str_Lit),
+                        At_Pos => -- Ati),
+                          (if At_Lit = No_GPR_Node
+                           then 0
+                           else Unit_Index'Wide_Wide_Value
+                             (At_Lit.Text))),
+                     Is_Others      => False,
+                     Case_Sensitive => False);
                end if;
             end Create_Index;
 
@@ -2859,61 +2850,49 @@ package body GPR2.Parser.Project is
                         else PAI.Undefined);
 
          begin
-            if Present (Index) and then I_Sloc = PAI.Undefined
+            if not I_Sloc.Is_Defined
+             and then PRA.Exists (Q_Name)
+             and then PRA.Get (Q_Name).Index /= PRA.No
             then
-               --  Empty index found in attribute declaration
+               if not Values.Indexed_Values.Filled then
+                  Tree.Log_Messages.Append
+                   (Message.Create
+                      (Level   => Message.Error,
+                       Sloc    => Sloc,
+                       Message => "full associative array expression " &
+                         "requires simple attribute reference"));
 
-               Tree.Log_Messages.Append
-                 (Message.Create
-                    (Level   => Message.Error,
-                     Sloc    => Sloc,
-                     Message => "empty index not allowed here"));
+               elsif Values.Indexed_Values.Attribute_Pack /= Pack_Name then
+                  Tree.Log_Messages.Append
+                   (Message.Create
+                      (Level   => Message.Error,
+                       Sloc    => Sloc,
+                       Message => "not the same package as " &
+                         Image (Pack_Name)));
 
-            else
-               if not I_Sloc.Is_Defined
-                 and then PRA.Exists (Q_Name)
-                 and then PRA.Get (Q_Name).Index /= PRA.No
-               then
-                  if not Values.Indexed_Values.Filled then
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message => "full associative array expression " &
-                             "requires simple attribute reference"));
-
-                  elsif Values.Indexed_Values.Attribute_Pack /= Pack_Name then
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message => "not the same package as " &
-                             Image (Pack_Name)));
-
-                  elsif Values.Indexed_Values.Attribute_Name /= N_Id then
-                     Tree.Log_Messages.Append
-                       (Message.Create
-                          (Level   => Message.Error,
-                           Sloc    => Sloc,
-                           Message => "full associative array expression " &
-                             "must reference the same attribute """ &
-                             Image (N_Id) & '"'));
-
-                  else
-                     for V of Values.Indexed_Values.Values loop
-                        Create_And_Register_Attribute
-                          (Index  => V.Index,
-                           Values => V.Values,
-                           Single => V.Single);
-                     end loop;
-                  end if;
+               elsif Values.Indexed_Values.Attribute_Name /= N_Id then
+                  Tree.Log_Messages.Append
+                   (Message.Create
+                      (Level   => Message.Error,
+                       Sloc    => Sloc,
+                       Message => "full associative array expression " &
+                         "must reference the same attribute """ &
+                         Image (N_Id) & '"'));
 
                else
-                  Create_And_Register_Attribute
-                    (Index  => I_Sloc,
-                     Values => Values.Values,
-                     Single => Values.Single);
+                  for V of Values.Indexed_Values.Values loop
+                     Create_And_Register_Attribute
+                      (Index  => V.Index,
+                       Values => V.Values,
+                       Single => V.Single);
+                  end loop;
                end if;
+
+            else
+               Create_And_Register_Attribute
+                (Index  => I_Sloc,
+                 Values => Values.Values,
+                 Single => Values.Single);
             end if;
          end Parse_Attribute_Decl;
 
