@@ -1,0 +1,18 @@
+cp /runtime.xml /inst/include/prj/runtime.xml
+
+cp /file1.txt /inst/file1.txt
+
+cp /optional/file3.txt /inst/file3.txt
+
+cp /file7.txt /inst/file7.txt
+
+cp /file9.txt /inst/a/file9.txt
+
+cp /file5.txt /inst/file5.txt
+
+cp /required/file6.txt /inst/file6.txt
+
+cp /file8.txt /inst/file8.txt
+
+cp /file10.txt /inst/ra/file10.txt
+

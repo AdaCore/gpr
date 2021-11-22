@@ -1,0 +1,33 @@
+project Prj is
+
+   for Languages use ("Xml");
+   package Compiler is
+      for Driver ("XML") use "";
+   end Compiler;
+
+   package Naming is
+      for Body_Suffix ("XML") use ".xml";
+   end Naming;
+
+   for Source_Files use ("runtime.xml");
+
+   package Install is
+      for Artifacts ("") use (
+         "file1.txt",
+         "file2.txt",
+         "optional/file3.txt",
+         "optional/file4.txt");
+      for Required_Artifacts ("") use (
+         "file5.txt",
+         "required/file6.txt");
+      for Artifacts (".") use (
+         "file7.txt");
+      for Required_Artifacts (".") use (
+         "file8.txt");
+      for Artifacts ("a") use (
+         "file9.txt");
+      for Required_Artifacts ("ra") use (
+         "file10.txt");
+   end Install;
+
+end Prj;
