@@ -1,0 +1,6 @@
+cp /runtime.xml /inst/relative/include/prj/runtime.xml
+
+cp /file1.txt /inst/relative/a/file1.txt
+
+cp /file2.txt /inst/relative/ra/file2.txt
+
