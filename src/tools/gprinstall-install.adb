@@ -478,7 +478,8 @@ package body GPRinstall.Install is
                      else
                         Replace
                           (Prefix_Dir,
-                           Options.Global_Prefix_Dir.V.all & V.Value.Text,
+                           Options.Global_Prefix_Dir.V.all & "/" &
+                             V.Value.Text,
                            Normalize => True);
                      end if;
 
