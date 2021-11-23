@@ -1,0 +1,6 @@
+cp /arch/unchconv.ads /inst/gnat/unchconv.ads
+
+cp /adalib/unchconv.ali /inst/adalib/unchconv.ali
+
+cp /adalib/libgnat.a /inst/adalib/libgnat.a
+
