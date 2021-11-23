@@ -318,7 +318,12 @@ package body GPR2.Project.Source is
 
       procedure Insert (Source : Object; Unit : GPR2.Unit.Object) is
       begin
-         Deps.Insert ((Source, Unit.Index));
+         if Unit.Is_Defined then
+            Deps.Insert ((Source, Unit.Index));
+         else
+            Deps.Insert ((Source, No_Index));
+         end if;
+
       end Insert;
 
    begin
