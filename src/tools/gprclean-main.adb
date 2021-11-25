@@ -234,8 +234,7 @@ procedure GPRclean.Main is
       --  Check for additional switches in Clean package
 
       if View.Has_Packages (PRP.Clean)
-        and then View.Pack (PRP.Clean).Check_Attribute
-                   (PRA.Switches, Result => Attr)
+        and then View.Check_Attribute (PRP.Clean, PRA.Switches, Result => Attr)
       then
          declare
             use GNAT.Command_Line;
@@ -754,7 +753,8 @@ begin
             Default_KB => not Options.Skip_Default_KB,
             Custom_KB  => Options.KB_Locations));
 
-      if Project_Tree.Configuration.Log_Messages.Has_Element
+      if Project_Tree.Has_Configuration
+        and then Project_Tree.Configuration.Log_Messages.Has_Element
            (Warning     => True,
             Information => False,
             Error       => False)

@@ -69,14 +69,12 @@ procedure Main is
       Text_IO.Set_Col (20);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      if Prj.Has_Packages then
-         for Pck of Prj.Packages loop
-            Text_IO.Put_Line (" " & Image (Pck.Name));
-            for A of Pck.Attributes loop
-               Display (A);
-            end loop;
+      for Pck of Prj.Packages (With_Defaults => False) loop
+         Text_IO.Put_Line (" " & Image (Pck));
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
+            Display (A);
          end loop;
-      end if;
+      end loop;
    end Display;
 
    ---------------------

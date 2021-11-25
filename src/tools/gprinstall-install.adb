@@ -37,7 +37,6 @@ with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
@@ -472,11 +471,8 @@ package body GPRinstall.Install is
          if Project.Has_Packages (P.Install) then
             declare
                use Ada.Characters.Handling;
-
-               Pck : constant GPR2.Project.Pack.Object :=
-                       Project.Packages.Element (P.Install);
             begin
-               for V of Pck.Attributes loop
+               for V of Project.Attributes (Pack => P.Install) loop
                   if V.Name.Id = A.Prefix then
                      --  If Install.Prefix is a relative path, it is made
                      --  relative to the global prefix.
@@ -571,15 +567,23 @@ package body GPRinstall.Install is
 
                   elsif V.Name.Id in A.Artifacts | A.Required_Artifacts
                   then
-                     for S of V.Values loop
-                        Artifacts.Append
-                          (Artifacts_Data'
-                             (To_Unbounded_String (V.Index.Text),
-                              To_Unbounded_String (S.Text),
-                              Required =>
-                                (if V.Name.Id = A.Artifacts
-                                 then False else True)));
-                     end loop;
+                     declare
+                        Destination : constant Unbounded_String :=
+                                        (if V.Index.Text = ""
+                                         then To_Unbounded_String (".")
+                                         else To_Unbounded_String
+                                           (V.Index.Text));
+                     begin
+                        for S of V.Values loop
+                           Artifacts.Append
+                             (Artifacts_Data'
+                                (Destination,
+                                 To_Unbounded_String (S.Text),
+                                 Required =>
+                                   (if V.Name.Id = A.Artifacts
+                                    then False else True)));
+                        end loop;
+                     end;
                   end if;
                end loop;
             end;
@@ -1455,7 +1459,10 @@ package body GPRinstall.Install is
             begin
                Content.Append ("   package Naming is");
 
-               for A of Project.Naming_Package.Attributes loop
+               for A of Project.Attributes (Pack          => P.Naming,
+                                            With_Defaults => False,
+                                            With_Config   => False)
+               loop
                   if not A.Has_Index then
                      Content.Append ("      " & A.Image);
                      Found := True;
@@ -1749,8 +1756,9 @@ package body GPRinstall.Install is
                                  Project.Tree.Configuration.Corresponding_View;
                         begin
                            if C.Has_Packages (P.Compiler)
-                             and then C.Pack (P.Compiler).Check_Attribute
-                                        (A.Driver,
+                             and then C.Check_Attribute
+                                        (P.Compiler,
+                                         A.Driver,
                                          Attribute_Index.Create (Lang.Text),
                                          Result => Attr)
                              and then Attr.Value.Text /= ""
@@ -1789,7 +1797,7 @@ package body GPRinstall.Install is
          is
             use type Ada.Containers.Count_Type;
 
-            procedure Linker_For (Pck : GPR2.Project.Pack.Object);
+            procedure Linker_For (View : GPR2.Project.View.Object);
             --  Handle the linker options for this package
 
             procedure Append (Attribute : GPR2.Project.Attribute.Object);
@@ -1847,10 +1855,10 @@ package body GPRinstall.Install is
             -- Linker_For --
             ----------------
 
-            procedure Linker_For (Pck : GPR2.Project.Pack.Object) is
+            procedure Linker_For (View : GPR2.Project.View.Object) is
             begin
-               if Pck.Has_Attributes (A.Linker_Options) then
-                  Append (Pck.Attributes.Element (A.Linker_Options));
+               if View.Has_Attribute (A.Linker_Options, Pack => P.Linker) then
+                  Append (View.Attribute (A.Linker_Options, Pack => P.Linker));
                end if;
             end Linker_For;
 
@@ -1872,16 +1880,11 @@ package body GPRinstall.Install is
          begin
             R.Append ("         when """ & Options.Build_Name.all & """ =>");
 
-            if Project.Has_Packages (P.Linker) then
-               Linker_For (Project.Packages.Element (P.Linker));
-            end if;
+            Linker_For (Project);
 
             if Proj.Qualifier = K_Aggregate_Library then
                for Aggregated of Proj.Aggregated loop
-                  if Aggregated.Has_Packages (P.Linker) then
-                     Linker_For (Aggregated.Packages.Element (P.Linker));
-                  end if;
-
+                  Linker_For (Aggregated);
                   Append_Imported_External_Libraries (Aggregated);
                end loop;
             end if;
@@ -1892,13 +1895,10 @@ package body GPRinstall.Install is
 
             if Proj.Is_Library then
                declare
-                  Library_Options : GPR2.Project.Attribute.Object;
+                  Library_Options : constant GPR2.Project.Attribute.Object :=
+                                      Proj.Attribute (A.Library_Options);
                begin
-                  if Proj.Check_Attribute
-                    (Name           => A.Library_Options,
-                     Check_Extended => True,
-                     Result         => Library_Options)
-                  then
+                  if Library_Options.Is_Defined then
                      for Value of Library_Options.Values loop
                         Opts_Append (Value.Text);
                      end loop;
@@ -1938,8 +1938,8 @@ package body GPRinstall.Install is
          function Naming_Case_Alternative
            (Project : GPR2.Project.View.Object) return String_Vector.Vector
          is
-            procedure Naming_For (Pck : GPR2.Project.Pack.Object);
-            --  Handle the naming scheme for this package
+            procedure Naming_For (View : GPR2.Project.View.Object);
+            --  Handle the naming scheme for this view
 
             Seen : GPR2.Containers.Name_Set;
             --  Records the attribute generated to avoid duplicate when
@@ -1956,13 +1956,15 @@ package body GPRinstall.Install is
             -- Naming_For --
             ----------------
 
-            procedure Naming_For (Pck : GPR2.Project.Pack.Object) is
+            procedure Naming_For (View : GPR2.Project.View.Object) is
                Found : Boolean := False;
             begin
-               if Pck.Has_Attributes then
+               if View.Has_Packages (P.Naming) then
                   --  Check all associative attributes
 
-                  for Att of Pck.Attributes loop
+                  for Att of View.Attributes (Pack          => P.Naming,
+                                              With_Defaults => False,
+                                              With_Config   => False) loop
                      if Att.Has_Index then
                         if (Att.Name.Id /= A.Body_N
                             or else not
@@ -1999,11 +2001,11 @@ package body GPRinstall.Install is
          begin
             V.Append ("         when """ & Options.Build_Name.all & """ =>");
 
-            Naming_For (Project.Naming_Package);
+            Naming_For (Project);
 
             if Project.Qualifier = K_Aggregate_Library then
                for Agg of Project.Aggregated loop
-                  Naming_For (Agg.Naming_Package);
+                  Naming_For (Agg);
                end loop;
             end if;
 
@@ -2518,7 +2520,7 @@ package body GPRinstall.Install is
         (Project : GPR2.Project.View.Object) return Boolean is
       begin
          if Project.Has_Packages (P.Install) then
-            for V of Project.Pack (P.Install).Attributes loop
+            for V of Project.Attributes (Pack => P.Install) loop
                if V.Name.Id = A.Active then
                   return Characters.Handling.To_Lower
                            (V.Value.Text) /= "false";
@@ -2767,7 +2769,7 @@ package body GPRinstall.Install is
 
       Is_Project_To_Install := Active
         and then (Project.Has_Sources
-                  or else Project.Has_Attributes (A.Main)
+                  or else Project.Has_Attribute (A.Main)
                   or else Project.Is_Externally_Built);
 
       --  If we have an aggregate project we just install separately all

@@ -1,0 +1,5 @@
+with "child";
+
+project Prj6 is
+   H := Child.Naming'Specification_Exceptions("Test") & "H";
+end Prj6;

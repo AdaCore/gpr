@@ -97,6 +97,10 @@ package GPR2.Project.Attribute.Set is
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Unit_Index             := No_Index) return Cursor;
 
+   function Find
+     (Self      : Object;
+      Attribute : Project.Attribute.Object) return Cursor;
+
    function Has_Element (Position : Cursor) return Boolean;
 
    package Attribute_Iterator is
@@ -123,7 +127,7 @@ package GPR2.Project.Attribute.Set is
       Name          : Optional_Attribute_Id  := No_Attribute;
       Index         : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos        : Unit_Index             := No_Index;
-      With_Defaults : Boolean                := False)
+      With_Defaults : Boolean                := True)
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
@@ -140,27 +144,6 @@ package GPR2.Project.Attribute.Set is
 
    function Has_Languages (Self : Object) return Boolean;
    function Languages     (Self : Object) return Attribute.Object;
-
-   function Has_Source_Dirs (Self : Object) return Boolean;
-   function Source_Dirs     (Self : Object) return Attribute.Object;
-
-   function Has_Source_Files (Self : Object) return Boolean;
-   function Source_Files     (Self : Object) return Attribute.Object;
-
-   function Has_Excluded_Source_Files (Self : Object) return Boolean;
-   function Excluded_Source_Files     (Self : Object) return Attribute.Object;
-
-   function Has_Excluded_Source_List_File (Self : Object) return Boolean;
-   function Excluded_Source_List_File (Self : Object) return Attribute.Object;
-
-   function Has_Source_List_File (Self : Object) return Boolean;
-   function Source_List_File     (Self : Object) return Attribute.Object;
-
-   function Has_Library_Interface (Self : Object) return Boolean;
-   function Library_Interface     (Self : Object) return Attribute.Object;
-
-   function Has_Interfaces (Self : Object) return Boolean;
-   function Interfaces     (Self : Object) return Attribute.Object;
 
 private
 
@@ -218,47 +201,5 @@ private
 
    function Languages (Self : Object) return Attribute.Object is
      (Self.Element (Registry.Attribute.Languages));
-
-   function Has_Source_Dirs (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_Dirs));
-
-   function Source_Dirs (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_Dirs));
-
-   function Has_Source_Files (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_Files));
-
-   function Source_Files (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_Files));
-
-   function Has_Excluded_Source_Files (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Excluded_Source_Files));
-
-   function Excluded_Source_Files (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Excluded_Source_Files));
-
-   function Has_Excluded_Source_List_File (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Excluded_Source_List_File));
-
-   function Excluded_Source_List_File (Self : Object) return Attribute.Object
-     is (Self.Element (Registry.Attribute.Excluded_Source_List_File));
-
-   function Has_Source_List_File (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_List_File));
-
-   function Source_List_File (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_List_File));
-
-   function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Library_Interface));
-
-   function Library_Interface (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Library_Interface));
-
-   function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Interfaces));
-
-   function Interfaces (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Interfaces));
 
 end GPR2.Project.Attribute.Set;

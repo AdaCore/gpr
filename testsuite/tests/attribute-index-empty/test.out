@@ -1,4 +1,5 @@
 testing p3.gpr
 p3.gpr:8:50: error: empty index not allowed here
 testing p4.gpr
-p4.gpr:8:07: error: empty index not allowed here
+Compiler.Default_Switches()=("-ffunction-sections","-fdata-sections","-Wall")
+Compiler.Default_Switches(Ada)=("-gnatX","-funroll-loops","-gnatn","-fdata-sections","-ffunction-sections")

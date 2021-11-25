@@ -84,16 +84,14 @@ package body GPR2.Project.Attr_Values is
      (Name  : Source_Reference.Attribute.Object;
       Value : Source_Reference.Value.Object) return Object
    is
-      Sloc   : constant Source_Reference.Object :=
-                 Source_Reference.Object (Name);
       Values : constant Containers.Source_Value_List :=
                  Containers.Source_Value_Type_List.To_Vector
                    (Value, 1);
    begin
       return Object'
-        (Sloc
+        (Name
          with Single,
-              Name, Values, True, Build_Map (Values, True));
+              Values, True, Build_Map (Values, True));
    end Create;
 
    function Create
@@ -101,9 +99,9 @@ package body GPR2.Project.Attr_Values is
       Values : Containers.Source_Value_List) return Object is
    begin
       return Object'
-        (Source_Reference.Object (Name)
+        (Name
          with List,
-         Name, Values, True, Build_Map (Values, True));
+         Values, True, Build_Map (Values, True));
    end Create;
 
    ---------------
@@ -154,7 +152,7 @@ package body GPR2.Project.Attr_Values is
 
    function Name (Self : Object) return Source_Reference.Attribute.Object is
    begin
-      return Self.Name;
+      return Source_Reference.Attribute.Object (Self);
    end Name;
 
    ------------
@@ -165,10 +163,13 @@ package body GPR2.Project.Attr_Values is
      (Self : Object;
       Name : Source_Reference.Attribute.Object) return Object
    is
-      Result : Object := Self;
    begin
-      Result.Name := Name;
-      return Result;
+      return Object'
+        (Name with
+           Kind                 => Self.Kind,
+           Values               => Self.Values,
+           Value_Case_Sensitive => Self.Value_Case_Sensitive,
+           V_Map                => Self.V_Map);
    end Rename;
 
    --------------

@@ -80,7 +80,7 @@ package GPR2.Project.Attribute_Index is
 
    function Value
      (Self          : Object;
-      Preserve_Case : Boolean := True) return Value_Not_Empty
+      Preserve_Case : Boolean := True) return Value_Type
      with Pre => Self.Is_Defined;
    --  Returns the actual value for the given attribute index
 
@@ -155,7 +155,7 @@ private
 
    function Value
      (Self          : Object;
-      Preserve_Case : Boolean := True) return Value_Not_Empty
+      Preserve_Case : Boolean := True) return Value_Type
    is
      (if Preserve_Case
       then Self.Text

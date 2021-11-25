@@ -1,4 +1,5 @@
 with "gpr2";
 project test is
    for main use ("main.adb");
+package Compiler is for Default_Switches ("Ada") use ("-g", "-O0"); end Compiler;
 end test;

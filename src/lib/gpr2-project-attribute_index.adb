@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2020, AdaCore                      --
+--                    Copyright (C) 2019-2021, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -44,6 +44,12 @@ package body GPR2.Project.Attribute_Index is
                      then Right.Text
                      else "");
    begin
+      if L_Text = "" and then R_Text = "" then
+         --  Empty index should be different from not defined index
+
+         return Source_Reference.Value.Object (Left).Is_Defined
+           = Source_Reference.Value.Object (Right).Is_Defined;
+      end if;
       if Left.Case_Sensitive then
          return Is_Others and then L_Text = R_Text;
       else

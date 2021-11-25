@@ -30,12 +30,11 @@ with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
 with Ada.Text_IO;
 
-with GPR2.Parser.Project.Create;
+with GPR2.Project.Parser.Create;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Definition;
 with GPR2.Project.Import.Set;
-with GPR2.Project.Pack;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference.Attribute;
 with GPR2.Source_Reference.Value;
@@ -101,11 +100,6 @@ package body GPR2.Project.Tree is
       Unit   : GPR2.Unit.Object;
       Result : in out Source.Object) return Boolean;
    --  Get source by unit name and kind from the same subtree with the View
-
-   procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean);
-
-   function Ali_Parser_Is_Enabled (Tree : Object) return Boolean
-   is (Tree.Ali_Parser_Is_On);
 
    function Has_Source
      (View : Project.View.Object; Name : Simple_Name) return Boolean
@@ -240,20 +234,25 @@ package body GPR2.Project.Tree is
          package PRP renames Project.Registry.Pack;
          package PRA renames Project.Registry.Attribute;
       begin
-         if View.Is_Defined and then View.Has_Packages (PRP.Compiler) then
+         if View.Is_Defined
+           and then View.Has_Packages (PRP.Compiler)
+           and then View.Has_Languages
+         then
             for Language of View.Languages loop
                declare
                   Index  : constant Attribute_Index.Object :=
                              Attribute_Index.Create (Language.Text);
+                  Attr   : constant Attribute.Object :=
+                             (if View.Has_Attribute
+                                        (PRA.Driver, PRP.Compiler, Index)
+                              then View.Attribute
+                                          (PRA.Driver, PRP.Compiler, Index)
+                              else Attribute.Undefined);
                   Driver : constant String :=
-                             (if View.Pack (PRP.Compiler).Has_Attributes
-                                (PRA.Driver, Index)
-                              then
-                                 String (Path_Name.Create_File
-                                           (Filename_Type (View.Pack
-                                             (PRP.Compiler).Attribute
-                                               (PRA.Driver,
-                                                Index).Value.Text)).Base_Name)
+                             (if Attr.Is_Defined
+                              then String
+                                (Path_Name.Create_File
+                                   (Filename_Type (Attr.Value.Text)).Base_Name)
                               else "");
                begin
                   if Driver'Length > 2 then
@@ -477,11 +476,10 @@ package body GPR2.Project.Tree is
    begin
       --  Check runtime path
 
-      if CV.Check_Attribute
-        (PRA.Runtime_Dir,
-         Attribute_Index.Create ("ada"), Result => RTD)
-        and then RTD.Value.Text /= ""
-      then
+      RTD := CV.Attribute (PRA.Runtime_Dir,
+                               Index => Attribute_Index.Create (Ada_Language));
+
+      if RTD.Is_Defined and then RTD.Value.Text /= "" then
          --  Runtime_Dir (Ada) exists, this is used to compute the Source_Dirs
          --  and Object_Dir for the Runtime project view.
 
@@ -564,7 +562,7 @@ package body GPR2.Project.Tree is
          Data.Is_Root   := True;
          Data.Unique_Id := GPR2.View_Ids.Runtime_View_Id;
 
-         Data.Trees.Project := Parser.Project.Create
+         Data.Trees.Project := Project.Parser.Create
            (Name      => Name (PRA.Runtime),
             File      => RTF,
             Qualifier => K_Standard);
@@ -591,15 +589,6 @@ package body GPR2.Project.Tree is
    begin
       return Project_View_Store.Element (Position.Current);
    end Element;
-
-   -----------------------
-   -- Enable_Ali_Parser --
-   -----------------------
-
-   procedure Enable_Ali_Parser (Tree : in out Object; Enable : Boolean) is
-   begin
-      Tree.Ali_Parser_Is_On := Enable;
-   end Enable_Ali_Parser;
 
    -----------
    -- Error --
@@ -1289,15 +1278,11 @@ package body GPR2.Project.Tree is
             --  parsing as a configuration project is a simple project no
             --  with clauses.
 
-            Parser.Project.Process
+            Project.Parser.Process
               (P_Data.Trees.Project,
                Self,
                Root_Context,
-               C_View,
-               P_Data.Attrs,
-               P_Data.Vars,
-               P_Data.Packs,
-               P_Data.Types);
+               C_View);
 
             if Self.Conf.Is_Defined then
                Update_Project_Search_Path_From_Config (Self, Self.Conf);
@@ -1520,10 +1505,11 @@ package body GPR2.Project.Tree is
             return Target;
          end if;
 
-         if Self.Root.Is_Defined
-           and then Self.Root.Check_Attribute
-                      (PRA.Target, Check_Extended => True, Result => Tmp_Attr)
-         then
+         if Self.Root.Is_Defined then
+            Tmp_Attr := Self.Root.Attribute (PRA.Target);
+         end if;
+
+         if Tmp_Attr.Is_Defined then
             --  Check if the project explicitly defines the attribute or if
             --  this comes from a default value.
 
@@ -1545,6 +1531,7 @@ package body GPR2.Project.Tree is
       procedure Add_Languages (View : Project.View.Object) is
       begin
          if not View.Is_Abstract
+           and then View.Has_Languages
            and then View.Languages.Length = 0
          then
             Self.Append_Message
@@ -1552,7 +1539,7 @@ package body GPR2.Project.Tree is
                  (Level   => Message.Warning,
                   Message => "no language for the project "
                   & String (View.Name),
-                  Sloc    => View.Attributes.Languages));
+                  Sloc    => View.Attribute (PRA.Languages)));
          end if;
 
          if View.Has_Languages then
@@ -1563,7 +1550,7 @@ package body GPR2.Project.Tree is
             --  Keep languages attribute for possible error message Sloc
             --  parameter.
 
-            Lang_Sloc := View.Attributes.Languages;
+            Lang_Sloc := View.Attribute (PRA.Languages);
          end if;
       end Add_Languages;
 
@@ -1808,13 +1795,13 @@ package body GPR2.Project.Tree is
             return Name_Type (LRT);
          end if;
 
-         if Self.Root.Is_Defined
-           and then Self.Root.Check_Attribute
-                      (PRA.Runtime,
-                       Attribute_Index.Create
-                         (Value_Not_Empty (Name (Language))),
-                       Check_Extended => True, Result => Tmp_Attr)
-         then
+         if Self.Root.Is_Defined then
+            Tmp_Attr := Self.Root.Attribute
+              (PRA.Runtime,
+               Index => Attribute_Index.Create (Language));
+         end if;
+
+         if Tmp_Attr.Is_Defined then
             return Attr_As_Abs_Path (Tmp_Attr, Self.Root);
          end if;
 
@@ -1830,15 +1817,14 @@ package body GPR2.Project.Tree is
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Is_Defined
-           and then Self.Root.Check_Attribute
-                      (PRA.Toolchain_Name,
-                       Attribute_Index.Create
-                         (Value_Not_Empty (Name (Language))),
-                       Check_Extended => True, Result => Tmp_Attr)
-           and then Tmp_Attr.Value.Text /= ""
-         then
-            return Name_Type (Tmp_Attr.Value.Text);
+         if Self.Root.Is_Defined then
+            Tmp_Attr := Self.Root.Attribute
+              (PRA.Toolchain_Name,
+               Index => Attribute_Index.Create (Language));
+         end if;
+
+         if Tmp_Attr.Is_Defined then
+            return Optional_Name_Type (Tmp_Attr.Value.Text);
          end if;
 
          return No_Name;
@@ -1853,14 +1839,13 @@ package body GPR2.Project.Tree is
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Is_Defined
-           and then Self.Root.Check_Attribute
-                      (PRA.Toolchain_Path,
-                       Attribute_Index.Create
-                         (Value_Not_Empty (Name (Language))),
-                       Check_Extended => True, Result => Tmp_Attr)
-           and then Tmp_Attr.Value.Text /= ""
-         then
+         if Self.Root.Is_Defined then
+            Tmp_Attr := Self.Root.Attribute
+              (PRA.Toolchain_Path,
+               Index => Attribute_Index.Create (Language));
+         end if;
+
+         if Tmp_Attr.Is_Defined and then Tmp_Attr.Value.Text /= "" then
             return Filename_Type
               (GNAT.OS_Lib.Normalize_Pathname
                  (Tmp_Attr.Value.Text, Self.Root.Dir_Name.Value));
@@ -1878,15 +1863,14 @@ package body GPR2.Project.Tree is
       is
          Tmp_Attr : GPR2.Project.Attribute.Object;
       begin
-         if Self.Root.Is_Defined
-           and then Self.Root.Check_Attribute
-                      (PRA.Required_Toolchain_Version,
-                       Attribute_Index.Create
-                         (Value_Not_Empty (Name (Language))),
-                       Check_Extended => True, Result => Tmp_Attr)
-           and then Tmp_Attr.Value.Text /= ""
-         then
-            return Name_Type (Tmp_Attr.Value.Text);
+         if Self.Root.Is_Defined then
+            Tmp_Attr := Self.Root.Attribute
+              (PRA.Required_Toolchain_Version,
+               Index => Attribute_Index.Create (Language));
+         end if;
+
+         if Tmp_Attr.Is_Defined then
+            return Optional_Name_Type (Tmp_Attr.Value.Text);
          end if;
 
          return No_Name;
@@ -1972,15 +1956,18 @@ package body GPR2.Project.Tree is
             end loop;
 
             if Languages.Length = 0 then
-               Self.Append_Message
-                 (Message.Create
-                    (Level   => Message.Warning,
-                     Message => "no language for the projects tree: "
-                     & "configuration skipped",
-                     Sloc    => (if Lang_Sloc.Is_Defined
-                                 then Lang_Sloc
-                                 else Source_Reference.Create
-                                        (Self.Root.Path_Name.Value, 0, 0))));
+               if not Self.Root_Project.Is_Abstract then
+                  Self.Append_Message
+                    (Message.Create
+                       (Level   => Message.Warning,
+                        Message => "no language for the projects tree: "
+                        & "configuration skipped",
+                        Sloc    => (if Lang_Sloc.Is_Defined
+                                    then Lang_Sloc
+                                    else Source_Reference.Create
+                                      (Self.Root.Path_Name.Value, 0, 0))));
+               end if;
+
                return;
             end if;
 
@@ -2544,8 +2531,8 @@ package body GPR2.Project.Tree is
 
          Paths   : constant Path_Name.Set.Object :=
                      GPR2.Project.Search_Paths (Filename, Search_Path);
-         Project : constant Parser.Project.Object :=
-                     Parser.Project.Parse
+         Project : constant GPR2.Project.Parser.Object :=
+                     GPR2.Project.Parser.Parse
                        (Filename, Self.Implicit_With, Self.Messages);
          Data    : Definition.Data;
       begin
@@ -2572,7 +2559,7 @@ package body GPR2.Project.Tree is
                   if Import_Filename.Exists then
                      Data.Trees.Imports.Insert
                        (Import_Filename,
-                        Parser.Project.Parse
+                        GPR2.Project.Parser.Parse
                           (Import_Filename,
                            Self.Implicit_With,
                            Self.Messages));
@@ -2601,7 +2588,7 @@ package body GPR2.Project.Tree is
                                         Create (Extended_Name, Paths);
                begin
                   if Extended_Filename.Exists then
-                     Data.Trees.Extended := Parser.Project.Parse
+                     Data.Trees.Extended := GPR2.Project.Parser.Parse
                         (Extended_Filename, Self.Implicit_With, Self.Messages);
                   else
                      Self.Messages.Append
@@ -2654,9 +2641,11 @@ package body GPR2.Project.Tree is
       end Propagate_Aggregate_Library;
 
    begin
-      if Starting_From.Is_Defined
-        and then Starting_From.Check_Attribute (PRA.Project_Path, Result => PP)
-      then
+      if Starting_From.Is_Defined then
+         PP := Starting_From.Attribute (PRA.Project_Path);
+      end if;
+
+      if PP.Is_Defined then
          declare
             Prepend : Boolean := False;
             Path    : Path_Name.Object;
@@ -2929,18 +2918,17 @@ package body GPR2.Project.Tree is
       then
          return Self.Conf.Runtime (Language);
 
-      elsif Self.Root.Is_Defined
-        and then Self.Root.Check_Attribute
+      elsif Self.Root.Is_Defined then
+         TA := Self.Root.Attribute
           (PRA.Runtime,
-           Index => GPR2.Project.Attribute_Index.Create (Language),
-           Check_Extended => True,
-           Result         => TA)
-      then
-         return Optional_Name_Type (TA.Value.Text);
+           Index => Attribute_Index.Create (Language));
 
-      else
-         return No_Name;
+         if TA.Is_Defined then
+            return Optional_Name_Type (TA.Value.Text);
+         end if;
       end if;
+
+      return No_Name;
    end Runtime;
 
    ---------------------
@@ -2975,7 +2963,7 @@ package body GPR2.Project.Tree is
       Set_Context (Self, Changed);
 
       for V of Self.Views_Set loop
-         Definition.Set_Default_Attributes (Definition.Get (V).all);
+         Definition.Get (V).Clear_Cache;
 
          if Src_Subdirs /= ""
            and then V.Kind not in K_Configuration | K_Abstract
@@ -3200,8 +3188,9 @@ package body GPR2.Project.Tree is
 
             function Is_Defined_Empty (Attr : Attribute_Id) return Boolean is
             begin
-               return View.Check_Attribute (Attr, Result => Tmp_Attr)
-                 and then Tmp_Attr.Values.Is_Empty;
+               Tmp_Attr := View.Attribute (Attr);
+
+               return Tmp_Attr.Is_Defined and then Tmp_Attr.Values.Is_Empty;
             end Is_Defined_Empty;
 
          begin
@@ -3227,15 +3216,11 @@ package body GPR2.Project.Tree is
          end Is_Implicitly_Abstract;
 
       begin
-         Parser.Project.Process
+         GPR2.Project.Parser.Process
            (P_Data.Trees.Project,
             Self,
             View.Context,
             View,
-            P_Data.Attrs,
-            P_Data.Vars,
-            P_Data.Packs,
-            P_Data.Types,
             Self.Pre_Conf_Mode);
 
          if View.Qualifier not in Aggregate_Kind then
@@ -3411,12 +3396,13 @@ package body GPR2.Project.Tree is
 
                elsif View.Check_Attribute
                        (PRA.Library_Name,
-                        Check_Extended => True,
                         Result         => Tmp_Attr)
-                 and then Tmp_Attr.Value.Text /= ""
+                 and then (Tmp_Attr.Value.Text /= ""
+                           or else Tmp_Attr.Value.Is_From_Default)
                  and then View.Check_Attribute
                             (PRA.Library_Dir, Result => Tmp_Attr)
-                 and then Tmp_Attr.Value.Text /= ""
+                 and then (Tmp_Attr.Value.Text /= ""
+                           or else Tmp_Attr.Value.Is_From_Default)
                then
                   --  If Library_Name, Library_Dir are declared, then the
                   --  project is a library project.
@@ -3516,22 +3502,22 @@ package body GPR2.Project.Tree is
          --  Check packages
 
          for P of P_Data.Packs loop
-            if Registry.Pack.Exists (P.Name) then
+            if Registry.Pack.Exists (P.Id) then
                --  Check the package itself
 
-               if not Registry.Pack.Is_Allowed_In (P.Name, P_Kind) then
+               if not Registry.Pack.Is_Allowed_In (P.Id, P_Kind) then
                   Self.Warning
-                    ("package """ & Image (P.Name)
+                    ("package """ & Image (P.Id)
                      & """ cannot be used in " & Image (P_Kind) & 's',
                      P);
                end if;
 
                --  Check package's attributes
 
-               for A of P.Attributes loop
+               for A of P.Attrs loop
                   declare
                      Q_Name : constant PRA.Qualified_Name :=
-                                PRA.Create (A.Name.Id, P.Name);
+                                PRA.Create (A.Name.Id, P.Id);
                      Def    : PRA.Def;
                   begin
                      if PRA.Exists (Q_Name) then
@@ -3546,11 +3532,11 @@ package body GPR2.Project.Tree is
 
                         Check_Def (Def, A);
 
-                     elsif PRP.Attributes_Are_Checked (P.Name) then
+                     elsif PRP.Attributes_Are_Checked (P.Id) then
                         Self.Warning
                           ("attribute """ & Image (A.Name.Id)
                            & """ not supported in package "
-                           & Image (P.Name),
+                           & Image (P.Id),
                            A);
                      end if;
                   end;
@@ -3650,14 +3636,17 @@ package body GPR2.Project.Tree is
                Mandatory     : Boolean := False;
                Must_Exist    : Boolean := True) is
             begin
-               if View.Check_Attribute (Attr_Name, Result => Attr) then
+               --  We don't warn for default attributes (such as exec dir
+               --  defaulting to a non-existing object dir), as we already
+               --  warn for the referenced attribute.
+               if View.Check_Attribute (Attr_Name, Result => Attr)
+                 and then not Attr.Is_Default
+               then
                   declare
                      AV : constant Source_Reference.Value.Object := Attr.Value;
                      PN : constant Path_Name.Object := Get_Directory (View);
                   begin
-                     if Must_Exist
-                       and then not PN.Exists
-                     then
+                     if Must_Exist and then not PN.Exists then
                         Self.Messages.Append
                           (Message.Create
                              ((if Self.Absent_Dir_Error
@@ -3700,6 +3689,7 @@ package body GPR2.Project.Tree is
          begin
             if View.Kind in K_Standard | K_Library | K_Aggregate_Library
               and then Check_Object_Dir_Exists
+              and then not View.Is_Aggregated_In_Library
             then
                Check_Directory
                  (PRA.Object_Dir, "object",
@@ -3708,7 +3698,9 @@ package body GPR2.Project.Tree is
                                   and then not View.Is_Extended);
             end if;
 
-            if View.Is_Library then
+            if View.Is_Library
+              and then not View.Is_Aggregated_In_Library
+            then
                Check_Directory
                  (PRA.Library_Dir, "library",
                   Project.View.Library_Directory'Access,
@@ -3723,7 +3715,7 @@ package body GPR2.Project.Tree is
                                   and then not View.Is_Extended);
 
                if View.Has_Library_Interface
-                 or else View.Has_Attributes (PRA.Interfaces)
+                 or else View.Has_Attribute (PRA.Interfaces)
                then
                   Check_Directory
                     (PRA.Library_Src_Dir, "",
@@ -3731,8 +3723,7 @@ package body GPR2.Project.Tree is
                end if;
 
                if not View.Check_Attribute
-                        (PRA.Library_Name,
-                         Check_Extended => True, Result => Attr)
+                        (PRA.Library_Name, Result => Attr)
                then
                   Self.Messages.Append
                     (Message.Create
@@ -3744,7 +3735,9 @@ package body GPR2.Project.Tree is
 
             case View.Kind is
                when K_Standard =>
-                  if Check_Exec_Dir_Exists then
+                  if Check_Exec_Dir_Exists
+                    and then not View.Is_Aggregated_In_Library
+                  then
                      Check_Directory
                        (PRA.Exec_Dir, "exec",
                         Project.View.Executable_Directory'Access);
@@ -3825,6 +3818,11 @@ package body GPR2.Project.Tree is
 
          Self.Runtime := Create_Runtime_View (Self);
       end if;
+
+      --  Clear attribute value cache
+      for V of Self.Views_Set loop
+         Definition.Get (V).Clear_Cache;
+      end loop;
 
       declare
          Closure_Found : Boolean := True;
@@ -3959,8 +3957,7 @@ package body GPR2.Project.Tree is
          return Name_Type (TA.Value.Text);
 
       elsif Self.Root.Is_Defined
-        and then Self.Root.Check_Attribute
-                   (PRA.Target, Check_Extended => True, Result => TA)
+        and then Self.Root.Check_Attribute (PRA.Target, Result => TA)
       then
          return Name_Type (TA.Value.Text);
 
@@ -4036,7 +4033,6 @@ package body GPR2.Project.Tree is
       Conf : Project.Configuration.Object)
    is
       use OS_Lib;
-      Compiler     : Project.Pack.Object;
       Drivers      : Attribute.Set.Object;
 
       PATH         : constant String := Environment_Variables.Value ("PATH");
@@ -4081,10 +4077,7 @@ package body GPR2.Project.Tree is
       end Is_Bin_Path;
 
    begin
-      if Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
-         Compiler :=
-           Conf.Corresponding_View.Packages.Element (Registry.Pack.Compiler);
-      else
+      if not Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
          return;
       end if;
 
@@ -4100,7 +4093,9 @@ package body GPR2.Project.Tree is
          (1 => Path_Separator),
          String_Split.Multiple);
 
-      Drivers := Compiler.Attributes (Registry.Attribute.Driver);
+      Drivers := Conf.Corresponding_View.Attributes
+        (Registry.Attribute.Driver,
+         Pack => Registry.Pack.Compiler);
 
       --  We need to arrange toolchains in the order of appearance on PATH
 
@@ -4493,7 +4488,5 @@ begin
    Definition.Set_Source         := Set_Source'Access;
    Definition.Remove_Source      := Remove_Source'Access;
    Definition.Get_Context        := Get_Context'Access;
-   Definition.Enable_Ali_Parser  := Enable_Ali_Parser'Access;
-   Definition.Ali_Parser_Is_On   := Ali_Parser_Is_Enabled'Access;
    Definition.Are_Sources_Loaded := Are_Sources_Loaded'Access;
 end GPR2.Project.Tree;

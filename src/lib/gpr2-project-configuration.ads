@@ -26,7 +26,7 @@
 
 limited with GPR2.KB;
 with GPR2.Log;
-with GPR2.Parser.Project;
+with GPR2.Project.Parser;
 with GPR2.Project.View;
 with GNATCOLL.Refcount;
 
@@ -128,14 +128,16 @@ package GPR2.Project.Configuration is
    --  specific runtime has been specified for this language.
 
    function Archive_Suffix (Self : Object) return Filename_Type
-     with Pre  => Self.Is_Defined,
+     with Inline,
+          Pre  => Self.Is_Defined,
           Post => Archive_Suffix'Result (Archive_Suffix'Result'First) = '.';
    --  Returns the archive file suffix (with the leading dot)
 
    function Object_File_Suffix
      (Self     : Object;
       Language : Language_Id) return Filename_Type
-     with Pre  => Self.Is_Defined,
+     with Inline,
+          Pre  => Self.Is_Defined,
           Post => Object_File_Suffix'Result
                     (Object_File_Suffix'Result'First) = '.';
    --  Returns the object file suffix (with the leading dot)
@@ -208,7 +210,7 @@ private
    type Object is tagged record
       Messages           : Log.Object;
       Target             : Unbounded_String;
-      Project            : Parser.Project.Object;
+      Project            : GPR2.Project.Parser.Object;
       Conf               : GPR2.Project.View.Object;
       Descriptions       : Configuration.Descriptions.Vector;
 

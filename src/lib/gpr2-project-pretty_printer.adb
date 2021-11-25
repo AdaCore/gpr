@@ -30,9 +30,8 @@ with GPR_Parser.Common;
 with Langkit_Support.Text;
 
 with GPR2;
-with GPR2.Parser;
-with GPR2.Parser.Project;
 with GPR2.Project.Definition;
+with GPR2.Project.Parser;
 with GPR2.Project.Registry.Attribute;
 
 package body GPR2.Project.Pretty_Printer is

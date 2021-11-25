@@ -1,6 +1,7 @@
 Demo     K_STANDARD
 A:   Archive_Suffix ~> .a
 A:   Exec_Dir ~> 
+A:   Externally_Built ~> false
 A:   Languages ~> Ada
 A:   Name ~> demo
 A:   Object_Dir -> 
@@ -12,5 +13,4 @@ A2:  Object_Dir ->
 A3:  Object_Dir
 V:   Dir -> 
 Compiler
-A:   Object_File_Suffix () ~> .o
 A:   Switches [Capital.adb] -> -g -gnata

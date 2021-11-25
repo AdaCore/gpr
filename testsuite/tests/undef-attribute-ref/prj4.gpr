@@ -1,0 +1,6 @@
+project Prj4 is
+
+   package Naming is
+      D := Prj4.Naming'Specification_Exceptions("Test") & ("D");
+   end Naming;
+end Prj4;

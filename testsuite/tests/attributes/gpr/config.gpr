@@ -1,0 +1,5 @@
+configuration project MyConfig is
+   package Compiler is
+      for Switches("ada") use ("-config-ada");
+   end Compiler;
+end MyConfig;

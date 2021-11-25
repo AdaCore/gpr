@@ -45,18 +45,16 @@ procedure Main is
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
       if Full then
-         if Prj.Has_Attributes then
-            for A in Prj.Attributes.Iterate loop
-               Text_IO.Put
-                 ("   " & Image (Attribute.Set.Element (A).Name.Id));
-               Text_IO.Put (" ->");
+         for A of Prj.Attributes (With_Defaults => False) loop
+            Text_IO.Put
+              ("   " & Image (A.Name.Id));
+            Text_IO.Put (" ->");
 
-               for V of Attribute.Set.Element (A).Values loop
-                  Text_IO.Put (" " & V.Text);
-               end loop;
-               Text_IO.New_Line;
+            for V of A.Values loop
+               Text_IO.Put (" " & V.Text);
             end loop;
-         end if;
+            Text_IO.New_Line;
+         end loop;
       end if;
    end Display;
 
