@@ -935,7 +935,7 @@ package body GPRinstall.Install is
                if Required then
                   Rollback_Manifests;
                   raise Constraint_Error with
-                    "warning: file does not exist '" & Pathname.Value & ''';
+                    "error: file does not exist '" & Pathname.Value & ''';
                else
                   Put_Line
                     ("warning: file does not exist '" & Pathname.Value & ''');
@@ -2665,8 +2665,9 @@ package body GPRinstall.Install is
                                   & Buffer
                                       (GNAT.MD5.Message_Digest'Length + 2
                                         .. Last);
+                     Unused   : Boolean;
                   begin
-                     Ada.Directories.Delete_File (Filename);
+                     OS_Lib.Delete_File (Filename, Unused);
 
                      Delete_Empty_Directory
                        (Prefix_Dir.V.all,
