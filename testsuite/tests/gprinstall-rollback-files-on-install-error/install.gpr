@@ -1,0 +1,24 @@
+project Install is
+
+   for Languages use ("XML");
+
+   package Compiler is
+      for Driver ("XML") use "";
+   end Compiler;
+
+   package Naming is
+      for Body_Suffix ("XML") use ".xml";
+   end Naming;
+
+   for Source_Files use ("runtime.xml");
+
+   package Install is
+      for Required_Artifacts ("") use
+        ("runtime.xml",
+         "support\ada_source_path",
+         "support\ada_object_path", "target_properties");
+      for Sources_Subdir use ".";
+      for Install_Project use "false";
+   end Install;
+
+end Install;
