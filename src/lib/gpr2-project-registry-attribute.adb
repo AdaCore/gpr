@@ -693,6 +693,7 @@ begin
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
+      Default               => Create ("false"),
       Inherit_From_Extended => Not_Inherited);
 
    --  leading_library_options
