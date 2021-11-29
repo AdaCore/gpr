@@ -88,8 +88,7 @@ package GPR2.Project.Registry.Attribute is
    type Default_Value_Kind is
      (D_Attribute_Reference,
       D_Value,
-      D_Callback,
-      D_Empty_List);
+      D_Callback);
    --  The various kind of default value definition:
    --  Attribute_Reference: the default value takes the value of the mentioned
    --   attribute.
@@ -124,8 +123,6 @@ package GPR2.Project.Registry.Attribute is
             Values : Value_Map.Map;
          when D_Callback =>
             Callback : Default_Value_Callback;
-         when D_Empty_List =>
-            null;
       end case;
    end record;
 

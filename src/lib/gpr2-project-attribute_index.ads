@@ -55,7 +55,7 @@ package GPR2.Project.Attribute_Index is
    --  Creates an attribute index for the given Index source reference
 
    function Create
-     (Value          : Value_Not_Empty;
+     (Value          : Value_Type;
       Case_Sensitive : Boolean := False) return Object
      with Post => Create'Result.Is_Defined;
    --  Creates a built-in attribute index
@@ -134,7 +134,7 @@ private
    is (Index with Is_Others, Case_Sensitive);
 
    function Create
-     (Value          : Value_Not_Empty;
+     (Value          : Value_Type;
       Case_Sensitive : Boolean := False) return Object
    is
      (Create (Source_Reference.Value.Object

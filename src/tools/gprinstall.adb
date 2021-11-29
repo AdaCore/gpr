@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -46,9 +46,7 @@ package body GPRinstall is
             Check_Entry : while More_Entries (Search) loop
                Get_Next_Entry (Search, Element);
 
-               if Directories.Simple_Name (Element) /= "."
-                 and then Directories.Simple_Name (Element) /= ".."
-               then
+               if Directories.Simple_Name (Element) not in "." | ".." then
                   To_Delete := False;
                   exit Check_Entry;
                end if;

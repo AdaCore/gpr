@@ -3,15 +3,18 @@ B:SINGLE=false B
 C:SINGLE=lowercase C
 E:SINGLE=lowercase E
 G:SINGLE=lowercase G
+Compiler.E:SINGLE=lowercase E
+Naming.C:SINGLE=lowercase C
 prj1.gpr:
 G:SINGLE=lowercaseG
+Compiler.E:SINGLE=lowercaseE
 prj2.gpr:
 G:SINGLE=lowercaseG
 prj3.gpr:
-prj3.gpr:3:17: error: undefined attribute "Main"
+A:LIST=A;
 prj4.gpr:
-prj4.gpr:4:24: error: undefined attribute "Naming'Specification_Exceptions ("Test")"
+Naming.D:LIST=D;
 prj5.gpr:
-prj5.gpr:4:19: error: undefined attribute "Naming'Specification_Exceptions ("Test")"
+Compiler.F:LIST=F;
 prj6.gpr:
-prj6.gpr:4:22: error: undefined attribute "Naming'Specification_Exceptions ("Test")"
+H:LIST=H;

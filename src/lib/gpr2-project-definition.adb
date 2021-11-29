@@ -337,7 +337,9 @@ package body GPR2.Project.Definition is
                Index           : constant Attribute_Index.Object :=
                                    Attribute_Index.Create (Ada_Language);
             begin
-               if Associated_Lang /= Suffix_Lang_Maps.No_Element then
+               if Suffix_Lang_Maps.Has_Element (Associated_Lang) and then
+                 Suffix_Lang_Maps.Element (Associated_Lang) /= Language
+               then
                   if Attribute_Name = PRA.Separate_Suffix
                     and then View.Has_Attribute (PRA.Body_Suffix,
                                                  Pack  => PRP.Naming,

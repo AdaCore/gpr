@@ -1,0 +1,6 @@
+..\..\..\src\gnarl
+..\..\src\gnarl
+..\src\crt0
+..\src\gnarl
+arch
+user_srcs

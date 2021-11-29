@@ -1,0 +1,3 @@
+description:
+    Check gprinstall reports correctly installation error
+driver: python_script

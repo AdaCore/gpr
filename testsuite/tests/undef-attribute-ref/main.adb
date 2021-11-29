@@ -41,9 +41,15 @@ procedure Main is
       end if;
    end Print_Message;
 
-   procedure Print_Variable (Variable : GPR2.Project.Variable.Object) is
+   procedure Print_Variable (Variable : GPR2.Project.Variable.Object;
+                             Pack     : GPR2.Optional_Package_Id := GPR2.No_Package) is
       use GPR2.Project.Registry.Attribute;
+      use type GPR2.Package_Id;
    begin
+      if Pack /= GPR2.No_Package then
+         Ada.Text_IO.Put (GPR2.Image (Pack) & '.');
+      end if;
+
       Ada.Text_IO.Put(String (Variable.Name.Text) & ":" & Variable.Kind'Img & "=");
       if Variable.Kind = GPR2.Project.Registry.Attribute.Single then
          Ada.Text_IO.Put_Line (Variable.Value.Text);
@@ -68,6 +74,12 @@ procedure Main is
 
       for V of Tree.Root_Project.Variables loop
          Print_Variable (V);
+      end loop;
+
+      for Pack of Tree.Root_Project.Packages loop
+         for V of Tree.Root_Project.Variables (Pack) loop
+            Print_Variable (V, Pack);
+         end loop;
       end loop;
 
    exception

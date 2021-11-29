@@ -641,21 +641,6 @@ package body GPR2.Project.View is
                      end if;
                   end;
 
-               when PRA.D_Empty_List =>
-                  declare
-                     SR_Name : constant Source_Reference.Attribute.Object :=
-                                 Source_Reference.Attribute.Object
-                                   (Source_Reference.Attribute.Create
-                                      (GPR2.Source_Reference.Builtin,
-                                       Name));
-                  begin
-                     Result := Project.Attribute.Create
-                       (Name    => SR_Name,
-                        Values  =>
-                          Containers.Source_Value_Type_List.Empty_Vector,
-                        Default => True);
-                  end;
-
                when PRA.D_Callback =>
                   --  Create the default value for the attribute from a
                   --  callback call.
@@ -834,9 +819,6 @@ package body GPR2.Project.View is
                begin
                   Maybe_Insert (Def_Attr);
                end;
-
-            when D_Empty_List =>
-               null;
 
             when D_Value =>
                for Cursor in Def.Default.Values.Iterate loop

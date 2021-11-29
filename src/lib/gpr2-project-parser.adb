@@ -1271,16 +1271,14 @@ package body GPR2.Project.Parser is
                       Get_Value_Type (I_Node.As_Single_Tok_Node);
          begin
             return
-              (if Index'Length = 0
-               then PAI.Undefined
-               else PAI.Create
+              PAI.Create
                  (Index,
                   Case_Sensitive =>
                     (if Name = PRA.Switches
                      then Is_Switches_Index_Case_Sensitive
                        (Get_Value_Type (I_Node.As_Single_Tok_Node))
                      else not PRA.Exists (Q_Name)
-                     or else PRA.Get (Q_Name).Index_Case_Sensitive)));
+                     or else PRA.Get (Q_Name).Index_Case_Sensitive));
          end;
       end Get_Attribute_Index;
 
@@ -1304,6 +1302,9 @@ package body GPR2.Project.Parser is
                             (Single_Tok_Node (F_Attribute_Name (Node)));
          Q_Name       : constant PRA.Qualified_Name :=
                           PRA.Create (Name, Pack);
+         Def          : constant PRA.Def := (if PRA.Exists (Q_Name)
+                                             then PRA.Get (Q_Name)
+                                             else PRA.Def'(others => <>));
 
          Index        : constant PAI.Object :=
                           Get_Attribute_Index (Node, Pack);
@@ -1333,7 +1334,7 @@ package body GPR2.Project.Parser is
             use PRA;
          begin
             if Index = PAI.Undefined
-              and then PRA.Get (Q_Name).Index /= PRA.No
+              and then  Def.Index /= PRA.No
             then
                Indexed_Values.Filled := True;
                Indexed_Values.Attribute_Pack := Pack;
@@ -1427,7 +1428,7 @@ package body GPR2.Project.Parser is
             if Pack = No_Package then
                if Attr.Is_Defined then
                   if Project_View = View
-                    and then PRA.Get (Q_Name).Is_Toolchain_Config
+                    and then Def.Is_Toolchain_Config
                     and then not Attr.Is_Frozen
                   then
                      Attr.Freeze;
@@ -1497,9 +1498,22 @@ package body GPR2.Project.Parser is
                end if;
             end if;
 
-            --  In case we're Project_View = Process.View, we don't issue
-            --  the errors as the referenced attribute may not haveAf been
-            --  parsed yet.
+            if not Attr.Is_Defined
+              and then not Indexed_Values.Filled
+              and then Def.Value /= PRA.Single
+            then
+               --  When no default is defined, lists are created empty.
+               --  This allows the common pattern:
+               --  My_List := ("new", "values") & Project'My_List
+               Attr := GPR2.Project.Attribute.Create
+                 (Source_Reference.Attribute.Object
+                    (Source_Reference.Attribute.Create
+                         (Source_Reference.Builtin, Name)),
+                  Index   => Index,
+                  Values  => Containers.Source_Value_Type_List.Empty_Vector,
+                  Default => True);
+            end if;
+
             if not Attr.Is_Defined then
                if Pack /= No_Package
                  and then not Project_View.Has_Packages (Pack)
