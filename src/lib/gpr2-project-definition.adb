@@ -172,8 +172,6 @@ package body GPR2.Project.Definition is
            new Ada.Containers.Indefinite_Ordered_Maps
              (Value_Type, Language_Id);
 
-         use type Suffix_Lang_Maps.Cursor;
-
          Suffix_Lang_Map : Suffix_Lang_Maps.Map;
          --  key=suffix value; value=first language registering suffix use
          --  map used to detect/report multiple use of a suffix.
