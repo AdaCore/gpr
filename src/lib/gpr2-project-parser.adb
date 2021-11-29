@@ -1271,16 +1271,14 @@ package body GPR2.Project.Parser is
                       Get_Value_Type (I_Node.As_Single_Tok_Node);
          begin
             return
-              (if Index'Length = 0
-               then PAI.Undefined
-               else PAI.Create
+              PAI.Create
                  (Index,
                   Case_Sensitive =>
                     (if Name = PRA.Switches
                      then Is_Switches_Index_Case_Sensitive
                        (Get_Value_Type (I_Node.As_Single_Tok_Node))
                      else not PRA.Exists (Q_Name)
-                     or else PRA.Get (Q_Name).Index_Case_Sensitive)));
+                     or else PRA.Get (Q_Name).Index_Case_Sensitive));
          end;
       end Get_Attribute_Index;
 
