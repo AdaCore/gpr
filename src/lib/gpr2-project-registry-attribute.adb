@@ -64,8 +64,6 @@ package body GPR2.Project.Registry.Attribute is
    function Create (Ref : Attribute_Id) return Default_Value;
    function Create (Value : Value_Type) return Default_Value is
      (Create (Value_Type (Any_Index), Value));
-   function Create_Empty return Default_Value is
-      (Default_Value'(Kind => D_Empty_List));
    --  Create container for attribute default value
 
    function "+" (Left, Right : Default_Value) return Default_Value
@@ -516,7 +514,7 @@ begin
       Is_Allowed_In         => No_Aggregates,
       Inherit_From_Extended => Not_Inherited);
 
-   --  excluded_source_files, Loally_Removed_Files
+   --  excluded_source_files, Locally_Removed_Files
    Add
      (Create (Excluded_Source_Files),
       Index                => No,
@@ -705,7 +703,6 @@ begin
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
-      Default               => Create_Empty,
       Config_Concatenable   => True,
       Inherit_From_Extended => Not_Inherited);
 
@@ -718,7 +715,6 @@ begin
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
-      Default               => Create_Empty,
       Config_Concatenable   => True,
       Inherit_From_Extended => Not_Inherited);
 
@@ -731,7 +727,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1116,7 +1111,6 @@ begin
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
-      Default               => Create_Empty,
       Inherit_From_Extended => Not_Inherited);
 
    --  library_version_switches
@@ -1128,7 +1122,6 @@ begin
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
-      Default               => Create_Empty,
       Config_Concatenable   => True,
       Inherit_From_Extended => Not_Inherited);
 
@@ -1306,7 +1299,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1319,7 +1311,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => FileGlob_Or_Language_Index);
 
@@ -1386,7 +1377,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1399,7 +1389,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1412,7 +1401,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1446,7 +1434,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1471,7 +1458,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1484,7 +1470,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Index_Type           => Language_Index);
 
    --  compiler.multi_unit_object_separator
@@ -1507,7 +1492,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1542,7 +1526,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1632,7 +1615,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1656,7 +1638,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1691,7 +1672,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1725,7 +1705,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1828,7 +1807,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1841,7 +1819,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => FileGlob_Or_Language_Index);
 
@@ -1865,7 +1842,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1912,7 +1888,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True);
 
    --  linker.default_switches
@@ -1924,7 +1899,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => No_Aggregates,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => Language_Index);
 
@@ -1937,7 +1911,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => FileGlob_Or_Language_Index);
 
@@ -1950,7 +1923,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True,
       Index_Type           => FileGlob_Or_Language_Index);
 
@@ -1963,7 +1935,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Index_Type           => FileGlob_Or_Language_Index);
 
    --  linker.linker_options
@@ -2027,7 +1998,6 @@ begin
       Value                => List,
       Value_Case_Sensitive => True,
       Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty,
       Config_Concatenable  => True);
 
    --  linker.export_file_format
@@ -2091,8 +2061,7 @@ begin
       Index_Case_Sensitive => False,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty);
+      Is_Allowed_In        => Everywhere);
 
    --  clean.artifacts_in_object_dir
    Add
@@ -2102,8 +2071,7 @@ begin
       Index_Case_Sensitive => False,
       Value                => List,
       Value_Case_Sensitive => True,
-      Is_Allowed_In        => Everywhere,
-      Default              => Create_Empty);
+      Is_Allowed_In        => Everywhere);
 
    --  cross_reference.default_switches
    Add
