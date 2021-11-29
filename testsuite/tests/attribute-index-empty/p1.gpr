@@ -3,6 +3,7 @@ abstract project P1 is
    for Source_Dirs use ();
    
    package Compiler is
+      for Default_Switches ("") use ("-fdata-sections", "-Wall", "-ffunction-sections");
       for Default_Switches ("c") use ("-ffunction-sections", "-fdata-sections", "-Wall");
       for Default_Switches ("ada") use ("-gnatX", "-funroll-loops", "-gnatn", "-fdata-sections", "-ffunction-sections");
    end Compiler;
