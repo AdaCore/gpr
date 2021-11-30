@@ -124,6 +124,11 @@ package GPR2.Project.Attr_Values is
                  and then Item.Is_Defined and then Self.Kind = List;
    --  Append one item to the list values of the object
 
+   procedure Append_Vector
+     (Self : in out Object; Other : Object)
+     with Inline,
+          Pre => Self.Is_Defined and then Self.Kind = List;
+
 private
 
    type Object is new Source_Reference.Attribute.Object with record

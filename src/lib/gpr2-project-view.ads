@@ -45,6 +45,7 @@ limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
 
+private with GPR2.Project.Pack;
 private with GPR2.Project.Registry.Pack;
 
 package GPR2.Project.View is
@@ -191,6 +192,30 @@ package GPR2.Project.View is
 
    --  Attributes
 
+   function Has_Attribute
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Pack   : Optional_Package_Id    := No_Package;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Check whether an attribute with Name and Index has been defined, either
+   --  at the top-level project if Pkg is not defined, in within the package
+   --  named Pkg.
+   --  At_Pos denotes the unit index in the source file represented by Index
+
+   function Attribute
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Pack   : Optional_Package_Id    := No_Package;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index)
+      return Project.Attribute.Object
+     with Pre  => Self.Is_Defined;
+   --  Compute the final value for the attribute Name in package Pkg.
+   --  If the Attribute is not defined in the View, and has no default value,
+   --  then Project.Attribute.Undefined is returned.
+
    function Check_Attribute
      (Self           : Object;
       Name           : Attribute_Id;
@@ -218,40 +243,43 @@ package GPR2.Project.View is
 
    function Attributes
      (Self          : Object;
-      Name          : Optional_Attribute_Id  := No_Attribute;
-      Index         : Attribute_Index.Object := Attribute_Index.Undefined;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Retrieve all top-level attributes that have the given name.
+   --
+   --  Name:          the attribute to retrieve.
+   --  With_Defaults: whether default values are considered.
+   --  With_Config:   whether attributes defined from the config file are
+   --                 considered.
+   --
+   --  Note:  blob index, if defined in the project, is returned as-is (not
+   --         resolved with regard to the source list). Their value may be then
+   --         invalid as they are not properly merged with any potential
+   --         inherited attribute.
+   --  Note2: if With_Defaults is set, then the default values that accept
+   --         any index won't be generated.
+
+   function Attributes
+     (Self          : Object;
+      Pack          : Package_Id;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+     with Pre => Self.Is_Defined;
+   --  See above, but for packages.
+
+   function Attributes
+     (Self          : Object;
       Pack          : Optional_Package_Id    := No_Package;
       With_Defaults : Boolean                := True;
-      With_Config   : Boolean                := True;
-      Alias_Check   : Boolean                := False)
-      return Attribute.Set.Object
+      With_Config   : Boolean                := True)
+      return Project.Attribute.Set.Object
      with Pre => Self.Is_Defined;
-   --  Get the list of attributes, possibly an empty list if it does not
-   --  contain attributes or if Name and Index does not match any attribute.
-
-   function Attribute
-     (Self   : Object;
-      Name   : Attribute_Id;
-      Pack   : Optional_Package_Id    := No_Package;
-      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Unit_Index             := No_Index)
-      return Project.Attribute.Object
-     with Pre => Self.Is_Defined;
-   --  Compute the final value for the attribute Name in package Pkg.
-   --  If the Attribute is not defined in the View, and has no default value,
-   --  then Project.Attribute.Undefined is returned.
-
-   function Has_Attribute
-     (Self   : Object;
-      Name   : Attribute_Id;
-      Pack   : Optional_Package_Id    := No_Package;
-      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Unit_Index             := No_Index) return Boolean
-     with Pre => Self.Is_Defined;
-   --  Check whether an attribute with Name and Index has been defined, either
-   --  at the top-level project if Pkg is not defined, in within the package
-   --  named Pkg.
-   --  At_Pos denotes the unit index in the source file represented by Index
+   --  Get the list of attributes.
 
    function Attribute_Location
      (Self  : Object;
@@ -334,7 +362,8 @@ package GPR2.Project.View is
      (Self           : Object;
       Name           : Optional_Package_Id := No_Package;
       Check_Extended : Boolean := True;
-      With_Defaults  : Boolean := True) return Boolean
+      With_Defaults  : Boolean := True;
+      With_Config    : Boolean := True) return Boolean
      with Pre => Self.Is_Defined;
    --  If Name is set to No_Name then return True if the view defined some
    --  packages, otherwise check for the specified package.
@@ -345,9 +374,11 @@ package GPR2.Project.View is
 
    function Packages
      (Self : Object;
-      With_Defaults : Boolean := True) return GPR2.Containers.Package_Id_List
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True) return GPR2.Containers.Package_Id_List
      with Pre  => Self.Is_Defined,
-          Post => (if Self.Has_Packages (With_Defaults => With_Defaults)
+          Post => (if Self.Has_Packages (With_Defaults => With_Defaults,
+                                         With_Config   => With_Config)
                    then not Packages'Result.Is_Empty),
           Inline;
    --  Get the list of packages defined in the project or inherited from the
@@ -366,10 +397,7 @@ package GPR2.Project.View is
 
    function Languages (Self : Object) return Containers.Source_Value_List
      with Pre  => Self.Is_Defined;
-   --  Returns the languages used on this project, this is not necessary the
-   --  content of the Languages attribute as if not defined it returns the
-   --  default language Ada. But the languages attribute can be set to the
-   --  empty list (no language defined).
+   --  Returns the languages used on this project.
 
    function Source_Directories (Self : Object) return Project.Attribute.Object
      with Pre => Self.Is_Defined
@@ -740,6 +768,13 @@ package GPR2.Project.View is
        Post => Implementation'Result.Is_Defined;
    --  Handles Body, Implementation, this is only defined for the Ada language
 
+   function Raw_Attributes
+     (Self : Object;
+      Pack : Package_Id) return Project.Attribute.Set.Object
+     with Inline;
+   --  Internal function used to retrieve the unprocessed list of attributes
+   --  defined in a package.
+
 private
 
    type Object is new Definition_References.Ref with null record;
@@ -750,6 +785,11 @@ private
       Language : Language_Id) return Containers.Value_Set;
    --  Returns union of the attribute lists of the Clean packages from the
    --  configuration view, extending view if it exists and Self view.
+
+   function Pack
+      (Self : Object;
+       Name : Package_Id) return Project.Pack.Object;
+   --  Get the package with the given Name.
 
    Undefined : constant Object :=
                  (Definition_References.Null_Ref with null record);
@@ -786,7 +826,8 @@ private
      (Self.Has_Attribute (Registry.Attribute.Library_Interface));
 
    function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Has_Attribute (Registry.Attribute.Interfaces));
+     (Self.Has_Attribute (Registry.Attribute.Interfaces) and then
+      not Self.Attribute (Registry.Attribute.Interfaces).Values.Is_Empty);
 
    function Has_Any_Interfaces (Self : Object) return Boolean is
      (Self.Has_Library_Interface or else Self.Has_Interfaces);
@@ -860,5 +901,10 @@ private
      (Self : Object;
       Unit : Value_Type) return Project.Attribute.Object
    is (Self.Attribute (PRA.Spec, PRP.Naming, PAI.Create (Unit)));
+
+   function Raw_Attributes
+     (Self : Object;
+      Pack : Package_Id) return Project.Attribute.Set.Object
+   is (Self.Pack (Pack).Attrs);
 
 end GPR2.Project.View;

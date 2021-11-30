@@ -765,7 +765,10 @@ package body GPR2.Project.Definition is
       procedure Fill_Ada_Naming_Exceptions (Attr : Attribute_Id) is
       begin
          for A of View.Attributes
-           (Name => Attr, Pack => PRP.Naming, With_Defaults => False)
+           (Pack          => PRP.Naming,
+            Name          => Attr,
+            With_Defaults => False,
+            With_Config   => False)
          loop
             declare
                Source          : constant Filename_Type :=
@@ -2001,42 +2004,45 @@ package body GPR2.Project.Definition is
                      Add (Attr);
                   end if;
 
-                  --  Attributes adds default values
-                  for A of View.Attributes (PRA.Spec_Suffix,
-                                            Pack => PRP.Naming)
+                  for L of View.Languages loop
+                     declare
+                        L_Id  : constant Language_Id :=
+                                  +Name_Type (L.Text);
+                        Index : constant Attribute_Index.Object :=
+                                  Attribute_Index.Create (L_Id);
+                     begin
+                        if View.Check_Attribute
+                          (PRP.Naming, PRA.Spec_Suffix, Index, Result => Attr)
+                        then
+                           Add (Attr);
+                        end if;
+
+                        if View.Check_Attribute
+                          (PRP.Naming, PRA.Body_Suffix, Index, Result => Attr)
+                        then
+                           Add (Attr);
+                        end if;
+
+                        if L_Id = Ada_Language then
+                           if View.Check_Attribute
+                             (PRP.Naming, PRA.Separate_Suffix, Result => Attr)
+                           then
+                              Add (Attr);
+                           end if;
+                        end if;
+                     end;
+                  end loop;
+
+                  for A of View.Attributes (PRP.Naming, PRA.Spec,
+                                                  With_Defaults => False,
+                                                  With_Config   => False)
                   loop
                      Add (A);
                   end loop;
 
-                  for A of View.Attributes (PRA.Body_Suffix,
-                                            Pack => PRP.Naming)
-                  loop
-                     Add (A);
-                  end loop;
-
-                  for A of View.Attributes (PRA.Separate_Suffix,
-                                            Pack => PRP.Naming)
-                  loop
-                     Add (A);
-                  end loop;
-
-                  for A of View.Attributes (PRA.Body_N,
-                                            Pack          => PRP.Naming,
-                                            With_Defaults => False)
-                  loop
-                     Add (A);
-                  end loop;
-
-                  for A of View.Attributes (PRA.Spec,
-                                            Pack          => PRP.Naming,
-                                            With_Defaults => False)
-                  loop
-                     Add (A);
-                  end loop;
-
-                  for A of View.Attributes (PRA.Body_N,
-                                            Pack          => PRP.Naming,
-                                            With_Defaults => False)
+                  for A of View.Attributes (PRP.Naming, PRA.Body_N,
+                                                  With_Defaults => False,
+                                                  With_Config   => False)
                   loop
                      Add (A);
                   end loop;
@@ -2081,9 +2087,9 @@ package body GPR2.Project.Definition is
       Fill_Ada_Naming_Exceptions (PRA.Body_N);
 
       Fill_Other_Naming_Exceptions
-        (View.Attributes (PRA.Specification_Exceptions, Pack => PRP.Naming));
+        (View.Attributes (PRP.Naming, PRA.Specification_Exceptions));
       Fill_Other_Naming_Exceptions
-        (View.Attributes (PRA.Implementation_Exceptions, Pack => PRP.Naming));
+        (View.Attributes (PRP.Naming, PRA.Implementation_Exceptions));
 
       --  Record units being set as interfaces, first for Library_Interface
       --  which contains unit names.
@@ -2358,7 +2364,8 @@ package body GPR2.Project.Definition is
 
          if View.Has_Packages (PRP.Naming,
                                Check_Extended => False,
-                               With_Defaults  => False)
+                               With_Defaults  => False,
+                               With_Config    => False)
          then
             --  Check all naming exceptions is used only in the original
             --  project where Naming package is declared. If nameing package is

@@ -4094,8 +4094,8 @@ package body GPR2.Project.Tree is
          String_Split.Multiple);
 
       Drivers := Conf.Corresponding_View.Attributes
-        (Registry.Attribute.Driver,
-         Pack => Registry.Pack.Compiler);
+        (Registry.Pack.Compiler,
+         Registry.Attribute.Driver);
 
       --  We need to arrange toolchains in the order of appearance on PATH
 

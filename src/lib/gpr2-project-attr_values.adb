@@ -47,6 +47,21 @@ package body GPR2.Project.Attr_Values is
          Item);
    end Append;
 
+   -------------------
+   -- Append_Vector --
+   -------------------
+
+   procedure Append_Vector
+     (Self : in out Object; Other : Object) is
+   begin
+      Self.Values.Append_Vector (Other.Values);
+      for C in Other.V_Map.Iterate loop
+         Self.V_Map.Include
+           (GPR2.Containers.Value_Source_Reference_Package.Key (C),
+            Containers.Value_Source_Reference_Package.Element (C));
+      end loop;
+   end Append_Vector;
+
    ---------------
    -- Build_Set --
    ---------------

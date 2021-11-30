@@ -1959,7 +1959,10 @@ package body GPRinstall.Install is
             procedure Naming_For (View : GPR2.Project.View.Object) is
                Found : Boolean := False;
             begin
-               if View.Has_Packages (P.Naming) then
+               if View.Has_Packages (P.Naming,
+                                     With_Defaults => False,
+                                     With_Config   => False)
+               then
                   --  Check all associative attributes
 
                   for Att of View.Attributes (Pack          => P.Naming,

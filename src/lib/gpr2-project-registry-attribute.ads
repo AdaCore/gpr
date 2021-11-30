@@ -177,6 +177,11 @@ package GPR2.Project.Registry.Attribute is
 
    type Default_Rules is private;
 
+   function All_Attributes
+     (Pack : Optional_Package_Id) return Containers.Attribute_Id_List;
+   --  Retrieve the Ids of all defined attributes for a given package, or
+   --  the top-level attributes if Pack is No_Package.
+
    function Exists (Q_Name : Qualified_Name) return Boolean;
    --  The qualified name comprise the package name and attribute name, both
    --  parts are separated by a dot which is mandatory even if the package
