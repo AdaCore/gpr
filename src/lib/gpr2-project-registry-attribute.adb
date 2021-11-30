@@ -1177,7 +1177,8 @@ begin
       Value_Case_Sensitive => True,
       Read_Only            => False,
       Is_Allowed_In        => Everywhere,
-      Default              => Create ("ada", ".adb") + Create ("c", ".c"),
+      Default              => Create ("ada", ".adb") + Create ("c", ".c") +
+                              Create ("c++", ".cpp"),
       Index_Type           => Language_Index);
 
    --  naming.separate_suffix
