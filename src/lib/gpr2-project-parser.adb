@@ -1341,12 +1341,21 @@ package body GPR2.Project.Parser is
                Indexed_Values.Attribute_Name := Name;
 
                if View.Is_Defined then
-                  for Attribute of View.Attributes (Name, Pack => Pack) loop
-                     Indexed_Values.Values.Append
-                       ((Index  => Attribute.Index,
-                         Values => Attribute.Values,
-                         Single => Attribute.Kind = PRA.Single), 1);
-                  end loop;
+                  if Pack /= No_Package then
+                     for Attribute of View.Attributes (Pack, Name) loop
+                        Indexed_Values.Values.Append
+                          ((Index  => Attribute.Index,
+                            Values => Attribute.Values,
+                            Single => Attribute.Kind = PRA.Single), 1);
+                     end loop;
+                  else
+                     for Attribute of View.Attributes (Name) loop
+                        Indexed_Values.Values.Append
+                          ((Index  => Attribute.Index,
+                            Values => Attribute.Values,
+                            Single => Attribute.Kind = PRA.Single), 1);
+                     end loop;
+                  end if;
                end if;
             end if;
          end Fill_Indexed_Values;
@@ -1485,8 +1494,9 @@ package body GPR2.Project.Parser is
 
                      if Tree.Has_Configuration then
                         for Attr of
-                          Tree.Configuration.Corresponding_View.Attributes
-                            (Name)
+                          Tree.Configuration.
+                            Corresponding_View.Attributes
+                              (Name, With_Config => False)
                         loop
                            Indexed_Values.Values.Append
                              ((Index  => Attr.Index,
@@ -2951,8 +2961,7 @@ package body GPR2.Project.Parser is
             else
                --  Then just copy the attributes into the current package
 
-               Pack_Ref.Attrs := View.Attributes (Pack          => P_Name,
-                                                  With_Defaults => False);
+               Pack_Ref.Attrs := View.Raw_Attributes (P_Name);
                Pack_Ref.Vars  := View.Variables (Pack => P_Name);
             end if;
 
@@ -3024,8 +3033,7 @@ package body GPR2.Project.Parser is
             else
                --  Then just copy the attributes into the current package
 
-               Pack_Ref.Attrs :=
-                 View.Attributes (Pack => P_Name, With_Defaults => False);
+               Pack_Ref.Attrs := View.Raw_Attributes (P_Name);
                Pack_Ref.Vars  := View.Variables (Pack => P_Name);
             end if;
 
@@ -3320,12 +3328,8 @@ package body GPR2.Project.Parser is
 
          if Include and then Set.Contains (A) then
             declare
-               Old : constant PA.Object := Set.Element
-                 (A.Name.Id,
-                  (if A.Has_Index then A.Index
-                   else GPR2.Project.Attribute_Index.Undefined));
+               Old : constant PA.Object := Set.Element (A.Name.Id, A.Index);
             begin
-               --  Take care if we re-parse to resolve undefined values
                if Old.Is_Frozen then
                   Tree.Log_Messages.Append
                     (Message.Create

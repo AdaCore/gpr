@@ -35,7 +35,6 @@ with GNAT.Regexp; use GNAT.Regexp;
 with GPR2.Message;
 with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Definition;
-with GPR2.Project.Pack;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View.Set;
@@ -57,11 +56,6 @@ package body GPR2.Project.View is
 
    function Get_RW (View : in out Object) return Definition.Ref is
      (Definition.Data (View.Get.Element.all)'Unchecked_Access);
-
-   function Pack
-      (Self : Object;
-       Name : Package_Id) return Project.Pack.Object;
-   --  Get the package with the given Name.
 
    function Refcount (Self : Object) return Natural is
      (Definition_References.Get_Refcount (Self));
@@ -90,6 +84,15 @@ package body GPR2.Project.View is
    function Remove_Body_Suffix
      (Self : Object; Name : Simple_Name) return Value_Not_Empty;
    --  Remove body suffix from Name
+
+   function Attributes_Internal
+     (Self          : Object;
+      Pack          : Optional_Package_Id;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+   with Inline;
 
    -------------------------
    -- Aggregate_Libraries --
@@ -311,7 +314,11 @@ package body GPR2.Project.View is
             --  for the attribute in the current view. If the associated
             --  package is not present look for a package in the extended view.
 
-            if View.Has_Packages (Pack, With_Defaults => False) then
+            if View.Has_Packages
+              (Pack,
+               With_Defaults => False,
+               With_Config   => False)
+            then
                Result := Get_Package_Attribute (View => View);
 
             elsif View.Is_Extending
@@ -536,14 +543,15 @@ package body GPR2.Project.View is
 
       --  Handle configuration project
 
-      if GPR2.Project.Tree.Has_Configuration (Self.Tree.all) then
-
+      if GPR2.Project.Tree.Has_Configuration (Self.Tree.all)
+        and then Self.Tree.Configuration.Corresponding_View /= Self
+      then
          if not Found (Result) then
             --  If at this stage Result is not defined try to fetch the value
             --  from the configuration project.
 
             Result := Get_Attribute_From_View
-              (View => Self.Tree.all.Configuration.Corresponding_View);
+              (View => Self.Tree.Configuration.Corresponding_View);
 
             if Result.Is_Defined then
                --  Set the From_Config flag for the attribute
@@ -702,282 +710,259 @@ package body GPR2.Project.View is
 
    function Attributes
      (Self          : Object;
-      Name          : Optional_Attribute_Id  := No_Attribute;
-      Index         : Attribute_Index.Object := Attribute_Index.Undefined;
-      Pack          : Optional_Package_Id    := No_Package;
-      With_Defaults : Boolean                := True;
-      With_Config   : Boolean                := True;
-      Alias_Check   : Boolean                := False)
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
       return Project.Attribute.Set.Object
    is
-      Result  : Project.Attribute.Set.Object;
-      Result2 : Project.Attribute.Set.Object;
-      Alias   : constant PRA.Qualified_Name :=
-                  (if Name = No_Attribute
-                   then PRA.No_Name
-                   else PRA.Alias (PRA.Create (Name, Pack)));
-
-      procedure Action (Attr : Attribute_Id;
-                        Def  : Registry.Attribute.Def);
-
-      procedure Maybe_Insert
-        (Attr        : Project.Attribute.Object;
-         Concatenate : Boolean := False);
-
-      ------------
-      -- Action --
-      ------------
-
-      procedure Action (Attr : Attribute_Id;
-                        Def  : Registry.Attribute.Def)
-      is
-         use Registry.Attribute;
-
-         function Get_PA
-           (Value : Value_Type;
-            Index : Value_Type := "") return Project.Attribute.Object;
-
-         ------------
-         -- Get_PA --
-         ------------
-
-         function Get_PA
-           (Value : Value_Type;
-            Index : Value_Type := "") return Project.Attribute.Object is
-         begin
-            if Def.Index = PRA.No then
-               return Project.Attribute.Create
-                 (Name     => Attr,
-                  Index    => PAI.Undefined,
-                  Source   => Self.Path_Name,
-                  Default  => Value,
-                  As_List  => Def.Value = PRA.List);
-            else
-               return Project.Attribute.Create
-                 (Name                 => Attr,
-                  Index                => Index,
-                  Index_Case_Sensitive => Def.Index_Case_Sensitive,
-                  Source               => Self.Path_Name,
-                  Default              => Value,
-                  As_List              => Def.Value = PRA.List);
-            end if;
-         end Get_PA;
-
-      begin
-         --  Apply name filter
-         if Name /= No_Attribute and then Attr /= Name then
-            return;
-         end if;
-
-         --  Check if the attribute actually has a default in the project
-         --  context
-         if not Def.Has_Default_In (Self.Kind) then
-            return;
-         end if;
-
-         case Def.Default.Kind is
-            when D_Attribute_Reference =>
-               for CA in Self.Attributes
-                 (Def.Default.Attr,
-                  (if Attr = PRA.Separate_Suffix
-                   then Attribute_Index.Create (Ada_Language)
-                   else Index),
-                  Pack).Iterate (With_Defaults => True)
-               loop
-                  declare
-                     Ref_Attr : constant Project.Attribute.Object :=
-                                  Project.Attribute.Set.Element (CA);
-                     Loc      : constant Source_Reference.Object :=
-                                  Source_Reference.Object
-                                    (Self.Attribute_Location
-                                       (Attr, Pack => Pack));
-
-                     --  Rename the original attribute. Note: this ensures the
-                     --  Is_Default flag is set.
-
-                     Def_Attr : Project.Attribute.Object :=
-                                  Ref_Attr.Rename
-                                    (Source_Reference.Attribute.Object
-                                       (Source_Reference.Attribute.Create
-                                          (Loc, Attr)));
-
-                  begin
-                     if Attr = PRA.Separate_Suffix then
-                        Def_Attr.Set_Index (Attribute_Index.Undefined);
-                     end if;
-
-                     Maybe_Insert (Def_Attr);
-                  end;
-               end loop;
-
-            when D_Callback =>
-               declare
-                  Def_Attr : constant Project.Attribute.Object :=
-                               Get_PA
-                                 (Def.Default.Callback (Self),
-                                  Index.Value);
-               begin
-                  Maybe_Insert (Def_Attr);
-               end;
-
-            when D_Value =>
-               for Cursor in Def.Default.Values.Iterate loop
-                  if Def.Index = PRA.No
-                    or else PRA.Value_Map.Key (Cursor) = PRA.Any_Index
-                    or else not Index.Is_Defined
-                    or else PRA.Value_Map.Key (Cursor) = Index.Value
-                  then
-                     declare
-                        Def_Attr : constant Project.Attribute.Object :=
-                                     Get_PA
-                                       (PRA.Value_Map.Element (Cursor),
-                                        (if Index.Is_Defined
-                                         then Index.Value
-                                         else Value_Map.Key (Cursor)));
-                     begin
-                        Maybe_Insert (Def_Attr);
-                     end;
-                  end if;
-               end loop;
-         end case;
-      end Action;
-
-      ------------------
-      -- Maybe_Insert --
-      ------------------
-
-      procedure Maybe_Insert
-        (Attr        : Project.Attribute.Object;
-         Concatenate : Boolean := False)
-      is
-         use type Attribute_Index.Object;
-         Attr_Index : Project.Attribute_Index.Object;
-      begin
-         if (Name = No_Attribute
-             or else Name = Attr.Name.Id)
-           and then (Index = Attribute_Index.Undefined
-                     or else Index = Attr.Index)
-         then
-            if Attr.Has_Index then
-               Attr_Index := Attr.Index;
-            end if;
-
-            if not Result.Contains
-              (Name  => Attr.Name.Id,
-               Index => Attr_Index)
-              and then
-                (Alias.Attr = No_Attribute
-                 or else not Result.Contains
-                   (Name  => Alias.Attr,
-                    Index => Attr_Index))
-            then
-
-               Result.Insert (Attr);
-
-            elsif Concatenate then
-               declare
-                  Own_Attr : constant Project.Attribute.Object :=
-                               Result.Element (Attr.Name.Id, Attr_Index);
-                  Inh_Attr : Project.Attribute.Object;
-
-               begin
-                  if Own_Attr.Is_Defined then
-                     Inh_Attr := Attr;
-
-                     for V of Own_Attr.Values loop
-                        Inh_Attr.Append (V);
-                     end loop;
-
-                     Result.Include (Inh_Attr);
-                  else
-                     Result.Insert (Attr);
-                  end if;
-               end;
-            end if;
-         end if;
-      end Maybe_Insert;
-
    begin
-      if Pack = No_Package then
-         Result := Definition.Get_RO (Self).Attrs.Filter (Name, Index);
+      return Attributes_Internal
+        (Self, No_Package, Name, With_Defaults, With_Config);
+   end Attributes;
 
-         --  Check inherited attributes
-         if Self.Is_Extending then
-            for Attr of Self.Extended_Root.Attributes
-                                             (Name, Index, No_Package, False)
-            loop
-               declare
-                  Q_Name : constant PRA.Qualified_Name :=
-                             PRA.Create (Attr.Name.Id);
-                  Def    : constant PRA.Def := PRA.Get (Q_Name);
-               begin
-                  case Def.Inherit_From_Extended is
-                     when PRA.Inherited =>
-                        Maybe_Insert (Attr);
-                     when PRA.Concatenated =>
-                        Maybe_Insert (Attr, True);
-                     when PRA.Not_Inherited =>
-                        null;
-                  end case;
-               end;
-            end loop;
-         end if;
+   function Attributes
+     (Self          : Object;
+      Pack          : Package_Id;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+   is
+   begin
+      return Attributes_Internal
+        (Self, Pack, Name, With_Defaults, With_Config);
+   end Attributes;
 
-      elsif Self.Has_Packages (Pack) then
-         Result := Self.Pack (Pack).Attrs.Filter (Name, Index);
-
-         if Alias.Attr /= No_Attribute then
-            for Attr of Self.Pack (Pack).Attrs.Filter (Alias.Attr, Index) loop
-               declare
-                  Renamed : constant Project.Attribute.Object :=
-                              Attr.Get_Alias (Name);
-                  C       : constant Project.Attribute.Set.Cursor :=
-                              Result.Find (Renamed);
-               begin
-                  if not Project.Attribute.Set.Has_Element (C) then
-                     Result.Insert (Renamed);
-
-                  elsif Project.Attribute.Set.Element (C).Is_Default
-                    and then not Renamed.Is_Default
-                  then
-                     --  Replace default value with an actual one
-                     Result.Include (Renamed);
-
-                  elsif not Renamed.Is_Default then
-                     --  Both are present... look for the last defined one
-                     if Project.Attribute.Set.Element (C).Line < Renamed.Line
-                     then
-                        Result.Include (Renamed);
-                     end if;
-                  end if;
-               end;
-            end loop;
-         end if;
-      end if;
-
-      --  ??? TODO: add attributes from config.
-
-      --  Fill up the missing default values
-      if With_Defaults then
-         Registry.Attribute.For_Each_Default
-           (Rules  => Registry.Attribute.Get_Default_Rules (Pack),
-            Action => Action'Access);
-      end if;
-
-      --  Check if we need to adjust the results
-      if not With_Defaults then
-         for Attr of Result loop
-            if not Attr.Is_Default then
-               Result2.Insert (Attr);
+   function Attributes
+     (Self          : Object;
+      Pack          : Optional_Package_Id    := No_Package;
+      With_Defaults : Boolean                := True;
+      With_Config   : Boolean                := True)
+      return Project.Attribute.Set.Object
+   is
+      Result : Project.Attribute.Set.Object;
+   begin
+      for Attr_Id of PRA.All_Attributes (Pack) loop
+         for Attr of Self.Attributes_Internal
+           (Pack          => Pack,
+            Name          => Attr_Id,
+            With_Defaults => With_Defaults,
+            With_Config   => With_Config)
+         loop
+            --  Do not include alias values, as they would duplicate their
+            --  aliased attribute.
+            if not Attr.Is_Alias then
+               Result.Insert (Attr);
             end if;
          end loop;
+      end loop;
 
-         return Result2;
+      return Result;
+   end Attributes;
+
+   -------------------------
+   -- Attributes_Internal --
+   -------------------------
+
+   function Attributes_Internal
+     (Self          : Object;
+      Pack          : Optional_Package_Id;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+   is
+      Result : Project.Attribute.Set.Object;
+      Q_Name : constant PRA.Qualified_Name    := PRA.Create (Name, Pack);
+      Alias  : constant Optional_Attribute_Id := PRA.Alias (Q_Name).Attr;
+      Def    : constant PRA.Def               := PRA.Get (Q_Name);
+
+      use type PRA.Inherit_From_Extended_Type;
+      use type PRA.Index_Kind;
+
+      procedure Add_Attr (Attr   : Project.Attribute.Object;
+                          Concat : Boolean);
+
+      function Config return Object is
+        (Self.Tree.Configuration.Corresponding_View);
+      --  Configuration View. To be used only when the tree has a configuration
+
+      --------------
+      -- Add_Attr --
+      --------------
+
+      procedure Add_Attr (Attr   : Project.Attribute.Object;
+                          Concat : Boolean)
+      is
+         Cursor : constant GPR2.Project.Attribute.Set.Cursor :=
+                    Result.Find (Name, Attr.Index);
+      begin
+         --  Check if we already have the same attribute in the main view
+
+         if not Project.Attribute.Set.Has_Element (Cursor) then
+            --  Nope, so just inherit
+            Result.Insert (Attr);
+
+         elsif Concat then
+            --  If we have it, and we need to concatenate, then amend the
+            --  value in Result.
+
+            declare
+               Own_Attr : constant Project.Attribute.Object :=
+                            Project.Attribute.Set.Element (Cursor);
+               Res_Attr : Project.Attribute.Object;
+            begin
+               Res_Attr := Attr;
+               Res_Attr.Append_Vector (Own_Attr);
+               Result.Include (Res_Attr);
+            end;
+         end if;
+      end Add_Attr;
+
+   begin
+      --  If the attribute has no index, then just call Attribute, as at most
+      --  one result can be returned,
+
+      if Def.Index = PRA.No then
+         declare
+            Attr : constant Project.Attribute.Object :=
+                     Self.Attribute (Name, Pack);
+         begin
+            if Attr.Is_Defined
+              and then (With_Defaults or else not Attr.Is_Default)
+              and then (With_Config or else not Attr.From_Config)
+            then
+               Result.Include (Attr);
+            end if;
+
+            return Result;
+         end;
+      end if;
+
+      if Pack = No_Package then
+         Result := Get_RO (Self).Attrs.Filter (Name);
+
+         if Alias /= No_Attribute then
+            for Attr of Get_RO (Self).Attrs.Filter (Alias) loop
+               --  Return the attributes with the requested name
+               if not Result.Contains (Name, Attr.Index) then
+                  Result.Include (Attr.Get_Alias (Name));
+               end if;
+            end loop;
+         end if;
+
+         --  Query extended views
+
+         if Def.Inherit_From_Extended /= PRA.Not_Inherited
+           and then Self.Is_Extending
+         then
+            for Attr of Self.Extended_Root.Attributes_Internal
+              (No_Package, Name, False, False)
+            loop
+               Add_Attr (Attr, Def.Inherit_From_Extended = PRA.Concatenated);
+            end loop;
+         end if;
 
       else
-         return Result;
+         declare
+            --  Self.Pack resolves inheritance.
+            Pack_Inst : constant Project.Pack.Object := Self.Pack (Pack);
+         begin
+            if not Pack_Inst.Attrs.Is_Empty then
+               Result := Pack_Inst.Attrs.Filter (Name);
+
+               if Alias /= No_Attribute then
+                  for Attr of Pack_Inst.Attrs.Filter (Alias) loop
+                     if not Result.Contains (Name, Attr.Index) then
+                        Result.Insert (Attr.Get_Alias (Name));
+                     end if;
+                  end loop;
+               end if;
+            end if;
+         end;
       end if;
-   end Attributes;
+
+      --  Query configuration project
+
+      if With_Config
+        and then Self.Tree.Has_Configuration
+      then
+         for Attr of Config.Attributes_Internal
+                       (Pack, Name, False, False)
+         loop
+            Add_Attr (Attr, Def.Config_Concatenable);
+         end loop;
+      end if;
+
+      --  Finally check the default value
+
+      if With_Defaults
+        and then Def.Has_Default_In (Self.Kind)
+      then
+         declare
+            Cursor  : GPR2.Project.Attribute.Set.Cursor;
+            Attr    : Project.Attribute.Object;
+            use GPR2.Project.Attribute.Set;
+         begin
+            case Def.Default.Kind is
+               when PRA.D_Callback =>
+                  null;
+
+               when PRA.D_Attribute_Reference =>
+                  for Attr of Self.Attributes_Internal (Pack,
+                                                              Def.Default.Attr)
+                  loop
+                     Cursor := Result.Find (Name, Attr.Index);
+
+                     if not Has_Element (Cursor) then
+                        Result.Insert
+                          (Attr.Rename
+                             (GPR2.Source_Reference.Attribute.Object
+                                  (GPR2.Source_Reference.Attribute.Create
+                                       (GPR2.Source_Reference.Builtin,
+                                        Name))));
+                     end if;
+                  end loop;
+
+               when PRA.D_Value =>
+                  for C in Def.Default.Values.Iterate loop
+                     declare
+                        Val_Index  : constant Value_Type :=
+                                       PRA.Value_Map.Key (C);
+                        Attr_Index : Attribute_Index.Object;
+                     begin
+                        if Val_Index /= PRA.Any_Index
+                          and then Val_Index'Length > 0
+                        then
+                           Attr_Index := Attribute_Index.Create (Val_Index);
+                           Attr_Index.Set_Case (Def.Index_Case_Sensitive);
+
+                           Cursor := Result.Find (Name, Attr_Index);
+
+                           if not Has_Element (Cursor) then
+                              --  Create the value
+                              Attr := Project.Attribute.Create
+                                (Name    => Source_Reference.Attribute.Object
+                                             (Source_Reference.Attribute.Create
+                                               (Source_Reference.Builtin,
+                                                Name)),
+                                 Index   => Attr_Index,
+                                 Value   => Source_Reference.Value.Object
+                                              (Source_Reference.Value.Create
+                                                (Source_Reference.Builtin,
+                                                 PRA.Value_Map.Element (C))),
+                                 Default => True);
+                              Result.Insert (Attr);
+                           end if;
+                        end if;
+                     end;
+                  end loop;
+            end case;
+         end;
+      end if;
+
+      return Result;
+   end Attributes_Internal;
 
    ----------------------
    -- Binder_Artifacts --
@@ -1478,7 +1463,8 @@ package body GPR2.Project.View is
      (Self           : Object;
       Name           : Optional_Package_Id := No_Package;
       Check_Extended : Boolean := True;
-      With_Defaults  : Boolean := True) return Boolean
+      With_Defaults  : Boolean := True;
+      With_Config    : Boolean := True) return Boolean
    is
       View        : Object := Self;
       Def         : GPR2.Project.Registry.Attribute.Default_Rules;
@@ -1502,6 +1488,14 @@ package body GPR2.Project.View is
 
    begin
       if Definition.Get_RO (Self).Has_Packages (Name) then
+         return True;
+      end if;
+
+      if With_Config
+        and then Self.Tree.Has_Configuration
+        and then Self.Tree.Configuration.Corresponding_View.
+                   Get_RO.Has_Packages (Name)
+      then
          return True;
       end if;
 
@@ -1595,7 +1589,10 @@ package body GPR2.Project.View is
       Pack : Package_Id;
       Name : Optional_Name_Type := No_Name) return Boolean is
    begin
-      if not Self.Has_Packages (Pack, With_Defaults => False) then
+      if not Self.Has_Packages (Pack,
+                                With_Defaults => False,
+                                With_Config   => False)
+      then
          return False;
       end if;
 
@@ -2059,7 +2056,8 @@ package body GPR2.Project.View is
 
    function Packages
      (Self : Object;
-      With_Defaults : Boolean := True) return GPR2.Containers.Package_Id_List
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True) return GPR2.Containers.Package_Id_List
    is
       Result : Containers.Package_Id_List;
    begin
@@ -2071,6 +2069,16 @@ package body GPR2.Project.View is
          Result.Include (Pack.Id);
       end loop;
 
+      if With_Config
+        and then Self.Tree.Has_Configuration
+      then
+         for Pack of Definition.Get_RO
+           (Self.Tree.Configuration.Corresponding_View).Packs
+         loop
+            Result.Include (Pack.Id);
+         end loop;
+      end if;
+
       --  Check packages with default values
       if With_Defaults then
          for Pack of PRA.Get_Packages_With_Default loop
@@ -2078,7 +2086,10 @@ package body GPR2.Project.View is
             --  the package apply to Self.Kind.
 
             if not Result.Contains (Pack)
-              and then Self.Has_Packages (Pack, False, True)
+              and then Self.Has_Packages (Pack,
+                                          Check_Extended => False,
+                                          With_Defaults  => True,
+                                          With_Config    => False)
             then
                Result.Include (Pack);
             end if;

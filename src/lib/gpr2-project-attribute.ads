@@ -139,7 +139,7 @@ package GPR2.Project.Attribute is
    function Index (Self : Object) return Attribute_Index.Object
      with Inline,
           Pre  => Self.Is_Defined,
-          Post => Index'Result.Is_Defined;
+          Post => Self.Has_Index = Index'Result.Is_Defined;
    --  Returns the attribute's index value
 
    procedure Set_Case

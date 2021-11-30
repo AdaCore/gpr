@@ -59,7 +59,8 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      for A in Prj.Attributes (With_Defaults => False).Iterate loop
+      for A in Prj.Attributes (With_Defaults => False,
+                               With_Config   => False).Iterate loop
          Text_IO.Put
            ("A:   " & Image (Attribute.Set.Element (A).Name.Id));
          Text_IO.Put (" ->");

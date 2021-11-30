@@ -233,9 +233,7 @@ procedure GPRclean.Main is
    begin
       --  Check for additional switches in Clean package
 
-      if View.Has_Packages (PRP.Clean)
-        and then View.Check_Attribute (PRP.Clean, PRA.Switches, Result => Attr)
-      then
+      if View.Check_Attribute (PRP.Clean, PRA.Switches, Result => Attr) then
          declare
             use GNAT.Command_Line;
 

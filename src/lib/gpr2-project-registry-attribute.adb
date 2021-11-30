@@ -72,7 +72,8 @@ package body GPR2.Project.Registry.Attribute is
 
    function Default_Library_Standalone
      (View : Project.View.Object) return Value_Type
-   is (if View.Has_Any_Interfaces then "standard" else "no");
+   is (if View.Is_Library and then View.Has_Any_Interfaces
+       then "standard" else "no");
 
    ---------
    -- "+" --
@@ -125,6 +126,12 @@ package body GPR2.Project.Registry.Attribute is
       end Index_Default;
 
    begin
+      pragma Assert
+        ((not Config_Concatenable
+            and then Inherit_From_Extended /= Concatenated)
+         or else Value = List,
+         "Cannot concatenate single value attributes");
+
       Store.Insert
         (Name,
          Def'(Index                 => Index,
@@ -178,6 +185,34 @@ package body GPR2.Project.Registry.Attribute is
          return Attribute_Aliases.Element (C);
       end if;
    end Alias;
+
+   --------------------
+   -- All_Attributes --
+   --------------------
+
+   function All_Attributes
+     (Pack : Optional_Package_Id) return Containers.Attribute_Id_List
+   is
+      Result : Containers.Attribute_Id_List;
+   begin
+      for C in Store.Iterate loop
+         declare
+            Q_Name : constant Qualified_Name := Attribute_Definitions.Key (C);
+            A      : Qualified_Name;
+         begin
+            if Q_Name.Pack = Pack then
+               Result.Insert (Q_Name.Attr);
+               A := Alias (Q_Name);
+
+               if A /= No_Name then
+                  Result.Insert (A.Attr);
+               end if;
+            end if;
+         end;
+      end loop;
+
+      return Result;
+   end All_Attributes;
 
    ------------
    -- Create --
@@ -679,7 +714,7 @@ begin
       Value                 => Single,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Configuration,
-      Config_Concatenable   => True,
+      Config_Concatenable   => False,
       Inherit_From_Extended => Not_Inherited);
 
    --  library_auto_init

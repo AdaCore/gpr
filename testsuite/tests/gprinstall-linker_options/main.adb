@@ -49,7 +49,23 @@ procedure Main is
                               then Image (Name)
                               else Image (Pack) & "." & Image (Name));
    begin
-      Attributes := Tree.Root_Project.Attributes (Name, Pack => Pack);
+      if Name = No_Attribute then
+         Attributes := Tree.Root_Project.Attributes
+           (Pack,
+            With_Defaults => False,
+            With_Config   => False);
+      elsif Pack = No_Package then
+         Attributes := Tree.Root_Project.Attributes
+           (Name,
+            With_Defaults => False,
+            With_Config   => False);
+      elsif Tree.Root_Project.Has_Packages (Pack, With_Defaults => False) then
+         Attributes := Tree.Root_Project.Attributes
+           (Pack,
+            Name,
+            With_Defaults => False,
+            With_Config   => False);
+      end if;
 
       for A of Attributes loop
          declare
@@ -116,7 +132,7 @@ begin
                exit;
             end if;
          end loop;
-         if Not Found then
+         if not Found then
             Print_Attributes
               (Tree => Tree1,
                Pack => GPR2.No_Package,
