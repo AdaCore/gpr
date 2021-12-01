@@ -63,10 +63,10 @@ package GPR2.Project.Attribute.Set is
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
       At_Pos : Unit_Index             := No_Index) return Attribute.Object
-     with Post =>
-       (if Self.Contains (Name, Index, At_Pos)
-        then Element'Result.Is_Defined
-        else not Element'Result.Is_Defined);
+     with Post => (if Self.Contains (Name, Index, At_Pos)
+                   then Element'Result.Is_Defined
+                   else not Element'Result.Is_Defined),
+          Inline;
 
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)

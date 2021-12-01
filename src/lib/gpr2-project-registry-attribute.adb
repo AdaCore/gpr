@@ -108,7 +108,8 @@ package body GPR2.Project.Registry.Attribute is
       Is_Toolchain_Config   : Boolean                    := False;
       Config_Concatenable   : Boolean                    := False;
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
-      Index_Type            : Index_Value_Type           := Name_Index)
+      Index_Type            : Index_Value_Type           := Name_Index;
+      Is_Set                : Boolean                    := False)
    is
       procedure Index_Default;
       --  Save definition with default value to Defaults index
@@ -126,12 +127,6 @@ package body GPR2.Project.Registry.Attribute is
       end Index_Default;
 
    begin
-      pragma Assert
-        ((not Config_Concatenable
-            and then Inherit_From_Extended /= Concatenated)
-         or else Value = List,
-         "Cannot concatenate single value attributes");
-
       Store.Insert
         (Name,
          Def'(Index                 => Index,
@@ -151,7 +146,8 @@ package body GPR2.Project.Registry.Attribute is
               Is_Toolchain_Config   => Is_Toolchain_Config,
               Config_Concatenable   => Config_Concatenable,
               Inherit_From_Extended => Inherit_From_Extended,
-              Index_Type            => Index_Type));
+              Index_Type            => Index_Type,
+              Value_Is_Set          => Is_Set));
 
       if Default /= No_Default_Value then
          Index_Default;
@@ -442,7 +438,8 @@ begin
       Is_Allowed_In         => No_Aggregates,
       Default               => Create ("Ada"),
       Has_Default_In        => No_Aggregates_Abstract,
-      Inherit_From_Extended => Concatenated);
+      Inherit_From_Extended => Concatenated,
+      Is_Set                => True);
 
    --  roots
    Add
@@ -592,7 +589,7 @@ begin
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => Everywhere,
-      Inherit_From_Extended => Not_Inherited);
+      Inherit_From_Extended => Inherited);
 
    --  project_files
    Add
@@ -679,7 +676,8 @@ begin
       Value                 => List,
       Value_Case_Sensitive  => True,
       Is_Allowed_In         => In_Library,
-      Inherit_From_Extended => Concatenated);
+      Inherit_From_Extended => Inherited,
+      Is_Set                => True);
 
    --  library_standalone
    Add

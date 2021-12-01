@@ -1400,9 +1400,6 @@ package body GPR2.Project.Definition is
                                          Kind     => Kind,
                                          Last_Dot => Last_Dot,
                                          Success  => Match);
-                        Unit_Idx  : constant Attribute_Index.Object :=
-                                      Attribute_Index.Create
-                                        (Value_Type (Unit_Name));
 
                         function Has_Conflict_NE
                           (Attr_Name : Attribute_Id) return Boolean;
@@ -1441,16 +1438,22 @@ package body GPR2.Project.Definition is
                         function Has_Conflict_NE
                           (Attr_Name : Attribute_Id) return Boolean
                         is
-                           Attr : Project.Attribute.Object;
+                           Cursor : Source_Path_To_Attribute_List.Cursor;
+                           use Source_Path_To_Attribute_List;
                         begin
-                           if View.Check_Attribute
-                             (PRP.Naming, Attr_Name, Unit_Idx, Result => Attr)
-                           then
-                              if not Naming_Exception_Equal
-                                (Attr, Value_Type (Basename), 1)
-                              then
-                                 return True;
-                              end if;
+                           Cursor := Ada_Naming_Exceptions.Find
+                             (Filename_Optional (Unit_Name));
+
+                           if Has_Element (Cursor) then
+                              for Attr of Element (Cursor) loop
+                                 if Attr.Name.Id = Attr_Name then
+                                    if not Naming_Exception_Equal
+                                      (Attr, Value_Type (Basename), 1)
+                                    then
+                                       return True;
+                                    end if;
+                                 end if;
+                              end loop;
                            end if;
 
                            return False;

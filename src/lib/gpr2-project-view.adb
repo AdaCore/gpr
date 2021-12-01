@@ -244,12 +244,6 @@ package body GPR2.Project.View is
          return Project.Attribute.Object;
       --  Internal function to get attribute from a view
 
-      function Get_Package_Attribute (View : Object)
-         return Project.Attribute.Object;
-
-      function Get_Toplevel_Attribute (View : Object)
-         return Project.Attribute.Object;
-
       procedure Check_Matching_Index
          (Pattern : Project.Attribute.Object;
           Result  : in out Project.Attribute.Object);
@@ -305,26 +299,122 @@ package body GPR2.Project.View is
       function Get_Attribute_From_View (View : Object)
          return Project.Attribute.Object
       is
+         function Get_Pack return Project.Pack.Set.Cursor with Inline;
+         function Get_Attrs return Project.Attribute.Set.Object with Inline;
+
+         ---------------
+         -- Get_Attrs --
+         ---------------
+
+         function Get_Attrs return Project.Attribute.Set.Object is
+         begin
+            if Pack = No_Package then
+               return View.Get_RO.Attrs;
+            end if;
+
+            declare
+               Cursor : Project.Pack.Set.Cursor renames Get_Pack;
+            begin
+               if Project.Pack.Set.Has_Element (Cursor) then
+                  return Project.Pack.Set.Element (Cursor).Attrs;
+               else
+                  return Project.Attribute.Set.Empty_Set;
+               end if;
+            end;
+         end Get_Attrs;
+
+         --------------
+         -- Get_Pack --
+         --------------
+
+         function Get_Pack return Project.Pack.Set.Cursor
+         is
+            Def    : Definition.Const_Ref := View.Get_RO;
+            Result : Project.Pack.Set.Cursor;
+         begin
+            loop
+               Result := Def.Packs.Find (Pack);
+               if Project.Pack.Set.Has_Element (Result) then
+                  return Result;
+               end if;
+
+               exit when not Def.Extended_Root.Is_Defined;
+
+               Def := Def.Extended_Root.Get_RO;
+            end loop;
+
+            return Result;
+         end Get_Pack;
+
          Result : Project.Attribute.Object;
+         Attrs  : Project.Attribute.Set.Object renames Get_Attrs;
+
       begin
-         if Pack = No_Package then
-            Result := Get_Toplevel_Attribute (View => View);
-         else
-            --  If the attribute is from a project the GPR semantic is to look
-            --  for the attribute in the current view. If the associated
-            --  package is not present look for a package in the extended view.
+         --  First try to find an exact match
+         Result := Attrs.Element (Name, Index, At_Pos);
 
-            if View.Has_Packages
-              (Pack,
-               With_Defaults => False,
-               With_Config   => False)
-            then
-               Result := Get_Package_Attribute (View => View);
+         if not Found (Result) and then Alias /= No_Attribute then
+            Result := Attrs.Element (Alias, Index, At_Pos);
+         end if;
 
-            elsif View.Is_Extending
-              and then PRA_Def.Inherit_From_Extended /= PRA.Not_Inherited
+         --  If the attribute has not been found, first handle the case in
+         --  which an index is used and pattern matching might apply.
+
+         if not Found (Result) and then Index /= Attribute_Index.Undefined then
+            if PRA_Def.Index_Type = PRA.FileGlob_Index or else
+               PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
             then
-               Result := Get_Attribute_From_View (View => View.Extended_Root);
+               --  The index might match a globbing pattern. In that case
+               --  iterate other the statements to find one that match the
+               --  index.
+
+               for Cursor in Attrs.Iterate (Name => Name) loop
+                  --  Note: we need to keep going here as last match will be
+                  --  the one to take into account.
+                  Check_Matching_Index
+                     (Pattern => Project.Attribute.Set.Element (Cursor),
+                      Result  => Result);
+               end loop;
+
+               if not Found (Result) and then Alias /= No_Attribute then
+                  for Cursor in Attrs.Iterate (Name => Alias) loop
+                     Check_Matching_Index
+                       (Pattern => Project.Attribute.Set.Element (Cursor),
+                        Result  => Result);
+                  end loop;
+               end if;
+            end if;
+
+            if not Found (Result) and then PRA_Def.Others_Allowed then
+               Result :=
+                 Attrs.Element (Name, Project.Attribute_Index.I_Others);
+
+               if not Found (Result) and then Alias /= No_Attribute then
+                  Result :=
+                    Attrs.Element (Alias, Project.Attribute_Index.I_Others);
+               end if;
+            end if;
+         end if;
+
+         if Pack = No_Package
+           and then PRA_Def.Inherit_From_Extended /= PRA.Not_Inherited
+           and then View.Is_Extending
+         then
+            if not Found (Result) then
+               return Get_Attribute_From_View (View.Extended_Root);
+
+            elsif PRA_Def.Inherit_From_Extended = PRA.Concatenated then
+               --  We need to fetch to concatenate the attribute value with
+               --  the value from the extended project.
+
+               declare
+                  Result2 : Project.Attribute.Object;
+               begin
+                  Result2 := Get_Attribute_From_View (View.Extended_Root);
+                  if Found (Result2) then
+                     Result.Prepend_Vector (Result2);
+                  end if;
+               end;
             end if;
          end if;
 
@@ -344,165 +434,6 @@ package body GPR2.Project.View is
             return Index.Value (Preserve_Case => Index.Is_Case_Sensitive);
          end if;
       end Get_Default_Index;
-
-      ---------------------------
-      -- Get_Package_Attribute --
-      ---------------------------
-
-      function Get_Package_Attribute (View : Object)
-         return Project.Attribute.Object
-      is
-         Pkg_Obj : GPR2.Project.Pack.Object renames View.Pack (Pack);
-         Result  : Project.Attribute.Object;
-      begin
-         --  Implementation note: Check_Atttribute on package does not follow
-         --  extended because if a package is defined in an extending project
-         --  it override the complete package from the extended project.
-
-         Result := Pkg_Obj.Attrs.Element (Name, Index, At_Pos);
-
-         if not Found (Result) and then Alias /= No_Attribute then
-            Result := Pkg_Obj.Attrs.Element (Alias, Index, At_Pos);
-         end if;
-
-         if Found (Result) then
-            return Result;
-         end if;
-
-         --  If the attribute has not been found, first handle the case in
-         --  which an index is used and pattern matching might apply.
-
-         if Index /= Attribute_Index.Undefined then
-            if PRA_Def.Index_Type in
-              PRA.FileGlob_Index | PRA.FileGlob_Or_Language_Index
-            then
-               --  The index might match a globbing pattern. In that case
-               --  iterate other the statements to find one that match the
-               --  index.
-
-               for Attr of Pkg_Obj.Attrs.Filter (Name) loop
-                  Check_Matching_Index
-                     (Pattern => Attr,
-                      Result  => Result);
-               end loop;
-
-               if not Found (Result) and then Alias /= No_Attribute then
-                  for Attr of Pkg_Obj.Attrs.Filter (Alias) loop
-                     Check_Matching_Index
-                       (Pattern => Attr,
-                        Result  => Result);
-                  end loop;
-               end if;
-            end if;
-
-            if not Found (Result) and then PRA_Def.Others_Allowed then
-               Result := Pkg_Obj.Attrs.Element
-                 (Name, Project.Attribute_Index.I_Others);
-
-               if not Found (Result) and then Alias /= No_Attribute then
-                  Result :=
-                    Pkg_Obj.Attrs.Element
-                      (Alias, Project.Attribute_Index.I_Others);
-               end if;
-            end if;
-         end if;
-
-         return Result;
-      end Get_Package_Attribute;
-
-      ----------------------------
-      -- Get_Toplevel_Attribute --
-      ----------------------------
-
-      function Get_Toplevel_Attribute (View : Object)
-         return Project.Attribute.Object
-      is
-         Result  : Project.Attribute.Object;
-      begin
-         --  First try to find an exact match
-
-         Result := Get_RO (View).Attrs.Element (Name, Index, At_Pos);
-
-         if not Found (Result) and then Alias /= No_Attribute then
-            Result := Get_RO (View).Attrs.Element (Alias, Index, At_Pos);
-         end if;
-
-         if Found (Result) then
-            return Result;
-         end if;
-
-         --  If the attribute has not been found, first handle the case in
-         --  which an index is used and pattern matching might apply.
-
-         if Index /= Attribute_Index.Undefined then
-            if PRA_Def.Index_Type = PRA.FileGlob_Index or else
-               PRA_Def.Index_Type = PRA.FileGlob_Or_Language_Index
-            then
-               --  The index might match a globbing pattern. In that case
-               --  iterate other the statements to find one that match the
-               --  index.
-
-               for Cursor in Definition.Get_RO (Self).Attrs.Iterate
-                  (Name => Name)
-               loop
-                  Check_Matching_Index
-                     (Pattern => Project.Attribute.Set.Element (Cursor),
-                      Result  => Result);
-               end loop;
-
-               if not Found (Result) and then Alias /= No_Attribute then
-                  for Cursor in Definition.Get_RO (Self).Attrs.Iterate
-                    (Name => Alias)
-                  loop
-                     Check_Matching_Index
-                       (Pattern => Project.Attribute.Set.Element (Cursor),
-                        Result  => Result);
-                  end loop;
-               end if;
-            end if;
-
-            if not Found (Result) and then PRA_Def.Others_Allowed then
-               Result := Get_RO (View).Attrs.Element
-                 (Name, Project.Attribute_Index.I_Others);
-
-               if not Found (Result) and then Alias /= No_Attribute then
-                  Result := Get_RO (View).Attrs.Element
-                    (Name, Project.Attribute_Index.I_Others);
-               end if;
-            end if;
-         end if;
-
-         --  Attribute value cannot be found, so start looking into extended
-         --  views.
-
-         if not Found (Result)
-           and then View.Is_Extending
-           and then PRA_Def.Inherit_From_Extended /= PRA.Not_Inherited
-         then
-            return Get_Toplevel_Attribute (View.Extended_Root);
-
-         else
-            if PRA_Def.Inherit_From_Extended = PRA.Concatenated
-              and then View.Is_Extending
-            then
-               --  We need to fetch to concatenate the attribute value with
-               --  the value from the extended project.
-
-               declare
-                  Result2 : Project.Attribute.Object;
-               begin
-                  Result2 := Get_Toplevel_Attribute (View.Extended_Root);
-                  if Found (Result2) then
-                     for V of Result2.Values loop
-                        Result.Append (V);
-                     end loop;
-                  end if;
-               end;
-            end if;
-
-            return Result;
-         end if;
-      end Get_Toplevel_Attribute;
 
       Cache_Cursor : constant Project.Attribute_Cache.Cursor :=
          Definition.Get_RO (Self).Cache.Check_Cache
@@ -568,12 +499,8 @@ package body GPR2.Project.View is
                Result2 := Get_Attribute_From_View
                  (View => Self.Tree.all.Configuration.Corresponding_View);
 
-               if Result2.Is_Defined then
-                  for V of Result.Values loop
-                     Result2.Append (V);
-                  end loop;
-
-                  Result := Result2;
+               if Found (Result2) then
+                  Result.Prepend_Vector (Result2);
                end if;
             end;
          end if;
@@ -587,8 +514,8 @@ package body GPR2.Project.View is
          --  Finally use the default value if defined
 
          declare
-            use type PRA.Default_Value_Kind;
             use type PRA.Value_Kind;
+            use type PRA.Default_Value_Kind;
             package SR renames Source_Reference;
 
             Default : PRA.Default_Value renames PRA_Def.Default;
@@ -645,7 +572,7 @@ package body GPR2.Project.View is
                            Index   => Index,
                            Source  => Self.Path_Name,
                            Default => PRA.Get (Default.Values, Def_Index),
-                           As_List => PRA_Def.Value = PRA.List);
+                           As_List => PRA_Def.Value /= PRA.Single);
                      end if;
                   end;
 
@@ -658,7 +585,7 @@ package body GPR2.Project.View is
                      Index   => Index,
                      Source  => Self.Path_Name,
                      Default => Default.Callback (Self),
-                  As_List => PRA_Def.Value = PRA.List);
+                     As_List => PRA_Def.Value /= PRA.Single);
             end case;
          end;
       end if;
@@ -670,6 +597,10 @@ package body GPR2.Project.View is
          --  We found the alternative name for the attribute. Let's rename
          --  it to the requested name.
          Result := GPR2.Project.Attribute.Get_Alias (Result, Name);
+      end if;
+
+      if PRA_Def.Value_Is_Set and then Result.Is_Defined then
+         Result.Ensure_Set;
       end if;
 
       --  Finally return the result
@@ -866,7 +797,7 @@ package body GPR2.Project.View is
       else
          declare
             --  Self.Pack resolves inheritance.
-            Pack_Inst : constant Project.Pack.Object := Self.Pack (Pack);
+            Pack_Inst : Project.Pack.Object renames Self.Pack (Pack);
          begin
             if not Pack_Inst.Attrs.Is_Empty then
                Result := Pack_Inst.Attrs.Filter (Name);
@@ -2032,10 +1963,13 @@ package body GPR2.Project.View is
       Name           : Package_Id) return Project.Pack.Object
    is
       View : Object := Self;
+      Cursor : Project.Pack.Set.Cursor;
    begin
       loop
-         if Definition.Get_RO (View).Has_Packages (Name) then
-            return Definition.Get_RO (View).Packs.Element (Name);
+         Cursor := Definition.Get_RO (View).Packs.Find (Name);
+
+         if Project.Pack.Set.Has_Element (Cursor) then
+            return Project.Pack.Set.Element (Cursor);
          end if;
 
          exit when not View.Is_Extending;

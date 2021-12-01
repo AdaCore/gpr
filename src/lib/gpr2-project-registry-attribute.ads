@@ -135,6 +135,10 @@ package GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive  : Boolean            := False;
       Value                 : Value_Kind         := Single;
       Value_Case_Sensitive  : Boolean            := False;
+      Value_Is_Set          : Boolean            := False;
+      --  When the value is a list, determine if the elements should be unique
+      --  or not.
+
       Empty_Value           : Empty_Value_Status := Allow;
       Builtin               : Boolean            := False;
       Is_Allowed_In         : Allowed_In         := (K_Abstract => True,
@@ -221,7 +225,12 @@ package GPR2.Project.Registry.Attribute is
       Is_Toolchain_Config   : Boolean                    := False;
       Config_Concatenable   : Boolean                    := False;
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
-      Index_Type            : Index_Value_Type           := Name_Index);
+      Index_Type            : Index_Value_Type           := Name_Index;
+      Is_Set                : Boolean                    := False)
+     with Pre => (if Is_Set
+                     or else Config_Concatenable
+                     or else Inherit_From_Extended = Concatenated
+                    then Value = List);
    --  add package/attribute definition in database for attribute checks
 
    procedure Add_Alias

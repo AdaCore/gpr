@@ -34,5 +34,3 @@ Project: Demo2
 ---------- NOT INTERFACE
  > /src/pck.adb,Kind: S_BODY,unit: Pck
  > /src/pck.ads,Kind: S_SPEC,unit: Pck
-Messages found:
-demo2.gpr:11:08: warning: duplicate unit 'data' in library_interface attribute
