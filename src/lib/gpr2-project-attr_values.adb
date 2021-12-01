@@ -211,6 +211,36 @@ package body GPR2.Project.Attr_Values is
       return Source_Reference.Attribute.Object (Self);
    end Name;
 
+   -------------
+   -- Prepend --
+   -------------
+
+   procedure Prepend
+     (Self : in out Object; Item : Source_Reference.Value.Object) is
+   begin
+      Self.Values.Prepend (Item);
+      Self.V_Map.Include
+        ((if Self.Value_Case_Sensitive
+          then Item.Text
+          else Ada.Characters.Handling.To_Lower (Item.Text)),
+         Item);
+   end Prepend;
+
+   --------------------
+   -- Prepend_Vector --
+   --------------------
+
+   procedure Prepend_Vector
+     (Self : in out Object; Other : Object) is
+   begin
+      Self.Values.Prepend_Vector (Other.Values);
+      for C in Other.V_Map.Iterate loop
+         Self.V_Map.Include
+           (GPR2.Containers.Value_Source_Reference_Package.Key (C),
+            Containers.Value_Source_Reference_Package.Element (C));
+      end loop;
+   end Prepend_Vector;
+
    ------------
    -- Rename --
    ------------
