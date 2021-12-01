@@ -672,6 +672,10 @@ package body GPR2.Project.View is
          Result := GPR2.Project.Attribute.Get_Alias (Result, Name);
       end if;
 
+      if PRA_Def.Value_Is_Set and then Result.Is_Defined then
+         Result.Ensure_Set;
+      end if;
+
       --  Finally return the result
       Definition.Get_RO (Self).Cache.Update_Cache
          (Name   => Name,

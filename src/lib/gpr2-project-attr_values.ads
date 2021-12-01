@@ -129,6 +129,9 @@ package GPR2.Project.Attr_Values is
      with Inline,
           Pre => Self.Is_Defined and then Self.Kind = List;
 
+   procedure Ensure_Set (Self : in out Object)
+     with Pre => Self.Is_Defined;
+
 private
 
    type Object is new Source_Reference.Attribute.Object with record

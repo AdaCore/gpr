@@ -119,6 +119,47 @@ package body GPR2.Project.Attr_Values is
          Values, True, Build_Map (Values, True));
    end Create;
 
+   ----------------
+   -- Ensure_Set --
+   ----------------
+
+   procedure Ensure_Set (Self : in out Object)
+   is
+      V2    : Containers.Source_Value_List;
+      VMap2 : Containers.Value_Source_Reference;
+      C     : Containers.Source_Value_Type_List.Cursor;
+   begin
+      if Self.Kind = Single then
+         return;
+      end if;
+
+      for V of Self.Values loop
+         declare
+            Text     : constant String :=
+                         (if Self.Value_Case_Sensitive
+                          then V.Text
+                          else Characters.Handling.To_Lower (V.Text));
+            Cmap     : Containers.Value_Source_Reference_Package.Cursor;
+            Inserted : Boolean;
+         begin
+            VMap2.Insert (Text, V, Cmap, Inserted);
+
+            if not Inserted then
+               --  Replace with the newer value
+               C := V2.Find (VMap2.Element (Text));
+               V2.Delete (C);
+
+               VMap2.Replace_Element (Cmap, V);
+            end if;
+
+            V2.Append (V);
+         end;
+      end loop;
+
+      Self.Values := V2;
+      Self.V_Map  := VMap2;
+   end Ensure_Set;
+
    ---------------
    -- Has_Value --
    ---------------
