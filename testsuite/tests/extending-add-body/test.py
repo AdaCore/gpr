@@ -3,8 +3,8 @@ from testsuite_support.builder_and_runner import BuilderAndRunner, GPRLS, GPRCLE
 
 bnr = BuilderAndRunner()
 
-bnr.build("add_body.gpr")
-bnr.build("add_spec.gpr")
+bnr.run(["gprbuild", "-p", "-q", "-Padd_body.gpr"])
+bnr.run(["gprbuild", "-p", "-q", "-Padd_spec.gpr"])
 
 bnr.call([GPRLS, "-P", "add_body.gpr"])
 print("------------")
