@@ -633,6 +633,22 @@ package body GPR2.Project.Definition is
 
       package Naming_Exceptions_Usage renames Value_Source_Reference_Package;
 
+      type Naming_Schema
+        (Spec_Suffix_Length,
+         Body_Suffix_Length,
+         Separate_Suffix_Length : Natural)
+      is record
+         Has_Spec_Suffix     : Boolean;
+         Has_Body_Suffix     : Boolean;
+         Has_Separate_Suffix : Boolean;
+         Spec_Suffix         : String (1 .. Spec_Suffix_Length);
+         Body_Suffix         : String (1 .. Body_Suffix_Length);
+         Sep_Suffix          : String (1 .. Separate_Suffix_Length);
+      end record;
+
+      package Naming_Schema_Maps is new Ada.Containers.Indefinite_Ordered_Maps
+        (Language_Id, Naming_Schema);
+
       procedure Register_Units
         (Source : Project.Source.Object)
         with Pre => Source.Language = Ada_Language;
@@ -681,6 +697,8 @@ package body GPR2.Project.Definition is
       --  Includes Value into Set. If Value contains directory separator put
       --  error message into log.
 
+      procedure Fill_Naming_Schema;
+
       procedure Fill_Ada_Naming_Exceptions (Attr : Attribute_Id)
         with Pre => Attr in  PRA.Spec | PRA.Body_N;
       --  Fill the Ada_Naming_Exceptions object with the given attribute set
@@ -701,6 +719,8 @@ package body GPR2.Project.Definition is
                    View.Attribute
                      (PRA.Dot_Replacement, PRP.Naming).Value.Text;
       --  Get Dot_Replacement value
+
+      Naming_Schema_Map : Naming_Schema_Maps.Map;
 
       Is_Standard_GNAT_Naming : constant  Boolean :=
                                   (View.Spec_Suffix
@@ -786,6 +806,51 @@ package body GPR2.Project.Definition is
             end;
          end loop;
       end Fill_Ada_Naming_Exceptions;
+
+      ------------------------
+      -- Fill_Naming_Schema --
+      ------------------------
+
+      procedure Fill_Naming_Schema
+      is
+      begin
+         for L of View.Languages loop
+            declare
+               Lang : constant Language_Id := +Name_Type (L.Text);
+               Has_Spec_Suffix : constant Boolean :=
+                                   View.Has_Spec_Suffix (Lang);
+               Spec_Suffix     : constant String :=
+                                   (if Has_Spec_Suffix
+                                    then View.Spec_Suffix (Lang).Value.Text
+                                    else "");
+               Has_Body_Suffix : constant Boolean :=
+                                   View.Has_Body_Suffix (Lang);
+               Body_Suffix     : constant String :=
+                                   (if Has_Body_Suffix
+                                    then View.Body_Suffix (Lang).Value.Text
+                                    else "");
+               Has_Sep_Suffix  : constant Boolean :=
+                                   Lang = Ada_Language
+                                       and then View.Has_Separate_Suffix;
+               Sep_Suffix      : constant String :=
+                                   (if Has_Sep_Suffix
+                                    then View.Separate_Suffix.Value.Text
+                                    else "");
+            begin
+               Naming_Schema_Map.Insert
+                 (Lang,
+                  (Spec_Suffix_Length     => Spec_Suffix'Length,
+                   Body_Suffix_Length     => Body_Suffix'Length,
+                   Separate_Suffix_Length => Sep_Suffix'Length,
+                   Has_Spec_Suffix        => Has_Spec_Suffix,
+                   Has_Body_Suffix        => Has_Body_Suffix,
+                   Has_Separate_Suffix    => Has_Sep_Suffix,
+                   Spec_Suffix            => Spec_Suffix,
+                   Body_Suffix            => Body_Suffix,
+                   Sep_Suffix             => Sep_Suffix));
+            end;
+         end loop;
+      end Fill_Naming_Schema;
 
       ----------------------------------
       -- Fill_Other_Naming_Exceptions --
@@ -1045,66 +1110,50 @@ package body GPR2.Project.Definition is
             Matches_Spec     : Boolean;
             Matches_Body     : Boolean;
             Matches_Separate : Boolean;
-            Has_Spec_Suffix  : constant Boolean :=
-                                 View.Has_Spec_Suffix (Language);
-            Spec_Suffix      : constant String :=
-                                 (if Has_Spec_Suffix
-                                  then View.Spec_Suffix (Language).Value.Text
-                                  else "");
-            Has_Body_Suffix  : constant Boolean :=
-                                 View.Has_Body_Suffix (Language);
-            Body_Suffix      : constant String :=
-                                 (if Has_Body_Suffix
-                                  then View.Body_Suffix (Language).Value.Text
-                                  else "");
-            Has_Sep_Suffix   : constant Boolean := Language = Ada_Language
-                                 and then View.Has_Separate_Suffix;
-            Sep_Suffix       : constant String :=
-                                 (if Has_Sep_Suffix
-                                  then View.Separate_Suffix.Value.Text
-                                  else "");
+            NS               : constant Naming_Schema :=
+                                 Naming_Schema_Map.Element (Language);
             use GNATCOLL.Utils;
 
          begin
-            Matches_Spec := Has_Spec_Suffix
-              and then Ends_With (Basename, Spec_Suffix);
+            Matches_Spec := NS.Has_Spec_Suffix
+              and then Ends_With (Basename, NS.Spec_Suffix);
 
-            Matches_Body := Has_Body_Suffix
-              and then Ends_With (Basename, Body_Suffix);
+            Matches_Body := NS.Has_Body_Suffix
+              and then Ends_With (Basename, NS.Body_Suffix);
 
-            Matches_Separate := Has_Sep_Suffix
-              and then Ends_With (Basename, Sep_Suffix);
+            Matches_Separate := NS.Has_Separate_Suffix
+              and then Ends_With (Basename, NS.Sep_Suffix);
 
             --  See GA05-012: if there's ambiguity with suffixes (e.g. one of
             --  the suffixes if a suffix of another) we use with the most
             --  explicit one (e.g. the longest one) that matches.
 
             if Matches_Spec and then Matches_Body then
-               if Spec_Suffix'Length >= Body_Suffix'Length then
-                  pragma Assert (Ends_With (Spec_Suffix, Body_Suffix));
+               if NS.Spec_Suffix'Length >= NS.Body_Suffix'Length then
+                  pragma Assert (Ends_With (NS.Spec_Suffix, NS.Body_Suffix));
                   Matches_Body := False;
                else
-                  pragma Assert (Ends_With (Body_Suffix, Spec_Suffix));
+                  pragma Assert (Ends_With (NS.Body_Suffix, NS.Spec_Suffix));
                   Matches_Spec := False;
                end if;
             end if;
 
             if Matches_Spec and then Matches_Separate then
-               if Spec_Suffix'Length >= Sep_Suffix'Length then
-                  pragma Assert (Ends_With (Spec_Suffix, Sep_Suffix));
+               if NS.Spec_Suffix'Length >= NS.Sep_Suffix'Length then
+                  pragma Assert (Ends_With (NS.Spec_Suffix, NS.Sep_Suffix));
                   Matches_Separate := False;
                else
-                  pragma Assert (Ends_With (Sep_Suffix, Spec_Suffix));
+                  pragma Assert (Ends_With (NS.Sep_Suffix, NS.Spec_Suffix));
                   Matches_Spec := False;
                end if;
             end if;
 
             if Matches_Body and then Matches_Separate then
-               if Body_Suffix'Length >= Sep_Suffix'Length then
-                  pragma Assert (Ends_With (Body_Suffix, Sep_Suffix));
+               if NS.Body_Suffix'Length >= NS.Sep_Suffix'Length then
+                  pragma Assert (Ends_With (NS.Body_Suffix, NS.Sep_Suffix));
                   Matches_Separate := False;
                else
-                  pragma Assert (Ends_With (Sep_Suffix, Body_Suffix));
+                  pragma Assert (Ends_With (NS.Sep_Suffix, NS.Body_Suffix));
                   Matches_Body := False;
                end if;
             end if;
@@ -1112,11 +1161,11 @@ package body GPR2.Project.Definition is
             --  Additional check: dot replacement and charset
             if Language = Ada_Language then
                if Matches_Spec then
-                  Matches_Spec := Test_Charset (Spec_Suffix);
+                  Matches_Spec := Test_Charset (NS.Spec_Suffix);
                elsif Matches_Body then
-                  Matches_Body := Test_Charset (Body_Suffix);
+                  Matches_Body := Test_Charset (NS.Body_Suffix);
                elsif Matches_Separate then
-                  Matches_Separate := Test_Charset (Sep_Suffix);
+                  Matches_Separate := Test_Charset (NS.Sep_Suffix);
                end if;
             end if;
 
@@ -1160,11 +1209,11 @@ package body GPR2.Project.Definition is
                Suffix : constant Value_Type :=
                           (case Kind is
                               when Unit.Spec_Kind =>
-                                View.Spec_Suffix (Ada_Language).Value.Text,
+                                Naming_Schema_Map (Ada_Language).Spec_Suffix,
                               when Unit.Body_Kind =>
-                                View.Body_Suffix (Ada_Language).Value.Text,
+                                Naming_Schema_Map (Ada_Language).Body_Suffix,
                               when S_Separate     =>
-                                View.Separate_Suffix.Value.Text);
+                                Naming_Schema_Map (Ada_Language).Sep_Suffix);
             begin
                if Length (Result) > Suffix'Length then
                   Delete
@@ -2083,6 +2132,8 @@ package body GPR2.Project.Definition is
       if Def.Sources_Signature = Current_Signature then
          return;
       end if;
+
+      Fill_Naming_Schema;
 
       --  Setup the naming exceptions look-up table if needed
 
