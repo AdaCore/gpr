@@ -523,6 +523,7 @@ package body GPR2.Project.Definition is
    is
    begin
       Def.Cache.Clear_Cache;
+      Def.Dir_Cache := (others => <>);
    end Clear_Cache;
 
    -------------------

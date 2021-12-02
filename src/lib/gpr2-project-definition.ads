@@ -68,6 +68,19 @@ private package GPR2.Project.Definition is
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
 
+   type Dir_Cache_Value is record
+      Is_Set : Boolean := False;
+      Value  : GPR2.Path_Name.Object;
+   end record;
+   --  Used to cache directory attributes that require otherwise
+   --  postprocessing each time they are retrieved (Call to
+   --  Apply_Root_And_Subdirs).
+
+   type Cacheable_Dir_Attrs is
+     (Exec_Dir, Library_Ali_Dir, Library_Dir, Library_Src_Dir, Object_Dir);
+
+   type Dir_Cache_List is array (Cacheable_Dir_Attrs) of Dir_Cache_Value;
+
    --  Data contains a project view data. We have all the attributes, variables
    --  and packages with the final values as parsed with the project's context
    --  in the given tree. Imports here are the project views corresponding to
@@ -115,6 +128,7 @@ private package GPR2.Project.Definition is
 
       --  Cached values for faster retrieval of attributes
       Cache           : Attribute_Cache.Object;
+      Dir_Cache       : Dir_Cache_List;
    end record;
 
    type Ref is access all Data;

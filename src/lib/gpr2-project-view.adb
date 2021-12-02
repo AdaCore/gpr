@@ -128,36 +128,67 @@ package body GPR2.Project.View is
    function Apply_Root_And_Subdirs
      (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object
    is
-      Dir      : constant Value_Type :=
-                   Self.Attribute (Dir_Attr).Value.Text;
-      Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
-      Dir_Name : constant Filename_Type :=
-                   (if Dir = "" then "." else Filename_Type (Dir));
-      Result   : GPR2.Path_Name.Object;
+      function Compute return GPR2.Path_Name.Object;
+
+      function Compute return GPR2.Path_Name.Object is
+         Dir      : constant Value_Type :=
+           Self.Attribute (Dir_Attr).Value.Text;
+         Subdirs  : constant Filename_Optional := Self.Tree.Subdirs;
+         Dir_Name : constant Filename_Type :=
+           (if Dir = "" then "." else Filename_Type (Dir));
+         Result   : GPR2.Path_Name.Object;
+      begin
+         if OS_Lib.Is_Absolute_Path (Dir) then
+            Result := GPR2.Path_Name.Create_Directory (Dir_Name);
+
+         elsif Self.Tree.Build_Path.Is_Defined then
+            Result := GPR2.Path_Name.Create_Directory
+              (Self.Dir_Name.Relative_Path
+                 (Self.Tree.Root_Project.Dir_Name).Name,
+               Filename_Type (Self.Tree.Build_Path.Value));
+
+            Result := GPR2.Path_Name.Create_Directory
+              (Dir_Name, Filename_Type (Result.Value));
+
+         else
+            Result := GPR2.Path_Name.Create_Directory
+              (Dir_Name, Filename_Type (Self.Dir_Name.Value));
+         end if;
+
+         if Subdirs = No_Filename then
+            return Result;
+         end if;
+
+         return GPR2.Path_Name.Create_Directory
+           (Subdirs, Filename_Type (Result.Value));
+      end Compute;
+
+      Def      : Definition.Ref renames Self.Get_Ref;
+      Def_Attr : Definition.Cacheable_Dir_Attrs;
    begin
-      if OS_Lib.Is_Absolute_Path (Dir) then
-         Result := GPR2.Path_Name.Create_Directory (Dir_Name);
-
-      elsif Self.Tree.Build_Path.Is_Defined then
-         Result := GPR2.Path_Name.Create_Directory
-           (Self.Dir_Name.Relative_Path
-              (Self.Tree.Root_Project.Dir_Name).Name,
-            Filename_Type (Self.Tree.Build_Path.Value));
-
-         Result := GPR2.Path_Name.Create_Directory
-           (Dir_Name, Filename_Type (Result.Value));
-
+      if Dir_Attr = PRA.Object_Dir then
+         Def_Attr := Definition.Object_Dir;
+      elsif Dir_Attr = PRA.Library_Ali_Dir then
+         Def_Attr := Definition.Library_Ali_Dir;
+      elsif Dir_Attr = PRA.Library_Dir then
+         Def_Attr := Definition.Library_Dir;
+      elsif Dir_Attr = PRA.Exec_Dir then
+         Def_Attr := Definition.Exec_Dir;
+      elsif Dir_Attr = PRA.Library_Src_Dir then
+         Def_Attr := Definition.Library_Src_Dir;
       else
-         Result := GPR2.Path_Name.Create_Directory
-           (Dir_Name, Filename_Type (Self.Dir_Name.Value));
+         raise Constraint_Error with
+           "Unexpected call to Apply_Root_And_Subdirs with Attr " &
+           Image (Dir_Attr);
       end if;
 
-      if Subdirs = No_Filename then
-         return Result;
+      if not Def.Dir_Cache (Def_Attr).Is_Set then
+         Def.Dir_Cache (Def_Attr) :=
+           (Is_Set => True,
+            Value  => Compute);
       end if;
 
-      return GPR2.Path_Name.Create_Directory
-               (Subdirs, Filename_Type (Result.Value));
+      return Def.Dir_Cache (Def_Attr).Value;
    end Apply_Root_And_Subdirs;
 
    ---------------
