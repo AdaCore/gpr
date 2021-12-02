@@ -2556,23 +2556,23 @@ package body GPR2.Project.Definition is
    procedure Update_Sources_Parse
      (Def : in out Data; Backends : Source_Info.Backend_Set)
    is
-      Def_Sources : Project.Source.Set.Object;
       Def_Src_Map : Simple_Name_Source.Map;
       Repeat_Map  : Simple_Name_Source.Map; -- Second pass for subunits
       Position    : Simple_Name_Source.Cursor;
       Inserted    : Boolean;
       SW          : Project.Source.Object;
 
-      procedure Insert_SW;
+      procedure Insert_SW (C : Project.Source.Set.Cursor);
       --  Insert SW into Def_Sources and Def_Src_Map
 
       ---------------
       -- Insert_SW --
       ---------------
 
-      procedure Insert_SW is
+      procedure Insert_SW (C : Project.Source.Set.Cursor) is
       begin
-         Def_Sources.Insert (SW);
+         Def.Sources.Replace (C, SW);
+
          Def_Src_Map.Insert
            (SW.Path_Name.Simple_Name, SW, Position, Inserted);
 
@@ -2604,7 +2604,7 @@ package body GPR2.Project.Definition is
            or else not Def.Extending.Was_Freed
            or else SW.Language /= Ada_Language
          then
-            Insert_SW;
+            Insert_SW (C);
 
          else
             --  It can be subunit case in runtime krunched source names, need
@@ -2621,11 +2621,15 @@ package body GPR2.Project.Definition is
 
       for C in Repeat_Map.Iterate loop
          SW := Simple_Name_Source.Element (C);
-         SW.Update (Backends);
-         Insert_SW;
+         declare
+            Cursor : constant Project.Source.Set.Cursor :=
+                       Def.Sources.Find (SW);
+         begin
+            SW.Update (Backends);
+            Insert_SW (Cursor);
+         end;
       end loop;
 
-      Def.Sources     := Def_Sources;
       Def.Sources_Map := Def_Src_Map;
    end Update_Sources_Parse;
 
