@@ -21,12 +21,12 @@ AFTER: Has unread Message: FALSE
 
 Project: Demo3
  > src2/pck__a.adb
-                  language: Ada    Kind: S_BODY_ONLY   unit: Pck.A
+                  language: Ada    Kind: S_BODY_ONLY   unit: PCK.A
  > src2/pcka.ads
-                  language: Ada    Kind: S_SPEC_ONLY   unit: Pcka
+                  language: Ada    Kind: S_SPEC_ONLY   unit: PCKA
 Project: Demo4
  > src3/main.adb
-                  language: Ada    Kind: S_BODY_ONLY   unit: Main
+                  language: Ada    Kind: S_BODY_ONLY   unit: MAIN
 Project: Demo5
 BEFORE: Has unread Message: TRUE
 > /source-errors/demo5.gpr

@@ -3,7 +3,7 @@
 /main/obj/helper.o
       OK /main/helper.c
 /main/obj/main.o
-   Main
+   MAIN
       OK /main/main.adb
 ----------
 /main/obj/asm.o
@@ -11,10 +11,10 @@
 /main/obj/helper.o
       OK /main/helper.c
 /main/obj/main.o
-   Main
+   MAIN
       OK /main/main.adb
 /mylib/obj/mylib.o
-   Mylib
+   MYLIB
       OK /mylib/mylib.ads
 ----------
 /main/obj/asm.o
@@ -22,7 +22,7 @@
 /main/obj/helper.o
       OK /main/helper.c
 /main/obj/main.o
-   Main
+   MAIN
       OK /main/main.adb
 ----------
 /main/obj/asm.o

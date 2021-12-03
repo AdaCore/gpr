@@ -1,9 +1,9 @@
 Pkg.Execute
 
 /sources~2.o
-   Pkg
+   PKG
       OK /sources.ada at index 2
 /sources~3.o
-   Main
+   MAIN
       OK /sources.ada at index 3
 

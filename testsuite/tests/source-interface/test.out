@@ -1,36 +1,36 @@
 Project: Demo
 
 ---------- ALL
- > /src/api.adb,language: Ada,Kind: S_BODY,unit: Api
- > /src/api.ads,language: Ada,Kind: S_SPEC,unit: Api
- > /src/data.ads,language: Ada,Kind: S_SPEC_ONLY,unit: Data
- > /src/pck.adb,language: Ada,Kind: S_BODY,unit: Pck
- > /src/pck.ads,language: Ada,Kind: S_SPEC,unit: Pck
+ > /src/api.adb,language: Ada,Kind: S_BODY,unit: API
+ > /src/api.ads,language: Ada,Kind: S_SPEC,unit: API
+ > /src/data.ads,language: Ada,Kind: S_SPEC_ONLY,unit: DATA
+ > /src/pck.adb,language: Ada,Kind: S_BODY,unit: PCK
+ > /src/pck.ads,language: Ada,Kind: S_SPEC,unit: PCK
 
 ---------- INTERFACE ONLY
- > /src/api.ads,Kind: S_SPEC,unit: Api
- > /src/data.ads,Kind: S_SPEC_ONLY,unit: Data
+ > /src/api.ads,Kind: S_SPEC,unit: API
+ > /src/data.ads,Kind: S_SPEC_ONLY,unit: DATA
 
 ---------- NOT INTERFACE
- > /src/api.adb,Kind: S_BODY,unit: Api
- > /src/pck.adb,Kind: S_BODY,unit: Pck
- > /src/pck.ads,Kind: S_SPEC,unit: Pck
+ > /src/api.adb,Kind: S_BODY,unit: API
+ > /src/pck.adb,Kind: S_BODY,unit: PCK
+ > /src/pck.ads,Kind: S_SPEC,unit: PCK
 Messages found:
 demo.gpr:11:08: warning: duplicate source 'api.ads' in interfaces attribute
 Project: Demo2
 
 ---------- ALL
- > /src/api.adb,language: Ada,Kind: S_BODY,unit: Api
- > /src/api.ads,language: Ada,Kind: S_SPEC,unit: Api
- > /src/data.ads,language: Ada,Kind: S_SPEC_ONLY,unit: Data
- > /src/pck.adb,language: Ada,Kind: S_BODY,unit: Pck
- > /src/pck.ads,language: Ada,Kind: S_SPEC,unit: Pck
+ > /src/api.adb,language: Ada,Kind: S_BODY,unit: API
+ > /src/api.ads,language: Ada,Kind: S_SPEC,unit: API
+ > /src/data.ads,language: Ada,Kind: S_SPEC_ONLY,unit: DATA
+ > /src/pck.adb,language: Ada,Kind: S_BODY,unit: PCK
+ > /src/pck.ads,language: Ada,Kind: S_SPEC,unit: PCK
 
 ---------- INTERFACE ONLY
- > /src/api.adb,Kind: S_BODY,unit: Api
- > /src/api.ads,Kind: S_SPEC,unit: Api
- > /src/data.ads,Kind: S_SPEC_ONLY,unit: Data
+ > /src/api.adb,Kind: S_BODY,unit: API
+ > /src/api.ads,Kind: S_SPEC,unit: API
+ > /src/data.ads,Kind: S_SPEC_ONLY,unit: DATA
 
 ---------- NOT INTERFACE
- > /src/pck.adb,Kind: S_BODY,unit: Pck
- > /src/pck.ads,Kind: S_SPEC,unit: Pck
+ > /src/pck.adb,Kind: S_BODY,unit: PCK
+ > /src/pck.ads,Kind: S_SPEC,unit: PCK
