@@ -97,7 +97,6 @@ package body GPR2.KB.Compiler_Iterator is
 
       Executable_Pattern : constant String :=
                              (if On_Windows then "*.{exe,bat,cmd}" else "");
-      C                  : CDM.Cursor;
       Search             : Search_Type;
       Dir                : Directory_Entry_Type;
       Exec_Suffix        : OS_Lib.String_Access :=
@@ -142,11 +141,10 @@ package body GPR2.KB.Compiler_Iterator is
             begin
                exit For_All_Files_In_Dir when not More_Entries (Search);
                Get_Next_Entry (Search, Dir);
-               C := First (Base.Compilers);
-               while Has_Element (C) loop
+               for C in Base.Compilers.Iterate loop
                   declare
-                     Config  : constant Compiler_Description :=
-                                 CDM.Element (C);
+                     Config  : constant CDM.Constant_Reference_Type :=
+                                 CDM.Constant_Reference (Base.Compilers, C);
                      Simple  : constant String :=
                                  Ada.Directories.Simple_Name (Dir);
                      Matches : Match_Array
@@ -225,7 +223,6 @@ package body GPR2.KB.Compiler_Iterator is
                         exit For_All_Files_In_Dir when not Continue;
                      end if;
                   end;
-                  Next (C);
                end loop;
             exception
                when Ada.Directories.Name_Error | Ada.Directories.Use_Error =>
@@ -237,11 +234,10 @@ package body GPR2.KB.Compiler_Iterator is
          --  for the compilers. This results in a lot less system calls, and
          --  thus is faster.
 
-         C := First (Base.Compilers);
-         while Has_Element (C) loop
+         for C in Base.Compilers.Iterate loop
             declare
-               Config : constant Compiler_Description :=
-                          CDM.Element (C);
+               Config : constant CDM.Constant_Reference_Type :=
+                          CDM.Constant_Reference (Base.Compilers, C);
                F      : constant String :=
                           GNAT.OS_Lib.Normalize_Pathname
                             (Name           => To_String (Config.Executable),
@@ -274,8 +270,6 @@ package body GPR2.KB.Compiler_Iterator is
                when Ada.Directories.Name_Error | Ada.Directories.Use_Error =>
                   null;
             end;
-
-            Next (C);
          end loop;
       end if;
 
