@@ -263,7 +263,9 @@ private
       Dependencies  : Source_Reference.Identifier.Set.Object;
       Sep_From      : Optional_Name_Type;
       Flags         : Flags_Set) return Object is
-     (Object'(Name         => To_Unbounded_String (String (Name)),
+     (Object'(Name         => To_Unbounded_String
+                               (Ada.Characters.Handling.To_Upper
+                                  (String (Name))),
               Index        => Index,
               Kind         => Lib_Unit_Kind,
               Item_Kind    => Lib_Item_Kind,

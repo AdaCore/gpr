@@ -1288,15 +1288,19 @@ package body GPR2.Project.Definition is
                end;
             end if;
 
-            --  Some additional checks on the unit name
+            declare
+               Unit_Name : constant Name_Type :=
+                             Name_Type (To_String (Result));
+            begin
+               --  Some additional checks on the unit name
+               if not Is_Valid_Unit_Name (Unit_Name) then
+                  goto Invalid;
+               end if;
 
-            if not Is_Valid_Unit_Name (Name_Type (To_String (Result))) then
-               goto Invalid;
-            end if;
+               Success := True;
 
-            Success := True;
-
-            return Name_Type (To_Mixed (To_String (Result)));
+               return Unit_Name;
+            end;
 
             <<Invalid>>
 

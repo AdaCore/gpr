@@ -2,11 +2,11 @@ main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Main
+    unit name    = MAIN
     kind         = S_BODY_ONLY
     withed units = { pkg1 pkg2 }
     object file  = main.ali
-    dependency unit Pkg1.Sep S_SEPARATE in sub.adb at 1
+    dependency unit PKG1.SEP S_SEPARATE in sub.adb at 1
     dependency unit U3.P S_SEPARATE in few_units.ada at 8
     dependency unit U3 S_BODY in few_units.ada at 6
     dependency unit U3 S_SPEC in few_units.ada at 5
@@ -15,31 +15,31 @@ main.adb
     dependency unit U1 S_BODY in few_units.ada at 2
     dependency unit U1 S_SPEC in few_units.ada at 1
     dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit Pkg1 S_BODY in pkg1.adb
-    dependency unit Pkg1 S_SPEC in pkg1.ads
-    dependency unit Pkg S_SPEC_ONLY in pkg.ads
-    dependency unit Pkg2.Sep S_SEPARATE in sub.adb at 2
-    dependency unit Pkg2 S_BODY in pkg2.adb
-    dependency unit Pkg2 S_SPEC in pkg2.ads
-    dependency unit Main S_BODY_ONLY in main.adb
+    dependency unit PKG1 S_BODY in pkg1.adb
+    dependency unit PKG1 S_SPEC in pkg1.ads
+    dependency unit PKG S_SPEC_ONLY in pkg.ads
+    dependency unit PKG2.SEP S_SEPARATE in sub.adb at 2
+    dependency unit PKG2 S_BODY in pkg2.adb
+    dependency unit PKG2 S_SPEC in pkg2.ads
+    dependency unit MAIN S_BODY_ONLY in main.adb
 sub.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
-    unit name    = Pkg1.Sep
+    unit name    = PKG1.SEP
     kind         = S_SEPARATE
   - compilation unit at 2
-    unit name    = Pkg2.Sep
+    unit name    = PKG2.SEP
     kind         = S_SEPARATE
 pkg1.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg1
+    unit name    = PKG1
     kind         = S_BODY
     withed units = { u4 }
     object file  = pkg1.ali
-    dependency unit Pkg1.Sep S_SEPARATE in sub.adb at 1
+    dependency unit PKG1.SEP S_SEPARATE in sub.adb at 1
     dependency unit U3.P S_SEPARATE in few_units.ada at 8
     dependency unit U3 S_BODY in few_units.ada at 6
     dependency unit U3 S_SPEC in few_units.ada at 5
@@ -48,24 +48,24 @@ pkg1.adb
     dependency unit U1 S_BODY in few_units.ada at 2
     dependency unit U1 S_SPEC in few_units.ada at 1
     dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
-    dependency unit Pkg1 S_BODY in pkg1.adb
-    dependency unit Pkg1 S_SPEC in pkg1.ads
+    dependency unit PKG1 S_BODY in pkg1.adb
+    dependency unit PKG1 S_SPEC in pkg1.ads
 pkg1.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg1
+    unit name    = PKG1
     kind         = S_SPEC
 pkg2.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg2
+    unit name    = PKG2
     kind         = S_BODY
     withed units = { pkg u1 }
     object file  = pkg2.ali
-    dependency unit Pkg S_SPEC_ONLY in pkg.ads
-    dependency unit Pkg2.Sep S_SEPARATE in sub.adb at 2
+    dependency unit PKG S_SPEC_ONLY in pkg.ads
+    dependency unit PKG2.SEP S_SEPARATE in sub.adb at 2
     dependency unit U4 S_SPEC_ONLY in few_units.ada at 7
     dependency unit U3.P S_SEPARATE in few_units.ada at 8
     dependency unit U3 S_BODY in few_units.ada at 6
@@ -74,29 +74,29 @@ pkg2.adb
     dependency unit U2 S_SPEC in few_units.ada at 3
     dependency unit U1 S_BODY in few_units.ada at 2
     dependency unit U1 S_SPEC in few_units.ada at 1
-    dependency unit Pkg2 S_BODY in pkg2.adb
-    dependency unit Pkg2 S_SPEC in pkg2.ads
+    dependency unit PKG2 S_BODY in pkg2.adb
+    dependency unit PKG2 S_SPEC in pkg2.ads
 pkg2.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg2
+    unit name    = PKG2
     kind         = S_SPEC
 pkg.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg
+    unit name    = PKG
     kind         = S_BODY
     object file  = pkg.ali
 pkg.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg
+    unit name    = PKG
     kind         = S_SPEC_ONLY
     object file  = pkg.ali
-    dependency unit Pkg S_SPEC_ONLY in pkg.ads
+    dependency unit PKG S_SPEC_ONLY in pkg.ads
 few_units.ada
   single-unit          = FALSE
   has naming exception = TRUE
@@ -167,63 +167,63 @@ main.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Main
+    unit name    = MAIN
     kind         = S_BODY_ONLY
     withed units = { Pkg1 Pkg2 }
     object file  = main.ali
-    dependency unit Pkg1 S_SPEC in pkg1.ads
-    dependency unit Pkg1 S_BODY in pkg1.adb
-    dependency unit Pkg2 S_SPEC in pkg2.ads
-    dependency unit Pkg2 S_BODY in pkg2.adb
+    dependency unit PKG1 S_SPEC in pkg1.ads
+    dependency unit PKG1 S_BODY in pkg1.adb
+    dependency unit PKG2 S_SPEC in pkg2.ads
+    dependency unit PKG2 S_BODY in pkg2.adb
 sub.adb
   single-unit          = FALSE
   has naming exception = TRUE
   - compilation unit at 1
-    unit name    = Pkg1.Sep
+    unit name    = PKG1.SEP
     kind         = S_BODY_ONLY
     object file  = sub~1.ali
   - compilation unit at 2
-    unit name    = Pkg2.Sep
+    unit name    = PKG2.SEP
     kind         = S_BODY_ONLY
     object file  = sub~2.ali
 pkg1.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg1
+    unit name    = PKG1
     kind         = S_BODY
     object file  = pkg1.ali
 pkg1.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg1
+    unit name    = PKG1
     kind         = S_SPEC
 pkg2.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg2
+    unit name    = PKG2
     kind         = S_BODY
     object file  = pkg2.ali
 pkg2.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg2
+    unit name    = PKG2
     kind         = S_SPEC
 pkg.adb
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg
+    unit name    = PKG
     kind         = S_BODY
     object file  = pkg.ali
 pkg.ads
   single-unit          = TRUE
   has naming exception = FALSE
   - compilation unit at 0
-    unit name    = Pkg
+    unit name    = PKG
     kind         = S_SPEC
 few_units.ada
   single-unit          = FALSE
@@ -270,8 +270,8 @@ few_units.ada
    U4
       OK /files/few_units.ada at index 7
 /files/pkg.o
-   Pkg
+   PKG
      DIF /files/pkg.adb
 /files/pkg.o
-   Pkg
+   PKG
       OK /files/pkg.ads

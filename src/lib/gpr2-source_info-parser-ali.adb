@@ -642,6 +642,7 @@ package body GPR2.Source_Info.Parser.ALI is
                      IO.Get_Token (A_Handle, Stop_At_LF => True);
             Tok2 : constant String :=
                      IO.Get_Token (A_Handle, Stop_At_LF => True);
+            use Ada.Characters.Handling;
          begin
             --  At least "?%(b|s)"
 
@@ -805,7 +806,6 @@ package body GPR2.Source_Info.Parser.ALI is
         (Cache    : Cache_Holder;
          Add_Deps : Boolean)
       is
-         U_Ref_Name : constant Name_Type := U_Ref.Name;
          Position   : Unit_Dependencies.Cursor;
          Inserted   : Boolean;
       begin
@@ -823,15 +823,6 @@ package body GPR2.Source_Info.Parser.ALI is
          --  those.
 
          U_Ref.Update_Index (LI_Idx);
-
-         --  Also preserve U_Ref name, as the casing coming from the project
-         --  file is supposed better than the lower-cased one found in the ali
-         --  file, except for runtime sources where U_Ref.Name contains the
-         --  krunched name.
-
-         if not Data.Is_RTS_Source then
-            U_Ref.Update_Name (U_Ref_Name);
-         end if;
 
          Data.Language := Ada_Language;
          Data.Checksum := Cache.Checksum;
@@ -978,12 +969,7 @@ package body GPR2.Source_Info.Parser.ALI is
 
             CU_Idx := CU_Idx + 1;
 
-            if U_Ref.Name = Name_Type (-U_Name) then
-               --  Keep original casing
-
-               U_Name := +String (U_Ref.Name);
-
-            else
+            if U_Ref.Name /= Name_Type (-U_Name) then
                View.Reindex_Unit
                  (From => U_Ref.Name, To => Name_Type (-U_Name));
             end if;
