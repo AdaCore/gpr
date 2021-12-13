@@ -27,7 +27,6 @@ with GPR2.Project.Variable;
 procedure Main is
    Tree         : GPR2.Project.Tree.Object;
    Context      : GPR2.Context.Object;
-   Project_Name : constant GPR2.Filename_Type := "prj";
    use GPR2;
 
    procedure Print_Message is
@@ -55,28 +54,26 @@ procedure Main is
       end if;
    end Print_Variable;
 
+   procedure Test (Prj : GPR2.Filename_Type) is
+   begin
+      Ada.Text_IO.Put_Line (String (Prj) & ".gpr:");
+      Tree.Unload;
+      Tree.Load_Autoconf
+        (Filename => GPR2.Path_Name.Create_File
+           (GPR2.Project.Ensure_Extension (Prj),
+            GPR2.Path_Name.No_Resolution),
+         Context  => Context);
+      for V of Tree.Root_Project.Variables loop
+         Print_Variable (V);
+      end loop;
+   exception
+      when Project_Error =>
+         Print_Message;
+   end Test;
+
 begin
-   Tree.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension (Project_Name),
-         GPR2.Path_Name.No_Resolution),
-      Context  => Context);
-   Print_Variable (Tree.Root_Project.Variable (Name => "A"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "B"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "C"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "D"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "E"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "F"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "G"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "H"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "I"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "J"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "K"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "L"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "M"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "N"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "O"));
-exception
-   when Project_Error =>
-      Print_Message;
+   Test ("prj");
+   Test ("prj2");
+   Test ("prj3");
+   Test ("prj4");
 end Main;

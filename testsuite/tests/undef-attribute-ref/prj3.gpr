@@ -1,0 +1,5 @@
+project Prj3 is
+
+   A := project'Main & ("A");
+
+end Prj3;

@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -61,6 +61,9 @@ package GPRname.Options is
 
    function Sections (Self : Object) return Section.Vector.Object;
    --  Returns the sections for Self
+
+   function Minimal_Dirs (Self : Object) return Boolean;
+   --  Returns the Minimal_Dirs flag for Self
 
 private
 

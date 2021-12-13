@@ -866,6 +866,21 @@ begin
          Set_Of_Targets : GPR2.Containers.Name_Set;
       begin
 
+         if Knowledge_Base.Has_Error then
+            for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
+              (Information => Opt_Verbosity > Quiet,
+               Warning     => Opt_Verbosity > Quiet)
+            loop
+               Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+            end loop;
+
+            Ada.Text_IO.Put_Line
+              (Ada.Text_IO.Standard_Error,
+               "Invalid setup of the gprconfig knowledge base");
+            GNAT.OS_Lib.OS_Exit (1);
+            return;
+         end if;
+
          if Opt_Show_Targets or else Opt_Verbosity = Verbose then
 
             Ada.Text_IO.Put_Line ("List of targets supported by a compiler:");
@@ -932,12 +947,29 @@ begin
 
       for Msg_Cur in Config_Log.Iterate
         (Information => Opt_Verbosity > Quiet,
+         Warning     => Opt_Verbosity > Quiet,
+         Read        => False)
+      loop
+         Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
+      end loop;
+
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "Generation of configuration files failed");
+      GNAT.OS_Lib.OS_Exit (1);
+      return;
+   elsif Knowledge_Base.Has_Error then
+
+      for Msg_Cur in Knowledge_Base.Log_Messages.Iterate
+        (Information => Opt_Verbosity > Quiet,
          Warning     => Opt_Verbosity > Quiet)
       loop
          Ada.Text_IO.Put_Line (Log.Element (Msg_Cur).Format);
       end loop;
 
-      Ada.Text_IO.Put_Line ("Generation of configuration files failed");
+      Ada.Text_IO.Put_Line
+        (Ada.Text_IO.Standard_Error,
+         "Invalid setup of the gprconfig knowledge base");
       GNAT.OS_Lib.OS_Exit (1);
       return;
    else

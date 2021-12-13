@@ -1,7 +1,6 @@
 testing agg.gpr
 import8.gpr:3:13: error: ".a." is illegal for Dot_Replacement
 abst.gpr:6:12: error: Dot_Replacement cannot be empty
-abst.gpr:8:12: error: Body_Suffix("") for language Ada is also defined for language Ada
 abst.gpr:9:12: error: Separate_Suffix cannot be empty
 import9.gpr:5:13: error: "- -" is illegal for Dot_Replacement
 import9.gpr:6:13: error: Spec_Suffix(".ada") for language C is also defined for language Ada

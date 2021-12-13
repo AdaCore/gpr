@@ -1,0 +1,7 @@
+project Prj5 is
+
+   package Compiler is
+      F := Naming'Specification_Exceptions("Test") & ("F");
+   end Compiler;
+
+end Prj5;

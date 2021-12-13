@@ -37,10 +37,18 @@ with GPR2.Containers;
 with GPR2.Path_Name;
 with GPR2.Project.Attribute;
 with GPR2.Project.Attribute_Index;
-with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Project.Source.Artifact;
+pragma Warnings (Off, "* is not referenced");
+--  GPR2.Project.Source.Dependencies return a Part_Set but only has limited
+--  visibility on it. So in order to be able to manipulate the returned object
+--  we need to have full vilibility so need to add this with clause.
+--  However we never reference the package explicitly, so the compiler will
+--  complain that the using is not referenced.
+--  So let's just kill the warning.
+with GPR2.Project.Source.Part_Set;
+pragma Warnings (On, "* is not referenced");
 with GPR2.Project.Variable;
 with GPR2.Project.View.Set;
 with GPR2.Project.Source.Set;
@@ -91,10 +99,13 @@ package body GPRinstall.Install is
    --  routine when an error occurs while copying the files.
 
    function Other_Part_Need_Body
-     (Source : GPR2.Project.Source.Object) return Boolean
+     (Source : GPR2.Project.Source.Object;
+      Index  : Unit_Index) return Boolean
    is
-     (Source.Has_Other_Part
-      and then Source.Other_Part.Is_Implementation_Required);
+     (Source.Has_Other_Part (Index)
+      and then Source.Other_Part
+        (Index).Source.Is_Implementation_Required
+          (Source.Other_Part (Index).Index));
    --  Returns True if Source has other part and this part need body
 
    procedure Double_Buffer;
@@ -460,11 +471,8 @@ package body GPRinstall.Install is
          if Project.Has_Packages (P.Install) then
             declare
                use Ada.Characters.Handling;
-
-               Pck : constant GPR2.Project.Pack.Object :=
-                       Project.Packages.Element (P.Install);
             begin
-               for V of Pck.Attributes loop
+               for V of Project.Attributes (Pack => P.Install) loop
                   if V.Name.Id = A.Prefix then
                      --  If Install.Prefix is a relative path, it is made
                      --  relative to the global prefix.
@@ -624,7 +632,7 @@ package body GPRinstall.Install is
          pragma Warnings (Off, "*can never be executed*");
 
          if Sym_Link and then Is_Windows_Host then
-            raise Constraint_Error
+            raise GPRinstall_Error
               with "internal error: cannot use symbolic links on Windows";
          end if;
 
@@ -635,7 +643,7 @@ package body GPRinstall.Install is
            and then not Options.Force_Installations
            and then Src_Path.Content_MD5 /= Dest_Path.Content_MD5
          then
-            raise Constraint_Error
+            raise GPRinstall_Error
               with "file " & String (File) & " exists, use -f to overwrite";
          end if;
 
@@ -666,14 +674,14 @@ package body GPRinstall.Install is
                   OS_Lib.Delete_File (Dest_Filename, Success);
 
                   if not Success then
-                     raise Constraint_Error with "cannot overwrite "
+                     raise GPRinstall_Error with "cannot overwrite "
                        & Dest_Filename & " check permissions";
                   end if;
                end;
             end if;
 
             if not Sym_Link and then not Src_Path.Exists then
-               raise Constraint_Error with
+               raise GPRinstall_Error with
                  "file " & F & " does not exist, build may not be complete";
             end if;
 
@@ -690,14 +698,14 @@ package body GPRinstall.Install is
                   exception
                      when Text_IO.Use_Error =>
                         --  Cannot create path, permission issue
-                        raise Constraint_Error with
+                        raise GPRinstall_Error with
                           "cannot create destination directory "
                           & (if Sym_Link then Src_Path.Dir_Name else T)
                           & " check permissions";
                   end;
 
                else
-                  raise Constraint_Error with
+                  raise GPRinstall_Error with
                     "target directory "
                     & T & " does not exist, use -p to create";
                end if;
@@ -730,7 +738,7 @@ package body GPRinstall.Install is
                      Form        => "preserve=timestamps");
                exception
                   when Text_IO.Use_Error =>
-                     raise Constraint_Error with
+                     raise GPRinstall_Error with
                        "cannot overwrite file " & Dest_Filename
                         & " check permissions.";
                end;
@@ -927,14 +935,14 @@ package body GPRinstall.Install is
 
             if Required and not Something_Copied then
                Rollback_Manifests;
-               raise Constraint_Error with
+               raise GPRinstall_Error with
                  "error: file does not exist '" & Pathname.Value & ''';
             end if;
          exception
             when Text_IO.Name_Error =>
                if Required then
                   Rollback_Manifests;
-                  raise Constraint_Error with
+                  raise GPRinstall_Error with
                     "error: file does not exist '" & Pathname.Value & ''';
                else
                   Put_Line
@@ -962,7 +970,8 @@ package body GPRinstall.Install is
             --  artifacts.
 
             procedure Copy_Interface_Closure
-              (Source : GPR2.Project.Source.Object)
+              (Source : GPR2.Project.Source.Object;
+               Index  : GPR2.Unit_Index)
             with Pre => Source.Has_Units;
             --  Copy all sources and artifacts part of the close of Source
 
@@ -971,18 +980,20 @@ package body GPRinstall.Install is
             ----------------------------
 
             procedure Copy_Interface_Closure
-              (Source : GPR2.Project.Source.Object) is
+              (Source : GPR2.Project.Source.Object;
+               Index  : GPR2.Unit_Index) is
             begin
                --  Note that we only install the interface from the same view
                --  to avoid installing the runtime file for example.
 
-               for D of Source.Dependencies (Closure => True) loop
-                  if not Source_Copied.Contains (D)
-                    and then (D.Kind in Unit.Spec_Kind
-                              or else Other_Part_Need_Body (D))
-                    and then Source.View = D.View
+               for D of Source.Dependencies (Index, Closure => True) loop
+                  if not Source_Copied.Contains (D.Source)
+                    and then (D.Source.Kind (D.Index) in Unit.Spec_Kind
+                              or else Other_Part_Need_Body (D.Source, D.Index))
+                    and then Source.View = D.Source.View
                   then
-                     Install_Project_Source (D, Is_Interface_Closure => True);
+                     Install_Project_Source (D.Source,
+                                             Is_Interface_Closure => True);
                   end if;
                end loop;
             end Copy_Interface_Closure;
@@ -1018,10 +1029,12 @@ package body GPRinstall.Install is
 
                   if Options.All_Sources
                     or else Source.Kind in Unit.Spec_Kind
-                    or else Other_Part_Need_Body (Source)
-                    or else Source.Is_Generic
-                    or else (Source.Kind = S_Separate
-                             and then Source.Separate_From.Is_Generic)
+                    or else Other_Part_Need_Body (Source, No_Index)
+                    or else Source.Is_Generic (No_Index)
+                    or else
+                      (Source.Kind = S_Separate
+                       and then Source.Separate_From
+                         (No_Index).Source.Is_Generic (No_Index))
                   then
                      Done := Copy_Source (Source);
 
@@ -1032,7 +1045,13 @@ package body GPRinstall.Install is
                        and then Source.Has_Units
                        and then not Is_Interface_Closure
                      then
-                        Copy_Interface_Closure (Source);
+                        if Source.Has_Units then
+                           for CU of CUs loop
+                              Copy_Interface_Closure (Source, CU.Index);
+                           end loop;
+                        else
+                           Copy_Interface_Closure (Source, No_Index);
+                        end if;
                      end if;
 
                   elsif Source.Has_Naming_Exception then
@@ -1078,16 +1097,18 @@ package body GPRinstall.Install is
                         declare
                            Proj : GPR2.Project.View.Object;
                            Satf : GPR2.Project.Source.Artifact.Object;
+                           use GPR2.Project.Source.Artifact;
                         begin
-                           if not Source.Has_Other_Part
+                           if Options.All_Sources
                              or else not Source.Has_Naming_Exception
                              or else not Source.Has_Single_Unit
-                             or else Options.All_Sources
+                             or else not Source.Has_Other_Part
                            then
                               Satf := Atf;
                            else
-                              Satf := Source.Other_Part.Artifacts
-                                        (Force_Spec => True);
+                              Satf :=
+                                Source.Other_Part.Source.Artifacts
+                                                          (Force_Spec => True);
                            end if;
 
                            if Project.Qualifier = K_Aggregate_Library then
@@ -1097,8 +1118,9 @@ package body GPRinstall.Install is
                            end if;
 
                            if Is_Ada (Source) then
-                              for CU of CUs loop
-                                 if CU.Kind not in S_Spec | S_Separate
+                              for CU of Source.Units loop
+                                 if Source.Kind (CU.Index)
+                                      not in S_Spec | S_Separate
                                    and then Atf.Has_Dependency (CU.Index)
                                  then
                                     Copy_File
@@ -1106,8 +1128,7 @@ package body GPRinstall.Install is
                                        To   => (if Proj.Kind = K_Library
                                                 then ALI_Dir
                                                 else Lib_Dir),
-                                       File => Satf.Dependency
-                                                 (CU.Index).Simple_Name);
+                                       File => Satf.Dependency.Simple_Name);
                                  end if;
                               end loop;
                            end if;
@@ -1438,7 +1459,10 @@ package body GPRinstall.Install is
             begin
                Content.Append ("   package Naming is");
 
-               for A of Project.Naming_Package.Attributes loop
+               for A of Project.Attributes (Pack          => P.Naming,
+                                            With_Defaults => False,
+                                            With_Config   => False)
+               loop
                   if not A.Has_Index then
                      Content.Append ("      " & A.Image);
                      Found := True;
@@ -1732,8 +1756,9 @@ package body GPRinstall.Install is
                                  Project.Tree.Configuration.Corresponding_View;
                         begin
                            if C.Has_Packages (P.Compiler)
-                             and then C.Pack (P.Compiler).Check_Attribute
-                                        (A.Driver,
+                             and then C.Check_Attribute
+                                        (P.Compiler,
+                                         A.Driver,
                                          Attribute_Index.Create (Lang.Text),
                                          Result => Attr)
                              and then Attr.Value.Text /= ""
@@ -1772,7 +1797,7 @@ package body GPRinstall.Install is
          is
             use type Ada.Containers.Count_Type;
 
-            procedure Linker_For (Pck : GPR2.Project.Pack.Object);
+            procedure Linker_For (View : GPR2.Project.View.Object);
             --  Handle the linker options for this package
 
             procedure Append (Attribute : GPR2.Project.Attribute.Object);
@@ -1830,10 +1855,10 @@ package body GPRinstall.Install is
             -- Linker_For --
             ----------------
 
-            procedure Linker_For (Pck : GPR2.Project.Pack.Object) is
+            procedure Linker_For (View : GPR2.Project.View.Object) is
             begin
-               if Pck.Has_Attributes (A.Linker_Options) then
-                  Append (Pck.Attributes.Element (A.Linker_Options));
+               if View.Has_Attribute (A.Linker_Options, Pack => P.Linker) then
+                  Append (View.Attribute (A.Linker_Options, Pack => P.Linker));
                end if;
             end Linker_For;
 
@@ -1855,16 +1880,11 @@ package body GPRinstall.Install is
          begin
             R.Append ("         when """ & Options.Build_Name.all & """ =>");
 
-            if Project.Has_Packages (P.Linker) then
-               Linker_For (Project.Packages.Element (P.Linker));
-            end if;
+            Linker_For (Project);
 
             if Proj.Qualifier = K_Aggregate_Library then
                for Aggregated of Proj.Aggregated loop
-                  if Aggregated.Has_Packages (P.Linker) then
-                     Linker_For (Aggregated.Packages.Element (P.Linker));
-                  end if;
-
+                  Linker_For (Aggregated);
                   Append_Imported_External_Libraries (Aggregated);
                end loop;
             end if;
@@ -1875,13 +1895,10 @@ package body GPRinstall.Install is
 
             if Proj.Is_Library then
                declare
-                  Library_Options : GPR2.Project.Attribute.Object;
+                  Library_Options : constant GPR2.Project.Attribute.Object :=
+                                      Proj.Attribute (A.Library_Options);
                begin
-                  if Proj.Check_Attribute
-                    (Name           => A.Library_Options,
-                     Check_Extended => True,
-                     Result         => Library_Options)
-                  then
+                  if Library_Options.Is_Defined then
                      for Value of Library_Options.Values loop
                         Opts_Append (Value.Text);
                      end loop;
@@ -1921,8 +1938,8 @@ package body GPRinstall.Install is
          function Naming_Case_Alternative
            (Project : GPR2.Project.View.Object) return String_Vector.Vector
          is
-            procedure Naming_For (Pck : GPR2.Project.Pack.Object);
-            --  Handle the naming scheme for this package
+            procedure Naming_For (View : GPR2.Project.View.Object);
+            --  Handle the naming scheme for this view
 
             Seen : GPR2.Containers.Name_Set;
             --  Records the attribute generated to avoid duplicate when
@@ -1939,13 +1956,18 @@ package body GPRinstall.Install is
             -- Naming_For --
             ----------------
 
-            procedure Naming_For (Pck : GPR2.Project.Pack.Object) is
+            procedure Naming_For (View : GPR2.Project.View.Object) is
                Found : Boolean := False;
             begin
-               if Pck.Has_Attributes then
+               if View.Has_Packages (P.Naming,
+                                     With_Defaults => False,
+                                     With_Config   => False)
+               then
                   --  Check all associative attributes
 
-                  for Att of Pck.Attributes loop
+                  for Att of View.Attributes (Pack          => P.Naming,
+                                              With_Defaults => False,
+                                              With_Config   => False) loop
                      if Att.Has_Index then
                         if (Att.Name.Id /= A.Body_N
                             or else not
@@ -1982,11 +2004,11 @@ package body GPRinstall.Install is
          begin
             V.Append ("         when """ & Options.Build_Name.all & """ =>");
 
-            Naming_For (Project.Naming_Package);
+            Naming_For (Project);
 
             if Project.Qualifier = K_Aggregate_Library then
                for Agg of Project.Aggregated loop
-                  Naming_For (Agg.Naming_Package);
+                  Naming_For (Agg);
                end loop;
             end if;
 
@@ -2113,7 +2135,7 @@ package body GPRinstall.Install is
             end loop Check_Generated_Status;
 
             if not Generated and then not Options.Force_Installations then
-               raise Constraint_Error with
+               raise GPRinstall_Error with
                  "non gprinstall project file "
                  & Filename & " exists, use -f to overwrite";
             end if;
@@ -2152,7 +2174,7 @@ package body GPRinstall.Install is
                         P := Strings.Fixed.Index (Line, ");");
 
                         if P = 0 then
-                           raise Constraint_Error with
+                           raise GPRinstall_Error with
                              "cannot parse the BUILD_KIND line";
 
                         else
@@ -2501,7 +2523,7 @@ package body GPRinstall.Install is
         (Project : GPR2.Project.View.Object) return Boolean is
       begin
          if Project.Has_Packages (P.Install) then
-            for V of Project.Pack (P.Install).Attributes loop
+            for V of Project.Attributes (Pack => P.Install) loop
                if V.Name.Id = A.Active then
                   return Characters.Handling.To_Lower
                            (V.Value.Text) /= "false";
@@ -2588,7 +2610,7 @@ package body GPRinstall.Install is
                      Put_Line
                        ("   - force installation under the same name, "
                         & "use --install-name=" & Install_Name.V.all);
-                     raise Constraint_Error;
+                     raise GPRinstall_Error_No_Message;
                   end if;
                end if;
 
@@ -2607,7 +2629,7 @@ package body GPRinstall.Install is
 
       exception
          when Text_IO.Use_Error =>
-            raise Constraint_Error with
+            raise GPRinstall_Error with
               "cannot open or create the manifest file "
               & Project_Subdir.V.all & Install_Name.V.all
               & ", check permissions on this location";
@@ -2664,8 +2686,8 @@ package body GPRinstall.Install is
                                   Dir
                                   & Buffer
                                       (GNAT.MD5.Message_Digest'Length + 2
-                                        .. Last);
-                     Unused   : Boolean;
+                                       .. Last);
+                     Unused  : Boolean;
                   begin
                      OS_Lib.Delete_File (Filename, Unused);
 
@@ -2751,7 +2773,7 @@ package body GPRinstall.Install is
 
       Is_Project_To_Install := Active
         and then (Project.Has_Sources
-                  or else Project.Has_Attributes (A.Main)
+                  or else Project.Has_Attribute (A.Main)
                   or else Project.Is_Externally_Built);
 
       --  If we have an aggregate project we just install separately all

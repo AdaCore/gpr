@@ -1,0 +1,2 @@
+description: Test gprls output for runtime sources in user projets
+driver: python_script

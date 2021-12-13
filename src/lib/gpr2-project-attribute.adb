@@ -30,7 +30,7 @@ package body GPR2.Project.Attribute is
 
    function Create
      (Index          : Attribute_Index.Object;
-      Default_At_Pos : Natural := 0) return Value_At_Pos
+      Default_At_Pos : Unit_Index := No_Index) return Value_At_Pos
    is
       Is_Others : constant Boolean    :=
                     Index.Is_Defined and then Index.Is_Others;
@@ -82,9 +82,7 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Attr_Values.Create (Name, Value)
-         with Index   => Attribute_Index.Undefined,
-              Default => False,
-              Frozen  => False);
+         with others => <>);
    end Create;
 
    function Create
@@ -95,9 +93,9 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Attr_Values.Create (Name, Value)
-         with Index   => Attribute_Index.Undefined,
-              Default => Default,
-              Frozen  => Frozen);
+         with Default => Default,
+              Frozen  => Frozen,
+              others  => <>);
    end Create;
 
    overriding function Create
@@ -106,9 +104,7 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Attr_Values.Create (Name, Values)
-         with Index   => Attribute_Index.Undefined,
-              Default => False,
-              Frozen  => False);
+         with others => <>);
    end Create;
 
    function Create
@@ -118,9 +114,63 @@ package body GPR2.Project.Attribute is
    begin
       return Object'
         (Attr_Values.Create (Name, Values)
-         with Index   => Attribute_Index.Undefined,
-              Default => Default,
-              Frozen  => False);
+         with Default => Default,
+              others  => <>);
+   end Create;
+
+   function Create
+     (Name                 : Attribute_Id;
+      Index                : Value_Type;
+      Index_Case_Sensitive : Boolean;
+      Source               : GPR2.Path_Name.Object;
+      Default              : Value_Type;
+      As_List              : Boolean) return Object
+   is
+   begin
+      return Create
+        (Name,
+         Attribute_Index.Create (Index, Index_Case_Sensitive),
+         Source, Default, As_List);
+   end Create;
+
+   function Create
+     (Name    : Attribute_Id;
+      Index   : Attribute_Index.Object;
+      Source  : GPR2.Path_Name.Object;
+      Default : Value_Type;
+      As_List : Boolean) return Object
+   is
+      SR_Name : constant Source_Reference.Attribute.Object :=
+                  Source_Reference.Attribute.Object
+                    (Source_Reference.Attribute.Create
+                       (Filename => Source.Value,
+                        Line     => 0,
+                        Column   => 0,
+                        Id       => Name));
+      SR_Value : constant Source_Reference.Value.Object :=
+                   Source_Reference.Value.Object
+                     (Source_Reference.Value.Create
+                        (Filename => Source.Value,
+                         Line     => 0,
+                         Column   => 0,
+                         Text     => Default));
+      SR_Values : GPR2.Containers.Source_Value_List;
+
+   begin
+      if As_List then
+         SR_Values.Append (SR_Value);
+         return Create
+           (Name    => SR_Name,
+            Index   => Index,
+            Values  => SR_Values,
+            Default => True);
+      else
+         return Project.Attribute.Create
+           (Name    => SR_Name,
+            Index   => Index,
+            Value   => SR_Value,
+            Default => True);
+      end if;
    end Create;
 
    ------------
@@ -131,6 +181,27 @@ package body GPR2.Project.Attribute is
    begin
       Self.Frozen := True;
    end Freeze;
+
+   ---------------
+   -- Get_Alias --
+   ---------------
+
+   function Get_Alias
+     (Self     : Object;
+      New_Name : Attribute_Id) return Object
+   is
+      SR_Name : constant Source_Reference.Attribute.Object :=
+                  Source_Reference.Attribute.Object
+                    (Source_Reference.Attribute.Create
+                       (Source_Reference.Object (Self), New_Name));
+   begin
+      return (Attr_Values.Object (Self).Rename (SR_Name) with
+              Default     => Self.Default,
+              Index       => Self.Index,
+              Frozen      => Self.Frozen,
+              Is_Alias    => True,
+              From_Config => Self.From_Config);
+   end Get_Alias;
 
    ---------------
    -- Has_Index --
@@ -176,7 +247,7 @@ package body GPR2.Project.Attribute is
             Append (Result, '"' & Self.Value.Text & '"');
 
             if Self.Value.Has_At_Pos then
-               Append (Result, " at" & Integer'Image (Self.Value.At_Pos));
+               Append (Result, " at" & Self.Value.At_Pos'Image);
             end if;
 
          when List =>
@@ -202,13 +273,16 @@ package body GPR2.Project.Attribute is
    ------------
 
    overriding function Rename
-     (Self : Object;
-      Name : Source_Reference.Attribute.Object) return Object is
+     (Self     : Object;
+      Name     : Source_Reference.Attribute.Object) return Object
+   is
    begin
       return (Attr_Values.Object (Self).Rename (Name) with
-                Default => True,
-                Index   => Self.Index,
-                Frozen  => Self.Frozen);
+              Default     => True,
+              Index       => Self.Index,
+              Frozen      => Self.Frozen,
+              Is_Alias    => False,
+              From_Config => Self.From_Config);
    end Rename;
 
    --------------
@@ -226,5 +300,39 @@ package body GPR2.Project.Attribute is
          Self.Index.Set_Case (Index_Is_Case_Sensitive);
       end if;
    end Set_Case;
+
+   ----------------------
+   -- Set_Default_Flag --
+   ----------------------
+
+   procedure Set_Default_Flag
+     (Self : in out Object;
+      Is_Default : Boolean) is
+   begin
+      Self.Default := Is_Default;
+   end Set_Default_Flag;
+
+   ---------------------
+   -- Set_From_Config --
+   ---------------------
+
+   procedure Set_From_Config
+     (Self : in out Object;
+      From_Config : Boolean) is
+   begin
+      Self.From_Config := From_Config;
+   end Set_From_Config;
+
+   ---------------
+   -- Set_Index --
+   ---------------
+
+   procedure Set_Index
+     (Self  : in out Object;
+      Index : Attribute_Index.Object)
+   is
+   begin
+      Self.Index := Index;
+   end Set_Index;
 
 end GPR2.Project.Attribute;

@@ -1,6 +1,7 @@
 Demo     K_STANDARD
 A:   Archive_Suffix ~> .a
 A:   Exec_Dir ~> .
+A:   Externally_Built ~> false
 A:   Languages -> Ada .LANG
 A:   Name ~> demo
 A:   Object_Dir ~> .
@@ -9,7 +10,6 @@ A:   Shared_Library_Prefix ~> lib
 A:   Shared_Library_Suffix ~> .so
 A:   Source_Dirs ~> .
 Compiler
-A:   Object_File_Suffix () ~> .o
 A:   Switches [.lang] -> -g1 -g2
 A:   Switches [Capital.adb] -> -g -gnata
 A:   Switches [capital.adb] -> -g -gnata -g0

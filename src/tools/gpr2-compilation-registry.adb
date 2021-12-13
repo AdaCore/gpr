@@ -36,7 +36,6 @@ with GPR2.Compilation.Process;
 with GPR2.Compilation.Slave.List;
 with GPR2.Compilation.Sync;
 with GPR2.Message;
-with GPR2.Project.Pack;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Registry.Pack;
 with GPR2.Source_Reference;
@@ -734,28 +733,33 @@ package body GPR2.Compilation.Registry is
 
       --  Check for Root_Dir attribute and Excluded_Patterns
 
-      if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
-         declare
-            Pck : constant GPR2.Project.Pack.Object :=
-                    Project.Packages.Element
-                      (GPR2.Project.Registry.Pack.Remote);
-         begin
-            if Pck.Has_Attributes (Attrs.Excluded_Patterns) then
-               Insert
-                 (Excluded_Patterns,
-                  Pck.Attribute (Attrs.Excluded_Patterns).Values);
+      if Project.Has_Attribute (Attrs.Excluded_Patterns,
+                                GPR2.Project.Registry.Pack.Remote)
+      then
+         Insert
+           (Excluded_Patterns,
+            Project.Attribute
+              (Attrs.Excluded_Patterns,
+               GPR2.Project.Registry.Pack.Remote).Values);
 
-            elsif Pck.Has_Attributes (Attrs.Included_Patterns) then
-               Insert
-                 (Included_Patterns,
-                  Pck.Attribute (Attrs.Included_Patterns).Values);
+      elsif Project.Has_Attribute (Attrs.Included_Patterns,
+                                   GPR2.Project.Registry.Pack.Remote)
+      then
+         Insert
+           (Included_Patterns,
+            Project.Attribute
+              (Attrs.Included_Patterns,
+               GPR2.Project.Registry.Pack.Remote).Values);
 
-            elsif Pck.Has_Attributes (Attrs.Included_Artifacts_Patterns) then
-               Insert
-                 (Included_Artifact_Patterns,
-                  Pck.Attribute (Attrs.Included_Artifacts_Patterns).Values);
-            end if;
-         end;
+      elsif Project.Has_Attribute
+        (Attrs.Included_Artifacts_Patterns,
+         GPR2.Project.Registry.Pack.Remote)
+      then
+         Insert
+           (Included_Artifact_Patterns,
+            Project.Attribute
+              (Attrs.Included_Artifacts_Patterns,
+               GPR2.Project.Registry.Pack.Remote).Values);
       end if;
 
       if not Exists (To_String (Root_Dir))
@@ -843,24 +847,20 @@ package body GPR2.Compilation.Registry is
 
       Root_Dir : constant String := Project.Dir_Name.Value;
    begin
-      if Project.Has_Packages (GPR2.Project.Registry.Pack.Remote) then
+      if Project.Has_Attribute (Attrs.Root_Dir,
+                                GPR2.Project.Registry.Pack.Remote)
+      then
          declare
-            Pck : constant GPR2.Project.Pack.Object :=
-                    Project.Packages.Element
-                      (GPR2.Project.Registry.Pack.Remote);
+            RD : constant String :=
+                   Project.Attribute
+                     (Attrs.Root_Dir,
+                      GPR2.Project.Registry.Pack.Remote).Value.Text;
          begin
-            if Pck.Has_Attributes (Attrs.Root_Dir) then
-               declare
-                  RD : constant String :=
-                         Pck.Attribute (Attrs.Root_Dir).Value.Text;
-               begin
-                  if Is_Absolute_Path (RD) then
-                     return RD;
-                  else
-                     return Normalize_Pathname
-                       (Root_Dir & Directory_Separator & RD);
-                  end if;
-               end;
+            if Is_Absolute_Path (RD) then
+               return RD;
+            else
+               return Normalize_Pathname
+                 (Root_Dir & Directory_Separator & RD);
             end if;
          end;
       end if;

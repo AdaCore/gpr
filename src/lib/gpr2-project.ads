@@ -149,7 +149,7 @@ private
 
    function At_Pos_Or
      (Value   : Source_Reference.Value.Object'Class;
-      Default : Natural) return Natural
+      Default : Unit_Index) return Unit_Index
    is
      (if Value.Is_Defined and then Value.Has_At_Pos
       then Value.At_Pos

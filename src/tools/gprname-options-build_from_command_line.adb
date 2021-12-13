@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -22,6 +22,8 @@ with Ada.Text_IO;
 
 with GNAT.OS_Lib;
 
+with GPR2.Version;
+
 separate (GPRname.Options)
 procedure Build_From_Command_Line (Self : in out Object) is
 
@@ -39,6 +41,8 @@ procedure Build_From_Command_Line (Self : in out Object) is
 
    Current_Section : Section.Object := Empty_Section;
 
+   Version_Displayed : Boolean := False;
+
    procedure Add_Directory (Name : String);
    --  Add directory to the Current_Section
 
@@ -55,15 +59,16 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Usage;
    --  Print usage
 
+   procedure Show_Version;
+   --  Print version if not already done
+
    -------------------
    -- Add_Directory --
    -------------------
 
    procedure Add_Directory (Name : String) is
    begin
-      Current_Section.Add_Directory
-        ((if Root_Prj = Null_Unbounded_String then ""
-          else To_String (Root_Prj) & GNAT.OS_Lib.Directory_Separator) & Name);
+      Current_Section.Add_Directory (Name, To_String (Root_Prj));
    end Add_Directory;
 
    -----------------------------
@@ -73,7 +78,7 @@ procedure Build_From_Command_Line (Self : in out Object) is
    procedure Prepare_And_Add_Section (S : in out Section.Object) is
    begin
       if S.Is_Valid then
-         S.Prepare;
+         S.Prepare (To_String (Root_Prj));
          Self.Sections.Append (S);
 
       else
@@ -102,6 +107,19 @@ procedure Build_From_Command_Line (Self : in out Object) is
       end if;
    end Read_Next_Arg;
 
+   ------------------
+   -- Show_Version --
+   ------------------
+
+   procedure Show_Version is
+   begin
+      if not Version_Displayed then
+         GPR2.Version.Display
+           ("GPRNAME", "2018", Version_String => GPR2.Version.Long_Value);
+         Version_Displayed := True;
+      end if;
+   end Show_Version;
+
    -----------
    -- Usage --
    -----------
@@ -119,9 +137,8 @@ procedure Build_From_Command_Line (Self : in out Object) is
       Put_Line ("  -h, --help  Display usage and exit");
       New_Line;
 
-      Put_Line ("  -eL             Follow symbolic links when processing " &
-                  "project files");
-      Put_Line ("                  !!! NOT IMPLEMENTED !!!");
+      Put_Line ("  -eL             For backwards compatibility," &
+                  " has no effect");
       Put_Line ("  -P[ ]<proj>     Update or create project file <proj>");
       New_Line;
 
@@ -142,7 +159,6 @@ procedure Build_From_Command_Line (Self : in out Object) is
                   " that contain at least one source.");
       Put_Line ("                  This will also expand any /** suffix to" &
                   " an explicit list of directories.");
-      Put_Line ("                  !!! NOT IMPLEMENTED !!!");
       New_Line;
 
       Put_Line ("  -v           Verbose output");
@@ -227,6 +243,7 @@ begin
          Self.Follow_Symlinks := True;
 
       elsif Arg.all = "-v" then
+         Show_Version;
          if Self.Verbosity = None then
             Self.Verbosity := Low;
          elsif Self.Verbosity = Low then
@@ -242,7 +259,12 @@ begin
          Usage;
          GNAT.OS_Lib.OS_Exit (0);
 
-      elsif Arg'Length >= 13 and then Arg  (1 .. 13) = "-minimal-dirs" then
+      elsif Arg.all = "--version" then
+         Show_Version;
+         GPR2.Version.Display_Free_Software;
+         GNAT.OS_Lib.OS_Exit (0);
+
+      elsif Arg.all = "--minimal-dirs" then
          Self.Minimal_Dirs := True;
 
       elsif Arg'Length >= 8 and then

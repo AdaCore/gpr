@@ -47,6 +47,21 @@ package body GPR2.Project.Attr_Values is
          Item);
    end Append;
 
+   -------------------
+   -- Append_Vector --
+   -------------------
+
+   procedure Append_Vector
+     (Self : in out Object; Other : Object) is
+   begin
+      Self.Values.Append_Vector (Other.Values);
+      for C in Other.V_Map.Iterate loop
+         Self.V_Map.Include
+           (GPR2.Containers.Value_Source_Reference_Package.Key (C),
+            Containers.Value_Source_Reference_Package.Element (C));
+      end loop;
+   end Append_Vector;
+
    ---------------
    -- Build_Set --
    ---------------
@@ -84,16 +99,14 @@ package body GPR2.Project.Attr_Values is
      (Name  : Source_Reference.Attribute.Object;
       Value : Source_Reference.Value.Object) return Object
    is
-      Sloc   : constant Source_Reference.Object :=
-                 Source_Reference.Object (Name);
       Values : constant Containers.Source_Value_List :=
                  Containers.Source_Value_Type_List.To_Vector
                    (Value, 1);
    begin
       return Object'
-        (Sloc
+        (Name
          with Single,
-              Name, Values, True, Build_Map (Values, True));
+              Values, True, Build_Map (Values, True));
    end Create;
 
    function Create
@@ -101,10 +114,51 @@ package body GPR2.Project.Attr_Values is
       Values : Containers.Source_Value_List) return Object is
    begin
       return Object'
-        (Source_Reference.Object (Name)
+        (Name
          with List,
-         Name, Values, True, Build_Map (Values, True));
+         Values, True, Build_Map (Values, True));
    end Create;
+
+   ----------------
+   -- Ensure_Set --
+   ----------------
+
+   procedure Ensure_Set (Self : in out Object)
+   is
+      V2    : Containers.Source_Value_List;
+      VMap2 : Containers.Value_Source_Reference;
+      C     : Containers.Source_Value_Type_List.Cursor;
+   begin
+      if Self.Kind = Single then
+         return;
+      end if;
+
+      for V of Self.Values loop
+         declare
+            Text     : constant String :=
+                         (if Self.Value_Case_Sensitive
+                          then V.Text
+                          else Characters.Handling.To_Lower (V.Text));
+            Cmap     : Containers.Value_Source_Reference_Package.Cursor;
+            Inserted : Boolean;
+         begin
+            VMap2.Insert (Text, V, Cmap, Inserted);
+
+            if not Inserted then
+               --  Replace with the newer value
+               C := V2.Find (VMap2.Element (Text));
+               V2.Delete (C);
+
+               VMap2.Replace_Element (Cmap, V);
+            end if;
+
+            V2.Append (V);
+         end;
+      end loop;
+
+      Self.Values := V2;
+      Self.V_Map  := VMap2;
+   end Ensure_Set;
 
    ---------------
    -- Has_Value --
@@ -154,8 +208,38 @@ package body GPR2.Project.Attr_Values is
 
    function Name (Self : Object) return Source_Reference.Attribute.Object is
    begin
-      return Self.Name;
+      return Source_Reference.Attribute.Object (Self);
    end Name;
+
+   -------------
+   -- Prepend --
+   -------------
+
+   procedure Prepend
+     (Self : in out Object; Item : Source_Reference.Value.Object) is
+   begin
+      Self.Values.Prepend (Item);
+      Self.V_Map.Include
+        ((if Self.Value_Case_Sensitive
+          then Item.Text
+          else Ada.Characters.Handling.To_Lower (Item.Text)),
+         Item);
+   end Prepend;
+
+   --------------------
+   -- Prepend_Vector --
+   --------------------
+
+   procedure Prepend_Vector
+     (Self : in out Object; Other : Object) is
+   begin
+      Self.Values.Prepend_Vector (Other.Values);
+      for C in Other.V_Map.Iterate loop
+         Self.V_Map.Include
+           (GPR2.Containers.Value_Source_Reference_Package.Key (C),
+            Containers.Value_Source_Reference_Package.Element (C));
+      end loop;
+   end Prepend_Vector;
 
    ------------
    -- Rename --
@@ -165,10 +249,13 @@ package body GPR2.Project.Attr_Values is
      (Self : Object;
       Name : Source_Reference.Attribute.Object) return Object
    is
-      Result : Object := Self;
    begin
-      Result.Name := Name;
-      return Result;
+      return Object'
+        (Name with
+           Kind                 => Self.Kind,
+           Values               => Self.Values,
+           Value_Case_Sensitive => Self.Value_Case_Sensitive,
+           V_Map                => Self.V_Map);
    end Rename;
 
    --------------

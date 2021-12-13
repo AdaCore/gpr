@@ -79,9 +79,8 @@ package body GPR2.Source is
       return Result : Object  do
          Result.Path_Name := Filename;
          Result.Timestamp := Filename.Modification_Time;
-         Result.Language  := Language;
 
-         Set (Result, Kind);
+         Set_Non_Ada (Result, Language, Kind);
       end return;
    end Create;
 
@@ -91,30 +90,13 @@ package body GPR2.Source is
 
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
-      Units         : GPR2.Unit.List.Object;
-      Is_RTS_Source : Boolean;
-      Is_Indexed    : Boolean) return Object'Class
+      Units         : GPR2.Unit.List.Object) return Object'Class
    is
       use all type GPR2.Unit.Library_Unit_Type;
 
       Key          : Unbounded_String;
-      Sorted_Units : GPR2.Unit.List.Object :=
-                       GPR2.Unit.List.List.To_Vector
-                         (GPR2.Unit.Undefined, Units.Length);
    begin
       for CU of Units loop
-         if CU.Index > Positive (Units.Length) then
-            raise Project_Error with "Unit index overflow";
-         end if;
-
-         if Sorted_Units (CU.Index).Is_Defined then
-            raise Project_Error with "Unit index duplication";
-         end if;
-
-         Sorted_Units (CU.Index) := CU;
-      end loop;
-
-      for CU of Sorted_Units loop
          Append
            (Key,
             To_Lower (CU.Name)
@@ -124,10 +106,26 @@ package body GPR2.Source is
       return Result : Object do
          Result.Path_Name := Filename;
          Result.Timestamp := Filename.Modification_Time;
-         Result.Language  := +"Ada";
          Result.Ada_Key   := Key;
 
-         Set_Ada (Result, Sorted_Units, Is_RTS_Source, Is_Indexed);
+         Set_Ada (Result, Units);
+      end return;
+   end Create_Ada;
+
+   function Create_Ada
+     (Filename      : GPR2.Path_Name.Object;
+      Unit          : GPR2.Unit.Object;
+      Is_RTS_Source : Boolean) return Object'Class  is
+   begin
+      pragma Assert (Unit.Index = No_Index);
+      return Result : Object do
+         Result.Path_Name := Filename;
+         Result.Timestamp := Filename.Modification_Time;
+         Result.Ada_Key   := +(To_Lower (Unit.Name)
+                               & (if Unit.Kind in GPR2.Unit.Spec_Kind
+                                  then 'S' else 'B'));
+
+         Set_Ada (Result, Unit, Is_RTS_Source);
       end return;
    end Create_Ada;
 

@@ -41,20 +41,20 @@ package GPR2.Source_Reference.Value is
      (Filename     : Path_Name.Full_Name;
       Line, Column : Natural;
       Text         : Value_Type;
-      At_Pos       : Natural := 0) return Object'Class
+      At_Pos       : Unit_Index := No_Index) return Object'Class
      with Post => Create'Result.Is_Defined;
 
    function Create
      (Sloc         : GPR2.Source_Reference.Object;
       Text         : Value_Type;
-      At_Pos       : Natural := 0;
+      At_Pos       : Unit_Index := No_Index;
       From_Default : Boolean := False) return Text_Values.Object'Class
      with Post => Create'Result.Is_Defined;
 
    function Has_At_Pos (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
 
-   function At_Pos (Self : Object) return Positive
+   function At_Pos (Self : Object) return Unit_Index
      with Pre => Self.Is_Defined and then Self.Has_At_Pos;
 
    function Is_From_Default (Self : Object) return Boolean
@@ -63,7 +63,7 @@ package GPR2.Source_Reference.Value is
 private
 
    type Object is new Text_Values.Object with record
-      At_Pos       : Natural := 0;
+      At_Pos       : Unit_Index := No_Index;
       From_Default : Boolean := False;
       --  From_Default is only relevant for Target attribute value that may
       --  be evaluated as implicit one. The knowledge wether or not the target
@@ -76,7 +76,7 @@ private
      (Filename     : Path_Name.Full_Name;
       Line, Column : Natural;
       Text         : Value_Type;
-      At_Pos       : Natural := 0) return Object'Class
+      At_Pos       : Unit_Index := No_Index) return Object'Class
    is
      (Object'
         (Text_Values.Object
@@ -86,7 +86,7 @@ private
    function Create
      (Sloc         : GPR2.Source_Reference.Object;
       Text         : Value_Type;
-      At_Pos       : Natural := 0;
+      At_Pos       : Unit_Index := No_Index;
       From_Default : Boolean := False) return Text_Values.Object'Class
    is
      (Object'
@@ -97,7 +97,7 @@ private
    function Has_At_Pos (Self : Object) return Boolean is
      (Self.At_Pos > 0);
 
-   function At_Pos (Self : Object) return Positive is
+   function At_Pos (Self : Object) return Unit_Index is
      (Self.At_Pos);
 
    function Is_From_Default (Self : Object) return Boolean is

@@ -29,13 +29,12 @@ with GPR2.Source;
 with GPR2.Source_Info;
 
 limited with GPR2.Project.Source.Artifact;
-limited with GPR2.Project.Source.Set;
+limited with GPR2.Project.Source.Part_Set;
 
 package GPR2.Project.Source is
 
    use type GPR2.Source.Object;
    use type GPR2.Unit.Library_Unit_Type;
-   use type Source_Info.Backend_Set;
 
    type Naming_Exception_Kind is (No, Yes, Multi_Unit);
 
@@ -47,6 +46,13 @@ package GPR2.Project.Source is
    Undefined : constant Object;
    --  This constant is equal to any object declared without an explicit
    --  initializer.
+
+   type Source_Part is record
+      Source : Object;
+      Index  : Unit_Index;
+   end record;
+
+   function "<" (L, R : Source_Part) return Boolean with Inline;
 
    overriding function Is_Defined (Self : Object) return Boolean;
    --  Returns true if Self is defined
@@ -120,6 +126,11 @@ package GPR2.Project.Source is
      with Pre => Self.Is_Defined;
    --  Returns whether the source is the main file to create executable
 
+   function Is_Compilable (Self : Object;
+                           Index : Unit_Index) return Boolean;
+   --  Tells if the unit identified by index, or the source (if no units)
+   --  is compilable (e.g. is a body unit, or a spec_only unit)
+
    function Artifacts
      (Self : Object; Force_Spec : Boolean := False) return Artifact.Object
      with Pre => Self.Is_Defined;
@@ -135,66 +146,69 @@ package GPR2.Project.Source is
 
    function Dependencies
      (Self    : Object;
-      Closure : Boolean := False;
-      Index   : Source_Info.Unit_Index := 1) return Project.Source.Set.Object
+      Index   : Unit_Index := No_Index;
+      Closure : Boolean    := False) return Part_Set.Object
      with Pre => Self.Is_Defined and then Self.Has_Units;
-   --  Returns the source files on which the current source file depends
-   --  (potentially transitively).
+   --  Returns the source files on which the current source file depends.
+   --
+   --  In case of unit-based sources, if index is No_Index, then dependencies
+   --  of all the units in the source are returned.
 
    procedure Dependencies
      (Self     : Object;
+      Index    : Unit_Index;
       For_Each : not null access procedure
-                   (Source : GPR2.Project.Source.Object);
-      Closure  : Boolean := False;
-      Index    : Source_Info.Unit_Index := 1);
-   --  Call For_Each routine for each dependency source
-
-   procedure Dependencies
-     (Self     : Object;
-      For_Each : not null access procedure
-                   (Source : GPR2.Project.Source.Object;
-                    Unit   : GPR2.Unit.Object);
-      Index    : Source_Info.Unit_Index := 1);
+                   (Source : Object; Index : Unit_Index);
+      Closure  : Boolean := False);
    --  Call For_Each routine for each dependency unit with it's source
-
    --
    --  The following routines may be used for both unit-based and
    --  non-unit-based sources. In the latter case, Index is not used.
+
+   procedure Dependencies
+     (Self     : Object;
+      Index    : Unit_Index;
+      For_Each : not null access procedure
+                   (Source : Object; Unit : GPR2.Unit.Object);
+      Closure  : Boolean := False);
+   --  Call For_Each routine for each dependency unit with it's source
    --
+   --  The following routines may be used for both unit-based and
+   --  non-unit-based sources. In the latter case, Index is not used.
 
    function Has_Other_Part
      (Self  : Object;
-      Index : Source_Info.Unit_Index := 1) return Boolean
+      Index : Unit_Index := No_Index) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if an other part exists for this project source's unit at
    --  the given index.
 
    function Other_Part
      (Self  : Object;
-      Index : Source_Info.Unit_Index := 1) return Object
+      Index : Unit_Index := No_Index) return Source_Part
      with Pre  => Self.Is_Defined and then Self.Has_Other_Part (Index),
-          Post => Other_Part'Result.Is_Defined;
+          Post => Other_Part'Result.Source.Is_Defined;
    --  Returns the project's source containing the other part for this project
    --  source's unit at the given index.
 
    function Other_Part_Unchecked
      (Self : Object;
-      Index : Source_Info.Unit_Index := 1) return Object;
+      Index : Unit_Index) return Source_Part;
    --  Same as Other_Part, but returns Undefined if no other part exists for
    --  Self.
 
    function Separate_From
      (Self  : Object;
-      Index : Source_Info.Unit_Index := 1) return Object
+      Index : Unit_Index) return Source_Part
      with Pre => Self.Is_Defined
-                 and then Self.Kind = GPR2.Unit.S_Separate;
+                 and then Self.Kind (Index) = GPR2.Unit.S_Separate;
    --  Returns the project's source containing the separate for Self's unit at
    --  the given index.
 
    procedure Update
      (Self     : in out Object;
       Backends : Source_Info.Backend_Set := Source_Info.All_Backends)
-     with Pre => Self.Is_Defined and then Backends /= Source_Info.No_Backends;
+     with Pre => Self.Is_Defined;
    --  Ensure that the project source is parsed/updated if needed
 
 private
@@ -227,10 +241,24 @@ private
    function Is_Interface (Self : Object) return Boolean is
      (Self.Is_Interface);
 
+   function Is_Compilable (Self : Object;
+                           Index : Unit_Index) return Boolean
+   is (Kind (Self, Index) in GPR2.Unit.Body_Kind
+       or else (Self.Language = Ada_Language
+         and then Kind (Self, Index) in GPR2.Unit.Spec_Kind
+         and then not Self.Has_Other_Part (Index)));
+   --  The condition above is about Ada package specs
+   --  without a body, which have to be compilable.
+
    function Has_Naming_Exception (Self : Object) return Boolean is
      (Self.Naming_Exception in Naming_Exception_Value);
 
    function Naming_Exception (Self : Object) return Naming_Exception_Kind is
      (Self.Naming_Exception);
+
+   function "<" (L, R : Source_Part) return Boolean is
+     (if L.Source = R.Source
+      then L.Index < R.Index
+      else L.Source < R.Source);
 
 end GPR2.Project.Source;

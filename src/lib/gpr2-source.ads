@@ -55,10 +55,6 @@ package GPR2.Source is
      with Pre => Self.Is_Defined;
    --  Returns the path-name for the given source
 
-   function Language (Self : Object) return Language_Id
-     with Pre => Self.Is_Defined;
-   --  Returns the language for this source
-
    function Timestamp (Self : Object; ALI : Boolean) return Ada.Calendar.Time
      with Pre => Self.Is_Defined;
    --  Returns last modification time for this source
@@ -79,16 +75,22 @@ package GPR2.Source is
 
    function Create_Ada
      (Filename      : GPR2.Path_Name.Object;
-      Units         : GPR2.Unit.List.Object;
-      Is_RTS_Source : Boolean;
-      Is_Indexed    : Boolean) return Object'Class
+      Units         : GPR2.Unit.List.Object) return Object'Class
      with Pre  => Filename.Is_Defined and then not Units.Is_Empty,
           Post => Create_Ada'Result.Is_Defined;
-   --  Constructor for an Ada source object.
+   --  Constructor for a multi-unit Ada source object.
    --  Information in Units parameter came from filenames and
    --  project information only. It can be different from function
    --  Units call results because Separate Ada units can be
    --  determined only on parsing source files.
+
+   function Create_Ada
+     (Filename      : GPR2.Path_Name.Object;
+      Unit          : GPR2.Unit.Object;
+      Is_RTS_Source : Boolean) return Object'Class
+     with Pre  => Filename.Is_Defined and then Unit.Is_Defined,
+     Post => Create_Ada'Result.Is_Defined;
+   --  Constructor for a single-unit Ada source object
 
 private
 
@@ -99,7 +101,6 @@ private
    type Object is new Source_Info.Object with record
       Path_Name : GPR2.Path_Name.Object;
       Timestamp : Calendar.Time := No_Time;
-      Language  : Language_Id   := No_Language;
       Ada_Key   : Unbounded_String;
    end record;
 
@@ -115,8 +116,5 @@ private
 
    function Path_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Path_Name);
-
-   function Language (Self : Object) return Language_Id is
-     (Self.Language);
 
 end GPR2.Source;

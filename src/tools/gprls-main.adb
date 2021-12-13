@@ -24,7 +24,6 @@ with GNAT.Command_Line;
 
 with GPR2.Interrupt_Handler;
 with GPR2.Project.Tree;
-with GPR2.Version;
 
 with GPRls;
 with GPRls.Options;
@@ -56,13 +55,6 @@ begin
 
    Opt.Tree := Tree.Reference;
    Opt.Build_From_Command_Line;
-
-   if Opt.Version then
-      Version.Display
-        ("GPRLS", "2018", Version_String => Version.Long_Value);
-      Version.Display_Free_Software;
-      return;
-   end if;
 
    --  Run the gprls main procedure
 

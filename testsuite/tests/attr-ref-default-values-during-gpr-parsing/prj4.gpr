@@ -1,0 +1,5 @@
+project Prj4 is
+
+   A := Naming'Implementation_Suffix ("Ada");
+
+end Prj4;

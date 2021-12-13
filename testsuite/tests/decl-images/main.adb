@@ -47,17 +47,15 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Qualifier'Img);
 
-      if Prj.Has_Attributes then
-         Text_IO.New_Line;
-         for A of Prj.Attributes loop
-            Text_IO.Put_Line (A.Image);
-         end loop;
+      Text_IO.New_Line;
+      for A of Prj.Attributes (With_Defaults => False) loop
+         Text_IO.Put_Line (A.Image);
+      end loop;
 
-         Text_IO.New_Line;
-         for A of Prj.Attributes loop
-            Text_IO.Put_Line (A.Image (15));
-         end loop;
-      end if;
+      Text_IO.New_Line;
+      for A of Prj.Attributes (With_Defaults => False) loop
+         Text_IO.Put_Line (A.Image (15));
+      end loop;
 
       if Prj.Has_Types then
          Text_IO.New_Line;

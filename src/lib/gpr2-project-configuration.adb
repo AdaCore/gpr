@@ -47,14 +47,9 @@ package body GPR2.Project.Configuration is
    --------------------
 
    function Archive_Suffix (Self : Object) return Filename_Type is
-      Cache : constant Cache_Refcount.Reference_Type := Self.Cache.Get;
    begin
-      if Cache.Archive_Suffix = "" then
-         Cache.Archive_Suffix :=
-           Self.Conf.Attribute (PRA.Archive_Suffix).Value.Unchecked_Text;
-      end if;
-
-      return Filename_Type (-Cache.Archive_Suffix);
+      return Filename_Type
+        (-Self.Conf.Attribute (PRA.Archive_Suffix).Value.Unchecked_Text);
    end Archive_Suffix;
 
    ------------------
@@ -287,7 +282,7 @@ package body GPR2.Project.Configuration is
 
          if Path_Name.Temporary_Directory.Is_Defined then
             Result.Project :=
-              Parser.Project.Parse
+              GPR2.Project.Parser.Parse
                 (Contents        => Configuration_String,
                  Messages        => Parsing_Messages,
                  Pseudo_Filename => Path_Name.Create_File
@@ -295,7 +290,7 @@ package body GPR2.Project.Configuration is
                     Filename_Type (Path_Name.Temporary_Directory.Value)));
          else
             Result.Project :=
-              Parser.Project.Parse
+              GPR2.Project.Parser.Parse
                 (Contents        => Configuration_String,
                  Messages        => Parsing_Messages,
                  Pseudo_Filename => Path_Name.Create_File
@@ -319,6 +314,9 @@ package body GPR2.Project.Configuration is
 
       else
 
+         for Msg of Base.Log_Messages loop
+            Result.Messages.Append (Msg);
+         end loop;
          Result.Messages.Append
            (Message.Create
               (Message.Error,
@@ -388,7 +386,7 @@ package body GPR2.Project.Configuration is
       Result : Object;
    begin
       Result.Project :=
-        Parser.Project.Parse
+        Project.Parser.Parse
           (Filename, GPR2.Path_Name.Set.Empty_Set, Result.Messages);
 
       --  Continue only if there is no parsing error on the configuration
@@ -423,23 +421,17 @@ package body GPR2.Project.Configuration is
      (Self     : Object;
       Language : Language_Id) return Filename_Type
    is
-      Cache : constant Cache_Refcount.Reference_Type := Self.Cache.Get;
-      A     : Project.Attribute.Object;
+      Attr  : constant Project.Attribute.Object :=
+                Self.Conf.Attribute
+                  (PRA.Object_File_Suffix,
+                   Pack  => PRP.Compiler,
+                   Index => Attribute_Index.Create (Language));
    begin
-      if not Cache.Object_File_Suffix.Contains (Language) then
-         if Self.Conf.Has_Packages (PRP.Compiler)
-           and then Self.Conf.Pack (PRP.Compiler).Check_Attribute
-                      (PRA.Object_File_Suffix,
-                       Attribute_Index.Create (Language),
-                       Result => A)
-         then
-            Cache.Object_File_Suffix.Include (Language, A.Value.Text);
-         else
-            Cache.Object_File_Suffix.Include (Language, ".o");
-         end if;
+      if Attr.Is_Defined then
+         return Filename_Type (Attr.Value.Text);
+      else
+         return ".o";
       end if;
-
-      return Filename_Type (Cache.Object_File_Suffix.Element (Language));
    end Object_File_Suffix;
 
    -------------

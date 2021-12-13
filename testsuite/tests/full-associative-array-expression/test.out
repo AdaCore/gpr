@@ -6,13 +6,13 @@ Compiler.Switches(C)=("text4","text5")
 Compiler.Switches(C++)=()
 check2a.gpr
 /check2a.gpr semantic error
-check2a.gpr:4:33: error: associative array value not found
+check2a.gpr:4:33: error: undefined attribute "Runtime"
 check2b.gpr
 /check2b.gpr semantic error
-check2b.gpr:5:45: error: package "Compiler" not declared in project "Options_Empty"
+check2b.gpr:5:45: error: undefined attribute "Compiler'Switches"
 check2c.gpr
 /check2c.gpr semantic error
-check2c.gpr:5:54: error: associative array value not found
+check2c.gpr:5:54: error: undefined attribute "Compiler'Switches"
 check3a.gpr
 /check3a.gpr semantic error
 check3a.gpr:3:03: error: full associative array expression requires simple attribute reference

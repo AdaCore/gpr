@@ -128,6 +128,11 @@ package GPR2.Path_Name is
      with Pre => Self.Is_Defined;
    --  Returns the base name for Self (with extension)
 
+   function Simple_Name (Path : String) return String;
+   --  Returns the simple name portion of the file name specified by Name.
+   --  This is Ada.Directories.Simple_Name implementation with
+   --  valid path name check removed to allow '*' chars.
+
    function Has_Dir_Name (Self : Object) return Boolean
      with Pre => Self.Is_Defined;
    --  Returns True if Self has directory information

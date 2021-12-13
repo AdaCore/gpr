@@ -124,18 +124,36 @@ package GPR2.Project.Attr_Values is
                  and then Item.Is_Defined and then Self.Kind = List;
    --  Append one item to the list values of the object
 
+   procedure Prepend
+     (Self : in out Object; Item : Source_Reference.Value.Object)
+     with Pre => Self.Is_Defined
+                 and then Item.Is_Defined and then Self.Kind = List;
+   --  Append one item to the list values of the object
+
+   procedure Append_Vector
+     (Self : in out Object; Other : Object)
+     with Inline,
+          Pre => Self.Is_Defined and then Self.Kind = List;
+
+   procedure Prepend_Vector
+     (Self : in out Object; Other : Object)
+     with Inline,
+          Pre => Self.Is_Defined and then Self.Kind = List;
+
+   procedure Ensure_Set (Self : in out Object)
+     with Pre => Self.Is_Defined;
+
 private
 
-   type Object is new Source_Reference.Object with record
+   type Object is new Source_Reference.Attribute.Object with record
       Kind                 : Registry.Attribute.Value_Kind := List;
-      Name                 : Source_Reference.Attribute.Object;
       Values               : Containers.Source_Value_List;
       Value_Case_Sensitive : Boolean := True;
       V_Map                : Containers.Value_Source_Reference;  -- fast check
    end record;
 
    Undefined : constant Object :=
-                 (Source_Reference.Undefined with others => <>);
+                 (Source_Reference.Attribute.Undefined with others => <>);
 
    overriding function Is_Defined (Self : Object) return Boolean is
      (Self /= Undefined);

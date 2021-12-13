@@ -1,0 +1,5 @@
+description:
+    cannot extend a project with the same name error handling
+driver: build_and_run
+project_file: test
+main: test

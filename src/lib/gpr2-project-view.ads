@@ -34,7 +34,6 @@ with GPR2.Context;
 with GPR2.Path_Name.Set;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
-with GPR2.Project.Pack.Set;
 with GPR2.Project.Registry.Attribute;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
@@ -45,6 +44,9 @@ with GPR2.View_Ids;
 limited with GPR2.Project.Source.Set;
 limited with GPR2.Project.Tree;
 limited with GPR2.Project.View.Set;
+
+private with GPR2.Project.Pack;
+private with GPR2.Project.Registry.Pack;
 
 package GPR2.Project.View is
 
@@ -190,62 +192,100 @@ package GPR2.Project.View is
 
    --  Attributes
 
-   function Has_Attributes
-     (Self           : Object;
-      Name           : Optional_Attribute_Id  := No_Attribute;
-      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      Check_Extended : Boolean                := False)
-      return Boolean
+   function Has_Attribute
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Pack   : Optional_Package_Id    := No_Package;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns true if the project view has some attributes defined. If Name
-   --  and/or Index are set it returns True if an attribute with the given
-   --  Name and/or Index is defined.
-   --  If Check_Extended parameter is True then the presence of an attribute is
-   --  also checked in extended projects.
+   --  Check whether an attribute with Name and Index has been defined, either
+   --  at the top-level project if Pkg is not defined, in within the package
+   --  named Pkg.
+   --  At_Pos denotes the unit index in the source file represented by Index
+
+   function Attribute
+     (Self   : Object;
+      Name   : Attribute_Id;
+      Pack   : Optional_Package_Id    := No_Package;
+      Index  : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos : Unit_Index             := No_Index)
+      return Project.Attribute.Object
+     with Pre  => Self.Is_Defined;
+   --  Compute the final value for the attribute Name in package Pkg.
+   --  If the Attribute is not defined in the View, and has no default value,
+   --  then Project.Attribute.Undefined is returned.
 
    function Check_Attribute
      (Self           : Object;
       Name           : Attribute_Id;
       Index          : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos         : Natural                := 0;
-      Check_Extended : Boolean                := False;
+      At_Pos         : Unit_Index             := No_Index;
       Result         : out Project.Attribute.Object) return Boolean
      with Pre => Self.Is_Defined;
-   --  Returns True and set Result to attribute if attribute exists or has
-   --  default value, returns False and set Result to Undefined otherwise.
-   --  If Check_Extended is set, and the attribute is not defined in the view,
-   --  and the view is extending, then the extended project attribute is
-   --  checked.
+   --  Returns True and set Result if the value of the attribute
+   --  exists, after all resolutions are applied (inheritance, default value
+   --  according to project kind, etc.).
+   --  Returns whether the result is defined.
+
+   function Check_Attribute
+     (Self           : Object;
+      Pack           : Package_Id;
+      Name           : Attribute_Id;
+      Index          : Attribute_Index.Object := Attribute_Index.Undefined;
+      At_Pos         : Unit_Index             := No_Index;
+      Result         : out Project.Attribute.Object) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns True and set Result if the value of the package attribute
+   --  exists, after all resolutions are applied (inheritance, default value
+   --  according to project kind, etc.).
+   --  Returns whether the result is defined.
 
    function Attributes
-     (Self  : Object;
-      Name  : Optional_Attribute_Id  := No_Attribute;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
-      return Attribute.Set.Object
-     with Post =>
-       (if Self.Has_Attributes (Name) then not Attributes'Result.Is_Empty),
-          Inline;
-   --  Get the list of attributes, possibly an empty list if it does not
-   --  contain attributes or if Name and Index does not match any attribute.
+     (Self          : Object;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Retrieve all top-level attributes that have the given name.
+   --
+   --  Name:          the attribute to retrieve.
+   --  With_Defaults: whether default values are considered.
+   --  With_Config:   whether attributes defined from the config file are
+   --                 considered.
+   --
+   --  Note:  blob index, if defined in the project, is returned as-is (not
+   --         resolved with regard to the source list). Their value may be then
+   --         invalid as they are not properly merged with any potential
+   --         inherited attribute.
+   --  Note2: if With_Defaults is set, then the default values that accept
+   --         any index won't be generated.
 
-   function Attribute
-     (Self  : Object;
-      Name  : Attribute_Id;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
-      return Attribute.Object
-     with
-       Pre =>
-         Self.Is_Defined
-         and then Self.Has_Attributes (Name, Index)
-         and then Self.Attributes (Name, Index).Length = 1;
-   --  Returns the Attribute with the given Name and possibly Index
-   --  Important note: this returns the view's raw attribute value, not the
-   --  one computed after inheritance via extends or extends all.
+   function Attributes
+     (Self          : Object;
+      Pack          : Package_Id;
+      Name          : Attribute_Id;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True)
+      return Project.Attribute.Set.Object
+     with Pre => Self.Is_Defined;
+   --  See above, but for packages.
+
+   function Attributes
+     (Self          : Object;
+      Pack          : Optional_Package_Id    := No_Package;
+      With_Defaults : Boolean                := True;
+      With_Config   : Boolean                := True)
+      return Project.Attribute.Set.Object
+     with Pre => Self.Is_Defined;
+   --  Get the list of attributes.
 
    function Attribute_Location
      (Self  : Object;
       Name  : Attribute_Id;
-      Index : Attribute_Index.Object := Attribute_Index.Undefined)
+      Index : Attribute_Index.Object := Attribute_Index.Undefined;
+      Pack  : Optional_Package_Id    := No_Package)
       return Source_Reference.Object'Class
      with
        Pre => Self.Is_Defined;
@@ -279,15 +319,35 @@ package GPR2.Project.View is
      with Pre => Self.Is_Defined;
    --  Returns true if the project view has some variables defined
 
+   function Has_Variables
+     (Self : Object;
+      Pack : Package_Id;
+      Name : Optional_Name_Type := No_Name) return Boolean
+     with Pre => Self.Is_Defined;
+   --  Returns true if the package has some variables defined
+
    function Variables (Self : Object) return Variable.Set.Object
      with Pre  => Self.Is_Defined,
           Post => (if Self.Has_Variables then not Variables'Result.Is_Empty);
    --  Get the list of all variables defined
 
+   function Variables
+     (Self : Object; Pack : Package_Id) return Variable.Set.Object
+     with Pre  => Self.Is_Defined,
+          Post => (if Self.Has_Variables (Pack)
+                   then not Variables'Result.Is_Empty);
+   --  Get the list of all variables defined in Pck
+
    function Variable (Self : Object; Name : Name_Type) return Variable.Object
      with Pre  => Self.Is_Defined and then Self.Has_Variables (Name),
           Post => Variable'Result.Is_Defined;
    --  Returns the variable with the given name
+
+   function Variable (Self : Object;
+                      Pack : Package_Id;
+                      Name : Name_Type) return Project.Variable.Object
+     with Pre  => Self.Is_Defined and then Self.Has_Variables (Pack, Name),
+          Post => Variable'Result.Is_Defined;
 
    function Namespace_Root (Self : Object) return Object
      with Pre  => Self.Is_Defined,
@@ -301,40 +361,30 @@ package GPR2.Project.View is
    function Has_Packages
      (Self           : Object;
       Name           : Optional_Package_Id := No_Package;
-      Check_Extended : Boolean := True) return Boolean
+      Check_Extended : Boolean := True;
+      With_Defaults  : Boolean := True;
+      With_Config    : Boolean := True) return Boolean
      with Pre => Self.Is_Defined;
    --  If Name is set to No_Name then return True if the view defined some
-   --  packages. In case Check_Extended is True then this include packages
-   --  inherited from the extended view.
-   --  If Name is different from No_Name then return True if the package Name
-   --  is defined in the view. If Check_Extended is True then the function
-   --  returns also True if the package has been inherited.
+   --  packages, otherwise check for the specified package.
+   --  Check_Extended: if set, verifies if Self inherits the package from
+   --  its hierarchy.
+   --  With_Defaults: if set, will match packages that are implicitly defined
+   --  via their default attribute values.
 
-   function Packages (Self : Object) return Pack.Set.Object
+   function Packages
+     (Self : Object;
+      With_Defaults : Boolean := True;
+      With_Config   : Boolean := True) return GPR2.Containers.Package_Id_List
      with Pre  => Self.Is_Defined,
-          Post => (if Self.Has_Packages then not Packages'Result.Is_Empty),
+          Post => (if Self.Has_Packages (With_Defaults => With_Defaults,
+                                         With_Config   => With_Config)
+                   then not Packages'Result.Is_Empty),
           Inline;
    --  Get the list of packages defined in the project or inherited from the
    --  extended view.
-
-   function Pack
-      (Self           : Object;
-       Name           : Package_Id;
-       Check_Extended : Boolean := True) return Pack.Object
-     with Pre  => Self.Is_Defined
-                  and then Self.Has_Packages
-                     (Name => Name, Check_Extended => Check_Extended),
-          Post => Pack'Result.Is_Defined;
-   --  Get the package with the given Name. If Check_Extended is True, then
-   --  the function might return an inherited package.
-
-   function Naming_Package (Self : Object) return Project.Pack.Object
-     with Pre  => Self.Is_Defined,
-          Post => Naming_Package'Result.Is_Defined;
-   --  Returns the Naming package for the current view. This is either
-   --  the view Naming package, the project's tree Naming package from the
-   --  loaded configuration project if any and finally the default Naming
-   --  package.
+   --  With_Defaults: controls whether packages defined implicitly by
+   --  attributes default values are taken into account.
 
    --  Sources
 
@@ -346,13 +396,8 @@ package GPR2.Project.View is
    --  example.
 
    function Languages (Self : Object) return Containers.Source_Value_List
-     with Pre  => Self.Is_Defined
-                  and then Self.Kind /= K_Aggregate
-                  and then Self.Has_Languages;
-   --  Returns the languages used on this project, this is not necessary the
-   --  content of the Languages attribute as if not defined it returns the
-   --  default language Ada. But the languages attribute can be set to the
-   --  empty list (no language defined).
+     with Pre  => Self.Is_Defined;
+   --  Returns the languages used on this project.
 
    function Source_Directories (Self : Object) return Project.Attribute.Object
      with Pre => Self.Is_Defined
@@ -482,9 +527,8 @@ package GPR2.Project.View is
    function Library_Kind (Self : Object) return Name_Type
      with Pre  => Self.Is_Defined
                   and then Self.Is_Library,
-          Post => Self.Has_Attributes
-                    (Project.Registry.Attribute.Library_Kind,
-                     Check_Extended => True)
+          Post => Self.Has_Attribute
+                    (Project.Registry.Attribute.Library_Kind)
                   or else Library_Kind'Result = "static";
    --  Returns the library kind, "static" if the corresponding attribute is not
    --  defined.
@@ -642,7 +686,7 @@ package GPR2.Project.View is
    function Executable
      (Self    : Object;
       Source  : Simple_Name;
-      At_Pos  : Natural) return GPR2.Path_Name.Object;
+      At_Pos  : Unit_Index) return GPR2.Path_Name.Object;
    --  Returns the full pathname of the main executable for the given main
 
    procedure Reindex_Unit (Self : Object; From, To : Name_Type);
@@ -650,6 +694,86 @@ package GPR2.Project.View is
 
    procedure Hide_Unit_Body (Self : Object; Unit : Name_Type);
    --  Remove unit body from unit info index
+
+   --  To ease the use of some attributes (some have synonyms for example)
+   --  below are direct access to them.
+
+   function Has_Spec_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Boolean
+     with Pre  => Self.Is_Defined;
+   --  Returns True is package naming Self contains a Spec_Suffix attribute
+
+   function Spec_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Spec_Suffix (Language),
+          Post => Spec_Suffix'Result.Is_Defined;
+   --  Handles Spec_Suffix and Specification_Suffix
+
+   function Has_Body_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Boolean
+     with Pre  => Self.Is_Defined;
+   --  Returns True is package naming Self contains a Body_Suffix attribute
+
+   function Body_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Body_Suffix (Language),
+          Post => Body_Suffix'Result.Is_Defined;
+   --  Handles Body_Suffix and Implementation_Suffix
+
+   function Has_Separate_Suffix
+     (Self : Object) return Boolean
+     with Pre  => Self.Is_Defined;
+   --  Returns True is package naming Self contains a Separate_Suffix attribute
+
+   function Separate_Suffix
+     (Self : Object) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Separate_Suffix,
+          Post => Separate_Suffix'Result.Is_Defined;
+   --  Handles Separate_Suffix
+
+   function Has_Specification
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+     with Pre  => Self.Is_Defined;
+   --  Return True if package Naming Self has an attribute Specification or
+   --  Spec defined for the given unit.
+
+   function Specification
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined
+                  and then Self.Has_Specification (Unit),
+          Post => Specification'Result.Is_Defined;
+   --  Handles Spec, Specification, this is only defined for the Ada language
+
+   function Has_Implementation
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+     with Pre  => Self.Is_Defined;
+   --  Return True if package Naming Self has an attribute Implementation or
+   --  Body defined for the given unit.
+
+   function Implementation
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object
+     with Pre  => Self.Is_Defined
+               and then Self.Has_Implementation (Unit),
+       Post => Implementation'Result.Is_Defined;
+   --  Handles Body, Implementation, this is only defined for the Ada language
+
+   function Raw_Attributes
+     (Self : Object;
+      Pack : Package_Id) return Project.Attribute.Set.Object
+     with Inline;
+   --  Internal function used to retrieve the unprocessed list of attributes
+   --  defined in a package.
 
 private
 
@@ -661,6 +785,11 @@ private
       Language : Language_Id) return Containers.Value_Set;
    --  Returns union of the attribute lists of the Clean packages from the
    --  configuration view, extending view if it exists and Self view.
+
+   function Pack
+      (Self : Object;
+       Name : Package_Id) return Project.Pack.Object;
+   --  Get the package with the given Name.
 
    Undefined : constant Object :=
                  (Definition_References.Null_Ref with null record);
@@ -691,15 +820,14 @@ private
         (Self.Attribute (Registry.Attribute.Library_Name).Value.Text));
 
    function Has_Library_Version (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Library_Version));
+     (Self.Has_Attribute (Registry.Attribute.Library_Version));
 
    function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Library_Interface,
-                           Check_Extended => True));
+     (Self.Has_Attribute (Registry.Attribute.Library_Interface));
 
    function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Has_Attributes (Registry.Attribute.Interfaces,
-                           Check_Extended => True));
+     (Self.Has_Attribute (Registry.Attribute.Interfaces) and then
+      not Self.Attribute (Registry.Attribute.Interfaces).Values.Is_Empty);
 
    function Has_Any_Interfaces (Self : Object) return Boolean is
      (Self.Has_Library_Interface or else Self.Has_Interfaces);
@@ -712,5 +840,71 @@ private
 
    function Dir_Name (Self : Object) return GPR2.Path_Name.Object is
      (Self.Get.Path);
+
+   --  Naming package accessor
+
+   package PRA renames Project.Registry.Attribute;
+   package PRP renames Project.Registry.Pack;
+   package PAI renames Project.Attribute_Index;
+
+   function Has_Separate_Suffix
+     (Self : Object) return Boolean
+   is
+     (Self.Has_Attribute (PRA.Separate_Suffix, PRP.Naming));
+
+   function Separate_Suffix
+     (Self : Object) return Project.Attribute.Object
+   is (Self.Attribute (PRA.Separate_Suffix, PRP.Naming));
+
+   function Has_Spec_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Boolean
+   is
+     (Self.Has_Attribute (PRA.Spec_Suffix, PRP.Naming, PAI.Create (Language)));
+
+   function Spec_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Project.Attribute.Object
+   is (Self.Attribute
+         (PRA.Spec_Suffix, PRP.Naming, PAI.Create (Language)));
+
+   function Has_Body_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Boolean
+   is
+     (Self.Has_Attribute (PRA.Body_Suffix, PRP.Naming, PAI.Create (Language)));
+
+   function Body_Suffix
+     (Self     : Object;
+      Language : Language_Id) return Project.Attribute.Object
+   is (Self.Attribute
+         (PRA.Body_Suffix, PRP.Naming, PAI.Create (Language)));
+
+   function Has_Implementation
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+   is
+     (Self.Has_Attribute (PRA.Body_N, PRP.Naming, PAI.Create (Unit)));
+
+   function Implementation
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object
+   is (Self.Attribute (PRA.Body_N, PRP.Naming, PAI.Create (Unit)));
+
+   function Has_Specification
+     (Self : Object;
+      Unit : Value_Type) return Boolean
+   is
+     (Self.Has_Attribute (PRA.Spec, PRP.Naming, PAI.Create (Unit)));
+
+   function Specification
+     (Self : Object;
+      Unit : Value_Type) return Project.Attribute.Object
+   is (Self.Attribute (PRA.Spec, PRP.Naming, PAI.Create (Unit)));
+
+   function Raw_Attributes
+     (Self : Object;
+      Pack : Package_Id) return Project.Attribute.Set.Object
+   is (Self.Pack (Pack).Attrs);
 
 end GPR2.Project.View;

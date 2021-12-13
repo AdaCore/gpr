@@ -75,6 +75,9 @@ package body GPR2.Source_Info.Parser.D is
         return Dependency_Vectors_Ref.Reference_Type;
       --  Create dependencies reference
 
+      procedure Wrong_Format;
+      --  Print message that file has wrong format
+
       OK : Boolean;
 
       function Is_Time_Stamp (S : String) return Boolean is
@@ -97,14 +100,12 @@ package body GPR2.Source_Info.Parser.D is
             begin
                Ref.Set (Dependency_Vectors.Empty_Vector);
                Data.Dependencies.Insert
-                 (1, Ref, CU1, Inserted);
+                 (No_Index, Ref, CU1, Inserted);
             end;
             pragma Assert (Inserted);
 
          else
-            pragma Assert
-              (Unit_Dependencies."="
-                 (CU1, Data.Dependencies.First));
+            CU1 := Data.Dependencies.First;
          end if;
 
          return Result : constant Dependency_Vectors_Ref.Reference_Type :=
@@ -116,11 +117,24 @@ package body GPR2.Source_Info.Parser.D is
          end return;
       end Dependencies_Reference;
 
+      ------------------
+      -- Wrong_Format --
+      ------------------
+
+      procedure Wrong_Format is
+      begin
+         Put  ("      -> dependency file ");
+         Put  (Dep_Name.Value);
+         Put_Line (" has wrong format");
+      end Wrong_Format;
+
       Dependencies : constant Dependency_Vectors_Ref.Reference_Type :=
                        Dependencies_Reference;
 
    begin
-      if not Dep_Name.Is_Defined then
+      if not Dep_Name.Is_Defined
+        or else not Dep_Name.Exists
+      then
          return;
       end if;
 
@@ -234,9 +248,7 @@ package body GPR2.Source_Info.Parser.D is
 
          if not OK then
             if Debug ('D') then
-               Put  ("      -> dependency file ");
-               Put  (Dep_Name.Value);
-               Put_Line (" has wrong format");
+               Wrong_Format;
 
                if Finish = 0 then
                   Put_Line ("         no colon");
@@ -282,9 +294,7 @@ package body GPR2.Source_Info.Parser.D is
 
                   if Start = Last then
                      if Debug ('D') then
-                        Put  ("      -> dependency file ");
-                        Put  (Dep_Name.Value);
-                        Put_Line (" has wrong format");
+                        Wrong_Format;
                      end if;
 
                      Close (Dep_File);
@@ -314,6 +324,15 @@ package body GPR2.Source_Info.Parser.D is
                           and then Line (Finish + 1) = '\'
                         then
                            Finish := Finish + 2;
+
+                           if Finish > Last then
+                              if Debug ('D') then
+                                 Wrong_Format;
+                              end if;
+
+                              Close (Dep_File);
+                              return;
+                           end if;
 
                         elsif On_Windows
                           and then Line (Finish + 1) not in '\' | ' '
@@ -404,7 +423,7 @@ package body GPR2.Source_Info.Parser.D is
          Looping := True;
       end loop Big_Loop;
 
-      Data.Parsed := Source_Info.LI;
+      Data.Parsed := LI;
       Close (Dep_File);
    end Compute;
 

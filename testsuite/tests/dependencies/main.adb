@@ -21,6 +21,7 @@ with Ada.Text_IO;
 
 with GPR2.Context;
 with GPR2.Path_Name;
+with GPR2.Project.Source.Part_Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
@@ -56,7 +57,7 @@ procedure Main is
 
       for Source of View.Sources loop
          declare
-            U : constant Optional_Name_Type := Source.Unit_Name;
+            U : constant Optional_Name_Type := Source.Unit_Name (No_Index);
          begin
             Text_IO.New_Line;
             Output_Filename (Source.Path_Name.Value);
@@ -71,7 +72,7 @@ procedure Main is
 
                for D of Source.Dependencies loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Path_Name.Value);
+                  Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
 
@@ -85,7 +86,7 @@ procedure Main is
 
                for D of Source.Dependencies (Closure => True) loop
                   Text_IO.Put ("  ");
-                  Output_Filename (D.Path_Name.Value);
+                  Output_Filename (D.Source.Path_Name.Value);
                   Text_IO.New_Line;
                end loop;
             end if;

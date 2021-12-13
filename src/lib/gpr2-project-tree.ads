@@ -324,11 +324,11 @@ package GPR2.Project.Tree is
      (Self : Object;
       View : Project.View.Object := Project.View.Undefined)
      with Pre => Self.Is_Defined;
-   --  Invalidates the sources for all views in the tree if View is set or the
-   --  source in the given view otherwise. This is needed when some sources
-   --  are added or removed from the view. It is not required to call
-   --  Update_Sources below, when the routine Sources on one of the views
-   --  of the tree will be called, the set of sources will be recomputed.
+   --  Invalidates the sources for all views in the tree if View is undefined
+   --  or the source in the given view otherwise. This is needed when some
+   --  sources are added or removed from the view. It is not required to call
+   --  Update_Sources below, when the routine Sources on one of the views of
+   --  the tree will be called, the set of sources will be recomputed.
 
    procedure Update_Sources
      (Self          : Object;
@@ -523,7 +523,6 @@ private
       --  Root and aggregate contexts
       View_Ids         : aliased Id_Maps.Map;
       View_DAG         : GPR2.View_Ids.DAGs.DAG;
-      Ali_Parser_Is_On : Boolean := True;
       Sources_Loaded   : Boolean := False;
    end record;
 
@@ -560,7 +559,7 @@ private
    function Is_Windows_Target (Tree : Object) return Boolean is
      (Tree.Has_Configuration
         and then
-      Tree.Configuration.Corresponding_View.Has_Attributes
+      Tree.Configuration.Corresponding_View.Has_Attribute
         (GPR2.Project.Registry.Attribute.Shared_Library_Suffix)
         and then
       Tree.Configuration.Corresponding_View.Attribute

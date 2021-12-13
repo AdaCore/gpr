@@ -1,0 +1,3 @@
+description: test gpr2name U323-030 tests
+driver: python_script
+timeout: 600

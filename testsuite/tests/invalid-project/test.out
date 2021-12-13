@@ -1,4 +1,4 @@
 p.gpr:2:04: error: Expected Identifier, got ';'
 gprls: unable to process project file p.gpr
-gprbuild_O629_023.gpr:2:21: error: attribute "P'Runtime" is not defined
+gprbuild_O629_023.gpr:2:21: error: unknown package or project "P"
 gprls: unable to process project file gprbuild_O629_023.gpr

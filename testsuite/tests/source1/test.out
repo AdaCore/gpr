@@ -1,11 +1,11 @@
 Project: Demo1
- > src1/main.adb      language: Ada    Kind: S_BODY_ONLY   unit: Main
+ > src1/main.adb      language: Ada    Kind: S_BODY_ONLY   unit: MAIN
 Project: Demo2
  > src1/file3.c       language: C      Kind: S_BODY
  > src2/file3.h       language: C      Kind: S_SPEC
- > src1/demo1.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: Demo1
- > src1/demo2.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: Demo2
- > src2/file.ab       language: Ada    Kind: S_BODY   unit: File
- > src2/file.gpr      language: Ada    Kind: S_SPEC   unit: File
- > src1/first.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: First
- > src1/source1.gpr   language: Ada    Kind: S_SPEC_ONLY   unit: Source1
+ > src1/demo1.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: DEMO1
+ > src1/demo2.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: DEMO2
+ > src2/file.ab       language: Ada    Kind: S_BODY   unit: FILE
+ > src2/file.gpr      language: Ada    Kind: S_SPEC   unit: FILE
+ > src1/first.gpr     language: Ada    Kind: S_SPEC_ONLY   unit: FIRST
+ > src1/source1.gpr   language: Ada    Kind: S_SPEC_ONLY   unit: SOURCE1

@@ -22,6 +22,7 @@ with Ada.Strings.Unbounded;
 with Ada.Text_IO;
 
 with GNAT.Command_Line;
+with GNAT.OS_Lib;
 with GNAT.Strings;
 
 with GNATCOLL.Traces;
@@ -34,10 +35,14 @@ with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
 with GPR2.Project.Source.Artifact;
+pragma Warnings (Off, "*is not referenced");
+with GPR2.Project.Source.Part_Set;
+pragma Warnings (On, "*is not referenced");
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
 with GPR2.Project.View;
 with GPR2.Project.Unit_Info;
+with GPR2.Unit;
 with GPR2.Version;
 
 procedure GPRdump is
@@ -59,6 +64,7 @@ procedure GPRdump is
    --  Parse command line parameters
 
    Help                : aliased Boolean := False;
+   Version             : aliased Boolean := False;
    Display_Sources     : aliased Boolean := False;
    Display_All_Sources : aliased Boolean := False;
    Display_Artifacts   : aliased Boolean := False;
@@ -87,9 +93,17 @@ procedure GPRdump is
             Source : constant GPR2.Project.Source.Object :=
                        View.Source (File);
          begin
-            for S of Source.Dependencies (Closure => True) loop
-               Text_IO.Put_Line (S.Path_Name.Value);
-            end loop;
+            if Source.Has_Units then
+               for CU of Source.Units loop
+                  for S of Source.Dependencies (Index => CU.Index) loop
+                     Text_IO.Put_Line
+                       (S.Source.Path_Name.Value &
+                        (if S.Index in Multi_Unit_Index
+                           then S.Index'Image
+                           else ""));
+                  end loop;
+               end loop;
+            end if;
          end;
       end if;
    end Full_Closure;
@@ -110,6 +124,11 @@ procedure GPRdump is
          Help => "display this help message and exit");
 
       Define_Switch
+        (Options.Config, Version'Access,
+         Long_Switch => "--version",
+         Help        => "Display version and exit");
+
+      Define_Switch
         (Options.Config, Display_Sources'Access,
          "-s", Long_Switch => "--sources",
          Help => "display sources");
@@ -126,8 +145,8 @@ procedure GPRdump is
 
       Define_Switch
         (Options.Config, All_Projects'Access,
-         "-r", Long_Switch => "--recoursive",
-         Help => "All none external projects recoursively");
+         "-r", Long_Switch => "--recursive",
+         Help => "All none external projects recursively");
 
       Define_Switch
         (Options.Config, Display_Artifacts'Access,
@@ -143,14 +162,13 @@ procedure GPRdump is
 
       Getopt (Options.Config);
 
-      if Options.Version or else Options.Verbose then
-         Version.Display
-           ("GPRDUMP", "2019", Version_String => Version.Long_Value);
+      if Version then
+         GPR2.Version.Display
+           ("GPRDUMP", "2019", Version_String => GPR2.Version.Long_Value);
 
-         if Options.Version then
-            Version.Display_Free_Software;
-            return;
-         end if;
+         GPR2.Version.Display_Free_Software;
+         GNAT.OS_Lib.OS_Exit (0);
+         return;
       end if;
 
       --  Now read arguments
@@ -218,9 +236,9 @@ procedure GPRdump is
             for U of View.Units loop
                Text_IO.Put_Line
                  (String (U.Name) & ' '
-                  & (if U.Has_Spec then U.Spec.Value else "-")
+                  & (if U.Has_Spec then U.Spec.Source.Value else "-")
                   & ' '
-                  & (if U.Has_Body then U.Main_Body.Value
+                  & (if U.Has_Body then U.Main_Body.Source.Value
                      else "-")
                  );
             end loop;

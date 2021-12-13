@@ -91,11 +91,6 @@ package body GPR2.Path_Name is
       then Path (Path'First .. Path'Last - 1)
       else Path);
 
-   function Simple_Name (Path : String) return String;
-   --  Returns the simple name portion of the file name specified by Name.
-   --  This is Ada.Directories.Simple_Name implementation with
-   --  valid path name check removed to allow '*' chars.
-
    function Containing_Directory (Path : String) return String;
    --  Containing directory for / is '/'
    --  This is Ada.Directories.Containing_Directory implementation with

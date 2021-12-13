@@ -1,0 +1,4 @@
+description: test gpr2name importing gprbuild-internal B701-008 tests
+driver: python_script
+control:
+- [SKIP, "'windows' in env.host.platform", "DEAD on windows"]

@@ -233,10 +233,7 @@ procedure GPRclean.Main is
    begin
       --  Check for additional switches in Clean package
 
-      if View.Has_Packages (PRP.Clean)
-        and then View.Pack (PRP.Clean).Check_Attribute
-                   (PRA.Switches, Result => Attr)
-      then
+      if View.Check_Attribute (PRP.Clean, PRA.Switches, Result => Attr) then
          declare
             use GNAT.Command_Line;
 
@@ -420,7 +417,8 @@ procedure GPRclean.Main is
                      if CU.Kind in Unit.Body_Kind then
                         Binder_Artifacts
                           (S.Path_Name.Base_Filename
-                           & Filename_Type ('~' & Image (CU.Index, 1)),
+                           & Filename_Type
+                             ('~' & Image (Positive (CU.Index), 1)),
                            Language => S.Language);
                      end if;
                   end loop;
@@ -457,9 +455,7 @@ procedure GPRclean.Main is
                      Delete_File
                        (View.Executable
                           (S.Path_Name.Simple_Name,
-                           (if S.Has_Single_Unit
-                            then 0
-                            else U.Index)).Value);
+                           U.Index).Value);
                   end loop;
                end if;
             end if;
@@ -755,7 +751,8 @@ begin
             Default_KB => not Options.Skip_Default_KB,
             Custom_KB  => Options.KB_Locations));
 
-      if Project_Tree.Configuration.Log_Messages.Has_Element
+      if Project_Tree.Has_Configuration
+        and then Project_Tree.Configuration.Log_Messages.Has_Element
            (Warning     => True,
             Information => False,
             Error       => False)

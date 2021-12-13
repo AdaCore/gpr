@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -50,7 +50,8 @@ package GPRname.Section is
 
    procedure Add_Directory
      (Self      : in out Object;
-      Directory : String);
+      Directory : String;
+      Root_Dir  : String);
    --  Adds a source directory to the section
 
    procedure Add_Directories_File
@@ -73,7 +74,7 @@ package GPRname.Section is
    function Is_Valid (Self : Object) return Boolean;
    --  Returns True if the section is valid (i.e. contains one pattern)
 
-   procedure Prepare (Self : in out Object);
+   procedure Prepare (Self : in out Object; Root : String);
    --  Processes a section to finalize it for use by gprname:
    --  Add some default values, and complete the source dirs by reading the
    --  directories files.

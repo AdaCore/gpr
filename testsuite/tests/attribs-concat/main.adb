@@ -54,11 +54,24 @@ procedure Main is
                               then Image (Name)
                               else Image (Pack) & "." & Image (Name));
    begin
-      if Pack = No_Package then
-         Attributes := Tree.Root_Project.Attributes (Name);
-      elsif Tree.Root_Project.Has_Packages (Pack) then
-         Attributes := Tree.Root_Project.Pack (Pack).Attributes (Name);
+      if Name = No_Attribute then
+         Attributes := Tree.Root_Project.Attributes
+           (Pack,
+            With_Defaults => False,
+            With_Config   => False);
+      elsif Pack = No_Package then
+         Attributes := Tree.Root_Project.Attributes
+           (Name,
+            With_Defaults => False,
+            With_Config   => False);
+      elsif Tree.Root_Project.Has_Packages (Pack, With_Defaults => False) then
+         Attributes := Tree.Root_Project.Attributes
+           (Pack,
+            Name,
+            With_Defaults => False,
+            With_Config   => False);
       end if;
+
       for A of Attributes loop
          declare
             Attribute : GPR2.Project.Attribute.Object := A;

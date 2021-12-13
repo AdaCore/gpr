@@ -1,6 +1,6 @@
 Project: Demo
 
- > /src/abc-plop.ads   unit: ABC.Plop
+ > /src/abc-plop.ads   unit: ABC.PLOP
 ..... DIRECT
    > /src/api.adb
    > /src/api.ads
@@ -18,7 +18,7 @@ Project: Demo
 ..... DIRECT
 ..... CLOSURE
 
- > /src/api-call.adb   unit: Api.Call
+ > /src/api-call.adb   unit: API.CALL
 ..... DIRECT
    > /src2/toto.adb
    > /src2/toto.ads
@@ -27,7 +27,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src2/toto.adb
    > /src2/toto.ads
 
- > /src/api.adb   unit: Api
+ > /src/api.adb   unit: API
 ..... DIRECT
    > /src2/toto.adb
    > /src2/toto.ads
@@ -36,7 +36,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src2/toto.adb
    > /src2/toto.ads
 
- > /src/api.ads   unit: Api
+ > /src/api.ads   unit: API
 ..... DIRECT
    > /src2/toto.adb
    > /src2/toto.ads
@@ -45,7 +45,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src2/toto.adb
    > /src2/toto.ads
 
- > /src/call.adb   unit: Call
+ > /src/call.adb   unit: CALL
 ..... DIRECT
    > /src/tst.adb
    > /src/tst.ads
@@ -60,7 +60,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src/tst.adb
    > /src/tst.ads
 
- > /src/tst.adb   unit: Tst
+ > /src/tst.adb   unit: TST
 ..... DIRECT
    > /src/abc-plop.ads
    > /src/abc.adb
@@ -76,7 +76,7 @@ api.ads:3:01: warning: withed unit titi not found
    > /src2/toto.adb
    > /src2/toto.ads
 
- > /src/tst.ads   unit: Tst
+ > /src/tst.ads   unit: TST
 ..... DIRECT
    > /src/abc-plop.ads
    > /src/abc.adb

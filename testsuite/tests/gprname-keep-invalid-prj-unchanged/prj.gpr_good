@@ -1,0 +1,7 @@
+project Prj is
+   package Unknown is
+      for Single use "simple";
+      Var := ("list");
+      for assoc ("Ada") use var;
+   end Unknown;
+end Prj;

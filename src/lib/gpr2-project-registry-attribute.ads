@@ -28,7 +28,8 @@
 
 with Ada.Containers.Indefinite_Ordered_Maps;
 private with Ada.Containers.Ordered_Maps;
-with Ada.Strings.Unbounded;
+
+limited with GPR2.Project.View;
 
 package GPR2.Project.Registry.Attribute is
 
@@ -61,10 +62,15 @@ package GPR2.Project.Registry.Attribute is
    --  Ignore : an empty value is ignored and reported as warning.
    --  Error  : an empty value is erroneous and reported as error.
 
-   type Qualified_Name (<>) is private;
+   type Qualified_Name is record
+      Pack : Optional_Package_Id;
+      Attr : Optional_Attribute_Id;
+   end record;
    --  A qualified name is an attribute name possibly prefixed with a package
    --  name. It is the only way to create a non-ambiguous reference to an
    --  attribute.
+
+   No_Name : constant Qualified_Name := (No_Package, No_Attribute);
 
    function Create
      (Name : Attribute_Id;
@@ -79,17 +85,49 @@ package GPR2.Project.Registry.Attribute is
    Everywhere : constant Allowed_In := (others => True);
    Nowhere    : constant Allowed_In := (others => False);
 
-   type Default_Value (Is_Reference : Boolean := False) is record
-      case Is_Reference is
-         when True =>
+   type Default_Value_Kind is
+     (D_Attribute_Reference,
+      D_Value,
+      D_Callback);
+   --  The various kind of default value definition:
+   --  Attribute_Reference: the default value takes the value of the mentioned
+   --   attribute.
+   --  Value: the default value is a literal
+   --  Callback: the default value is determined by a callback function (too
+   --   dynamic to be statically described.
+   --  Empty_List: the default value is an empty list.
+
+   type Default_Value_Callback is access
+     function (View : GPR2.Project.View.Object) return Value_Type;
+
+   Any_Index : constant Value_Type := (1 => ASCII.NUL);
+
+   package Value_Map is new Ada.Containers.Indefinite_Ordered_Maps
+     (Value_Type, Value_Type);
+   --  Used to store indexed constants as default values.
+
+   function Exists
+     (Map : Value_Map.Map; Key : Value_Type := Any_Index) return Boolean;
+
+   function Get
+     (Map : Value_Map.Map; Key : Value_Type := Any_Index) return Value_Type;
+   --  Returns value for key Key in Map. If Key is not present looks first for
+   --  the Any_Index key. If no value is defined for Any_Index, returns empty.
+
+   type Default_Value (Kind : Default_Value_Kind := D_Attribute_Reference)
+   is record
+      case Kind is
+         when D_Attribute_Reference =>
             Attr : Optional_Attribute_Id;
-         when False =>
-            Value : Ada.Strings.Unbounded.Unbounded_String;
+         when D_Value =>
+            Values : Value_Map.Map;
+         when D_Callback =>
+            Callback : Default_Value_Callback;
       end case;
    end record;
 
-   package VSR is new Ada.Containers.Indefinite_Ordered_Maps
-     (Name_Type, Default_Value);
+   No_Default_Value : constant Default_Value :=
+      (Kind => D_Attribute_Reference, Attr => No_Attribute);
 
    type Def is record
       Index                 : Index_Kind         := Optional;
@@ -97,26 +135,33 @@ package GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive  : Boolean            := False;
       Value                 : Value_Kind         := Single;
       Value_Case_Sensitive  : Boolean            := False;
+      Value_Is_Set          : Boolean            := False;
+      --  When the value is a list, determine if the elements should be unique
+      --  or not.
+
       Empty_Value           : Empty_Value_Status := Allow;
-      Read_Only             : Boolean            := False;
+      Builtin               : Boolean            := False;
       Is_Allowed_In         : Allowed_In         := (K_Abstract => True,
-                                                    others     => False);
-      Default               : VSR.Map;
+                                                     others     => False);
+      Default               : Default_Value;
       Has_Default_In        : Allowed_In         := (others => False);
       Is_Toolchain_Config   : Boolean            := False;
-      --  When set, the attribute is used to during the gprconfig stage to
+      --  When set, the attribute is used during the gprconfig stage to
       --  configure toolchains (for example the attributes Target or Runtime
       --  are toolchain config attributes). Due to elaboration constraints,
       --  such attributes need to be global to the project tree, and so
       --  should not be modified after being referenced. So for example
       --  using "for Target use project'Target & "suffix"" is not allowed.
+
       Config_Concatenable   : Boolean := False;
       --  When True the final value for the attribute is concatenated with the
       --  value found in the Config project (if it exists) rather than
       --  overriding it.
+
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
       --  Whether an attribute is inherited from an extended project or not
       --  See Inherited_From_Extended_Type definition for available behaviours.
+
       Index_Type            : Index_Value_Type := Name_Index;
       --  Set the type for the index value
 
@@ -130,7 +175,16 @@ package GPR2.Project.Registry.Attribute is
        --  Must be usable somewhere
        Def.Is_Allowed_In /= (Project_Kind => False);
 
+   function Get_Default_Value
+     (Attr_Def : Def; Key : Value_Type) return Value_Type
+     with Pre => Attr_Def.Default.Kind = D_Value;
+
    type Default_Rules is private;
+
+   function All_Attributes
+     (Pack : Optional_Package_Id) return Containers.Attribute_Id_List;
+   --  Retrieve the Ids of all defined attributes for a given package, or
+   --  the top-level attributes if Pack is No_Package.
 
    function Exists (Q_Name : Qualified_Name) return Boolean;
    --  The qualified name comprise the package name and attribute name, both
@@ -146,6 +200,9 @@ package GPR2.Project.Registry.Attribute is
    --  Get default rules by package name. If package name is empty get the root
    --  default rules.
 
+   function Get_Packages_With_Default return Containers.Package_Id_List;
+   --  Get the list of packages that have attributes with default values
+
    procedure For_Each_Default
      (Rules  : Default_Rules;
       Action : not null access procedure
@@ -160,16 +217,31 @@ package GPR2.Project.Registry.Attribute is
       Index_Case_Sensitive  : Boolean;
       Value                 : Value_Kind;
       Value_Case_Sensitive  : Boolean;
-      Read_Only             : Boolean;
       Is_Allowed_In         : Allowed_In;
-      Empty_Value           : Empty_Value_Status := Allow;
-      Default               : VSR.Map            := VSR.Empty_Map;
-      Has_Default_In        : Allowed_In         := Nowhere;
-      Is_Toolchain_Config   : Boolean            := False;
-      Config_Concatenable   : Boolean            := False;
+      Is_Builtin            : Boolean                    := False;
+      Empty_Value           : Empty_Value_Status         := Allow;
+      Default               : Default_Value              := No_Default_Value;
+      Has_Default_In        : Allowed_In                 := Nowhere;
+      Is_Toolchain_Config   : Boolean                    := False;
+      Config_Concatenable   : Boolean                    := False;
       Inherit_From_Extended : Inherit_From_Extended_Type := Inherited;
-      Index_Type            : Index_Value_Type           := Name_Index);
+      Index_Type            : Index_Value_Type           := Name_Index;
+      Is_Set                : Boolean                    := False)
+     with Pre => (if Is_Set
+                     or else Config_Concatenable
+                     or else Inherit_From_Extended = Concatenated
+                    then Value = List);
    --  add package/attribute definition in database for attribute checks
+
+   procedure Add_Alias
+     (Name     : Qualified_Name;
+      Alias_Of : Qualified_Name);
+
+   function Has_Alias (Name : Qualified_Name) return Boolean;
+
+   function Alias (Name : Qualified_Name) return Qualified_Name
+     with Post => (if Has_Alias (Name) then Alias'Result /= No_Name
+                   else Alias'Result = No_Name);
 
    --  Some common attribute names
 
@@ -432,11 +504,6 @@ package GPR2.Project.Registry.Attribute is
 
 private
 
-   type Qualified_Name is record
-      Pack : Optional_Package_Id;
-      Attr : Optional_Attribute_Id;
-   end record;
-
    function Image (Name : Qualified_Name) return String is
      (if Name.Pack = No_Package
       then Image (Name.Attr)
@@ -456,5 +523,9 @@ private
    --  To keep references only to attribute definitions with default rules
 
    type Default_Rules is access constant Default_References.Map;
+
+   package Attribute_Aliases is new Ada.Containers.Ordered_Maps
+     (Qualified_Name, Qualified_Name);
+   --  Keeps track of Attributes that are aliased
 
 end GPR2.Project.Registry.Attribute;

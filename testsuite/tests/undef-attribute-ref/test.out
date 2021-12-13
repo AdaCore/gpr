@@ -1,10 +1,20 @@
-A:LIST=A;
-B:SINGLE=B
+prj.gpr:
+B:SINGLE=false B
 C:SINGLE=lowercase C
-D:LIST=D;
 E:SINGLE=lowercase E
-F:LIST=F;
 G:SINGLE=lowercase G
+Compiler.E:SINGLE=lowercase E
+Naming.C:SINGLE=lowercase C
+prj1.gpr:
+G:SINGLE=lowercaseG
+Compiler.E:SINGLE=lowercaseE
+prj2.gpr:
+G:SINGLE=lowercaseG
+prj3.gpr:
+A:LIST=A;
+prj4.gpr:
+Naming.D:LIST=D;
+prj5.gpr:
+Compiler.F:LIST=F;
+prj6.gpr:
 H:LIST=H;
-prj1.gpr:5:24: error: package "Naming" not declared in project "Prj1"
-prj2.gpr:4:23: error: package "Naming" not declared in project "Child1"

@@ -25,6 +25,7 @@
 with Ada.Command_Line;
 with Ada.Directories;
 with Ada.Environment_Variables;
+with Ada.Exceptions;
 with Ada.Text_IO;
 with Ada.Strings.Fixed;
 
@@ -481,6 +482,9 @@ package body GPR2.KB is
             Compilers.Delete_First;
          end loop;
       end return;
+   exception
+      when Invalid_KB =>
+         return No_Compilers;
    end All_Compilers;
 
    -------------------------------------
@@ -916,10 +920,17 @@ package body GPR2.KB is
 
    begin
       for Setting of Settings loop
-         if Is_Language_With_No_Compiler
-           (Self, Language (Setting))
-         then
+         if Is_Language_With_No_Compiler (Self, Language (Setting)) then
             Compilers.Append (Create_Filter (Self, Setting));
+
+         elsif not Self.Languages_Known.Contains (Language (Setting)) then
+            Messages.Append
+              (Message.Create
+                 (Message.Information,
+                  "unknown language '"
+                  & Image (Language (Setting)) & "'",
+                  Source_Reference.Create ("embedded_kb/kb", 0, 0)));
+
          else
             Filters.Append (Create_Filter (Self, Setting));
          end if;
@@ -935,7 +946,7 @@ package body GPR2.KB is
             Fallback         => Fallback,
             Errors           => Messages);
       exception
-         when No_Compatible_Compilers =>
+         when No_Compatible_Compilers | Invalid_KB =>
             return Null_Unbounded_String;
       end;
 
@@ -1587,7 +1598,8 @@ package body GPR2.KB is
       Merge_Same_Dirs  : Boolean := False;
       Calls_Cache      : in out GPR2.Containers.Name_Value_Map;
       Messages         : in out Log.Object;
-      Processed_Value  : out External_Value_Lists.List)
+      Processed_Value  : out External_Value_Lists.List;
+      Ignore_Compiler  : out Boolean)
    is
       use External_Value_Nodes;
       use GNAT.Expect;
@@ -1655,6 +1667,7 @@ package body GPR2.KB is
       Visited        : String_To_External_Value.Map;
    begin
       Processed_Value.Clear;
+      Ignore_Compiler := False;
 
       while Has_Element (Node_Cursor) loop
          while Has_Element (Node_Cursor) loop
@@ -1801,7 +1814,8 @@ package body GPR2.KB is
                         Trace
                           (Main_Trace,
                            Attribute & ": nogrep matched=""" & Tmp_Str & """");
-                        raise Ignore_Compiler;
+                        Ignore_Compiler := True;
+                        return;
 
                      else
                         Trace (Main_Trace, Attribute & ": nogrep no match");
@@ -1820,7 +1834,8 @@ package body GPR2.KB is
                         & To_String (Node.Must_Match));
 
                      Tmp_Result := Null_Unbounded_String;
-                     raise Ignore_Compiler;
+                     Ignore_Compiler := True;
+                     return;
                   end if;
 
                   exit;
@@ -1901,6 +1916,7 @@ package body GPR2.KB is
 
          Next (Node_Cursor);
       end loop;
+
    end Get_External_Value;
 
    --------------------------
@@ -3188,7 +3204,17 @@ package body GPR2.KB is
             raise Invalid_KB;
          end if;
 
-         return Get_Variable_Value (Comp, Var_Name);
+         begin
+            return Get_Variable_Value (Comp, Var_Name);
+         exception
+            when Ex : Invalid_KB =>
+               Messages.Append
+                 (Message.Create
+                    (Message.Error,
+                     Ada.Exceptions.Exception_Message (Ex),
+                     Sloc => Error_Sloc));
+               raise Invalid_KB;
+         end;
       end Callback;
 
       function Do_Substitute is new Substitute_Variables (Callback);
@@ -3254,7 +3280,17 @@ package body GPR2.KB is
                   if Comp.Selected
                     and then Comp.Language = Lang
                   then
-                     return Get_Variable_Value (Comp, Var_Name);
+                     begin
+                        return Get_Variable_Value (Comp, Var_Name);
+                     exception
+                        when Ex : Invalid_KB =>
+                           Messages.Append
+                             (Message.Create
+                                (Message.Error,
+                                 Ada.Exceptions.Exception_Message (Ex),
+                                 Sloc => Error_Sloc));
+                           raise Invalid_KB;
+                     end;
                   end if;
                end loop;
             end;

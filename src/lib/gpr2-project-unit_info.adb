@@ -30,9 +30,9 @@ package body GPR2.Project.Unit_Info is
 
    function Create
      (Name      : Name_Type;
-      Spec      : Path_Name.Object;
-      Main_Body : Path_Name.Object;
-      Separates : Path_Name.Set.Object) return Object is
+      Spec      : Unit.Source_Unit_Identifier;
+      Main_Body : Unit.Source_Unit_Identifier;
+      Separates : Unit.Source_Unit_Vectors.Vector) return Object is
    begin
       return Object'(To_Unbounded_String (String (Name)),
                      Spec,
@@ -46,7 +46,7 @@ package body GPR2.Project.Unit_Info is
 
    procedure Remove_Body (Self : in out Object) is
    begin
-      Self.Main_Body := Path_Name.Undefined;
+      Self.Main_Body := Unit.Undefined_Id;
    end Remove_Body;
 
    -----------------
@@ -54,7 +54,7 @@ package body GPR2.Project.Unit_Info is
    -----------------
 
    procedure Update_Body
-     (Self : in out Object; Source : Path_Name.Object) is
+     (Self : in out Object; Source : Unit.Source_Unit_Identifier) is
    begin
       Self.Main_Body := Source;
    end Update_Body;
@@ -74,7 +74,7 @@ package body GPR2.Project.Unit_Info is
    ----------------------
 
    procedure Update_Separates
-     (Self : in out Object; Source : Path_Name.Object) is
+     (Self : in out Object; Source : Unit.Source_Unit_Identifier) is
    begin
       Self.Separates.Append (Source);
    end Update_Separates;
@@ -84,7 +84,7 @@ package body GPR2.Project.Unit_Info is
    -----------------
 
    procedure Update_Spec
-     (Self : in out Object; Source : Path_Name.Object) is
+     (Self : in out Object; Source : Unit.Source_Unit_Identifier) is
    begin
       Self.Spec := Source;
    end Update_Spec;

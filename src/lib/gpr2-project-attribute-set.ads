@@ -46,7 +46,7 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Boolean;
+      At_Pos : Unit_Index             := No_Index) return Boolean;
    --  Checks whether the set contains the attribute with the given Name and
    --  possibly the given Index.
 
@@ -62,11 +62,11 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Attribute.Object
-     with Post =>
-       (if Self.Contains (Name, Index, At_Pos)
-        then Element'Result.Is_Defined
-        else not Element'Result.Is_Defined);
+      At_Pos : Unit_Index             := No_Index) return Attribute.Object
+     with Post => (if Self.Contains (Name, Index, At_Pos)
+                   then Element'Result.Is_Defined
+                   else not Element'Result.Is_Defined),
+          Inline;
 
    procedure Insert
      (Self : in out Object; Attribute : Project.Attribute.Object)
@@ -95,7 +95,11 @@ package GPR2.Project.Attribute.Set is
      (Self   : Object;
       Name   : Attribute_Id;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural    := 0) return Cursor;
+      At_Pos : Unit_Index             := No_Index) return Cursor;
+
+   function Find
+     (Self      : Object;
+      Attribute : Project.Attribute.Object) return Cursor;
 
    function Has_Element (Position : Cursor) return Boolean;
 
@@ -122,15 +126,15 @@ package GPR2.Project.Attribute.Set is
      (Self          : Object;
       Name          : Optional_Attribute_Id  := No_Attribute;
       Index         : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos        : Natural                := 0;
-      With_Defaults : Boolean                := False)
+      At_Pos        : Unit_Index             := No_Index;
+      With_Defaults : Boolean                := True)
       return Attribute_Iterator.Forward_Iterator'Class;
 
    function Filter
      (Self   : Object;
       Name   : Optional_Attribute_Id  := No_Attribute;
       Index  : Attribute_Index.Object := Attribute_Index.Undefined;
-      At_Pos : Natural                := 0) return Object
+      At_Pos : Unit_Index             := No_Index) return Object
      with Post => (if Name = No_Attribute and then not Index.Is_Defined
                    then Filter'Result = Self);
    --  Returns an attribute set containing only the attribute corresponding to
@@ -140,27 +144,6 @@ package GPR2.Project.Attribute.Set is
 
    function Has_Languages (Self : Object) return Boolean;
    function Languages     (Self : Object) return Attribute.Object;
-
-   function Has_Source_Dirs (Self : Object) return Boolean;
-   function Source_Dirs     (Self : Object) return Attribute.Object;
-
-   function Has_Source_Files (Self : Object) return Boolean;
-   function Source_Files     (Self : Object) return Attribute.Object;
-
-   function Has_Excluded_Source_Files (Self : Object) return Boolean;
-   function Excluded_Source_Files     (Self : Object) return Attribute.Object;
-
-   function Has_Excluded_Source_List_File (Self : Object) return Boolean;
-   function Excluded_Source_List_File (Self : Object) return Attribute.Object;
-
-   function Has_Source_List_File (Self : Object) return Boolean;
-   function Source_List_File     (Self : Object) return Attribute.Object;
-
-   function Has_Library_Interface (Self : Object) return Boolean;
-   function Library_Interface     (Self : Object) return Attribute.Object;
-
-   function Has_Interfaces (Self : Object) return Boolean;
-   function Interfaces     (Self : Object) return Attribute.Object;
 
 private
 
@@ -182,13 +165,11 @@ private
    type Cursor is record
       CM  : Set.Cursor;               -- main map cursor
       CA  : Set_Attribute.Cursor;     -- inner map cursor (Set below)
-      Set : access Set_Attribute.Map; -- Set ref to current inner map
    end record;
 
    No_Element : constant Cursor :=
                   (Set.No_Element,
-                   Set_Attribute.No_Element,
-                   null);
+                   Set_Attribute.No_Element);
 
    type Constant_Reference_Type
      (Attribute : not null access constant Project.Attribute.Object)
@@ -209,7 +190,7 @@ private
    end record;
 
    type Object is tagged record
-      Attributes : Set.Map;
+      Attributes : aliased Set.Map;
       Length     : Containers.Count_Type := 0;
    end record;
 
@@ -220,47 +201,5 @@ private
 
    function Languages (Self : Object) return Attribute.Object is
      (Self.Element (Registry.Attribute.Languages));
-
-   function Has_Source_Dirs (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_Dirs));
-
-   function Source_Dirs (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_Dirs));
-
-   function Has_Source_Files (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_Files));
-
-   function Source_Files (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_Files));
-
-   function Has_Excluded_Source_Files (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Excluded_Source_Files));
-
-   function Excluded_Source_Files (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Excluded_Source_Files));
-
-   function Has_Excluded_Source_List_File (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Excluded_Source_List_File));
-
-   function Excluded_Source_List_File (Self : Object) return Attribute.Object
-     is (Self.Element (Registry.Attribute.Excluded_Source_List_File));
-
-   function Has_Source_List_File (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Source_List_File));
-
-   function Source_List_File (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Source_List_File));
-
-   function Has_Library_Interface (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Library_Interface));
-
-   function Library_Interface (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Library_Interface));
-
-   function Has_Interfaces (Self : Object) return Boolean is
-     (Self.Contains (Registry.Attribute.Interfaces));
-
-   function Interfaces (Self : Object) return Attribute.Object is
-     (Self.Element (Registry.Attribute.Interfaces));
 
 end GPR2.Project.Attribute.Set;

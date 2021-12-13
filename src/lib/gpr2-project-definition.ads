@@ -23,13 +23,13 @@
 ------------------------------------------------------------------------------
 
 with Ada.Containers.Indefinite_Ordered_Maps;
-
 with GPR2.Context;
-with GPR2.Parser.Project.Set;
+with GPR2.Project.Attribute_Cache;
 with GPR2.Project.Attribute_Index;
 with GPR2.Project.Attribute.Set;
 with GPR2.Project.Configuration;
-with GPR2.Project.Pack.Set;
+with GPR2.Project.Pack;
+with GPR2.Project.Parser.Set;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Typ.Set;
 with GPR2.Project.Variable.Set;
@@ -48,7 +48,6 @@ private package GPR2.Project.Definition is
    use type Attribute_Index.Object;
    use type View.Object;
    use type Path_Name.Object;
-   use type Source_Info.Backend_Set;
 
    --  Tree contains the Project parser object. This is shared by all projects
    --  view in all loaded trees. That is there is always a single instance of
@@ -56,9 +55,9 @@ private package GPR2.Project.Definition is
    --  Imports contains the list of all imported projects for Project.
 
    type Tree is record
-      Project  : Parser.Project.Object;
-      Imports  : Parser.Project.Set.Object;
-      Extended : Parser.Project.Object;
+      Project  : GPR2.Project.Parser.Object;
+      Imports  : GPR2.Project.Parser.Set.Object;
+      Extended : GPR2.Project.Parser.Object;
    end record;
 
    package Simple_Name_Source is
@@ -69,13 +68,18 @@ private package GPR2.Project.Definition is
    package Project_View_Store is new Ada.Containers.Indefinite_Ordered_Maps
      (Name_Type, View.Object);
 
-   type Path_Cache is record
-      Path  : GPR2.Path_Name.Object;
-      Valid : Boolean := False;
+   type Dir_Cache_Value is record
+      Is_Set : Boolean := False;
+      Value  : GPR2.Path_Name.Object;
    end record;
+   --  Used to cache directory attributes that require otherwise
+   --  postprocessing each time they are retrieved (Call to
+   --  Apply_Root_And_Subdirs).
 
-   type Cached_Attribute is (Library_Ali_Dir, Library_Dir, Object_Dir);
-   type Cache_List is array (Cached_Attribute) of Path_Cache;
+   type Cacheable_Dir_Attrs is
+     (Exec_Dir, Library_Ali_Dir, Library_Dir, Library_Src_Dir, Object_Dir);
+
+   type Dir_Cache_List is array (Cacheable_Dir_Attrs) of Dir_Cache_Value;
 
    --  Data contains a project view data. We have all the attributes, variables
    --  and packages with the final values as parsed with the project's context
@@ -104,7 +108,7 @@ private package GPR2.Project.Definition is
       Aggregated      : Project_View_Store.Map;
       Attrs           : Project.Attribute.Set.Object;
       Vars            : Project.Variable.Set.Object;
-      Packs           : Project.Pack.Set.Object;
+      Packs           : Project.Pack.Set.Map;
       Types           : Project.Typ.Set.Object;
       Sources         : Project.Source.Set.Object;
       Sources_Map     : Simple_Name_Source.Map;
@@ -122,8 +126,9 @@ private package GPR2.Project.Definition is
       Tree            : access Project.Tree.Object;
       --  The project tree for this view
 
-      --  Cached values for faster retrieval of very common attributes
-      Cache           : Cache_List;
+      --  Cached values for faster retrieval of attributes
+      Cache           : Attribute_Cache.Object;
+      Dir_Cache       : Dir_Cache_List;
    end record;
 
    type Ref is access all Data;
@@ -206,22 +211,8 @@ private package GPR2.Project.Definition is
    Strong : access function (View : Weak_Reference) return Project.View.Object;
    --  Get view from weak reference
 
-   Set_Pack_Default_Attributes : access procedure
-     (Self : in out Pack.Object; VDD : Definition.Data);
-
-   Set_Defaults : access procedure
-     (Self : in out Attribute.Set.Object;
-      VDD  : Data;
-      Pack : Optional_Package_Id);
-
    Change_Actual_View : access function
      (Self : Source.Object; View : Project.View.Object) return Source.Object;
-
-   Enable_Ali_Parser : access procedure
-     (Tree : in out Project.Tree.Object; Enable : Boolean);
-
-   Ali_Parser_Is_On : access function
-     (Tree : Project.Tree.Object) return Boolean;
 
    -----------------------------------------------------------------------
    -- Private routines exported from GPR2.Project.Configuration package --
@@ -264,17 +255,6 @@ private package GPR2.Project.Definition is
       then Def.Attrs.Contains (Name)
       else not Def.Attrs.Filter (Name, Index).Is_Empty);
 
-   function Languages (Def : Data) return Containers.Source_Value_List;
-   --  Returns the languages used on this project, this is not necessary the
-   --  content of the Languages attribute as if not defined it returns the
-   --  default language Ada.
-
-   function Naming_Package (Def : Data) return Project.Pack.Object;
-   --  Returns the Naming package for the current view. This is either
-   --  the view Naming package, the project's tree Naming package from the
-   --  loaded configuration project if any and finally the default Naming
-   --  package.
-
    procedure Update_Sources
      (Def           : in out Data;
       View          : Project.View.Object;
@@ -291,8 +271,17 @@ private package GPR2.Project.Definition is
    --  Backends parameter defines the set of parser that can be used to parse
    --  the source information.
 
-   procedure Set_Default_Attributes (Def : in out Data);
-   --  Set default and inherited attributes for the project view
+   procedure Update_Sources_List
+     (Def           : in out Data;
+      View          : Project.View.Object;
+      Stop_On_Error : Boolean)
+   with Pre => View.Is_Defined;
+   --  Populate the list of sources for the given view
+
+   procedure Update_Sources_Parse
+     (Def : in out Data; Backends : Source_Info.Backend_Set);
+   --  Parse the project's source dependency file and populate the
+   --  corresponding source_info.
 
    procedure Sources_Map_Insert
      (Def : in out Data;
@@ -316,5 +305,11 @@ private package GPR2.Project.Definition is
 
    procedure Clear_Cache (Def : in out Data);
    --  Used during the reload of a tree to clear values cached in the view
+
+   procedure Disable_Cache (Def : in out Data);
+   --  Used during parsing, where attributes can change as we parse.
+
+   procedure Enable_Cache (Def : in out Data);
+   --  Start using cache to store attribute values
 
 end GPR2.Project.Definition;

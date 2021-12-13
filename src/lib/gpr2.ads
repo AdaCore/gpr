@@ -85,6 +85,10 @@ package GPR2 is
    --  raised with a minimal message but the actual messages are to be found in
    --  the Tree log messages.
 
+   Attribute_Error : exception;
+   --  Raised when querying an invalid attribute (not in the registry,
+   --  invalid context, ...).
+
    type Project_Kind is
      (K_Configuration, K_Abstract,
       K_Standard, K_Library, K_Aggregate, K_Aggregate_Library);
@@ -198,6 +202,18 @@ package GPR2 is
      (Filename_Regexp : Filename_Optional) return GNAT.Regexp.Regexp;
    --  Returns Regexp object for Filename_Regexp pattern
    --  Allows '?' & '*' wildchars. Use case insensitive match when required
+
+   --  Compilation unit index for multi-unit sources
+
+   type Unit_Index is new Integer range 0 .. Integer'Last;
+   --  Index of a compilation unit part in a source file
+
+   No_Index          : constant Unit_Index := 0;
+   --  Value of the unit index in case the source contains a single unit or
+   --  is not unit based.
+
+   subtype Multi_Unit_Index is Unit_Index range 1 .. Unit_Index'Last;
+   --  Value range of the unit index
 
    --  Name tables definition
 

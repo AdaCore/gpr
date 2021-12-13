@@ -184,7 +184,7 @@ package GPR2.KB is
       return Ada.Strings.Unbounded.Unbounded_String
      with Pre  => Self.Is_Defined,
           Post => Configuration'Result /= Null_Unbounded_String
-             or else Messages.Has_Error;
+             or else Messages.Has_Error or else Self.Has_Error;
    --  Creates configuration string
 
    procedure Release (Self : in out Object)
@@ -635,9 +635,6 @@ private
    function Log_Messages (Self : Object) return Log.Object is
      (Self.Messages);
 
-   Ignore_Compiler : exception;
-   --  Raised when the compiler should be ignored
-
    Invalid_KB : exception;
    --  Raised when an error occurred while parsing the knowledge base
 
@@ -671,12 +668,13 @@ private
       Merge_Same_Dirs  : Boolean := False;
       Calls_Cache      : in out GPR2.Containers.Name_Value_Map;
       Messages         : in out Log.Object;
-      Processed_Value  : out External_Value_Lists.List);
+      Processed_Value  : out External_Value_Lists.List;
+      Ignore_Compiler  : out Boolean);
    --  Computes the value of Value, depending on its type. When an external
    --  command needs to be executed, Path is put first on the PATH environment
    --  variable. Results of external command execution are cached for effciency
    --  and are stored/looked up in Calls_Cache.
-   --  Raises Ignore_Compiler if the value doesn't match its <must_have>
+   --  Sets Ignore_Compiler if the value doesn't match its <must_have>
    --  regexp.
    --  The <filter> node is also taken into account.
    --  If Split_Into_Words is true, then the value read from <shell> or as a

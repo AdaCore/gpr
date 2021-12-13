@@ -31,9 +31,14 @@ package body GPR2.Source_Info is
    -- Build_Timestamp --
    ---------------------
 
-   function Build_Timestamp (Self : Object) return Ada.Calendar.Time is
+   function Build_Timestamp (Self  : Object;
+                             Index : Unit_Index) return Ada.Calendar.Time is
    begin
-      return Self.LI_Timestamp;
+      if Index = No_Index then
+         return Self.LI_Timestamp;
+      else
+         return Self.CU_Info (Index).Build_Timestamp;
+      end if;
    end Build_Timestamp;
 
    ----------------
@@ -74,9 +79,9 @@ package body GPR2.Source_Info is
 
    function Context_Clause_Dependencies
      (Self  : Object;
-      Index : Unit_Index := 1) return Source_Reference.Identifier.Set.Object is
+      Index : Unit_Index) return Source_Reference.Identifier.Set.Object is
    begin
-      return Self.CU_List (Positive (Index)).Dependencies;
+      return Self.CU_List (Index).Dependencies;
    end Context_Clause_Dependencies;
 
    function Context_Clause_Dependencies
@@ -100,12 +105,12 @@ package body GPR2.Source_Info is
 
    procedure Dependencies
      (Self   : Object;
+      Index  : Unit_Index;
       Action : access procedure
-                 (Sfile : Simple_Name;
-                  Unit  : Name_Type;
-                  Kind  : GPR2.Unit.Library_Unit_Type;
-                  Stamp : Ada.Calendar.Time);
-      Index  : Unit_Index := 1)
+                 (Unit_Name : Name_Type;
+                  Sfile     : Simple_Name;
+                  Kind      : GPR2.Unit.Library_Unit_Type;
+                  Stamp     : Ada.Calendar.Time))
    is
       C_Idx : constant Unit_Dependencies.Cursor :=
                 Self.Dependencies.Find (Index);
@@ -135,11 +140,11 @@ package body GPR2.Source_Info is
             --  None Ada dependencied taken from .d files has full path name
          begin
             Action
-              (Simple_Name
+              (Name_Type (Ref.Unit_Name),
+               Simple_Name
                  (Ref.Sfile
                       ((if First = 0 then Ref.Sfile'First else First + 1)
                        .. Ref.Sfile'Last)),
-               Name_Type (Ref.Unit_Name),
                Ref.Unit_Kind,
                Ref.Stamp);
          end;
@@ -169,7 +174,7 @@ package body GPR2.Source_Info is
    function Has_Unit_At
      (Self : Object; Index : Unit_Index) return Boolean is
    begin
-      return Self.CU_List.Length >= Containers.Count_Type (Index);
+      return Self.CU_List.Has_Element (Index);
    end Has_Unit_At;
 
    ----------------
@@ -177,10 +182,10 @@ package body GPR2.Source_Info is
    ----------------
 
    function Is_Generic
-     (Self : Object; Index : Unit_Index := 1) return Boolean is
+     (Self : Object; Index : Unit_Index) return Boolean is
    begin
       return Self.Has_Units
-        and then Self.CU_List (Positive (Index)).Is_Generic;
+        and then Self.CU_List (Index).Is_Generic;
    end Is_Generic;
 
    --------------------------------
@@ -188,11 +193,45 @@ package body GPR2.Source_Info is
    --------------------------------
 
    function Is_Implementation_Required
-     (Self : Object; Index : Unit_Index := 1) return Boolean is
+     (Self : Object; Index : Unit_Index) return Boolean is
    begin
       return Self.CU_List
-        (Positive (Index)).Is_Flag_Set (GPR2.Unit.Body_Needed_For_SAL);
+        (Index).Is_Flag_Set (GPR2.Unit.Body_Needed_For_SAL);
    end Is_Implementation_Required;
+
+   ---------------
+   -- Is_Parsed --
+   ---------------
+
+   function Is_Parsed (Self : Object) return Parse_State
+   is
+      Fully_Parsed : Boolean := True;
+      Not_Parsed   : Boolean := True;
+   begin
+      if not Self.Has_Units then
+         if Self.Is_Parsed (No_Index) then
+            return Full;
+         else
+            return No;
+         end if;
+      else
+         for CU of Self.Units loop
+            if Self.Is_Parsed (CU.Index) then
+               Not_Parsed := False;
+            else
+               Fully_Parsed := False;
+            end if;
+         end loop;
+
+         if Fully_Parsed then
+            return Full;
+         elsif Not_Parsed then
+            return No;
+         else
+            return Partial;
+         end if;
+      end if;
+   end Is_Parsed;
 
    ----------
    -- Kind --
@@ -200,10 +239,10 @@ package body GPR2.Source_Info is
 
    function Kind
      (Self  : Object;
-      Index : Unit_Index := 1) return GPR2.Unit.Library_Unit_Type is
+      Index : Unit_Index := No_Index) return GPR2.Unit.Library_Unit_Type is
    begin
-      if Self.Is_Ada then
-         return Self.CU_List (Positive (Index)).Kind;
+      if Self.Has_Units then
+         return Self.CU_List (Index).Kind;
       else
          return Self.Kind;
       end if;
@@ -218,46 +257,58 @@ package body GPR2.Source_Info is
       Self := Undefined;
    end Reset;
 
-   ---------
-   -- Set --
-   ---------
-
-   procedure Set
-     (Self : in out Object;
-      Kind : GPR2.Unit.Library_Unit_Type) is
-   begin
-      Self.Is_Ada := False;
-      Self.Kind   := Kind;
-   end Set;
-
    -------------
    -- Set_Ada --
    -------------
 
    procedure Set_Ada
-     (Self          : in out Object;
-      Units         : GPR2.Unit.List.Object;
-      Is_RTS_Source : Boolean;
-      Is_Indexed    : Boolean) is
+     (Self  : in out Object;
+      Units : GPR2.Unit.List.Object) is
    begin
-      Self.Is_Ada        := True;
+      Self.Language      := Ada_Language;
+      Self.Is_RTS_Source := False;
       Self.CU_List       := Units;
-      Self.Is_RTS_Source := Is_RTS_Source;
-      Self.Is_Indexed    := Is_Indexed;
-
-      if Self.CU_List.Length > 0 then
-         Self.Kind := Self.CU_List (1).Kind;
-      end if;
+      Self.CU_Info       :=
+        Unit_Info_Vectors.To_Vector (Unit_Info'(others => <>),
+                                     Units.Length);
    end Set_Ada;
+
+   procedure Set_Ada
+     (Self          : in out Object;
+      Unit          : GPR2.Unit.Object;
+      Is_RTS_Source : Boolean) is
+   begin
+      pragma Assert (Unit.Index = No_Index);
+      Self.Language      := Ada_Language;
+      Self.Is_RTS_Source := Is_RTS_Source;
+      Self.CU_List.Clear;
+      Self.CU_List.Insert (Unit);
+      Self.CU_Info       := Unit_Info_Vectors.Empty_Vector;
+   end Set_Ada;
+
+   -----------------
+   -- Set_Non_Ada --
+   -----------------
+
+   procedure Set_Non_Ada
+     (Self     : in out Object;
+      Language : Language_Id;
+      Kind     : GPR2.Unit.Library_Unit_Type) is
+   begin
+      pragma Assert (Language /= Ada_Language);
+      Self.Language := Language;
+      Self.Kind     := Kind;
+   end Set_Non_Ada;
 
    ----------
    -- Unit --
    ----------
 
    function Unit
-     (Self : Object; Index : Unit_Index := 1) return GPR2.Unit.Object is
+     (Self  : Object;
+      Index : Unit_Index) return GPR2.Unit.Object is
    begin
-      return Self.CU_List (Positive (Index));
+      return Self.CU_List (Index);
    end Unit;
 
    ---------------
@@ -265,9 +316,10 @@ package body GPR2.Source_Info is
    ---------------
 
    function Unit_Name
-     (Self : Object; Index : Unit_Index := 1) return Name_Type is
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Name_Type is
    begin
-      return Self.CU_List (Positive (Index)).Name;
+      return Self.CU_List (Index).Name;
    end Unit_Name;
 
    ------------
@@ -296,13 +348,13 @@ package body GPR2.Source_Info is
    procedure Update_Kind
      (Self  : in out Object;
       Kind  : GPR2.Unit.Library_Unit_Type;
-      Index : Unit_Index := 1) is
+      Index : Unit_Index) is
    begin
-      if Index = 1 then
+      if not Self.Has_Units then
          Self.Kind := Kind;
+      else
+         Self.CU_List (Index).Update_Kind (Kind);
       end if;
-
-      Self.CU_List (Positive (Index)).Update_Kind (Kind);
    end Update_Kind;
 
 end GPR2.Source_Info;

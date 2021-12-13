@@ -1,15 +1,22 @@
+prj.gpr:
 A:LIST=Ada;
 B:LIST=
 C:SINGLE=.
 D:LIST=test.out;
 E:SINGLE=.adb
 F:SINGLE=.adb
-G:LIST=
+G:LIST=-a;-b;
 H:SINGLE=.adb
 I:SINGLE=.adb
 J:SINGLE=.c
-K:SINGLE=
+K:SINGLE=123
 L:SINGLE=.
 M:SINGLE=.c
 N:SINGLE=.
 O:SINGLE=.c
+prj2.gpr:
+prj2.gpr:4:50: error: undefined attribute "Naming'Implementation_Suffix ("also_not_defined")"
+prj3.gpr:
+prj3.gpr:3:09: error: undefined variable "Naming.A"
+prj4.gpr:
+A:SINGLE=.adb

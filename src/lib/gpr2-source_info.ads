@@ -28,8 +28,9 @@
 --  the kind of parser that has been used.
 
 with Ada.Calendar;
-with Ada.Containers.Indefinite_Vectors;
-with Ada.Containers.Ordered_Maps;
+private with Ada.Containers.Indefinite_Vectors;
+private with Ada.Containers.Ordered_Maps;
+private with Ada.Containers.Vectors;
 
 with GPR2.Unit.List;
 with GPR2.Containers;
@@ -68,19 +69,29 @@ package GPR2.Source_Info is
    function Is_Defined (Self : Object) return Boolean;
    --  Returns True if Self is defined
 
-   function Is_Parsed (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined;
-   --  Returns True if the source info has been computed
+   type Parse_State is (No, Partial, Full);
 
-   function Used_Backend (Self : Object) return Implemented_Backend
-     with Pre  => Self.Is_Defined and then Self.Is_Parsed;
+   function Is_Parsed (Self : Object) return Parse_State;
+
+   function Is_Parsed (Self  : Object;
+                       Index : Unit_Index) return Boolean;
+   --  Returns True when the Unit in the source has been computed
+
+   function Used_Backend (Self  : Object;
+                          Index : Unit_Index) return Implemented_Backend
+     with Pre => Self.Is_Defined and then Self.Is_Parsed (Index);
    --  Returns the backend used to compute the source information
 
    function Is_Ada (Self : Object) return Boolean
-     with Pre  => Self.Is_Defined;
+     with Pre => Self.Is_Defined;
    --  Returns True if language is Ada
 
-   function Build_Timestamp (Self : Object) return Ada.Calendar.Time
+   function Language (Self : Object) return Language_Id
+     with Pre => Self.Is_Defined;
+   --  Returns the language of the source
+
+   function Build_Timestamp (Self  : Object;
+                             Index : Unit_Index) return Ada.Calendar.Time
      with Inline,
           Pre => Self.Is_Defined;
    --  Returns last modification of the source file from the time point when
@@ -97,13 +108,13 @@ package GPR2.Source_Info is
      with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns True if Self contains the given unit
 
-   type Unit_Index is new Positive;
-
    function Kind
-     (Self : Object; Index : Unit_Index := 1) return Unit.Library_Unit_Type
+     (Self  : Object;
+      Index : Unit_Index := No_Index) return Unit.Library_Unit_Type
      with Pre => Self.Is_Defined
                  and then (not Self.Has_Units
-                           or else Self.Has_Unit_At (Index));
+                           or else Self.Has_Unit_At (Index))
+                 and then (Self.Has_Units or else Index = No_Index);
    --  Returns the kind of Self's source at the given index
 
    function Check_Unit
@@ -111,14 +122,14 @@ package GPR2.Source_Info is
       Name : Name_Type;
       Spec : Boolean;
       Unit : out GPR2.Unit.Object) return Boolean;
-   --  Check is the unit exists in the source file and set Unit and returns
+   --  Check if the unit exists in the source file and set Unit and returns
    --  True if found.
    --  If Spec is True search for the unit kind in Spec_Kind.
    --  Search for the Body_Kind or S_Separate otherwise.
 
    function Has_Unit_At
      (Self : Object; Index : Unit_Index) return Boolean
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Is_Defined and then Self.Has_Units;
    --  Returns True if Self has a compilation unit at Index
 
    function Has_Single_Unit (Self : Object) return Boolean
@@ -130,25 +141,27 @@ package GPR2.Source_Info is
    --  Returns True if source contains one or more units declared in Naming
    --  package with "at" Index.
 
+   function Unit (Self  : Object;
+                  Index : Unit_Index) return GPR2.Unit.Object
+     with Pre => Self.Is_Defined
+                   and then Self.Has_Units and then Self.Has_Unit_At (Index);
+
    function Units
-     (Self : Object) return Unit.List.Object
+     (Self : Object) return GPR2.Unit.List.Object
      with Inline,
           Pre  => Self.Is_Defined and then Self.Has_Units,
           Post => Units'Result.Length > 1
                   or else Self.Has_Single_Unit;
    --  Returns all compilation units for self
 
-   function Unit
-     (Self : Object; Index : Unit_Index := 1) return Unit.Object
-     with Pre => Self.Is_Defined and then Self.Has_Unit_At (Index);
-
-   function Unit_Name (Self : Object; Index : Unit_Index := 1) return Name_Type
+   function Unit_Name (Self  : Object;
+                       Index : Unit_Index := No_Index) return Name_Type
      with Pre => Self.Is_Defined and then Self.Has_Units
                  and then Self.Has_Unit_At (Index);
    --  Returns the unit name for the source Self at Index (default = 1)
 
    function Is_Generic
-     (Self : Object; Index : Unit_Index := 1) return Boolean
+     (Self : Object; Index : Unit_Index) return Boolean
      with Pre => Self.Is_Defined
                    and then
                  (not Self.Has_Units
@@ -156,7 +169,7 @@ package GPR2.Source_Info is
    --  Returns True if the source Self has the generic unit at Index
 
    function Is_Implementation_Required
-     (Self : Object; Index : Unit_Index := 1) return Boolean
+     (Self : Object; Index : Unit_Index) return Boolean
      with Pre => Self.Is_Defined
                  and then Self.Has_Unit_At (Index);
    --  Returns True if the source for the implementation is required for the
@@ -165,7 +178,8 @@ package GPR2.Source_Info is
 
    function Context_Clause_Dependencies
      (Self  : Object;
-      Index : Unit_Index := 1) return Source_Reference.Identifier.Set.Object
+      Index : Unit_Index)
+      return Source_Reference.Identifier.Set.Object
      with Pre => Self.Is_Defined and then Self.Has_Units
                  and then Self.Has_Unit_At (Index);
    --  Returns the list of withed unit for Self's source at Index (default = 1)
@@ -181,26 +195,34 @@ package GPR2.Source_Info is
 
    procedure Dependencies
      (Self   : Object;
+      Index  : Unit_Index;
       Action : access procedure
-                 (Sfile : Simple_Name;
-                  Unit  : Name_Type;
-                  Kind  : GPR2.Unit.Library_Unit_Type;
-                  Stamp : Ada.Calendar.Time);
-      Index  : Unit_Index := 1)
+                 (Unit_Name : Name_Type;
+                  Sfile     : Simple_Name;
+                  Kind      : GPR2.Unit.Library_Unit_Type;
+                  Stamp     : Ada.Calendar.Time))
      with Pre => Self.Is_Defined;
    --  Call Action for each of unit dependencies
 
-   procedure Set
-     (Self : in out Object;
-      Kind : GPR2.Unit.Library_Unit_Type)
-     with Post => not Self.Is_Ada;
+   procedure Set_Non_Ada
+     (Self     : in out Object;
+      Language : Language_Id;
+      Kind     : GPR2.Unit.Library_Unit_Type);
+
+   procedure Set_Ada
+     (Self  : in out Object;
+      Units : GPR2.Unit.List.Object)
+     with Post => Self.Is_Ada and then Self.Has_Index;
+   --  Set Ada-specific info for a multi-unit source
 
    procedure Set_Ada
      (Self          : in out Object;
-      Units         : GPR2.Unit.List.Object;
-      Is_RTS_Source : Boolean;
-      Is_Indexed    : Boolean)
-     with Post => Self.Is_Ada;
+      Unit          : GPR2.Unit.Object;
+      Is_RTS_Source : Boolean)
+     with Pre  => Unit.Is_Defined,
+          Post => Self.Is_Ada
+                    and then not Self.Has_Index and then Self.Has_Single_Unit;
+   --  Set Ada-specific info for a single-unit source
 
    procedure Update (Self : in out Object) with Pre'Class => Self.Is_Defined;
    --  Update source information. The default implementation does nothing. The
@@ -210,11 +232,9 @@ package GPR2.Source_Info is
    procedure Update_Kind
      (Self  : in out Object;
       Kind  : GPR2.Unit.Library_Unit_Type;
-      Index : Unit_Index := 1)
+      Index : Unit_Index)
      with Pre  => Self.Is_Defined
-               and then Self.Has_Units
-               and then Kind in GPR2.Unit.S_Spec_Only | GPR2.Unit.S_Body_Only,
-          Post => Self.Kind = Kind or else Index > 1;
+               and then Kind in GPR2.Unit.S_Spec_Only | GPR2.Unit.S_Body_Only;
    --  Update kind for the source, this is only to adjust the kind to
    --  S_Spec_Only and S_Body_Only after a source based parser has been used.
 
@@ -245,7 +265,7 @@ private
       --  Time stamp value. Note that this will be all zero characters for the
       --  dummy entries for missing or non-dependent files.
 
-      Checksum : Word := 0;
+      Checksum  : Word := 0;
       --  Checksum value. Note that this will be all zero characters for the
       --  dummy entries for missing or non-dependent files
       --  Zero if Sfile is configuration pragmas file.
@@ -254,7 +274,7 @@ private
       --  Name of the unit or subunit.
       --  Empty if Sfile is configuration pragmas file.
 
-      Sfile : String (1 .. SFile_Length);
+      Sfile     : String (1 .. SFile_Length);
       --  Base name of the source file for Ada.
       --  Full path name for none-Ada and for configuration pragmas files.
    end record;
@@ -273,20 +293,30 @@ private
    package Unit_Dependencies is new Ada.Containers.Ordered_Maps
      (Unit_Index, Dependency_Vectors_Ref.Ref, "=" => Equ);
 
+   type Unit_Info is record
+      Build_Timestamp : Calendar.Time := No_Time;
+      Parsed          : Backend := None;
+   end record;
+
+   package Unit_Info_Vectors is new Ada.Containers.Vectors
+     (Multi_Unit_Index, Unit_Info);
+
    type Object is tagged record
-      Is_Ada        : Boolean := False;
-      Parsed        : Backend := None;
-      Is_RTS_Source : Boolean := False;
-      Is_Indexed    : Boolean := False;
-      CU_List       : GPR2.Unit.List.Object;
-      Kind          : GPR2.Unit.Library_Unit_Type := GPR2.Unit.S_Separate;
-      LI_Timestamp  : Calendar.Time          := No_Time;
-      Checksum      : Word                   := 0;
+      --  Common to all sources
+      Language      : Language_Id   := No_Language;
+      Checksum      : Word          := 0;
       Dependencies  : Unit_Dependencies.Map;
-   end record
-     with Dynamic_Predicate =>
-            Object.CU_List.Length = 0
-            or else Object.CU_List (1).Kind = Object.Kind;
+      --  Non unit based source info
+      Kind          : GPR2.Unit.Library_Unit_Type := GPR2.Unit.S_Separate;
+      --  Non unit-based or single unit info
+      Parsed        : Backend := None;
+      LI_Timestamp  : Calendar.Time := No_Time;
+      --  unit based sources properties
+      Is_RTS_Source : Boolean := False;
+      CU_List       : GPR2.Unit.List.Object;
+      --  multi-unit specifc source property
+      CU_Info       : Unit_Info_Vectors.Vector;
+   end record;
    --  Record that holds relevant source information, including details about
    --  the compilation unit(s) for Ada sources.
 
@@ -302,21 +332,36 @@ private
 
    function Has_Units (Self : Object) return Boolean is (Self.Is_Ada);
 
-   function Used_Backend (Self : Object) return Implemented_Backend is
-     (Self.Parsed);
+   function Used_Backend (Self  : Object;
+                          Index : Unit_Index)
+                          return Implemented_Backend
+   is (if Index = No_Index
+       then Self.Parsed
+       else Self.CU_Info (Index).Parsed);
 
    function Has_Single_Unit (Self : Object) return Boolean is
      (Self.CU_List.Length = 1);
 
    function Has_Index (Self : Object) return Boolean is
-     (Self.Is_Indexed);
+     (Self.CU_List.Is_Indexed_List);
 
-   function Is_Ada (Self : Object) return Boolean is (Self.Is_Ada);
+   function Is_Ada (Self : Object) return Boolean is
+     (Self.Language = Ada_Language);
+
+   function Language (Self : Object) return Language_Id is
+     (Self.Language);
 
    function Is_Runtime (Self : Object) return Boolean is
      (Self.Is_RTS_Source);
 
-   function Is_Parsed (Self : Object) return Boolean is (Self.Parsed /= None);
+   function Is_Parsed (Self  : Object;
+                       Index : Unit_Index) return Boolean is
+     (if Index = No_Index
+      then Self.Parsed /= None
+      else
+        (if Self.CU_Info.Last_Index >= Index
+         then Self.CU_Info (Index).Parsed /= None
+         else False));
 
    function Units
      (Self : Object) return GPR2.Unit.List.Object is (Self.CU_List);

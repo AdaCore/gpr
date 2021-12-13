@@ -41,9 +41,15 @@ procedure Main is
       end if;
    end Print_Message;
 
-   procedure Print_Variable (Variable : GPR2.Project.Variable.Object) is
+   procedure Print_Variable (Variable : GPR2.Project.Variable.Object;
+                             Pack     : GPR2.Optional_Package_Id := GPR2.No_Package) is
       use GPR2.Project.Registry.Attribute;
+      use type GPR2.Package_Id;
    begin
+      if Pack /= GPR2.No_Package then
+         Ada.Text_IO.Put (GPR2.Image (Pack) & '.');
+      end if;
+
       Ada.Text_IO.Put(String (Variable.Name.Text) & ":" & Variable.Kind'Img & "=");
       if Variable.Kind = GPR2.Project.Registry.Attribute.Single then
          Ada.Text_IO.Put_Line (Variable.Value.Text);
@@ -55,8 +61,9 @@ procedure Main is
       end if;
    end Print_Variable;
 
-   procedure Check_Load_Failure (Project : GPR2.Filename_Type) is
+   procedure Test (Project : GPR2.Filename_Type) is
    begin
+      Ada.Text_IO.Put_Line (String (Project) & ".gpr:");
       Tree.Unload;
       Tree.Load_Autoconf
         (Filename => GPR2.Path_Name.Create_File
@@ -64,29 +71,30 @@ procedure Main is
             GPR2.Path_Name.No_Resolution),
          Context  => Context);
       Print_Message;
+
+      for V of Tree.Root_Project.Variables loop
+         Print_Variable (V);
+      end loop;
+
+      for Pack of Tree.Root_Project.Packages loop
+         for V of Tree.Root_Project.Variables (Pack) loop
+            Print_Variable (V, Pack);
+         end loop;
+      end loop;
+
    exception
       when Project_Error =>
          Print_Message;
-   end Check_Load_Failure;
+   end Test;
 
 begin
-   Tree.Load_Autoconf
-     (Filename => GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension (Project_Name),
-         GPR2.Path_Name.No_Resolution),
-      Context  => Context);
-   Print_Message;
-   Print_Variable (Tree.Root_Project.Variable (Name => "A"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "B"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "C"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "D"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "E"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "F"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "G"));
-   Print_Variable (Tree.Root_Project.Variable (Name => "H"));
-   Context.Insert (Key => "DEFINE_NAMING_PACKAGE", New_Item => "False");
-   Check_Load_Failure (Project_Name & "1");
-   Check_Load_Failure (Project_Name & "2");
+   Test ("prj");
+   Test ("prj1");
+   Test ("prj2");
+   Test ("prj3");
+   Test ("prj4");
+   Test ("prj5");
+   Test ("prj6");
 exception
    when Project_Error =>
       Print_Message;

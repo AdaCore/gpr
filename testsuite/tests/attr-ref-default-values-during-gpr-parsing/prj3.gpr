@@ -1,0 +1,5 @@
+project Prj3 is
+
+   G := project.Naming.A;
+
+end Prj3;

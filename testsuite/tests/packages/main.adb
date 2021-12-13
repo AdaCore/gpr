@@ -60,21 +60,17 @@ procedure Main is
       Text_IO.Set_Col (10);
       Text_IO.Put_Line (Prj.Kind'Img);
 
-      if Prj.Has_Attributes then
-         for A of Prj.Attributes loop
+      for A of Prj.Attributes (With_Defaults => False) loop
+         Display (A);
+      end loop;
+
+      for Pck of Prj.Packages (With_Defaults => False) loop
+         Text_IO.Put_Line (" " & Image (Pck));
+
+         for A of Prj.Attributes (Pack => Pck, With_Defaults => False) loop
             Display (A);
          end loop;
-      end if;
-
-      if Prj.Has_Packages then
-         for Pck of Prj.Packages loop
-            Text_IO.Put_Line (" " & Image (Pck.Name));
-
-            for A of Pck.Attributes loop
-               Display (A);
-            end loop;
-         end loop;
-      end if;
+      end loop;
    end Display;
 
    Prj : Project.Tree.Object;

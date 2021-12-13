@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2019, AdaCore                        --
+--                     Copyright (C) 2019-2021, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -33,6 +33,13 @@ package body GPRname.Options is
 
    function Ignore_Predefined_Units (Self : Object) return Boolean is
      (Self.Ignore_Predefined_Units);
+
+   ------------------
+   -- Minimal_Dirs --
+   ------------------
+
+   function Minimal_Dirs (Self : Object) return Boolean is
+      (Self.Minimal_Dirs);
 
    ---------------
    -- No_Backup --
