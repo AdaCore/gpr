@@ -1244,6 +1244,7 @@ package body GPR2.Project.View is
          Do_Subdir_Visit : in out Boolean) := null)
    is
       use GNAT.OS_Lib;
+      use GNATCOLL.Utils;
 
       View_Dir  : constant GPR2.Path_Name.Object :=
                     GPR2.Path_Name.Create_Directory
@@ -1257,7 +1258,9 @@ package body GPR2.Project.View is
                         else String (Directory_Pattern)));
       --  normalize dir part avoiding "" & "**"
       Recursive : constant Boolean :=
-                    GNATCOLL.Utils.Ends_With (Dir, "**");
+                    Dir'Length > 2
+                    and then Dir (Dir'Last - 1 .. Dir'Last) = "**"
+                    and then Is_Directory_Separator (Dir (Dir'Last - 2));
       Last      : constant Positive :=
                     Dir'Last - (if Recursive then 2 else 0);
       Root_Dir  : constant String :=
@@ -1342,9 +1345,10 @@ package body GPR2.Project.View is
       end Handle_Directory;
 
    begin
-      Handle_Directory (Filename_Type (Root_Dir),
-                        Recursive   => Recursive,
-                        Is_Root_Dir => True);
+      Handle_Directory
+        (Filename_Type (Root_Dir),
+         Recursive   => Recursive,
+         Is_Root_Dir => True);
    end Foreach;
 
    ---------------------------
