@@ -28,7 +28,6 @@
 with Ada.Containers.Ordered_Maps;
 
 with GPR2.Path_Name.Set;
-with GPR2.Project.Source;
 
 package GPR2.Project.Source.Artifact is
 

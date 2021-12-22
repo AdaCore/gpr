@@ -29,7 +29,6 @@ with GPR_Parser.Common;
 
 with Langkit_Support.Text;
 
-with GPR2;
 with GPR2.Project.Definition;
 with GPR2.Project.Parser;
 with GPR2.Project.Registry.Attribute;
