@@ -18,7 +18,6 @@
 
 with Ada.Exceptions;
 
-with GPRname;
 with GPRname.Common;
 with GPRname.Options;
 with GPRname.Process;

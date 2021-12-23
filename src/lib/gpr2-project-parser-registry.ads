@@ -24,8 +24,6 @@
 
 with GPR2.Path_Name;
 
-with GPR2.Project.Parser;
-
 private package GPR2.Project.Parser.Registry is
 
    use type GPR2.Path_Name.Object;

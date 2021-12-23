@@ -25,7 +25,6 @@ with GNAT.Command_Line;
 with GPR2.Interrupt_Handler;
 with GPR2.Project.Tree;
 
-with GPRls;
 with GPRls.Options;
 with GPRls.Process;
 
