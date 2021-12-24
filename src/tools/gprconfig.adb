@@ -752,7 +752,18 @@ procedure GPRconfig is
    Default_Config_File_Name : constant String := "default.cgpr";
 begin
 
-   GNATCOLL.Traces.Parse_Config_File;
+   begin
+      GNATCOLL.Traces.Parse_Config_File;
+   exception
+      when E : others =>
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "Cannot parse trace configuration file "
+            & "(traces may work incorrectly):");
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            Ada.Exceptions.Exception_Message (E));
+   end;
    GPRtools.Util.Set_Program_Name ("gprconfig");
 
    Register_Cmd_Options;
@@ -1022,7 +1033,7 @@ exception
    when E : others =>
       Ada.Text_IO.Put_Line
         (Ada.Text_IO.Standard_Error,
-         "Unrecoverable error in GPRconfig :"
+         "Unrecoverable error in GPRconfig: "
          & Ada.Exceptions.Exception_Information (E));
       GNAT.OS_Lib.OS_Exit (1);
 end GPRconfig;
