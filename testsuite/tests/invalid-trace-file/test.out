@@ -1,0 +1,2 @@
+Cannot parse trace configuration file (traces may work incorrectly):
+Line  1: "> &FOO:BOO:1.0.0.1:8080" is not recognised.
