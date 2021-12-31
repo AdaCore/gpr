@@ -1,11 +1,10 @@
 import os
-
 from testsuite_support.builder_and_runner import BuilderAndRunner, GPRINSTALL, GPRLS
+
 
 bnr = BuilderAndRunner()
 OK = True
 
-# build 'p' project
 bnr.run(['gprbuild', '-p', '-q', '-aPmylib', '-Pmain/main.gpr'],
         output='run.out')
 
@@ -35,13 +34,25 @@ for line in open("run.out"):
 
 bnr.run(['gprbuild', '-p', '-q',
          '-aPinstall/share/gpr', '-Pmain/main.gpr'], output='run.out')
+for line in open("run.out"):
+    OK = False
+    print('4:' + line)
+
 print('----------')
 bnr.call([GPRLS, '-U', '-aPinstall/share/gpr', '-Pmain/main.gpr', '-d', '--debugF',
           'helper.o', 'asm.o'])
 
+print('----------')
+bnr.run([GPRLS, '-v', '-U', '-aPinstall/share/gpr', '-Pmain/main.gpr', '-d',
+         '--debugF'],
+        output='run.out')
+
+outp = False
 for line in open("run.out"):
-    OK = False
-    print('4:' + line)
+    if line.find("/main/obj/asm.o") > 0:
+        outp = True
+    if outp:
+        print(line[:-1])
 
 if OK:
     print('OK')

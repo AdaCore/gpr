@@ -29,4 +29,26 @@
 /main/obj/helper.o
          OK /main/helper.c
          OK /install/include/mylib/mylib.h
+----------
+/main/obj/asm.o
+   depends upon
+/main/obj/helper.o
+   depends upon
+        Source => /main/helper.c unchanged
+        Source => /install/include/mylib/mylib.h unchanged
+/main/obj/main.o
+   Unit =>
+     Name   => MAIN
+     Kind   => subprogram body
+     Flags  => No_Elab_Code
+   depends upon
+        Source => /main/main.adb unchanged
+        Source => /install/include/mylib/mylib.ads unchanged
+<no_obj>
+   Unit =>
+     Name   => MYLIB
+     Kind   => package spec
+     Flags  => Preelaborable No_Elab_Code
+   depends upon
+        Source => /install/include/mylib/mylib.ads unchanged
 OK

@@ -137,7 +137,7 @@ package GPR2.Source_Info is
    --  Returns true if the source contains a single unit
 
    function Has_Index (Self : Object) return Boolean
-     with Pre => Self.Is_Defined and then Self.Has_Units;
+     with Pre => Self.Is_Defined;
    --  Returns True if source contains one or more units declared in Naming
    --  package with "at" Index.
 
