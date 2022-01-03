@@ -33,7 +33,7 @@
 #
 #   prefix        : root install directory
 #   ENABLE_SHARED : yes / no (or empty)
-#   BUILD         : debug release
+#   BUILD         : debug / release / release_checks
 #   PROCESSORS    : nb parallel compilations (0 to use all cores)
 #   PROFILER      : Include gprof support instrumentation (yes / no)
 #   TARGET        : target triplet for cross-compilation
@@ -126,7 +126,7 @@ GPR_OPTIONS=$(GTARGET) $(RBD) -XBUILD=${BUILD} \
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
              -XPROFILER=${PROFILER} ${COVERAGE_BUILD_FLAGS}
 INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
-CLEANER=gprclean -eL -p $(RBD)
+CLEANER=gprclean -eL -p $(RBD) -XBUILD=$(BUILD)
 UNINSTALLER=$(INSTALLER) -p -f --uninstall
 
 .PHONY: force
@@ -250,7 +250,7 @@ clean: clean-tools ${LIBGPR2_TYPES:%=clean-%}
 	make -C langkit clean
 
 clean-%:
-	-$(CLEANER) -XLIBRARY_TYPE=$* -XXMLADA_BUILD=$* -P $(GPR2)
+	-$(CLEANER) -XLIBRARY_TYPE=$* -P $(GPR2)
 
 clean-tools:
-	-$(CLEANER) -P $(GPR2TOOLS)
+	-$(CLEANER) -XLIBRARY_TYPE=static -P $(GPR2TOOLS)
