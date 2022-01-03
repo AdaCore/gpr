@@ -48,8 +48,9 @@ bnr.run([GPRLS, '-v', '-U', '-aPinstall/share/gpr', '-Pmain/main.gpr', '-d',
         output='run.out')
 
 outp = False
+start_line = os.path.join("main", "obj", "asm.o")
 for line in open("run.out"):
-    if line.find("/main/obj/asm.o") > 0:
+    if line.find(start_line) > 0:
         outp = True
     if outp:
         print(line[:-1])
