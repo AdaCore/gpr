@@ -1,5 +1,5 @@
 --
---  Copyright (C) 2011-2012, AdaCore
+--  Copyright (C) 2011-2022, AdaCore
 --
 
 package Simple is
