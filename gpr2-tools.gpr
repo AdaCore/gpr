@@ -24,6 +24,7 @@ with "libadalang";
 project GPR2.Tools is
 
    Build      := GPR2.Build;
+   Build_Root := GPR2.Build_Root;
    Processors := GPR2.Processors;
 
    type Target_type is ("Windows_NT", "UNIX");
@@ -33,7 +34,8 @@ project GPR2.Tools is
    Tools_Prefix : Tools_Prefix_Type := external ("GPR2_TOOLS_PREFIX", "gpr");
 
    for Source_Dirs use ("src/tools");
-   for Object_Dir use ".build/" & Build & "/obj-tools";
+   for Object_Dir use Build_Root & "/" & Build & "/obj-tools";
+   for Exec_Dir use Build_Root & "/" & Build;
 
    for Main use ("gprremote.adb", "gprdump.adb", "gprinstall-main.adb",
                  "gprclean-main.adb", "gprname-main.adb", "gprls-main.adb",
