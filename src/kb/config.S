@@ -1,7 +1,7 @@
 /****************************************************************************
  *                           GPR2 PROJECT MANAGER                           *
  *                                                                          *
- *                    Copyright (C) 2019-2020, AdaCore                      *
+ *                    Copyright (C) 2019-2022, AdaCore                      *
  *                                                                          *
  * This library is free software;  you can redistribute it and/or modify it *
  * under terms of the  GNU General Public License  as published by the Free *
@@ -21,7 +21,11 @@
  *                                                                          *
  ****************************************************************************/
 
+#ifdef __APPLE__
+.section __TEXT,__const
+#else
 .section .rodata
+#endif
   .global _binary_config_kb_start
   .align 4
 _binary_config_kb_start:
