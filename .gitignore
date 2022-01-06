@@ -1,8 +1,3 @@
-# Build artifacts
-langkit/build
-langkit/src/gpr.qx
-*~
-
 # Python artifacts
 *.pyc
 
@@ -15,7 +10,8 @@ makefile.setup
 
 /workspace
 
-# Vim swap files
+# Editor artifacts
+*~
 *.swp
 
 # GnatStudio artifacts
@@ -28,9 +24,3 @@ bindings/python/.coveragerc
 bindings/python/.tox
 bindings/python/htmlcov
 bindings/python/src/*egg*
-
-# knowledge base artifacts
-src/kb/collect_kb
-src/kb/config.kb
-src/kb/gprconfig_kb
-src/kb/obj

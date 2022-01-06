@@ -22,14 +22,16 @@ with "langkit_support";
 
 library project GPR2 is
 
-   type Build_Type is ("debug", "release", "release_checks");
+   type Build_Type is ("debug", "release", "release_checks", "gnatcov");
    Build : Build_Type := external ("BUILD", "debug");
 
    type Profiler_Flag is ("yes", "no");
    Profiler : Profiler_Flag := External ("PROFILER", "no");
 
    Processors := external ("PROCESSORS", "0");
-   Langkit_Generated_Src := external ("LANGKIT_GENERATED_SRC", "langkit/build");
+   Build_Root            := external ("BUILD_ROOT", ".build");
+   Langkit_Generated_Src := Build_Root & "/lkparser";
+   KB_Build              := Build_Root & "/kb";
 
    type Library_Kind is ("static", "relocatable", "static-pic");
    Library_Type : Library_Kind := external ("LIBRARY_TYPE", "static");
@@ -37,11 +39,12 @@ library project GPR2 is
    for Languages use ("Ada", "C", "Asm_Cpp");
    for Source_Dirs use ("src/lib",
                         "src/kb",
+                        KB_Build,
                         Langkit_Generated_Src & "/src");
    for Library_Name use "gpr2";
 
-   for Object_Dir use ".build/" & Build & "/obj-" & Library_Type;
-   for Library_Dir use ".build/" & Build & "/lib-" & Library_Type;
+   for Object_Dir use Build_Root & "/" & Build & "/obj-" & Library_Type;
+   for Library_Dir use Build_Root & "/" & Build & "/lib-" & Library_Type;
    for Library_Kind use Library_Type;
 
    --------------
@@ -73,7 +76,7 @@ library project GPR2 is
    package Compiler is
 
       case Build is
-         when "debug" =>
+         when "debug" | "gnatcov" =>
             for Default_Switches ("Ada") use Common_Options & Checks_Options &
                                              Debug_Options;
             for Default_Switches ("C") use ("-g");

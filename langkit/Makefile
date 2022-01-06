@@ -30,9 +30,9 @@ DEST := "build"
 PYTHONEXE=python
 
 setup:
-	mkdir -p ${DEST}
-	$(PYTHONEXE) manage.py generate --build-dir=${DEST} \
+	mkdir -p "${DEST}"
+	$(PYTHONEXE) manage.py generate --build-dir="${DEST}" \
 		--generate-unparser --disable-warning undocumented-nodes
 
 clean:
-	rm -fr build
+	rm -fr "${DEST}"

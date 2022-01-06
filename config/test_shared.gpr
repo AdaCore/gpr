@@ -17,9 +17,11 @@
 ------------------------------------------------------------------------------
 
 library project Test_Shared is
+   Build_Root := external ("BUILD_ROOT", "../.build");
+
    for Source_Dirs use (".");
-   for Object_Dir use "../.build/setup/obj";
-   for Library_Dir use "../.build/setup/lib";
+   for Object_Dir use Build_Root & "/autoconf/obj";
+   for Library_Dir use Build_Root & "/autoconf/lib";
    for Library_Name use "lib";
    for Library_Kind use "relocatable";
    for Excluded_Source_Files use ("main.adb");
