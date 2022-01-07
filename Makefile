@@ -129,7 +129,7 @@ GPR_OPTIONS=${GTARGET} -XBUILD=${BUILD} \
 
 BUILDER=gprbuild -p -m -j${PROCESSORS} ${GPR_OPTIONS} ${GPRBUILD_OPTIONS} \
              -XPROFILER=${PROFILER} ${COVERAGE_BUILD_FLAGS}
-INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix=${prefix}
+INSTALLER=${GPRINSTALL} -p -f ${GPR_OPTIONS} --prefix='${prefix}'
 CLEANER=gprclean -eL -p ${RBD} -XBUILD=${BUILD} \
         -XBUILD_ROOT="${CURDIR}/${BUILD_ROOT}"
 UNINSTALLER=${INSTALLER} -p -f --uninstall
