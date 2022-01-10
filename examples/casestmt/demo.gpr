@@ -1,14 +1,14 @@
 
 project Demo is
    type OS_Kind is ("Windows", "Linux");
-   OS : OS_Kind := external ("OS", "Windows");
+   OS : OS_Kind := external ("CASESTMT_OS", "Linux");
 
    type Build_Kind is ("Debug", "Production");
    Build : Build_Kind := external ("BUILD", "Production");
 
    case OS is
       when "Windows" =>
-         for Source_Dirs ("Ada") use (".", "src-win");
+         for Source_Dirs use (".", "src-win");
          case Build is
             when "Debug" =>
                for Object_Dir use "obj-wdeb";
@@ -16,7 +16,7 @@ project Demo is
                for Object_Dir use "obj-wprod";
          end case;
       when "Linux" =>
-         for Source_Dirs ("Ada") use (".", "src-lnx");
+         for Source_Dirs use (".", "src-lnx");
          case Build is
             when "Debug" =>
                for Object_Dir use "obj-ldeb";

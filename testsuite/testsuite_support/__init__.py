@@ -1,3 +1,5 @@
+import os
+from e3.fs import cp
 import e3.testsuite
 
 from .build_and_run import BuildAndRunDriver
@@ -46,6 +48,13 @@ class Testsuite(e3.testsuite.Testsuite):
         # instrumented programs.
         self.env.gnatcov = (GNATcov(self) if self.main.args.gnatcov else None)
         self.env.root_dir = self.root_dir
+
+        # copy GPR2 examples into examples test.
+        cp(
+            os.path.join(self.root_dir, '../examples/*'),
+            os.path.join(self.test_dir, 'examples'),
+            recursive=True
+        )
 
     def tear_down(self):
         if self.env.gnatcov:

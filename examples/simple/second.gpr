@@ -1,4 +1,6 @@
 
 aggregate library project second is
-   for Project_Files use ("first.gpr");
+   for Project_Files use ("third.gpr");
+   for Library_Name use project'Name;
+   for Library_Dir use project'Name & "-lib";
 end second;

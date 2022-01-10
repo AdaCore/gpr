@@ -30,6 +30,7 @@ with GNATCOLL.VFS;
 with GPR2.Containers;
 with GPR2.Context;
 with GPR2.Path_Name;
+with GPR2.Path_Name.GNATCOLL;
 with GPR2.Project.Configuration;
 with GPR2.Project.Source.Set;
 with GPR2.Project.Tree;
@@ -100,7 +101,7 @@ procedure Conversion_Tutorial is
         (if Config_File_Arg.Get = Null_Unbounded_String then
             GPR2.Path_Name.Undefined
          else
-            GPR2.Path_Name.Create_File (GPR2.Name_Type
+            GPR2.Path_Name.Create_File (GPR2.Filename_Type
                                         (To_String (Config_File_Arg.Get))));
       --  The GPR2 project file object (default GPR2.Path_Name.Undefined)
 
@@ -146,7 +147,7 @@ procedure Conversion_Tutorial is
      (if Args.Project_Arg.Get = Null_Unbounded_String  then
          GPR2.Path_Name.Undefined
       else GPR2.Path_Name.Create_File
-        (GPR2.Project.Ensure_Extension (GPR2.Optional_Name_Type
+        (GPR2.Project.Ensure_Extension (GPR2.Filename_Type
                                         (To_String (Args.Project_Arg.Get)))));
    --  The GPR2 project file object (default GPR2.Path_Name.Undefined)
 
@@ -165,8 +166,8 @@ procedure Conversion_Tutorial is
    function Init_Project return Boolean is
    begin
       declare
-         Runtime : GPR2.Containers.Name_Value_Map
-           := GPR2.Containers.Name_Value_Map_Package.Empty_Map;
+         Language_Runtimes : GPR2.Containers.Lang_Value_Map :=
+           GPR2.Containers.Lang_Value_Maps.Empty_Map;
          Config  : GPR2.Project.Configuration.Object;
 
          use GPR2;
@@ -178,7 +179,9 @@ procedure Conversion_Tutorial is
 
          Insert_Scenario_Vars (Project_Env);
 
-         Runtime.Insert ("Ada", To_String (Args.Runtime.Get));
+         Language_Runtimes.Insert (+GPR2.Optional_Name_Type'("ada"),
+                                   GPR2.Value_Type'
+                                     (To_String (Args.Runtime.Get)));
 
          if Args.Config_File.Is_Defined then
             if Args.Target = GPR2.No_Name then
@@ -208,7 +211,7 @@ procedure Conversion_Tutorial is
                Subdirs           => Args.Subdirs,
                Src_Subdirs       => Args.Src_Subdirs,
                Target            => Args.Target,
-               Language_Runtimes => Runtime);
+               Language_Runtimes => Language_Runtimes);
          end if;
 
          if not Project_Tree.Has_Runtime_Project then
@@ -246,6 +249,8 @@ procedure Conversion_Tutorial is
    end Insert_Scenario_Vars;
 
    Last_Source : GPR2.Path_Name.Object;
+
+   use GPR2;
 
 begin
 
@@ -296,17 +301,20 @@ begin
                 GNATCOLL.VFS.Filesystem_String
                   (Last_Source.Simple_Name)).Display_Full_Name);
       --  To_Pathname functions
-      Put_Line ("To_Pathnane:" & String (To_Pathname
-                (GNATCOLL.VFS.Filesystem_String (Last_Source.Value)).Name));
-      Put_Line ("To_Pathname:" & String (To_Pathname (GNATCOLL.VFS.Create
-                (GNATCOLL.VFS.Filesystem_String (Last_Source.Value))).Name));
+      Put_Line ("To_Pathnane:" & String
+                (GPR2.Path_Name.GNATCOLL.To_Pathname
+                   (GNATCOLL.VFS.Filesystem_String (Last_Source.Value)).Name));
+      Put_Line ("To_Pathname:" & String
+                (GPR2.Path_Name.GNATCOLL.To_Pathname (GNATCOLL.VFS.Create
+                   (GNATCOLL.VFS.Filesystem_String
+                      (Last_Source.Value))).Name));
    end if;
 
    --  GNATCOLL.Projects.Register_New_Attribute
    Put_Line ("Register_New_Attribute returned:" &
                Register_New_Attribute
-               (Name                 => "Test",
-                Pkg                  => "Conversion_Tutorial",
+               (Name                 => +"Test",
+                Pkg                  => +"Conversion_Tutorial",
                 Is_List              => True,
                 Indexed              => True,
                 Case_Sensitive_Index => True));
@@ -315,14 +323,18 @@ begin
       Languages : GNAT.Strings.String_List_Access;
    begin
       Languages := Attribute_Value
-        (Project_Tree.Root_Project, "", "Languages");
+        (Project        => Project_Tree.Root_Project,
+         Attribute_Name => +"Languages",
+         Package_Name   => +"");
 
       if Languages'Length > 0 then
          Put_Line ("Languages'First:" & Languages (Languages'First).all);
       end if;
 
       Put_Line ("Attribute_Value(Object_Dir):" &
-        Attribute_Value (Project_Tree.Root_Project, "", "Object_Dir"));
+                  Attribute_Value (Project        => Project_Tree.Root_Project,
+                                   Attribute_Name => +"Object_Dir",
+                                   Package_Name   => +""));
    end;
 
    Project_Tree.Unload;
