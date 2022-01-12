@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                       Copyright (C) 2021, AdaCore                        --
+--                    Copyright (C) 2021-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -55,7 +55,9 @@ package body GPR2.View_Ids is
       if Self.Kind /= Other.Kind then
          return False;
       elsif Self.Kind = Project_Id then
-         return Self.Id = Other.Id and then Self.Context = Other.Context;
+         return Self.Id = Other.Id
+           and then Self.Context = Other.Context
+           and then Self.Extending = Other.Extending;
       else
          return True;
       end if;
