@@ -133,7 +133,7 @@ package body GPR2.Unit.List is
 
    procedure Insert (Self : in out Object; Element : Unit.Object) is
       Inserted : Boolean;
-      Position : Cursor with Unreferenced;
+      Position : Cursor;
    begin
       Self.Insert (Element, Position, Inserted);
 

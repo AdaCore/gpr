@@ -447,7 +447,7 @@ package body GPR2.Path_Name is
                   & String (Simple_Name (To)) & ASCII.NUL;
       Result  : Integer;
       Success : Boolean;
-      pragma Unreferenced (Success, Result);
+      pragma Unreferenced (Result);
 
    begin
       OS_Lib.Delete_File (To_String (Self.Value), Success);
