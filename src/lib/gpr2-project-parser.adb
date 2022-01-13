@@ -1662,16 +1662,27 @@ package body GPR2.Project.Parser is
                procedure Handle_External_As_List_Variable
                  (Node : Builtin_Function_Call)
                is
+                  function Get_Parameter (Index : Positive) return Value_Type;
+                  --  Returns parameter by Index
+
                   Parameters : constant Term_List_List :=
                                  F_Terms (F_Parameters (Node));
-                  Error      : Boolean with Unreferenced;
-                  Var        : constant Name_Type :=
-                                 Name_Type
-                                   (Get_String_Literal
-                                      (Child (Parameters, 1), Error));
-                  Sep        : constant Value_Type :=
-                                 Get_String_Literal
-                                   (Child (Parameters, 2), Error);
+
+                  -------------------
+                  -- Get_Parameter --
+                  -------------------
+
+                  function Get_Parameter (Index : Positive) return Value_Type
+                  is
+                     Ignore : Boolean;
+                  begin
+                     return Get_String_Literal
+                       (Child (Parameters, Index), Error => Ignore);
+                  end Get_Parameter;
+
+                  Var : constant Name_Type  := Name_Type (Get_Parameter (1));
+                  Sep : constant Value_Type := Get_Parameter (2);
+
                begin
                   for V of Builtin.External_As_List (Context, Var, Sep) loop
                      New_Item := True;

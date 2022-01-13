@@ -55,7 +55,9 @@ package body GPR2.View_Ids is
       if Self.Kind /= Other.Kind then
          return False;
       elsif Self.Kind = Project_Id then
-         return Self.Id = Other.Id and then Self.Context = Other.Context;
+         return Self.Id = Other.Id
+           and then Self.Context = Other.Context
+           and then Self.Extending = Other.Extending;
       else
          return True;
       end if;
