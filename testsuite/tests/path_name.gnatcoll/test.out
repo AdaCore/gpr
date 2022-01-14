@@ -1,0 +1,14 @@
+=== testing GNATCOLL.VFS conversion ===
+<>
+<>
+<./gpr2.path.no.res>
+<gpr2.path.no.res>
+</gpr2.path>
+</gpr2.path>
+=== testing GPR2.Path_Name conversion ===
+<undefined>
+<undefined>
+<./gpr2.path.no.res>
+<./gpr2.path.no.res>
+</gpr2.path>
+</gpr2.path>

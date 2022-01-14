@@ -16,6 +16,7 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+with "gnatcoll";
 with "gnatcoll_iconv";
 with "gnatcoll_gmp";
 with "langkit_support";

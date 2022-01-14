@@ -1,0 +1,5 @@
+with "gpr2";
+with "gnatcoll";
+project Test is
+   for main use ("main.adb");
+end Test;
