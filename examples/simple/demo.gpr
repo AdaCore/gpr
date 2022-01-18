@@ -4,10 +4,10 @@ with "first.gpr";
 project Demo is
    type Me is ("one", "two");
    Dir1 := "toto";
-   Dir2 := external ("OS");
+   Dir2 := external ("OS", "Linux");
    Dir3 : Me := "one";
 
-   for Source_Dirs use (".", Dir1, Dir2);
+   for Source_Dirs use (".");
    for Object_Dir use "obj";
    for Main use ("main.adb");
 end Demo;

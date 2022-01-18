@@ -1,0 +1,137 @@
+Demo     K_STANDARD
+   Archive_Suffix -> .a 
+   Exec_Dir -> obj-lprod 
+   Externally_Built -> false 
+   Languages -> Ada 
+   Main -> main.adb 
+   Name -> demo 
+   Object_Dir -> obj-lprod 
+   Project_Dir -> /casestmt/ 
+   Shared_Library_Prefix -> lib 
+   Shared_Library_Suffix -> .so 
+   Source_Dirs -> . src-lnx 
+
+Demo     K_STANDARD
+   Archive_Suffix -> .a 
+   Exec_Dir -> obj-wprod 
+   Externally_Built -> false 
+   Languages -> Ada 
+   Main -> main.adb 
+   Name -> demo 
+   Object_Dir -> obj-wprod 
+   Project_Dir -> /casestmt/ 
+   Shared_Library_Prefix -> lib 
+   Shared_Library_Suffix -> .so 
+   Source_Dirs -> . src-win 
+
+>>> Changed_Callback for /simple/demo.gpr
+>>> Changed_Callback for /simple/demo.gpr
+Demo     K_STANDARD
+A:   Archive_Suffix -> .a 
+A:   Exec_Dir -> obj 
+A:   Externally_Built -> false 
+A:   Languages -> Ada 
+A:   Main -> main.adb 
+A:   Name -> demo 
+A:   Object_Dir -> obj 
+A:   Project_Dir -> /simple/ 
+A:   Shared_Library_Prefix -> lib 
+A:   Shared_Library_Suffix -> .so 
+A:   Source_Dirs -> . 
+V:   Dir1 -> toto
+V:   Dir2 -> Linux
+V:   Dir3 -> one
+
+Demo     K_STANDARD
+A:   Archive_Suffix -> .a 
+A:   Exec_Dir -> obj 
+A:   Externally_Built -> false 
+A:   Languages -> Ada 
+A:   Main -> main.adb 
+A:   Name -> demo 
+A:   Object_Dir -> obj 
+A:   Project_Dir -> /simple/ 
+A:   Shared_Library_Prefix -> lib 
+A:   Shared_Library_Suffix -> .so 
+A:   Source_Dirs -> . 
+V:   Dir1 -> toto
+V:   Dir2 -> Windows
+V:   Dir3 -> one
+
+>>> Changed_Callback for /simple/demo.gpr
+Demo     K_STANDARD
+A:   Archive_Suffix -> .a 
+A:   Exec_Dir -> obj 
+A:   Externally_Built -> false 
+A:   Languages -> Ada 
+A:   Main -> main.adb 
+A:   Name -> demo 
+A:   Object_Dir -> obj 
+A:   Project_Dir -> /simple/ 
+A:   Shared_Library_Prefix -> lib 
+A:   Shared_Library_Suffix -> .so 
+A:   Source_Dirs -> . 
+V:   Dir1 -> toto
+V:   Dir2 -> Linux-2
+V:   Dir3 -> one
+
+**************** Iterator Prj1
+first    K_LIBRARY
+Demo     K_STANDARD
+   is root
+**************** Iterator Prj2
+second   K_AGGREGATE_LIBRARY
+third    K_LIBRARY
+first    K_LIBRARY
+Demo     K_STANDARD
+**************** Iterator Prj3
+third    K_LIBRARY
+first    K_LIBRARY
+**************** Iterator Prj4
+second   K_AGGREGATE_LIBRARY
+third    K_LIBRARY
+first    K_LIBRARY
+Demo     K_STANDARD
+/gnatcoll-projects-conversion/conversion_tutorial.adb
+/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.adb
+/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
+Object_Dir:/gnatcoll-projects-conversion
+Artifacts_Dir:/gnatcoll-projects-conversion
+Name:Conversion_Tutorial
+Runtime:
+Create:/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
+To_Pathnane:/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
+To_Pathname:/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
+Register_New_Attribute returned:
+Languages'First:Ada
+Attribute_Value(Object_Dir):.
+Demo     K_STANDARD
+   Archive_Suffix -> .a
+   Exec_Dir -> obj
+   Externally_Built -> false
+   Languages -> Ada
+   Main -> main.adb
+   Name -> demo
+   Object_Dir -> obj
+   Project_Dir -> /packages/
+   Shared_Library_Prefix -> lib
+   Shared_Library_Suffix -> .so
+   Source_Dirs -> src
+ Binder
+   Default_Switches (Ada) -> -Es
+ Builder
+ Compiler
+   Default_Switches (C) -> -g
+ Naming
+   Body_Suffix (ada) -> .adb
+   Body_Suffix (c) -> .c
+   Casing -> lowercase
+   Dot_Replacement -> -
+   Implementation_Suffix (ada) -> .adb
+   Implementation_Suffix (c) -> .c
+   Separate_Suffix -> .adb
+   Spec_Suffix (ada) -> .ads
+   Spec_Suffix (c) -> .h
+   Specification_Suffix (ada) -> .ads
+   Specification_Suffix (c) -> .h
+

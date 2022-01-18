@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2022, AdaCore                     --
+--                        Copyright (C) 2022, AdaCore                       --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -16,10 +16,6 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
-with "gpr2";
-
-project Simple is
-   for Object_Dir use "obj";
-   for Exec_Dir use ".";
-   for Main use ("main.adb");
-end simple;
+package Third is
+   Name : constant String := "Third";
+end Third;
