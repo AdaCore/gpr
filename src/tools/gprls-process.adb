@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                     Copyright (C) 2019-2021, AdaCore                     --
+--                     Copyright (C) 2019-2022, AdaCore                     --
 --                                                                          --
 -- This is  free  software;  you can redistribute it and/or modify it under --
 -- terms of the  GNU  General Public License as published by the Free Soft- --
@@ -602,6 +602,7 @@ begin
               or else
                 (not SI.Parser.Registry.Exists (S.Language, SI.None)
                  and then Check_Object_Code
+                 and then Artifacts.Object_Code (Index => Idx).Exists
                  and then S.Timestamp (ALI => False) <
                         Artifacts.Object_Code (Index => Idx).Modification_Time)
             then

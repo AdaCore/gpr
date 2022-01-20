@@ -2,7 +2,7 @@
 --                                                                          --
 --                           GPR2 PROJECT MANAGER                           --
 --                                                                          --
---                    Copyright (C) 2019-2021, AdaCore                      --
+--                    Copyright (C) 2019-2022, AdaCore                      --
 --                                                                          --
 -- This library is free software;  you can redistribute it and/or modify it --
 -- under terms of the  GNU General Public License  as published by the Free --
@@ -202,7 +202,7 @@ package GPR2.Path_Name is
    --  First dot in the Extension is ignored.
 
    function Modification_Time (Self : Object) return Ada.Calendar.Time
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Exists;
    --  Returns Self's modification time
 
 private
