@@ -202,7 +202,7 @@ package GPR2.Path_Name is
    --  First dot in the Extension is ignored.
 
    function Modification_Time (Self : Object) return Ada.Calendar.Time
-     with Pre => Self.Is_Defined;
+     with Pre => Self.Exists;
    --  Returns Self's modification time
 
 private
