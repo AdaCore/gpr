@@ -602,6 +602,7 @@ begin
               or else
                 (not SI.Parser.Registry.Exists (S.Language, SI.None)
                  and then Check_Object_Code
+                 and then Artifacts.Object_Code (Index => Idx).Exists
                  and then S.Timestamp (ALI => False) <
                         Artifacts.Object_Code (Index => Idx).Modification_Time)
             then

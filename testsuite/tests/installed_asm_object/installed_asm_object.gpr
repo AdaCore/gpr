@@ -1,0 +1,15 @@
+library project Installed_Asm_Object is
+
+   for Languages use ("Ada", "Asm_Cpp");
+   for Source_Dirs use ("src/**");
+   for Object_Dir use "obj";
+   for Library_Name use project'Name;
+   for Library_Dir use "lib";
+   for Library_Ali_Dir use project'Library_Dir;
+   for Externally_Built use "False";
+   for Library_Kind use "static";
+   for Library_Src_Dir use project'Library_Dir;
+   for Library_Auto_Init use "True";
+   for Interfaces use ("installed_asm_object.ads", "config.S");
+
+end Installed_Asm_Object;
