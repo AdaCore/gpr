@@ -1,0 +1,22 @@
+with "leaf2";
+project Imported extends "leaf1" is
+  package Linker is
+     for Switches ("Ada") use ("Linker.Imported");
+  end Linker;
+  package Metrics extends leaf2.Metrics is
+     for Switches ("Ada") use ("Metrics.Imported");
+  end Metrics;
+  package Gnatstub is
+     for Switches ("Ada") use ("Gnatstub.Imported");
+  end Gnatstub;
+  package Pretty_Printer extends leaf2.Pretty_Printer is
+     for Switches ("Ada") use ("Pretty_Printer.Imported");
+  end Pretty_Printer;
+  package Finder renames Leaf1.Finder;
+  package Cross_Reference is
+     for Switches ("Ada") use ("Cross_Reference.Imported");
+  end Cross_Reference;
+  package Eliminate extends leaf2.Eliminate is
+     for Switches ("Ada") use ("Eliminate.Imported");
+  end Eliminate;
+end Imported;

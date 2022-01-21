@@ -100,13 +100,14 @@ Demo     K_STANDARD
 /gnatcoll-projects-conversion/conversion_tutorial.adb
 /gnatcoll-projects-conversion/gpr2_gnatcoll_projects.adb
 /gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
+/gnatcoll-projects-conversion/main.adb
 Object_Dir:/gnatcoll-projects-conversion
 Artifacts_Dir:/gnatcoll-projects-conversion
 Name:Conversion_Tutorial
 Runtime:
-Create:/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
-To_Pathnane:/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
-To_Pathname:/gnatcoll-projects-conversion/gpr2_gnatcoll_projects.ads
+Create:/gnatcoll-projects-conversion/main.adb
+To_Pathnane:/gnatcoll-projects-conversion/main.adb
+To_Pathname:/gnatcoll-projects-conversion/main.adb
 Register_New_Attribute returned:
 Languages'First:Ada
 Attribute_Value(Object_Dir):.

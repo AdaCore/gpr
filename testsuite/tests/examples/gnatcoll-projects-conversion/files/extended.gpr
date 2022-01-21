@@ -1,0 +1,22 @@
+with "leaf3";
+project Extended extends "leaf" is
+  for Ignore_Source_Sub_Dirs use ("Ignore_Source_Sub_Dirs.Extended");
+  package Linker is
+     for Switches ("Ada") use ("Linker.Extended");
+  end Linker;
+  package Metrics extends Leaf3.Metrics is
+     for Switches ("Ada") use ("Metrics.Extended");
+  end Metrics;
+  package Gnatstub is
+     for Switches ("Ada") use ("Gnatstub.Extended");
+  end Gnatstub;
+  package Pretty_Printer extends Leaf3.Pretty_Printer is
+     for Switches ("Ada") use ("Pretty_Printer.Extended");
+  end Pretty_Printer;
+  package Cross_Reference is
+     for Switches ("Ada") use ("Cross_Reference.Extended");
+  end Cross_Reference;
+  package Eliminate extends Leaf3.Eliminate is
+     for Switches ("Ada") use ("Eliminate.Extended");
+  end Eliminate;
+end Extended;

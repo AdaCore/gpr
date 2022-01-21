@@ -1,0 +1,17 @@
+project Prj2 extends "prj1" is
+
+   Var1 := "Value1";
+   Var1 := "Value2";
+
+   for Target use "x86_64-wrs-vxworks7r2";
+
+   for Languages use ("Ada", "Unknown");
+
+   for Source_Dirs use ("p2");
+
+   --  Check that we can refer to Prj0 from here through extension
+   --  transitivity (we extend prj1 and prj1 extends prj0).
+
+   for Object_Dir use Prj0.Obj_Name & "2";
+
+end Prj2;

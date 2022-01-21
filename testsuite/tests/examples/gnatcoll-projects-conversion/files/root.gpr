@@ -1,0 +1,22 @@
+with "imported";
+project Root extends "extended" is
+  for Excluded_Source_Dirs use ("Excluded_Source_Dirs.Root");
+  package Check is
+     for Default_Switches ("Ada") use ("Check.Root");
+  end Check;
+  package Gnatstub is
+     for Default_Switches ("Ada") use ("Gnatstub.Root");
+  end Gnatstub;
+  package Pretty_Printer is
+     for Default_Switches ("Ada") use ("Pretty_Printer.Root");
+  end Pretty_Printer;
+  package Finder extends imported.Finder is
+     for Default_Switches ("Ada") use ("Finder.Root");
+  end Finder;
+  package Cross_Reference extends imported.Cross_Reference is
+     for Default_Switches ("Ada") use ("Cross_Reference.Root");
+  end Cross_Reference;
+  package Eliminate extends imported.Eliminate is
+     for Default_Switches ("Ada") use ("Eliminate.Root");
+  end Eliminate;
+end Root;
