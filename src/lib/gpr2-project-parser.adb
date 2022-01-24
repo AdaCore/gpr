@@ -469,7 +469,7 @@ package body GPR2.Project.Parser is
 
          if Filename.Is_Directory then
             Unit := Get_From_Buffer
-                      (Context, Filename.Value, Buffer => Empty_Project);
+              (Context, Filename.Value, Buffer => Empty_Project);
          else
             Unit := Get_From_File (Context, Filename.Value);
          end if;
@@ -1210,8 +1210,6 @@ package body GPR2.Project.Parser is
       --  set and Pack_Name contains the name of the package and Pack_Ref
       --  will point to the view's package object.
 
-      Undefined_Attribute_Count : Natural :=  0;
-
       function Is_Open return Boolean is
         (Case_Values.Is_Empty
          or else (for all CV of Case_Values => CV (1) = '+'));
@@ -1411,19 +1409,6 @@ package body GPR2.Project.Parser is
             return Empty_Item_Values;
          end if;
 
-         if Present (F_Attribute_Index (Node)) and then Index = PAI.Undefined
-         then
-            --  Empty index found in attribute reference.
-
-            Tree.Log_Messages.Append
-              (Message.Create
-                 (Message.Error,
-                  "empty index not allowed here",
-                  Get_Source_Reference (Self.File, Node)));
-
-            return Empty_Item_Values;
-         end if;
-
          --  If the attribute is not found or not yet resolved we need
          --  to ensure that the Values list respect the post
          --  condition. That is, a Single result must contain a single
@@ -1491,19 +1476,6 @@ package body GPR2.Project.Parser is
                      Indexed_Values.Attribute_Name := Name;
                      Indexed_Values.Attribute_Pack := No_Package;
                      Indexed_Values.Filled         := True;
-
-                     if Tree.Has_Configuration then
-                        for Attr of
-                          Tree.Configuration.
-                            Corresponding_View.Attributes
-                              (Name, With_Config => False)
-                        loop
-                           Indexed_Values.Values.Append
-                             ((Index  => Attr.Index,
-                               Values => Attr.Values,
-                               Single => Attr.Kind = PRA.Single), 1);
-                        end loop;
-                     end if;
                   end if;
                end if;
             end if;
@@ -1572,11 +1544,8 @@ package body GPR2.Project.Parser is
                Result.Values := Ensure_Source_Loc (Attr.Values, Sloc);
                Result.Single := Attr.Kind = PRA.Single;
             else
-               if PRA.Exists (Q_Name) then
-                  Result.Single := PRA.Get (Q_Name).Value = PRA.Single;
-               else
-                  Result.Single := False;
-               end if;
+               Result.Single := PRA.Get (Q_Name).Value = PRA.Single;
+
                if Result.Single then
                   Result.Values :=
                     GPR2.Containers.Source_Value_Type_List.To_Vector
@@ -2754,7 +2723,7 @@ package body GPR2.Project.Parser is
                   end loop;
                end if;
 
-            else
+            elsif Values /= Empty_Item_Values or else not Values.Single then
                Create_And_Register_Attribute
                 (Index  => I_Sloc,
                  Values => Values.Values,
@@ -3332,12 +3301,7 @@ package body GPR2.Project.Parser is
       is
          Include : Boolean := True;
       begin
-         if not A.Is_Defined then
-            Undefined_Attribute_Count := Undefined_Attribute_Count + 1;
-            Include := False;
-         end if;
-
-         if Include and then Set.Contains (A) then
+         if Set.Contains (A) then
             declare
                Old : constant PA.Object := Set.Element (A.Name.Id, A.Index);
             begin

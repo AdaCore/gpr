@@ -84,14 +84,6 @@ package GPR2.Project.Attr_Values is
      with Pre => Self.Is_Defined and then Self.Kind = List;
    --  Returns true whether the list of value contains Value
 
-   function Value
-     (Self : Object; Value : Value_Type) return Source_Reference.Value.Object
-     with Pre => Self.Is_Defined
-     and then Self.Kind = List
-     and then Self.Has_Value (Value);
-   --  Returns the (source reference) value for the Name/Values pair object,
-   --  selected by its (text) value.
-
    function Value (Self : Object) return Source_Reference.Value.Object
      with Pre => Self.Is_Defined and then Self.Kind = Single;
    --  Returns the value for the Name/Values pair object
@@ -100,12 +92,6 @@ package GPR2.Project.Attr_Values is
      with Pre => Self.Kind = Single;
    --  Returns True if the attribute's value is equal to Value taking into
    --  account the case-sensitivity of the value.
-
-   function Image (Self : Object; Name_Len : Natural := 0) return String
-     with Pre => Self.Is_Defined;
-   --  Returns a string representation. Name_Len represents the length in
-   --  character than the Name should take, so possibly some space padding
-   --  are added.
 
    procedure Set_Case
      (Self                    : in out Object;
@@ -117,23 +103,6 @@ package GPR2.Project.Attr_Values is
       Name : Source_Reference.Attribute.Object) return Object
      with Pre => Self.Is_Defined;
    --  Returns the object with another name
-
-   procedure Append
-     (Self : in out Object; Item : Source_Reference.Value.Object)
-     with Pre => Self.Is_Defined
-                 and then Item.Is_Defined and then Self.Kind = List;
-   --  Append one item to the list values of the object
-
-   procedure Prepend
-     (Self : in out Object; Item : Source_Reference.Value.Object)
-     with Pre => Self.Is_Defined
-                 and then Item.Is_Defined and then Self.Kind = List;
-   --  Append one item to the list values of the object
-
-   procedure Append_Vector
-     (Self : in out Object; Other : Object)
-     with Inline,
-          Pre => Self.Is_Defined and then Self.Kind = List;
 
    procedure Prepend_Vector
      (Self : in out Object; Other : Object)

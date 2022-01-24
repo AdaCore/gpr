@@ -65,7 +65,10 @@ package body GPR2.Project.View is
    --  Convert definition to view
 
    function Apply_Root_And_Subdirs
-     (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object;
+     (Self : Object; Dir_Attr : Attribute_Id) return GPR2.Path_Name.Object
+     with Pre => Dir_Attr in PRA.Object_Dir | PRA.Library_Ali_Dir |
+                             PRA.Library_Dir | PRA.Exec_Dir |
+                             PRA.Library_Src_Dir;
    --  Apply project path and subdir option for library, object and executable
    --  directories defined in attribute Dir_Attr.
 
@@ -176,10 +179,6 @@ package body GPR2.Project.View is
          Def_Attr := Definition.Exec_Dir;
       elsif Dir_Attr = PRA.Library_Src_Dir then
          Def_Attr := Definition.Library_Src_Dir;
-      else
-         raise Constraint_Error with
-           "Unexpected call to Apply_Root_And_Subdirs with Attr " &
-           Image (Dir_Attr);
       end if;
 
       if not Def.Dir_Cache (Def_Attr).Is_Set then
@@ -304,9 +303,6 @@ package body GPR2.Project.View is
                Result := Pattern;
             end if;
          end if;
-      exception
-         when Error_In_Regexp =>
-            null;
       end Check_Matching_Index;
 
       -----------
@@ -770,13 +766,11 @@ package body GPR2.Project.View is
             --  value in Result.
 
             declare
-               Own_Attr : constant Project.Attribute.Object :=
+               New_Attr : Project.Attribute.Object :=
                             Project.Attribute.Set.Element (Cursor);
-               Res_Attr : Project.Attribute.Object;
             begin
-               Res_Attr := Attr;
-               Res_Attr.Append_Vector (Own_Attr);
-               Result.Include (Res_Attr);
+               New_Attr.Prepend_Vector (Attr);
+               Result.Include (New_Attr);
             end;
          end if;
       end Add_Attr;
@@ -871,8 +865,7 @@ package body GPR2.Project.View is
                   null;
 
                when PRA.D_Attribute_Reference =>
-                  for Attr of Self.Attributes_Internal (Pack,
-                                                              Def.Default.Attr)
+                  for Attr of Self.Attributes_Internal (Pack, Def.Default.Attr)
                   loop
                      Cursor := Result.Find (Name, Attr.Index);
 

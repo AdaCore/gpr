@@ -150,7 +150,7 @@ package GPR2.Project.Attribute is
    --  Sets attribute case sensitivity for the index and the value.
    --  By default both are case-sensitive.
 
-   overriding function Image
+   function Image
      (Self : Object; Name_Len : Natural := 0) return String
      with Pre => Self.Is_Defined;
    --  Returns a string representation. The attribute name is represented with
