@@ -3223,6 +3223,10 @@ package body GPR2.Project.Tree is
             View,
             Self.Pre_Conf_Mode);
 
+         if Self.Messages.Has_Error then
+            return;
+         end if;
+
          if View.Qualifier not in Aggregate_Kind then
             New_Signature := View.Context.Signature (P_Data.Externals);
 
@@ -3840,24 +3844,30 @@ package body GPR2.Project.Tree is
             if not View.Has_Aggregate_Context then
                Set_View (View);
                Closure.Insert (View.Id);
+
+               exit when Has_Error;
             end if;
          end loop;
 
          --  Now evaluate the remaining views
 
-         loop
-            for View of Self.Ordered_Views loop
-               Closure.Insert (View.Id, Position, Inserted);
+         if not Has_Error then
+            Closure_Loop :
+            loop
+               for View of Self.Ordered_Views loop
+                  Closure.Insert (View.Id, Position, Inserted);
 
-               if Inserted then
-                  Closure_Found := False;
-                  Set_View (View);
-               end if;
-            end loop;
+                  if Inserted then
+                     Closure_Found := False;
+                     Set_View (View);
+                     exit Closure_Loop when Has_Error;
+                  end if;
+               end loop;
 
-            exit when Closure_Found;
-            Closure_Found := True;
-         end loop;
+               exit Closure_Loop when Closure_Found;
+               Closure_Found := True;
+            end loop Closure_Loop;
+         end if;
       end;
 
       if not Has_Error and then not Self.Pre_Conf_Mode then

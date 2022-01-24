@@ -1,7 +1,8 @@
+testing abst.gpr
+abst.gpr:6:08: error: attribute Naming'Dot_Replacement cannot be empty
+testing abst2.gpr
+abst2.gpr:6:08: error: attribute Naming'Separate_Suffix cannot be empty
 testing agg.gpr
-import8.gpr:3:13: error: ".a." is illegal for Dot_Replacement
-abst.gpr:6:12: error: Dot_Replacement cannot be empty
-abst.gpr:9:12: error: Separate_Suffix cannot be empty
 import9.gpr:5:13: error: "- -" is illegal for Dot_Replacement
 import9.gpr:6:13: error: Spec_Suffix(".ada") for language C is also defined for language Ada
 import10.gpr:3:12: error: ".." is illegal for Dot_Replacement
@@ -10,4 +11,5 @@ extending.gpr:6:12: error: "a" is illegal for Dot_Replacement
 extending.gpr:7:12: error: "a" is illegal for Spec_Suffix: must have a dot
 extending.gpr:8:12: error: "b" is illegal for Body_Suffix: must have a dot
 extending.gpr:9:12: error: "c" is illegal for Separate_Suffix: must have a dot
-aggregated.gpr:6:12: error: invalid value for casing
+import8.gpr:3:13: error: ".a." is illegal for Dot_Replacement
+aggregated.gpr:7:12: error: invalid value for casing

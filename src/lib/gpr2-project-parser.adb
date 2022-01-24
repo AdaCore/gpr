@@ -2584,7 +2584,7 @@ package body GPR2.Project.Parser is
                                 (Message.Create
                                    (Level   => Message.Warning,
                                     Sloc    => Sloc,
-                                    Message => "Empty attribute "
+                                    Message => "empty attribute "
                                       & PRA.Image (Q_Name)
                                       & " ignored"));
                               Is_Valid := False;
@@ -2594,9 +2594,9 @@ package body GPR2.Project.Parser is
                                 (Message.Create
                                    (Level   => Message.Error,
                                     Sloc    => Sloc,
-                                    Message => "Attribute "
+                                    Message => "attribute "
                                       & PRA.Image (Q_Name)
-                                      & " can't be empty"));
+                                      & " cannot be empty"));
                         end case;
                      end if;
 
