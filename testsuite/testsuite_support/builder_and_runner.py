@@ -120,7 +120,8 @@ class BuilderAndRunner(object):
             self.simple_run(gnatcov_cmd, env=env, analyze_output=False)
 
             gprbuild_cmd = (
-                ["gprbuild", "-P", project]
+                ["gprbuild", "-P", project,
+                 "-XBUILD=gnatcov", "-XXMLADA_BUILD=static"]
                 + vars
                 + ["--src-subdirs=gnatcov-instr", "--implicit-with=gnatcov_rts_full"]
                 + args

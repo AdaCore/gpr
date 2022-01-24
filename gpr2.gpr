@@ -29,6 +29,10 @@ library project GPR2 is
    type Profiler_Flag is ("yes", "no");
    Profiler : Profiler_Flag := External ("PROFILER", "no");
 
+   type Bool is ("true", "false");
+   Is_Externally_Built : Bool := external ("EXTERNALLY_BUILT", "false");
+   for Externally_Built use Is_Externally_Built;
+
    Processors := external ("PROCESSORS", "0");
    Build_Root            := external ("BUILD_ROOT", ".build");
    Langkit_Generated_Src := Build_Root & "/lkparser";
