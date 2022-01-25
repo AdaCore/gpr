@@ -153,7 +153,7 @@ package body GPR2_GNATCOLL_Projects is
 
             --  Looking for a project's package's attribute
 
-            if Project.Has_Packages
+            if Project.Has_Package
               (Name => Package_Name, Check_Extended => True)
             then
                Attribute := Get_Attribute
@@ -174,7 +174,7 @@ package body GPR2_GNATCOLL_Projects is
                                     Project.Extended_Root;
                begin
                   while Extended_Root.Is_Defined loop
-                     if Extended_Root.Has_Packages
+                     if Extended_Root.Has_Package
                        (Name           => Package_Name,
                         Check_Extended => True)
                      then
@@ -204,7 +204,7 @@ package body GPR2_GNATCOLL_Projects is
             if not Attribute.Is_Defined
               and then Project.Tree.Has_Configuration
               and then Project.Tree.Configuration.Corresponding_View.
-                Has_Packages (Name => Package_Name, Check_Extended => True)
+                Has_Package (Name => Package_Name, Check_Extended => True)
             then
                Attribute := Get_Attribute
                  (View  => Project.Tree.Configuration.Corresponding_View,

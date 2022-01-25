@@ -1526,7 +1526,7 @@ package body GPR2.Project.Parser is
 
             if not Attr.Is_Defined then
                if Pack /= No_Package
-                 and then not Project_View.Has_Packages (Pack)
+                 and then not Project_View.Has_Package (Pack)
                then
                   Tree.Log_Messages.Append
                     (Message.Create
@@ -2213,7 +2213,7 @@ package body GPR2.Project.Parser is
                else
                   --  Otherwise search into the already parsed packages
 
-                  if View.Has_Packages (Pack) then
+                  if View.Has_Package (Pack) then
                      return Get_Pack_Var (View, Pack, Variable);
                   else
                      Error
@@ -2242,7 +2242,7 @@ package body GPR2.Project.Parser is
                   return Try_Visible_In (From_View);
                end if;
 
-            elsif From_View.Has_Packages (Pack) then
+            elsif From_View.Has_Package (Pack) then
                return Get_Pack_Var (From_View, Pack, Variable);
             else
                Error ("undefined package """ & Image (Pack) & '"');
@@ -2959,7 +2959,7 @@ package body GPR2.Project.Parser is
                      Message =>
                        "undefined project """ & String (Project) & '"'));
 
-            elsif not View.Has_Packages (P_Name) then
+            elsif not View.Has_Package (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Error,
@@ -3032,7 +3032,7 @@ package body GPR2.Project.Parser is
                      Message =>
                        "undefined project """ & String (Project) & '"'));
 
-            elsif not View.Has_Packages (P_Name) then
+            elsif not View.Has_Package (P_Name) then
                Tree.Log_Messages.Append
                  (Message.Create
                     (Level   => Message.Warning,

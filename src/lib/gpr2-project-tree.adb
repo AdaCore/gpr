@@ -235,7 +235,7 @@ package body GPR2.Project.Tree is
          package PRA renames Project.Registry.Attribute;
       begin
          if View.Is_Defined
-           and then View.Has_Packages (PRP.Compiler)
+           and then View.Has_Package (PRP.Compiler)
            and then View.Has_Languages
          then
             for Language of View.Languages loop
@@ -4087,7 +4087,7 @@ package body GPR2.Project.Tree is
       end Is_Bin_Path;
 
    begin
-      if not Conf.Corresponding_View.Has_Packages (Registry.Pack.Compiler) then
+      if not Conf.Corresponding_View.Has_Package (Registry.Pack.Compiler) then
          return;
       end if;
 

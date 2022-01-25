@@ -367,7 +367,7 @@ package body GPR2.Project.Definition is
          end Log_Error;
 
       begin
-         if View.Has_Packages (PRP.Naming) then
+         if View.Has_Package (PRP.Naming) then
             Check_Casing;
             Check_Dot_Replacement;
 
@@ -1836,7 +1836,7 @@ package body GPR2.Project.Definition is
          function Check_View (View : Project.View.Object) return Boolean is
             Att : Project.Attribute.Object;
          begin
-            if View.Has_Packages (PRP.Compiler) then
+            if View.Has_Package (PRP.Compiler) then
                if View.Check_Attribute
                  (PRP.Compiler,
                   PRA.Driver,
@@ -2408,7 +2408,7 @@ package body GPR2.Project.Definition is
             end loop;
          end if;
 
-         if View.Has_Packages (PRP.Naming,
+         if View.Has_Package (PRP.Naming,
                                Check_Extended => False,
                                With_Defaults  => False,
                                With_Config    => False)

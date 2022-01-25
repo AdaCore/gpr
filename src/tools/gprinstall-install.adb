@@ -468,7 +468,7 @@ package body GPRinstall.Install is
          end Replace;
 
       begin
-         if Project.Has_Packages (P.Install) then
+         if Project.Has_Package (P.Install) then
             declare
                use Ada.Characters.Handling;
             begin
@@ -1755,7 +1755,7 @@ package body GPRinstall.Install is
                            C : constant GPR2.Project.View.Object :=
                                  Project.Tree.Configuration.Corresponding_View;
                         begin
-                           if C.Has_Packages (P.Compiler)
+                           if C.Has_Package (P.Compiler)
                              and then C.Check_Attribute
                                         (P.Compiler,
                                          A.Driver,
@@ -1959,9 +1959,9 @@ package body GPRinstall.Install is
             procedure Naming_For (View : GPR2.Project.View.Object) is
                Found : Boolean := False;
             begin
-               if View.Has_Packages (P.Naming,
-                                     With_Defaults => False,
-                                     With_Config   => False)
+               if View.Has_Package (P.Naming,
+                                    With_Defaults => False,
+                                    With_Config   => False)
                then
                   --  Check all associative attributes
 
@@ -2522,7 +2522,7 @@ package body GPRinstall.Install is
       function Is_Install_Active
         (Project : GPR2.Project.View.Object) return Boolean is
       begin
-         if Project.Has_Packages (P.Install) then
+         if Project.Has_Package (P.Install) then
             for V of Project.Attributes (Pack => P.Install) loop
                if V.Name.Id = A.Active then
                   return Characters.Handling.To_Lower
