@@ -1,0 +1,5 @@
+project Undef_Project_Ref is
+
+   Var := Undef.Naming.Var;
+
+end Undef_Project_Ref;

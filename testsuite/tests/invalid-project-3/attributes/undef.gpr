@@ -1,0 +1,8 @@
+project Undef is
+
+   for Foo use Project'Languages;
+   --  Undefined attribute
+
+   Var := Project'Foo;
+
+end Undef;

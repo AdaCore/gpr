@@ -1,14 +1,40 @@
+with "shared.gpr";
+
 library project Root extends "extended.gpr" is
    for Object_Dir   use "myobj";
    for Library_Dir  use "lib";
    for Source_Dirs  use ("src");
-   for Languages use ("ada", "C");
+   for Languages    use ("Ada");
+   --  Languages should be concatenated with "C" from extended
+   for Runtime      use Shared'Runtime;
+   --  Runtime: Use full associative array assignment, amended with value
+   --           from config
+   for Target       use Shared'Target;
+   --  Target: non explicit value in shared
+   for Target       use Shared'Target & "2";
+   --  Redeclare target
+
+   for Locally_Removed_Files use ("file.adb");
+   for Excluded_Source_Files use Project'Excluded_Source_Files & ("file.ads");
+   --  Test top-level aliased attributes
 
    package Compiler is
       for Switches ("Ada") use ("-test-switch");
       for Switches ("m*.ads") use ("-Owrongspecial");
       for Switches ("my*.ads") use ("-Ospecial");
+      for Default_Switches use Shared.Compiler'Default_Switches;
    end Compiler;
+
+   package Naming is
+      for Spec ("MyAdaUnit") use "my";
+      for Specification ("MyAdaUnit") use Naming'Specification ("MyAdaUnit") &
+        "ada";
+      for Spec ("MyAdaUnit") use Naming'Specification ("MyAdaUnit") &
+        "unit";
+      for Spec ("MyAdaUnit") use Naming'Spec ("MyAdaUnit") &
+        ".ads";
+      --  Test various combination of aliased attributes
+   end Naming;
 
    package Install is
       for Install_Name use "myname";

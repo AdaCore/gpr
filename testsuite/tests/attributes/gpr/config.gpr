@@ -1,4 +1,6 @@
 configuration project MyConfig is
+   for Runtime ("C++") use "baz";
+
    package Compiler is
       for Switches("ada") use ("-config-ada");
    end Compiler;

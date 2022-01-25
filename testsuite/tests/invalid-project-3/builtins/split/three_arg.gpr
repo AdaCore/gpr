@@ -1,0 +1,5 @@
+project Three_Arg is
+
+   Var := split ("EXT", ",", "whatever");
+
+end Three_Arg;

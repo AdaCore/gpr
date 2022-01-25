@@ -1,0 +1,5 @@
+project Empty_String2 is
+
+   Var := external_as_list ("EXT", "");
+
+end Empty_String2;

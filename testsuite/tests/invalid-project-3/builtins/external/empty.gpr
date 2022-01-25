@@ -1,0 +1,5 @@
+project Empty is
+
+   Var := external ();
+
+end Empty;

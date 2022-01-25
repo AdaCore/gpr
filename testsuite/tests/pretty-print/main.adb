@@ -17,13 +17,12 @@
 ------------------------------------------------------------------------------
 
 with Ada.Text_IO;
-with Ada.Strings.Fixed;
 
 with GPR2.Context;
 with GPR2.Log;
 with GPR2.Message;
+with GPR2.Project.Pretty_Printer;
 with GPR2.Project.Tree;
-with GPR2.Project.Typ;
 
 procedure Main is
 
@@ -40,47 +39,28 @@ procedure Main is
    procedure Load (Filename : String) is
       Prj : Project.Tree.Object;
       Ctx : Context.Object;
+      PP  : Project.Pretty_Printer.Object;
    begin
       Project.Tree.Load (Prj, Create (Filename_Type (Filename)), Ctx);
-      Text_IO.Put_Line ("All good, no message.");
-
-      for T of Prj.Root_Project.Types loop
-         Text_IO.Put ("Type : " & String (T.Name.Text) & " -");
-
-         for V of T.Values loop
-            Text_IO.Put (' ' & V.Text);
-         end loop;
-
-         Text_IO.New_Line;
-      end loop;
+      PP := Project.Pretty_Printer.Create;
+      PP.Pretty_Print (Prj.Root_Project);
+      Ada.Text_IO.Put (PP.Result);
 
    exception
       when GPR2.Project_Error =>
-         if Prj.Has_Messages then
-            Text_IO.Put_Line ("Messages found:");
-
-            for C in Prj.Log_Messages.Iterate
-              (False, False, True, True, True)
-            loop
-               declare
-                  M   : constant Message.Object := Log.Element (C);
-                  Mes : constant String := M.Format;
-                  L   : constant Natural :=
-                    Strings.Fixed.Index (Mes, "/types");
-               begin
-                  if L /= 0 then
-                     Text_IO.Put_Line (Mes (L .. Mes'Last));
-                  else
-                     Text_IO.Put_Line (Mes);
-                  end if;
-               end;
-            end loop;
-         end if;
+         Text_IO.Put_Line ("Error: failed to load the tree");
+         for C in Prj.Log_Messages.Iterate
+           (False, False, True, True, True)
+         loop
+            declare
+               M   : constant Message.Object := Log.Element (C);
+               Mes : constant String := M.Format;
+            begin
+               Text_IO.Put_Line (Mes);
+            end;
+         end loop;
    end Load;
 
 begin
    Load ("demo.gpr");
-   Load ("demo2.gpr");
-   Load ("demo3.gpr");
-   Load ("demo4-child.gpr");
 end Main;

@@ -1,0 +1,7 @@
+project Empty_Error is
+
+   package Naming is
+      for Dot_Replacement use "";
+   end Naming;
+
+end Empty_Error;

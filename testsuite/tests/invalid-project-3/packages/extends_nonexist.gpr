@@ -1,0 +1,6 @@
+project Extends_Nonexist is
+
+   package Metrics extends Foo.Metrics is
+   end Metrics;
+
+end Extends_Nonexist;

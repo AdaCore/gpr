@@ -1,0 +1,5 @@
+project One_Arg is
+
+   Var := external_as_list ("EXT");
+
+end One_Arg;

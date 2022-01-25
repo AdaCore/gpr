@@ -1,0 +1,5 @@
+project One_Arg is
+
+   Var := split ("EXT");
+
+end One_Arg;

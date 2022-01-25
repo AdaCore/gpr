@@ -1,0 +1,8 @@
+with "empty";
+
+project Extends_Nonexist is
+
+   package Metrics extends Empty.Metrics is
+   end Metrics;
+
+end Extends_Nonexist;

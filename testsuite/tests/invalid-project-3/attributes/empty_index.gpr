@@ -1,0 +1,7 @@
+project Empty_Index is
+
+    package Compiler is
+       for Default_Switches ("Ada") use Compiler'Default_Switches ("");
+    end Compiler;
+
+end Empty_Index;

@@ -1,0 +1,7 @@
+with "empty";
+
+project Renames_Nonexist is
+
+   package Metrics renames Empty.Metrics;
+
+end Renames_Nonexist;
